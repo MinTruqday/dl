@@ -1,0 +1,9 @@
+.env
+*.pyc
+__pycache__/
+node_modules/
+frontend/.next/
+frontend/public/
+backend/logs/
+*.bak
+

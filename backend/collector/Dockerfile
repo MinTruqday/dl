@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/playwright/python:v1.42.0-jammy
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y tzdata calibre xvfb && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+ENV PYTHONPATH=/app/src
+ENV PYTHONUNBUFFERED=1
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN playwright install chromium
+
+COPY src/ ./src/
+COPY main.py .
+CMD ["xvfb-run", "-a", "python", "-u", "main.py"]
