@@ -89,7 +89,7 @@ export default function WalletPage() {
         <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">Số dư hiện tại</span>
         <div className="flex items-baseline gap-2">
           <span className="text-5xl font-bold text-black tracking-tighter">{balance.toLocaleString()}</span>
-          <span className="text-lg font-bold text-zinc-400">Coin</span>
+          <span className="text-lg font-bold text-zinc-400">dl</span>
         </div>
       </div>
 
@@ -141,7 +141,7 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <span className={`font-bold text-sm ${tx.amount > 0 ? "text-black" : "text-zinc-400"}`}>
-                  {tx.amount > 0 ? "+" : ""}{tx.amount} Coin
+                  {tx.amount > 0 ? "+" : ""}{tx.amount} dl
                 </span>
               </div>
             ))}

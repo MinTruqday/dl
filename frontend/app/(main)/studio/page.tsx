@@ -243,7 +243,7 @@ export default function AuthorStudioPage() {
 
   const requestPayout = async () => {
     if (!revenue?.available_balance || revenue.available_balance < 1000) {
-      alert("Số dư tối thiểu để rút là 1000 Coin");
+      alert("Số dư tối thiểu để rút là 1000 dl");
       return;
     }
     try {
@@ -386,7 +386,7 @@ export default function AuthorStudioPage() {
                     <Wallet className="w-4 h-4" />
                     <span className="text-[10px] font-bold tracking-widest uppercase">Số dư thu nhập</span>
                   </div>
-                  <h3 className="text-3xl font-bold">{revenue?.available_balance || 0} Coin</h3>
+                  <h3 className="text-3xl font-bold">{revenue?.available_balance || 0} dl</h3>
                   <Button variant="secondary" size="sm" onClick={requestPayout} className="w-full mt-4 font-bold text-[10px] tracking-widest border-border">RÚT TIỀN</Button>
                 </div>
               </div>
@@ -438,7 +438,7 @@ export default function AuthorStudioPage() {
                         onChange={(e) => updateDocumentConfig({ price: parseFloat(e.target.value) })}
                         className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">Coin</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">dl</span>
                     </div>
                     <p className="text-[9px] text-muted-foreground italic font-medium">Nhập số 0 nếu bạn muốn chia sẻ tài liệu này miễn phí</p>
                   </div>

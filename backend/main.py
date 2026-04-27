@@ -137,6 +137,11 @@ app.include_router(monetization_router)
 
 app.include_router(rag_router)
 app.include_router(inference_router)
+app.include_router(notification_router)
+app.include_router(coauthor_router)
+
+from api.moderation import router as moderation_router_v2
+app.include_router(moderation_router_v2)
 
 
 @app.get("/health")

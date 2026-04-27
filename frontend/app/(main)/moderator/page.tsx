@@ -162,7 +162,7 @@ export default function ModeratorDashboard() {
                         <span className="text-[12px] font-bold text-black tracking-widest">ID: {p.user_id?.slice(-6)}</span>
                         <span className="text-[12px] font-bold text-zinc-400 tracking-tight">Tên: {p.user_name}</span>
                       </div>
-                      <p className="text-2xl font-bold text-black tracking-tighter">{p.amount?.toLocaleString()} Coin</p>
+                      <p className="text-2xl font-bold text-black tracking-tighter">{p.amount?.toLocaleString()} dl</p>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handlePayout(p.id, "reject")} className="p-3 border border-zinc-200 text-zinc-400 hover:text-black hover:border-black transition-all">

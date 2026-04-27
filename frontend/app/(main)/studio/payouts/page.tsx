@@ -93,11 +93,11 @@ export default function PayoutsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{balance}</span>
-          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Số dư hiện tại (Coin)</p>
+          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Số dư hiện tại (dl)</p>
         </div>
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{revenue?.total_revenue || 0}</span>
-          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tổng doanh thu (Coin)</p>
+          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tổng doanh thu (dl)</p>
         </div>
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{revenue?.total_sales || 0}</span>
@@ -136,7 +136,7 @@ export default function PayoutsPage() {
           className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all disabled:bg-zinc-300 flex items-center justify-center gap-2"
         >
           {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
-          Yêu cầu rút {balance} Coin
+          Yêu cầu rút {balance} dl
         </button>
       </div>
     </div>

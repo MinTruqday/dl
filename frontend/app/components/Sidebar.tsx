@@ -120,7 +120,7 @@ export default function Sidebar({
           <NavLink href="/feed" label="Bảng tin" icon={LayoutGrid} />
           <NavLink href="/leaderboard" label="Vinh danh" icon={Trophy} />
 
-          <NavLink href="/collections" label="Bộ sưu tập" icon={Bookmark} requireAuth />
+          <NavLink href="/collections" label="Bộ sưu tập tài liệu" icon={Bookmark} requireAuth />
           <NavLink href="/history" label="Lịch sử đọc" icon={History} requireAuth />
           <NavLink href="/library" label="Thư viện cá nhân" icon={Library} requireAuth />
 

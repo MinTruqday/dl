@@ -42,7 +42,7 @@ export default function Library() {
       const data = await getLibraryAPI();
       setReadingList(data || []);
       
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/labels`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/bookmark-folders`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) setLabels(await res.json());
@@ -57,7 +57,7 @@ export default function Library() {
   const createLabel = async () => {
     if (!newLabelName.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/labels`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/bookmark-folders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +119,7 @@ export default function Library() {
                     <span className="text-[13px] font-bold tracking-[0.2em] text-zinc-400">Không gian cá nhân</span>
                 </div>
                 <h1 className="text-4xl font-bold text-black tracking-tighter flex items-center gap-4">
-                    Tủ sách tri thức
+                    Thư viện tri thức
                 </h1>
                 <p className="text-zinc-500 mt-3 font-medium text-sm">Quản lý các tài liệu đã lưu và tiến độ đọc của bạn.</p>
             </div>
@@ -194,7 +194,7 @@ export default function Library() {
                                         <h3 className="font-bold text-black text-lg line-clamp-2 leading-tight tracking-tight group-hover:underline underline-offset-4 decoration-2">{list.name}</h3>
                                         <p className="text-xs text-zinc-500 mt-2 line-clamp-2 font-medium">{list.description || "Không có mô tả"}</p>
                                         <div className="mt-8 pt-6 border-t border-zinc-50 flex justify-between items-center text-[12px] font-bold tracking-widest text-zinc-400">
-                                            <span>{list.books?.length || 0} TÀI LIỆU</span>
+                                            <span>{(list.documents?.length || list.books?.length || 0)} TÀI LIỆU</span>
                                             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </div>
                                     </div>

@@ -20,10 +20,8 @@ export default function AiChatPanel() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   const { user } = useAuth() as any;
-  if (!user) return null;
-
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && user?._id) {
       const historyKey = `doclib_chat_${user._id}`;
       const saved = localStorage.getItem(historyKey);
       if (saved) {
@@ -35,7 +33,7 @@ export default function AiChatPanel() {
   }, [isOpen, user]);
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && user?._id) {
       const historyKey = `doclib_chat_${user._id}`;
       localStorage.setItem(historyKey, JSON.stringify(messages));
     }
@@ -43,6 +41,8 @@ export default function AiChatPanel() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, user]);
+
+  if (!user) return null;
 
   const clearHistory = () => {
     const historyKey = `doclib_chat_${user._id}`;
@@ -108,7 +108,7 @@ export default function AiChatPanel() {
           
       setMessages((prev) => [...prev, { role: "assistant", content: "", thoughts: [] }]);
       
-      const res = await fetch(`${API_URL}/api/rag/stream`, {
+      const res = await fetch(`${API_URL}/rag/stream`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -387,7 +387,7 @@ export default function AiChatPanel() {
                   <span className="text-[12px] font-bold text-zinc-500 group-hover:text-black transition-colors tracking-widest">Tìm kiếm chuyên sâu</span>
                 </label>
                 {usePro && (
-                  <span className="text-[13px] font-bold text-black py-0.5 px-2 bg-zinc-100 rounded-sm flex items-center gap-1">5 <Coins className="w-3 h-3" /></span>
+                  <span className="text-[13px] font-bold text-black py-0.5 px-2 bg-zinc-100 rounded-sm flex items-center gap-1">5 dl <Coins className="w-3 h-3" /></span>
                 )}
               </div>
             )}

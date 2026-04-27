@@ -599,7 +599,7 @@ export default function DocumentsPage() {
           <div className="bg-card p-6  w-full max-w-sm border border-black">
             <h3 className="text-xl font-bold font-sans mb-4 flex items-center text-black"><DollarSign className="mr-2"/> Thương mại hóa tài liệu</h3>
             <form onSubmit={handleMonetize}>
-              <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="Nhập giá bán (Coin)" required />
+              <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="Nhập giá bán (dl)" required />
               <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setMonetizeDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Lưu thiết lập</Button></div>
             </form>
           </div>

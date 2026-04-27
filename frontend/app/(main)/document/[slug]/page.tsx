@@ -8,7 +8,7 @@ import { Eye, Star, ExternalLink, AlertTriangle, ChevronLeft } from "lucide-reac
 
 const INTERNAL_API_URL = process.env.INTERNAL_API_URL;
 
-interface DocLibBook {
+interface DocLibDocument {
   _id: string;
   title: string;
   slug: string;
@@ -24,12 +24,12 @@ interface DocLibBook {
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/books/slug/${params.slug}`);
+    const res = await fetch(`${INTERNAL_API_URL}/documents/slug/${params.slug}`);
     if (res.ok) {
-      const book: DocLibBook = await res.json();
+      const doc: DocLibDocument = await res.json();
       return {
-        title: `${book.title} | DocLib`,
-        description: book.description,
+        title: `${doc.title} | DocLib`,
+        description: doc.description,
       }
     }
   } catch (error) {}
@@ -37,9 +37,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return { title: "Không tìm thấy tài liệu | DocLib" }
 }
 
-async function getBookDetail(slug: string): Promise<DocLibBook | null> {
+async function getDocumentDetail(slug: string): Promise<DocLibDocument | null> {
   try {
-    const res = await fetch(`${INTERNAL_API_URL}/books/slug/${slug}`, {
+    const res = await fetch(`${INTERNAL_API_URL}/documents/slug/${slug}`, {
       next: { revalidate: 10 }
     });
     if (!res.ok) return null;
@@ -50,10 +50,11 @@ async function getBookDetail(slug: string): Promise<DocLibBook | null> {
   }
 }
 
-export default async function BookProfilePage({ params }: { params: { slug: string } }) {
-  const book = await getBookDetail(params.slug);
+export default async function DocumentProfilePage({ params }: { params: { slug: string } }) {
+  const document = await getDocumentDetail(params.slug);
+  const doc = document;
 
-  if (!book) {
+  if (!doc) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center animate-in fade-in duration-300">
         <h1 className="text-3xl font-bold text-black mb-4">Không tìm thấy tài liệu</h1>
@@ -65,7 +66,7 @@ export default async function BookProfilePage({ params }: { params: { slug: stri
     );
   }
 
-  const renderPdfUrl = book.file_url ? book.file_url : null;
+  const renderPdfUrl = doc.file_url ? doc.file_url : null;
 
   return (
     <div className="w-full animate-in fade-in duration-300">
@@ -78,35 +79,35 @@ export default async function BookProfilePage({ params }: { params: { slug: stri
         <div className="bg-white  border border-border overflow-hidden">
           <div className="p-8 sm:p-12">
             <div className="flex items-center space-x-3 mb-6">
-              <span className={`px-4 py-1.5  text-[12px] font-bold tracking-widest ${book.status === "published" ? "bg-black text-white" : "bg-zinc-100 text-black"}`}>
-                {book.status === "published" ? "Xuất bản" : book.status === "draft" ? "Bản thảo" : book.status}
+              <span className={`px-4 py-1.5  text-[12px] font-bold tracking-widest ${doc.status === "published" ? "bg-black text-white" : "bg-zinc-100 text-black"}`}>
+                {doc.status === "published" ? "Xuất bản" : doc.status === "draft" ? "Bản thảo" : doc.status}
               </span>
-              <span className="text-[12px] text-zinc-400 font-bold tracking-widest">ID: {book.slug}</span>
+              <span className="text-[12px] text-zinc-400 font-bold tracking-widest">ID: {doc.slug}</span>
               <span className="text-zinc-200">|</span>
               <div className="flex items-center text-[13px] font-bold text-zinc-500 gap-1.5">
                 <Eye className="w-3.5 h-3.5" />
-                {book.views || 0}
+                {doc.views || 0}
               </div>
               <div className="flex items-center text-[13px] font-bold text-black gap-1.5">
                 <Star className="w-3.5 h-3.5" />
-                {book.average_rating ? Number(book.average_rating).toFixed(1) : "Chưa có"} <span className="text-zinc-400 ml-1">({book.rating_count || 0})</span>
+                {doc.average_rating ? Number(doc.average_rating).toFixed(1) : "Chưa có"} <span className="text-zinc-400 ml-1">({doc.rating_count || 0})</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 border-b border-border pb-8">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-black leading-tight tracking-tighter">
-                {book.title}
+                {doc.title}
               </h1>
-              <BookmarkButton bookId={book._id} />
+              <BookmarkButton documentId={doc._id} />
             </div>
             
             <div className="prose prose-zinc prose-lg text-zinc-600 max-w-none mb-12 leading-relaxed">
-              <p>{book.description || "Tác giả chưa cung cấp mô tả cho tài liệu này."}</p>
+              <p>{doc.description || "Tác giả chưa cung cấp mô tả cho tài liệu này."}</p>
             </div>
 
-            {book.content ? (
+            {doc.content ? (
               <div className="border-t border-border mt-12 pt-12">
-                 <ReaderView content={book.content} title={book.title} />
+                 <ReaderView content={doc.content} title={doc.title} documentId={doc._id} />
               </div>
             ) : renderPdfUrl ? (
               <div className="border-t border-border pt-12">
@@ -138,10 +139,10 @@ export default async function BookProfilePage({ params }: { params: { slug: stri
             )}
             
             <div className="mt-12">
-              <ReviewSection bookId={book._id} />
+              <ReviewSection documentId={doc._id} />
             </div>
             <div className="mt-12">
-              <DiscussionSection bookId={book._id} />
+              <DiscussionSection documentId={doc._id} />
             </div>
           </div>
         </div>

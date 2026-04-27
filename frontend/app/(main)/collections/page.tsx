@@ -11,7 +11,7 @@ export default function CollectionsPage() {
   useEffect(() => {
     const fetchCollections = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/collections`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reader/lists`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('doclib_token')}` }
         });
         if (res.ok) {

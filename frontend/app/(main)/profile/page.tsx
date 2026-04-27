@@ -27,9 +27,9 @@ export default function ProfilePage() {
   const fetchAll = async () => {
     try {
       const [profileRes, statsRes, privacyRes] = await Promise.all([
-        fetch(`${API_URL}/reader/profile`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+        fetch(`${API_URL}/profile/me`, { headers: { Authorization: `Bearer ${getToken()}` } }),
         fetch(`${API_URL}/reader/stats`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-        fetch(`${API_URL}/reader/privacy`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+        fetch(`${API_URL}/reader/settings/privacy`, { headers: { Authorization: `Bearer ${getToken()}` } }),
       ]);
       if (profileRes.ok) {
         const p = await profileRes.json();
@@ -48,7 +48,7 @@ export default function ProfilePage() {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`${API_URL}/reader/profile`, {
+      const res = await fetch(`${API_URL}/profile/me`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify(editData),
@@ -67,7 +67,7 @@ export default function ProfilePage() {
 
   const savePrivacy = async () => {
     try {
-      const res = await fetch(`${API_URL}/reader/privacy`, {
+      const res = await fetch(`${API_URL}/reader/settings/privacy`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify(privacy),

@@ -54,7 +54,7 @@ export default function AuthorRevenuePage() {
                <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tổng doanh thu</span>
                <DollarSign className="w-4 h-4" />
             </div>
-            <h2 className="text-4xl font-bold tracking-tighter">{(data?.total_revenue || 0).toLocaleString()} C</h2>
+            <h2 className="text-4xl font-bold tracking-tighter">{(data?.total_revenue || 0).toLocaleString()} dl</h2>
             <div className="flex items-center gap-2 text-[12px] font-bold text-zinc-400">
                <ArrowUpRight className="w-3 h-3" /> +12.5% so với tháng trước
             </div>
@@ -91,14 +91,14 @@ export default function AuthorRevenuePage() {
             {data?.recent_sales?.map((sale: any, idx: number) => (
                <div key={idx} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-zinc-50 transition-colors">
                   <div className="space-y-1">
-                     <p className="text-sm font-bold tracking-tight">{sale.book_title}</p>
+                     <p className="text-sm font-bold tracking-tight">{sale.document_title}</p>
                      <p className="text-[12px] font-bold text-zinc-400 tracking-widest">
                         {new Date(sale.date).toLocaleString("vi-VN")}
                      </p>
                   </div>
                   <div className="flex items-center gap-8">
                      <div className="text-right">
-                        <p className="text-sm font-bold">+{sale.price.toLocaleString()} C</p>
+                        <p className="text-sm font-bold">+{sale.price.toLocaleString()} dl</p>
                         <p className="text-[13px] font-bold text-black tracking-widest">Thành công</p>
                      </div>
                      <ArrowUpRight className="w-5 h-5 text-zinc-200" />

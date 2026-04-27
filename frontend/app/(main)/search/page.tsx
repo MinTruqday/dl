@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getBooksAPI } from "@/app/lib/api";
+import { getDocumentsAPI } from "@/app/lib/api";
 import { Search, Filter, BookOpen, User, Clock, Star, Trash2, X } from "lucide-react";
 
 export default function SearchResultsPage() {
@@ -41,9 +41,9 @@ export default function SearchResultsPage() {
     try {
       const data = await getDocumentsAPI(query);
       let filtered = data || [];
-      if (filters.price === "free") filtered = filtered.filter((b: any) => !b.price_coins || b.price_coins === 0);
-      if (filters.price === "paid") filtered = filtered.filter((b: any) => b.price_coins > 0);
-      if (filters.rating > 0) filtered = filtered.filter((b: any) => (b.average_rating || 0) >= filters.rating);
+      if (filters.price === "free") filtered = filtered.filter((d: any) => !d.price_coins || d.price_coins === 0);
+      if (filters.price === "paid") filtered = filtered.filter((d: any) => d.price_coins > 0);
+      if (filters.rating > 0) filtered = filtered.filter((d: any) => (d.average_rating || 0) >= filters.rating);
       setResults(filtered);
     } catch (e) {
       console.error(e);
@@ -153,33 +153,33 @@ export default function SearchResultsPage() {
                 ))}
               </div>
             ) : results.length > 0 ? (
-              results.map((book) => (
-                <Link key={book._id} href={`/preview?slug=${book.slug}`} className="group p-6 bg-white border border-border hover:border-black transition-all duration-300 flex gap-6">
+              results.map((doc) => (
+                <Link key={doc._id} href={`/document/${doc.slug}`} className="group p-6 bg-white border border-border hover:border-black transition-all duration-300 flex gap-6">
                   <div className="w-24 h-32 bg-zinc-100 border border-border shrink-0 overflow-hidden">
-                    {book.cover_url ? (
-                       <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {doc.cover_url ? (
+                       <img src={doc.cover_url} alt={doc.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                        <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-zinc-300 text-center p-4">
-                          {book.title}
+                          {doc.title}
                        </div>
                     )}
                   </div>
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-3 text-[13px] font-bold tracking-widest text-zinc-400">
-                      <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {book.categories?.[0] || "Tài liệu"}</span>
+                      <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {doc.categories?.[0] || "Tài liệu"}</span>
                       <span className="w-1 h-1 rounded-none bg-zinc-200" />
-                      <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {book.author_name || "Tác giả ẩn danh"}</span>
+                      <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {doc.author_name || "Tác giả ẩn danh"}</span>
                     </div>
-                    <h3 className="text-lg font-bold tracking-tight group-hover:underline underline-offset-4 decoration-2">{book.title}</h3>
+                    <h3 className="text-lg font-bold tracking-tight group-hover:underline underline-offset-4 decoration-2">{doc.title}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-3xl font-medium">
-                      {book.description}
+                      {doc.description}
                     </p>
                     <div className="pt-2 flex items-center gap-6">
                        <div className="flex items-center gap-1.5 text-[13px] font-bold tracking-widest text-zinc-300">
-                          <Clock className="w-3.5 h-3.5" /> {new Date(book.created_at).toLocaleDateString("vi-VN")}
+                          <Clock className="w-3.5 h-3.5" /> {new Date(doc.created_at).toLocaleDateString("vi-VN")}
                        </div>
                        <div className="flex items-center gap-1.5 text-[13px] font-bold tracking-widest text-black">
-                          <Star className="w-3.5 h-3.5" /> {book.average_rating?.toFixed(1) || "0.0"}
+                          <Star className="w-3.5 h-3.5" /> {doc.average_rating?.toFixed(1) || "0.0"}
                        </div>
                     </div>
                   </div>

@@ -216,7 +216,15 @@ export async function compileDocumentAPI(documentId: string) {
     return data;
 }
 
-export async function getDocumentsAPI(search?: string, sortBy?: string, category?: string, tag?: string) {
+export async function getDocumentsAPI(
+    search?: string, 
+    sortBy?: string, 
+    category?: string, 
+    tag?: string,
+    folder_id?: string,
+    is_starred?: boolean,
+    fmt?: string
+) {
     const token = getToken();
     let url = `${API_URL}/documents/`;
     const params = new URLSearchParams();
@@ -224,6 +232,10 @@ export async function getDocumentsAPI(search?: string, sortBy?: string, category
     if (sortBy) params.append("sort_by", sortBy);
     if (category) params.append("category", category);
     if (tag) params.append("tag", tag);
+    if (folder_id) params.append("folder_id", folder_id);
+    if (is_starred) params.append("is_starred", "true");
+    if (fmt && fmt !== "all") params.append("fmt", fmt);
+    
     if (params.toString()) url += `?${params.toString()}`;
 
     const res = await fetch(url, {
@@ -680,21 +692,7 @@ export async function createStoryAPI(payload: {
     return await res.json();
 }
 
-export const getDocumentsAPI = async (folder_id?: string, search?: string, is_starred?: boolean, fmt?: string) => {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const params = new URLSearchParams();
-  if (folder_id) params.append("folder_id", folder_id);
-  if (search) params.append("search", search);
-  if (is_starred) params.append("is_starred", "true");
-  if (fmt && fmt !== "all") params.append("fmt", fmt);
-  
-  const res = await fetch(`${API_URL}/documents/?${params.toString()}`, {
-    headers: { "Authorization": "Bearer " + token }
-  });
-  if (!res.ok) throw new Error("Failed to fetch documents");
-  return res.json();
-};
+// Removed duplicated getDocumentsAPI to maintain system-wide consistency.
 
 export const getFoldersAPI = async (parent_id?: string) => {
   const token = getToken();
@@ -857,7 +855,7 @@ export async function getLibraryAPI() {
     const res = await fetch(`${API_URL}/reader/lists`, {
         headers: { Authorization: `Bearer ${token}` }
     });
-    if (!res.ok) throw new Error("Không thể tải kệ sách");
+    if (!res.ok) throw new Error("Không thể tải thư viện cá nhân");
     return await res.json();
 }
 

@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ModerationDashboard() {
     const { user, isLoading } = useAuth();
-    const [pendingBooks, setPendingBooks] = useState<any[]>([]);
+    const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -30,14 +30,14 @@ export default function ModerationDashboard() {
         if (!user || (user.role !== "admin" && user.role !== "moderator")) {
             window.location.href = "/";
         } else {
-            fetchPendingBooks();
+            fetchPendingDocuments();
             fetchReports();
         }
     }, [user, isLoading]);
 
-    const fetchPendingBooks = async () => {
-        const res = await fetch(`${API_URL}/moderation/books/pending`, { headers: { 'Authorization': `Bearer ${getToken()}` }});
-        if (res.ok) setPendingBooks(await res.json());
+    const fetchPendingDocuments = async () => {
+        const res = await fetch(`${API_URL}/moderation/documents/pending`, { headers: { 'Authorization': `Bearer ${getToken()}` }});
+        if (res.ok) setPendingDocuments(await res.json());
     };
 
     const fetchReports = async () => {
@@ -45,15 +45,15 @@ export default function ModerationDashboard() {
         if (res.ok) setReports(await res.json());
     };
 
-    const reviewBook = async (bookId: string, status: string, reason: string = "") => {
+    const reviewDocument = async (documentId: string, status: string, reason: string = "") => {
         setIsProcessing(true);
-        const res = await fetch(`${API_URL}/moderation/books/${bookId}/review`, {
+        const res = await fetch(`${API_URL}/moderation/documents/${documentId}/review`, {
             method: "POST",
             headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ status, reason })
         });
         if (res.ok) {
-            fetchPendingBooks();
+            fetchPendingDocuments();
         }
         setIsProcessing(false);
     };
@@ -88,8 +88,8 @@ export default function ModerationDashboard() {
 
             <Tabs defaultValue="books" className="space-y-8">
                 <TabsList className="bg-muted/50 p-1 rounded-sm border border-border inline-flex h-auto w-full md:w-auto overflow-x-auto whitespace-nowrap">
-                    <TabsTrigger value="books" className="gap-2 px-6 py-2.5 data-[state=active]:bg-white data-[state=active]: transition-all duration-200">
-                        <Clock className="w-4 h-4" /> Duyệt tác phẩm ({pendingBooks.length})
+                    <TabsTrigger value="documents" className="gap-2 px-6 py-2.5 data-[state=active]:bg-white data-[state=active]: transition-all duration-200">
+                        <Clock className="w-4 h-4" /> Duyệt tài liệu ({pendingDocuments.length})
                     </TabsTrigger>
                     <TabsTrigger value="reports" className="gap-2 px-6 py-2.5 data-[state=active]:bg-white data-[state=active]: transition-all duration-200">
                         <AlertTriangle className="w-4 h-4" /> Báo cáo vi phạm ({reports.length})
@@ -97,31 +97,31 @@ export default function ModerationDashboard() {
                 </TabsList>
 
                 {}
-                <TabsContent value="books" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <TabsContent value="documents" className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {pendingBooks.length === 0 ? (
+                        {pendingDocuments.length === 0 ? (
                             <div className="lg:col-span-2 py-20 text-center border-2 border-dashed border-border rounded-sm">
                                 <BookOpen className="w-8 h-8 mx-auto text-muted-foreground opacity-20 mb-4" />
                                 <p className="text-sm font-bold text-muted-foreground tracking-widest">Hàng đợi đang trống</p>
                             </div>
                         ) : (
-                            pendingBooks.map((book) => (
-                                <div key={book._id} className="bg-white border border-border rounded-sm overflow-hidden flex flex-col group hover:border-foreground transition-colors duration-300">
+                            pendingDocuments.map((doc) => (
+                                <div key={doc._id} className="bg-white border border-border rounded-sm overflow-hidden flex flex-col group hover:border-foreground transition-colors duration-300">
                                     <div className="p-6 flex-1">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
-                                                <h3 className="text-lg font-bold tracking-tight leading-tight mb-2">{book.title}</h3>
+                                                <h3 className="text-lg font-bold tracking-tight leading-tight mb-2">{doc.title}</h3>
                                                 <div className="flex items-center gap-4 text-[12px] font-bold text-muted-foreground tracking-widest mb-4">
-                                                    <span className="flex items-center gap-1"><User className="w-3 h-3" /> {book.author_name || "Unknown"}</span>
-                                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(book.created_at).toLocaleDateString("vi-VN")}</span>
+                                                    <span className="flex items-center gap-1"><User className="w-3 h-3" /> {doc.author_name || "Unknown"}</span>
+                                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(doc.created_at).toLocaleDateString("vi-VN")}</span>
                                                 </div>
                                                 <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                                                    {book.description || "Không có mô tả."}
+                                                    {doc.description || "Không có mô tả."}
                                                 </p>
                                             </div>
                                             <div className="w-20 h-28 bg-muted rounded-sm flex-shrink-0 border border-border overflow-hidden">
-                                                {book.cover_url ? (
-                                                    <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover" />
+                                                {doc.cover_url ? (
+                                                    <img src={doc.cover_url} alt={doc.title} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-muted-foreground opacity-20">
                                                         <BookOpen className="w-8 h-8" />
@@ -139,7 +139,7 @@ export default function ModerationDashboard() {
                                                 variant="secondary" 
                                                 size="sm" 
                                                 className="h-9 px-4 rounded-none text-[12px] font-bold tracking-widest gap-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-100"
-                                                onClick={() => reviewBook(book._id, "PUBLISHED")}
+                                                onClick={() => reviewDocument(doc._id, "PUBLISHED")}
                                                 disabled={isProcessing}
                                             >
                                                 <CheckCircle2 className="w-3.5 h-3.5" /> Duyệt
@@ -148,7 +148,7 @@ export default function ModerationDashboard() {
                                                 variant="destructive" 
                                                 size="sm" 
                                                 className="h-9 px-4 rounded-none text-[12px] font-bold tracking-widest gap-2"
-                                                onClick={() => reviewBook(book._id, "REJECTED")}
+                                                onClick={() => reviewDocument(doc._id, "REJECTED")}
                                                 disabled={isProcessing}
                                             >
                                                 <XCircle className="w-3.5 h-3.5" /> Từ chối

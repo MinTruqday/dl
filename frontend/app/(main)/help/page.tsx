@@ -9,7 +9,7 @@ export default function HelpPage() {
       title: "Dành cho Độc giả",
       icon: <Book className="w-6 h-6" />,
       items: [
-        "Cách mua tài liệu bằng Coin",
+        "Cách mua tài liệu bằng dl",
         "Sử dụng công nghệ đọc văn bản AI",
         "Quản lý thư viện và lịch sử",
         "Hệ thống đánh giá"

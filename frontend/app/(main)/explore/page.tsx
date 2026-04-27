@@ -17,14 +17,14 @@ export default function ExplorePage() {
   }, []);
 
   useEffect(() => {
-    loadBooks();
+    loadDocuments();
   }, [selectedCategory]);
 
   const loadInitialData = async () => {
     try {
       const [catData, trendData] = await Promise.all([
         getTagsCategoriesAPI(),
-        getTrendingBooksAPI(3)
+        getTrendingDocumentsAPI(3)
       ]);
       setCategories(catData.categories || []);
       setTrending(trendData || []);
@@ -33,7 +33,7 @@ export default function ExplorePage() {
     }
   };
 
-  const loadBooks = async () => {
+  const loadDocuments = async () => {
     setLoading(true);
     try {
       const data = await getDocumentsAPI(undefined, "latest", selectedCategory || undefined);
@@ -91,14 +91,14 @@ export default function ExplorePage() {
                 <TrendingUp className="w-3 h-3" />
                 Xu hướng
              </div>
-             <div className="space-y-4">
-                {trending.map((book, i) => (
-                   <Link key={book._id} href={`/preview?slug=${book.slug}`} className="group cursor-pointer block">
+              <div className="space-y-4">
+                {trending.map((doc, i) => (
+                   <Link key={doc._id} href={`/document/${doc.slug}`} className="group cursor-pointer block">
                       <div className="text-[12px] font-bold text-zinc-400 mb-1">0{i+1}</div>
-                      <h4 className="text-xs font-bold leading-tight group-hover:underline underline-offset-4">{book.title}</h4>
+                      <h4 className="text-xs font-bold leading-tight group-hover:underline underline-offset-4">{doc.title}</h4>
                    </Link>
                 ))}
-             </div>
+              </div>
           </div>
         </aside>
 
@@ -109,27 +109,27 @@ export default function ExplorePage() {
                 <div key={i} className="aspect-[3/4] bg-zinc-100 animate-pulse border border-border" />
               ))}
             </div>
-          ) : books.length > 0 ? (
+          ) : documents.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {books.map((book) => (
-                <Link key={book._id} href={`/preview?slug=${book.slug}`} className="group space-y-4">
+              {documents.map((doc) => (
+                <Link key={doc._id} href={`/document/${doc.slug}`} className="group space-y-4">
                   <div className="aspect-[3/4] bg-zinc-100 border border-border relative overflow-hidden">
-                    {book.cover_url ? (
-                      <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    {doc.cover_url ? (
+                      <img src={doc.cover_url} alt={doc.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-zinc-400 tracking-widest p-12 text-center">
-                        {book.title}
+                        {doc.title}
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{book.categories?.[0] || "Tổng hợp"}</span>
-                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{book.views || 0} lượt xem</span>
+                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{doc.categories?.[0] || "Tổng hợp"}</span>
+                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{doc.views || 0} lượt xem</span>
                     </div>
-                    <h3 className="text-sm font-bold leading-tight group-hover:underline underline-offset-4 decoration-1">{book.title}</h3>
-                    <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">{book.description}</p>
+                    <h3 className="text-sm font-bold leading-tight group-hover:underline underline-offset-4 decoration-1">{doc.title}</h3>
+                    <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">{doc.description}</p>
                   </div>
                 </Link>
               ))}

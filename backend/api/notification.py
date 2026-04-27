@@ -10,7 +10,7 @@ router = APIRouter()
 async def stream_notifications(
     request: Request,
     token: str = Query(...),
-    _ = Depends(RateLimiter(calls=10, period=60))
+    _ = Depends(RateLimiter(calls=60, period=60))
 ):
     current_user = await get_current_user_token_param(token)
     return EventSourceResponse(NotificationService.sse_generator(current_user.id))

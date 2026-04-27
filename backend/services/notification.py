@@ -9,6 +9,18 @@ from loguru import logger
 class NotificationService:
     @staticmethod
     async def sse_generator(user_id: str):
+        if not db_client.redis:
+            yield {
+                "event": "connected",
+                "data": json.dumps({"status": "Notifications available (polling mode)"})
+            }
+            try:
+                while True:
+                    await asyncio.sleep(30)
+                    yield {"event": "heartbeat", "data": ""}
+            except asyncio.CancelledError:
+                return
+
         try:
             pubsub = db_client.redis.pubsub()
             await pubsub.subscribe(f"user_notifications:{user_id}")
@@ -28,6 +40,12 @@ class NotificationService:
                 await asyncio.sleep(0.5)
         except asyncio.CancelledError:
             logger.info(f"SSE notification stream cancelled for user {user_id}")
+        except Exception as e:
+            logger.error(f"SSE generator error for user {user_id}: {e}")
+            yield {
+                "event": "error",
+                "data": json.dumps({"detail": "Connection lost"})
+            }
 
     @staticmethod
     async def get_notifications(current_user):

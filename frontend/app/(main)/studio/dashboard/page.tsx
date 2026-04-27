@@ -151,7 +151,7 @@ export default function AuthorDashboardPage() {
         <div className="animate-in fade-in duration-300">
           {revenue && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              <div className="border border-border p-5"><TrendingUp className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_revenue || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Doanh thu (Coin)</p></div>
+              <div className="border border-border p-5"><TrendingUp className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_revenue || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Doanh thu (dl)</p></div>
               <div className="border border-border p-5"><Eye className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_views || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt xem</p></div>
               <div className="border border-border p-5"><Star className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_sales || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt mua</p></div>
               <div className="border border-border p-5"><BookOpen className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_documents || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu</p></div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getMySeriesAPI, getMyDocumentsAPI, createSeriesAPI } from "@/app/lib/api";
-import { Layers, Plus, Book, Info, CheckCircle2, ChevronRight, LayoutGrid } from "lucide-react";
+import { Layers, Plus, BookText, Info, CheckCircle2, ChevronRight, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AuthorSeriesPage() {
@@ -140,7 +140,7 @@ export default function AuthorSeriesPage() {
              </div>
              <div className="pt-6 border-t border-zinc-100 flex items-center justify-between">
                 <span className="text-[12px] font-bold tracking-widest text-zinc-400 flex items-center gap-1.5">
-                   <Book className="w-3.5 h-3.5" />
+                   <BookText className="w-3.5 h-3.5" />
                    {s.document_count} tài liệu
                 </span>
                 <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-black transition-colors" />

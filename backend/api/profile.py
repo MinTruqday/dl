@@ -13,6 +13,46 @@ class AuthorApplicationBase(BaseModel):
 
 router = APIRouter(prefix="/profile")
 
+@router.get("/me")
+async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):
+    return await ProfileService.get_user_profile(current_user)
+
+@router.put("/me")
+async def update_my_profile(data: dict, current_user: UserInDB = Depends(get_current_user)):
+    return await ProfileService.update_profile(data, current_user)
+
+@router.get("/settings")
+async def get_settings(current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    user = await db["users"].find_one({"_id": str(current_user.id)}, {"settings": 1})
+    defaults = {
+        "appearance": "light",
+        "fontSize": "medium",
+        "notifications": True,
+        "privacyProfile": "public",
+        "privacyActivity": True,
+        "twoFactor": False,
+        "notifyCommunity": {"email": True, "inapp": True},
+        "notifyFinance": {"email": True, "inapp": True},
+        "notifyUpdates": {"email": False, "inapp": True},
+        "notifyNewsletter": {"email": True, "inapp": False},
+    }
+    if user and "settings" in user:
+        defaults.update(user["settings"])
+    return defaults
+
+@router.put("/settings")
+async def update_settings(data: dict, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    from datetime import datetime
+    db = db_client.mongodb.get_default_database()
+    await db["users"].update_one(
+        {"_id": str(current_user.id)},
+        {"$set": {"settings": data, "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "Đã lưu cài đặt."}
+
 @router.get("/takeout", dependencies=[Depends(RateLimiter(calls=2, period=3600))])
 async def request_data_takeout(current_user: UserInDB = Depends(get_current_user)):
     takeout_payload = await ProfileService.request_data_takeout(current_user)

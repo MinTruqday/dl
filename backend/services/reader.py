@@ -234,47 +234,47 @@ class ReaderService:
         return result
 
     @staticmethod
-    async def create_documentmark_folder(name: str, current_user) -> dict:
+    async def create_bookmark_folder(name: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         folder = {
             "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "name": name.strip()[:100],
-            "documentmark_ids": [],
+            "bookmark_ids": [],
             "created_at": datetime.utcnow(),
         }
-        await db["documentmark_folders"].insert_one(folder)
-        logger.info(f"Documentmark folder created by user {current_user.id}: {folder['_id']}")
+        await db["bookmark_folders"].insert_one(folder)
+        logger.info(f"Bookmark folder created by user {current_user.id}: {folder['_id']}")
         return folder
 
     @staticmethod
-    async def get_documentmark_folders(current_user) -> list:
+    async def get_bookmark_folders(current_user) -> list:
         db = db_client.mongodb.get_default_database()
-        folders = await db["documentmark_folders"].find(
+        folders = await db["bookmark_folders"].find(
             {"user_id": str(current_user.id)}
         ).sort("created_at", -1).to_list(length=50)
         return [{
             "id": str(f["_id"]),
             "name": f.get("name", ""),
-            "documentmark_ids": f.get("documentmark_ids", []),
+            "bookmark_ids": f.get("bookmark_ids", []),
             "created_at": f["created_at"].isoformat() if isinstance(f.get("created_at"), datetime) else "",
         } for f in folders]
 
     @staticmethod
-    async def assign_documentmarks_to_folder(folder_id: str, documentmark_ids: list, current_user) -> dict:
+    async def assign_bookmarks_to_folder(folder_id: str, bookmark_ids: list, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        result = await db["documentmark_folders"].update_one(
+        result = await db["bookmark_folders"].update_one(
             {"_id": folder_id, "user_id": str(current_user.id)},
-            {"$set": {"documentmark_ids": documentmark_ids, "updated_at": datetime.utcnow()}}
+            {"$set": {"bookmark_ids": bookmark_ids, "updated_at": datetime.utcnow()}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Thư mục không tồn tại.")
         return {"message": "Đã cập nhật thư mục đánh dấu thành công."}
 
     @staticmethod
-    async def delete_documentmark_folder(folder_id: str, current_user) -> dict:
+    async def delete_bookmark_folder(folder_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        result = await db["documentmark_folders"].delete_one({"_id": folder_id, "user_id": str(current_user.id)})
+        result = await db["bookmark_folders"].delete_one({"_id": folder_id, "user_id": str(current_user.id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Thư mục không tồn tại.")
         return {"message": "Đã xóa thư mục đánh dấu thành công."}

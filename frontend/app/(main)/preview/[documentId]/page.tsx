@@ -6,8 +6,8 @@ import Link from "next/link";
 import { BookOpen, Eye, Star, Lock, ChevronLeft, Tag, Flag } from "lucide-react";
 import ReviewSection from "@/app/components/ReviewSection";
 
-export default function BookPreviewPage() {
-  const { bookId } = useParams();
+export default function DocumentPreviewPage() {
+  const { documentId } = useParams();
   const [preview, setPreview] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -15,7 +15,7 @@ export default function BookPreviewPage() {
   useEffect(() => {
     const fetchPreview = async () => {
       try {
-        const res = await fetch(`${API_URL}/guest/books/${bookId}/preview`);
+        const res = await fetch(`${API_URL}/guest/documents/${documentId}/preview`);
         if (res.ok) {
           setPreview(await res.json());
         }
@@ -25,8 +25,8 @@ export default function BookPreviewPage() {
         setLoading(false);
       }
     };
-    if (bookId) fetchPreview();
-  }, [bookId, API_URL]);
+    if (documentId) fetchPreview();
+  }, [documentId, API_URL]);
 
   if (loading) {
     return (
@@ -62,7 +62,7 @@ export default function BookPreviewPage() {
             const reason = prompt("Lý do báo cáo tài liệu này:");
             if (!reason) return;
             try {
-               const res = await fetch(`${API_URL}/social/posts/${bookId}/report?reason=${encodeURIComponent(reason)}`, { 
+               const res = await fetch(`${API_URL}/social/posts/${documentId}/report?reason=${encodeURIComponent(reason)}`, { 
                  method: "POST", 
                  headers: { 'Authorization': `Bearer ${localStorage.getItem('doclib_token')}` } 
                });
@@ -140,7 +140,7 @@ export default function BookPreviewPage() {
         )}
       </div>
 
-      {bookId && <ReviewSection bookId={bookId as string} />}
+      {documentId && <ReviewSection documentId={documentId as string} />}
 
       <div className="mt-12 border border-black p-8 text-center">
         <h3 className="text-xl font-bold text-black mb-3 tracking-tight">Đọc toàn bộ tài liệu</h3>

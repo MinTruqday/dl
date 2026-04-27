@@ -26,12 +26,12 @@ export default function MessagesPage() {
         const history = await res.json();
         const allDiscussions: any[] = [];
         for (const h of history.slice(0, 10)) {
-          const discRes = await fetch(`${API_URL}/reader/discussions/${h.book_id}`, {
+          const discRes = await fetch(`${API_URL}/social/documents/${h.document_id}/discussions`, {
             headers: { Authorization: `Bearer ${getToken()}` },
           });
           if (discRes.ok) {
             const discs = await discRes.json();
-            allDiscussions.push(...discs.map((d: any) => ({ ...d, book_title: h.book_title })));
+            allDiscussions.push(...discs.map((d: any) => ({ ...d, document_title: h.document_title })));
           }
         }
         setDiscussions(allDiscussions);
@@ -52,7 +52,7 @@ export default function MessagesPage() {
     if (!replyContent.trim() || !selectedDiscussion) return;
     setSending(true);
     try {
-      const res = await fetch(`${API_URL}/reader/discussions/${selectedDiscussion.id}/reply`, {
+      const res = await fetch(`${API_URL}/social/discussions/${selectedDiscussion.id}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ content: replyContent }),
@@ -109,8 +109,8 @@ export default function MessagesPage() {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <span className="text-sm font-bold text-black">{d.title}</span>
-                  {d.book_title && (
-                    <span className="text-[12px] text-zinc-400 font-bold tracking-widest ml-3">{d.book_title}</span>
+                  {d.document_title && (
+                    <span className="text-[12px] text-zinc-400 font-bold tracking-widest ml-3">{d.document_title}</span>
                   )}
                 </div>
                 <span className="text-[12px] text-zinc-400 font-bold tracking-widest shrink-0">

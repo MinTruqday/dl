@@ -53,40 +53,56 @@ export default function NotificationToast() {
     if (!token) return;
 
     let eventSource: EventSource | null = null;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+    let retryTimeout: NodeJS.Timeout | null = null;
+    let cancelled = false;
     const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-    try {
-      eventSource = new EventSource(`${API_URL}/notifications/stream?token=${token}`);
+    const connect = () => {
+      if (cancelled || retryCount >= MAX_RETRIES) return;
+      
+      try {
+        eventSource = new EventSource(`${API_URL}/notifications/stream?token=${token}`);
 
-      eventSource.addEventListener("connected", (e) => {
-      });
+        eventSource.addEventListener("connected", () => {
+          retryCount = 0;
+        });
 
-      eventSource.addEventListener("notification", (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          const newNotif = {
-            id: Math.random().toString(),
-            title: data.title || "Thông báo",
-            body: data.body || "",
-            type: data.type || "info"
-          };
-          setNotifications((prev) => [...prev, newNotif]);
-          
-          setTimeout(() => {
-            setNotifications((prev) => prev.filter(n => n.id !== newNotif.id));
-          }, 5000);
-        } catch (err) {}
-      });
+        eventSource.addEventListener("notification", (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            const newNotif = {
+              id: Math.random().toString(),
+              title: data.title || "Thông báo",
+              body: data.body || "",
+              type: data.type || "info"
+            };
+            setNotifications((prev) => [...prev, newNotif]);
+            
+            setTimeout(() => {
+              setNotifications((prev) => prev.filter(n => n.id !== newNotif.id));
+            }, 5000);
+          } catch (err) {}
+        });
 
-      eventSource.onerror = (err) => {
-        console.error("SSE Error:", err);
-        if (eventSource) eventSource.close();
-      };
-    } catch(err) {
-    }
+        eventSource.onerror = () => {
+          if (eventSource) eventSource.close();
+          eventSource = null;
+          if (!cancelled && retryCount < MAX_RETRIES) {
+            retryCount++;
+            retryTimeout = setTimeout(connect, 30000); // Retry after 30s
+          }
+        };
+      } catch(err) {}
+    };
+
+    connect();
 
     return () => {
+      cancelled = true;
       if (eventSource) eventSource.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
     };
   }, [user]);
 

@@ -48,7 +48,7 @@ export default function TermsPage() {
         <section>
           <h2 className="text-lg font-bold text-black mb-4 tracking-tight">5. Giao dịch và thanh toán</h2>
           <p>
-            Mọi giao dịch trên nền tảng được thực hiện thông qua hệ thống DocLib Coin. Người dùng có trách nhiệm xác nhận giao dịch trước khi hoàn tất. Các giao dịch đã hoàn tất không được hoàn trả trừ trường hợp lỗi kỹ thuật từ phía hệ thống.
+            Mọi giao dịch trên nền tảng được thực hiện thông qua hệ thống dl. Người dùng có trách nhiệm xác nhận giao dịch trước khi hoàn tất. Các giao dịch đã hoàn tất không được hoàn trả trừ trường hợp lỗi kỹ thuật từ phía hệ thống.
           </p>
         </section>
 

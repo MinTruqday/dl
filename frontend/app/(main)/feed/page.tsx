@@ -40,8 +40,8 @@ export default function Feed() {
   const [isPremium, setIsPremium] = useState(false);
   const [price, setPrice] = useState(0);
   const [readProgress, setReadProgress] = useState(0);
-  const [attachedBookId, setAttachedBookId] = useState("");
-  const [attachedBookTitle, setAttachedBookTitle] = useState("");
+  const [attachedDocumentId, setAttachedDocumentId] = useState("");
+  const [attachedDocumentTitle, setAttachedDocumentTitle] = useState("");
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showExtras, setShowExtras] = useState(false);
@@ -66,7 +66,7 @@ export default function Feed() {
     if (savedDraft) setContent(savedDraft);
   }, []);
 
-  const [bookSuggestions, setBookSuggestions] = useState<any[]>([]);
+  const [documentSuggestions, setDocumentSuggestions] = useState<any[]>([]);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const handleStoryNext = () => {
@@ -185,22 +185,22 @@ export default function Feed() {
     if (val) localStorage.setItem("doclib_feed_draft", val);
     else localStorage.removeItem("doclib_feed_draft");
 
-    const match = val.match(/\/book\s+([^\n]+)$/);
-    if (match && match[1].length > 1) {
+    const match = val.match(/\/(book|document)\s+([^\n]+)$/);
+    if (match && match[2].length > 1) {
       try {
-        const res = await fetch(`${API_URL}/books?q=${encodeURIComponent(match[1])}&limit=5`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-        if (res.ok) setBookSuggestions((await res.json()));
+        const res = await fetch(`${API_URL}/documents?q=${encodeURIComponent(match[2])}&limit=5`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        if (res.ok) setDocumentSuggestions((await res.json()));
       } catch(e) { console.error("API error:", e); }
     } else {
-      setBookSuggestions([]);
+      setDocumentSuggestions([]);
     }
   };
 
-  const selectAttachedBook = (book: any) => {
-    setAttachedBookId(book.slug || book.id);
-    setAttachedBookTitle(book.title);
-    setContent(content.replace(/\/book\s+[^\n]+$/, ''));
-    setBookSuggestions([]);
+  const selectAttachedDocument = (doc: any) => {
+    setAttachedDocumentId(doc.slug || doc.id);
+    setAttachedDocumentTitle(doc.title);
+    setContent(content.replace(/\/(book|document)\s+[^\n]+$/, ''));
+    setDocumentSuggestions([]);
   };
 
   const [commentText, setCommentText] = useState("");
@@ -347,8 +347,8 @@ export default function Feed() {
       const tagRes = await fetch(`${API_URL}/social/trending-tags`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
       if (tagRes.ok) setTrendingTags(await tagRes.json());
       
-      const booksRes = await fetch(`${API_URL}/social/suggested-books`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (booksRes.ok) setBookSuggestions(await booksRes.json());
+      const booksRes = await fetch(`${API_URL}/social/suggested-documents`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      if (booksRes.ok) setDocumentSuggestions(await booksRes.json());
     } catch (error) {
       if (reset) showToast("Không thể tải bảng tin lúc này, vui lòng thử lại sau.", "error");
     } finally {
@@ -505,8 +505,8 @@ export default function Feed() {
           privacy: privacy,
           comment_privacy: commentPrivacy,
           poll_options: db_poll_opts.length > 0 ? db_poll_opts : null,
-          attached_book_id: attachedBookId || null,
-          attached_book_title: attachedBookTitle || null,
+          attached_document_id: attachedDocumentId || null,
+          attached_document_title: attachedDocumentTitle || null,
           media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           is_premium: isPremium,
           price: isPremium ? price : 0,
@@ -792,13 +792,13 @@ export default function Feed() {
                     </div>
                   )}
 
-                  {bookSuggestions.length > 0 && (
+                  {documentSuggestions.length > 0 && (
                     <div className="absolute z-50 bg-background border border-border   mt-1 overflow-hidden w-full max-w-md">
                       <div className="p-2 bg-muted/50 text-xs font-semibold text-muted-foreground border-b border-border">Đính kèm tài liệu</div>
-                      {bookSuggestions.map((book: any, i: number) => (
-                        <div key={i} className="px-4 py-2 hover:bg-muted cursor-pointer text-sm font-medium flex justify-between" onClick={() => selectAttachedBook(book)}>
-                          {book.title} 
-                          <span className="text-muted-foreground text-xs">{book.author}</span>
+                      {documentSuggestions.map((doc: any, i: number) => (
+                        <div key={i} className="px-4 py-2 hover:bg-muted cursor-pointer text-sm font-medium flex justify-between" onClick={() => selectAttachedDocument(doc)}>
+                          {doc.title} 
+                          <span className="text-muted-foreground text-xs">{doc.author}</span>
                         </div>
                       ))}
                     </div>
@@ -927,7 +927,7 @@ export default function Feed() {
                           <Button onClick={async () => {
                               try {
                                  const res = await fetch(`${API_URL}/social/posts/${post.id}/unlock`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` }});
-                                 if(res.ok) { fetchFeed(true); fetchWallet(); } else { showToast("Mở khóa thất bại, hãy nạp thêm DocLib Coin", "error"); }
+                                 if(res.ok) { fetchFeed(true); fetchWallet(); } else { showToast("Mở khóa thất bại, hãy nạp thêm dl", "error"); }
                               } catch(e) { console.error("API error:", e); }
                           }} className="bg-black text-white hover:bg-zinc-800  h-11 px-6 text-xs font-bold tracking-widest flex items-center gap-2 transition-all active:scale-[0.98]">
                             Mở khóa với {post.price} <Coins className="w-4 h-4" />
@@ -962,11 +962,11 @@ export default function Feed() {
                   </div>
                 )}
 
-                {post.book_id && (
+                {post.document_id && (
                   <div className="mt-4 p-4 border border-border bg-muted/30  cursor-pointer border-l-4 border-l-primary hover:bg-muted/50 transition-colors flex items-center justify-between">
                     <div>
                       <span className="text-xs font-semibold text-muted-foreground tracking-wider flex items-center"><BookText className="w-4 h-4 mr-2" /> Tài liệu đính kèm</span>
-                      <h5 className="font-semibold mt-1 text-sm text-foreground truncate">{post.book_title || post.book_id}</h5>
+                      <h5 className="font-semibold mt-1 text-sm text-foreground truncate">{post.document_title || post.document_id}</h5>
                     </div>
                     <Button variant="outline" size="sm">Đọc ngay</Button>
                   </div>
@@ -1015,7 +1015,7 @@ export default function Feed() {
                     <Eye className="w-4 h-4 mr-1" /> {post.view_count || 0}
                   </Button>
                   <div className="flex items-center gap-1 ml-auto">
-                    <Button variant="ghost" size="sm" onClick={() => { if(currentUser) handleVote(post.id, 50); else showToast("Vui lòng đăng nhập để thực hiện", "error"); }} className="text-muted-foreground hover:text-foreground flex items-center gap-1.5" title="Tặng 50 DocLib Coin">
+                    <Button variant="ghost" size="sm" onClick={() => { if(currentUser) handleVote(post.id, 50); else showToast("Vui lòng đăng nhập để thực hiện", "error"); }} className="text-muted-foreground hover:text-foreground flex items-center gap-1.5" title="Tặng 50 dl">
                         <Coins className="w-3.5 h-3.5" />
                         <span className="text-xs font-bold text-zinc-400">50</span>
                     </Button>
@@ -1157,11 +1157,11 @@ export default function Feed() {
 
           <div className="bg-card border border-border  p-5">
             <h3 className="text-xs font-bold text-foreground tracking-wider mb-4 border-b border-border pb-3 flex items-center gap-2"><BookText className="w-3.5 h-3.5" /> Tài liệu đáng đọc</h3>
-            {bookSuggestions.length === 0 ? (
+            {documentSuggestions.length === 0 ? (
               <p className="text-[12px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có gợi ý</p>
             ) : (
               <div className="space-y-4 pt-1">
-                {bookSuggestions.map((b, i) => (
+                {documentSuggestions.map((b, i) => (
                   <div key={i} className="flex gap-3 items-center group cursor-pointer border border-transparent hover:border-zinc-100 p-1 transition-all">
                     <div className="w-10 h-14 bg-zinc-50 border border-zinc-100 rounded-none shrink-0 flex items-center justify-center overflow-hidden">
                       <BookText className="w-5 h-5 text-zinc-300" />

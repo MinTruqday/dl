@@ -52,7 +52,7 @@ export default function AnalyticsDashboard() {
             <BookOpen className="w-3.5 h-3.5" />
             Tổng tài liệu
           </div>
-          <div className="text-4xl font-bold">{stats?.total_books || 0}</div>
+          <div className="text-4xl font-bold">{stats?.total_documents || 0}</div>
           <div className="flex items-center gap-1.5 text-[12px] font-bold text-black">
             <ArrowUpRight className="w-3 h-3" />
             +12% so với tháng trước
@@ -90,16 +90,16 @@ export default function AnalyticsDashboard() {
              Hiệu quả từng tài liệu
           </h2>
           <div className="space-y-1">
-            {stats?.books?.map((book: any) => (
-              <div key={book.id} className="flex items-center justify-between p-4 border border-border hover:bg-zinc-50 transition-colors">
+            {stats?.documents?.map((doc: any) => (
+              <div key={doc.id} className="flex items-center justify-between p-4 border border-border hover:bg-zinc-50 transition-colors">
                 <div className="space-y-1">
-                  <div className="text-sm font-bold">{book.title}</div>
+                  <div className="text-sm font-bold">{doc.title}</div>
                   <div className="text-[12px] font-bold text-zinc-400 tracking-widest flex items-center">
-                    {book.rating.toFixed(1)} <Star className="w-3 h-3 inline-block mx-1 fill-current" /> Đánh giá
+                    {doc.rating.toFixed(1)} <Star className="w-3 h-3 inline-block mx-1 fill-current" /> Đánh giá
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold">{book.views}</div>
+                  <div className="text-sm font-bold">{doc.views}</div>
                   <div className="text-[12px] font-bold text-zinc-400 tracking-widest">Lượt xem</div>
                 </div>
               </div>

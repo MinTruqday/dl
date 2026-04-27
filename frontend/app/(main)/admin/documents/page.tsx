@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
  
 
 
-interface Book {
+interface Document {
   id: string;
   title: string;
   slug: string;
@@ -14,8 +14,8 @@ interface Book {
   created_at: string;
 }
 
-export default function BookManagerPage() {
-  const [books, setBooks] = useState<Book[]>([]);
+export default function DocumentManagerPage() {
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,20 +26,20 @@ export default function BookManagerPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetchBooks();
+    fetchDocuments();
   }, []);
 
-  const fetchBooks = async () => {
+  const fetchDocuments = async () => {
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/books`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/documents`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Lỗi hệ thống");
-      setBooks(data);
+      setDocuments(data);
     } catch (err: any) {
       console.error(err);
       setError("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
@@ -48,7 +48,7 @@ export default function BookManagerPage() {
     }
   };
 
-  const handleCreateBook = async (e: React.FormEvent) => {
+  const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
     setError(null);
@@ -57,7 +57,7 @@ export default function BookManagerPage() {
       if (!token) {
         throw new Error("Không tìm thấy thông tin đăng nhập");
       }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/books`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/documents`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export default function BookManagerPage() {
       setNewTitle("");
       setNewSlug("");
       setNewDescription("");
-      fetchBooks();
+      fetchDocuments();
     } catch (err: any) {
       console.error(err);
       const detail = err.message || "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.";
@@ -128,7 +128,7 @@ export default function BookManagerPage() {
         <div className="flex items-center justify-center p-12">
           <p className="text-sm text-gray-500">Đang tải dữ liệu</p>
         </div>
-      ) : books.length === 0 ? (
+      ) : documents.length === 0 ? (
         <div className="text-center p-12 border border-gray-200 border-dashed">
           <p className="text-sm text-gray-500">Chưa có tác phẩm nào trong hệ thống.</p>
         </div>
@@ -145,16 +145,16 @@ export default function BookManagerPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {books.map((book) => (
-                <tr key={book.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{book.title}</td>
-                  <td className="px-4 py-3 text-gray-500">{book.slug}</td>
+              {documents.map((doc) => (
+                <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-gray-900">{doc.title}</td>
+                  <td className="px-4 py-3 text-gray-500">{doc.slug}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center px-2 py-0.5 border border-gray-200 text-xs font-medium text-gray-600 bg-gray-50">
-                      {book.status}
+                      {doc.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{book.visibility}</td>
+                  <td className="px-4 py-3 text-gray-500">{doc.visibility}</td>
                   <td className="px-4 py-3 text-right">
                     <button className="text-gray-600 hover:text-black font-medium transition-colors">Sửa</button>
                   </td>
@@ -169,7 +169,7 @@ export default function BookManagerPage() {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white border border-gray-200 w-full max-w-lg ">
-            <form onSubmit={handleCreateBook}>
+            <form onSubmit={handleCreateDocument}>
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold tracking-tight">Thêm tài liệu mới</h2>
                 <p className="text-sm text-gray-500 mt-1">Nhập thông tin cơ bản cho tác phẩm mới.</p>
