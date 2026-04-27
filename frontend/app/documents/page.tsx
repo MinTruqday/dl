@@ -602,6 +602,7 @@ export default function DocumentsPage() {
               <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="Nhập giá bán (Coin)" required />
               <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setMonetizeDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Lưu thiết lập</Button></div>
             </form>
+          </div>
         </div>
       )}
 

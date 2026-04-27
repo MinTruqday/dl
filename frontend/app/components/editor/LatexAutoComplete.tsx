@@ -9,7 +9,7 @@ export const LatexAutocomplete = Extension.create({
     return {
       suggestion: {
         char: '\\',
-        command: ({ editor, range, props }) => {
+        command: ({ editor, range, props }: any) => {
           const detail = props.detail || '';
           
           if (

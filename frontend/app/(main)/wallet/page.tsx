@@ -72,7 +72,7 @@ export default function WalletPage() {
   return (
     <div className="w-full max-w-[800px] mx-auto px-6 lg:px-8 py-12 md:py-16 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
@@ -80,13 +80,13 @@ export default function WalletPage() {
       <header className="border-b border-black pb-8 mb-10">
         <div className="flex items-center gap-3 mb-2">
           <Wallet className="w-5 h-5 text-zinc-400" />
-          <span className="text-[10px] font-bold tracking-widest text-zinc-400">Tài chính</span>
+          <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tài chính</span>
         </div>
         <h1 className="text-4xl font-bold text-black tracking-tighter">Ví DocLib</h1>
       </header>
 
       <div className="border border-black p-8 mb-10">
-        <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-2">Số dư hiện tại</span>
+        <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">Số dư hiện tại</span>
         <div className="flex items-baseline gap-2">
           <span className="text-5xl font-bold text-black tracking-tighter">{balance.toLocaleString()}</span>
           <span className="text-lg font-bold text-zinc-400">Coin</span>
@@ -108,7 +108,7 @@ export default function WalletPage() {
           />
           <button
             onClick={redeemVoucher}
-            className="px-6 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all"
+            className="px-6 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all"
           >
             Nạp
           </button>
@@ -135,7 +135,7 @@ export default function WalletPage() {
                   )}
                   <div>
                     <p className="text-sm font-medium text-black">{tx.note || "Giao dịch"}</p>
-                    <span className="text-[10px] text-zinc-400 font-bold tracking-widest">
+                    <span className="text-[12px] text-zinc-400 font-bold tracking-widest">
                       {tx.created_at ? new Date(tx.created_at).toLocaleDateString("vi-VN") : ""}
                     </span>
                   </div>

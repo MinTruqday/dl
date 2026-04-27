@@ -132,7 +132,7 @@ export default function DiscoverPage() {
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-1 bg-current opacity-30" />
-              <span className="text-[10px] font-bold tracking-wider opacity-70">Tiêu điểm hôm nay</span>
+              <span className="text-[12px] font-bold tracking-wider opacity-70">Tiêu điểm hôm nay</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tighter mb-5 leading-tight">
               {banner.title}
@@ -202,7 +202,7 @@ export default function DiscoverPage() {
         <div className="flex gap-2 mb-12 border-b border-border pb-8 overflow-x-auto hide-scrollbar whitespace-nowrap">
           <button
             onClick={() => setTagFilter("")}
-            className={`px-6 py-2.5 text-[11px] font-bold tracking-wider transition-all border shrink-0 ${tagFilter === "" ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black'}`}
+            className={`px-6 py-2.5 text-[13px] font-bold tracking-wider transition-all border shrink-0 ${tagFilter === "" ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black'}`}
           >
             Tất cả
           </button>
@@ -210,7 +210,7 @@ export default function DiscoverPage() {
             <button
               key={tag}
               onClick={() => setTagFilter(tag)}
-              className={`px-6 py-2.5 rounded-none text-[10px] font-black tracking-widest transition-all border shrink-0 ${tagFilter === tag ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black'}`}
+              className={`px-6 py-2.5 rounded-none text-[12px] font-bold tracking-widest transition-all border shrink-0 ${tagFilter === tag ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black'}`}
             >
               {tag}
             </button>
@@ -249,7 +249,7 @@ export default function DiscoverPage() {
                 ) : (
                   <div className="flex flex-col items-center gap-3">
                     <BookOpen className="w-12 h-12 text-zinc-200 transition-all duration-500 group-hover:text-black" strokeWidth={1} />
-                    <span className="text-[10px] font-bold text-zinc-300 tracking-wider group-hover:text-black transition-colors">Tài liệu</span>
+                    <span className="text-[12px] font-bold text-zinc-300 tracking-wider group-hover:text-black transition-colors">Tài liệu</span>
                   </div>
                 )}
               </div>
@@ -260,7 +260,7 @@ export default function DiscoverPage() {
                 <p className="text-sm text-zinc-500 line-clamp-2 mt-3 flex-1 leading-relaxed font-medium">
                   {book.description || "Tác giả chưa cung cấp mô tả cho tài liệu này."}
                 </p>
-                <div className="mt-6 flex items-center justify-between pt-5 border-t border-zinc-50 text-[10px] font-bold tracking-widest text-zinc-400">
+                <div className="mt-6 flex items-center justify-between pt-5 border-t border-zinc-50 text-[12px] font-bold tracking-widest text-zinc-400">
                   <span className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5" />
                     {book.created_at ? new Date(book.created_at).toLocaleDateString('vi-VN') : 'Mới nhất'}
@@ -292,7 +292,7 @@ export default function DiscoverPage() {
         <div className="max-w-md">
           <div className="flex items-center gap-3 mb-4">
              <Sparkles className="w-6 h-6 text-black" />
-             <h4 className="text-lg font-black tracking-tighter">DocLib</h4>
+             <h4 className="text-lg font-bold tracking-tighter">DocLib</h4>
           </div>
           <p className="text-sm text-zinc-500 font-medium leading-relaxed mb-6">
             Nền tảng tri thức mở hàng đầu dành cho cộng đồng học thuật và sáng tạo.
@@ -310,17 +310,17 @@ export default function DiscoverPage() {
               <Mail className="w-4 h-4" />
             </button>
           </div>
-          {newsletterMsg && <p className="text-[10px] text-zinc-400 mt-3 font-bold tracking-widest">{newsletterMsg}</p>}
+          {newsletterMsg && <p className="text-[12px] text-zinc-400 mt-3 font-bold tracking-widest">{newsletterMsg}</p>}
         </div>
         <div className="flex gap-12">
           <div className="flex flex-col gap-3">
-             <span className="text-[10px] font-black tracking-widest text-black">Khám phá</span>
+             <span className="text-[12px] font-bold tracking-widest text-black">Khám phá</span>
              <Link href="/library" className="text-sm text-zinc-500 hover:text-black transition-colors font-medium">Thư viện</Link>
              <Link href="/leaderboard" className="text-sm text-zinc-500 hover:text-black transition-colors font-medium">Xếp hạng</Link>
              <Link href="/feed" className="text-sm text-zinc-500 hover:text-black transition-colors font-medium">Cộng đồng</Link>
           </div>
           <div className="flex flex-col gap-3">
-             <span className="text-[10px] font-black tracking-widest text-black">Hỗ trợ</span>
+             <span className="text-[12px] font-bold tracking-widest text-black">Hỗ trợ</span>
              <Link href="/terms" className="text-sm text-zinc-500 hover:text-black transition-colors font-medium">Điều khoản</Link>
           </div>
         </div>

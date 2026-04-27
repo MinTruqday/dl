@@ -97,7 +97,7 @@ export default function ReaderTools({ onFontSizeChange, onThemeChange, textConte
               </button>
             </div>
             {searchQuery && (
-              <p className="text-[10px] font-bold  tracking-widest text-zinc-400">
+              <p className="text-[12px] font-bold  tracking-widest text-zinc-400">
                 {searchResults > 0 ? `Tìm thấy ${searchResults} kết quả` : "Không tìm thấy kết quả"}
               </p>
             )}
@@ -107,7 +107,7 @@ export default function ReaderTools({ onFontSizeChange, onThemeChange, textConte
         {showSettings && (
           <div className="bg-white border border-black p-6 space-y-6 animate-in slide-in-from-bottom-4 duration-300 w-64">
              <div className="space-y-3">
-                <label className="text-[10px] font-bold  tracking-widest text-zinc-400">Kích thước chữ</label>
+                <label className="text-[12px] font-bold  tracking-widest text-zinc-400">Kích thước chữ</label>
                 <div className="flex items-center justify-between bg-zinc-50 border border-border p-2">
                    <button onClick={() => handleFontSize(-2)} className="p-2 hover:bg-white transition-colors"><Minus className="w-4 h-4" /></button>
                    <span className="text-sm font-bold">{fontSize}px</span>
@@ -116,29 +116,29 @@ export default function ReaderTools({ onFontSizeChange, onThemeChange, textConte
              </div>
 
              <div className="space-y-3">
-                <label className="text-[10px] font-bold  tracking-widest text-zinc-400">Chế độ hiển thị</label>
+                <label className="text-[12px] font-bold  tracking-widest text-zinc-400">Chế độ hiển thị</label>
                 <div className="grid grid-cols-3 gap-2">
                    <button 
                       onClick={() => handleTheme("light")}
-                      className={`p-2 border text-center text-[10px] font-bold  transition-all ${theme === 'light' ? 'bg-black text-white border-black' : 'bg-white border-border'}`}
+                      className={`p-2 border text-center text-[12px] font-bold  transition-all ${theme === 'light' ? 'bg-black text-white border-black' : 'bg-white border-border'}`}
                    >Sáng</button>
                    <button 
                       onClick={() => handleTheme("sepia")}
-                      className={`p-2 border text-center text-[10px] font-bold  transition-all ${theme === 'sepia' ? 'bg-[#f4ecd8] text-[#5b4636] border-[#e2d7bd]' : 'bg-white border-border'}`}
+                      className={`p-2 border text-center text-[12px] font-bold  transition-all ${theme === 'sepia' ? 'bg-[#f4ecd8] text-[#5b4636] border-[#e2d7bd]' : 'bg-white border-border'}`}
                    >Giấy cũ</button>
                    <button 
                       onClick={() => handleTheme("night")}
-                      className={`p-2 border text-center text-[10px] font-bold  transition-all ${theme === 'night' ? 'bg-[#1a1a1a] text-white border-zinc-800' : 'bg-white border-border'}`}
+                      className={`p-2 border text-center text-[12px] font-bold  transition-all ${theme === 'night' ? 'bg-[#1a1a1a] text-white border-zinc-800' : 'bg-white border-border'}`}
                    >Tối</button>
                 </div>
              </div>
 
              <div className="space-y-3">
-                <label className="text-[10px] font-bold  tracking-widest text-zinc-400">Tự động cuộn</label>
+                <label className="text-[12px] font-bold  tracking-widest text-zinc-400">Tự động cuộn</label>
                 <div className="flex items-center justify-between">
                   <button
                     onClick={toggleAutoScroll}
-                    className={`flex items-center gap-2 px-3 py-2 border text-[10px] font-bold  tracking-widest transition-all ${autoScroll ? 'bg-black text-white border-black' : 'border-border hover:bg-zinc-50'}`}
+                    className={`flex items-center gap-2 px-3 py-2 border text-[12px] font-bold  tracking-widest transition-all ${autoScroll ? 'bg-black text-white border-black' : 'border-border hover:bg-zinc-50'}`}
                   >
                     {autoScroll ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                     {autoScroll ? "Dừng" : "Bật"}
@@ -155,7 +155,7 @@ export default function ReaderTools({ onFontSizeChange, onThemeChange, textConte
 
              <button 
                 onClick={toggleTTS}
-                className={`w-full p-4 border border-black flex items-center justify-center gap-3 text-[10px] font-bold  tracking-widest transition-all ${isReading ? 'bg-black text-white' : 'hover:bg-zinc-50'}`}
+                className={`w-full p-4 border border-black flex items-center justify-center gap-3 text-[12px] font-bold  tracking-widest transition-all ${isReading ? 'bg-black text-white' : 'hover:bg-zinc-50'}`}
              >
                 {isReading ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 {isReading ? "Dừng đọc" : "Nghe đọc"}

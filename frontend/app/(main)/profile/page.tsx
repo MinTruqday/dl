@@ -89,7 +89,7 @@ export default function ProfilePage() {
   return (
     <div className="w-full max-w-[900px] mx-auto px-6 lg:px-8 py-12 md:py-16 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
@@ -98,10 +98,10 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <User className="w-5 h-5 text-zinc-400" />
-            <span className="text-[10px] font-bold tracking-widest text-zinc-400">Hồ sơ cá nhân</span>
+            <span className="text-[12px] font-bold tracking-widest text-zinc-400">Hồ sơ cá nhân</span>
           </div>
           <div className="flex flex-col items-end gap-1">
-             <span className="text-[9px] font-black tracking-tighter">Mức độ hoàn thiện: {
+             <span className="text-[13px] font-bold tracking-tighter">Mức độ hoàn thiện: {
                 (() => {
                   let score = 0;
                   if (profile?.full_name) score += 20;
@@ -143,7 +143,7 @@ export default function ProfilePage() {
             <button
               onClick={() => editMode ? saveProfile() : setEditMode(true)}
               disabled={saving}
-              className="text-[10px] font-bold tracking-widest px-4 py-2 border border-border hover:border-black transition-all flex items-center gap-2"
+              className="text-[12px] font-bold tracking-widest px-4 py-2 border border-border hover:border-black transition-all flex items-center gap-2"
             >
               <Save className="w-3.5 h-3.5" />
               {editMode ? "Lưu" : "Chỉnh sửa"}
@@ -152,7 +152,7 @@ export default function ProfilePage() {
           {editMode ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-1">Tên hiển thị</label>
+                <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-1">Tên hiển thị</label>
                 <input
                   type="text"
                   value={editData.full_name}
@@ -161,7 +161,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-1">Giới thiệu</label>
+                <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-1">Giới thiệu</label>
                 <textarea
                   value={editData.bio}
                   onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
@@ -173,7 +173,7 @@ export default function ProfilePage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between py-2 border-b border-zinc-50">
                 <span className="text-zinc-400 font-medium">Vai trò</span>
-                <span className="font-bold text-black text-[10px] tracking-widest">{profile?.role || "reader"}</span>
+                <span className="font-bold text-black text-[12px] tracking-widest">{profile?.role || "reader"}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-zinc-50">
                 <span className="text-zinc-400 font-medium">Giới thiệu</span>
@@ -191,19 +191,19 @@ export default function ProfilePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-zinc-50 border border-border">
                 <span className="text-2xl font-bold text-black">{stats.total_books_read}</span>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu đã đọc</p>
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu đã đọc</p>
               </div>
               <div className="p-4 bg-zinc-50 border border-border">
                 <span className="text-2xl font-bold text-black">{stats.completed_books}</span>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Hoàn thành</p>
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Hoàn thành</p>
               </div>
               <div className="p-4 bg-zinc-50 border border-border">
                 <span className="text-2xl font-bold text-black">{stats.days_active}</span>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Ngày hoạt động</p>
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Ngày hoạt động</p>
               </div>
               <div className="p-4 bg-zinc-50 border border-border">
                 <span className="text-2xl font-bold text-black">{stats.average_progress}%</span>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tiến độ TB</p>
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tiến độ TB</p>
               </div>
             </div>
           ) : (
@@ -243,7 +243,7 @@ export default function ProfilePage() {
           </label>
           <button
             onClick={savePrivacy}
-            className="px-6 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all mt-4"
+            className="px-6 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all mt-4"
           >
             Lưu cài đặt
           </button>

@@ -18,7 +18,7 @@ export default function FloatingAI() {
           <header className="p-4 bg-black text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span className="text-[10px] font-bold tracking-widest">Trợ lý AI Phân tán</span>
+              <span className="text-[12px] font-bold tracking-widest">Trợ lý AI Phân tán</span>
             </div>
             <button onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-opacity">
               <X className="w-4 h-4" />
@@ -48,7 +48,7 @@ export default function FloatingAI() {
                    <Send className="w-3.5 h-3.5" />
                 </button>
              </div>
-             <div className="mt-3 flex items-center gap-2 text-[9px] font-bold text-zinc-400 tracking-widest">
+             <div className="mt-3 flex items-center gap-2 text-[13px] font-bold text-zinc-400 tracking-widest">
                 <Command className="w-3 h-3" /> Nhấn Enter để gửi
              </div>
           </div>

@@ -261,11 +261,11 @@ export default function AiChatPanel() {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-black tracking-tight">DocLib AI</h3>
-                <p className="text-[10px] text-zinc-500 font-medium">Trợ lý tri thức</p>
+                <p className="text-[12px] text-zinc-500 font-medium">Trợ lý tri thức</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={clearHistory} className="text-[10px] text-zinc-400 hover:text-black font-bold mr-2 transition-colors">Xóa</button>
+              <button onClick={clearHistory} className="text-[12px] text-zinc-400 hover:text-black font-bold mr-2 transition-colors">Xóa</button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 rounded-md text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors"
@@ -281,7 +281,7 @@ export default function AiChatPanel() {
                 <div className="w-14 h-14 rounded-md bg-white shadow-sm border border-zinc-200 flex items-center justify-center mb-5">
                   <Zap className="w-6 h-6 text-black" />
                 </div>
-                <p className="text-sm font-black text-black tracking-tight">Xin chào{user ? `, ${user.full_name}` : ''}</p>
+                <p className="text-sm font-bold text-black tracking-tight">Xin chào{user ? `, ${user.full_name}` : ''}</p>
                 <p className="text-xs text-zinc-500 mt-2 leading-relaxed max-w-[240px]">
                   Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm kiến thức hoặc giải đáp các thắc mắc.
                 </p>
@@ -303,14 +303,14 @@ export default function AiChatPanel() {
                   }`}>
                     {msg.role === "assistant" && user && usePro && msg.thoughts && msg.thoughts.length > 0 && (
                       <details className="mb-3 group border-b border-zinc-200 pb-3 cursor-pointer overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-zinc-50/50 rounded-md px-3 mt-1">
-                         <summary className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 hover:text-black transition-colors list-none select-none py-2">
+                         <summary className="flex items-center gap-2 text-[12px] font-bold text-zinc-500 hover:text-black transition-colors list-none select-none py-2">
                              <Cpu className="w-3.5 h-3.5" />
                              Quá trình xử lý
                          </summary>
                          <div className="pb-2">
                            <ul className="flex flex-col gap-2.5 border-l-2 border-zinc-300 pl-3 ml-1.5 mt-1">
                              {msg.thoughts.map((t, idx2) => (
-                               <li key={idx2} className="text-[11px] text-zinc-600 flex items-center gap-2">
+                               <li key={idx2} className="text-[13px] text-zinc-600 flex items-center gap-2">
                                  <div className="w-1.5 h-1.5 bg-zinc-400 shrink-0" />
                                  <span className="leading-none font-medium">{t}</span>
                                </li>
@@ -350,7 +350,7 @@ export default function AiChatPanel() {
                 {selectedFile && (
                   <div className="relative group shrink-0 h-12 w-28 bg-zinc-50 border border-zinc-200 rounded-md flex items-center px-2 gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-black shrink-0" />
-                    <span className="text-[9px] font-medium text-zinc-600 truncate leading-tight">{selectedFile.name}</span>
+                    <span className="text-[13px] font-medium text-zinc-600 truncate leading-tight">{selectedFile.name}</span>
                     <button onClick={() => setSelectedFile(null)} className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-2.5 h-2.5" /></button>
                   </div>
                 )}
@@ -364,15 +364,15 @@ export default function AiChatPanel() {
                  
                  <button onClick={() => fileInputRef.current?.click()} type="button" className="flex flex-col items-center gap-1.5 p-3 hover:bg-zinc-100 rounded-md transition-colors min-w-[70px]">
                    <div className="w-10 h-10 bg-zinc-100 text-black flex items-center justify-center"><FileText className="w-5 h-5" /></div>
-                   <span className="text-[9px] font-bold text-black">Tài liệu</span>
+                   <span className="text-[13px] font-bold text-black">Tài liệu</span>
                  </button>
                  <button onClick={() => imageInputRef.current?.click()} type="button" className="flex flex-col items-center gap-1.5 p-3 hover:bg-zinc-100 rounded-md transition-colors min-w-[70px]">
                    <div className="w-10 h-10 bg-zinc-100 text-black flex items-center justify-center"><ImageIcon className="w-5 h-5" /></div>
-                   <span className="text-[9px] font-bold text-black">Hình ảnh</span>
+                   <span className="text-[13px] font-bold text-black">Hình ảnh</span>
                  </button>
                  <button type="button" className="flex flex-col items-center gap-1.5 p-3 hover:bg-zinc-100 rounded-md transition-colors min-w-[70px] opacity-50 cursor-not-allowed">
                    <div className="w-10 h-10 bg-zinc-100 text-black flex items-center justify-center"><Cpu className="w-5 h-5" /></div>
-                   <span className="text-[9px] font-bold text-black">Thư viện</span>
+                   <span className="text-[13px] font-bold text-black">Thư viện</span>
                  </button>
                </div>
             )}
@@ -384,10 +384,10 @@ export default function AiChatPanel() {
                     <input type="checkbox" checked={usePro} onChange={handleTogglePro} className="sr-only peer" />
                     <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:h-3 after:w-3 after:transition-all peer-checked:bg-black"></div>
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-500 group-hover:text-black transition-colors tracking-widest">Tìm kiếm chuyên sâu</span>
+                  <span className="text-[12px] font-bold text-zinc-500 group-hover:text-black transition-colors tracking-widest">Tìm kiếm chuyên sâu</span>
                 </label>
                 {usePro && (
-                  <span className="text-[9px] font-bold text-black py-0.5 px-2 bg-zinc-100 rounded-sm flex items-center gap-1">5 <Coins className="w-3 h-3" /></span>
+                  <span className="text-[13px] font-bold text-black py-0.5 px-2 bg-zinc-100 rounded-sm flex items-center gap-1">5 <Coins className="w-3 h-3" /></span>
                 )}
               </div>
             )}

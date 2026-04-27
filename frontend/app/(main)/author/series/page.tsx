@@ -78,7 +78,7 @@ export default function SeriesManagementPage() {
           </div>
           <button 
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Tạo Series mới
@@ -90,7 +90,7 @@ export default function SeriesManagementPage() {
             <h2 className="text-lg font-bold mb-6 tracking-tight">Cấu hình Series mới</h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Tên Series</label>
+                <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Tên Series</label>
                 <input 
                   type="text" 
                   value={newSeries.title}
@@ -99,7 +99,7 @@ export default function SeriesManagementPage() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Mô tả</label>
+                <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Mô tả</label>
                 <textarea 
                   rows={3} 
                   value={newSeries.description}
@@ -108,7 +108,7 @@ export default function SeriesManagementPage() {
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-4">Chọn tài liệu vào Series</label>
+                <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-4">Chọn tài liệu vào Series</label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto p-2 border border-zinc-100">
                   {myBooks.map(book => (
                     <label key={book.id} className="flex items-center gap-3 p-3 border border-zinc-50 hover:bg-zinc-50 cursor-pointer">
@@ -131,13 +131,13 @@ export default function SeriesManagementPage() {
               <div className="flex gap-4 pt-4">
                 <button 
                   onClick={handleCreate}
-                  className="px-8 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 flex items-center gap-2"
+                  className="px-8 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" /> Xác nhận tạo
                 </button>
                 <button 
                   onClick={() => setShowCreate(false)}
-                  className="px-8 py-4 border border-zinc-200 text-[10px] font-bold tracking-widest hover:border-zinc-900"
+                  className="px-8 py-4 border border-zinc-200 text-[12px] font-bold tracking-widest hover:border-zinc-900"
                 >
                   Hủy bỏ
                 </button>
@@ -166,13 +166,13 @@ export default function SeriesManagementPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-6 mt-6">
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 tracking-widest">
+                  <div className="flex items-center gap-2 text-[12px] font-bold text-zinc-400 tracking-widest">
                     <BookOpen className="w-4 h-4" />
                     {series.book_count} tài liệu
                   </div>
                   <Link 
                     href={`/author/series/${series.id}`}
-                    className="ml-auto text-[10px] font-bold tracking-widest text-zinc-900 flex items-center gap-1 group-hover:gap-2 transition-all"
+                    className="ml-auto text-[12px] font-bold tracking-widest text-zinc-900 flex items-center gap-1 group-hover:gap-2 transition-all"
                   >
                     Quản lý chuỗi <ChevronRight className="w-4 h-4" />
                   </Link>
@@ -184,7 +184,7 @@ export default function SeriesManagementPage() {
       </div>
 
       {toastMsg && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900 text-white px-6 py-3 text-[10px] font-bold tracking-widest shadow-xl animate-in slide-in-from-bottom-2 duration-300">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900 text-white px-6 py-3 text-[12px] font-bold tracking-widest shadow-xl animate-in slide-in-from-bottom-2 duration-300">
           {toastMsg}
         </div>
       )}

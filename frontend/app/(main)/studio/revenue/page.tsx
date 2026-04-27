@@ -39,11 +39,11 @@ export default function AuthorRevenuePage() {
         <div>
            <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Tài chính tác giả</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tài chính tác giả</span>
            </div>
-           <h1 className="text-4xl font-black text-black tracking-tighter">Thống kê doanh thu</h1>
+           <h1 className="text-4xl font-bold text-black tracking-tighter">Thống kê doanh thu</h1>
         </div>
-        <Button variant="outline" className="text-[10px] font-bold tracking-widest border-black h-12 px-8">
+        <Button variant="outline" className="text-[12px] font-bold tracking-widest border-black h-12 px-8">
            <Download className="w-4 h-4 mr-2" /> Xuất báo cáo (CSV)
         </Button>
       </header>
@@ -51,29 +51,29 @@ export default function AuthorRevenuePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
          <div className="border border-black p-8 bg-black text-white space-y-4">
             <div className="flex justify-between items-start">
-               <span className="text-[10px] font-bold tracking-widest text-zinc-400">Tổng doanh thu</span>
+               <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tổng doanh thu</span>
                <DollarSign className="w-4 h-4" />
             </div>
-            <h2 className="text-4xl font-black tracking-tighter">{(data?.total_revenue || 0).toLocaleString()} C</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
+            <h2 className="text-4xl font-bold tracking-tighter">{(data?.total_revenue || 0).toLocaleString()} C</h2>
+            <div className="flex items-center gap-2 text-[12px] font-bold text-zinc-400">
                <ArrowUpRight className="w-3 h-3" /> +12.5% so với tháng trước
             </div>
          </div>
          <div className="border border-black p-8 bg-white space-y-4">
             <div className="flex justify-between items-start">
-               <span className="text-[10px] font-bold tracking-widest text-zinc-400">Tổng lượt bán</span>
+               <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tổng lượt bán</span>
                <Package className="w-4 h-4" />
             </div>
-            <h2 className="text-4xl font-black tracking-tighter">{(data?.total_sales || 0).toLocaleString()}</h2>
-            <p className="text-[10px] font-bold text-zinc-400 tracking-widest">Giao dịch thành công</p>
+            <h2 className="text-4xl font-bold tracking-tighter">{(data?.total_sales || 0).toLocaleString()}</h2>
+            <p className="text-[12px] font-bold text-zinc-400 tracking-widest">Giao dịch thành công</p>
          </div>
          <div className="border border-black p-8 bg-white space-y-4">
             <div className="flex justify-between items-start">
-               <span className="text-[10px] font-bold tracking-widest text-zinc-400">Lượt xem tài liệu</span>
+               <span className="text-[12px] font-bold tracking-widest text-zinc-400">Lượt xem tài liệu</span>
                <TrendingUp className="w-4 h-4" />
             </div>
-            <h2 className="text-4xl font-black tracking-tighter">{(data?.total_views || 0).toLocaleString()}</h2>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
+            <h2 className="text-4xl font-bold tracking-tighter">{(data?.total_views || 0).toLocaleString()}</h2>
+            <div className="flex items-center gap-2 text-[12px] font-bold text-zinc-400">
                <ArrowDownRight className="w-3 h-3" /> -2.1% tỷ lệ chuyển đổi
             </div>
          </div>
@@ -81,7 +81,7 @@ export default function AuthorRevenuePage() {
 
       <div className="space-y-8">
          <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
-            <h3 className="text-sm font-black tracking-tighter flex items-center gap-2">
+            <h3 className="text-sm font-bold tracking-tighter flex items-center gap-2">
                <Calendar className="w-5 h-5" />
                Lịch sử giao dịch gần đây
             </h3>
@@ -92,14 +92,14 @@ export default function AuthorRevenuePage() {
                <div key={idx} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-zinc-50 transition-colors">
                   <div className="space-y-1">
                      <p className="text-sm font-bold tracking-tight">{sale.book_title}</p>
-                     <p className="text-[10px] font-bold text-zinc-400 tracking-widest">
+                     <p className="text-[12px] font-bold text-zinc-400 tracking-widest">
                         {new Date(sale.date).toLocaleString("vi-VN")}
                      </p>
                   </div>
                   <div className="flex items-center gap-8">
                      <div className="text-right">
-                        <p className="text-sm font-black">+{sale.price.toLocaleString()} C</p>
-                        <p className="text-[9px] font-bold text-black tracking-widest">Thành công</p>
+                        <p className="text-sm font-bold">+{sale.price.toLocaleString()} C</p>
+                        <p className="text-[13px] font-bold text-black tracking-widest">Thành công</p>
                      </div>
                      <ArrowUpRight className="w-5 h-5 text-zinc-200" />
                   </div>
@@ -108,7 +108,7 @@ export default function AuthorRevenuePage() {
 
             {(!data?.recent_sales || data.recent_sales.length === 0) && (
                <div className="py-24 text-center bg-zinc-50/50">
-                  <p className="text-[10px] font-bold tracking-widest text-zinc-300">Chưa có giao dịch phát sinh.</p>
+                  <p className="text-[12px] font-bold tracking-widest text-zinc-300">Chưa có giao dịch phát sinh.</p>
                </div>
             )}
          </div>

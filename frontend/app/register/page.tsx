@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { register } from "@/app/lib/api";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { Notification } from "@/app/components/NotificationToast";
 
 export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
@@ -55,11 +56,7 @@ export default function RegisterPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card py-8 px-4  sm: sm:px-10 border border-border">
           <form className="space-y-5" onSubmit={handleRegister}>
-            {error && (
-              <div className="bg-gray-100 border-l-4 border-black p-4  text-sm font-medium text-black font-bold outline-black">
-                {error}
-              </div>
-            )}
+            {error && <Notification type="error" message={error} />}
             <div>
               <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
                 Tên hiển thị

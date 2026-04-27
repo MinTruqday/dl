@@ -92,7 +92,7 @@ export default function Library() {
                 <p className="text-sm text-zinc-500 mb-8 font-medium leading-relaxed">Phân loại kho tri thức của bạn bằng các nhãn chủ đề để tối ưu hóa việc quản lý và tìm kiếm.</p>
                 <div className="space-y-6">
                     <div>
-                        <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Tên nhãn dán</label>
+                        <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Tên nhãn dán</label>
                         <input 
                             type="text" 
                             placeholder="Nhập nhãn dán" 
@@ -104,8 +104,8 @@ export default function Library() {
                     </div>
                 </div>
                 <div className="flex gap-3 justify-end mt-10">
-                    <button onClick={() => setIsLabelModalOpen(false)} className="px-6 py-3 text-[11px] font-bold text-zinc-400 hover:text-black tracking-widest transition-colors">Hủy</button>
-                    <button onClick={createLabel} className="px-8 py-3 text-[11px] font-bold bg-black text-white  hover:bg-zinc-800 transition-all tracking-widest">Lưu</button>
+                    <button onClick={() => setIsLabelModalOpen(false)} className="px-6 py-3 text-[13px] font-bold text-zinc-400 hover:text-black tracking-widest transition-colors">Hủy</button>
+                    <button onClick={createLabel} className="px-8 py-3 text-[13px] font-bold bg-black text-white  hover:bg-zinc-800 transition-all tracking-widest">Lưu</button>
                 </div>
             </div>
         </div>
@@ -116,7 +116,7 @@ export default function Library() {
             <div>
                 <div className="flex items-center gap-3 mb-2">
                     <LayoutGrid className="w-5 h-5 text-black" />
-                    <span className="text-[11px] font-bold tracking-[0.2em] text-zinc-400">Không gian cá nhân</span>
+                    <span className="text-[13px] font-bold tracking-[0.2em] text-zinc-400">Không gian cá nhân</span>
                 </div>
                 <h1 className="text-4xl font-bold text-black tracking-tighter flex items-center gap-4">
                     Tủ sách tri thức
@@ -138,7 +138,7 @@ export default function Library() {
             <aside className="md:col-span-3 flex flex-col gap-6">
                 <div className="bg-zinc-50 border border-border p-6 ">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-xs font-black tracking-widest text-black flex items-center gap-2">
+                        <h3 className="text-xs font-bold tracking-widest text-black flex items-center gap-2">
                             <ListFilter className="w-4 h-4" />
                             Nhãn dán chủ đề
                         </h3>
@@ -149,7 +149,7 @@ export default function Library() {
                     
                     <ul className="space-y-1">
                         {labels.length === 0 ? (
-                            <li className="text-[10px] text-zinc-400 font-bold tracking-widest py-4 border-t border-zinc-100 italic">Không có nhãn nào</li>
+                            <li className="text-[12px] text-zinc-400 font-bold tracking-widest py-4 border-t border-zinc-100 italic">Không có nhãn nào</li>
                         ) : labels.map((lb: any) => (
                             <li key={lb._id} className="flex justify-between items-center group cursor-pointer py-3 border-b border-zinc-100 last:border-0 hover:border-black transition-colors">
                                 <span className="text-xs font-bold text-zinc-600 group-hover:text-black tracking-tight flex items-center gap-2.5">
@@ -165,11 +165,11 @@ export default function Library() {
             <div className="md:col-span-9 flex flex-col gap-12">
                 <section>
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-black text-black tracking-tight flex items-center gap-3">
+                        <h2 className="text-xl font-bold text-black tracking-tight flex items-center gap-3">
                             <Clock className="w-5 h-5" />
                             Đang nghiên cứu
                         </h2>
-                        <span className="text-[10px] font-bold text-zinc-400 tracking-widest">{readingList.length} DANH SÁCH</span>
+                        <span className="text-[12px] font-bold text-zinc-400 tracking-widest">{readingList.length} DANH SÁCH</span>
                     </div>
                     
                     {readingList.length === 0 ? (
@@ -187,13 +187,13 @@ export default function Library() {
                                                 <Bookmark className="w-5 h-5" />
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-[9px] font-black tracking-widest text-black bg-zinc-100 px-2 py-1  mb-2">DANH SÁCH</span>
-                                                <span className="text-[10px] font-bold text-zinc-400 tracking-tight">{list.is_public ? "Công khai" : "Riêng tư"}</span>
+                                                <span className="text-[13px] font-bold tracking-widest text-black bg-zinc-100 px-2 py-1  mb-2">DANH SÁCH</span>
+                                                <span className="text-[12px] font-bold text-zinc-400 tracking-tight">{list.is_public ? "Công khai" : "Riêng tư"}</span>
                                             </div>
                                         </div>
                                         <h3 className="font-bold text-black text-lg line-clamp-2 leading-tight tracking-tight group-hover:underline underline-offset-4 decoration-2">{list.name}</h3>
                                         <p className="text-xs text-zinc-500 mt-2 line-clamp-2 font-medium">{list.description || "Không có mô tả"}</p>
-                                        <div className="mt-8 pt-6 border-t border-zinc-50 flex justify-between items-center text-[10px] font-bold tracking-widest text-zinc-400">
+                                        <div className="mt-8 pt-6 border-t border-zinc-50 flex justify-between items-center text-[12px] font-bold tracking-widest text-zinc-400">
                                             <span>{list.books?.length || 0} TÀI LIỆU</span>
                                             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </div>

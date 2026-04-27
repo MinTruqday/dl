@@ -74,7 +74,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
         </h2>
         <button 
            onClick={() => setShowForm(!showForm)}
-           className="text-[10px] font-bold text-black tracking-widest border border-black px-4 py-2 hover:bg-zinc-50 transition-all flex items-center gap-2"
+           className="text-[12px] font-bold text-black tracking-widest border border-black px-4 py-2 hover:bg-zinc-50 transition-all flex items-center gap-2"
         >
            {showForm ? "Hủy bỏ" : "Tạo thảo luận mới"}
            {!showForm && <Plus className="w-3 h-3" />}
@@ -84,7 +84,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
       {showForm && (
         <form onSubmit={handleCreate} className="bg-zinc-50 border border-border p-8 space-y-6 animate-in slide-in-from-top-4 duration-300">
            <div className="space-y-4">
-              <label className="text-[10px] font-bold tracking-widest text-zinc-400">Tiêu đề thảo luận</label>
+              <label className="text-[12px] font-bold tracking-widest text-zinc-400">Tiêu đề thảo luận</label>
               <input 
                  type="text" 
                  value={title}
@@ -95,7 +95,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
               />
            </div>
            <div className="space-y-4">
-              <label className="text-[10px] font-bold tracking-widest text-zinc-400">Nội dung chi tiết</label>
+              <label className="text-[12px] font-bold tracking-widest text-zinc-400">Nội dung chi tiết</label>
               <textarea
                  value={content}
                  onChange={(e) => setContent(e.target.value)}
@@ -107,7 +107,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
            <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-2"
+              className="px-8 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-2"
            >
               {submitting ? "Đang gửi" : "Đăng thảo luận"}
               <Send className="w-3 h-3" />
@@ -129,17 +129,17 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
                   <div className="space-y-1">
                      <h3 className="text-base font-bold tracking-tight">{d.title}</h3>
                      <div className="flex items-center gap-3">
-                        <div className="text-[10px] font-bold tracking-widest text-zinc-400 flex items-center gap-1">
+                        <div className="text-[12px] font-bold tracking-widest text-zinc-400 flex items-center gap-1">
                            <User className="w-3 h-3" />
                            {d.user_name}
                         </div>
                         <span className="w-1 h-1 rounded-none bg-zinc-200" />
-                        <div className="text-[10px] font-bold tracking-widest text-zinc-300">
+                        <div className="text-[12px] font-bold tracking-widest text-zinc-300">
                            {new Date(d.created_at).toLocaleDateString("vi-VN")}
                         </div>
                      </div>
                   </div>
-                  <div className="bg-zinc-100 px-3 py-1 text-[10px] font-bold tracking-widest text-zinc-500">
+                  <div className="bg-zinc-100 px-3 py-1 text-[12px] font-bold tracking-widest text-zinc-500">
                      {d.replies_count} phản hồi
                   </div>
                </div>
@@ -151,7 +151,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
                <div className="pt-4 border-t border-zinc-50 flex items-center gap-4">
                   <button 
                      onClick={() => setReplyingTo(replyingTo === d.id ? null : d.id)}
-                     className="text-[10px] font-bold tracking-widest text-black hover:underline"
+                     className="text-[12px] font-bold tracking-widest text-black hover:underline"
                   >
                      {replyingTo === d.id ? "Hủy bỏ" : "Trả lời thảo luận"}
                   </button>
@@ -168,7 +168,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
                      />
                      <button 
                         onClick={() => handleReply(d.id)}
-                        className="bg-black text-white px-6 py-2 text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all"
+                        className="bg-black text-white px-6 py-2 text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all"
                      >
                         Gửi
                      </button>
@@ -178,7 +178,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
           ))
         ) : (
           <div className="py-16 text-center border border-dashed border-border bg-zinc-50/50">
-             <p className="text-[10px] font-bold tracking-widest text-zinc-300">Chưa có chủ đề thảo luận nào cho tài liệu này.</p>
+             <p className="text-[12px] font-bold tracking-widest text-zinc-300">Chưa có chủ đề thảo luận nào cho tài liệu này.</p>
           </div>
         )}
       </div>

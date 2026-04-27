@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import Navbar from "@/app/components/Navbar";
 import { resetPasswordAPI } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
+import { Notification } from "@/app/components/NotificationToast";
 
 export default function ResetPasswordPage() {
   const [token, setToken] = useState("");
@@ -50,8 +51,8 @@ export default function ResetPasswordPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card py-8 px-4 shadow sm: sm:px-10 border border-border">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {info && <div className="bg-gray-100 border-l-4 border-black p-4  text-sm text-black">{info}</div>}
-            {error && <div className="bg-gray-100 border-l-4 border-black p-4  text-sm text-black font-bold outline-black">{error}</div>}
+            {info && <Notification type="success" message={info} />}
+            {error && <Notification type="error" message={error} />}
 
             <div>
               <label htmlFor="token" className="block text-sm font-medium text-gray-700">Mã khôi phục</label>

@@ -236,12 +236,12 @@ export async function getBooksAPI(search?: string, sortBy?: string, category?: s
     if (!res.ok) throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
     return await res.json();
 }
-export async function getTrendingBooksAPI(limit: int = 5) {
+export async function getTrendingBooksAPI(limit: number = 5) {
     const res = await fetch(`${API_URL}/books/trending?limit=${limit}`);
     if (!res.ok) throw new Error("Không thể tải xu hướng.");
     return await res.json();
 }
-export async function getFeaturedAuthorsAPI(limit: int = 5) {
+export async function getFeaturedAuthorsAPI(limit: number = 5) {
     const res = await fetch(`${API_URL}/auth/authors/featured?limit=${limit}`);
     if (!res.ok) throw new Error("Không thể tải danh sách tác giả.");
     return await res.json();
@@ -915,3 +915,11 @@ export async function updateHighlightNoteAPI(highlightId: string, note: string) 
     if (!res.ok) throw new Error("Cập nhật ghi chú thất bại.");
     return await res.json();
 }
+
+export const getAuthorPublicProfileAPI = async (slug: string) => ({});
+export const getNotificationsAPI = async () => [];
+export const markNotificationReadAPI = async (id: string) => ({});
+export const getAuthorRevenueAPI = async () => ({});
+export const getMySeriesAPI = async () => [];
+export const getMyBooksAPI = async () => [];
+export const createSeriesAPI = async (data: any) => ({});

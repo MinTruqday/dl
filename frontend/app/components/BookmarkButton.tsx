@@ -67,7 +67,7 @@ export default function BookmarkButton({ bookId }: { bookId: string }) {
   };
 
   if (loading) return (
-    <div className="flex items-center gap-2 px-6 py-3 border border-border  text-zinc-300 font-bold text-[11px] tracking-widest">
+    <div className="flex items-center gap-2 px-6 py-3 border border-border  text-zinc-300 font-bold text-[13px] tracking-widest">
       <Loader2 className="w-4 h-4 animate-spin" />
       Đang tải
     </div>

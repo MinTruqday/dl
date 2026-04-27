@@ -5,17 +5,17 @@ import uuid
 from enum import Enum
 
 class KYCStatusEnum(str, Enum):
-    NONE = "NONE"
-    PENDING = "PENDING"
-    VERIFIED = "VERIFIED"
-    REJECTED = "REJECTED"
+    NONE = "none"
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
 
 class AuthorStatusEnum(str, Enum):
-    NONE = "NONE"
-    PENDING = "PENDING"
-    APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
-    SUSPENDED = "SUSPENDED"
+    NONE = "none"
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    SUSPENDED = "suspended"
 
 class RoleEnum(str, Enum):
     GUEST = "guest"

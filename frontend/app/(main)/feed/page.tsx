@@ -276,7 +276,7 @@ export default function Feed() {
       fetchSuggestions();
       fetchWallet();
     }
-  }, [currentUser?._id]);
+  }, [(currentUser?._id || "")]);
 
   const fetchSuggestions = async () => {
     try {
@@ -403,7 +403,7 @@ export default function Feed() {
       }
     }
 
-    let parsedMentions = [];
+    let parsedMentions: string[] = [];
     if (storyMentionsInput.trim()) {
        parsedMentions = storyMentionsInput.split(',').map(s => s.trim()).filter(s => s);
     }
@@ -537,7 +537,7 @@ export default function Feed() {
       const res = await fetch(`${API_URL}/social/posts/${postId}/like?reaction_type=${reactionType}`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
       if (res.ok) {
         const data = await res.json();
-        if (data.message === "Đã thích") {
+        if (data.message === "Đã thích" && event) {
           const rect = (event.target as HTMLElement).getBoundingClientRect();
           const x = (rect.left + rect.width / 2) / window.innerWidth;
           const y = (rect.top + rect.height / 2) / window.innerHeight;
@@ -681,13 +681,13 @@ export default function Feed() {
               <div className="flex gap-1 bg-zinc-50 p-1 border border-zinc-100 mb-2 shrink-0">
                  <button 
                     onClick={() => setFilter("recent")}
-                    className={`px-4 py-1.5 text-[10px] font-black tracking-widest transition-all ${filter === "recent" ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
+                    className={`px-4 py-1.5 text-[12px] font-bold tracking-widest transition-all ${filter === "recent" ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
                  >
                     Mới nhất
                  </button>
                  <button 
                     onClick={() => setFilter("trending")}
-                    className={`px-4 py-1.5 text-[10px] font-black tracking-widest transition-all ${filter === "trending" ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
+                    className={`px-4 py-1.5 text-[12px] font-bold tracking-widest transition-all ${filter === "trending" ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
                  >
                     Xu hướng
                  </button>
@@ -706,7 +706,7 @@ export default function Feed() {
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-zinc-200 flex items-center justify-center font-black text-4xl text-zinc-400">
+                    <div className="w-full h-full bg-zinc-200 flex items-center justify-center font-bold text-4xl text-zinc-400">
                       {currentUser?.email?.[0]?.toUpperCase() || "U"}
                     </div>
                   )}
@@ -715,7 +715,7 @@ export default function Feed() {
                   <div className="absolute -top-5 w-10 h-10 bg-black text-white rounded-none flex items-center justify-center border-4 border-white z-10">
                     <Plus className="w-6 h-6" />
                   </div>
-                  <span className="text-[10px] font-black tracking-widest text-zinc-900 mt-4">Tạo tin</span>
+                  <span className="text-[12px] font-bold tracking-widest text-zinc-900 mt-4">Tạo tin</span>
                 </div>
               </div>
 
@@ -734,7 +734,7 @@ export default function Feed() {
                       className="absolute inset-0 flex items-center justify-center p-3 text-center text-white" 
                       style={{ backgroundColor: story.background_color || '#18181b' }}
                     >
-                      <h3 className="z-20 font-black text-[10px] tracking-tight leading-tight break-words line-clamp-6">{story.text_content}</h3>
+                      <h3 className="z-20 font-bold text-[12px] tracking-tight leading-tight break-words line-clamp-6">{story.text_content}</h3>
                     </div>
                   )}
 
@@ -743,12 +743,12 @@ export default function Feed() {
                     {story.user?.avatar_url ? (
                       <img src={story.user.avatar_url} className="w-full h-full object-cover rounded-none" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-zinc-900 font-black text-xs text-white rounded-none">
+                      <div className="w-full h-full flex items-center justify-center bg-zinc-900 font-bold text-xs text-white rounded-none">
                         {story.user?.name?.[0]?.toUpperCase() || "A"}
                       </div>
                     )}
                   </div>
-                  <span className="absolute bottom-3 left-3 z-20 text-[10px] font-black tracking-widest text-white truncate w-[80%]">{story.user?.name || 'Ai đó'}</span>
+                  <span className="absolute bottom-3 left-3 z-20 text-[12px] font-bold tracking-widest text-white truncate w-[80%]">{story.user?.name || 'Ai đó'}</span>
                 </div>
               ))}
             </div>
@@ -758,7 +758,7 @@ export default function Feed() {
           {currentUser && (
             <div className="bg-white border border-zinc-100 p-6 rounded-none flex flex-col mb-8 transition-all duration-500">
               <div className="flex gap-4 items-start">
-                <div className="w-12 h-12 bg-zinc-900 rounded-none border border-zinc-100 flex shrink-0 items-center justify-center text-white font-black text-xl overflow-hidden relative cursor-pointer transition-all">
+                <div className="w-12 h-12 bg-zinc-900 rounded-none border border-zinc-100 flex shrink-0 items-center justify-center text-white font-bold text-xl overflow-hidden relative cursor-pointer transition-all">
                   {currentUser?.avatar_url ? (
                     <img src={currentUser.avatar_url} className="w-full h-full object-cover" />
                   ) : (
@@ -769,7 +769,7 @@ export default function Feed() {
                   <textarea
                     id="composer-textarea"
                     className="w-full bg-transparent outline-none text-foreground resize-none min-h-[44px] text-lg placeholder:text-muted-foreground placeholder:font-normal mt-1.5"
-                    placeholder={`${currentUser?.name ? `${currentUser.name} ơi, ` : ''}bạn đang nghĩ gì thế?`}
+                    placeholder={`${(currentUser?._id || "") ? `${currentUser._id} ơi, ` : ''}bạn đang nghĩ gì thế?`}
                     value={content}
                     rows={isQuoteMode ? 2 : Math.max(1 + content.split('\n').length, 2)}
                     onChange={handleContentChange}
@@ -864,13 +864,13 @@ export default function Feed() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleString("vi-VN")}</span>
                       {post.is_shadowbanned && (
-                        <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-[10px] font-semibold rounded border border-border">
+                        <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-[12px] font-semibold rounded border border-border">
                           Bị hạn chế hiển thị
                         </span>
                       )}
                     </div>
                   </div>
-                  {currentUser?._id && currentUser._id === post.author_id ? (
+                  {(currentUser?._id || "") && currentUser?._id === post.author_id ? (
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" onClick={() => togglePinPost(post.id)} title={post.is_pinned ? "Bỏ ghim" : "Ghim bài viết"} className={`text-muted-foreground opacity-50 hover:opacity-100 transition-all ${post.is_pinned ? 'text-foreground opacity-100' : 'hover:text-foreground'}`}>
                         <Pin className="w-4 h-4" />
@@ -996,8 +996,8 @@ export default function Feed() {
 
                 <div className="mt-5 border-t border-border pt-4 flex gap-2 text-sm items-center">
                   <div className="relative group flex items-center">
-                    <Button variant="ghost" size="sm" onClick={(e) => { if(currentUser) toggleLike(post.id, "like", e); else showToast("Vui lòng đăng nhập để thực hiện.", "error"); }} className={`text-muted-foreground hover:text-foreground ${post.likes?.includes(currentUser?._id) ? 'text-black font-semibold' : ''}`}>
-                      <Heart className={`w-4 h-4 mr-1.5 transition-colors ${post.likes?.includes(currentUser?._id) ? 'fill-black text-black' : 'hover:text-black'}`} /> {post.likes?.length || 0}
+                    <Button variant="ghost" size="sm" onClick={(e) => { if(currentUser) toggleLike(post.id, "like", e); else showToast("Vui lòng đăng nhập để thực hiện.", "error"); }} className={`text-muted-foreground hover:text-foreground ${post.likes?.includes((currentUser?._id || "")) ? 'text-black font-semibold' : ''}`}>
+                      <Heart className={`w-4 h-4 mr-1.5 transition-colors ${post.likes?.includes((currentUser?._id || "")) ? 'fill-black text-black' : 'hover:text-black'}`} /> {post.likes?.length || 0}
                     </Button>
                     {currentUser && (
                       <div className="absolute bottom-full left-0 mb-1 hidden group-hover:flex bg-white border border-border  p-1.5 gap-1.5 z-10 transition-all animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -1038,12 +1038,12 @@ export default function Feed() {
                         <div key={i} className={`text-sm ${c.parent_id ? 'ml-6 relative pl-4 border-l-2 border-foreground/20' : ''}`}>
                           <div className="flex justify-between w-full group">
                             <div>
-                              <span className="font-semibold text-foreground">{c.user_name || c.user?.display_name || "Người dùng"}: </span>
+                              <span className="font-semibold text-foreground">{c.user.display_name || c.user?.display_name || "Người dùng"}: </span>
                               <span className="text-muted-foreground break-words">{c.content || c.text}</span>
                             </div>
                             {currentUser && (
                               <span onClick={() => {
-                                setReplyToContext({ postId: post.id, commentId: c.id, userName: c.user_name || "Người dùng" });
+                                setReplyToContext({ postId: post.id, commentId: c.id, userName: c.user.display_name || "Người dùng" });
                                 setCommentText("");
                               }} className="text-black dark:text-white text-xs opacity-0 group-hover:opacity-100 cursor-pointer whitespace-nowrap ml-2">Trả lời</span>
                             )}
@@ -1061,7 +1061,7 @@ export default function Feed() {
                           </div>
                         )}
                         <div className="flex gap-2 items-center pt-2">
-                          {post.comment_privacy === 'private' && currentUser?._id !== post.author_id ? (
+                          {post.comment_privacy === 'private' && (currentUser?._id || "") !== post.author_id ? (
                             <div className="flex-1 text-xs text-muted-foreground italic py-2 px-4 bg-muted rounded-none border border-border text-center">
                               Bình luận đã bị khóa cho bài viết này.
                             </div>
@@ -1117,15 +1117,15 @@ export default function Feed() {
             </h3>
             
             {ranking.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có dữ liệu</p>
+              <p className="text-[12px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có dữ liệu</p>
             ) : ranking.map((r, i) => (
               <div key={i} className="flex gap-3 items-center group border-b border-border last:border-0 pb-3 mb-3 last:pb-0 last:mb-0">
-                <div className="w-8 h-8  bg-black text-white font-bold flex items-center shrink-0 justify-center text-[10px] border border-black tracking-tighter">
+                <div className="w-8 h-8  bg-black text-white font-bold flex items-center shrink-0 justify-center text-[12px] border border-black tracking-tighter">
                   #{i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[10px] font-black tracking-widest text-foreground truncate">{r.full_name || "Tác giả ẩn danh"}</h4>
-                  <span className="text-[9px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest"> 
+                  <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate">{r.full_name || "Tác giả ẩn danh"}</h4>
+                  <span className="text-[13px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest"> 
                     {r.score.toLocaleString("vi-VN")} điểm
                   </span>
                 </div>
@@ -1139,15 +1139,15 @@ export default function Feed() {
             </h3>
             
             {readerRanking.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có dữ liệu</p>
+              <p className="text-[12px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có dữ liệu</p>
             ) : readerRanking.map((r, i) => (
               <div key={i} className="flex gap-3 items-center group border-b border-border last:border-0 pb-3 mb-3 last:pb-0 last:mb-0">
-                <div className="w-8 h-8  bg-zinc-100 text-black font-bold flex items-center shrink-0 justify-center text-[10px] border border-zinc-200 tracking-tighter">
+                <div className="w-8 h-8  bg-zinc-100 text-black font-bold flex items-center shrink-0 justify-center text-[12px] border border-zinc-200 tracking-tighter">
                   #{i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[10px] font-black tracking-widest text-foreground truncate">{r.full_name || "Độc giả ẩn danh"}</h4>
-                  <span className="text-[9px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest"> 
+                  <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate">{r.full_name || "Độc giả ẩn danh"}</h4>
+                  <span className="text-[13px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest"> 
                     {r.score.toLocaleString("vi-VN")} đóng góp
                   </span>
                 </div>
@@ -1158,7 +1158,7 @@ export default function Feed() {
           <div className="bg-card border border-border  p-5">
             <h3 className="text-xs font-bold text-foreground tracking-wider mb-4 border-b border-border pb-3 flex items-center gap-2"><BookText className="w-3.5 h-3.5" /> Tài liệu đáng đọc</h3>
             {bookSuggestions.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có gợi ý</p>
+              <p className="text-[12px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có gợi ý</p>
             ) : (
               <div className="space-y-4 pt-1">
                 {bookSuggestions.map((b, i) => (
@@ -1167,8 +1167,8 @@ export default function Feed() {
                       <BookText className="w-5 h-5 text-zinc-300" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[10px] font-black tracking-widest text-foreground truncate group-hover:text-black transition-colors">{b.title}</h4>
-                      <span className="text-[9px] text-zinc-400 font-bold tracking-widest">{b.mentions} đề xuất</span>
+                      <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate group-hover:text-black transition-colors">{b.title}</h4>
+                      <span className="text-[13px] text-zinc-400 font-bold tracking-widest">{b.mentions} đề xuất</span>
                     </div>
                   </div>
                 ))}
@@ -1181,12 +1181,12 @@ export default function Feed() {
                <Hash className="w-3.5 h-3.5" /> Thẻ xu hướng
             </h3>
             {trendingTags.length === 0 ? (
-              <p className="text-[10px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có xu hướng</p>
+              <p className="text-[12px] text-muted-foreground font-bold tracking-widest text-center py-4">Chưa có xu hướng</p>
             ) : (
               <div className="space-y-3">
                 {trendingTags.map((t, i) => (
                   <Link key={i} href={`/search?q=${encodeURIComponent(t.tag || t)}`} className="flex justify-between items-center group cursor-pointer">
-                    <span className="text-[10px] font-black tracking-widest text-zinc-400 group-hover:text-black transition-colors">#{t.tag || t}</span>
+                    <span className="text-[12px] font-bold tracking-widest text-zinc-400 group-hover:text-black transition-colors">#{t.tag || t}</span>
                     <ArrowUpRight className="w-3 h-3 text-zinc-200 group-hover:text-black transition-all" />
                   </Link>
                 ))}
@@ -1204,8 +1204,8 @@ export default function Feed() {
                   {s.display_name?.[0]?.toUpperCase() || "A"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[10px] font-black tracking-widest text-foreground truncate">{s.display_name || "Ẩn danh"}</h4>
-                  <span className="text-[9px] text-zinc-400 font-bold truncate tracking-widest">{s.total_match || 0} điểm chung</span>
+                  <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate">{s.display_name || "Ẩn danh"}</h4>
+                  <span className="text-[13px] text-zinc-400 font-bold truncate tracking-widest">{s.total_match || 0} điểm chung</span>
                 </div>
                 <Button size="sm" variant="outline" onClick={() => { if(currentUser) followUser(s._id); else showToast("Vui lòng đăng nhập để thực hiện.", "error"); }} title="Theo dõi" className="h-7 px-3 text-xs rounded-none shrink-0 hover:bg-foreground hover:text-background transition-all">
                   Theo dõi
@@ -1289,11 +1289,11 @@ export default function Feed() {
                           <img src={s.media_url} className="w-full h-full object-cover" alt="Story" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center p-2">
-                            <p className="text-white text-[10px] font-semibold text-center line-clamp-4 break-words">{s.text_content}</p>
+                            <p className="text-white text-[12px] font-semibold text-center line-clamp-4 break-words">{s.text_content}</p>
                           </div>
                         )}
                         <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
-                          <span className="text-white text-[9px] font-medium">{new Date(s.created_at).toLocaleDateString('vi-VN')}</span>
+                          <span className="text-white text-[13px] font-medium">{new Date(s.created_at).toLocaleDateString('vi-VN')}</span>
                         </div>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                       </div>
@@ -1524,7 +1524,7 @@ export default function Feed() {
                             <h4 className="text-white text-sm font-bold text-center mb-2">{stories[activeStoryIndex].poll_data.question}</h4>
                             {stories[activeStoryIndex].poll_data.options.map((opt: string, idx: number) => {
                               const totalVotes = Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length;
-                              const myVote = (stories[activeStoryIndex].poll_data.voters || {})[currentUser?.id || currentUser?._id];
+                              const myVote = (stories[activeStoryIndex].poll_data.voters || {})[(currentUser?._id || "")];
                               const hasVoted = myVote !== undefined;
                               const optsVotes = Object.values(stories[activeStoryIndex].poll_data.voters || {}).filter(v => v === idx).length;
                               const percent = totalVotes > 0 ? Math.round((optsVotes / totalVotes) * 100) : 0;
@@ -1543,14 +1543,14 @@ export default function Feed() {
                                 </button>
                               );
                             })}
-                            <div className="text-white/50 text-[10px] text-center mt-1 font-bold tracking-widest">{Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length} votes</div>
+                            <div className="text-white/50 text-[12px] text-center mt-1 font-bold tracking-widest">{Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length} votes</div>
                           </div>
                         ) : stories[activeStoryIndex].quiz_data ? (
                           <div className="w-full max-w-[280px] bg-black/40 backblur-md  border border-white/20 p-4 z-10  flex flex-col gap-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                             <div className="text-center font-bold text-xs tracking-widest text-primary/80">Trắc Nghiệm</div>
                             <h4 className="text-white text-sm font-bold text-center mb-2">{stories[activeStoryIndex].quiz_data.question}</h4>
                             {stories[activeStoryIndex].quiz_data.options.map((opt: string, idx: number) => {
-                              const myAnswer = (stories[activeStoryIndex].quiz_data.answers || {})[currentUser?.id || currentUser?._id];
+                              const myAnswer = (stories[activeStoryIndex].quiz_data.answers || {})[(currentUser?._id || "")];
                               const hasAnswered = myAnswer !== undefined;
                               const isCorrect = idx === stories[activeStoryIndex].quiz_data.correct_idx;
                               
@@ -1599,7 +1599,7 @@ export default function Feed() {
                           </span>
                         )}
                      </span>
-                     <span className="text-[10px] font-medium opacity-80 text-white ">{new Date(stories[activeStoryIndex].created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                     <span className="text-[12px] font-medium opacity-80 text-white ">{new Date(stories[activeStoryIndex].created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                    </div>
                  </div>
                  
@@ -1629,7 +1629,7 @@ export default function Feed() {
                             <h4 className="text-white text-sm font-bold text-center mb-2">{stories[activeStoryIndex].poll_data.question}</h4>
                             {stories[activeStoryIndex].poll_data.options.map((opt: string, idx: number) => {
                               const totalVotes = Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length;
-                              const myVote = (stories[activeStoryIndex].poll_data.voters || {})[currentUser?.id || currentUser?._id];
+                              const myVote = (stories[activeStoryIndex].poll_data.voters || {})[(currentUser?._id || "")];
                               const hasVoted = myVote !== undefined;
                               const optsVotes = Object.values(stories[activeStoryIndex].poll_data.voters || {}).filter(v => v === idx).length;
                               const percent = totalVotes > 0 ? Math.round((optsVotes / totalVotes) * 100) : 0;
@@ -1648,14 +1648,14 @@ export default function Feed() {
                                 </button>
                               );
                             })}
-                            <div className="text-white/50 text-[10px] text-center mt-1 font-bold tracking-widest">{Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length} votes</div>
+                            <div className="text-white/50 text-[12px] text-center mt-1 font-bold tracking-widest">{Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length} votes</div>
                           </div>
                       ) : stories[activeStoryIndex].quiz_data ? (
                           <div className="w-full max-w-[280px] bg-black/40 backblur-md  border border-white/20 p-4 z-10  flex flex-col gap-2 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                             <div className="text-center font-bold text-xs tracking-widest text-primary/80">Trắc Nghiệm</div>
                             <h4 className="text-white text-sm font-bold text-center mb-2">{stories[activeStoryIndex].quiz_data.question}</h4>
                             {stories[activeStoryIndex].quiz_data.options.map((opt: string, idx: number) => {
-                              const myAnswer = (stories[activeStoryIndex].quiz_data.answers || {})[currentUser?.id || currentUser?._id];
+                              const myAnswer = (stories[activeStoryIndex].quiz_data.answers || {})[(currentUser?._id || "")];
                               const hasAnswered = myAnswer !== undefined;
                               const isCorrect = idx === stories[activeStoryIndex].quiz_data.correct_idx;
                               
@@ -1689,7 +1689,7 @@ export default function Feed() {
                  
 
                  <div className="absolute bottom-4 left-0 right-0 w-full px-4 z-[205] flex justify-between items-center gap-3">
-                    {(stories[activeStoryIndex].user_id === currentUser?._id || stories[activeStoryIndex].user_id === currentUser?.id) ? (
+                    {(stories[activeStoryIndex].user._id === (currentUser?._id || "") || stories[activeStoryIndex].user._id === (currentUser?._id || "")) ? (
                       <div
                         className="bg-black/40  px-4 py-2.5 text-sm text-white border border-white/20 w-full flex justify-between items-center cursor-pointer hover:bg-black/50 transition-colors"
                         onClick={() => {
@@ -1704,7 +1704,7 @@ export default function Feed() {
                         </span>
                         <div className="flex -space-x-1.5">
                           {storyViewers.slice(0, 3).map((v: any, i: number) => (
-                            <div key={i} className="w-6 h-6 rounded-none bg-white/20 border border-white/40 overflow-hidden flex items-center justify-center text-[10px] font-bold">
+                            <div key={i} className="w-6 h-6 rounded-none bg-white/20 border border-white/40 overflow-hidden flex items-center justify-center text-[12px] font-bold">
                               {v.avatar_url ? (
                                 <img src={v.avatar_url} className="w-full h-full object-cover" />
                               ) : (
@@ -1747,7 +1747,7 @@ export default function Feed() {
                     )}
                  </div>
 
-                 {showViewerList && (stories[activeStoryIndex].user_id === currentUser?._id || stories[activeStoryIndex].user_id === currentUser?.id) && (
+                 {showViewerList && (stories[activeStoryIndex].user._id === (currentUser?._id || "") || stories[activeStoryIndex].user._id === (currentUser?._id || "")) && (
                    <div className="absolute bottom-20 left-4 right-4 z-[210] bg-black/80 border border-white/20  p-4 animate-in slide-in-from-bottom-4 duration-200 max-h-64 overflow-y-auto">
                      <div className="flex items-center justify-between mb-3">
                        <span className="text-white text-xs font-bold tracking-widest">Người đã xem</span>
@@ -1770,7 +1770,7 @@ export default function Feed() {
                          </div>
                          <div>
                            <p className="text-white text-xs font-bold">{v.full_name || "Ẩn danh"}</p>
-                           <p className="text-white/50 text-[10px]">{new Date(v.viewed_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</p>
+                           <p className="text-white/50 text-[12px]">{new Date(v.viewed_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</p>
                          </div>
                        </div>
                      ))}

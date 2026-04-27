@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
     else if (index === 2) style = "bg-zinc-500 text-white border-zinc-500";
 
     return (
-      <div className={`w-10 h-10 shrink-0 flex items-center justify-center  font-black text-sm border transition-all ${style}`}>
+      <div className={`w-10 h-10 shrink-0 flex items-center justify-center  font-bold text-sm border transition-all ${style}`}>
         {String(index + 1).padStart(2, '0')}
       </div>
     );
@@ -63,8 +63,8 @@ export default function LeaderboardPage() {
     <div className="w-full max-w-[1000px] mx-auto px-6 lg:px-8 py-12 md:py-20 bg-white min-h-screen animate-in fade-in duration-300">
       <div className="mb-16 border-b border-black pb-12">
         <div className="flex items-center gap-3 mb-4">
-           <Trophy className="w-6 h-6 text-black" />
-           <span className="text-[11px] font-black tracking-[0.3em] text-zinc-400">Vinh danh tri thức</span>
+          <Trophy className="w-6 h-6 text-black" />
+          <span className="text-[13px] font-bold tracking-[0.3em] text-zinc-400">Vinh danh tri thức</span>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold tracking-tighter text-black mb-6">
           Bảng xếp hạng
@@ -77,33 +77,30 @@ export default function LeaderboardPage() {
       <div className="flex flex-wrap gap-1 mb-12 bg-zinc-50 p-1 border border-border ">
         <button
           onClick={() => setActiveTab("views")}
-          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[10px] font-bold tracking-widest transition-all ${
-            activeTab === "views"
+          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[12px] font-bold tracking-widest transition-all ${activeTab === "views"
               ? "bg-black text-white"
               : "text-zinc-400 hover:text-black hover:bg-white"
-          }`}
+            }`}
         >
           <TrendingUp className="w-3.5 h-3.5" />
           Xem nhiều nhất
         </button>
         <button
           onClick={() => setActiveTab("rating")}
-          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[10px] font-bold tracking-widest transition-all ${
-            activeTab === "rating"
+          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[12px] font-bold tracking-widest transition-all ${activeTab === "rating"
               ? "bg-black text-white"
               : "text-zinc-400 hover:text-black hover:bg-white"
-          }`}
+            }`}
         >
           <Star className="w-3.5 h-3.5" />
           Đánh giá tốt nhất
         </button>
         <button
           onClick={() => setActiveTab("authors")}
-          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[10px] font-bold tracking-widest transition-all ${
-            activeTab === "authors"
+          className={`flex-1 flex items-center justify-center gap-2.5 px-6 py-3  text-[12px] font-bold tracking-widest transition-all ${activeTab === "authors"
               ? "bg-black text-white"
               : "text-zinc-400 hover:text-black hover:bg-white"
-          }`}
+            }`}
         >
           <Users className="w-3.5 h-3.5" />
           Tác giả nổi bật
@@ -165,24 +162,24 @@ export default function LeaderboardPage() {
 
                     <div className="shrink-0 flex flex-col items-end">
                       {activeTab === "views" ? (
-                        <div className="flex items-center gap-2 text-black font-black text-lg">
+                        <div className="flex items-center gap-2 text-black font-bold text-lg">
                           <TrendingUp className="w-4 h-4 text-zinc-300" />
                           {book.views_count?.toLocaleString() || 0}
-                          <span className="text-[9px] tracking-widest text-zinc-400 font-bold ml-1">Lượt xem</span>
+                          <span className="text-[13px] tracking-wider text-zinc-400 font-bold ml-1">Lượt xem</span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2 text-black font-black text-lg">
+                        <div className="flex items-center gap-2 text-black font-bold text-lg">
                           <Star className="w-4 h-4 text-zinc-300" />
                           {book.rating_avg?.toFixed(1) || 0}
-                          <span className="text-[9px] tracking-widest text-zinc-400 font-bold ml-1">Đánh giá</span>
+                          <span className="text-[13px] tracking-wider text-zinc-400 font-bold ml-1">Đánh giá</span>
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="absolute right-0 top-0 bottom-0 w-1 bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ))}
-                
+
                 {(!data?.top_books_by_views?.length && activeTab === "views") && (
                   <div className="py-32 text-center border border-dashed border-border  bg-zinc-50/30">
                     <p className="text-xs font-bold text-zinc-400 tracking-widest">Dữ liệu thống kê lượt xem đang được cập nhật</p>
@@ -212,10 +209,10 @@ export default function LeaderboardPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-black text-black tracking-tight group-hover:underline underline-offset-4 decoration-2 truncate transition-all">
+                      <h3 className="text-lg font-bold text-black tracking-tight group-hover:underline underline-offset-4 decoration-2 truncate transition-all">
                         {author.display_name}
                       </h3>
-                      <div className="flex items-center gap-2 mt-2 text-[10px] font-bold text-zinc-400 tracking-widest">
+                      <div className="flex items-center gap-2 mt-2 text-[12px] font-bold text-zinc-400 tracking-wider">
                         <Users className="w-3.5 h-3.5" />
                         <span>{author.followers_count || 0} Độc giả</span>
                       </div>
@@ -228,14 +225,14 @@ export default function LeaderboardPage() {
           </div>
         )}
       </div>
-      
+
       <div className="mt-20 py-12 border-t border-zinc-100 flex justify-center">
-         <div className="text-center max-w-sm">
-            <span className="text-[10px] font-black tracking-[0.3em] text-zinc-300 block mb-4">DocLib Excellence</span>
-            <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">
-              "Thành tựu vĩ đại nhất của một tác giả không phải là số lượt xem, mà là giá trị tri thức để lại cho cộng đồng."
-            </p>
-         </div>
+        <div className="text-center max-w-sm">
+          <span className="text-[12px] font-bold tracking-wider text-zinc-300 block mb-4">DocLib Excellence</span>
+          <p className="text-xs text-zinc-400 font-medium leading-relaxed italic">
+            "Thành tựu vĩ đại nhất của một tác giả không phải là số lượt xem, mà là giá trị tri thức để lại cho cộng đồng."
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -18,8 +18,7 @@ class RagService:
                 status_code=status.HTTP_401_UNAUTHORIZED, 
                 detail="Vui lòng đăng nhập để sử dụng tính năng Trợ lý AI."
             )
-
-        rag_url = f"{base_url}/stream"
+            
             
         use_pro = payload.get("usePro", False)
         if use_pro and current_user:

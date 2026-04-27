@@ -180,7 +180,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 border border-border ">
               <p className="text-muted-foreground text-xs font-bold tracking-widest">Tổng người dùng</p>
               <h3 className="text-3xl font-bold mt-2">{stats?.total_users || 0}</h3>
-              <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1 mt-2 text-[12px] text-muted-foreground">
                 <Activity className="w-3 h-3" /> {stats?.active_users_24h || 0} hoạt động (24h)
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
               <p className="text-muted-foreground text-xs font-bold tracking-widest">Trạng thái API</p>
               <div className="flex items-center gap-2 mt-4">
                 <div className={`w-2 h-2 rounded-none ${health?.status === 'healthy' ? 'bg-black' : 'bg-zinc-300'}`} />
-                <span className="text-[10px] font-bold tracking-widest">{health?.status || 'Đang kiểm tra'}</span>
+                <span className="text-[12px] font-bold tracking-widest">{health?.status || 'Đang kiểm tra'}</span>
               </div>
             </div>
           </div>
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
+                <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[12px] tracking-widest">
                   <th className="px-6 py-4 font-bold">Người dùng</th>
                   <th className="px-6 py-4 font-bold">Vai trò</th>
                   <th className="px-6 py-4 font-bold">Trạng thái</th>
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <p className="font-bold text-foreground">{u.full_name || 'Chưa đặt tên'}</p>
-                          <p className="text-[10px] text-muted-foreground">{u.email}</p>
+                          <p className="text-[12px] text-muted-foreground">{u.email}</p>
                         </div>
                       </div>
                     </td>
@@ -259,15 +259,15 @@ export default function AdminDashboard() {
                           <option value="admin">Quản trị viên</option>
                         </select>
                       ) : (
-                        <span className="bg-muted px-2 py-1 rounded text-[10px] font-bold">{u.role}</span>
+                        <span className="bg-muted px-2 py-1 rounded text-[12px] font-bold">{u.role}</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1">
-                        <span className={`text-[10px] font-bold tracking-widest ${u.is_active ? 'text-black' : 'text-zinc-400'}`}>
+                        <span className={`text-[12px] font-bold tracking-widest ${u.is_active ? 'text-black' : 'text-zinc-400'}`}>
                           {u.is_active ? 'ĐANG HOẠT ĐỘNG' : 'ĐÃ TẠM KHÓA'}
                         </span>
-                        {u.is_shadowbanned && <span className="text-[9px] text-zinc-500 font-bold tracking-widest">SHADOWBANNED</span>}
+                        {u.is_shadowbanned && <span className="text-[13px] text-zinc-500 font-bold tracking-widest">SHADOWBANNED</span>}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -284,7 +284,7 @@ export default function AdminDashboard() {
                          <Button 
                             variant={u.is_active ? "secondary" : "default"} 
                             size="sm" 
-                            className="h-8 text-[10px] font-bold"
+                            className="h-8 text-[12px] font-bold"
                             onClick={() => updateStatus(u._id, !u.is_active)}
                          >
                            {u.is_active ? "KHÓA" : "MỞ KHÓA"}
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
-                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
+                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[12px] tracking-widest">
                         <th className="px-6 py-4 font-bold">Người đăng ký</th>
                         <th className="px-6 py-4 font-bold">Thông tin</th>
                         <th className="px-6 py-4 font-bold text-right">Thao tác</th>
@@ -327,15 +327,15 @@ export default function AdminDashboard() {
                         <tr key={app._id} className="border-b border-border last:border-0 hover:bg-muted/5 transition-colors">
                           <td className="px-6 py-4">
                             <p className="font-bold text-foreground">{app.user_name || 'N/A'}</p>
-                            <p className="text-[10px] text-muted-foreground">{app.user_email}</p>
+                            <p className="text-[12px] text-muted-foreground">{app.user_email}</p>
                           </td>
                           <td className="px-6 py-4">
                             <p className="text-xs text-foreground italic">"{app.motivation || 'Không có mô tả'}"</p>
                           </td>
                           <td className="px-6 py-4 text-right">
                              <div className="flex justify-end gap-2">
-                               <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => reviewApplication(app._id, 'REJECTED', 'Không đủ tiêu chuẩn')}>TỪ CHỐI</Button>
-                               <Button variant="default" size="sm" className="h-8 text-[10px] font-bold" onClick={() => reviewApplication(app._id, 'APPROVED')}>CHẤP THUẬN</Button>
+                               <Button variant="outline" size="sm" className="h-8 text-[12px] font-bold" onClick={() => reviewApplication(app._id, 'REJECTED', 'Không đủ tiêu chuẩn')}>TỪ CHỐI</Button>
+                               <Button variant="default" size="sm" className="h-8 text-[12px] font-bold" onClick={() => reviewApplication(app._id, 'APPROVED')}>CHẤP THUẬN</Button>
                              </div>
                           </td>
                         </tr>
@@ -362,7 +362,7 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
-                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
+                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[12px] tracking-widest">
                         <th className="px-6 py-4 font-bold">Nội dung</th>
                         <th className="px-6 py-4 font-bold">Lý do</th>
                         <th className="px-6 py-4 font-bold text-right">Thao tác</th>
@@ -372,17 +372,17 @@ export default function AdminDashboard() {
                       {reports.map((r: any) => (
                         <tr key={r._id} className="border-b border-border last:border-0 hover:bg-muted/5 transition-colors">
                           <td className="px-6 py-4">
-                            <span className="bg-muted px-2 py-0.5 rounded text-[10px] font-bold mr-2">{r.item_type}</span>
+                            <span className="bg-muted px-2 py-0.5 rounded text-[12px] font-bold mr-2">{r.item_type}</span>
                             <span className="text-xs text-muted-foreground">{r.item_id}</span>
                           </td>
                           <td className="px-6 py-4">
                             <p className="font-bold text-foreground text-xs">{r.reason}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{r.description || 'Không có mô tả chi tiết'}</p>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">{r.description || 'Không có mô tả chi tiết'}</p>
                           </td>
                           <td className="px-6 py-4 text-right">
                              <div className="flex justify-end gap-2">
-                               <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => resolveReport(r._id, 'ignore')}>BỎ QUA</Button>
-                               <Button variant="destructive" size="sm" className="h-8 text-[10px] font-bold" onClick={() => resolveReport(r._id, 'takedown')}>XÓA BỎ</Button>
+                               <Button variant="outline" size="sm" className="h-8 text-[12px] font-bold" onClick={() => resolveReport(r._id, 'ignore')}>BỎ QUA</Button>
+                               <Button variant="destructive" size="sm" className="h-8 text-[12px] font-bold" onClick={() => resolveReport(r._id, 'takedown')}>XÓA BỎ</Button>
                              </div>
                           </td>
                         </tr>
@@ -442,7 +442,7 @@ export default function AdminDashboard() {
               </div>
               <div className="p-4 bg-muted/20 border border-border  flex gap-3">
                 <Info className="w-5 h-5 text-muted-foreground shrink-0" />
-                <p className="text-[10px] text-muted-foreground leading-relaxed">Các thay đổi về cấu hình sẽ được lưu vào cơ sở dữ liệu và áp dụng ngay lập tức cho các yêu cầu mới mà không cần khởi động lại dịch vụ Docker.</p>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">Các thay đổi về cấu hình sẽ được lưu vào cơ sở dữ liệu và áp dụng ngay lập tức cho các yêu cầu mới mà không cần khởi động lại dịch vụ Docker.</p>
               </div>
            </div>
         </div>

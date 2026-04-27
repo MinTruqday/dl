@@ -65,7 +65,7 @@ async def generate_text(req: GenerationRequest):
         semantic_cache.set_cache(req.prompt, result)
         return {"result": result, "cached": False}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Gặp sự cố khi xử lý ngôn ngữ, vui lòng thử lại sau.")
 
 @router.post("/generate_raw")
 async def generate_raw_text(req: GenerationRequest):
@@ -87,7 +87,7 @@ async def generate_raw_text(req: GenerationRequest):
         semantic_cache.set_cache(req.prompt, result)
         return {"result": result, "cached": False}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Không thể khởi tạo nội dung vào lúc này.")
 
 @router.post("/translate")
 async def translate_text(req: TranslationRequest):
@@ -116,7 +116,7 @@ async def translate_text(req: TranslationRequest):
         result = await loop.run_in_executor(None, run_translation)
         return {"result": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Dịch vụ dịch thuật đang bận, vui lòng thử lại.")
             
 @router.post("/analyze-sentiment")
 async def analyze_sentiment(req: SentimentRequest):
@@ -171,11 +171,58 @@ async def check_grammar(req: GrammarRequest):
 
 @router.post("/generate-cover")
 async def generate_cover(req: CoverRequest):
-    import urllib.parse
-    encoded_title = urllib.parse.quote(req.title)
-    placeholder_url = f"https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1000&auto=format&fit=crop" 
-    return {"cover_url": placeholder_url, "message": "Ảnh bìa đã được khởi tạo theo phong cách tối giản."
-    }
+    try:
+        hf_token = os.environ.get("HF_TOKEN")
+        if not hf_token:
+            raise HTTPException(status_code=500, detail="Cấu hình HF_TOKEN bị thiếu.")
+
+        model_id = "black-forest-labs/FLUX.1-schnell"
+        api_url = f"https://api-inference.huggingface.co/models/{model_id}"
+        headers = {"Authorization": f"Bearer {hf_token}"}
+        
+        prompt = f"Professional minimalist book cover, title: '{req.title}', description: '{req.description}', style: {req.style}, monochrome aesthetic, high quality, centered composition"
+        
+        import httpx
+        async with httpx.AsyncClient() as client:
+            response = await client.post(api_url, headers=headers, json={"inputs": prompt}, timeout=60)
+            if response.status_code != 200:
+                if response.status_code == 503:
+                    raise HTTPException(status_code=503, detail="Mô hình AI đang khởi động, vui lòng thử lại sau vài giây.")
+                raise HTTPException(status_code=500, detail=f"Lỗi từ AI Service: {response.text}")
+            image_bytes = response.content
+
+        import boto3
+        import uuid
+        from io import BytesIO
+        
+        s3 = boto3.client(
+            "s3",
+            endpoint_url=os.environ.get("MINIO_ENDPOINT"),
+            aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY"),
+            aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY"),
+            region_name=os.environ.get("MINIO_REGION", "us-east-1")
+        )
+        
+        bucket = os.environ.get("MINIO_BUCKET_NAME")
+        filename = f"covers/{uuid.uuid4()}.jpg"
+        
+        s3.upload_fileobj(
+            BytesIO(image_bytes), 
+            bucket, 
+            filename, 
+            ExtraArgs={'ContentType': 'image/jpeg'}
+        )
+        
+        cover_url = f"{os.environ.get('MINIO_ENDPOINT')}/{bucket}/{filename}"
+        
+        return {
+            "cover_url": cover_url, 
+            "message": "Ảnh bìa đã được khởi tạo và lưu trữ thành công."
+        }
+    except Exception as e:
+        import logging
+        logging.error(f"Cover Generation Error: {e}")
+        raise HTTPException(status_code=500, detail="Hệ thống gặp sự cố khi tạo ảnh bìa AI.")
 
 @router.post("/generate-flashcard")
 async def generate_flashcard(req: FlashcardRequest):
@@ -210,7 +257,7 @@ async def generate_flashcard(req: FlashcardRequest):
         return result
     except Exception as e:
         import logging; logging.error(f"Flashcard Error: {e}")
-        return {"front": req.text, "back": f"Lỗi AI: {str(e)}"}
+        return {"front": req.text, "back": "Hệ thống không thể giải thích khái niệm này vào lúc này."}
 
 from src.memory.conversation_memory import conversation_memory
 
@@ -250,7 +297,7 @@ async def chat_endpoint(req: ChatRequest):
         
         return {"result": result, "cached": False}
     except Exception as e:
-        return {"result": f"Lỗi AI: {str(e)}"}
+        return {"result": "Lỗi kết nối trí tuệ nhân tạo, vui lòng thử lại sau."}
 
 @router.post("/synonyms")
 async def get_synonyms(req: SynonymsRequest):
@@ -269,5 +316,5 @@ async def get_synonyms(req: SynonymsRequest):
         synonyms = [s.strip() for s in result.split(",")]
         return {"synonyms": synonyms}
     except Exception as e:
-        return {"synonyms": [], "error": str(e)}
+        return {"synonyms": [], "error": "Không thể tìm từ đồng nghĩa lúc này."}
 

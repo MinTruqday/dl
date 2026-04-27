@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <div className="w-full max-w-[800px] mx-auto px-6 lg:px-8 py-12 md:py-20 bg-white min-h-screen animate-in fade-in duration-300">
       <div className="mb-16 border-b border-black pb-12">
-        <span className="text-[11px] font-bold tracking-[0.3em] text-zinc-400 block mb-4">Pháp lý</span>
+        <span className="text-[13px] font-bold tracking-[0.3em] text-zinc-400 block mb-4">Pháp lý</span>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black mb-6">
           Điều khoản sử dụng
         </h1>

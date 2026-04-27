@@ -71,7 +71,7 @@ export default function BookPreviewPage() {
                console.error(e);
             }
           }}
-          className="text-[10px] font-bold tracking-widest text-zinc-400 hover:text-black transition-colors flex items-center gap-1.5"
+          className="text-[12px] font-bold tracking-widest text-zinc-400 hover:text-black transition-colors flex items-center gap-1.5"
         >
           <Flag className="w-3.5 h-3.5" /> Báo cáo vi phạm
         </button>
@@ -87,10 +87,10 @@ export default function BookPreviewPage() {
             )}
           </div>
           <div className="flex-1">
-            <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-2">Bản xem trước</span>
+            <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">Bản xem trước</span>
             <h1 className="text-3xl md:text-4xl font-bold text-black tracking-tighter mb-4">{preview.title}</h1>
             <p className="text-sm text-zinc-500 leading-relaxed mb-6">{preview.description}</p>
-            <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold text-zinc-400 tracking-widest mb-6">
+            <div className="flex flex-wrap items-center gap-4 text-[12px] font-bold text-zinc-400 tracking-widest mb-6">
               <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {preview.views || 0} lượt xem</span>
               {preview.average_rating && <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> {Number(preview.average_rating).toFixed(1)}</span>}
               <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> {preview.total_chapters || 0} chương</span>
@@ -98,17 +98,17 @@ export default function BookPreviewPage() {
             {preview.tags && preview.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {preview.tags.map((tag: string, i: number) => (
-                  <span key={i} className="px-3 py-1 bg-zinc-100 text-zinc-600 text-[10px] font-bold tracking-widest border border-border flex items-center gap-1.5">
+                  <span key={i} className="px-3 py-1 bg-zinc-100 text-zinc-600 text-[12px] font-bold tracking-widest border border-border flex items-center gap-1.5">
                     <Tag className="w-3 h-3" /> {tag}
                   </span>
                 ))}
               </div>
             )}
             <div className="flex flex-wrap gap-4 mt-8 pt-6 border-t border-zinc-100">
-               <button className="px-6 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-2">
+               <button className="px-6 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-2">
                   <Star className="w-4 h-4 fill-white" /> Ủng hộ tác giả
                </button>
-               <button className="px-6 py-3 border-2 border-black text-[10px] font-bold tracking-widest hover:bg-zinc-50 transition-all">
+               <button className="px-6 py-3 border-2 border-black text-[12px] font-bold tracking-widest hover:bg-zinc-50 transition-all">
                   Theo dõi gói hội viên
                </button>
             </div>
@@ -128,7 +128,7 @@ export default function BookPreviewPage() {
               {ch.is_preview && (
                 <div className="mt-6 pt-4 border-t border-border flex items-center gap-2 text-zinc-400">
                   <Lock className="w-4 h-4" />
-                  <span className="text-[10px] font-bold tracking-widest">Nội dung giới hạn trong bản xem trước</span>
+                  <span className="text-[12px] font-bold tracking-widest">Nội dung giới hạn trong bản xem trước</span>
                 </div>
               )}
             </div>
@@ -146,10 +146,10 @@ export default function BookPreviewPage() {
         <h3 className="text-xl font-bold text-black mb-3 tracking-tight">Đọc toàn bộ tài liệu</h3>
         <p className="text-sm text-zinc-500 mb-6">Đăng ký hoặc đăng nhập để truy cập toàn bộ nội dung tài liệu này.</p>
         <div className="flex justify-center gap-4">
-          <Link href="/login" className="px-8 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all">
+          <Link href="/login" className="px-8 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all">
             Đăng nhập
           </Link>
-          <Link href="/register" className="px-8 py-3 bg-white text-black border border-black text-[10px] font-bold tracking-widest hover:bg-zinc-50 transition-all">
+          <Link href="/register" className="px-8 py-3 bg-white text-black border border-black text-[12px] font-bold tracking-widest hover:bg-zinc-50 transition-all">
             Đăng ký
           </Link>
         </div>

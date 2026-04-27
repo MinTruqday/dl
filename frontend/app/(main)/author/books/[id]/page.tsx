@@ -132,7 +132,7 @@ export default function BookManagementPage() {
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto px-6 py-12 animate-in fade-in duration-500">
-        <Link href="/author/dashboard" className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-zinc-400 hover:text-zinc-900 mb-8 transition-colors">
+        <Link href="/author/dashboard" className="inline-flex items-center gap-1.5 text-[12px] font-bold tracking-widest text-zinc-400 hover:text-zinc-900 mb-8 transition-colors">
           <ChevronLeft className="w-4 h-4" />
           Quay lại bảng điều khiển
         </Link>
@@ -146,8 +146,8 @@ export default function BookManagementPage() {
               <h1 className="text-3xl font-bold text-zinc-900 tracking-tighter mb-2">{book.title}</h1>
               <p className="text-zinc-500 text-xs mb-4">ID: {id}</p>
               <div className="flex gap-4">
-                <Link href={`/editor/${id}`} className="px-4 py-2 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors">Tiếp tục viết</Link>
-                <button className="px-4 py-2 border border-zinc-200 text-[10px] font-bold tracking-widest hover:border-zinc-900 transition-colors">Xem trước</button>
+                <Link href={`/editor/${id}`} className="px-4 py-2 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors">Tiếp tục viết</Link>
+                <button className="px-4 py-2 border border-zinc-200 text-[12px] font-bold tracking-widest hover:border-zinc-900 transition-colors">Xem trước</button>
               </div>
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function BookManagementPage() {
       </div>
 
       {toastMsg && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900 text-white px-6 py-3 text-[10px] font-bold tracking-widest shadow-xl animate-in slide-in-from-bottom-2 duration-300">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-zinc-900 text-white px-6 py-3 text-[12px] font-bold tracking-widest shadow-xl animate-in slide-in-from-bottom-2 duration-300">
           {toastMsg}
         </div>
       )}
@@ -187,7 +187,7 @@ function TabButton({ active, onClick, label, icon }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-2 px-6 py-4 text-[10px] font-bold tracking-widest transition-all relative whitespace-nowrap ${
+      className={`flex items-center gap-2 px-6 py-4 text-[12px] font-bold tracking-widest transition-all relative whitespace-nowrap ${
         active ? "text-zinc-900" : "text-zinc-400 hover:text-zinc-600"
       }`}
     >
@@ -203,23 +203,23 @@ function GeneralSettings({ book }: any) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="space-y-6">
         <div>
-          <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Tiêu đề tài liệu</label>
+          <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Tiêu đề tài liệu</label>
           <input type="text" defaultValue={book.title} className="w-full p-4 border border-zinc-200 focus:border-zinc-900 outline-none transition-colors text-sm" />
         </div>
         <div>
-          <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Đường dẫn (Slug)</label>
+          <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Đường dẫn (Slug)</label>
           <input type="text" defaultValue={book.slug} className="w-full p-4 border border-zinc-200 focus:border-zinc-900 outline-none transition-colors text-sm" />
         </div>
         <div>
-          <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-2">Mô tả ngắn</label>
+          <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-2">Mô tả ngắn</label>
           <textarea rows={4} defaultValue={book.description} className="w-full p-4 border border-zinc-200 focus:border-zinc-900 outline-none transition-colors text-sm" />
         </div>
-        <button className="px-8 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors flex items-center gap-2">
+        <button className="px-8 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors flex items-center gap-2">
           <Save className="w-4 h-4" /> Lưu thông tin
         </button>
       </div>
       <div>
-        <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-4">Ảnh bìa</label>
+        <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-4">Ảnh bìa</label>
         <div className="aspect-[3/4] max-w-[240px] bg-zinc-50 border border-zinc-200 flex flex-col items-center justify-center gap-4 group relative overflow-hidden">
           {book.cover_url ? (
             <img src={book.cover_url} className="w-full h-full object-cover" />
@@ -227,7 +227,7 @@ function GeneralSettings({ book }: any) {
             <ImageIcon className="w-12 h-12 text-zinc-200" />
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <button className="bg-white text-black px-4 py-2 text-[10px] font-bold tracking-widest">Thay đổi ảnh</button>
+             <button className="bg-white text-black px-4 py-2 text-[12px] font-bold tracking-widest">Thay đổi ảnh</button>
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@ function MonetizeSettings({ book, onSave }: any) {
         <p className="text-zinc-500 text-xs mb-6">Mặc định là 0 nếu tài liệu này miễn phí.</p>
         <div className="relative max-w-[200px]">
           <input name="price" type="number" defaultValue={book.price_coins || 0} className="w-full p-4 pr-12 border border-zinc-200 focus:border-zinc-900 outline-none text-lg font-bold" />
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-400 tracking-widest">Coin</span>
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] font-bold text-zinc-400 tracking-widest">Coin</span>
         </div>
       </div>
       <div className="p-6 border border-zinc-200 bg-zinc-50">
@@ -255,7 +255,7 @@ function MonetizeSettings({ book, onSave }: any) {
           </div>
         </label>
       </div>
-      <button type="submit" className="px-8 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors flex items-center gap-2">
+      <button type="submit" className="px-8 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors flex items-center gap-2">
         <Save className="w-4 h-4" /> Lưu cấu hình tài chính
       </button>
     </form>
@@ -283,7 +283,7 @@ function AccessSettings({ book, onSetPassword, onSetFreePreview }: any) {
           />
           <button 
             onClick={() => onSetPassword(password)}
-            className="px-6 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800"
+            className="px-6 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800"
           >Cài đặt</button>
         </div>
       </div>
@@ -308,11 +308,11 @@ function AccessSettings({ book, onSetPassword, onSetFreePreview }: any) {
               />
             </div>
           ))}
-          {(book.chapters || []).length === 0 && <p className="p-6 text-center text-zinc-400 text-[10px] font-bold tracking-widest">Chưa có chương nào</p>}
+          {(book.chapters || []).length === 0 && <p className="p-6 text-center text-zinc-400 text-[12px] font-bold tracking-widest">Chưa có chương nào</p>}
         </div>
         <button 
           onClick={() => onSetFreePreview(selectedPreviewIds)}
-          className="mt-6 px-8 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest"
+          className="mt-6 px-8 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest"
         >Lưu chương đọc thử</button>
       </div>
     </div>
@@ -327,7 +327,7 @@ function PublishSettings({ book, onSchedule }: any) {
       <div className="p-8 border border-zinc-900">
         <h3 className="text-sm font-bold text-zinc-900 mb-1 tracking-tight">Trạng thái hiện tại: {book.status === 'published' ? 'Đã công khai' : 'Bản nháp'}</h3>
         <p className="text-zinc-500 text-xs mb-8">Khi xuất bản, tài liệu sẽ xuất hiện trên trang Khám phá và Feed của người theo dõi.</p>
-        <button className={`w-full py-4 text-[10px] font-bold tracking-widest transition-colors ${
+        <button className={`w-full py-4 text-[12px] font-bold tracking-widest transition-colors ${
           book.status === 'published' ? 'border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-900' : 'bg-zinc-900 text-white hover:bg-zinc-800'
         }`}>
           {book.status === 'published' ? 'Gỡ bỏ (Hạ xuống bản nháp)' : 'Xuất bản ngay lập tức'}
@@ -346,7 +346,7 @@ function PublishSettings({ book, onSchedule }: any) {
           />
           <button 
             onClick={() => onSchedule(publishAt)}
-            className="px-6 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800"
+            className="px-6 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800"
           >Đặt lịch</button>
         </div>
       </div>
@@ -372,7 +372,7 @@ function TeamSettings({ book, onInvite }: any) {
           />
           <button 
             onClick={() => onInvite(inviteValue)}
-            className="px-6 py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800"
+            className="px-6 py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800"
           >Gửi lời mời</button>
         </div>
       </div>
@@ -385,7 +385,7 @@ function TeamSettings({ book, onInvite }: any) {
               <div className="w-10 h-10 bg-zinc-100 rounded-full" />
               <div>
                 <p className="text-xs font-bold text-zinc-900">Bạn (Chủ sở hữu)</p>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest">Toàn quyền</p>
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest">Toàn quyền</p>
               </div>
             </div>
           </div>
@@ -447,7 +447,7 @@ function CouponSettings({ book, id }: any) {
           />
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-1">% Giảm</label>
+              <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-1">% Giảm</label>
               <input 
                 type="number" 
                 value={newCoupon.discount_percent}
@@ -456,7 +456,7 @@ function CouponSettings({ book, id }: any) {
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] font-bold tracking-widest text-zinc-400 mb-1">Số lượng</label>
+              <label className="block text-[12px] font-bold tracking-widest text-zinc-400 mb-1">Số lượng</label>
               <input 
                 type="number" 
                 value={newCoupon.max_uses}
@@ -467,7 +467,7 @@ function CouponSettings({ book, id }: any) {
           </div>
           <button 
             onClick={handleCreate}
-            className="w-full py-4 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800"
+            className="w-full py-4 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800"
           >Phát hành mã</button>
         </div>
       </div>
@@ -476,16 +476,16 @@ function CouponSettings({ book, id }: any) {
         <h3 className="text-sm font-bold text-zinc-900 mb-6 tracking-tight">Mã đang hoạt động</h3>
         <div className="divide-y divide-zinc-100 border border-zinc-200">
           {coupons.length === 0 ? (
-            <p className="p-8 text-center text-zinc-400 text-[10px] font-bold tracking-widest">Chưa có mã nào</p>
+            <p className="p-8 text-center text-zinc-400 text-[12px] font-bold tracking-widest">Chưa có mã nào</p>
           ) : coupons.map(c => (
             <div key={c.id} className="p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-zinc-900 tracking-widest">{c.code}</p>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">
+                <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">
                   Giảm {c.discount_percent}% • {c.used_count}/{c.max_uses} Lượt dùng
                 </p>
               </div>
-              <div className={`px-2 py-1 text-[8px] font-bold tracking-widest ${c.is_active ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
+              <div className={`px-2 py-1 text-[10px] font-bold tracking-widest ${c.is_active ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
                 {c.is_active ? 'Hoạt động' : 'Hết hạn'}
               </div>
             </div>

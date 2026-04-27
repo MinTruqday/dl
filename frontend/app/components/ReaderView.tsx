@@ -258,8 +258,8 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
     <div className={`min-h-screen transition-all duration-500 ${themeClasses[theme]}`}>
       <div className="max-w-[800px] mx-auto px-8 py-20">
         <header className="mb-16 border-b border-current/10 pb-12">
-           <h1 className="text-4xl font-black tracking-tighter mb-4">{title}</h1>
-           <div className="text-[10px] font-bold tracking-widest opacity-40">
+           <h1 className="text-4xl font-bold tracking-tighter mb-4">{title}</h1>
+           <div className="text-[12px] font-bold tracking-widest opacity-40">
              Bản đọc trực tuyến
              {highlights.length > 0 && (
                <span className="ml-4 text-foreground/60">{highlights.length} ghi chú</span>
@@ -278,12 +278,12 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
         {highlights.length > 0 && (
           <div className="mt-16 pt-12 border-t border-current/10 animate-in fade-in duration-300">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[10px] font-bold tracking-widest opacity-40">
+              <h3 className="text-[12px] font-bold tracking-widest opacity-40">
                 Danh sách ghi chú ({highlights.length})
               </h3>
               <button
                 onClick={handleExportMarkdown}
-                className="flex items-center gap-2 py-2 px-3 border border-current/10 text-[10px] font-bold tracking-widest opacity-60 hover:opacity-100 transition-all duration-150 hover:border-current/30"
+                className="flex items-center gap-2 py-2 px-3 border border-current/10 text-[12px] font-bold tracking-widest opacity-60 hover:opacity-100 transition-all duration-150 hover:border-current/30"
                 title="Xuất thành tập tin"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -329,7 +329,7 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
         )}
 
         <footer className="mt-20 pt-12 border-t border-current/10 text-center opacity-40">
-           <p className="text-[10px] font-bold tracking-widest">Hết nội dung</p>
+           <p className="text-[12px] font-bold tracking-widest">Hết nội dung</p>
         </footer>
       </div>
 
@@ -370,7 +370,7 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
         <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center animate-in fade-in duration-200">
           <div className="bg-white border border-zinc-200 w-full max-w-md mx-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-4 border-b border-zinc-100">
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Ghi chú</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Ghi chú</span>
               <button
                 onClick={() => setEditingNote(null)}
                 className="p-1 hover:bg-zinc-100 transition-colors"
@@ -391,13 +391,13 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
             <div className="flex gap-2 p-4 pt-0">
               <button
                 onClick={() => handleUpdateNote(editingNote.id, editingNote.note)}
-                className="flex-1 py-2.5 bg-zinc-900 text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
+                className="flex-1 py-2.5 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
               >
                 Luu ghi chu
               </button>
               <button
                 onClick={() => handleDeleteHighlight(editingNote.id)}
-                className="py-2.5 px-4 border border-zinc-200 text-[10px] font-bold tracking-widest hover:border-zinc-400 transition-colors"
+                className="py-2.5 px-4 border border-zinc-200 text-[12px] font-bold tracking-widest hover:border-zinc-400 transition-colors"
               >
                 Xoá đánh dấu
               </button>

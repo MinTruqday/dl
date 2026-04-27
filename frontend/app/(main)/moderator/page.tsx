@@ -71,7 +71,7 @@ export default function ModeratorDashboard() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <ShieldAlert className="w-5 h-5 text-black" />
-            <span className="text-[10px] font-bold tracking-widest text-zinc-400">Kiểm soát hệ thống</span>
+            <span className="text-[12px] font-bold tracking-widest text-zinc-400">Kiểm soát hệ thống</span>
           </div>
           <h1 className="text-4xl font-bold text-black tracking-tighter">Bảng điều khiển Kiểm duyệt</h1>
         </div>
@@ -81,7 +81,7 @@ export default function ModeratorDashboard() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 text-[10px] font-bold tracking-widest transition-all ${activeTab === tab ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
+              className={`px-6 py-2 text-[12px] font-bold tracking-widest transition-all ${activeTab === tab ? "bg-black text-white" : "text-zinc-400 hover:text-black"}`}
             >
               {tab === "reports" ? "Báo cáo" : tab === "payouts" ? "Rút tiền" : "Chỉ số"}
             </button>
@@ -94,17 +94,17 @@ export default function ModeratorDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in slide-in-from-bottom-4 duration-500">
             <div className="border border-black p-8">
               <Users className="w-6 h-6 mb-4 text-zinc-400" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-1">Tổng người dùng</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-1">Tổng người dùng</span>
               <p className="text-4xl font-bold text-black tracking-tighter">{metrics.total_users?.toLocaleString()}</p>
             </div>
             <div className="border border-black p-8">
               <FileCheck className="w-6 h-6 mb-4 text-zinc-400" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-1">Tài liệu hệ thống</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-1">Tài liệu hệ thống</span>
               <p className="text-4xl font-bold text-black tracking-tighter">{metrics.total_documents?.toLocaleString()}</p>
             </div>
             <div className="border border-black p-8">
               <BarChart3 className="w-6 h-6 mb-4 text-zinc-400" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-1">Trạng thái</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-1">Trạng thái</span>
               <p className="text-4xl font-bold text-black tracking-tighter">Ổn định</p>
             </div>
           </div>
@@ -118,7 +118,7 @@ export default function ModeratorDashboard() {
             
             {reports.length === 0 ? (
               <div className="py-24 text-center border border-dashed border-zinc-200">
-                <p className="text-[10px] font-bold text-zinc-400 tracking-widest">Hàng đợi trống</p>
+                <p className="text-[12px] font-bold text-zinc-400 tracking-widest">Hàng đợi trống</p>
               </div>
             ) : (
               <div className="border border-black divide-y divide-zinc-100">
@@ -126,15 +126,15 @@ export default function ModeratorDashboard() {
                   <div key={r.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-zinc-50 transition-colors">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-[9px] font-black bg-black text-white px-2 py-0.5">{r.item_type}</span>
-                        <span className="text-[10px] font-bold text-zinc-400 tracking-tight">Bởi: {r.reporter_name}</span>
+                        <span className="text-[13px] font-bold bg-black text-white px-2 py-0.5">{r.item_type}</span>
+                        <span className="text-[12px] font-bold text-zinc-400 tracking-tight">Bởi: {r.reporter_name}</span>
                       </div>
                       <h3 className="text-sm font-bold text-black mb-1">{r.reason}</h3>
                       <p className="text-xs text-zinc-500 line-clamp-1">{r.description || "Không có mô tả chi tiết"}</p>
                     </div>
                     <div className="flex gap-3">
-                      <button className="px-4 py-2 border border-black text-[10px] font-bold tracking-widest hover:bg-black hover:text-white transition-all">Xem nội dung</button>
-                      <button className="px-4 py-2 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all">Xử lý</button>
+                      <button className="px-4 py-2 border border-black text-[12px] font-bold tracking-widest hover:bg-black hover:text-white transition-all">Xem nội dung</button>
+                      <button className="px-4 py-2 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all">Xử lý</button>
                     </div>
                   </div>
                 ))}
@@ -151,7 +151,7 @@ export default function ModeratorDashboard() {
 
             {payouts.length === 0 ? (
               <div className="py-24 text-center border border-dashed border-zinc-200">
-                <p className="text-[10px] font-bold text-zinc-400 tracking-widest">Không có yêu cầu nào</p>
+                <p className="text-[12px] font-bold text-zinc-400 tracking-widest">Không có yêu cầu nào</p>
               </div>
             ) : (
               <div className="border border-black divide-y divide-zinc-100">
@@ -159,8 +159,8 @@ export default function ModeratorDashboard() {
                   <div key={p.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-zinc-50 transition-colors">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-[10px] font-bold text-black tracking-widest">ID: {p.user_id?.slice(-6)}</span>
-                        <span className="text-[10px] font-bold text-zinc-400 tracking-tight">Tên: {p.user_name}</span>
+                        <span className="text-[12px] font-bold text-black tracking-widest">ID: {p.user_id?.slice(-6)}</span>
+                        <span className="text-[12px] font-bold text-zinc-400 tracking-tight">Tên: {p.user_name}</span>
                       </div>
                       <p className="text-2xl font-bold text-black tracking-tighter">{p.amount?.toLocaleString()} Coin</p>
                     </div>

@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import Navbar from "@/app/components/Navbar";
 import { forgotPasswordAPI } from "@/app/lib/api";
+import { Notification } from "@/app/components/NotificationToast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -42,8 +43,8 @@ export default function ForgotPasswordPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card py-8 px-4 shadow sm: sm:px-10 border border-border">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {info && <div className="bg-gray-100 border-l-4 border-black p-4  text-sm text-black">{info}</div>}
-            {error && <div className="bg-gray-100 border-l-4 border-black p-4  text-sm text-black font-bold outline-black">{error}</div>}
+            {info && <Notification type="success" message={info} />}
+            {error && <Notification type="error" message={error} />}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Địa chỉ Email</label>
@@ -70,7 +71,7 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-4 text-sm text-center">
-            <a href="/reset-password" className="text-black hover:underline font-bold text-[10px] tracking-widest">Đã có mã xác thực? Đặt lại mật khẩu</a>
+            <a href="/reset-password" className="text-black hover:underline font-bold text-[12px] tracking-widest">Đã có mã xác thực? Đặt lại mật khẩu</a>
           </div>
         </div>
       </div>

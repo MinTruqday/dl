@@ -6,8 +6,12 @@ from loguru import logger
 from src.agents.router_agent import router_agent_app
 from src.ingestion.pipeline import ingestion_pipeline
 from src.store.vector_store import vector_store
+from datetime import datetime
+from motor.motor_asyncio import AsyncIOMotorClient
+from src.routers.inference import router as inference_router
 
-app = FastAPI(title="DocLib Agentic RAG API")
+app = FastAPI()
+app.include_router(inference_router, prefix="/inference")
 
 class ChatRequest(BaseModel):
     query: str
@@ -21,7 +25,14 @@ class ChatRequest(BaseModel):
 class IngestRequest(BaseModel):
     document_id: str
 
-@app.post("/api/chat")
+class FeedbackRequest(BaseModel):
+    session_id: str
+    message_id: str
+    user_id: Optional[str] = "guest"
+    vote_type: str = Field(..., description="Must be 'upvote', 'downvote', or 'hallucination_report'")
+    comment: Optional[str] = ""
+
+@app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     logger.info(f"Chat request for document_id: {req.document_id}")
     
@@ -46,9 +57,43 @@ async def chat_endpoint(req: ChatRequest):
         }
     except Exception as e:
         logger.error(f"Chat error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Hệ thống đang bận xử lý yêu cầu, vui lòng thử lại sau.")
 
-@app.post("/api/ingest")
+@app.post("/stream")
+async def stream_endpoint(req: ChatRequest):
+    initial_state = {
+        "question": req.query,
+        "user_id": req.user_id,
+        "document_id": req.document_id,
+        "route": "",
+        "final_answer": "",
+        "use_web": req.useWeb,
+        "use_smart": req.useSmart,
+        "image_data": req.image_data,
+        "file_data": req.file_data
+    }
+    
+    async def response_generator():
+        try:
+            config = {"configurable": {"thread_id": f"{req.user_id}_{req.document_id or 'global'}"}}
+            for chunk in router_agent_app.stream(initial_state, config=config, stream_mode="updates"):
+                import json
+                if "rag" in chunk:
+                    msg = chunk["rag"].get("final_answer", "")
+                    if msg:
+                        yield f"data: {json.dumps({'answer': msg})}\n\n"
+                elif "chat" in chunk:
+                    msg = chunk["chat"].get("final_answer", "")
+                    if msg:
+                        yield f"data: {json.dumps({'answer': msg})}\n\n"
+        except Exception as e:
+            logger.error(f"Streaming error: {e}")
+            yield f"data: {json.dumps({'error': 'Streaming failed'})}\n\n"
+
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(response_generator(), media_type="text/event-stream")
+
+@app.post("/ingest")
 async def ingest_endpoint(req: IngestRequest):
     logger.info(f"Ingest request for document_id: {req.document_id}")
     try:
@@ -56,9 +101,9 @@ async def ingest_endpoint(req: IngestRequest):
         return result
     except Exception as e:
         logger.error(f"Ingestion error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Gặp sự cố khi đồng bộ tài liệu, vui lòng thử lại sau.")
 
-@app.delete("/api/documents/{document_id}")
+@app.delete("/documents/{document_id}")
 async def delete_document_endpoint(document_id: str):
     logger.info(f"Delete request for document_id: {document_id}")
     try:
@@ -66,7 +111,35 @@ async def delete_document_endpoint(document_id: str):
         return {"status": "success", "message": f"Deleted vectors for document {document_id}"}
     except Exception as e:
         logger.error(f"Delete error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Không thể xóa dữ liệu vào lúc này.")
+
+@app.post("/feedback")
+async def submit_feedback(req: FeedbackRequest):
+    if req.vote_type not in ["upvote", "downvote", "hallucination_report"]:
+        raise HTTPException(status_code=400, detail="Invalid vote_type. Must be 'upvote', 'downvote', or 'hallucination_report'")
+        
+    try:
+        mongo_uri = os.getenv("MONGODB_URI")
+        client = AsyncIOMotorClient(mongo_uri)
+        db = client.doclib
+        
+        feedback_doc = {
+            "session_id": req.session_id,
+            "message_id": req.message_id,
+            "user_id": req.user_id,
+            "vote_type": req.vote_type,
+            "comment": req.comment,
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.rag_feedback.insert_one(feedback_doc)
+        client.close()
+        logger.info(f"Feedback saved for message {req.message_id} ({req.vote_type})")
+        
+        return {"status": "success", "message": "Cảm ơn bạn đã đóng góp ý kiến."}
+    except Exception as e:
+        logger.error(f"Failed to save feedback: {e}")
+        raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
 
 @app.get("/health")
 async def health_check():

@@ -192,19 +192,26 @@ class IngestionPipeline:
 
     def _extract_pdf(self, data: bytes) -> str:
         try:
-            doc = fitz.open(stream=data, filetype="pdf")
-            pages = []
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                text = page.get_text("text")
+            import pdf2image
+            import pytesseract
+            
+            logger.info("Starting OCR extraction for PDF using pytesseract")
+            images = pdf2image.convert_from_bytes(data)
+            pages_text = []
+            
+            for i, img in enumerate(images):
+                text = pytesseract.image_to_string(img, lang="vie+eng")
                 if text.strip():
-                    pages.append(text)
-            doc.close()
-            full_text = "\n\n".join(pages)
-            logger.info(f"PDF extracted: {len(pages)} pages, {len(full_text)} chars")
+                    pages_text.append(text.strip())
+                    
+            full_text = "\n\n".join(pages_text)
+            logger.info(f"PDF OCR extracted: {len(images)} pages, {len(full_text)} chars")
             return full_text
+        except ImportError:
+            logger.error("Missing pdf2image or pytesseract. Please install them to use OCR.")
+            return ""
         except Exception as e:
-            logger.error(f"PDF extraction error: {e}")
+            logger.error(f"PDF OCR extraction error: {e}")
             return ""
 
     def _extract_epub(self, data: bytes) -> str:

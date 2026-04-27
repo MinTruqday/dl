@@ -20,7 +20,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit }: any) {
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
-        <button onClick={() => onSubmit(reason)} className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800">
+        <button onClick={() => onSubmit(reason)} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800">
           Gửi báo cáo
         </button>
       </div>

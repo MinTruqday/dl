@@ -64,11 +64,11 @@ export default function AuthorSeriesPage() {
         <div>
            <div className="flex items-center gap-3 mb-2">
               <Layers className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Quản lý nội dung</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Quản lý nội dung</span>
            </div>
-           <h1 className="text-4xl font-black text-black tracking-tighter">Bộ sưu tập & Series</h1>
+           <h1 className="text-4xl font-bold text-black tracking-tighter">Bộ sưu tập & Series</h1>
         </div>
-        <Button onClick={() => setIsCreating(true)} className="text-[10px] font-bold tracking-widest bg-black h-12 px-8">
+        <Button onClick={() => setIsCreating(true)} className="text-[12px] font-bold tracking-widest bg-black h-12 px-8">
            <Plus className="w-4 h-4 mr-2" /> Tạo Series mới
         </Button>
       </header>
@@ -76,13 +76,13 @@ export default function AuthorSeriesPage() {
       {isCreating && (
         <div className="mb-12 border-2 border-black p-8 bg-zinc-50 space-y-6 animate-in slide-in-from-top-4 duration-300">
            <div className="flex justify-between items-start">
-              <h2 className="text-xl font-black tracking-tighter">Thiết lập Series mới</h2>
-              <button onClick={() => setIsCreating(false)} className="text-[10px] font-bold tracking-widest text-zinc-400 hover:text-black">Hủy bỏ</button>
+              <h2 className="text-xl font-bold tracking-tighter">Thiết lập Series mới</h2>
+              <button onClick={() => setIsCreating(false)} className="text-[12px] font-bold tracking-widest text-zinc-400 hover:text-black">Hủy bỏ</button>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold tracking-widest text-zinc-400">Tiêu đề Series</label>
+                    <label className="text-[12px] font-bold tracking-widest text-zinc-400">Tiêu đề Series</label>
                     <input 
                        value={newSeries.title}
                        onChange={e => setNewSeries({...newSeries, title: e.target.value})}
@@ -91,7 +91,7 @@ export default function AuthorSeriesPage() {
                     />
                  </div>
                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold tracking-widest text-zinc-400">Mô tả ngắn</label>
+                    <label className="text-[12px] font-bold tracking-widest text-zinc-400">Mô tả ngắn</label>
                     <textarea 
                        value={newSeries.description}
                        onChange={e => setNewSeries({...newSeries, description: e.target.value})}
@@ -101,7 +101,7 @@ export default function AuthorSeriesPage() {
                  </div>
               </div>
               <div className="space-y-4">
-                 <label className="text-[10px] font-bold tracking-widest text-zinc-400">Chọn tài liệu đưa vào Series ({newSeries.book_ids.length})</label>
+                 <label className="text-[12px] font-bold tracking-widest text-zinc-400">Chọn tài liệu đưa vào Series ({newSeries.book_ids.length})</label>
                  <div className="h-48 overflow-y-auto border border-zinc-200 bg-white divide-y divide-zinc-100">
                     {books.map(book => (
                        <div 
@@ -121,7 +121,7 @@ export default function AuthorSeriesPage() {
               </div>
            </div>
            <div className="pt-4 border-t border-zinc-200">
-              <Button onClick={handleCreate} className="w-full md:w-fit px-12 h-12 text-[10px] font-bold tracking-widest">
+              <Button onClick={handleCreate} className="w-full md:w-fit px-12 h-12 text-[12px] font-bold tracking-widest">
                  Xác nhận tạo Series
               </Button>
            </div>
@@ -135,11 +135,11 @@ export default function AuthorSeriesPage() {
                 <LayoutGrid className="w-6 h-6" />
              </div>
              <div className="space-y-2">
-                <h3 className="text-lg font-black tracking-tighter line-clamp-1">{s.title}</h3>
+                <h3 className="text-lg font-bold tracking-tighter line-clamp-1">{s.title}</h3>
                 <p className="text-xs text-zinc-500 line-clamp-2 italic">"{s.description || 'Không có mô tả'}"</p>
              </div>
              <div className="pt-6 border-t border-zinc-100 flex items-center justify-between">
-                <span className="text-[10px] font-bold tracking-widest text-zinc-400 flex items-center gap-1.5">
+                <span className="text-[12px] font-bold tracking-widest text-zinc-400 flex items-center gap-1.5">
                    <Book className="w-3.5 h-3.5" />
                    {s.book_count} tài liệu
                 </span>
@@ -151,7 +151,7 @@ export default function AuthorSeriesPage() {
         {series.length === 0 && !isCreating && (
            <div className="md:col-span-2 lg:col-span-3 py-32 text-center border border-dashed border-zinc-200 bg-zinc-50/30">
               <Info className="w-8 h-8 text-zinc-200 mx-auto mb-4" />
-              <p className="text-[10px] font-bold tracking-widest text-zinc-300">Bạn chưa có bộ sưu tập nào.</p>
+              <p className="text-[12px] font-bold tracking-widest text-zinc-300">Bạn chưa có bộ sưu tập nào.</p>
            </div>
         )}
       </div>

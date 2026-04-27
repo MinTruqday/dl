@@ -48,36 +48,36 @@ export default function AnalyticsDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="p-8 bg-zinc-50 border border-border space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
+          <div className="flex items-center gap-2 text-[12px] font-bold tracking-widest text-muted-foreground">
             <BookOpen className="w-3.5 h-3.5" />
             Tổng tài liệu
           </div>
           <div className="text-4xl font-bold">{stats?.total_books || 0}</div>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-black">
+          <div className="flex items-center gap-1.5 text-[12px] font-bold text-black">
             <ArrowUpRight className="w-3 h-3" />
             +12% so với tháng trước
           </div>
         </div>
 
         <div className="p-8 bg-zinc-50 border border-border space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
+          <div className="flex items-center gap-2 text-[12px] font-bold tracking-widest text-muted-foreground">
             <TrendingUp className="w-3.5 h-3.5" />
             Tổng lượt xem
           </div>
           <div className="text-4xl font-bold">{stats?.total_views?.toLocaleString() || 0}</div>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-black">
+          <div className="flex items-center gap-1.5 text-[12px] font-bold text-black">
              <ArrowUpRight className="w-3 h-3" />
              Tăng trưởng ổn định
           </div>
         </div>
 
         <div className="p-8 bg-zinc-50 border border-border space-y-4">
-          <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
+          <div className="flex items-center gap-2 text-[12px] font-bold tracking-widest text-muted-foreground">
             <Users className="w-3.5 h-3.5" />
             Người theo dõi
           </div>
           <div className="text-4xl font-bold">{stats?.followers_count || 0}</div>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-black">
+          <div className="flex items-center gap-1.5 text-[12px] font-bold text-black">
              Đang hoạt động tích cực
           </div>
         </div>
@@ -94,13 +94,13 @@ export default function AnalyticsDashboard() {
               <div key={book.id} className="flex items-center justify-between p-4 border border-border hover:bg-zinc-50 transition-colors">
                 <div className="space-y-1">
                   <div className="text-sm font-bold">{book.title}</div>
-                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest flex items-center">
+                  <div className="text-[12px] font-bold text-zinc-400 tracking-widest flex items-center">
                     {book.rating.toFixed(1)} <Star className="w-3 h-3 inline-block mx-1 fill-current" /> Đánh giá
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-bold">{book.views}</div>
-                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest">Lượt xem</div>
+                  <div className="text-[12px] font-bold text-zinc-400 tracking-widest">Lượt xem</div>
                 </div>
               </div>
             ))}
@@ -114,11 +114,11 @@ export default function AnalyticsDashboard() {
            </h2>
            <div className="p-8 bg-zinc-50 border border-border space-y-8">
               <div className="space-y-4">
-                 <div className="text-[10px] font-bold tracking-widest text-muted-foreground">Độ tuổi</div>
+                 <div className="text-[12px] font-bold tracking-widest text-muted-foreground">Độ tuổi</div>
                  <div className="space-y-3">
                     {Object.entries(demographics?.age_groups || {}).map(([group, val]: any) => (
                        <div key={group} className="space-y-1.5">
-                          <div className="flex justify-between text-[10px] font-bold">
+                          <div className="flex justify-between text-[12px] font-bold">
                              <span>{group}</span>
                              <span>{val}%</span>
                           </div>
@@ -131,11 +131,11 @@ export default function AnalyticsDashboard() {
               </div>
 
               <div className="space-y-4">
-                 <div className="text-[10px] font-bold tracking-widest text-muted-foreground">Giới tính</div>
+                 <div className="text-[12px] font-bold tracking-widest text-muted-foreground">Giới tính</div>
                  <div className="flex gap-4">
                     {Object.entries(demographics?.gender_ratio || {}).map(([gender, val]: any) => (
                        <div key={gender} className="flex-1 space-y-1.5">
-                          <div className="text-[10px] font-bold truncate">{gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : 'Khác'}</div>
+                          <div className="text-[12px] font-bold truncate">{gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : 'Khác'}</div>
                           <div className="text-lg font-bold">{val}%</div>
                           <div className="h-1 bg-zinc-200">
                              <div className="h-full bg-black" style={{ width: `${val}%` }} />

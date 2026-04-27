@@ -5,7 +5,8 @@ import AppShell from "@/app/components/AppShell";
 import { 
   BarChart3, 
   BookOpen, 
-  DollarSign, 
+  DollarSign,
+  Star, 
   Eye, 
   Users, 
   Plus, 
@@ -70,7 +71,7 @@ export default function AuthorDashboard() {
           </div>
           <Link 
             href="/editor/new"
-            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-zinc-900 text-white px-6 py-3 text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Viết tài liệu mới
@@ -132,14 +133,14 @@ export default function AuthorDashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[8px] font-bold tracking-widest px-2 py-0.5 border ${
+                        <span className={`text-[10px] font-bold tracking-widest px-2 py-0.5 border ${
                           book.status === 'published' ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-200 text-zinc-400'
                         }`}>
                           {book.status === 'published' ? 'Đã đăng' : 'Bản nháp'}
                         </span>
                       </div>
                       <h3 className="text-lg font-bold text-zinc-900 truncate group-hover:underline underline-offset-4">{book.title}</h3>
-                      <div className="flex items-center gap-4 mt-2 text-[10px] font-bold text-zinc-400 tracking-widest">
+                      <div className="flex items-center gap-4 mt-2 text-[12px] font-bold text-zinc-400 tracking-widest">
                         <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {book.views}</span>
                         <span className="flex items-center gap-1"><Star className="w-3 h-3" /> {book.average_rating || 0}</span>
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(book.created_at).toLocaleDateString('vi-VN')}</span>
@@ -161,13 +162,13 @@ export default function AuthorDashboard() {
               </h2>
               <div className="border border-zinc-200 p-6 space-y-6">
                 {!stats?.recent_sales || stats.recent_sales.length === 0 ? (
-                  <p className="text-zinc-400 text-[10px] font-bold tracking-widest text-center py-4">Chưa có giao dịch</p>
+                  <p className="text-zinc-400 text-[12px] font-bold tracking-widest text-center py-4">Chưa có giao dịch</p>
                 ) : (
                   stats.recent_sales.map((sale: any, i: number) => (
                     <div key={i} className="flex justify-between items-start border-b border-zinc-100 last:border-0 pb-4 last:pb-0">
                       <div>
-                        <p className="text-[10px] font-bold text-zinc-900 truncate max-w-[150px]">{sale.book_title}</p>
-                        <p className="text-[8px] font-bold text-zinc-400 tracking-widest">{new Date(sale.date).toLocaleDateString('vi-VN')}</p>
+                        <p className="text-[12px] font-bold text-zinc-900 truncate max-w-[150px]">{sale.book_title}</p>
+                        <p className="text-[10px] font-bold text-zinc-400 tracking-widest">{new Date(sale.date).toLocaleDateString('vi-VN')}</p>
                       </div>
                       <span className="text-xs font-bold text-zinc-900">+{sale.price}</span>
                     </div>
@@ -196,9 +197,9 @@ function StatCard({ icon, label, value, trend }: any) {
     <div className="border border-zinc-200 p-6 hover:border-zinc-900 transition-colors">
       <div className="flex items-center justify-between mb-4">
         <div className="text-zinc-400">{icon}</div>
-        {trend && <span className="text-[8px] font-bold text-zinc-900 bg-zinc-100 px-1.5 py-0.5">{trend}</span>}
+        {trend && <span className="text-[10px] font-bold text-zinc-900 bg-zinc-100 px-1.5 py-0.5">{trend}</span>}
       </div>
-      <p className="text-[10px] font-bold text-zinc-400 tracking-widest mb-1">{label}</p>
+      <p className="text-[12px] font-bold text-zinc-400 tracking-widest mb-1">{label}</p>
       <p className="text-3xl font-bold text-zinc-900 tracking-tighter">{value}</p>
     </div>
   );
@@ -208,7 +209,7 @@ function QuickAction({ icon, label, href }: any) {
   return (
     <Link 
       href={href}
-      className="flex items-center gap-3 p-4 border border-zinc-200 hover:bg-zinc-50 transition-colors text-[10px] font-bold tracking-widest text-zinc-900"
+      className="flex items-center gap-3 p-4 border border-zinc-200 hover:bg-zinc-50 transition-colors text-[12px] font-bold tracking-widest text-zinc-900"
     >
       {icon}
       {label}

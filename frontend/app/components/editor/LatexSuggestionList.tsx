@@ -3,7 +3,7 @@ import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'rea
 export const LatexSuggestionList = forwardRef((props: any, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const selectItem = index => {
+  const selectItem = (index: number) => {
     const item = props.items[index];
 
     if (item) {
@@ -26,7 +26,7 @@ export const LatexSuggestionList = forwardRef((props: any, ref) => {
   useEffect(() => setSelectedIndex(0), [props.items]);
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
+    onKeyDown: ({ event }: { event: any }) => {
       if (event.key === 'ArrowUp') {
         upHandler();
         return true;
@@ -49,7 +49,7 @@ export const LatexSuggestionList = forwardRef((props: any, ref) => {
   return (
     <div className="bg-card   border border-border overflow-hidden w-64">
       {props.items.length ? (
-        props.items.map((item, index) => (
+        props.items.map((item: any, index: number) => (
           <button
             className={`w-full text-left px-4 py-2 text-sm ${
               index === selectedIndex ? 'bg-gray-100 text-black font-semibold' : 'text-gray-700 hover:bg-background'

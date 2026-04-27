@@ -90,7 +90,7 @@ export default function AuthorProfilePage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">{author.role === "author" ? "Tác giả" : "Người dùng"}</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">{author.role === "author" ? "Tác giả" : "Người dùng"}</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-black tracking-tighter mb-3">{author.full_name}</h1>
             {author.bio && <p className="text-sm text-zinc-500 leading-relaxed max-w-xl mb-6">{author.bio}</p>}
@@ -110,7 +110,7 @@ export default function AuthorProfilePage() {
               <button
                 onClick={toggleFollow}
                 disabled={followLoading}
-                className={`inline-flex items-center gap-2 px-6 py-3 text-[10px] font-bold tracking-widest transition-all duration-150 ${
+                className={`inline-flex items-center gap-2 px-6 py-3 text-[12px] font-bold tracking-widest transition-all duration-150 ${
                   isFollowing
                     ? "bg-white text-black border border-black hover:bg-zinc-50"
                     : "bg-black text-white hover:bg-zinc-800"
@@ -151,7 +151,7 @@ export default function AuthorProfilePage() {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-bold text-black group-hover:underline underline-offset-4 decoration-2 truncate">{book.title}</h3>
                   {book.description && <p className="text-sm text-zinc-500 mt-1 line-clamp-2">{book.description}</p>}
-                  <div className="flex items-center gap-4 mt-3 text-[10px] font-bold text-zinc-400 tracking-widest">
+                  <div className="flex items-center gap-4 mt-3 text-[12px] font-bold text-zinc-400 tracking-widest">
                     <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {book.views || 0}</span>
                     {book.average_rating && <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> {Number(book.average_rating).toFixed(1)}</span>}
                   </div>

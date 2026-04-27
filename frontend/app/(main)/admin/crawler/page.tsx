@@ -17,7 +17,7 @@ export default function collectorManagerPage() {
     {
       id: "hcm-bio",
       source: "HoChiMinhCollection",
-      target_url: "https:
+      target_url: "https://example.com/hcm-bio",
       status: "idle",
       last_run: "2026-04-19 10:00:00",
       items_collected: 45,
@@ -25,7 +25,7 @@ export default function collectorManagerPage() {
     {
       id: "nxbgd-books",
       source: "NXBGDCollection",
-      target_url: "https:
+      target_url: "https://example.com/nxbgd-books",
       status: "idle",
       last_run: "2026-04-19 11:30:00",
       items_collected: 1200,
@@ -92,7 +92,7 @@ export default function collectorManagerPage() {
                 <td className="px-4 py-3 text-gray-500">{collector.last_run || "Chưa chạy"}</td>
                 <td className="px-4 py-3 text-gray-500">{collector.items_collected} bản ghi</td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 border text-[10px] font-bold tracking-widest ${
+                  <span className={`inline-flex items-center px-2 py-0.5 border text-[12px] font-bold tracking-widest ${
                     collector.status === 'running' 
                       ? 'border-black text-white bg-black' 
                       : collector.status === 'completed'

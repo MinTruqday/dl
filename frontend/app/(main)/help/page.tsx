@@ -57,7 +57,7 @@ export default function HelpPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 animate-in fade-in duration-500">
       <header className="border-b-2 border-black pb-12 mb-16">
-        <h1 className="text-6xl font-black text-black tracking-tighter mb-8">Trung tâm Trợ giúp</h1>
+        <h1 className="text-6xl font-bold text-black tracking-tighter mb-8">Trung tâm Trợ giúp</h1>
         <div className="max-w-2xl relative">
            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-black" />
            <input 
@@ -77,7 +77,7 @@ export default function HelpPage() {
               <div className="w-12 h-12 bg-black text-white flex items-center justify-center">
                 {section.icon}
               </div>
-              <h2 className="text-xl font-black tracking-tighter">{section.title}</h2>
+              <h2 className="text-xl font-bold tracking-tighter">{section.title}</h2>
             </div>
             <ul className="space-y-4">
               {section.items.map((item, i) => (
@@ -92,22 +92,22 @@ export default function HelpPage() {
       </div>
 
       <div className="mt-24 p-12 bg-black text-white text-center space-y-6">
-        <h2 className="text-3xl font-black tracking-tighter">Bạn là Nhà phát triển?</h2>
+        <h2 className="text-3xl font-bold tracking-tighter">Bạn là Nhà phát triển?</h2>
         <p className="text-zinc-400 text-sm max-w-xl mx-auto">
           Truy cập tài liệu API tự động để tích hợp các tính năng của DocLib vào ứng dụng của bạn.
         </p>
         <div className="flex justify-center gap-4 pt-4">
-          <a href={`${process.env.NEXT_PUBLIC_API_URL}/docs`} target="_blank" className="bg-white text-black text-[10px] font-bold tracking-widest px-8 py-4 hover:bg-zinc-200 transition-colors">
+          <a href={`${process.env.NEXT_PUBLIC_API_URL}/docs`} target="_blank" className="bg-white text-black text-[12px] font-bold tracking-widest px-8 py-4 hover:bg-zinc-200 transition-colors">
             Tài liệu kỹ thuật
           </a>
-          <a href={`${process.env.NEXT_PUBLIC_API_URL}/redoc`} target="_blank" className="border border-white text-white text-[10px] font-bold tracking-widest px-8 py-4 hover:bg-white hover:text-black transition-colors">
+          <a href={`${process.env.NEXT_PUBLIC_API_URL}/redoc`} target="_blank" className="border border-white text-white text-[12px] font-bold tracking-widest px-8 py-4 hover:bg-white hover:text-black transition-colors">
             Giao diện tham khảo
           </a>
         </div>
       </div>
 
       <div className="mt-24 space-y-8">
-         <h2 className="text-xs font-black tracking-widest border-l-4 border-black pl-4">Nhật ký cập nhật</h2>
+         <h2 className="text-xs font-bold tracking-widest border-l-4 border-black pl-4">Nhật ký cập nhật</h2>
          <div className="border border-zinc-100 divide-y divide-zinc-50">
             {[
               { date: "2024-04-24", event: "Triển khai hệ thống Báo cáo nội dung & Governance" },
@@ -116,7 +116,7 @@ export default function HelpPage() {
               { date: "2024-04-22", event: "Mở rộng bảng thống kê doanh thu cho Tác giả" }
             ].map((log, i) => (
               <div key={i} className="py-4 flex items-center justify-between px-2">
-                 <span className="text-[10px] font-bold text-zinc-400 tracking-widest">{log.date}</span>
+                 <span className="text-[12px] font-bold text-zinc-400 tracking-widest">{log.date}</span>
                  <span className="text-xs font-bold tracking-tight">{log.event}</span>
               </div>
             ))}
@@ -125,22 +125,22 @@ export default function HelpPage() {
 
       <footer className="mt-24 pt-12 border-t border-zinc-100 grid grid-cols-1 md:grid-cols-4 gap-12">
          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold tracking-widest text-zinc-400">Trạng thái hệ thống</h4>
+            <h4 className="text-[12px] font-bold tracking-widest text-zinc-400">Trạng thái hệ thống</h4>
             <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-none bg-black animate-pulse" />
-               <span className="text-[10px] font-black tracking-tighter">Hệ thống: Trực tuyến</span>
+               <span className="text-[12px] font-bold tracking-tighter">Hệ thống: Trực tuyến</span>
             </div>
          </div>
          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold tracking-widest text-zinc-400">Phản hồi</h4>
-            <p className="text-[10px] font-black">24ms (Tối ưu)</p>
+            <h4 className="text-[12px] font-bold tracking-widest text-zinc-400">Phản hồi</h4>
+            <p className="text-[12px] font-bold">24ms (Tối ưu)</p>
          </div>
          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold tracking-widest text-zinc-400">Phiên bản</h4>
+            <h4 className="text-[12px] font-bold tracking-widest text-zinc-400">Phiên bản</h4>
             <p className="text-xs font-bold">DocLib v1.0.0</p>
          </div>
          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold tracking-widest text-zinc-400">Hỗ trợ</h4>
+            <h4 className="text-[12px] font-bold tracking-widest text-zinc-400">Hỗ trợ</h4>
             <p className="text-xs font-bold">support@doclib.io</p>
          </div>
       </footer>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getFeaturedAuthorsAPI } from "@/app/lib/api";
-import { useI18n } from "@/app/contexts/I18nContext";
 import Link from "next/link";
 import { User, Users, ChevronRight, BookOpen } from "lucide-react";
 
@@ -54,12 +53,12 @@ export default function AuthorsPage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold tracking-widest">{author.full_name}</h3>
-                  <p className="text-[10px] text-zinc-400 font-bold tracking-tighter">@{author.slug}</p>
+                  <p className="text-[12px] text-zinc-400 font-bold tracking-tighter">@{author.slug}</p>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed min-h-[48px]">
                   {author.bio}
                 </p>
-                <div className="pt-4 flex items-center gap-4 text-[10px] font-bold tracking-widest text-zinc-400 group-hover:text-black transition-colors">
+                <div className="pt-4 flex items-center gap-4 text-[12px] font-bold tracking-widest text-zinc-400 group-hover:text-black transition-colors">
                   <span className="flex items-center gap-1.5"><BookOpen className="w-3 h-3" /> 12 Books</span>
                   <span className="flex items-center gap-1.5"><Users className="w-3 h-3" /> 450 Follows</span>
                 </div>

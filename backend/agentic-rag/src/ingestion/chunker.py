@@ -34,7 +34,7 @@ class AdvancedSemanticChunker:
                     logger.info("Loaded Chonkie TokenChunker")
                 except Exception as e2:
                     logger.error(f"Chonkie TokenChunker failed: {e2}")
-7: 
+
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info(f"Chunking text of length {len(text)}")
         
@@ -97,3 +97,4 @@ class AdvancedSemanticChunker:
         return chunks
 
 chunker = AdvancedSemanticChunker()
+

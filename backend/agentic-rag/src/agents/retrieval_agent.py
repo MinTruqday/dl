@@ -43,7 +43,6 @@ class RetrievalAgent:
             docs = await self.retrieve(q, document_id, k=3)
             all_docs.extend(docs)
         
-        # Deduplicate
         seen_texts = set()
         unique_docs = []
         for d in all_docs:

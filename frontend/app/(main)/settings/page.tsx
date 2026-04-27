@@ -54,14 +54,14 @@ export default function SettingsPage() {
       <header className="border-b border-black pb-8 mb-12">
         <div className="flex items-center gap-3 mb-2">
            <Monitor className="w-5 h-5 text-black" />
-           <span className="text-[10px] font-bold tracking-widest text-zinc-400">Cấu hình cá nhân</span>
+           <span className="text-[12px] font-bold tracking-widest text-zinc-400">Cấu hình cá nhân</span>
         </div>
-        <h1 className="text-4xl font-black text-black tracking-tighter">Thiết lập hệ thống</h1>
+        <h1 className="text-4xl font-bold text-black tracking-tighter">Thiết lập hệ thống</h1>
       </header>
 
       <div className="space-y-12">
         <section className="space-y-6">
-           <h2 className="text-xs font-black tracking-widest border-l-4 border-black pl-4">Hiển thị & Trải nghiệm</h2>
+           <h2 className="text-xs font-bold tracking-widest border-l-4 border-black pl-4">Hiển thị & Trải nghiệm</h2>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="border border-zinc-100 p-6 space-y-4">
                  <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export default function SettingsPage() {
                        <button 
                           key={s}
                           onClick={() => setSettings({...settings, fontSize: s})}
-                          className={`flex-1 py-2 border text-[10px] font-bold  transition-all ${settings.fontSize === s ? 'bg-black text-white border-black' : 'hover:bg-zinc-50'}`}
+                          className={`flex-1 py-2 border text-[12px] font-bold  transition-all ${settings.fontSize === s ? 'bg-black text-white border-black' : 'hover:bg-zinc-50'}`}
                        >
                           {s === 'small' ? 'Nhỏ' : s === 'medium' ? 'Vừa' : 'Lớn'}
                        </button>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
                     <Globe className="w-4 h-4" />
                     <span className="text-xs font-bold ">Ngôn ngữ hệ thống</span>
                  </div>
-                 <button className="w-full py-2 border bg-zinc-50 text-[10px] font-bold  tracking-widest cursor-not-allowed opacity-50">
+                 <button className="w-full py-2 border bg-zinc-50 text-[12px] font-bold  tracking-widest cursor-not-allowed opacity-50">
                     Tiếng Việt (Mặc định)
                  </button>
               </div>
@@ -93,7 +93,7 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-6">
-           <h2 className="text-xs font-black  tracking-widest border-l-4 border-black pl-4">Thiết bị & Phiên hoạt động</h2>
+           <h2 className="text-xs font-bold  tracking-widest border-l-4 border-black pl-4">Thiết bị & Phiên hoạt động</h2>
            <div className="border border-zinc-100 divide-y divide-zinc-50">
               <div className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                  <div className="flex items-center gap-4">
@@ -102,12 +102,12 @@ export default function SettingsPage() {
                     </div>
                     <div>
                        <p className="text-sm font-bold  tracking-tight">iPhone 15 Pro</p>
-                       <p className="text-[10px] text-zinc-950 font-bold  tracking-widest flex items-center gap-1.5">
+                       <p className="text-[12px] text-zinc-950 font-bold  tracking-widest flex items-center gap-1.5">
                            <span className="w-1.5 h-1.5 bg-black" /> Đang hoạt động • Hồ Chí Minh, VN
                        </p>
                     </div>
                  </div>
-                 <span className="text-[9px] font-black  tracking-widest px-2 py-1 bg-zinc-100">Thiết bị này</span>
+                 <span className="text-[13px] font-bold  tracking-widest px-2 py-1 bg-zinc-100">Thiết bị này</span>
               </div>
               <div className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                  <div className="flex items-center gap-4">
@@ -116,21 +116,21 @@ export default function SettingsPage() {
                     </div>
                     <div>
                        <p className="text-sm font-bold  tracking-tight">MacBook Pro M3</p>
-                       <p className="text-[10px] text-zinc-400 font-bold  tracking-widest">Hoạt động 2 giờ trước • Hà Nội, VN</p>
+                       <p className="text-[12px] text-zinc-400 font-bold  tracking-widest">Hoạt động 2 giờ trước • Hà Nội, VN</p>
                     </div>
                  </div>
-                 <button className="text-[10px] font-bold  tracking-widest text-zinc-400 hover:text-black hover:underline transition-colors">Đăng xuất</button>
+                 <button className="text-[12px] font-bold  tracking-widest text-zinc-400 hover:text-black hover:underline transition-colors">Đăng xuất</button>
               </div>
            </div>
         </section>
 
         <section className="space-y-6">
-           <h2 className="text-xs font-black  tracking-widest border-l-4 border-black pl-4">Quyền riêng tư & Bảo mật</h2>
+           <h2 className="text-xs font-bold  tracking-widest border-l-4 border-black pl-4">Quyền riêng tư & Bảo mật</h2>
            <div className="border border-black divide-y divide-zinc-100">
               <div className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                  <div className="space-y-1">
                     <p className="text-sm font-bold  tracking-tight">Chế độ hồ sơ</p>
-                    <p className="text-[10px] text-zinc-400 font-bold  tracking-widest">Cho phép người khác tìm thấy bạn</p>
+                    <p className="text-[12px] text-zinc-400 font-bold  tracking-widest">Cho phép người khác tìm thấy bạn</p>
                  </div>
                  <select 
                     value={settings.privacyProfile}
@@ -144,7 +144,7 @@ export default function SettingsPage() {
               <div className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                  <div className="space-y-1">
                     <p className="text-sm font-bold  tracking-tight">Hiển thị hoạt động đọc</p>
-                    <p className="text-[10px] text-zinc-400 font-bold  tracking-widest">Chia sẻ các đầu sách bạn đang đọc trên Feed</p>
+                    <p className="text-[12px] text-zinc-400 font-bold  tracking-widest">Chia sẻ các đầu sách bạn đang đọc trên Feed</p>
                  </div>
                  <button 
                     onClick={() => toggleSetting("privacyActivity")}
@@ -156,9 +156,9 @@ export default function SettingsPage() {
               <div className="p-6 flex items-center justify-between hover:bg-zinc-50 transition-colors">
                  <div className="space-y-1">
                     <p className="text-sm font-bold  tracking-tight">Xác thực 2 lớp (2FA)</p>
-                    <p className="text-[10px] text-zinc-400 font-bold  tracking-widest">Tăng cường bảo mật bằng mã OTP</p>
+                    <p className="text-[12px] text-zinc-400 font-bold  tracking-widest">Tăng cường bảo mật bằng mã OTP</p>
                  </div>
-                 <Button variant="outline" className="text-[10px] font-bold  tracking-widest h-10 px-6 border-black text-black hover:bg-black hover:text-white transition-all">
+                 <Button variant="outline" className="text-[12px] font-bold  tracking-widest h-10 px-6 border-black text-black hover:bg-black hover:text-white transition-all">
                     Kích hoạt
                  </Button>
               </div>
@@ -166,15 +166,15 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-6">
-           <h2 className="text-xs font-black  tracking-widest border-l-4 border-black pl-4">Xác minh danh tính</h2>
+           <h2 className="text-xs font-bold  tracking-widest border-l-4 border-black pl-4">Xác minh danh tính</h2>
            <div className="border border-black p-8 space-y-6 bg-white">
               <div className="flex items-center gap-4">
                  <div className="w-12 h-12 bg-zinc-100 flex items-center justify-center border border-zinc-200">
                     <CheckCircle className="w-6 h-6 text-zinc-300" />
                  </div>
                  <div>
-                    <h3 className="text-sm font-black  tracking-tight">Trở thành Tác giả xác minh</h3>
-                    <p className="text-[10px] text-zinc-400 font-bold  tracking-widest leading-relaxed">
+                    <h3 className="text-sm font-bold  tracking-tight">Trở thành Tác giả xác minh</h3>
+                    <p className="text-[12px] text-zinc-400 font-bold  tracking-widest leading-relaxed">
                        Nhận tích xanh để khẳng định uy tín và mở khóa các tính năng thương mại nâng cao.
                     </p>
                  </div>
@@ -190,14 +190,14 @@ export default function SettingsPage() {
                  </div>
               </div>
 
-              <button className="w-full py-4 bg-zinc-100 text-zinc-400 text-[10px] font-bold  tracking-widest cursor-not-allowed">
+              <button className="w-full py-4 bg-zinc-100 text-zinc-400 text-[12px] font-bold  tracking-widest cursor-not-allowed">
                  Xác minh ngay
               </button>
            </div>
         </section>
 
         <section className="space-y-6">
-           <h2 className="text-xs font-black  tracking-widest border-l-4 border-black pl-4">Cài đặt thông báo</h2>
+           <h2 className="text-xs font-bold  tracking-widest border-l-4 border-black pl-4">Cài đặt thông báo</h2>
            <div className="border border-zinc-100 divide-y divide-zinc-50 bg-white">
                {[
                   { id: "notifyCommunity", label: "Tương tác cộng đồng", desc: "Thông báo khi có người bình chọn, bình luận hoặc nhắc đến bạn." },
@@ -207,8 +207,8 @@ export default function SettingsPage() {
                ].map((item, i) => (
                   <div key={i} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-zinc-50 transition-colors">
                      <div className="space-y-1">
-                        <p className="text-sm font-black  tracking-tight">{item.label}</p>
-                        <p className="text-[10px] text-zinc-400 font-medium leading-relaxed max-w-md">{item.desc}</p>
+                        <p className="text-sm font-bold  tracking-tight">{item.label}</p>
+                        <p className="text-[12px] text-zinc-400 font-medium leading-relaxed max-w-md">{item.desc}</p>
                      </div>
                      <div className="flex gap-6">
                         <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                            >
                               <div className={`w-3 h-3 bg-white rounded-none transition-all ${settings[item.id]?.email ? 'translate-x-5' : ''}`} />
                            </div>
-                           <span className="text-[9px] font-bold  tracking-widest">Email</span>
+                           <span className="text-[13px] font-bold  tracking-widest">Email</span>
                         </div>
                         <div className="flex items-center gap-2">
                            <div 
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                            >
                               <div className={`w-3 h-3 bg-white rounded-none transition-all ${settings[item.id]?.inapp ? 'translate-x-5' : ''}`} />
                            </div>
-                           <span className="text-[9px] font-bold  tracking-widest">Hệ thống</span>
+                           <span className="text-[13px] font-bold  tracking-widest">Hệ thống</span>
                         </div>
                      </div>
                   </div>
@@ -236,12 +236,12 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-6">
-           <h2 className="text-xs font-black  tracking-widest border-l-4 border-black pl-4">Dữ liệu tài khoản</h2>
+           <h2 className="text-xs font-bold  tracking-widest border-l-4 border-black pl-4">Dữ liệu tài khoản</h2>
            
            <div className="border border-zinc-100 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-2 text-center md:text-left">
-                 <h3 className="text-sm font-black  tracking-tight">Trích xuất dữ liệu</h3>
-                 <p className="text-[10px] text-zinc-400 font-bold  tracking-widest max-w-md leading-relaxed">
+                 <h3 className="text-sm font-bold  tracking-tight">Trích xuất dữ liệu</h3>
+                 <p className="text-[12px] text-zinc-400 font-bold  tracking-widest max-w-md leading-relaxed">
                     Tải về toàn bộ dữ liệu cá nhân, lịch sử đọc và bài viết của bạn dưới định dạng JSON.
                  </p>
               </div>
@@ -262,7 +262,7 @@ export default function SettingsPage() {
                     }
                   } catch (e) { console.error(e); }
                 }}
-                className="h-12 px-8 font-black text-[10px]  tracking-widest border-black"
+                className="h-12 px-8 font-bold text-[12px]  tracking-widest border-black"
               >
                  Trích xuất dữ liệu
               </Button>
@@ -270,8 +270,8 @@ export default function SettingsPage() {
 
            <div className="border border-zinc-200 p-8 bg-zinc-50/50 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="space-y-2 text-center md:text-left">
-                 <h3 className="text-sm font-black  tracking-tight text-black">Xóa vĩnh viễn tài khoản</h3>
-                 <p className="text-[10px] text-zinc-500 font-bold  tracking-widest max-w-md leading-relaxed">
+                 <h3 className="text-sm font-bold  tracking-tight text-black">Xóa vĩnh viễn tài khoản</h3>
+                 <p className="text-[12px] text-zinc-500 font-bold  tracking-widest max-w-md leading-relaxed">
                     Hành động này sẽ xóa toàn bộ dữ liệu, tài liệu đã mua và không thể khôi phục theo quy định bảo mật.
                  </p>
               </div>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
                     } catch (e) { console.error(e); }
                   }
                 }}
-                className="h-12 px-8 font-black text-[10px]  tracking-widest"
+                className="h-12 px-8 font-bold text-[12px]  tracking-widest"
               >
                  Xóa tài khoản
               </Button>
@@ -300,7 +300,7 @@ export default function SettingsPage() {
         </section>
 
         <div className="pt-8 border-t border-zinc-100 flex justify-end">
-           <Button className="h-12 px-12 font-black text-[10px]  tracking-widest bg-black text-white">
+           <Button className="h-12 px-12 font-bold text-[12px]  tracking-widest bg-black text-white">
               Lưu toàn bộ thay đổi
            </Button>
         </div>

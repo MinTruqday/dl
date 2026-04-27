@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBooksAPI, getTagsCategoriesAPI } from "@/app/lib/api";
-import { useI18n } from "@/app/contexts/I18nContext";
+import { getBooksAPI, getTrendingBooksAPI, getTagsCategoriesAPI } from "@/app/lib/api";
 import Link from "next/link";
 import { Search, Filter, TrendingUp, Grid, List as ListIcon, ChevronRight } from "lucide-react";
 
@@ -65,7 +64,7 @@ export default function ExplorePage() {
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-12">
         <aside className="space-y-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-2 text-[12px] font-bold tracking-widest text-muted-foreground">
               <Filter className="w-3 h-3" />
               Danh mục
             </div>
@@ -89,14 +88,14 @@ export default function ExplorePage() {
           </div>
 
           <div className="p-6 bg-zinc-50 border border-border space-y-4">
-             <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
+             <div className="flex items-center gap-2 text-[12px] font-bold tracking-widest text-muted-foreground">
                 <TrendingUp className="w-3 h-3" />
                 Xu hướng
              </div>
              <div className="space-y-4">
                 {trending.map((book, i) => (
                    <Link key={book._id} href={`/preview?slug=${book.slug}`} className="group cursor-pointer block">
-                      <div className="text-[10px] font-bold text-zinc-400 mb-1">0{i+1}</div>
+                      <div className="text-[12px] font-bold text-zinc-400 mb-1">0{i+1}</div>
                       <h4 className="text-xs font-bold leading-tight group-hover:underline underline-offset-4">{book.title}</h4>
                    </Link>
                 ))}
@@ -119,7 +118,7 @@ export default function ExplorePage() {
                     {book.cover_url ? (
                       <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-400 tracking-widest p-12 text-center">
+                      <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-zinc-400 tracking-widest p-12 text-center">
                         {book.title}
                       </div>
                     )}
@@ -127,11 +126,11 @@ export default function ExplorePage() {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                       <span className="text-[9px] font-bold tracking-widest text-zinc-400">{book.categories?.[0] || "Tổng hợp"}</span>
-                       <span className="text-[9px] font-bold tracking-widest text-zinc-400">{book.views || 0} lượt xem</span>
+                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{book.categories?.[0] || "Tổng hợp"}</span>
+                       <span className="text-[13px] font-bold tracking-widest text-zinc-400">{book.views || 0} lượt xem</span>
                     </div>
                     <h3 className="text-sm font-bold leading-tight group-hover:underline underline-offset-4 decoration-1">{book.title}</h3>
-                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{book.description}</p>
+                    <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed">{book.description}</p>
                   </div>
                 </Link>
               ))}

@@ -18,9 +18,9 @@ export default function ReadingHistoryPage() {
         <div>
            <div className="flex items-center gap-3 mb-2">
               <Clock className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Dấu chân tri thức</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Dấu chân tri thức</span>
            </div>
-           <h1 className="text-4xl font-black text-black tracking-tighter">Lịch sử đọc</h1>
+           <h1 className="text-4xl font-bold text-black tracking-tighter">Lịch sử đọc</h1>
         </div>
         <div className="flex gap-4">
            <div className="relative">
@@ -30,7 +30,7 @@ export default function ReadingHistoryPage() {
                  placeholder="Tìm trong lịch sử"
               />
            </div>
-           <Button variant="outline" className="text-[10px] font-bold tracking-widest border-black h-10 px-6">
+           <Button variant="outline" className="text-[12px] font-bold tracking-widest border-black h-10 px-6">
               <Trash2 className="w-4 h-4 mr-2" /> Xóa toàn bộ
            </Button>
         </div>
@@ -39,25 +39,25 @@ export default function ReadingHistoryPage() {
       <div className="space-y-4">
         {history.map((item) => (
           <div key={item.id} className="group border border-black p-6 flex flex-col md:flex-row items-center gap-8 hover:bg-zinc-50 transition-all duration-300">
-             <div className="w-16 h-20 bg-zinc-100 border border-zinc-200 shrink-0 flex items-center justify-center font-black text-zinc-200 text-xs text-center p-2">
+             <div className="w-16 h-20 bg-zinc-100 border border-zinc-200 shrink-0 flex items-center justify-center font-bold text-zinc-200 text-xs text-center p-2">
                 {item.title}
              </div>
              
              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-3 text-[9px] font-bold tracking-widest text-zinc-400">
+                <div className="flex items-center gap-3 text-[13px] font-bold tracking-widest text-zinc-400">
                    <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(item.date).toLocaleDateString("vi-VN")}</span>
                    <span className="w-1 h-1 rounded-none bg-zinc-200" />
                    <span>{item.author}</span>
                 </div>
-                <h3 className="text-lg font-black tracking-tighter">{item.title}</h3>
+                <h3 className="text-lg font-bold tracking-tighter">{item.title}</h3>
                 <div className="w-full bg-zinc-100 h-1.5 rounded-none overflow-hidden">
                    <div className="bg-black h-full transition-all duration-500" style={{ width: `${item.progress}%` }} />
                 </div>
-                <p className="text-[9px] font-bold tracking-widest text-zinc-400">Tiến độ: {item.progress}%</p>
+                <p className="text-[13px] font-bold tracking-widest text-zinc-400">Tiến độ: {item.progress}%</p>
              </div>
 
              <div className="flex items-center gap-4">
-                <Link href={`/preview/${item.slug}`} className="bg-black text-white text-[10px] font-bold tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
+                <Link href={`/preview/${item.slug}`} className="bg-black text-white text-[12px] font-bold tracking-widest px-6 py-3 hover:bg-zinc-800 transition-all">
                    Đọc tiếp
                 </Link>
                 <button className="p-3 border border-zinc-100 hover:border-black transition-all group/btn">
@@ -69,7 +69,7 @@ export default function ReadingHistoryPage() {
 
         {history.length === 0 && (
            <div className="py-24 text-center border border-dashed border-zinc-200 bg-zinc-50/50">
-              <p className="text-[10px] font-bold tracking-widest text-zinc-300">Bạn chưa đọc tài liệu nào gần đây.</p>
+              <p className="text-[12px] font-bold tracking-widest text-zinc-300">Bạn chưa đọc tài liệu nào gần đây.</p>
            </div>
         )}
       </div>

@@ -54,30 +54,30 @@ export default function AuthorProfilePage() {
                  {profile.avatar_url ? (
                     <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl font-black">{profile.full_name[0]}</div>
+                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold">{profile.full_name[0]}</div>
                  )}
               </div>
               <div>
-                 <h1 className="text-2xl font-black tracking-tighter mb-1 flex items-center justify-center gap-2">
+                 <h1 className="text-2xl font-bold tracking-tighter mb-1 flex items-center justify-center gap-2">
                     {profile.full_name}
                     <ShieldCheck className="w-5 h-5 text-zinc-400" />
                  </h1>
-                 <p className="text-[10px] font-bold text-zinc-400 tracking-widest">Tác giả chuyên nghiệp • DocLib Verified</p>
+                 <p className="text-[12px] font-bold text-zinc-400 tracking-widest">Tác giả chuyên nghiệp • DocLib Verified</p>
               </div>
               <p className="text-sm text-zinc-600 leading-relaxed italic">
                  "{profile.bio || "Tác giả này chưa cập nhật tiểu sử."}"
               </p>
               <div className="pt-6 border-t border-zinc-100 grid grid-cols-2 gap-4">
                  <div className="space-y-1">
-                    <p className="text-xl font-black tracking-tighter">{profile.followers_count || 0}</p>
-                    <p className="text-[9px] font-bold text-zinc-400 tracking-widest">Người theo dõi</p>
+                    <p className="text-xl font-bold tracking-tighter">{profile.followers_count || 0}</p>
+                    <p className="text-[13px] font-bold text-zinc-400 tracking-widest">Người theo dõi</p>
                  </div>
                  <div className="space-y-1">
-                    <p className="text-xl font-black tracking-tighter">{profile.books?.length || 0}</p>
-                    <p className="text-[9px] font-bold text-zinc-400 tracking-widest">Tác phẩm</p>
+                    <p className="text-xl font-bold tracking-tighter">{profile.books?.length || 0}</p>
+                    <p className="text-[13px] font-bold text-zinc-400 tracking-widest">Tác phẩm</p>
                  </div>
               </div>
-              <button className="w-full bg-black text-white text-[10px] font-bold tracking-widest py-4 hover:bg-zinc-800 transition-all">
+              <button className="w-full bg-black text-white text-[12px] font-bold tracking-widest py-4 hover:bg-zinc-800 transition-all">
                  Theo dõi tác giả
               </button>
            </div>
@@ -102,11 +102,11 @@ export default function AuthorProfilePage() {
 
         <div className="lg:col-span-8 space-y-12">
            <div className="flex items-center justify-between border-b-2 border-black pb-4">
-              <h2 className="text-lg font-black tracking-tighter flex items-center gap-2">
+              <h2 className="text-lg font-bold tracking-tighter flex items-center gap-2">
                  <BookOpen className="w-5 h-5" />
                  Danh sách tác phẩm
               </h2>
-              <div className="text-[10px] font-bold text-zinc-400 tracking-widest">Sắp xếp theo: Mới nhất</div>
+              <div className="text-[12px] font-bold text-zinc-400 tracking-widest">Sắp xếp theo: Mới nhất</div>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -116,7 +116,7 @@ export default function AuthorProfilePage() {
                        {book.cover_url ? (
                           <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-zinc-200 font-black text-2xl text-center p-8">{book.title}</div>
+                          <div className="w-full h-full flex items-center justify-center text-zinc-200 font-bold text-2xl text-center p-8">{book.title}</div>
                        )}
                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     </div>
@@ -125,7 +125,7 @@ export default function AuthorProfilePage() {
                           <h3 className="text-base font-bold tracking-tight line-clamp-1">{book.title}</h3>
                           <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
                        </div>
-                       <div className="flex items-center gap-4 text-[10px] font-bold text-zinc-400 tracking-widest">
+                       <div className="flex items-center gap-4 text-[12px] font-bold text-zinc-400 tracking-widest">
                           <span className="flex items-center gap-1"><Star className="w-3 h-3 text-black" /> {book.average_rating?.toFixed(1) || "0.0"}</span>
                           <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {book.views || 0} lượt xem</span>
                        </div>
@@ -136,7 +136,7 @@ export default function AuthorProfilePage() {
 
            {profile.books?.length === 0 && (
               <div className="py-24 text-center border border-dashed border-border bg-zinc-50/50">
-                 <p className="text-[10px] font-bold tracking-widest text-zinc-300">Chưa có tác phẩm nào được xuất bản.</p>
+                 <p className="text-[12px] font-bold tracking-widest text-zinc-300">Chưa có tác phẩm nào được xuất bản.</p>
               </div>
            )}
         </div>

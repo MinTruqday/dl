@@ -53,13 +53,13 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
     <div className="mt-16 space-y-12">
       <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
         <h2 className="text-lg font-bold text-black tracking-tight">Đánh giá cộng đồng</h2>
-        <div className="text-[10px] font-bold text-zinc-400  tracking-widest">{reviews.length} đánh giá</div>
+        <div className="text-[12px] font-bold text-zinc-400  tracking-widest">{reviews.length} đánh giá</div>
       </div>
 
       {user ? (
         <form onSubmit={handleSubmit} className="bg-zinc-50 border border-border p-8 space-y-6">
           <div className="space-y-4">
-            <label className="text-[10px] font-bold  tracking-widest text-zinc-400">Xếp hạng của bạn</label>
+            <label className="text-[12px] font-bold  tracking-widest text-zinc-400">Xếp hạng của bạn</label>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((s) => (
                 <button
@@ -75,7 +75,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
           </div>
           
           <div className="space-y-4">
-             <label className="text-[10px] font-bold  tracking-widest text-zinc-400">Nội dung đánh giá</label>
+             <label className="text-[12px] font-bold  tracking-widest text-zinc-400">Nội dung đánh giá</label>
              <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -88,7 +88,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full md:w-auto px-8 py-3 bg-black text-white text-[10px] font-bold  tracking-widest hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
+            className="w-full md:w-auto px-8 py-3 bg-black text-white text-[12px] font-bold  tracking-widest hover:bg-zinc-800 transition-all flex items-center justify-center gap-2"
           >
             {submitting ? "Đang gửi" : (
               <>
@@ -124,7 +124,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
                     )}
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold tracking-widest">{rev.full_name}</div>
+                    <div className="text-[12px] font-bold tracking-widest">{rev.full_name}</div>
                     <div className="flex items-center gap-1 mt-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className={`w-2.5 h-2.5 ${i < rev.rating ? 'text-black fill-current' : 'text-zinc-200'}`} />
@@ -132,7 +132,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
                     </div>
                   </div>
                 </div>
-                <div className="text-[9px] font-bold tracking-widest text-zinc-300">
+                <div className="text-[13px] font-bold tracking-widest text-zinc-300">
                    {new Date(rev.created_at || Date.now()).toLocaleDateString("vi-VN")}
                 </div>
               </div>
@@ -143,7 +143,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
           ))
         ) : (
           <div className="py-12 text-center text-zinc-300">
-             <p className="text-[10px] font-bold tracking-widest">Chưa có đánh giá nào</p>
+             <p className="text-[12px] font-bold tracking-widest">Chưa có đánh giá nào</p>
           </div>
         )}
       </div>

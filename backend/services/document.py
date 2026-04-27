@@ -10,7 +10,7 @@ from bson.errors import InvalidId
 from fastapi import HTTPException, status
 from core.database import db_client
 from models.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
-from core.text_analysis import calculate_flesch_kincaid, calculate_vocabulary_richness
+from core.document_metrics import calculate_flesch_kincaid, calculate_vocabulary_richness
 from core.publisher import trigger_document_publish_job, publish_compile_task
 from loguru import logger
 

@@ -11,10 +11,12 @@ RAG_SERVICE_URL = os.environ["AGENTIC_RAG_URL"]
 async def proxy_post(path: str, payload: dict):
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
-            resp = await client.post(f"{RAG_SERVICE_URL}/api/inference/{path}", json=payload)
+            resp = await client.post(f"{RAG_SERVICE_URL}/inference/{path}", json=payload)
+            if resp.status_code != 200:
+                return {"error": "Dịch vụ AI phản hồi lỗi, vui lòng thử lại sau."}
             return resp.json()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Lỗi kết nối AI: {str(e)}")
+            raise HTTPException(status_code=503, detail="Không thể kết nối đến máy chủ AI.")
 
 @router.post("/generate-cover")
 async def generate_cover(payload: dict, current_user: UserInDB = Depends(get_current_user)):

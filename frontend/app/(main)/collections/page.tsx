@@ -41,11 +41,11 @@ export default function CollectionsPage() {
         <div>
            <div className="flex items-center gap-3 mb-2">
               <Bookmark className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Thư viện cá nhân</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Thư viện cá nhân</span>
            </div>
-           <h1 className="text-4xl font-black text-black tracking-tighter">Bộ sưu tập của tôi</h1>
+           <h1 className="text-4xl font-bold text-black tracking-tighter">Bộ sưu tập của tôi</h1>
         </div>
-        <Button className="text-[10px] font-bold tracking-widest bg-black h-12 px-8">
+        <Button className="text-[12px] font-bold tracking-widest bg-black h-12 px-8">
            <FolderPlus className="w-4 h-4 mr-2" /> Tạo bộ sưu tập
         </Button>
       </header>
@@ -65,31 +65,31 @@ export default function CollectionsPage() {
              
              <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                   <h3 className="text-lg font-black tracking-tighter">{col.title}</h3>
+                   <h3 className="text-lg font-bold tracking-tighter">{col.title}</h3>
                    {!col.is_public && <div className="w-2 h-2 rounded-none bg-zinc-200" title="Riêng tư" />}
                 </div>
-                <p className="text-[10px] font-bold text-zinc-400 tracking-widest flex items-center gap-2">
+                <p className="text-[12px] font-bold text-zinc-400 tracking-widest flex items-center gap-2">
                    <BookOpen className="w-3.5 h-3.5" /> {col.book_count} tài liệu đã lưu
                 </p>
              </div>
 
               <div className="pt-6 border-t border-zinc-100 space-y-4">
                  <div className="flex items-center justify-between">
-                    <Link href={`/collections/${col.id}`} className="text-[10px] font-bold tracking-widest text-black hover:underline underline-offset-4 decoration-2">
+                    <Link href={`/collections/${col.id}`} className="text-[12px] font-bold tracking-widest text-black hover:underline underline-offset-4 decoration-2">
                        Xem chi tiết
                     </Link>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 border ${col.is_public ? 'border-black text-black' : 'border-zinc-100 text-zinc-400'}`}>
+                    <span className={`text-[13px] font-bold px-2 py-0.5 border ${col.is_public ? 'border-black text-black' : 'border-zinc-100 text-zinc-400'}`}>
                        {col.is_public ? 'Công khai' : 'Riêng tư'}
                     </span>
                  </div>
                  <div className="flex items-center justify-between pt-2">
                     <div className="flex -space-x-2">
                        {[1, 2].map(i => (
-                          <div key={i} className="w-6 h-6  border border-black bg-white text-[8px] font-black flex items-center justify-center">U{i}</div>
+                          <div key={i} className="w-6 h-6  border border-black bg-white text-[10px] font-bold flex items-center justify-center">U{i}</div>
                        ))}
-                       <div className="w-6 h-6  border border-black bg-zinc-100 text-[8px] font-black flex items-center justify-center hover:bg-black hover:text-white cursor-pointer">+</div>
+                       <div className="w-6 h-6  border border-black bg-zinc-100 text-[10px] font-bold flex items-center justify-center hover:bg-black hover:text-white cursor-pointer">+</div>
                     </div>
-                    <span className="text-[8px] font-bold tracking-widest text-zinc-400">Cộng tác viên</span>
+                    <span className="text-[10px] font-bold tracking-widest text-zinc-400">Cộng tác viên</span>
                  </div>
               </div>
           </div>
@@ -99,7 +99,7 @@ export default function CollectionsPage() {
            <div className="w-12 h-12 rounded-none border border-zinc-200 flex items-center justify-center">
               <Plus className="w-6 h-6 text-zinc-300" />
            </div>
-           <p className="text-[10px] font-bold tracking-widest text-zinc-400">Thêm danh sách mới</p>
+           <p className="text-[12px] font-bold tracking-widest text-zinc-400">Thêm danh sách mới</p>
         </button>
       </div>
     </div>

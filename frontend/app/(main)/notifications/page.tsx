@@ -49,7 +49,7 @@ export default function NotificationPage() {
         <div>
            <div className="flex items-center gap-3 mb-2">
               <Bell className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Cập nhật hệ thống</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Cập nhật hệ thống</span>
            </div>
            <h1 className="text-4xl font-bold text-black tracking-tighter">Trung tâm thông báo</h1>
         </div>
@@ -79,7 +79,7 @@ export default function NotificationPage() {
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                    <h3 className={`text-sm font-bold ${n.is_read ? 'text-zinc-500' : 'text-black'}`}>{n.title}</h3>
-                   <span className="text-[10px] font-bold text-zinc-400 tracking-widest flex items-center gap-1.5">
+                   <span className="text-[12px] font-bold text-zinc-400 tracking-widest flex items-center gap-1.5">
                       <Clock className="w-3 h-3" />
                       {new Date(n.created_at).toLocaleDateString("vi-VN")}
                    </span>
@@ -88,14 +88,14 @@ export default function NotificationPage() {
                 
                 <div className="pt-4 flex items-center gap-4">
                    {n.link && (
-                      <Link href={n.link} className="text-[10px] font-bold tracking-widest text-black hover:underline flex items-center gap-1">
+                      <Link href={n.link} className="text-[12px] font-bold tracking-widest text-black hover:underline flex items-center gap-1">
                          Xem chi tiết <ExternalLink className="w-3 h-3" />
                       </Link>
                    )}
                    {!n.is_read && (
                       <button 
                          onClick={() => markRead(n._id)}
-                         className="text-[10px] font-bold tracking-widest text-zinc-400 hover:text-black transition-colors"
+                         className="text-[12px] font-bold tracking-widest text-zinc-400 hover:text-black transition-colors"
                       >
                          Đánh dấu đã đọc
                       </button>
@@ -107,7 +107,7 @@ export default function NotificationPage() {
         ) : (
           <div className="py-24 text-center border border-dashed border-border bg-zinc-50/50">
              <Mail className="w-8 h-8 text-zinc-200 mx-auto mb-4" />
-             <p className="text-[10px] font-bold tracking-widest text-zinc-300">Không có thông báo mới.</p>
+             <p className="text-[12px] font-bold tracking-widest text-zinc-300">Không có thông báo mới.</p>
           </div>
         )}
       </div>

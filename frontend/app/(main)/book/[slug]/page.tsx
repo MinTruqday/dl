@@ -78,16 +78,16 @@ export default async function BookProfilePage({ params }: { params: { slug: stri
         <div className="bg-white  border border-border overflow-hidden">
           <div className="p-8 sm:p-12">
             <div className="flex items-center space-x-3 mb-6">
-              <span className={`px-4 py-1.5  text-[10px] font-bold tracking-widest ${book.status === "published" ? "bg-black text-white" : "bg-zinc-100 text-black"}`}>
+              <span className={`px-4 py-1.5  text-[12px] font-bold tracking-widest ${book.status === "published" ? "bg-black text-white" : "bg-zinc-100 text-black"}`}>
                 {book.status === "published" ? "Xuất bản" : book.status === "draft" ? "Bản thảo" : book.status}
               </span>
-              <span className="text-[10px] text-zinc-400 font-bold tracking-widest">ID: {book.slug}</span>
+              <span className="text-[12px] text-zinc-400 font-bold tracking-widest">ID: {book.slug}</span>
               <span className="text-zinc-200">|</span>
-              <div className="flex items-center text-[11px] font-bold text-zinc-500 gap-1.5">
+              <div className="flex items-center text-[13px] font-bold text-zinc-500 gap-1.5">
                 <Eye className="w-3.5 h-3.5" />
                 {book.views || 0}
               </div>
-              <div className="flex items-center text-[11px] font-bold text-black gap-1.5">
+              <div className="flex items-center text-[13px] font-bold text-black gap-1.5">
                 <Star className="w-3.5 h-3.5" />
                 {book.average_rating ? Number(book.average_rating).toFixed(1) : "Chưa có"} <span className="text-zinc-400 ml-1">({book.rating_count || 0})</span>
               </div>
@@ -112,7 +112,7 @@ export default async function BookProfilePage({ params }: { params: { slug: stri
               <div className="border-t border-border pt-12">
                 <div className="flex items-center justify-between mb-8">
                   <h3 className="text-xl font-bold text-black tracking-tight">Bản đọc</h3>
-                  <a href={renderPdfUrl} target="_blank" rel="noreferrer" className="text-[11px] font-bold flex items-center space-x-2 text-black hover:bg-zinc-100 border border-border px-4 py-2  transition-all tracking-widest">
+                  <a href={renderPdfUrl} target="_blank" rel="noreferrer" className="text-[13px] font-bold flex items-center space-x-2 text-black hover:bg-zinc-100 border border-border px-4 py-2  transition-all tracking-widest">
                     <ExternalLink className="w-4 h-4" />
                     <span>Mở toàn màn hình</span>
                   </a>

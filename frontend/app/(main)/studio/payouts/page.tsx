@@ -77,7 +77,7 @@ export default function PayoutsPage() {
   return (
     <div className="w-full max-w-[900px] mx-auto px-6 py-12 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
@@ -85,7 +85,7 @@ export default function PayoutsPage() {
       <header className="border-b border-black pb-8 mb-10">
         <div className="flex items-center gap-3 mb-2">
           <Wallet className="w-5 h-5 text-zinc-400" />
-          <span className="text-[10px] font-bold tracking-widest text-zinc-400">Tài chính</span>
+          <span className="text-[12px] font-bold tracking-widest text-zinc-400">Tài chính</span>
         </div>
         <h1 className="text-4xl font-bold text-black tracking-tighter">Rút tiền</h1>
       </header>
@@ -93,15 +93,15 @@ export default function PayoutsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{balance}</span>
-          <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Số dư hiện tại (Coin)</p>
+          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Số dư hiện tại (Coin)</p>
         </div>
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{revenue?.total_revenue || 0}</span>
-          <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tổng doanh thu (Coin)</p>
+          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tổng doanh thu (Coin)</p>
         </div>
         <div className="border border-border p-6">
           <span className="text-3xl font-bold text-black">{revenue?.total_sales || 0}</span>
-          <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tổng lượt bán</p>
+          <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tổng lượt bán</p>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export default function PayoutsPage() {
         <button
           onClick={requestPayout}
           disabled={requesting || balance <= 0}
-          className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all disabled:bg-zinc-300 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all disabled:bg-zinc-300 flex items-center justify-center gap-2"
         >
           {requesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowRight className="w-3.5 h-3.5" />}
           Yêu cầu rút {balance} Coin

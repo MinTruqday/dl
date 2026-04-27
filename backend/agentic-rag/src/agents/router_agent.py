@@ -59,7 +59,7 @@ def route_query(state: RouterState):
         decision = response.strip().lower()
     except Exception as e:
         logger.error(f"Router LLM error: {e}")
-        decision = "rag" # Fallback
+        decision = "rag"
     
     route = "rag" 
     if "chat" in decision:

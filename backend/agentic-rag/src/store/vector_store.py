@@ -16,10 +16,11 @@ class VectorStore:
             collections = self.client.get_collections().collections
             exists = any(c.name == self.collection_name for c in collections)
             if not exists:
+                from src.ingestion.embedder import embedding_service
                 logger.info(f"Creating collection: {self.collection_name}")
                 self.client.create_collection(
                     collection_name=self.collection_name,
-                    vectors_config=VectorParams(size=emb_dim, distance=Distance.COSINE)
+                    vectors_config=VectorParams(size=embedding_service._dimensions, distance=Distance.COSINE)
                 )
         except Exception as e:
             logger.error(f"Error ensuring collection: {e}")

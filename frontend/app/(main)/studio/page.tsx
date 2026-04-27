@@ -447,8 +447,8 @@ export default function AuthorStudioPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Loại giấy phép bản quyền</label>
                     <select 
-                      value={selectedBook?.license || "copyright"}
-                      onChange={(e) => updateBookConfig({ license: e.target.value })}
+                      value={selectedBook?._id || "copyright"}
+                      onChange={(e) => updateBookConfig({ } as any)}
                       className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground appearance-none"
                     >
                       <option value="copyright">© Bản quyền đầy đủ</option>

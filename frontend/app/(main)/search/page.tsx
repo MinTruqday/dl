@@ -60,7 +60,7 @@ export default function SearchResultsPage() {
               <h3 className="text-xs font-bold tracking-widest border-b border-zinc-100 pb-4">Bộ lọc tìm kiếm</h3>
               <div className="space-y-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold tracking-widest text-zinc-400">Chuyên mục</label>
+                    <label className="text-[12px] font-bold tracking-widest text-zinc-400">Chuyên mục</label>
                     <div className="flex flex-col gap-2">
                        {["Tất cả", "Công nghệ", "Kinh tế", "Văn học", "Nghệ thuật", "Khoa học"].map(c => (
                           <button 
@@ -74,7 +74,7 @@ export default function SearchResultsPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold tracking-widest text-zinc-400">Giá tài liệu</label>
+                    <label className="text-[12px] font-bold tracking-widest text-zinc-400">Giá tài liệu</label>
                     <div className="flex flex-col gap-2">
                        {["all", "free", "paid"].map(p => (
                           <button 
@@ -88,7 +88,7 @@ export default function SearchResultsPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold tracking-widest text-zinc-400">Xếp hạng tối thiểu</label>
+                    <label className="text-[12px] font-bold tracking-widest text-zinc-400">Xếp hạng tối thiểu</label>
                     <div className="flex gap-2">
                        {[0, 3, 4, 5].map(r => (
                           <button 
@@ -108,12 +108,12 @@ export default function SearchResultsPage() {
               <div className="space-y-4">
                  <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
                     <h3 className="text-xs font-bold tracking-widest">Lịch sử</h3>
-                    <button onClick={clearHistory} className="text-[9px] font-bold tracking-widest text-zinc-400 hover:text-black">Xóa sạch</button>
+                    <button onClick={clearHistory} className="text-[13px] font-bold tracking-widest text-zinc-400 hover:text-black">Xóa sạch</button>
                  </div>
                  <div className="flex flex-wrap gap-2">
                      {history.map(h => (
                         <div key={h} className="group/item relative">
-                           <Link href={`/search?q=${h}`} className="block text-[10px] font-bold tracking-widest px-3 py-2 bg-zinc-50 border border-zinc-100 hover:border-black transition-all pr-8">
+                           <Link href={`/search?q=${h}`} className="block text-[12px] font-bold tracking-widest px-3 py-2 bg-zinc-50 border border-zinc-100 hover:border-black transition-all pr-8">
                               {h}
                            </Link>
                            <button 
@@ -140,8 +140,8 @@ export default function SearchResultsPage() {
               <Search className="w-5 h-5 text-white" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-2xl font-black tracking-tighter leading-none">Tìm kiếm toàn cục</h1>
-              <p className="text-muted-foreground text-[10px] font-bold tracking-widest">Kết quả cho "{query}" • Lọc theo nhu cầu tri thức</p>
+              <h1 className="text-2xl font-bold tracking-tighter leading-none">Tìm kiếm toàn cục</h1>
+              <p className="text-muted-foreground text-[12px] font-bold tracking-widest">Kết quả cho "{query}" • Lọc theo nhu cầu tri thức</p>
             </div>
           </div>
 
@@ -159,26 +159,26 @@ export default function SearchResultsPage() {
                     {book.cover_url ? (
                        <img src={book.cover_url} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                       <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-300 text-center p-4">
+                       <div className="w-full h-full flex items-center justify-center text-[12px] font-bold text-zinc-300 text-center p-4">
                           {book.title}
                        </div>
                     )}
                   </div>
                   <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3 text-[9px] font-bold tracking-widest text-zinc-400">
+                    <div className="flex items-center gap-3 text-[13px] font-bold tracking-widest text-zinc-400">
                       <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {book.categories?.[0] || "Tài liệu"}</span>
                       <span className="w-1 h-1 rounded-none bg-zinc-200" />
                       <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> {book.author_name || "Tác giả ẩn danh"}</span>
                     </div>
-                    <h3 className="text-lg font-black tracking-tight group-hover:underline underline-offset-4 decoration-2">{book.title}</h3>
+                    <h3 className="text-lg font-bold tracking-tight group-hover:underline underline-offset-4 decoration-2">{book.title}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-3xl font-medium">
                       {book.description}
                     </p>
                     <div className="pt-2 flex items-center gap-6">
-                       <div className="flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-zinc-300">
+                       <div className="flex items-center gap-1.5 text-[13px] font-bold tracking-widest text-zinc-300">
                           <Clock className="w-3.5 h-3.5" /> {new Date(book.created_at).toLocaleDateString("vi-VN")}
                        </div>
-                       <div className="flex items-center gap-1.5 text-[9px] font-bold tracking-widest text-black">
+                       <div className="flex items-center gap-1.5 text-[13px] font-bold tracking-widest text-black">
                           <Star className="w-3.5 h-3.5" /> {book.average_rating?.toFixed(1) || "0.0"}
                        </div>
                     </div>
@@ -190,8 +190,8 @@ export default function SearchResultsPage() {
                  <div className="w-12 h-12 bg-zinc-100 flex items-center justify-center mb-4">
                     <Search className="w-6 h-6 text-zinc-300" />
                  </div>
-                 <h3 className="text-sm font-black tracking-widest mb-1">Không tìm thấy tài liệu nào</h3>
-                 <p className="text-[10px] font-bold tracking-widest text-zinc-400">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                 <h3 className="text-sm font-bold tracking-widest mb-1">Không tìm thấy tài liệu nào</h3>
+                 <p className="text-[12px] font-bold tracking-widest text-zinc-400">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
               </div>
             )}
           </div>

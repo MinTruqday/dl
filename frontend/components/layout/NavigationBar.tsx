@@ -6,7 +6,7 @@ import { Search, User } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function NavigationBar() {
-  const { user, logout } = useAuth();
+  const { user, logoutState } = useAuth();
 
   return (
     <header className="h-14 sm:h-16 border-b border-border bg-white/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 transition-all">
@@ -27,10 +27,10 @@ export default function NavigationBar() {
         {user ? (
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="text-sm font-medium text-zinc-700 hidden sm:inline-block">
-              {user.username || user.full_name || 'User'}
+              {user.slug || user.display_name || 'User'}
             </span>
             <button
-              onClick={logout}
+              onClick={() => { localStorage.removeItem("token"); window.location.href="/login"; }}
               className="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               Đăng xuất

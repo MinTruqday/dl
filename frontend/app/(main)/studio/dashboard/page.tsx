@@ -123,13 +123,13 @@ export default function AuthorDashboardPage() {
   return (
     <div className="w-full max-w-[1100px] mx-auto px-6 lg:px-8 py-12 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
 
       <header className="border-b border-black pb-8 mb-10">
-        <span className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-2">Bảng điều khiển</span>
+        <span className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">Bảng điều khiển</span>
         <h1 className="text-4xl font-bold text-black tracking-tighter">Quản lý tài liệu</h1>
       </header>
 
@@ -138,7 +138,7 @@ export default function AuthorDashboardPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-3 text-[10px] font-bold tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3 text-[12px] font-bold tracking-widest transition-all border-b-2 whitespace-nowrap ${
               activeTab === tab.key ? "border-black text-black" : "border-transparent text-zinc-400 hover:text-black"
             }`}
           >
@@ -151,10 +151,10 @@ export default function AuthorDashboardPage() {
         <div className="animate-in fade-in duration-300">
           {revenue && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              <div className="border border-border p-5"><TrendingUp className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_revenue || 0}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Doanh thu (Coin)</p></div>
-              <div className="border border-border p-5"><Eye className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_views || 0}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Lượt xem</p></div>
-              <div className="border border-border p-5"><Star className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_sales || 0}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Lượt mua</p></div>
-              <div className="border border-border p-5"><BookOpen className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_books || 0}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu</p></div>
+              <div className="border border-border p-5"><TrendingUp className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_revenue || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Doanh thu (Coin)</p></div>
+              <div className="border border-border p-5"><Eye className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_views || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt xem</p></div>
+              <div className="border border-border p-5"><Star className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_sales || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt mua</p></div>
+              <div className="border border-border p-5"><BookOpen className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_books || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu</p></div>
             </div>
           )}
           <h2 className="text-xs font-bold tracking-widest text-black mb-6 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Tài liệu của bạn</h2>
@@ -167,13 +167,13 @@ export default function AuthorDashboardPage() {
                   <BookOpen className="w-5 h-5 text-zinc-300 group-hover:text-black transition-colors shrink-0" />
                   <div className="min-w-0">
                     <h3 className="font-bold text-black truncate group-hover:underline underline-offset-4">{book.title}</h3>
-                    <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-400 font-bold tracking-widest">
+                    <div className="flex items-center gap-3 mt-1 text-[12px] text-zinc-400 font-bold tracking-widest">
                       <span className={`px-2 py-0.5 border ${book.status === "published" ? "border-black text-black" : "border-zinc-200 text-zinc-400"}`}>{book.status === "published" ? "Xuất bản" : book.status === "draft" ? "Bản nháp" : book.status}</span>
                       <span>{book.chapters_count || 0} chương</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-6 text-[10px] font-bold text-zinc-400 tracking-widest shrink-0">
+                <div className="flex items-center gap-6 text-[12px] font-bold text-zinc-400 tracking-widest shrink-0">
                   <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {book.views || 0}</span>
                   <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
@@ -191,8 +191,8 @@ export default function AuthorDashboardPage() {
           ) : (
             <div className="space-y-3">{coupons.map((c: any) => (
               <div key={c.id} className="flex items-center justify-between p-5 border border-border">
-                <div><span className="font-bold text-black text-lg tracking-widest">{c.code}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Giảm {c.discount_percent}% | Đã dùng {c.used_count}/{c.max_uses}</p></div>
-                <span className={`text-[10px] font-bold tracking-widest px-3 py-1 border ${c.is_active ? "border-black text-black" : "border-zinc-200 text-zinc-400"}`}>{c.is_active ? "Hoạt động" : "Hết hạn"}</span>
+                <div><span className="font-bold text-black text-lg tracking-widest">{c.code}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Giảm {c.discount_percent}% | Đã dùng {c.used_count}/{c.max_uses}</p></div>
+                <span className={`text-[12px] font-bold tracking-widest px-3 py-1 border ${c.is_active ? "border-black text-black" : "border-zinc-200 text-zinc-400"}`}>{c.is_active ? "Hoạt động" : "Hết hạn"}</span>
               </div>
             ))}</div>
           )}
@@ -206,7 +206,7 @@ export default function AuthorDashboardPage() {
             <div className="py-16 text-center border border-dashed border-border"><p className="text-xs text-zinc-400 font-bold tracking-widest">Chưa có Series</p></div>
           ) : (
             <div className="space-y-3">{series.map((s: any) => (
-              <div key={s.id} className="p-5 border border-border"><h3 className="font-bold text-black">{s.title}</h3><p className="text-sm text-zinc-500 mt-1">{s.description}</p><span className="text-[10px] text-zinc-400 font-bold tracking-widest mt-2 block">{s.book_count} tài liệu</span></div>
+              <div key={s.id} className="p-5 border border-border"><h3 className="font-bold text-black">{s.title}</h3><p className="text-sm text-zinc-500 mt-1">{s.description}</p><span className="text-[12px] text-zinc-400 font-bold tracking-widest mt-2 block">{s.book_count} tài liệu</span></div>
             ))}</div>
           )}
         </div>
@@ -220,17 +220,17 @@ export default function AuthorDashboardPage() {
               <option value="">Chọn tài liệu</option>
               {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
             </select>
-            <button onClick={analyzeSentiment} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+            <button onClick={analyzeSentiment} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
               {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Brain className="w-3.5 h-3.5" />} Phân tích
             </button>
           </div>
           {sentiment && (
             <div className="border border-border p-6 animate-in fade-in duration-300">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div><span className="text-2xl font-bold text-black capitalize">{sentiment.sentiment}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Cảm xúc chung</p></div>
-                <div><span className="text-2xl font-bold text-black">{sentiment.positive_pct}%</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tích cực</p></div>
-                <div><span className="text-2xl font-bold text-black">{sentiment.negative_pct}%</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Tiêu cực</p></div>
-                <div><span className="text-2xl font-bold text-black">{sentiment.total_reviews || 0}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Đánh giá</p></div>
+                <div><span className="text-2xl font-bold text-black capitalize">{sentiment.sentiment}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Cảm xúc chung</p></div>
+                <div><span className="text-2xl font-bold text-black">{sentiment.positive_pct}%</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tích cực</p></div>
+                <div><span className="text-2xl font-bold text-black">{sentiment.negative_pct}%</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tiêu cực</p></div>
+                <div><span className="text-2xl font-bold text-black">{sentiment.total_reviews || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Đánh giá</p></div>
               </div>
               <p className="text-sm text-zinc-500 p-4 bg-zinc-50">{sentiment.summary}</p>
             </div>
@@ -247,15 +247,15 @@ export default function AuthorDashboardPage() {
               {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
             </select>
             <input type="text" placeholder="ID Chương cần kiểm tra" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4" />
-            <button onClick={checkGrammar} disabled={processing || !selectedBookId || !selectedChapterId} className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+            <button onClick={checkGrammar} disabled={processing || !selectedBookId || !selectedChapterId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
               {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Kiểm tra
             </button>
           </div>
           {grammarResult && (
             <div className="border border-border p-6 animate-in fade-in duration-300">
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <div><span className="text-2xl font-bold text-black">{grammarResult.score}/100</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Điểm ngữ pháp</p></div>
-                <div><span className="text-2xl font-bold text-black">{grammarResult.word_count}</span><p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">Số từ</p></div>
+                <div><span className="text-2xl font-bold text-black">{grammarResult.score}/100</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Điểm ngữ pháp</p></div>
+                <div><span className="text-2xl font-bold text-black">{grammarResult.word_count}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Số từ</p></div>
               </div>
               <p className="text-sm text-zinc-500 p-4 bg-zinc-50">{grammarResult.message}</p>
             </div>
@@ -270,7 +270,7 @@ export default function AuthorDashboardPage() {
             <option value="">Chọn tài liệu</option>
             {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
           </select>
-          <button onClick={generateCover} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+          <button onClick={generateCover} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
             {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Image className="w-3.5 h-3.5" />} Tạo ảnh bìa tối giản
           </button>
           <p className="text-xs text-zinc-400 mt-4 text-center">Ảnh bìa được tạo dựa trên tiêu đề và mô tả tài liệu qua hệ thống AI</p>
@@ -290,8 +290,8 @@ export default function AuthorDashboardPage() {
               <div key={a.id} className="flex items-center justify-between p-4 border border-border hover:border-black transition-all">
                 <div>
                   <span className="text-sm font-bold text-black">{a.filename}</span>
-                  <span className="text-[10px] text-zinc-400 font-bold tracking-widest ml-3">{a.type}</span>
-                  <span className="text-[10px] text-zinc-400 ml-3">{a.size_bytes > 0 ? `${(a.size_bytes / 1024).toFixed(1)} KB` : ""}</span>
+                  <span className="text-[12px] text-zinc-400 font-bold tracking-widest ml-3">{a.type}</span>
+                  <span className="text-[12px] text-zinc-400 ml-3">{a.size_bytes > 0 ? `${(a.size_bytes / 1024).toFixed(1)} KB` : ""}</span>
                 </div>
                 <button onClick={() => deleteAsset(a.id)} className="text-zinc-300 hover:text-black transition-colors"><Trash2 className="w-4 h-4" /></button>
               </div>

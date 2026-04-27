@@ -2,16 +2,9 @@
 import Navbar from "@/app/components/Navbar";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  forgotPasswordAPI,
-  login,
-  passkeyLoginBeginAPI,
-  passkeyLoginFinishAPI,
-  passkeyRegisterBeginAPI,
-  passkeyRegisterFinishAPI,
-  resetPasswordAPI,
-} from "@/app/lib/api";
+import { login, passkeyLoginBeginAPI, passkeyLoginFinishAPI, passkeyRegisterBeginAPI, passkeyRegisterFinishAPI, forgotPasswordAPI, resetPasswordAPI } from "@/app/lib/api";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { Notification } from "@/app/components/NotificationToast";
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {
   const pad = "=".repeat((4 - (b64url.length % 4)) % 4);
@@ -224,23 +217,15 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-card py-8 px-4  sm: sm:px-10 border border-border">
           <form className="space-y-6" onSubmit={handleLogin}>
-            {info && (
-              <div className="bg-gray-100 border-l-4 border-black p-4  text-sm font-medium text-black">
-                {info}
-              </div>
-            )}
-            {error && (
-              <div className="bg-gray-100 border-l-4 border-black p-4  text-sm font-medium text-black font-bold outline-black">
-                {error}
-              </div>
-            )}
+            {info && <Notification type="info" message={info} />}
+            {error && <Notification type="error" message={error} />}
             {authStep && !error && (
-              <div className="bg-background border-l-4 border-gray-400 p-4  text-sm font-medium text-gray-700">
+              <Notification type="info" message={
                 <span className="inline-flex items-center gap-2">
                   {isSubmitting && <span className="h-3 w-3 animate-spin rounded-none border-2 border-gray-400 border-t-transparent" />}
                   {authStep}
                 </span>
-              </div>
+              } />
             )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

@@ -12,8 +12,8 @@ export function CardHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <div className="flex justify-between items-center px-6 py-4 border-b-2 border-black bg-zinc-50">
       <div>
-        <h3 className="font-black text-black text-lg tracking-tighter leading-tight">{title}</h3>
-        {subtitle && <p className="text-[10px] text-zinc-500 mt-1 font-black tracking-widest">{subtitle}</p>}
+        <h3 className="font-bold text-black text-lg tracking-tighter leading-tight">{title}</h3>
+        {subtitle && <p className="text-[12px] text-zinc-500 mt-1 font-bold tracking-widest">{subtitle}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>

@@ -105,7 +105,7 @@ export default function ModeratorDashboardPage() {
   return (
     <div className="w-full max-w-[1100px] mx-auto px-6 lg:px-8 py-12 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
@@ -113,7 +113,7 @@ export default function ModeratorDashboardPage() {
       <header className="border-b border-black pb-8 mb-10">
         <div className="flex items-center gap-3 mb-2">
           <Shield className="w-5 h-5 text-zinc-400" />
-          <span className="text-[10px] font-bold tracking-widest text-zinc-400">Kiểm duyệt</span>
+          <span className="text-[12px] font-bold tracking-widest text-zinc-400">Kiểm duyệt</span>
         </div>
         <h1 className="text-4xl font-bold text-black tracking-tighter">Bảng điều khiển kiểm duyệt</h1>
       </header>
@@ -123,7 +123,7 @@ export default function ModeratorDashboardPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-3 text-[10px] font-bold tracking-widest transition-all border-b-2 whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-3 text-[12px] font-bold tracking-widest transition-all border-b-2 whitespace-nowrap ${
               activeTab === tab.key ? "border-black text-black" : "border-transparent text-zinc-400 hover:text-black"
             }`}
           >
@@ -143,13 +143,13 @@ export default function ModeratorDashboardPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold tracking-widest px-2 py-0.5 border border-zinc-300 text-zinc-500">{r.item_type}</span>
+                    <span className="text-[12px] font-bold tracking-widest px-2 py-0.5 border border-zinc-300 text-zinc-500">{r.item_type}</span>
                   </div>
                   <p className="text-sm font-bold text-black">{r.reason}</p>
-                  <p className="text-[10px] text-zinc-400 font-medium mt-2">Người báo cáo: {r.reporter_name}</p>
+                  <p className="text-[12px] text-zinc-400 font-medium mt-2">Người báo cáo: {r.reporter_name}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => removeContent(r.item_type, r.item_id)} className="px-3 py-1.5 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all">
+                  <button onClick={() => removeContent(r.item_type, r.item_id)} className="px-3 py-1.5 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all">
                     Gỡ nội dung
                   </button>
                 </div>
@@ -170,7 +170,7 @@ export default function ModeratorDashboardPage() {
             <div key={i} className="border border-border p-5">
               <m.icon className="w-5 h-5 text-zinc-400 mb-3" />
               <span className="text-3xl font-bold text-black">{m.value}</span>
-              <p className="text-[10px] text-zinc-400 font-bold tracking-widest mt-1">{m.label}</p>
+              <p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">{m.label}</p>
             </div>
           ))}
         </div>
@@ -180,7 +180,7 @@ export default function ModeratorDashboardPage() {
         <div className="animate-in fade-in duration-300">
           <div className="flex gap-2 mb-6">
             <input type="text" placeholder="Tên thẻ mới" value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => e.key === "Enter" && postAction("tags", { action: "create", tag_name: newTag }, "Đã tạo thẻ").then(() => setNewTag(""))} className="flex-1 px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all" />
-            <button onClick={() => postAction("tags", { action: "create", tag_name: newTag }, "Đã tạo thẻ").then(() => setNewTag(""))} className="px-6 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800">Tạo</button>
+            <button onClick={() => postAction("tags", { action: "create", tag_name: newTag }, "Đã tạo thẻ").then(() => setNewTag(""))} className="px-6 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800">Tạo</button>
           </div>
           <div className="flex flex-wrap gap-2">
             {tags.map((t: any) => (
@@ -198,12 +198,12 @@ export default function ModeratorDashboardPage() {
         <div className="animate-in fade-in duration-300">
           <div className="flex gap-2 mb-6">
             <input type="text" placeholder="Từ khóa cấm mới" value={newKeyword} onChange={(e) => setNewKeyword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && postAction("blacklist", { action: "add", keyword: newKeyword }, "Đã thêm").then(() => setNewKeyword(""))} className="flex-1 px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all" />
-            <button onClick={() => postAction("blacklist", { action: "add", keyword: newKeyword }, "Đã thêm").then(() => setNewKeyword(""))} className="px-6 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800">Thêm</button>
+            <button onClick={() => postAction("blacklist", { action: "add", keyword: newKeyword }, "Đã thêm").then(() => setNewKeyword(""))} className="px-6 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800">Thêm</button>
           </div>
           <div className="space-y-1">{blacklist.map((k: any) => (
             <div key={k.id} className="flex items-center justify-between px-4 py-3 border-b border-zinc-50">
               <span className="text-sm font-medium text-black">{k.keyword}</span>
-              <span className="text-[10px] text-zinc-400 font-bold tracking-widest">Đang áp dụng</span>
+              <span className="text-[12px] text-zinc-400 font-bold tracking-widest">Đang áp dụng</span>
             </div>
           ))}</div>
         </div>
@@ -221,9 +221,9 @@ export default function ModeratorDashboardPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-sm font-bold text-black">{b.title}</span>
-                  <span className={`text-[10px] font-bold tracking-widest ml-3 ${b.severity === "high" ? "text-black" : "text-zinc-400"}`}>{b.severity}</span>
+                  <span className={`text-[12px] font-bold tracking-widest ml-3 ${b.severity === "high" ? "text-black" : "text-zinc-400"}`}>{b.severity}</span>
                 </div>
-                <span className="text-[10px] font-bold tracking-widest text-zinc-400">{b.status}</span>
+                <span className="text-[12px] font-bold tracking-widest text-zinc-400">{b.status}</span>
               </div>
             </div>
           ))}
@@ -237,7 +237,7 @@ export default function ModeratorDashboardPage() {
           <button onClick={() => {
             const desc = prompt("Mô tả tranh chấp:");
             if (desc) postAction("copyright-disputes", { plaintiff_id: "user_a", defendant_id: "user_b", book_id: "book_1", description: desc }, "Đã tạo tranh chấp");
-          }} className="w-full py-3 border border-border text-[10px] font-bold tracking-widest hover:border-black transition-all">
+          }} className="w-full py-3 border border-border text-[12px] font-bold tracking-widest hover:border-black transition-all">
             Tạo tranh chấp mới
           </button>
         </div>
@@ -249,8 +249,8 @@ export default function ModeratorDashboardPage() {
           <div className="space-y-4">
             <input type="text" placeholder="User ID cần thăng/gỡ VIP" id="vip-uid" className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all" />
             <div className="flex gap-3">
-              <button onClick={() => { const uid = (document.getElementById("vip-uid") as HTMLInputElement)?.value; if (uid) postAction("vip-author", { user_id: uid, action: "promote" }, "Đã thăng cấp VIP"); }} className="flex-1 py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800">Thăng cấp VIP</button>
-              <button onClick={() => { const uid = (document.getElementById("vip-uid") as HTMLInputElement)?.value; if (uid) postAction("vip-author", { user_id: uid, action: "demote" }, "Đã gỡ VIP"); }} className="flex-1 py-3 border border-border text-[10px] font-bold tracking-widest hover:border-black">Gỡ cấp VIP</button>
+              <button onClick={() => { const uid = (document.getElementById("vip-uid") as HTMLInputElement)?.value; if (uid) postAction("vip-author", { user_id: uid, action: "promote" }, "Đã thăng cấp VIP"); }} className="flex-1 py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800">Thăng cấp VIP</button>
+              <button onClick={() => { const uid = (document.getElementById("vip-uid") as HTMLInputElement)?.value; if (uid) postAction("vip-author", { user_id: uid, action: "demote" }, "Đã gỡ VIP"); }} className="flex-1 py-3 border border-border text-[12px] font-bold tracking-widest hover:border-black">Gỡ cấp VIP</button>
             </div>
           </div>
         </div>
@@ -267,9 +267,9 @@ export default function ModeratorDashboardPage() {
             <div key={t.id} className="border border-border p-5 flex items-center justify-between">
               <div>
                 <span className="text-sm font-bold text-black">{t.title}</span>
-                <span className={`text-[10px] font-bold tracking-widest ml-3 ${t.priority === "high" ? "text-black" : "text-zinc-400"}`}>{t.priority}</span>
+                <span className={`text-[12px] font-bold tracking-widest ml-3 ${t.priority === "high" ? "text-black" : "text-zinc-400"}`}>{t.priority}</span>
               </div>
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">{t.status}</span>
+              <span className="text-[12px] font-bold tracking-widest text-zinc-400">{t.status}</span>
             </div>
           ))}
         </div>
@@ -281,7 +281,7 @@ export default function ModeratorDashboardPage() {
             const title = prompt("Tiêu đề đề xuất:");
             const content = prompt("Nội dung:");
             if (title && content) postAction("policy-proposals", { title, content }, "Đã gửi đề xuất");
-          }} className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all mb-4">
+          }} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all mb-4">
             Tạo đề xuất chính sách mới
           </button>
           {policies.length === 0 ? (
@@ -293,9 +293,9 @@ export default function ModeratorDashboardPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <span className="text-sm font-bold text-black">{p.title}</span>
-                  <span className="text-[10px] text-zinc-400 font-bold tracking-widest ml-3">{p.category}</span>
+                  <span className="text-[12px] text-zinc-400 font-bold tracking-widest ml-3">{p.category}</span>
                 </div>
-                <span className="text-[10px] font-bold tracking-widest text-zinc-400">{p.status}</span>
+                <span className="text-[12px] font-bold tracking-widest text-zinc-400">{p.status}</span>
               </div>
             </div>
           ))}

@@ -34,7 +34,7 @@ export default function BookManagerPage() {
     setError(null);
     try {
       const token = localStorage.getItem("access_token");
-      const res = await fetch("http:
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/books`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -57,7 +57,7 @@ export default function BookManagerPage() {
       if (!token) {
         throw new Error("Không tìm thấy thông tin đăng nhập");
       }
-      const res = await fetch("http:
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/books`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

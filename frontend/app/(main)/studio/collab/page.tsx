@@ -67,7 +67,7 @@ export default function CollabPage() {
   return (
     <div className="w-full max-w-[900px] mx-auto px-6 py-12 bg-white min-h-screen animate-in fade-in duration-300">
       {message && (
-        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[10px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
+        <div className="fixed top-6 right-6 z-50 px-5 py-3 bg-black text-white text-[12px] font-bold tracking-widest animate-in slide-in-from-right-4 duration-300">
           {message}
         </div>
       )}
@@ -75,7 +75,7 @@ export default function CollabPage() {
       <header className="border-b border-black pb-8 mb-10">
         <div className="flex items-center gap-3 mb-2">
           <Users className="w-5 h-5 text-zinc-400" />
-          <span className="text-[10px] font-bold tracking-widest text-zinc-400">Studio</span>
+          <span className="text-[12px] font-bold tracking-widest text-zinc-400">Studio</span>
         </div>
         <h1 className="text-4xl font-bold text-black tracking-tighter">Đồng tác giả</h1>
       </header>
@@ -86,7 +86,7 @@ export default function CollabPage() {
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-2">Chọn tài liệu</label>
+            <label className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">Chọn tài liệu</label>
             <select
               value={selectedBookId}
               onChange={(e) => setSelectedBookId(e.target.value)}
@@ -99,7 +99,7 @@ export default function CollabPage() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-bold tracking-widest text-zinc-400 block mb-2">ID người dùng cần mời</label>
+            <label className="text-[12px] font-bold tracking-widest text-zinc-400 block mb-2">ID người dùng cần mời</label>
             <input
               type="text"
               value={targetUserId}
@@ -111,7 +111,7 @@ export default function CollabPage() {
           <button
             onClick={inviteCoauthor}
             disabled={inviting || !selectedBookId || !targetUserId.trim()}
-            className="w-full py-3 bg-black text-white text-[10px] font-bold tracking-widest hover:bg-zinc-800 transition-all disabled:bg-zinc-300 flex items-center justify-center gap-2"
+            className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-all disabled:bg-zinc-300 flex items-center justify-center gap-2"
           >
             {inviting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
             Gửi lời mời
@@ -134,9 +134,9 @@ export default function CollabPage() {
               <div key={b.id} className="flex items-center justify-between px-4 py-3 border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
                 <div>
                   <span className="text-sm font-bold text-black">{b.title}</span>
-                  <span className="text-[10px] text-zinc-400 font-bold tracking-widest ml-3">{b.status}</span>
+                  <span className="text-[12px] text-zinc-400 font-bold tracking-widest ml-3">{b.status}</span>
                 </div>
-                <span className="text-[10px] text-zinc-400 font-bold tracking-widest">{b.chapters_count || 0} chương</span>
+                <span className="text-[12px] text-zinc-400 font-bold tracking-widest">{b.chapters_count || 0} chương</span>
               </div>
             ))}
           </div>

@@ -16,13 +16,9 @@ class EmailService:
 
         subject = "Mã xác thực khôi phục mật khẩu - DocLib"
         body = f"""Chào bạn,
-
 Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản {email}.
-
 Mã xác thực của bạn là: {token}
-
 Lưu ý: Mã này chỉ có hiệu lực trong vòng 1 phút. Nếu bạn không yêu cầu thay đổi này, vui lòng bỏ qua email này.
-
 Trân trọng,
 Đội ngũ DocLib."""
 

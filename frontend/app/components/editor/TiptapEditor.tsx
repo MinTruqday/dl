@@ -335,7 +335,7 @@ export default function TiptapEditor({ initialContent, onSave }: { initialConten
                          </div>
                         <span className="font-bold tracking-tight flex flex-col">
                            Bản in PDF
-                           <span className="text-[9px] text-zinc-400 font-medium normal-case tracking-normal">Đã hoàn thành biên dịch</span>
+                           <span className="text-[13px] text-zinc-400 font-medium normal-case tracking-normal">Đã hoàn thành biên dịch</span>
                         </span>
                     </div>
                     <div className="flex gap-2">
@@ -355,7 +355,7 @@ export default function TiptapEditor({ initialContent, onSave }: { initialConten
              </div>
          )}
       </div>
-      <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1.5 border border-border text-[10px] font-bold text-zinc-500 tracking-widest pointer-events-none flex gap-4">
+      <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1.5 border border-border text-[12px] font-bold text-zinc-500 tracking-widest pointer-events-none flex gap-4">
          <span>{editor.storage.characterCount.words()} Từ</span>
          <span>{editor.storage.characterCount.characters()} Ký tự</span>
          <span>Khoảng {estimatedReadTime} phút đọc</span>
