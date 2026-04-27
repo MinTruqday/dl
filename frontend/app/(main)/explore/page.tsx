@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getBooksAPI, getTrendingBooksAPI, getTagsCategoriesAPI } from "@/app/lib/api";
+import { getDocumentsAPI, getTrendingDocumentsAPI, getTagsCategoriesAPI } from "@/app/lib/api";
 import Link from "next/link";
 import { Search, Filter, TrendingUp, Grid, List as ListIcon, ChevronRight } from "lucide-react";
 
 export default function ExplorePage() {
-  const [books, setBooks] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [trending, setTrending] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -36,13 +36,12 @@ export default function ExplorePage() {
   const loadBooks = async () => {
     setLoading(true);
     try {
-      const data = await getBooksAPI(undefined, "latest", selectedCategory || undefined);
-      setBooks(data || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+      const data = await getDocumentsAPI(undefined, "latest", selectedCategory || undefined);
+      setDocuments(data || []);
+      const trendData = await getTrendingDocumentsAPI(5);
+      setTrending(trendData || []);
+    } catch (e) { console.error(e); }
+    setLoading(false);
   };
 
   return (

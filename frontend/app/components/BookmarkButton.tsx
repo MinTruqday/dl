@@ -5,7 +5,7 @@ import { getToken } from "../lib/api";
 import { ToastContainer } from "./Toast";
 import { Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 
-export default function BookmarkButton({ bookId }: { bookId: string }) {
+export default function BookmarkButton({ documentId }: { documentId: string }) {
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<any[]>([]);
@@ -20,7 +20,7 @@ export default function BookmarkButton({ bookId }: { bookId: string }) {
   useEffect(() => {
     if (token) checkSaved();
     else setLoading(false);
-  }, [bookId, token]);
+  }, [documentId, token]);
 
   const checkSaved = async () => {
     try {
@@ -29,7 +29,7 @@ export default function BookmarkButton({ bookId }: { bookId: string }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setIsSaved(data.some((b: any) => b.book_id === bookId));
+        setIsSaved(data.some((d: any) => d.document_id === documentId));
       }
     } catch (e) {
       console.error(e);
@@ -44,7 +44,7 @@ export default function BookmarkButton({ bookId }: { bookId: string }) {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/reading/library`;
       const method = isSaved ? "DELETE" : "POST";
-      const body = isSaved ? JSON.stringify({ book_id: bookId }) : JSON.stringify({ book_id: bookId, status: "reading" });
+      const body = isSaved ? JSON.stringify({ document_id: documentId }) : JSON.stringify({ document_id: documentId, status: "reading" });
 
       const res = await fetch(url, {
         method,

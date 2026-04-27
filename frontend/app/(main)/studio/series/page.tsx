@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMySeriesAPI, getMyBooksAPI, createSeriesAPI } from "@/app/lib/api";
+import { getMySeriesAPI, getMyDocumentsAPI, createSeriesAPI } from "@/app/lib/api";
 import { Layers, Plus, Book, Info, CheckCircle2, ChevronRight, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AuthorSeriesPage() {
   const [series, setSeries] = useState<any[]>([]);
-  const [books, setBooks] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
-  const [newSeries, setNewSeries] = useState({ title: "", description: "", book_ids: [] as string[] });
+  const [newSeries, setNewSeries] = useState({ title: "", description: "", document_ids: [] as string[] });
 
   useEffect(() => {
     loadData();
@@ -19,9 +19,9 @@ export default function AuthorSeriesPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [sRes, bRes] = await Promise.all([getMySeriesAPI(), getMyBooksAPI()]);
+      const [sRes, dRes] = await Promise.all([getMySeriesAPI(), getMyDocumentsAPI()]);
       setSeries(sRes || []);
-      setBooks(bRes || []);
+      setDocuments(dRes || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -29,12 +29,12 @@ export default function AuthorSeriesPage() {
     }
   };
 
-  const toggleBook = (id: string) => {
+  const toggleDocument = (id: string) => {
     setNewSeries(prev => ({
       ...prev,
-      book_ids: prev.book_ids.includes(id) 
-        ? prev.book_ids.filter(bid => bid !== id) 
-        : [...prev.book_ids, id]
+      document_ids: prev.document_ids.includes(id) 
+        ? prev.document_ids.filter(did => did !== id) 
+        : [...prev.document_ids, id]
     }));
   };
 
@@ -43,7 +43,7 @@ export default function AuthorSeriesPage() {
     try {
       await createSeriesAPI(newSeries);
       setIsCreating(false);
-      setNewSeries({ title: "", description: "", book_ids: [] });
+      setNewSeries({ title: "", description: "", document_ids: [] });
       loadData();
     } catch (e) {
       console.error(e);
@@ -96,21 +96,21 @@ export default function AuthorSeriesPage() {
                        value={newSeries.description}
                        onChange={e => setNewSeries({...newSeries, description: e.target.value})}
                        className="w-full bg-white border border-black p-4 text-sm outline-none h-32 focus:ring-1 focus:ring-black"
-                       placeholder="Mô tả nội dung chính của bộ sách này"
+                       placeholder="Mô tả nội dung chính của series này"
                     />
                  </div>
               </div>
               <div className="space-y-4">
-                 <label className="text-[12px] font-bold tracking-widest text-zinc-400">Chọn tài liệu đưa vào Series ({newSeries.book_ids.length})</label>
+                 <label className="text-[12px] font-bold tracking-widest text-zinc-400">Chọn tài liệu đưa vào Series ({newSeries.document_ids.length})</label>
                  <div className="h-48 overflow-y-auto border border-zinc-200 bg-white divide-y divide-zinc-100">
-                    {books.map(book => (
+                    {documents.map(doc => (
                        <div 
-                          key={book.id} 
-                          onClick={() => toggleBook(book.id)}
+                          key={doc.id} 
+                          onClick={() => toggleDocument(doc.id)}
                           className="p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-50"
                        >
-                          <span className="text-xs font-bold text-zinc-600 truncate mr-4">{book.title}</span>
-                          {newSeries.book_ids.includes(book.id) ? (
+                          <span className="text-xs font-bold text-zinc-600 truncate mr-4">{doc.title}</span>
+                          {newSeries.document_ids.includes(doc.id) ? (
                              <CheckCircle2 className="w-4 h-4 text-black" />
                           ) : (
                              <div className="w-4 h-4 border border-zinc-200" />
@@ -141,7 +141,7 @@ export default function AuthorSeriesPage() {
              <div className="pt-6 border-t border-zinc-100 flex items-center justify-between">
                 <span className="text-[12px] font-bold tracking-widest text-zinc-400 flex items-center gap-1.5">
                    <Book className="w-3.5 h-3.5" />
-                   {s.book_count} tài liệu
+                   {s.document_count} tài liệu
                 </span>
                 <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-black transition-colors" />
              </div>

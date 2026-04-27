@@ -282,10 +282,10 @@ export default function DocumentsPage() {
             
             <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="text-sm border-border  py-1.5 pl-3 pr-8 focus-visible:ring-ring bg-background text-foreground text-foreground font-medium">
               <option value="all">Mọi định dạng</option>
-              <option value="pdf">PDF</option>
-              <option value="docx">Word (DOCX)</option>
-              <option value="png">Hình ảnh</option>
-              <option value="zip">File nén (ZIP)</option>
+              <option value="pdf">Định dạng PDF</option>
+              <option value="docx">Văn bản Word</option>
+              <option value="latex">Mã nguồn LaTeX</option>
+              <option value="zip">Tệp nén lưu trữ</option>
             </select>
 
             <div className="h-6 w-px bg-gray-300 mx-2"></div>

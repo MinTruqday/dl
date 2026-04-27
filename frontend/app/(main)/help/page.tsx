@@ -10,7 +10,7 @@ export default function HelpPage() {
       icon: <Book className="w-6 h-6" />,
       items: [
         "Cách mua tài liệu bằng Coin",
-        "Sử dụng trình đọc AI (TTS)",
+        "Sử dụng công nghệ đọc văn bản AI",
         "Quản lý thư viện và lịch sử",
         "Hệ thống đánh giá"
       ]

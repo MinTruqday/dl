@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getBookReviewsAPI, createBookReviewAPI } from "@/app/lib/api";
+import { getDocumentReviewsAPI, createDocumentReviewAPI } from "@/app/lib/api";
 import { Star, User, Send, StarHalf } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 
 interface ReviewSectionProps {
-  bookId: string;
+  documentId: string;
 }
 
-export default function ReviewSection({ bookId }: ReviewSectionProps) {
+export default function ReviewSection({ documentId }: ReviewSectionProps) {
   const { user } = useAuth() as any;
   const [reviews, setReviews] = useState<any[]>([]);
   const [rating, setRating] = useState(5);
@@ -19,12 +19,12 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
 
   useEffect(() => {
     loadReviews();
-  }, [bookId]);
+  }, [documentId]);
 
   const loadReviews = async () => {
     setLoading(true);
     try {
-      const data = await getBookReviewsAPI(bookId);
+      const data = await getDocumentReviewsAPI(documentId);
       setReviews(data || []);
     } catch (e) {
       console.error(e);
@@ -38,7 +38,7 @@ export default function ReviewSection({ bookId }: ReviewSectionProps) {
     if (!user) return;
     setSubmitting(true);
     try {
-      await createBookReviewAPI(bookId, rating, comment);
+      await createDocumentReviewAPI(documentId, rating, comment);
       setComment("");
       setRating(5);
       loadReviews();

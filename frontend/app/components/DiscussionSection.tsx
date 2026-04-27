@@ -6,10 +6,10 @@ import { MessageSquare, User, Send, ChevronDown, ChevronUp, Plus } from "lucide-
 import { useAuth } from "@/app/contexts/AuthContext";
 
 interface DiscussionSectionProps {
-  bookId: string;
+  documentId: string;
 }
 
-export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
+export default function DiscussionSection({ documentId }: DiscussionSectionProps) {
   const { user } = useAuth() as any;
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -22,12 +22,12 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
 
   useEffect(() => {
     loadDiscussions();
-  }, [bookId]);
+  }, [documentId]);
 
   const loadDiscussions = async () => {
     setLoading(true);
     try {
-      const data = await getDiscussionsAPI(bookId);
+      const data = await getDiscussionsAPI(documentId);
       setDiscussions(data || []);
     } catch (e) {
       console.error(e);
@@ -41,7 +41,7 @@ export default function DiscussionSection({ bookId }: DiscussionSectionProps) {
     if (!user) return;
     setSubmitting(true);
     try {
-      await createDiscussionAPI(bookId, title, content);
+      await createDiscussionAPI(documentId, title, content);
       setTitle("");
       setContent("");
       setShowForm(false);

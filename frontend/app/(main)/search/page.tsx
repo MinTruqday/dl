@@ -39,7 +39,7 @@ export default function SearchResultsPage() {
   const loadResults = async () => {
     setLoading(true);
     try {
-      const data = await getBooksAPI(query);
+      const data = await getDocumentsAPI(query);
       let filtered = data || [];
       if (filters.price === "free") filtered = filtered.filter((b: any) => !b.price_coins || b.price_coins === 0);
       if (filters.price === "paid") filtered = filtered.filter((b: any) => b.price_coins > 0);

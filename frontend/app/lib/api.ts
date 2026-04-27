@@ -84,7 +84,7 @@ export async function getUserMe() {
     return userMePromise;
 }
 
-export async function uploadBookFile(file: File) {
+export async function uploadDocumentFile(file: File) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
@@ -120,11 +120,11 @@ export async function getFileDownloadUrl(filePath: string) {
     return data.download_url;
 }
 
-export async function createBookAPI(title: string, slug: string, description: string) {
+export async function createDocumentAPI(title: string, slug: string, description: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
-    const res = await fetch(`${API_URL}/books/`, {
+    const res = await fetch(`${API_URL}/documents/`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -146,11 +146,11 @@ export async function createBookAPI(title: string, slug: string, description: st
     return data;
 }
 
-export async function saveBookDraftAPI(bookId: string, content: string, format: string) {
+export async function saveDocumentDraftAPI(documentId: string, content: string, format: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
-    const res = await fetch(`${API_URL}/books/${bookId}/content`, {
+    const res = await fetch(`${API_URL}/documents/${documentId}/content`, {
         method: 'PUT',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -167,11 +167,11 @@ export async function saveBookDraftAPI(bookId: string, content: string, format: 
     return data;
 }
 
-export async function publishBookAPI(bookId: string) {
+export async function publishDocumentAPI(documentId: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
-    const res = await fetch(`${API_URL}/books/${bookId}/publish`, {
+    const res = await fetch(`${API_URL}/documents/${documentId}/publish`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -184,11 +184,11 @@ export async function publishBookAPI(bookId: string) {
     return data;
 }
 
-export async function getBookDraftAPI(bookId: string) {
+export async function getDocumentDraftAPI(documentId: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
-    const res = await fetch(`${API_URL}/books/${bookId}`, {
+    const res = await fetch(`${API_URL}/documents/${documentId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -200,11 +200,11 @@ export async function getBookDraftAPI(bookId: string) {
     return data;
 }
 
-export async function compileBookAPI(bookId: string) {
+export async function compileDocumentAPI(documentId: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
-    const res = await fetch(`${API_URL}/books/${bookId}/compile`, {
+    const res = await fetch(`${API_URL}/documents/${documentId}/compile`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -216,9 +216,9 @@ export async function compileBookAPI(bookId: string) {
     return data;
 }
 
-export async function getBooksAPI(search?: string, sortBy?: string, category?: string, tag?: string) {
+export async function getDocumentsAPI(search?: string, sortBy?: string, category?: string, tag?: string) {
     const token = getToken();
-    let url = `${API_URL}/books/`;
+    let url = `${API_URL}/documents/`;
     const params = new URLSearchParams();
     if (search) params.append("q", search);
     if (sortBy) params.append("sort_by", sortBy);
@@ -236,8 +236,8 @@ export async function getBooksAPI(search?: string, sortBy?: string, category?: s
     if (!res.ok) throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
     return await res.json();
 }
-export async function getTrendingBooksAPI(limit: number = 5) {
-    const res = await fetch(`${API_URL}/books/trending?limit=${limit}`);
+export async function getTrendingDocumentsAPI(limit: number = 5) {
+    const res = await fetch(`${API_URL}/documents/trending?limit=${limit}`);
     if (!res.ok) throw new Error("Không thể tải xu hướng.");
     return await res.json();
 }
@@ -248,7 +248,7 @@ export async function getFeaturedAuthorsAPI(limit: number = 5) {
 }
 
 export async function getTagsCategoriesAPI() {
-    const res = await fetch(`${API_URL}/books/tags-and-categories`);
+    const res = await fetch(`${API_URL}/documents/tags-and-categories`);
     if (!res.ok) throw new Error("Không thể tải danh mục.");
     return await res.json();
 }
@@ -263,7 +263,7 @@ export async function getFeedMe(offset: number = 0, limit: number = 10) {
     return await res.json();
 }
 
-export async function postQuoteAPI(bookId: string, quoteText: string, bgColor: string) {
+export async function postQuoteAPI(documentId: string, quoteText: string, bgColor: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
 
@@ -274,7 +274,7 @@ export async function postQuoteAPI(bookId: string, quoteText: string, bgColor: s
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            book_id: bookId,
+            document_id: documentId,
             quote_text: quoteText,
             background_color: bgColor
         })
@@ -334,7 +334,7 @@ export const toggleFeedBookmarkAPI = async (itemId: string) => {
     return res.json();
 };
 
-export const saveReadingProgressAPI = async (bookId: string, scrollPercent: number) => {
+export const saveReadingProgressAPI = async (documentId: string, scrollPercent: number) => {
     const token = typeof window !== "undefined" ? localStorage.getItem("doclib_token") : null;
     if (!token) return null;
     const res = await fetch(`${API_URL}/reading/progress`, {
@@ -343,7 +343,7 @@ export const saveReadingProgressAPI = async (bookId: string, scrollPercent: numb
             "Authorization": "Bearer " + token,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ book_id: bookId, progress_percentage: scrollPercent })
+        body: JSON.stringify({ document_id: documentId, progress_percentage: scrollPercent })
     });
     if (!res.ok) return null;
     return await res.json();
@@ -384,23 +384,23 @@ export async function getBookmarksAPI() {
     if (!res.ok) return null;
     return await res.json();
 }
-export async function toggleBookmarkAPI(bookId: string) {
+export async function toggleBookmarkAPI(documentId: string) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/profile/bookmarks/${bookId}`, {
+    const res = await fetch(`${API_URL}/profile/bookmarks/${documentId}`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + token }
     });
     return res.ok;
 }
-export async function togglePinBookAPI(bookId: string) {
+export async function togglePinDocumentAPI(documentId: string) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/profile/pin/${bookId}`, {
+    const res = await fetch(`${API_URL}/profile/pin/${documentId}`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + token }
     });
     return res.ok;
 }
-export async function updateReadingProgressAPI(bookId: string, progress: number, currentChapterSlug?: string) {
+export async function updateReadingProgressAPI(documentId: string, progress: number, currentChapterSlug?: string) {
     const token = getToken();
     const res = await fetch(`${API_URL}/reading/progress`, {
         method: "POST",
@@ -408,7 +408,7 @@ export async function updateReadingProgressAPI(bookId: string, progress: number,
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
         },
-        body: JSON.stringify({ book_id: bookId, progress_percentage: progress, current_chapter_slug: currentChapterSlug })
+        body: JSON.stringify({ document_id: documentId, progress_percentage: progress, current_chapter_slug: currentChapterSlug })
     });
     return res.ok;
 }
@@ -421,14 +421,14 @@ export async function getReadingHistoryAPI() {
     if (!res.ok) throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
     return await res.json();
 }
-export async function getDiscussionsAPI(bookId: string) {
-    const res = await fetch(`${API_URL}/social/books/${bookId}/discussions`);
+export async function getDiscussionsAPI(documentId: string) {
+    const res = await fetch(`${API_URL}/social/documents/${documentId}/discussions`);
     if (!res.ok) throw new Error("Không thể tải thảo luận.");
     return await res.json();
 }
-export async function createDiscussionAPI(bookId: string, title: string, content: string) {
+export async function createDiscussionAPI(documentId: string, title: string, content: string) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/social/books/${bookId}/discussions`, {
+    const res = await fetch(`${API_URL}/social/documents/${documentId}/discussions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
         body: JSON.stringify({ title, content })
@@ -462,14 +462,14 @@ export async function getAuthorDemographicsAPI() {
     if (!res.ok) throw new Error("Không thể tải dữ liệu nhân khẩu học.");
     return await res.json();
 }
-export async function getBookReviewsAPI(bookId: string) {
-    const res = await fetch(`${API_URL}/reading/${bookId}/reviews`);
+export async function getDocumentReviewsAPI(documentId: string) {
+    const res = await fetch(`${API_URL}/reading/${documentId}/reviews`);
     if (!res.ok) throw new Error("Không thể tải đánh giá.");
     return await res.json();
 }
-export async function createBookReviewAPI(bookId: string, rating: number, text: string) {
+export async function createDocumentReviewAPI(documentId: string, rating: number, text: string) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/reading/${bookId}/review`, {
+    const res = await fetch(`${API_URL}/reading/${documentId}/review`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -480,9 +480,9 @@ export async function createBookReviewAPI(bookId: string, rating: number, text: 
     if (!res.ok) throw new Error("Đánh giá thất bại.");
     return await res.json();
 }
-export async function rateBookAPI(bookId: string, rating: number, reviewText?: string) {
+export async function rateDocumentAPI(documentId: string, rating: number, reviewText?: string) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/reading/${bookId}/rate`, {
+    const res = await fetch(`${API_URL}/reading/${documentId}/rate`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -831,11 +831,11 @@ export async function getAcademicMetricsAPI(id: string) {
     return res.ok ? res.json() : null;
 }
 
-export const createPaymentCheckoutAPI = async (bookId: string, paymentType: string): Promise<any> => {
+export const createPaymentCheckoutAPI = async (documentId: string, paymentType: string): Promise<any> => {
   const res = await fetch(`${API_URL}/payment/checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-    body: JSON.stringify({ book_id: bookId, payment_type: paymentType })
+    body: JSON.stringify({ document_id: documentId, payment_type: paymentType })
   });
   if (!res.ok) throw new Error("Thanh toán thất bại");
   return res.json();
@@ -861,30 +861,30 @@ export async function getLibraryAPI() {
     return await res.json();
 }
 
-export async function exportHighlightsMarkdownAPI(bookId: string) {
+export async function exportHighlightsMarkdownAPI(documentId: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
-    const res = await fetch(`${API_URL}/reading/books/${bookId}/highlights/export`, {
+    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights/export`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Xuất ghi chú thất bại.");
     return await res.json();
 }
 
-export async function getBookHighlightsAPI(bookId: string) {
+export async function getDocumentHighlightsAPI(documentId: string) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
-    const res = await fetch(`${API_URL}/reading/books/${bookId}/highlights`, {
+    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
         headers: { Authorization: `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Tải ghi chú thất bại.");
     return await res.json();
 }
 
-export async function createHighlightAPI(bookId: string, data: { text: string; color: string; chapter_slug?: string; start_offset?: number; end_offset?: number; note?: string }) {
+export async function createHighlightAPI(documentId: string, data: { text: string; color: string; chapter_slug?: string; start_offset?: number; end_offset?: number; note?: string }) {
     const token = getToken();
     if (!token) throw new Error("Không có quyền truy cập.");
-    const res = await fetch(`${API_URL}/reading/books/${bookId}/highlights`, {
+    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data)
@@ -921,5 +921,5 @@ export const getNotificationsAPI = async () => [];
 export const markNotificationReadAPI = async (id: string) => ({});
 export const getAuthorRevenueAPI = async () => ({});
 export const getMySeriesAPI = async () => [];
-export const getMyBooksAPI = async () => [];
+export const getMyDocumentsAPI = async () => [];
 export const createSeriesAPI = async (data: any) => ({});

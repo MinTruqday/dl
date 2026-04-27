@@ -6,7 +6,7 @@ import {
   Compass,
   LayoutGrid,
   Library,
-  BookMarked,
+  Bookmark,
   Trophy,
   User,
   Wallet,
@@ -120,9 +120,9 @@ export default function Sidebar({
           <NavLink href="/feed" label="Bảng tin" icon={LayoutGrid} />
           <NavLink href="/leaderboard" label="Vinh danh" icon={Trophy} />
 
-          <NavLink href="/collections" label="Bộ sưu tập" icon={BookMarked} requireAuth />
+          <NavLink href="/collections" label="Bộ sưu tập" icon={Bookmark} requireAuth />
           <NavLink href="/history" label="Lịch sử đọc" icon={History} requireAuth />
-          <NavLink href="/library" label="Kệ sách" icon={Library} requireAuth />
+          <NavLink href="/library" label="Thư viện cá nhân" icon={Library} requireAuth />
 
           <NavLink href="/profile" label="Hồ sơ" icon={User} requireAuth />
           <NavLink href="/wallet" label="Ví điện tử" icon={Wallet} requireAuth />

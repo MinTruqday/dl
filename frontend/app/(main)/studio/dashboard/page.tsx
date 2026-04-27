@@ -9,7 +9,7 @@ type TabKey = "overview" | "coupons" | "series" | "sentiment" | "grammar" | "cov
 
 export default function AuthorDashboardPage() {
   const [revenue, setRevenue] = useState<any>(null);
-  const [books, setBooks] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
   const [series, setSeries] = useState<any[]>([]);
   const [assets, setAssets] = useState<any[]>([]);
@@ -17,7 +17,7 @@ export default function AuthorDashboardPage() {
   const [grammarResult, setGrammarResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
-  const [selectedBookId, setSelectedBookId] = useState("");
+  const [selectedDocumentId, setSelectedDocumentId] = useState("");
   const [selectedChapterId, setSelectedChapterId] = useState("");
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState("");
@@ -30,15 +30,15 @@ export default function AuthorDashboardPage() {
 
   const fetchAll = async () => {
     try {
-      const [revenueR, booksR, couponsR, seriesR, assetsR] = await Promise.all([
+      const [revenueR, documentsR, couponsR, seriesR, assetsR] = await Promise.all([
         fetch(`${API_URL}/author/revenue`, { headers: h() }),
-        fetch(`${API_URL}/author/books`, { headers: h() }),
+        fetch(`${API_URL}/author/documents`, { headers: h() }),
         fetch(`${API_URL}/author/coupons`, { headers: h() }),
         fetch(`${API_URL}/author/series`, { headers: h() }),
         fetch(`${API_URL}/author/assets`, { headers: h() }),
       ]);
       if (revenueR.ok) setRevenue(await revenueR.json());
-      if (booksR.ok) setBooks(await booksR.json());
+      if (documentsR.ok) setDocuments(await documentsR.json());
       if (couponsR.ok) setCoupons(await couponsR.json());
       if (seriesR.ok) setSeries(await seriesR.json());
       if (assetsR.ok) setAssets(await assetsR.json());
@@ -52,11 +52,11 @@ export default function AuthorDashboardPage() {
   const showMsg = (msg: string) => { setMessage(msg); setTimeout(() => setMessage(""), 3000); };
 
   const analyzeSentiment = async () => {
-    if (!selectedBookId) return;
+    if (!selectedDocumentId) return;
     setProcessing(true);
     setSentiment(null);
     try {
-      const res = await fetch(`${API_URL}/author/books/${selectedBookId}/sentiment`, { headers: h() });
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/sentiment`, { headers: h() });
       if (res.ok) setSentiment(await res.json());
       else showMsg("Không thể phân tích cảm xúc");
     } catch (e) { showMsg("Lỗi kết nối"); }
@@ -64,11 +64,11 @@ export default function AuthorDashboardPage() {
   };
 
   const checkGrammar = async () => {
-    if (!selectedBookId || !selectedChapterId) return;
+    if (!selectedDocumentId || !selectedChapterId) return;
     setProcessing(true);
     setGrammarResult(null);
     try {
-      const res = await fetch(`${API_URL}/author/books/${selectedBookId}/grammar/${selectedChapterId}`, {
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/grammar/${selectedChapterId}`, {
         method: "POST", headers: h(),
       });
       if (res.ok) setGrammarResult(await res.json());
@@ -78,10 +78,10 @@ export default function AuthorDashboardPage() {
   };
 
   const generateCover = async () => {
-    if (!selectedBookId) return;
+    if (!selectedDocumentId) return;
     setProcessing(true);
     try {
-      const res = await fetch(`${API_URL}/author/books/${selectedBookId}/generate-cover`, {
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/generate-cover`, {
         method: "POST", headers: jh(),
         body: JSON.stringify({ style: "minimalist" }),
       });
@@ -113,7 +113,7 @@ export default function AuthorDashboardPage() {
   const tabs: { key: TabKey; label: string; icon: any }[] = [
     { key: "overview", label: "Tổng quan", icon: BarChart3 },
     { key: "coupons", label: "Mã giảm giá", icon: Ticket },
-    { key: "series", label: "Bộ sách", icon: Layers },
+    { key: "series", label: "Series tài liệu", icon: Layers },
     { key: "sentiment", label: "Cảm xúc AI", icon: Brain },
     { key: "grammar", label: "Ngữ pháp", icon: CheckCircle },
     { key: "cover", label: "Ảnh bìa AI", icon: Image },
@@ -154,27 +154,27 @@ export default function AuthorDashboardPage() {
               <div className="border border-border p-5"><TrendingUp className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_revenue || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Doanh thu (Coin)</p></div>
               <div className="border border-border p-5"><Eye className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_views || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt xem</p></div>
               <div className="border border-border p-5"><Star className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_sales || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Lượt mua</p></div>
-              <div className="border border-border p-5"><BookOpen className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_books || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu</p></div>
+              <div className="border border-border p-5"><BookOpen className="w-5 h-5 text-zinc-400 mb-3" /><span className="text-3xl font-bold text-black">{revenue.total_documents || 0}</span><p className="text-[12px] text-zinc-400 font-bold tracking-widest mt-1">Tài liệu</p></div>
             </div>
           )}
           <h2 className="text-xs font-bold tracking-widest text-black mb-6 flex items-center gap-2"><BookOpen className="w-4 h-4" /> Tài liệu của bạn</h2>
-          {books.length === 0 ? (
+          {documents.length === 0 ? (
             <div className="py-16 text-center border border-dashed border-border"><p className="text-xs text-zinc-400 font-bold tracking-widest">Chưa có tài liệu nào</p></div>
           ) : (
-            <div className="space-y-3">{books.map((book: any) => (
-              <Link key={book.id} href={`/studio?book=${book.id}`} className="group flex items-center justify-between p-5 border border-border hover:border-black transition-all duration-300">
+            <div className="space-y-3">{documents.map((doc: any) => (
+              <Link key={doc.id} href={`/studio?document=${doc.id}`} className="group flex items-center justify-between p-5 border border-border hover:border-black transition-all duration-300">
                 <div className="flex items-center gap-4 min-w-0">
                   <BookOpen className="w-5 h-5 text-zinc-300 group-hover:text-black transition-colors shrink-0" />
                   <div className="min-w-0">
-                    <h3 className="font-bold text-black truncate group-hover:underline underline-offset-4">{book.title}</h3>
+                    <h3 className="font-bold text-black truncate group-hover:underline underline-offset-4">{doc.title}</h3>
                     <div className="flex items-center gap-3 mt-1 text-[12px] text-zinc-400 font-bold tracking-widest">
-                      <span className={`px-2 py-0.5 border ${book.status === "published" ? "border-black text-black" : "border-zinc-200 text-zinc-400"}`}>{book.status === "published" ? "Xuất bản" : book.status === "draft" ? "Bản nháp" : book.status}</span>
-                      <span>{book.chapters_count || 0} chương</span>
+                      <span className={`px-2 py-0.5 border ${doc.status === "published" ? "border-black text-black" : "border-zinc-200 text-zinc-400"}`}>{doc.status === "published" ? "Xuất bản" : doc.status === "draft" ? "Bản nháp" : doc.status}</span>
+                      <span>{doc.chapters_count || 0} chương</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-6 text-[12px] font-bold text-zinc-400 tracking-widest shrink-0">
-                  <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {book.views || 0}</span>
+                  <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {doc.views || 0}</span>
                   <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </Link>
@@ -206,7 +206,7 @@ export default function AuthorDashboardPage() {
             <div className="py-16 text-center border border-dashed border-border"><p className="text-xs text-zinc-400 font-bold tracking-widest">Chưa có Series</p></div>
           ) : (
             <div className="space-y-3">{series.map((s: any) => (
-              <div key={s.id} className="p-5 border border-border"><h3 className="font-bold text-black">{s.title}</h3><p className="text-sm text-zinc-500 mt-1">{s.description}</p><span className="text-[12px] text-zinc-400 font-bold tracking-widest mt-2 block">{s.book_count} tài liệu</span></div>
+              <div key={s.id} className="p-5 border border-border"><h3 className="font-bold text-black">{s.title}</h3><p className="text-sm text-zinc-500 mt-1">{s.description}</p><span className="text-[12px] text-zinc-400 font-bold tracking-widest mt-2 block">{s.document_count} tài liệu</span></div>
             ))}</div>
           )}
         </div>
@@ -215,12 +215,12 @@ export default function AuthorDashboardPage() {
       {activeTab === "sentiment" && (
         <div className="animate-in fade-in duration-300 space-y-6">
           <div className="border border-border p-6">
-            <h2 className="text-xs font-bold tracking-widest text-black flex items-center gap-2 mb-6"><Brain className="w-4 h-4" /> Phân tích cảm xúc độc giả (AI)</h2>
-            <select value={selectedBookId} onChange={(e) => setSelectedBookId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
+            <h2 className="text-xs font-bold tracking-widest text-black flex items-center gap-2 mb-6 uppercase"><Brain className="w-4 h-4" /> Phân tích cảm xúc độc giả</h2>
+            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
               <option value="">Chọn tài liệu</option>
-              {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+              {documents.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
             </select>
-            <button onClick={analyzeSentiment} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+            <button onClick={analyzeSentiment} disabled={processing || !selectedDocumentId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
               {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Brain className="w-3.5 h-3.5" />} Phân tích
             </button>
           </div>
@@ -241,13 +241,13 @@ export default function AuthorDashboardPage() {
       {activeTab === "grammar" && (
         <div className="animate-in fade-in duration-300 space-y-6">
           <div className="border border-border p-6">
-            <h2 className="text-xs font-bold tracking-widest text-black flex items-center gap-2 mb-6"><CheckCircle className="w-4 h-4" /> Kiểm tra ngữ pháp (AI)</h2>
-            <select value={selectedBookId} onChange={(e) => setSelectedBookId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
+            <h2 className="text-xs font-bold tracking-widest text-black flex items-center gap-2 mb-6 uppercase"><CheckCircle className="w-4 h-4" /> Kiểm tra ngữ pháp tự động</h2>
+            <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
               <option value="">Chọn tài liệu</option>
-              {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+              {documents.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
             </select>
             <input type="text" placeholder="ID Chương cần kiểm tra" value={selectedChapterId} onChange={(e) => setSelectedChapterId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4" />
-            <button onClick={checkGrammar} disabled={processing || !selectedBookId || !selectedChapterId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+            <button onClick={checkGrammar} disabled={processing || !selectedDocumentId || !selectedChapterId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
               {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Kiểm tra
             </button>
           </div>
@@ -266,11 +266,11 @@ export default function AuthorDashboardPage() {
       {activeTab === "cover" && (
         <div className="animate-in fade-in duration-300 border border-border p-6">
           <h2 className="text-xs font-bold tracking-widest text-black flex items-center gap-2 mb-6"><Image className="w-4 h-4" /> Tạo ảnh bìa AI</h2>
-          <select value={selectedBookId} onChange={(e) => setSelectedBookId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
+          <select value={selectedDocumentId} onChange={(e) => setSelectedDocumentId(e.target.value)} className="w-full px-4 py-3 border border-border text-sm focus:outline-none focus:border-black transition-all mb-4 bg-white">
             <option value="">Chọn tài liệu</option>
-            {books.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
+            {documents.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
           </select>
-          <button onClick={generateCover} disabled={processing || !selectedBookId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
+          <button onClick={generateCover} disabled={processing || !selectedDocumentId} className="w-full py-3 bg-black text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 disabled:bg-zinc-300 transition-all flex items-center justify-center gap-2">
             {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Image className="w-3.5 h-3.5" />} Tạo ảnh bìa tối giản
           </button>
           <p className="text-xs text-zinc-400 mt-4 text-center">Ảnh bìa được tạo dựa trên tiêu đề và mô tả tài liệu qua hệ thống AI</p>

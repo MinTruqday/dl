@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReaderTools from "./ReaderTools";
 import {
-  getBookHighlightsAPI,
+  getDocumentHighlightsAPI,
   createHighlightAPI,
   deleteHighlightAPI,
   updateHighlightNoteAPI,
@@ -31,10 +31,10 @@ interface Highlight {
 interface ReaderViewProps {
   content: string;
   title: string;
-  bookId?: string;
+  documentId?: string;
 }
 
-export default function ReaderView({ content, title, bookId }: ReaderViewProps) {
+export default function ReaderView({ content, title, documentId }: ReaderViewProps) {
   const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState<"light" | "sepia" | "night">("light");
   const [highlights, setHighlights] = useState<Highlight[]>([]);
@@ -70,25 +70,25 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
   }, [autoScrollEnabled, autoScrollSpeed]);
 
   const fetchHighlights = useCallback(async () => {
-    if (!bookId) return;
+    if (!documentId) return;
     try {
-      const data = await getBookHighlightsAPI(bookId);
+      const data = await getDocumentHighlightsAPI(documentId);
       setHighlights(data);
     } catch (e: any) {
       console.error("Lỗi lấy highlight:", e);
       setToastMsg({ text: e.message || "Không thể tải highlight.", type: "error" });
       setTimeout(() => setToastMsg(null), 3000);
     }
-  }, [bookId]);
+  }, [documentId]);
 
   useEffect(() => {
     fetchHighlights();
   }, [fetchHighlights]);
 
   const handleCreateHighlight = async (color: string) => {
-    if (!selectionPopup || !bookId) return;
+    if (!selectionPopup || !documentId) return;
     try {
-      await createHighlightAPI(bookId, {
+      await createHighlightAPI(documentId, {
         text: selectionPopup.text,
         color,
         chapter_slug: "",
@@ -130,9 +130,9 @@ export default function ReaderView({ content, title, bookId }: ReaderViewProps) 
   };
 
   const handleExportMarkdown = async () => {
-    if (!bookId) return;
+    if (!documentId) return;
     try {
-      const data = await exportHighlightsMarkdownAPI(bookId);
+      const data = await exportHighlightsMarkdownAPI(documentId);
       const blob = new Blob([data.markdown], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

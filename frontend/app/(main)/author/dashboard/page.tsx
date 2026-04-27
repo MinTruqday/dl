@@ -17,11 +17,11 @@ import {
   Clock
 } from "lucide-react";
 import Link from "next/link";
-import { getBooksAPI, getToken } from "@/app/lib/api";
+import { getDocumentsAPI, getToken } from "@/app/lib/api";
 
 export default function AuthorDashboard() {
   const [stats, setStats] = useState<any>(null);
-  const [myBooks, setMyBooks] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 

@@ -30,9 +30,9 @@ function ToastContainer({ toasts, removeToast }: { toasts: any[], removeToast: (
 
 export default function AdvancedReader() {
   const { slug } = useParams();
-  const bookId = slug; // Unify slug as bookId for internal logic
+  const documentId = slug;
   const router = useRouter();
-  const [book, setBook] = useState<any>(null);
+  const [document, setDocument] = useState<any>(null);
   
   const [isDyslexic, setIsDyslexic] = useState(false);
   const [isRTL, setIsRTL] = useState(false);
@@ -57,21 +57,21 @@ export default function AdvancedReader() {
   const [showNotesPanel, setShowNotesPanel] = useState(false);
   
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isBookOwned, setIsBookOwned] = useState(false);
+  const [isDocumentOwned, setIsDocumentOwned] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    if (bookId) {
+    if (documentId) {
       fetchSavedHighlights();
       loadReadingPreferences();
     }
-  }, [bookId]);
+  }, [documentId]);
 
   const fetchSavedHighlights = async () => {
     try {
-      const res = await fetch(`${API_URL}/reading/books/${bookId}/highlights`, {
+      const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) setSavedHighlights(await res.json());
@@ -82,7 +82,7 @@ export default function AdvancedReader() {
 
   const saveHighlightToServer = async (text: string, note: string = "") => {
     try {
-      await fetch(`${API_URL}/reading/books/${bookId}/highlights`, {
+      await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +148,7 @@ export default function AdvancedReader() {
     setFlashcardBtn(prev => ({...prev, show: false}));
     try {
       const token = getToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reading/books/${bookId}/flashcards/generate`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reading/documents/${documentId}/flashcards/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -192,9 +192,9 @@ export default function AdvancedReader() {
         },
         body: JSON.stringify({
           query: userMessage,
-          book_id: bookId,     
+          document_id: documentId,     
           useWeb: false,       
-          conversation_id: "reader_session_" + bookId
+          conversation_id: "reader_session_" + documentId
         })
       });
 
@@ -253,7 +253,7 @@ export default function AdvancedReader() {
       const res = await fetch(`${API_URL}/reader/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ item_type: "book", item_id: bookId, reason }),
+        body: JSON.stringify({ item_type: "document", item_id: documentId, reason }),
       });
       if (res.ok) {
         showToast("Báo cáo đã được gửi cho Ban Quản Trị", "success");
@@ -264,17 +264,17 @@ export default function AdvancedReader() {
     }
   };
 
-  const purchaseBook = async () => {
+  const purchaseDocument = async () => {
     setPurchasing(true);
     try {
-      const res = await fetch(`${API_URL}/reader/purchase/book/${bookId}`, {
+      const res = await fetch(`${API_URL}/reader/purchase/document/${documentId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       const data = await res.json();
       if (res.ok) {
         showToast("Mua tài liệu thành công", "success");
-        setIsBookOwned(true);
+        setIsDocumentOwned(true);
       } else {
         showToast(data.detail || "Không đủ số dư ví. Vui lòng nạp thêm.", "error");
       }
@@ -285,7 +285,7 @@ export default function AdvancedReader() {
   };
 
   useEffect(() => {
-    fetchBookInfo();
+    fetchDocumentInfo();
     const cleanupAntiScraping = setupAntiScraping();
     setupScrollTelemetry();
 
@@ -299,7 +299,7 @@ export default function AdvancedReader() {
         window.removeEventListener("beforeunload", handleBeforeUnload);
         sendDropoffTelemetry(); 
     }
-  }, [bookId]);
+  }, [documentId]);
 
   const sendDropoffTelemetry = () => {
       const dwellTime = Math.floor((Date.now() - entryTime.current) / 1000);
@@ -310,7 +310,7 @@ export default function AdvancedReader() {
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/telemetry/dropoff`, {
           method: "POST",
           headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json'},
-          body: JSON.stringify({ book_id: bookId, chapter: 1, scroll_percent: scrollPercent, dwell_time: dwellTime })
+          body: JSON.stringify({ document_id: documentId, chapter: 1, scroll_percent: scrollPercent, dwell_time: dwellTime })
       }).catch(e => {}); 
   };
 
@@ -336,12 +336,12 @@ export default function AdvancedReader() {
       window.addEventListener("scroll", onScroll);
   };
 
-  const fetchBookInfo = async () => {
+  const fetchDocumentInfo = async () => {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${documentId}`, {
             headers: { 'Authorization': `Bearer ${getToken()}`}
         });
-        if (res.ok) setBook(await res.json());
+        if (res.ok) setDocument(await res.json());
         else showToast("Không tìm thấy tài liệu hoặc chưa được cấp quyền", "error");
     } catch(e) {
         showToast("Mất kết nối mạng", "error");
@@ -366,7 +366,7 @@ export default function AdvancedReader() {
   const downloadWatermarkedPDF = async () => {
     showToast("Đang chuẩn bị bản in bảo vệ", "info");
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/books/${bookId}/export/pdf`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${documentId}/export/pdf`, {
             headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         if(!res.ok) throw new Error("Quyền truy cập bị từ chối");
@@ -374,7 +374,7 @@ export default function AdvancedReader() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `DocLib_${bookId}_baomat.pdf`;
+        a.download = `DocLib_${documentId}_baomat.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -429,7 +429,7 @@ export default function AdvancedReader() {
     } catch(e) { console.error(e); }
   };
 
-  if(!book) return (
+  if(!document) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
       <Loader2 className="w-10 h-10 animate-spin text-zinc-300" strokeWidth={1} />
       <span className="text-[12px] font-bold tracking-[0.3em] text-zinc-400">Đang tải tài liệu</span>
@@ -447,7 +447,7 @@ export default function AdvancedReader() {
           </button>
           <div className="flex items-center gap-2 overflow-hidden">
             <BookOpen className="w-5 h-5 shrink-0" />
-            <h1 className="text-sm font-bold tracking-tight truncate">{book.title}</h1>
+            <h1 className="text-sm font-bold tracking-tight truncate">{document.title}</h1>
           </div>
         </div>
         
@@ -485,7 +485,7 @@ export default function AdvancedReader() {
         </div>
 
         <article id="doclib-reader-core" className="text-xl leading-[2.2] selection:bg-zinc-900 selection:text-white" onMouseUp={applyHighlight}>
-            {book.content?.split('\n').map((para: string, i: number) => (
+            {document.content?.split('\n').map((para: string, i: number) => (
                 <p key={i} className="mb-8 indent-12 text-justify">{para}</p>
             )) || <div className="text-center py-20 text-zinc-300 font-bold tracking-widest">Tài liệu không có nội dung văn bản.</div>}
         </article>
@@ -499,7 +499,7 @@ export default function AdvancedReader() {
                  <Sparkles className="w-4 h-4" />
                  Hỏi đáp nội dung
                </div>
-               <span className="text-[12px] text-zinc-400 truncate max-w-[220px] font-medium mt-1 tracking-widest">{book.title}</span>
+               <span className="text-[12px] text-zinc-400 truncate max-w-[220px] font-medium mt-1 tracking-widest">{document.title}</span>
             </div>
             <button onClick={() => setIsChatOpen(false)} className="hover:bg-zinc-800 p-2  transition-all">
               <X className="w-4 h-4 text-white" />

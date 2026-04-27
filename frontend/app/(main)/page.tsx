@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, BookOpen, Clock, Inbox, Tag, ChevronRight, ChevronLeft, Sparkles, Mail, AlertCircle, X, Users } from "lucide-react";
-import { getBooksAPI, getToken } from "@/app/lib/api";
+import { getDocumentsAPI, getToken } from "@/app/lib/api";
 import { useAuth } from "@/app/contexts/AuthContext";
 
-interface DocLibBook {
+interface DocLibDocument {
   _id: string;
   title: string;
   slug: string;
@@ -19,7 +19,7 @@ interface DocLibBook {
 
 export default function DiscoverPage() {
   const { user, loading: authLoading } = useAuth() as any;
-  const [books, setBooks] = useState<DocLibBook[]>([]);
+  const [documents, setDocuments] = useState<DocLibDocument[]>([]);
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState("");
   const [sortBy, setSortBy] = useState("latest");
@@ -32,12 +32,12 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     let isMounted = true;
-    const loadBooks = async () => {
+    const loadDocuments = async () => {
       setLoading(true);
       try {
-        const data = await getBooksAPI(search, sortBy);
+        const data = await getDocumentsAPI(search, sortBy);
         if (isMounted && Array.isArray(data)) {
-          setBooks(data);
+          setDocuments(data);
         }
       } catch (e) {
         console.error(e);
@@ -47,7 +47,7 @@ export default function DiscoverPage() {
     };
     
     const timer = setTimeout(() => {
-      loadBooks();
+      loadDocuments();
     }, 400); 
     
     return () => {
@@ -88,8 +88,8 @@ export default function DiscoverPage() {
     }
   };
 
-  const filteredBooks = books.filter(b => tagFilter ? (b.tags || []).includes(tagFilter) : true);
-  const allTags = Array.from(new Set(books.flatMap(b => b.tags || [])));
+  const filteredDocuments = documents.filter(d => tagFilter ? (d.tags || []).includes(tagFilter) : true);
+  const allTags = Array.from(new Set(documents.flatMap(d => d.tags || [])));
 
   const [activeBanner, setActiveBanner] = useState(0);
   const banners = [
@@ -231,19 +231,19 @@ export default function DiscoverPage() {
             </div>
           ))}
         </div>
-      ) : filteredBooks.length > 0 ? (
+      ) : filteredDocuments.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredBooks.map((book) => (
+          {filteredDocuments.map((doc) => (
             <Link 
-            key={book._id} 
-            href={`/book/${book.slug}`}
+            key={doc._id} 
+            href={`/document/${doc.slug}`}
             className="group flex flex-col rounded-none border border-zinc-100 bg-white overflow-hidden hover:border-zinc-400 transition-all duration-300"
           >
               <div className="relative aspect-[3/4] bg-zinc-50 flex items-center justify-center border-b border-border overflow-hidden">
-                {book.cover_url ? (
+                {doc.cover_url ? (
                   <img 
-                    src={book.cover_url} 
-                    alt={book.title} 
+                    src={doc.cover_url} 
+                    alt={doc.title} 
                     className="w-full h-full object-cover transition-transform duration-500 grayscale group-hover:grayscale-0"
                   />
                 ) : (
@@ -255,20 +255,20 @@ export default function DiscoverPage() {
               </div>
               <div className="p-6 flex-1 flex flex-col">
                 <h3 className="font-bold text-black text-lg leading-tight line-clamp-1 group-hover:underline underline-offset-4 decoration-2 transition-all">
-                  {book.title}
+                  {doc.title}
                 </h3>
                 <p className="text-sm text-zinc-500 line-clamp-2 mt-3 flex-1 leading-relaxed font-medium">
-                  {book.description || "Tác giả chưa cung cấp mô tả cho tài liệu này."}
+                  {doc.description || "Tác giả chưa cung cấp mô tả cho tài liệu này."}
                 </p>
                 <div className="mt-6 flex items-center justify-between pt-5 border-t border-zinc-50 text-[12px] font-bold tracking-widest text-zinc-400">
                   <span className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5" />
-                    {book.created_at ? new Date(book.created_at).toLocaleDateString('vi-VN') : 'Mới nhất'}
+                    {doc.created_at ? new Date(doc.created_at).toLocaleDateString('vi-VN') : 'Mới nhất'}
                   </span>
-                  {book.tags && book.tags.length > 0 && (
+                  {doc.tags && doc.tags.length > 0 && (
                     <span className="flex items-center gap-2 px-2.5 py-1 bg-zinc-100 text-black ">
                       <Tag className="w-3 h-3" />
-                      {book.tags[0]}
+                      {doc.tags[0]}
                     </span>
                   )}
                 </div>

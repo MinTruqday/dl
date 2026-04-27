@@ -414,13 +414,16 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground tracking-widest">Phí rút tiền (C)</label>
-                  <input 
-                    type="number" 
-                    value={config?.withdrawal_fee || 0} 
-                    onChange={(e) => setConfig({...config, withdrawal_fee: parseInt(e.target.value)})}
-                    className="w-full bg-muted/30 border border-border  px-4 py-2.5 text-sm outline-none focus:border-foreground"
-                  />
+                  <label className="text-xs font-bold text-muted-foreground tracking-widest uppercase">Phí rút tiền cố định</label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      value={config?.withdrawal_fee || 0} 
+                      onChange={(e) => setConfig({...config, withdrawal_fee: parseInt(e.target.value)})}
+                      className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">Coin</span>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">

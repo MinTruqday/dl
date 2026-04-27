@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  compileBookAPI,
-  getBookDraftAPI,
-  getBooksAPI,
-  publishBookAPI,
-  saveBookDraftAPI,
+  compileDocumentAPI,
+  getDocumentDraftAPI,
+  getDocumentsAPI,
+  publishDocumentAPI,
+  saveDocumentDraftAPI,
   getToken,
 } from "@/app/lib/api";
 import { 
@@ -32,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import TiptapEditor from "@/app/components/editor/TiptapEditor";
 
-type StudioBook = {
+type StudioDocument = {
   _id: string;
   title: string;
   slug: string;
@@ -47,8 +47,8 @@ type ViewMode = "edit" | "stats" | "config" | "versions" | "trash";
 type EditorMode = "edit" | "preview" | "raw";
 
 export default function AuthorStudioPage() {
-  const [books, setBooks] = useState<StudioBook[]>([]);
-  const [selectedBookId, setSelectedBookId] = useState("");
+  const [documents, setDocuments] = useState<StudioDocument[]>([]);
+  const [selectedDocumentId, setSelectedDocumentId] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [editorMode, setEditorMode] = useState<EditorMode>("edit");
   const [content, setContent] = useState("");
@@ -59,22 +59,22 @@ export default function AuthorStudioPage() {
   const [stats, setStats] = useState<any>(null);
   const [revenue, setRevenue] = useState<any>(null);
   const [versions, setVersions] = useState<any[]>([]);
-  const [trashBooks, setTrashBooks] = useState<any[]>([]);
+  const [trashDocuments, setTrashDocuments] = useState<any[]>([]);
   const [isRestoring, setIsRestoring] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const selectedBook = useMemo(
-    () => books.find((b) => b._id === selectedBookId) || null,
-    [books, selectedBookId]
+  const selectedDocument = useMemo(
+    () => documents.find((d) => d._id === selectedDocumentId) || null,
+    [documents, selectedDocumentId]
   );
 
   useEffect(() => {
-    fetchBooks();
+    fetchDocuments();
   }, []);
 
   useEffect(() => {
-    if (selectedBookId) {
+    if (selectedDocumentId) {
       loadDraft();
       if (viewMode === "stats") fetchStats();
       if (viewMode === "versions") fetchVersions();
@@ -82,16 +82,16 @@ export default function AuthorStudioPage() {
       setContent("");
     }
     if (viewMode === "trash") fetchTrash();
-  }, [selectedBookId, viewMode]);
+  }, [selectedDocumentId, viewMode]);
 
-  const fetchBooks = async () => {
+  const fetchDocuments = async () => {
     setIsLoading(true);
     setStatusMsg("");
     try {
-      const data = await getBooksAPI();
-      setBooks(data || []);
-      if (data?.length > 0 && !selectedBookId) {
-        setSelectedBookId(data[0]._id);
+      const data = await getDocumentsAPI();
+      setDocuments(data || []);
+      if (data?.length > 0 && !selectedDocumentId) {
+        setSelectedDocumentId(data[0]._id);
       }
     } catch {
       setStatusMsg("Không thể tải danh sách tài liệu.");
@@ -101,9 +101,9 @@ export default function AuthorStudioPage() {
   };
 
   const loadDraft = async () => {
-    if (!selectedBookId) return;
+    if (!selectedDocumentId) return;
     try {
-      const draft = await getBookDraftAPI(selectedBookId);
+      const draft = await getDocumentDraftAPI(selectedDocumentId);
       setContent(draft?.content || "");
       setStatusMsg("Đã tải bản nháp.");
     } catch {
@@ -125,7 +125,7 @@ export default function AuthorStudioPage() {
 
   const fetchVersions = async () => {
     try {
-      const res = await fetch(`${API_URL}/author/books/${selectedBookId}/versions`, {
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/versions`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       if (res.ok) setVersions(await res.json());
@@ -137,43 +137,43 @@ export default function AuthorStudioPage() {
       const res = await fetch(`${API_URL}/api/trash`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       });
-      if (res.ok) setTrashBooks(await res.json());
+      if (res.ok) setTrashDocuments(await res.json());
     } catch (e) { console.error(e); }
   };
 
   const handleRestoreTrash = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/books/${id}/restore`, {
+      const res = await fetch(`${API_URL}/api/documents/${id}/restore`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       if (res.ok) {
         setStatusMsg("Đã khôi phục.");
         fetchTrash();
-        fetchBooks();
+        fetchDocuments();
       }
     } catch (e) { console.error(e); }
   };
 
-  const handleDeleteBook = async () => {
-    if (!selectedBookId) return;
+  const handleDeleteDocument = async () => {
+    if (!selectedDocumentId) return;
     if (!confirm("Bạn có chắc chắn muốn chuyển tài liệu này vào thùng rác?")) return;
     try {
-      const res = await fetch(`${API_URL}/api/books/${selectedBookId}`, {
+      const res = await fetch(`${API_URL}/api/documents/${selectedDocumentId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` }
       });
       if (res.ok) {
         setStatusMsg("Đã chuyển vào thùng rác.");
-        setSelectedBookId("");
-        fetchBooks();
+        setSelectedDocumentId("");
+        fetchDocuments();
       }
     } catch (e) { console.error(e); }
   };
 
   const saveVersion = async (note: string) => {
     try {
-      const res = await fetch(`${API_URL}/author/books/${selectedBookId}/versions`, {
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/versions`, {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
         body: JSON.stringify({ note })
@@ -201,11 +201,11 @@ export default function AuthorStudioPage() {
   };
 
   const handleSave = async () => {
-    if (!selectedBookId) return;
+    if (!selectedDocumentId) return;
     setIsSaving(true);
     setStatusMsg("Đang lưu");
     try {
-      await saveBookDraftAPI(selectedBookId, content, "html");
+      await saveDocumentDraftAPI(selectedDocumentId, content, "html");
       setStatusMsg("Đã lưu.");
     } catch {
       setStatusMsg("Lưu thất bại.");
@@ -215,35 +215,35 @@ export default function AuthorStudioPage() {
   };
 
   const handlePublish = async () => {
-    if (!selectedBookId) return;
+    if (!selectedDocumentId) return;
     setStatusMsg("Đang xuất bản");
     try {
-      await compileBookAPI(selectedBookId);
-      await publishBookAPI(selectedBookId);
+      await compileDocumentAPI(selectedDocumentId);
+      await publishDocumentAPI(selectedDocumentId);
       setStatusMsg("Đã xuất bản.");
-      fetchBooks();
+      fetchDocuments();
     } catch {
       setStatusMsg("Xuất bản thất bại.");
     }
   };
 
-  const updateBookConfig = async (updates: any) => {
+  const updateDocumentConfig = async (updates: any) => {
     try {
-      const res = await fetch(`${API_URL}/books/${selectedBookId}`, {
+      const res = await fetch(`${API_URL}/documents/${selectedDocumentId}`, {
         method: "PUT",
         headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
       if (res.ok) {
         setStatusMsg("Đã cập nhật cấu hình.");
-        fetchBooks();
+        fetchDocuments();
       }
     } catch (e) { console.error(e); }
   };
 
   const requestPayout = async () => {
     if (!revenue?.available_balance || revenue.available_balance < 1000) {
-      alert("Số dư tối thiểu để rút là 1,000 C");
+      alert("Số dư tối thiểu để rút là 1000 Coin");
       return;
     }
     try {
@@ -265,16 +265,16 @@ export default function AuthorStudioPage() {
           <Link href="/" className="text-lg font-bold tracking-tighter">DOCLIB<span className="text-muted-foreground ml-1 font-normal text-[10px] tracking-widest">Tác giả</span></Link>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="text-muted-foreground">Tài liệu:</span>
-            <span className="truncate max-w-[200px]">{selectedBook?.title || "Chưa chọn"}</span>
+            <span className="text-muted-foreground">Tài liệu</span>
+            <span className="truncate max-w-[200px] font-bold">{selectedDocument?.title || "Chưa chọn tài liệu"}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground mr-2 font-bold tracking-widest">{statusMsg}</span>
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={!selectedBookId || isSaving} className="h-8 text-xs font-bold border-border">
+          <span className="text-[10px] text-muted-foreground mr-2 font-bold tracking-widest uppercase">{statusMsg}</span>
+          <Button variant="outline" size="sm" onClick={handleSave} disabled={!selectedDocumentId || isSaving} className="h-8 text-xs font-bold border-border">
             <Save className="w-3.5 h-3.5 mr-2" /> LƯU BẢN NHÁP
           </Button>
-          <Button variant="default" size="sm" onClick={handlePublish} disabled={!selectedBookId} className="h-8 text-xs font-bold">
+          <Button variant="default" size="sm" onClick={handlePublish} disabled={!selectedDocumentId} className="h-8 text-xs font-bold">
             XUẤT BẢN
           </Button>
         </div>
@@ -291,34 +291,34 @@ export default function AuthorStudioPage() {
 
         <aside className="w-64 border-r border-border bg-white flex flex-col flex-shrink-0">
           <div className="p-4 border-b border-border">
-             <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4">Danh sách chương</h3>
+             <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4 uppercase">Danh sách chương</h3>
              <div className="space-y-1">
-                {(selectedBook?.chapters || []).map((ch: any, idx: number) => (
+                {(selectedDocument?.chapters || []).map((ch: any, idx: number) => (
                   <div key={ch.id} className="group flex items-center gap-2 p-2  border border-transparent hover:border-border hover:bg-muted/30 cursor-pointer">
                     <span className="text-[10px] font-bold text-muted-foreground w-4">{idx + 1}</span>
                     <span className="text-xs font-bold truncate flex-1">{ch.title}</span>
                   </div>
                 ))}
                 <button className="w-full mt-4 p-2 border border-dashed border-border text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground transition-all flex items-center justify-center gap-2">
-                  <Plus className="w-3.5 h-3.5" /> Thêm chương
+                  <Plus className="w-3.5 h-3.5" /> THÊM CHƯƠNG MỚI
                 </button>
              </div>
           </div>
 
           <div className="mt-4 flex-1 overflow-y-auto">
             <div className="p-4">
-              <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4">Tài liệu của bạn</h3>
+              <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4 uppercase">Tài liệu của bạn</h3>
               <div className="space-y-1">
                 {isLoading ? (
-                  <div className="py-4 text-center text-xs text-muted-foreground">Đang tải</div>
-                ) : books.map((book) => (
+                  <div className="py-4 text-center text-xs text-muted-foreground uppercase tracking-widest font-bold">Đang tải dữ liệu</div>
+                ) : documents.map((doc) => (
                   <button
-                    key={book._id}
-                    onClick={() => setSelectedBookId(book._id)}
-                    className={`w-full text-left p-3  border transition-all ${selectedBookId === book._id ? "bg-muted border-border" : "bg-transparent border-transparent hover:bg-muted/30"}`}
+                    key={doc._id}
+                    onClick={() => setSelectedDocumentId(doc._id)}
+                    className={`w-full text-left p-3  border transition-all ${selectedDocumentId === doc._id ? "bg-muted border-border" : "bg-transparent border-transparent hover:bg-muted/30"}`}
                   >
-                    <p className="font-bold text-xs truncate">{book.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate tracking-tighter">{book.status === "published" ? "Xuất bản" : book.status === "draft" ? "Bản thảo" : book.status}</p>
+                    <p className="font-bold text-xs truncate">{doc.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate tracking-tighter uppercase font-bold">{doc.status === "published" ? "Đã xuất bản" : doc.status === "draft" ? "Bản thảo" : doc.status}</p>
                   </button>
                 ))}
               </div>
@@ -354,7 +354,7 @@ export default function AuthorStudioPage() {
                   <div className="max-w-3xl mx-auto bg-white border border-border p-12 min-h-[80vh] prose prose-neutral" dangerouslySetInnerHTML={{ __html: content }} />
                 ) : (
                   <pre className="p-8 bg-black text-white  text-xs overflow-auto font-sans leading-loose">
-                    {content || "(empty)"}
+                    {content || "Chưa có nội dung soạn thảo"}
                   </pre>
                 )}
               </div>
@@ -384,9 +384,9 @@ export default function AuthorStudioPage() {
                 <div className="bg-white p-6 border border-border  shadow-sm">
                   <div className="flex items-center justify-between text-muted-foreground mb-4">
                     <Wallet className="w-4 h-4" />
-                    <span className="text-[10px] font-bold tracking-widest">Số dư thu nhập</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase">Số dư thu nhập</span>
                   </div>
-                  <h3 className="text-3xl font-bold">{revenue?.available_balance || 0} C</h3>
+                  <h3 className="text-3xl font-bold">{revenue?.available_balance || 0} Coin</h3>
                   <Button variant="secondary" size="sm" onClick={requestPayout} className="w-full mt-4 font-bold text-[10px] tracking-widest border-border">RÚT TIỀN</Button>
                 </div>
               </div>
@@ -405,13 +405,13 @@ export default function AuthorStudioPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {stats?.books?.map((b: any) => (
-                      <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
-                        <td className="px-6 py-4 font-bold">{b.title}</td>
-                        <td className="px-6 py-4">{b.views}</td>
-                        <td className="px-6 py-4 font-medium">{b.rating.toFixed(1)} / 5.0</td>
+                    {stats?.documents?.map((d: any) => (
+                      <tr key={d.id} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
+                        <td className="px-6 py-4 font-bold">{d.title}</td>
+                        <td className="px-6 py-4">{d.views}</td>
+                        <td className="px-6 py-4 font-medium">{d.rating.toFixed(1)} / 5.0</td>
                         <td className="px-6 py-4 text-right">
-                          <button onClick={() => {setSelectedBookId(b.id); setViewMode("edit");}} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Chi tiết</button>
+                          <button onClick={() => {setSelectedDocumentId(d.id); setViewMode("edit");}} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Chi tiết</button>
                         </td>
                       </tr>
                     ))}
@@ -421,49 +421,48 @@ export default function AuthorStudioPage() {
             </div>
           )}
 
-          {viewMode === "config" && (
             <div className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-300">
               <div className="max-w-2xl bg-white border border-border p-8  space-y-8">
                 <div>
                   <h2 className="text-lg font-bold tracking-tight mb-2">Thiết lập tài liệu</h2>
-                  <p className="text-xs text-muted-foreground tracking-wider">Cấu hình hiển thị và thương mại hóa cho {selectedBook?.title}</p>
+                  <p className="text-xs text-muted-foreground tracking-wider uppercase font-bold">Cấu hình hiển thị và thương mại hóa cho {selectedDocument?.title}</p>
                 </div>
 
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Giá bán (C)</label>
+                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Đơn giá bán</label>
                     <div className="relative">
                       <input 
                         type="number" 
-                        value={selectedBook?.price || 0}
-                        onChange={(e) => updateBookConfig({ price: parseFloat(e.target.value) })}
+                        value={selectedDocument?.price || 0}
+                        onChange={(e) => updateDocumentConfig({ price: parseFloat(e.target.value) })}
                         className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">C</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground uppercase">Coin</span>
                     </div>
-                    <p className="text-[9px] text-muted-foreground italic">* Để 0 nếu muốn cho đọc miễn phí</p>
+                    <p className="text-[9px] text-muted-foreground italic font-medium">Nhập số 0 nếu bạn muốn chia sẻ tài liệu này miễn phí</p>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Loại giấy phép bản quyền</label>
+                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Loại giấy phép bản quyền</label>
                     <select 
-                      value={selectedBook?._id || "copyright"}
-                      onChange={(e) => updateBookConfig({ } as any)}
+                      value={selectedDocument?.license || "copyright"}
+                      onChange={(e) => updateDocumentConfig({ license: e.target.value })}
                       className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground appearance-none"
                     >
-                      <option value="copyright">© Bản quyền đầy đủ</option>
-                      <option value="cc-by">CC BY (Ghi công)</option>
-                      <option value="cc-by-sa">CC BY-SA (Chia sẻ tương tự)</option>
-                      <option value="cc-by-nc">CC BY-NC (Phi thương mại)</option>
-                      <option value="public-domain">Public Domain (Miền công cộng)</option>
+                      <option value="copyright">Bản quyền toàn vẹn</option>
+                      <option value="cc-by">CC BY - Ghi công</option>
+                      <option value="cc-by-sa">CC BY-SA - Chia sẻ tương tự</option>
+                      <option value="cc-by-nc">CC BY-NC - Phi thương mại</option>
+                      <option value="public-domain">Public Domain - Miền công cộng</option>
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Chế độ hiển thị</label>
+                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">Chế độ hiển thị</label>
                     <select 
-                      value={selectedBook?.visibility || "public"}
-                      onChange={(e) => updateBookConfig({ visibility: e.target.value })}
+                      value={selectedDocument?.visibility || "public"}
+                      onChange={(e) => updateDocumentConfig({ visibility: e.target.value })}
                       className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground appearance-none"
                     >
                       <option value="public">Công khai</option>
@@ -474,10 +473,10 @@ export default function AuthorStudioPage() {
 
                   <div className="pt-4 border-t border-border flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold tracking-widest">Quản lý tài liệu</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Chuyển tài liệu vào thùng rác nếu không muốn tiếp tục soạn thảo.</p>
+                      <p className="text-xs font-bold tracking-widest uppercase">Quản lý tài liệu</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">Chuyển tài liệu vào thùng rác nếu bạn không muốn tiếp tục soạn thảo</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleDeleteBook} className="h-8 text-[10px] font-bold text-black border-zinc-200 hover:bg-zinc-50">Chuyển vào thùng rác</Button>
+                    <Button variant="outline" size="sm" onClick={handleDeleteDocument} className="h-8 text-[10px] font-bold text-black border-zinc-200 hover:bg-zinc-50">CHUYỂN VÀO THÙNG RÁC</Button>
                   </div>
                 </div>
               </div>
@@ -541,29 +540,29 @@ export default function AuthorStudioPage() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                  {trashBooks.length === 0 ? (
+                  {trashDocuments.length === 0 ? (
                     <div className="p-20 border border-dashed border-border flex flex-col items-center justify-center text-muted-foreground">
                       <Trash2 className="w-12 h-12 mb-4 opacity-20" />
-                      <p className="text-sm font-bold tracking-widest">Thùng rác trống</p>
+                      <p className="text-sm font-bold tracking-widest uppercase">Thùng rác đang trống</p>
                     </div>
-                  ) : trashBooks.map((book) => (
-                    <div key={book._id} className="bg-white border border-border p-6 flex items-center justify-between hover:border-foreground transition-all">
+                  ) : trashDocuments.map((doc) => (
+                    <div key={doc._id} className="bg-white border border-border p-6 flex items-center justify-between hover:border-foreground transition-all">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-16 bg-muted border border-border flex items-center justify-center">
                            <FileText className="w-6 h-6 text-muted-foreground" />
                         </div>
                         <div>
-                          <h3 className="font-bold text-sm">{book.title}</h3>
-                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest mt-1">Đã xóa vào: {new Date(book.deleted_at).toLocaleString('vi-VN')}</p>
+                          <h3 className="font-bold text-sm">{doc.title}</h3>
+                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest mt-1 uppercase">Đã xóa vào ngày {new Date(doc.deleted_at).toLocaleString('vi-VN')}</p>
                         </div>
                       </div>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => handleRestoreTrash(book._id)}
+                        onClick={() => handleRestoreTrash(doc._id)}
                         className="text-[10px] font-bold tracking-widest border-border"
                       >
-                        <RefreshCcw className="w-3.5 h-3.5 mr-2" /> KHÔI PHỤC
+                        <RefreshCcw className="w-3.5 h-3.5 mr-2" /> KHÔI PHỤC NGAY
                       </Button>
                     </div>
                   ))}

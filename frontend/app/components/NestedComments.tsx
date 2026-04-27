@@ -49,7 +49,7 @@ export default function NestedComments({ itemId }: { itemId: string }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getToken()}` 
         },
-        body: JSON.stringify({ item_id: itemId, item_type: "book", text: newText, parent_id: replyTo })
+        body: JSON.stringify({ item_id: itemId, item_type: "document", text: newText, parent_id: replyTo })
       });
       if (res.ok) {
         setNewText("");
