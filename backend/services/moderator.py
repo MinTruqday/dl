@@ -181,7 +181,7 @@ class ModeratorService:
             {"_id": document_id},
             {"$set": {"status": status, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": datetime.utcnow()}}
         )
-        await db["audit_logs"].insert_one({"action": f"BOOK_{action.upper()}", "actor_id": str(current_moderator.id), "document_id": document_id, "reason": reason, "timestamp": datetime.utcnow()})
+        await db["audit_logs"].insert_one({"action": f"DOCUMENT_{action.upper()}", "actor_id": str(current_moderator.id), "document_id": document_id, "reason": reason, "timestamp": datetime.utcnow()})
         return {"message": f"Đã {status} tài liệu."}
 
     @staticmethod

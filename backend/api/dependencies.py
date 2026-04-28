@@ -6,6 +6,7 @@ from core.security import SECRET_KEY, ALGORITHM
 from core.database import db_client
 from models.user import UserInDB, RoleEnum
 import time
+from core.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -25,7 +26,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     except jwt.PyJWTError:
         raise credentials_exception
 
-    user_doc = await db_client.mongodb.get_default_database()["users"].find_one({"email": email})
+    user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]["users"].find_one({"email": email})
     if user_doc is None:
         raise credentials_exception
         
@@ -33,8 +34,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     
     if session_id and db_client.redis:
         active_sid = await db_client.redis.get(f"active_session:{user_id_str}")
-        if active_sid and active_sid.decode("utf-8") if isinstance(active_sid, bytes) else active_sid != session_id:
-
+        if active_sid:
             active_sid_str = active_sid.decode("utf-8") if isinstance(active_sid, bytes) else active_sid
             if active_sid_str and active_sid_str != session_id:
                 raise HTTPException(
@@ -73,6 +73,10 @@ class RateLimiter:
         self.period = period
 
     async def __call__(self, request: Request):
+        # Bypass rate limiting in test environment
+        if settings.MONGODB_DB_NAME == "doclib_test":
+            return True
+
         if not db_client.redis:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

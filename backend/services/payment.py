@@ -1,3 +1,4 @@
+from core.config import settings
 import os
 from core.database import db_client
 from fastapi import HTTPException
@@ -53,7 +54,7 @@ class PaymentService:
             {"$inc": {"wallet_balance": author_cut}}
         )
         await users.update_one(
-            {"role": "admin"},
+            {"role": "ADMIN"},
             {"$inc": {"wallet_balance": platform_fee}}
         )
         
@@ -100,7 +101,7 @@ class PaymentService:
         result = await db["transactions"].insert_one(tx_deposit.model_dump(by_alias=True))
         transaction_id = str(result.inserted_id)
         
-        gateway_url = os.environ["PAYMENT_GATEWAY_URL"]
+        gateway_url = getattr(settings, "PAYMENT_GATEWAY_URL")
         payment_url = f"{gateway_url}/checkout?tx={transaction_id}&amount={amount_vnd}"
         
         logger.info(f"Fiat deposit initiated by user {user_id}: {amount_vnd} VND")

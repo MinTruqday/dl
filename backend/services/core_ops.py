@@ -21,7 +21,7 @@ class CoreOpsService:
         user_id = str(current_user.id)
         document = await db["documents"].find_one({"_id": str(document_id), "author_id": user_id})
         if not document:
-            raise HTTPException(status_code=403, detail="Không có quyền thao tác hoặc tài liệu không tồn tại")
+            raise HTTPException(status_code=403, detail="Tài liệu không tồn tại hoặc bạn không có quyền thực hiện thao tác này.")
             
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
@@ -55,7 +55,7 @@ class CoreOpsService:
             "details": f"Replaced '{search_term}' with '{replace_term}'", 
             "created_at": datetime.utcnow()
         })
-        return {"message": "Thay thế toàn cục thành công", "affected_fields": ["title", "description", "content"]}
+        return {"message": "Đã thực hiện thay thế nội dung toàn cục thành công.", "affected_fields": ["title", "description", "content"]}
 
     @staticmethod
     async def generate_gdpr_takeout(background_tasks, current_user):
@@ -97,4 +97,4 @@ class CoreOpsService:
                 "content": "[Bình luận này đã bị xóa bởi quyền lãng quên (GDPR Right to be Forgotten)]"
             }}
         )
-        return {"message": "Đã xóa tài khoản."}
+        return {"message": "Yêu cầu 'Quyền được lãng quên' đã được thực hiện. Tài khoản của bạn đã được xóa hoặc ẩn danh thành công."}

@@ -12,7 +12,7 @@ class VersionsService:
     async def save_version(document_id, version_note, current_user):
         db = db_client.mongodb.get_default_database()
 
-        doc = await db['books'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
+        doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
@@ -23,7 +23,7 @@ class VersionsService:
             'content': doc.get('content', ''),
             'created_at': datetime.datetime.utcnow()
         })
-        return {'message': 'Đã lưu phiên bản thành công'}
+        return {'message': 'Đã lưu phiên bản thành công.'}
 
     @staticmethod
     async def get_versions(document_id, current_user):
@@ -42,8 +42,8 @@ class VersionsService:
         if not version:
             raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản.")
             
-        await db['books'].update_one(
+        await db['documents'].update_one(
             {'_id': version['document_id']},
             {'$set': {'content': version['content'], 'updated_at': datetime.datetime.utcnow()}}
         )
-        return {'message': 'Đã khôi phục phiên bản thành công'}
+        return {'message': 'Đã khôi phục phiên bản thành công.'}

@@ -44,7 +44,7 @@ class NotificationService:
             logger.error(f"SSE generator error for user {user_id}: {e}")
             yield {
                 "event": "error",
-                "data": json.dumps({"detail": "Connection lost"})
+                "data": json.dumps({"detail": "Mất kết nối với máy chủ thông báo."})
             }
 
     @staticmethod

@@ -1,3 +1,4 @@
+from core.config import settings
 import datetime
 import os
 import uuid
@@ -239,7 +240,7 @@ class DocumentService:
         document = await docs_col.find_one({"_id": document_id})
         user_id = str(current_user.id)
         if not document or (document.get("author_id") != user_id and user_id not in document.get("coauthors", [])):
-            raise HTTPException(status_code=403, detail="Không có quyền.")
+            raise HTTPException(status_code=403, detail="Bạn không có quyền thêm chương mới cho tài liệu này.")
         order = len(document.get("chapters", [])) + 1
         new_chapter = {
             "id": str(uuid.uuid4()),
@@ -315,7 +316,7 @@ class DocumentService:
 
     @staticmethod
     async def generate_qr_code(document_id: str):
-        app_url = os.environ.get("URL")
+        app_url = getattr(settings, "URL", None)
         img = qrcode.make(f"{app_url}/reader/{document_id}")
         buf = io.BytesIO()
         img.save(buf, format="PNG")
@@ -345,7 +346,7 @@ class DocumentService:
         
         import os
         import httpx
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         
         if reference_document_id and rag_url:
             try:

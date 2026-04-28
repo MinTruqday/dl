@@ -99,7 +99,7 @@ class EditorService:
             "created_at": datetime.utcnow()
         })
         logger.info(f"Inline suggestion added for document {document_id} by user {user_id}")
-        return {"message": "Đã thêm gợi ý chỉnh sửa"}
+        return {"message": "Đã thêm gợi ý chỉnh sửa thành công."}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user):
@@ -113,7 +113,9 @@ class EditorService:
             "resolved_at": datetime.utcnow()
         }})
         logger.info(f"Suggestion {suggestion_id} resolved by user {user_id}")
-        return {"message": f"Đã {payload.get('action')} gợi ý"}
+        action_map = {"accepted": "chấp nhận", "rejected": "từ chối"}
+        action_vn = action_map.get(payload.get('action'), payload.get('action'))
+        return {"message": f"Đã {action_vn} gợi ý thành công."}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user):
@@ -137,7 +139,7 @@ class EditorService:
             {"_id": document_id, "$or": [{"author_id": user_id}, {"co_authors": user_id}]},
             {"$set": {"draft_content": content, "updated_at": datetime.utcnow()}}
         )
-        return {"message": "Auto-save thành công", "timestamp": str(datetime.utcnow())}
+        return {"message": "Tự động lưu bản nháp thành công.", "timestamp": str(datetime.utcnow())}
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user):
@@ -148,7 +150,7 @@ class EditorService:
             {"$set": {"editor_review_status": "pending_review"}}
         )
         logger.info(f"Document {document_id} submitted for review by user {user_id}")
-        return {"message": "Đã gửi chờ kiểm duyệt"}
+        return {"message": "Tài liệu đã được gửi và đang chờ kiểm duyệt."}
 
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user):
@@ -194,4 +196,4 @@ class EditorService:
             "created_at": datetime.utcnow()
         })
         logger.info(f"Global find/replace executed for document {document_id} by user {user_id}")
-        return {"message": "Thay thế toàn cục thành công", "affected_fields": ["title", "description", "content"]}
+        return {"message": "Thay thế nội dung toàn cục thành công.", "affected_fields": ["title", "description", "content"]}

@@ -1,3 +1,5 @@
+from typing import Any
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB
@@ -13,15 +15,15 @@ class AuthorApplicationBase(BaseModel):
 
 router = APIRouter(prefix="/profile")
 
-@router.get("/me")
+@router.get("/me", response_model=APIResponse[Any])
 async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.get_user_profile(current_user)
+    return APIResponse(data=await ProfileService.get_user_profile(current_user), message="Lấy thông tin hồ sơ thành công.", status=200)
 
-@router.put("/me")
+@router.put("/me", response_model=APIResponse[Any])
 async def update_my_profile(data: dict, current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.update_profile(data, current_user)
+    return APIResponse(data=await ProfileService.update_profile(data, current_user), message="Cập nhật hồ sơ thành công.", status=200)
 
-@router.get("/settings")
+@router.get("/settings", response_model=APIResponse[Any])
 async def get_settings(current_user: UserInDB = Depends(get_current_user)):
     from core.database import db_client
     db = db_client.mongodb.get_default_database()
@@ -40,9 +42,9 @@ async def get_settings(current_user: UserInDB = Depends(get_current_user)):
     }
     if user and "settings" in user:
         defaults.update(user["settings"])
-    return defaults
+    return APIResponse(data=defaults, message="Lấy cài đặt người dùng thành công.", status=200)
 
-@router.put("/settings")
+@router.put("/settings", response_model=APIResponse[Any])
 async def update_settings(data: dict, current_user: UserInDB = Depends(get_current_user)):
     from core.database import db_client
     from datetime import datetime
@@ -51,46 +53,44 @@ async def update_settings(data: dict, current_user: UserInDB = Depends(get_curre
         {"_id": str(current_user.id)},
         {"$set": {"settings": data, "updated_at": datetime.utcnow()}}
     )
-    return {"message": "Đã lưu cài đặt."}
+    return APIResponse(data={"message": "Đã lưu cài đặt."}, message="Lưu cài đặt thành công.", status=200)
 
-@router.get("/takeout", dependencies=[Depends(RateLimiter(calls=2, period=3600))])
+@router.get("/takeout", response_model=Any, dependencies=[Depends(RateLimiter(calls=2, period=3600))])
 async def request_data_takeout(current_user: UserInDB = Depends(get_current_user)):
     takeout_payload = await ProfileService.request_data_takeout(current_user)
-    stream = io.StringIO(json.dumps(takeout_payload, ensure_ascii=False, indent=2, default=str))
-    return StreamingResponse(
-        iter([stream.getvalue()]), 
-        media_type="application/json", 
-        headers={"Content-Disposition": f"attachment; filename=doclib_takeout_{current_user.slug}.json"}
-    )
+    # Note: Returning StreamingResponse directly inside APIResponse might be tricky depending on how the frontend handles it.
+    # But fixing the syntax error for now.
+    stream = io.BytesIO(json.dumps(takeout_payload, ensure_ascii=False, indent=2, default=str).encode("utf-8"))
+    return StreamingResponse(stream, media_type="application/json", headers={"Content-Disposition": f"attachment; filename=doclib_takeout_{current_user.slug}.json"})
 
-@router.post("/apply-author")
+@router.post("/apply-author", response_model=APIResponse[Any])
 async def apply_author(application: AuthorApplicationBase, current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.apply_author(application, current_user)
+    return APIResponse(data=await ProfileService.apply_author(application, current_user), message="Gửi yêu cầu trở thành tác giả thành công.", status=200)
 
-@router.post("/upload-kyc")
+@router.post("/upload-kyc", response_model=APIResponse[Any])
 async def upload_kyc(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.upload_kyc(file, current_user)
+    return APIResponse(data=await ProfileService.upload_kyc(file, current_user), message="Tải lên tài liệu định danh thành công.", status=200)
 
-@router.delete("/right-to-be-forgotten", dependencies=[Depends(RateLimiter(calls=1, period=86400))])
+@router.delete("/right-to-be-forgotten", response_model=APIResponse[Any], dependencies=[Depends(RateLimiter(calls=1, period=86400))])
 async def right_to_be_forgotten(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.right_to_be_forgotten(current_user)
+    return APIResponse(data=await ProfileService.right_to_be_forgotten(current_user), message="Yêu cầu xóa tài khoản đã được ghi nhận.", status=status.HTTP_202_ACCEPTED)
 
-@router.get("/streaks")
+@router.get("/streaks", response_model=APIResponse[Any])
 async def get_reading_streaks(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.get_reading_streaks(current_user)
+    return APIResponse(data=await ProfileService.get_reading_streaks(current_user), message="Lấy thông tin chuỗi ngày đọc thành công.", status=200)
 
-@router.get("/badges")
+@router.get("/badges", response_model=APIResponse[Any])
 async def get_badges(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.get_badges(current_user)
+    return APIResponse(data=await ProfileService.get_badges(current_user), message="Lấy danh sách huy hiệu thành công.", status=200)
 
-@router.post("/block/{target_id}")
+@router.post("/block/{target_id}", response_model=APIResponse[Any])
 async def block_user(target_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.block_user(target_id, current_user)
+    return APIResponse(data=await ProfileService.block_user(target_id, current_user), message="Đã chặn người dùng này thành công.", status=200)
 
-@router.post("/gdpr/export")
+@router.post("/gdpr/export", response_model=APIResponse[Any])
 async def request_data_export(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.request_data_export(current_user)
+    return APIResponse(data=await ProfileService.request_data_export(current_user), message="Gửi yêu cầu xuất dữ liệu cá nhân (GDPR) thành công.", status=200)
 
-@router.post("/gdpr/delete")
+@router.post("/gdpr/delete", response_model=APIResponse[Any])
 async def request_data_deletion(current_user: UserInDB = Depends(get_current_user)):
-    return await ProfileService.right_to_be_forgotten(current_user)
+    return APIResponse(data=await ProfileService.right_to_be_forgotten(current_user), message="Yêu cầu xóa dữ liệu định danh (GDPR) đã được gửi.", status=status.HTTP_202_ACCEPTED)

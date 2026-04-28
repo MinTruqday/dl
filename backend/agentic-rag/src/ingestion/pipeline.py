@@ -1,6 +1,5 @@
 import os
 import io
-import fitz
 import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger

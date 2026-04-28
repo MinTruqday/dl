@@ -3,10 +3,12 @@ from loguru import logger
 from typing import List, Dict, Optional
 import json
 import asyncio
+from langchain_huggingface import HuggingFaceEndpoint
 
 class ReasoningAgent:
     def __init__(self):
         self._model = os.environ.get("LLAMA_MODEL")
+        self._hf_token = os.environ.get("HF_TOKEN")
         logger.info(f"Reasoning Agent initialized with model: {self._model}")
 
     async def evaluate_quality(self, query: str, answer: str, context_docs: List[Dict]) -> Dict:
@@ -26,18 +28,17 @@ Tiêu chí đánh giá tính theo thang 0.0 đến 1.0 (Giữ nguyên Key JSON):
 5. "should_retry": bool (true nếu overall < 0.6)
 6. "feedback": "Nhận xét ngắn gọn về điểm mạnh, điểm yếu của câu trả lời và gợi ý cải thiện nếu cần thiết."
 
-Chỉ trả về định dạng JSON :"""
-
-        def run_eval():
-            from transformers import pipeline
-            hf_token = os.environ.get("HF_TOKEN")
-            pipe = pipeline("text-generation", model=self._model, max_new_tokens=300, token=hf_token)
-            res = pipe(eval_prompt, temperature=0.1)
-            return res[0]["generated_text"].replace(eval_prompt, "").strip()
+Chỉ trả về định dạng JSON:"""
 
         try:
-            loop = asyncio.get_event_loop()
-            result_text = await loop.run_in_executor(None, run_eval)
+            llm = HuggingFaceEndpoint(
+                repo_id=self._model,
+                huggingfacehub_api_token=self._hf_token,
+                temperature=0.1,
+                max_new_tokens=300
+            )
+            result_text = await llm.ainvoke(eval_prompt)
+            result_text = result_text.strip()
             
             if result_text.startswith("```"):
                 lines = result_text.split("```")
@@ -49,7 +50,7 @@ Chỉ trả về định dạng JSON :"""
             return json.loads(result_text)
         except Exception as e:
             logger.error(f"Evaluation error: {e}")
-            return {"overall": 0.5, "should_retry": False, "feedback": "Parse error"}
+            return {"overall": 0.5, "should_retry": False, "feedback": f"Lỗi đánh giá: {str(e)}"}
 
     def _build_context(self, docs: List[Dict]) -> str:
         if not docs:

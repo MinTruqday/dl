@@ -1,10 +1,10 @@
 import httpx
 import os
 import contextvars
-from typing import Annotated, TypedDict
+from typing import Annotated, TypedDict, List
 from langchain_core.tools import tool, StructuredTool
-from langchain_huggingface import HuggingFaceEndpoint
-from langgraph.prebuilt.chat_agent_executor import create_tool_calling_executor
+from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+from langgraph.prebuilt import create_react_agent
 from loguru import logger
 
 BACKEND_URL = os.environ.get("CORE_BACKEND_URL")
@@ -77,27 +77,20 @@ tools = [
 ]
 
 llama_model = os.environ.get("LLAMA_MODEL")
+hf_token = os.environ.get("HF_TOKEN")
+
 if not llama_model:
     raise ValueError("LLAMA_MODEL environment variable is not set.")
 
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
-    huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+    huggingfacehub_api_token=hf_token,
     temperature=0.1
 )
-llm = _hf_endpoint
 
-system_message = """Bạn là Trợ lý Tài chính & Thanh toán chuyên nghiệp của DocLib.
-Nhiệm vụ: Giải đáp thắc mắc về Ví, Nạp tiền, Số dư (dl), và Lịch sử giao dịch.
-Yêu cầu:
-- Sử dụng các công cụ được cung cấp để truy xuất dữ liệu chính xác.
-- Trả lời trung thực, lịch sự, chuyên nghiệp. Xưng hô là "DocLib" và "bạn".
-- Đơn vị tiền tệ luôn là "dl".
-- Nếu công cụ trả về lỗi, hãy thông báo hệ thống đang bận, tuyệt đối không tự bịa ra số liệu."""
+llm = ChatHuggingFace(llm=_hf_endpoint)
 
-from langchain_core.messages import SystemMessage
-llm_with_sys = llm.bind(messages=[SystemMessage(content=system_message)])
-billing_agent_app = create_tool_calling_executor(
+billing_agent_app = create_react_agent(
     llm,
     tools
 )

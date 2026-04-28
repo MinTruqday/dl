@@ -1,3 +1,4 @@
+from core.config import settings
 import os
 import httpx
 from fastapi import HTTPException
@@ -7,7 +8,7 @@ import json
 class AgentService:
     @staticmethod
     async def process_text(req):
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             logger.error("AGENTIC_RAG_URL not set")
             raise HTTPException(status_code=500, detail="Cấu hình dịch vụ AI chưa hoàn tất.")
@@ -47,7 +48,7 @@ class AgentService:
 
     @staticmethod
     async def process_document(req):
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             logger.error("AGENTIC_RAG_URL not set")
             raise HTTPException(status_code=500, detail="Cấu hình dịch vụ AI chưa hoàn tất.")

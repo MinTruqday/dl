@@ -271,7 +271,7 @@ class WalletService:
     async def get_revenue(current_user):
         db = db_client.mongodb.get_default_database()
         pipeline = [
-            {"$match": {"user_id": str(current_user.id), "type": "RECEIVE"}},
+            {"$match": {"user_id": str(current_user.id), "type": "receive"}},
             {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}}
         ]
         cursor = db["transactions"].aggregate(pipeline)

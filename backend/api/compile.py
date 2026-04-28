@@ -1,3 +1,5 @@
+from typing import Any
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB, RoleEnum
@@ -8,7 +10,7 @@ from io import BytesIO
 
 router = APIRouter(prefix="/compile")
 
-@router.post("/pdf", response_class=StreamingResponse)
+@router.post("/pdf", response_model=Any)
 async def compile_latex_to_pdf(
     payload: dict,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
@@ -19,9 +21,9 @@ async def compile_latex_to_pdf(
     return StreamingResponse(
         BytesIO(pdf_data), 
         media_type="application/pdf",
-        headers={"CContent-Disposition": "inline; filename=preview.pdf"}
+        headers={"Content-Disposition": "inline; filename=preview.pdf"}
     )
 
-@router.get("/latex")
+@router.get("/latex", response_model=APIResponse[Any])
 async def get_latex():
-    return await EditorService.get_latex()
+    return APIResponse(data=await EditorService.get_latex(), message="Lấy mã nguồn LaTeX thành công.", status=200)

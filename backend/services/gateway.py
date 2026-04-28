@@ -1,3 +1,4 @@
+from core.config import settings
 import hmac
 import hashlib
 import json
@@ -12,12 +13,12 @@ from loguru import logger
 class GatewayService:
     @staticmethod
     async def create_momo_payment(req, current_user):
-        partner_code = os.environ.get("MOMO_PARTNER_CODE")
-        access_key = os.environ.get("MOMO_ACCESS_KEY")
-        secret_key = os.environ.get("MOMO_SECRET_KEY")
-        endpoint = os.environ.get("MOMO_ENDPOINT")
-        return_url = os.environ.get("MOMO_RETURN_URL")
-        notify_url = f"{os.environ.get('MOMO_NOTIFY_URL')}/api/gateways/momo/ipn"
+        partner_code = getattr(settings, "MOMO_PARTNER_CODE", None)
+        access_key = getattr(settings, "MOMO_ACCESS_KEY", None)
+        secret_key = getattr(settings, "MOMO_SECRET_KEY", None)
+        endpoint = getattr(settings, "MOMO_ENDPOINT", None)
+        return_url = getattr(settings, "MOMO_RETURN_URL", None)
+        notify_url = f"{getattr(settings, 'MOMO_NOTIFY_URL', None)}/api/gateways/momo/ipn"
 
         if req.amount < 1000:
             raise HTTPException(status_code=400, detail="Số tiền nạp tối thiểu là 1,000 VNĐ.")
@@ -85,16 +86,16 @@ class GatewayService:
                 
         except Exception as e:
             logger.error(f"MoMo connection error: {e}")
-            raise HTTPException(status_code=500, detail="Không kết nối được tổng đài thanh toán MoMo")
+            raise HTTPException(status_code=500, detail="Không thể kết nối với hệ thống thanh toán MoMo. Vui lòng thử lại sau.")
 
     @staticmethod
     async def momo_ipn(request):
         data = await request.json()
         logger.info(f"Received MoMo IPN: {data}")
         
-        partner_code = os.environ.get("MOMO_PARTNER_CODE")
-        access_key = os.environ.get("MOMO_ACCESS_KEY")
-        secret_key = os.environ.get("MOMO_SECRET_KEY")
+        partner_code = getattr(settings, "MOMO_PARTNER_CODE", None)
+        access_key = getattr(settings, "MOMO_ACCESS_KEY", None)
+        secret_key = getattr(settings, "MOMO_SECRET_KEY", None)
 
         raw_signature = (
             f"accessKey={access_key}"

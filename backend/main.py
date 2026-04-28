@@ -42,14 +42,11 @@ logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
 logger.add("logs/backend.log", rotation="10 MB", level="INFO")
 
-app = FastAPI(title="DocLib API", version="1.0.0", docs_url="/docs", redoc_url="/redoc")
+from core.config import settings
 
-cors_env = os.environ.get("CORS_ALLOWED_ORIGINS")
-if not cors_env:
-    logger.error("CORS_ALLOWED_ORIGINS environment variable is missing")
-    sys.exit(1)
+app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION, docs_url="/docs", redoc_url="/redoc")
 
-allowed_origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
+allowed_origins = [origin.strip() for origin in settings.CORS_ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,

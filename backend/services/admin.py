@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from models.user import RoleEnum
 from fastapi import HTTPException
@@ -117,7 +118,7 @@ class AdminService:
                 "commission_rate": 0.1,
                 "withdrawal_fee_dl": 1000,
                 "rag_top_k": 5,
-                "ai_model": os.environ.get("LLAMA_MODEL"),
+                "ai_model": getattr(settings, "LLAMA_MODEL", None),
                 "updated_at": datetime.utcnow()
             }
             await db["settings"].insert_one(config)
@@ -152,7 +153,7 @@ class AdminService:
 
     @staticmethod
     async def get_ai_gateway_stats():
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             return {"status": "not_configured", "active_models": [], "total_requests_24h": 0}
         try:
@@ -163,7 +164,7 @@ class AdminService:
         except Exception as e:
             logger.warning(f"Failed to fetch AI gateway stats: {e}")
         return {
-            "active_models": [os.environ.get("LLAMA_MODEL"), os.environ.get("EMBEDDING_MODEL")],
+            "active_models": [getattr(settings, "LLAMA_MODEL", None), getattr(settings, "EMBEDDING_MODEL", None)],
             "total_requests_24h": 0,
             "status": "operational"
         }

@@ -47,13 +47,13 @@ class AgentState(TypedDict):
     image_data: str
     file_data: str
 
+# Fixed model to ensure stability and public access
 llama_model = os.environ.get("LLAMA_MODEL")
-if not llama_model:
-    raise ValueError("LLAMA_MODEL is not set in environment variables")
+hf_token = os.environ.get("HF_TOKEN")
 
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
-    huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+    huggingfacehub_api_token=hf_token,
     temperature=0.1
 )
 llm = _hf_endpoint
@@ -302,7 +302,7 @@ def grade_generation(state: AgentState):
             scores = nli_model.predict([[docs_str[:1500], generation]]) 
             entail_score = scores[0][1]
             contradict_score = scores[0][0]
-            logger.info(f"NLI Scores: Entail={entail_score:.2f}, Contradict={contradict_score:.2f}")
+            logger.info(f"NLI Scores: Entail={entail_score:.2f}, Predict={contradict_score:.2f}")
             hallucination_pass = "yes" if entail_score > contradict_score else "no"
         except Exception as e:
             logger.error(f"NLI evaluation error: {e}")

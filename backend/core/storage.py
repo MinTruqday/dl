@@ -3,16 +3,13 @@ import os
 import aioboto3
 from botocore.exceptions import ClientError
 
-MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT")
-MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
-MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
-MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME")
-MINIO_PUBLIC_URL = os.environ.get("MINIO_PUBLIC_URL")
+from core.config import settings
 
-if not all([MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET_NAME]):
-    logger.error("Missing mandatory MinIO environment variables")
-    import sys
-    sys.exit(1)
+MINIO_ENDPOINT = settings.MINIO_ENDPOINT
+MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
+MINIO_SECRET_KEY = settings.MINIO_SECRET_KEY
+MINIO_BUCKET_NAME = settings.MINIO_BUCKET_NAME
+MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 
 session = aioboto3.Session()
 

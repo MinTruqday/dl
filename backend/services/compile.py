@@ -1,5 +1,5 @@
 import tempfile
-import subprocess
+import asyncio
 import os
 from loguru import logger
 from fastapi import HTTPException
@@ -8,7 +8,7 @@ class CompileService:
     @staticmethod
     async def compile_latex_to_pdf(content: str):
         if not content:
-            raise HTTPException(status_code=400, detail="Nội dung trống.")
+            raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống.")
             
         if "\\documentclass" not in content and "\\begin{document}" not in content:
             content = f"\\documentclass{{article}}\n\\usepackage{{amsmath,amssymb}}\n\\begin{{document}}\n{content}\n\\end{{document}}"
@@ -16,33 +16,39 @@ class CompileService:
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
                 tex_file = os.path.join(tmpdir, "main.tex")
+                # Ghi file đồng bộ trong tempdir thường nhanh, nhưng có thể dùng aiofiles nếu cần
                 with open(tex_file, "w", encoding="utf-8") as f:
                     f.write(content)
                 
-                result = subprocess.run(
-                    ["tectonic", tex_file, "--outdir", tmpdir],
-                    capture_output=True,
-                    text=True,
-                    timeout=15
+                # Chạy Tectonic bất đồng bộ
+                process = await asyncio.create_subprocess_exec(
+                    "tectonic", tex_file, "--outdir", tmpdir,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
                 )
                 
-                if result.returncode != 0:
-                    logger.error(f"Tectonic error: {result.stderr}")
-                    raise HTTPException(status_code=422, detail={"error": "Không thể tạo công thức toán học.", "logs": result.stderr})
+                try:
+                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=20.0)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    raise HTTPException(status_code=408, detail="Quá thời gian xử lý biên dịch LaTeX (Timeout).")
+                
+                if process.returncode != 0:
+                    err_msg = stderr.decode()
+                    logger.error(f"Tectonic error: {err_msg}")
+                    raise HTTPException(status_code=422, detail={"error": "Lỗi định dạng LaTeX, không thể biên dịch.", "logs": err_msg})
                     
                 pdf_path = os.path.join(tmpdir, "main.pdf")
                 if not os.path.exists(pdf_path):
-                    raise HTTPException(status_code=500, detail="Không thể tạo file PDF.")
+                    raise HTTPException(status_code=500, detail="Tệp PDF không được tạo ra sau khi biên dịch.")
                     
                 with open(pdf_path, "rb") as pdf_file:
                     pdf_data = pdf_file.read()
                     
                 return pdf_data
                 
-        except subprocess.TimeoutExpired:
-            raise HTTPException(status_code=408, detail="Quá thời gian xử lý, vui lòng thử lại.")
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Compilation error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Lỗi trong quá trình biên dịch LaTeX.")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình biên dịch tài liệu.")

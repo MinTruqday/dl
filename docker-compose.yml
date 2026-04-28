@@ -81,6 +81,7 @@ services:
       - ./backend:/app
       - ./backend/public/uploads:/app/public/uploads
       - ./backend/public/feed_uploads:/app/public/feed_uploads
+      - ./packages:/packages
     networks:
       - doclib_network
 
@@ -98,6 +99,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - ./packages:/packages
       - /app/.next
     environment:
       - WATCHPACK_POLLING=true

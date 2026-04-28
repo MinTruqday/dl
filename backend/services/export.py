@@ -1,4 +1,5 @@
 import io
+import asyncio
 from fastapi import HTTPException
 from core.database import db_client
 from loguru import logger
@@ -24,59 +25,70 @@ class ExportService:
         db = db_client.mongodb.get_default_database()
         document = await db["documents"].find_one({"_id": str(document_id)})
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại trên hệ thống.")
 
         user_email = getattr(current_user, "email", "unknown")
         user_id = str(current_user.id)
         watermark_text = f"Bản quyền thuộc DocLib - Cấp riêng cho: {user_email} (ID: {user_id})"
 
-        raw_pdf_buffer = io.BytesIO()
-        c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(50, 800, document.get("title", "Tác phẩm vô danh"))
-        c.setFont("Helvetica", 12)
-        y_pos = 750
-        content = str(document.get("content", "Nội dung sáng tác đang chờ xử lý."))
-        lines = content.split("\n")
-        for para in lines:
-            if not para.strip():
-                continue
-            wrapped_lines = simpleSplit(para.strip(), "Helvetica", 12, 450)
-            for line in wrapped_lines:
-                c.drawString(50, y_pos, line)
-                y_pos -= 18
-                if y_pos < 50:
-                    c.showPage()
-                    c.setFont("Helvetica", 12)
-                    y_pos = 800
-        c.save()
+        def generate_pdf_sync():
+            try:
+                raw_pdf_buffer = io.BytesIO()
+                c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)
+                c.setFont("Helvetica-Bold", 16)
+                c.drawString(50, 800, document.get("title", "Tác phẩm vô danh"))
+                c.setFont("Helvetica", 12)
+                y_pos = 750
+                content = str(document.get("content", "Nội dung sáng tác đang chờ xử lý."))
+                lines = content.split("\n")
+                for para in lines:
+                    if not para.strip():
+                        continue
+                    wrapped_lines = simpleSplit(para.strip(), "Helvetica", 12, 450)
+                    for line in wrapped_lines:
+                        c.drawString(50, y_pos, line)
+                        y_pos -= 18
+                        if y_pos < 50:
+                            c.showPage()
+                            c.setFont("Helvetica", 12)
+                            y_pos = 800
+                c.save()
 
-        raw_pdf_buffer.seek(0)
-        
-        watermark_buffer = io.BytesIO()
-        watermark_canvas = canvas.Canvas(watermark_buffer, pagesize=A4)
-        watermark_canvas.setFillColor(colors.lightgrey, alpha=0.3)
-        watermark_canvas.setFont("Helvetica-Oblique", 25)
-        watermark_canvas.translate(A4[0] / 2, A4[1] / 2)
-        watermark_canvas.rotate(45)
-        watermark_canvas.drawCentredString(0, 0, watermark_text)
-        watermark_canvas.save()
-        watermark_buffer.seek(0)
+                raw_pdf_buffer.seek(0)
+                
+                watermark_buffer = io.BytesIO()
+                watermark_canvas = canvas.Canvas(watermark_buffer, pagesize=A4)
+                watermark_canvas.setFillColor(colors.lightgrey, alpha=0.3)
+                watermark_canvas.setFont("Helvetica-Oblique", 25)
+                watermark_canvas.translate(A4[0] / 2, A4[1] / 2)
+                watermark_canvas.rotate(45)
+                watermark_canvas.drawCentredString(0, 0, watermark_text)
+                watermark_canvas.save()
+                watermark_buffer.seek(0)
 
-        raw_pdf = PyPDF2.PdfReader(raw_pdf_buffer)
-        watermark_pdf = PyPDF2.PdfReader(watermark_buffer)
-        watermark_page = watermark_pdf.pages[0]
+                raw_pdf = PyPDF2.PdfReader(raw_pdf_buffer)
+                watermark_pdf = PyPDF2.PdfReader(watermark_buffer)
+                watermark_page = watermark_pdf.pages[0]
 
-        output_pdf = PyPDF2.PdfWriter()
+                output_pdf = PyPDF2.PdfWriter()
 
-        for page_num in range(len(raw_pdf.pages)):
-            page = raw_pdf.pages[page_num]
-            page.merge_page(watermark_page)
-            output_pdf.add_page(page)
+                for page_num in range(len(raw_pdf.pages)):
+                    page = raw_pdf.pages[page_num]
+                    page.merge_page(watermark_page)
+                    output_pdf.add_page(page)
 
-        final_buffer = io.BytesIO()
-        output_pdf.write(final_buffer)
-        final_buffer.seek(0)
+                final_buffer = io.BytesIO()
+                output_pdf.write(final_buffer)
+                final_buffer.seek(0)
+                return final_buffer.read()
+            except Exception as e:
+                logger.error(f"Sync PDF generation error: {e}")
+                return None
+
+        pdf_data = await asyncio.to_thread(generate_pdf_sync)
+        if pdf_data is None:
+            raise HTTPException(status_code=500, detail="Lỗi trong quá trình tạo tệp PDF có dấu mờ.")
 
         logger.info(f"Document {document_id} exported to watermarked PDF for user {user_id}")
-        return final_buffer.read()
+        return pdf_data
+

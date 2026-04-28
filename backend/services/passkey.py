@@ -1,3 +1,4 @@
+from core.config import settings
 import base64
 from webauthn import (
     generate_registration_options,
@@ -21,9 +22,9 @@ from datetime import datetime
 import os
 import uuid
 
-RP_ID = os.environ.get("PASSKEY_RP_ID")
+RP_ID = getattr(settings, "PASSKEY_RP_ID", None)
 RP_NAME = "DocLib"
-ORIGIN = os.environ.get("PASSKEY_ALLOWED_ORIGINS")
+ORIGIN = getattr(settings, "PASSKEY_ALLOWED_ORIGINS", None)
 
 class PasskeyService:
     @staticmethod

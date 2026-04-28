@@ -19,7 +19,7 @@ export default function AiChatPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   
-  const { user } = useAuth() as any;
+  const { user } = useAuth();
   useEffect(() => {
     if (isOpen && user?._id) {
       const historyKey = `doclib_chat_${user._id}`;
@@ -94,6 +94,11 @@ export default function AiChatPanel() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSending) return;
+
+    if (usePro && (user?.wallet_balance || 0) < 10) {
+      alert("Số dư ví không đủ để sử dụng AI Pro (cần tối thiểu 10 dl). Vui lòng nạp thêm tiền.");
+      return;
+    }
 
     const userMessage = input;
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
@@ -410,8 +415,9 @@ export default function AiChatPanel() {
               </div>
               <button
                 type="submit"
-                disabled={isSending || !input.trim()}
+                disabled={isSending || !input.trim() || (usePro && (user?.wallet_balance || 0) < 10)}
                 className="w-12 h-12 shrink-0 rounded-md bg-black text-white flex items-center justify-center hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                title={usePro && (user?.wallet_balance || 0) < 10 ? "Số dư không đủ để dùng Pro" : "Gửi tin nhắn"}
               >
                 <Send className="w-4 h-4" />
               </button>

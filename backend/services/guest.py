@@ -9,7 +9,7 @@ class GuestService:
     async def get_featured_authors(limit: int = 10) -> list:
         db = db_client.mongodb.get_default_database()
         pipeline = [
-            {"$match": {"role": "author", "is_active": True}},
+            {"$match": {"role": "AUTHOR", "is_active": True}},
             {"$lookup": {"from": "documents", "localField": "_id", "foreignField": "author_id", "as": "documents"}},
             {"$addFields": {"document_count": {"$size": "$documents"}, "total_views": {"$sum": "$documents.views"}}},
             {"$sort": {"total_views": -1}}, {"$limit": limit},

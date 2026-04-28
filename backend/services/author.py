@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -316,7 +317,7 @@ class AuthorService:
         if not doc: raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         reviews = await db["reviews"].find({"document_id": document_id}).to_list(length=100)
         if not reviews: return {"sentiment": "neutral", "summary": "Chưa có đánh giá nào để phân tích."}
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if rag_url:
             texts = [r.get("review_text", "") for r in reviews if r.get("review_text")]
             try:
@@ -333,7 +334,7 @@ class AuthorService:
         if not doc: raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         chapter = next((ch for ch in doc.get("chapters", []) if ch.get("id") == chapter_id), None)
         if not chapter: raise HTTPException(status_code=404, detail="Chương không tồn tại.")
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
@@ -347,7 +348,7 @@ class AuthorService:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc: raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=60.0) as client:

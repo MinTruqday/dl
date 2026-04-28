@@ -4,9 +4,9 @@ import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError("CRITICAL: SECRET_KEY environment variable is not defined.")
+from core.config import settings
+
+SECRET_KEY = settings.SECRET_KEY
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30

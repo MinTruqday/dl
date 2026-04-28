@@ -1,3 +1,5 @@
+import asyncio
+from core.config import settings
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -7,22 +9,20 @@ from loguru import logger
 class EmailService:
     @staticmethod
     async def send_reset_password_email(email: str, token: str):
-        smtp_host = os.environ.get("SMTP_HOST")
-        smtp_port = int(os.environ.get("SMTP_PORT"))
-        smtp_user = os.environ.get("SMTP_USER")
-        smtp_pass = os.environ.get("SMTP_PASS")
-        sender_email = os.environ.get("SENDER_EMAIL")
-        app_url = os.environ.get("URL")
+        smtp_host = getattr(settings, "SMTP_HOST", None)
+        smtp_port = int(getattr(settings, "SMTP_PORT", 587))
+        smtp_user = getattr(settings, "SMTP_USER", None)
+        smtp_pass = getattr(settings, "SMTP_PASS", None)
+        sender_email = getattr(settings, "SENDER_EMAIL", None)
+        sender_name = getattr(settings, "SENDER_NAME", "DocLib Support")
 
         subject = "Mã xác thực khôi phục mật khẩu - DocLib"
         body = f"""Chào bạn,
 Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản {email}.
 Mã xác thực của bạn là: {token}
-Lưu ý: Mã này chỉ có hiệu lực trong vòng 1 phút. Nếu bạn không yêu cầu thay đổi này, vui lòng bỏ qua email này.
+Lưu ý: Mã này chỉ có hiệu lực trong vòng 10 phút. Nếu bạn không yêu cầu thay đổi này, vui lòng bỏ qua email này.
 Trân trọng,
 Đội ngũ DocLib."""
-
-        sender_name = os.environ.get("SENDER_NAME")
 
         if not all([smtp_host, smtp_user, smtp_pass]):
             logger.warning(f"SMTP not configured. Writing email content to logs/emails.log for {email}")
@@ -31,19 +31,29 @@ Trân trọng,
                 f.write(f"--- {email} ---\nSubject: {subject}\nBody: {body}\n\n")
             return
 
-        try:
-            msg = MIMEMultipart()
-            msg["From"] = f"{sender_name} <{sender_email}>"
-            msg["To"] = email
-            msg["Subject"] = subject
-            msg.attach(MIMEText(body, "plain"))
+        def send_sync():
+            try:
+                msg = MIMEMultipart()
+                msg["From"] = f"{sender_name} <{sender_email}>"
+                msg["To"] = email
+                msg["Subject"] = subject
+                msg.attach(MIMEText(body, "plain", "utf-8"))
 
-            server = smtplib.SMTP(smtp_host, smtp_port)
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
-            server.quit()
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.send_message(msg)
+                server.quit()
+                return True
+            except Exception as e:
+                logger.error(f"Error in sync SMTP send: {e}")
+                return False
+
+        success = await asyncio.to_thread(send_sync)
+        if success:
             logger.info(f"Password reset email sent successfully to {email}")
-        except Exception as e:
-            logger.error(f"Error sending email to {email}: {str(e)}")
-            raise Exception("Hệ thống gửi email hiện đang bận, vui lòng thử lại sau.")
+        else:
+            logger.error(f"Failed to send email to {email}")
+            # Không raise exception để tránh làm gián đoạn luồng chính của user 
+            # (họ vẫn nhận được thông báo chung ở auth service)
+

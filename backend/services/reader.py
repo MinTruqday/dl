@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -133,11 +134,11 @@ class ReaderService:
 
     @staticmethod
     async def semantic_search(query: str, current_user) -> list:
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url: raise HTTPException(status_code=500, detail="Dịch vụ AI chưa được cấu hình.")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/api/chat", json={
+                resp = await client.post(f"{rag_url}/chat", json={
                     "query": f"Tìm kiếm tài liệu liên quan đến: {query}",
                     "user_id": str(current_user.id),
                     "useSmart": True
@@ -151,7 +152,7 @@ class ReaderService:
 
     @staticmethod
     async def generate_flashcard(document_id: str, payload, current_user):
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url: raise HTTPException(status_code=500, detail="Dịch vụ AI hiện chưa được cấu hình.")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:

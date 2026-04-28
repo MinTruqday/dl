@@ -1,3 +1,5 @@
+from typing import Any
+from core.response import APIResponse
 LATEX_COMMANDS = [
     {
         "label": "\\usepackage[options]{package}",

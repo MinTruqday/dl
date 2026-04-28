@@ -29,6 +29,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 RUN useradd -m -s /bin/bash appuser
+RUN mkdir -p /home/appuser/.cache/huggingface && chown -R appuser:appuser /home/appuser/.cache
 COPY --chown=appuser:appuser src/ ./src/
 
 USER appuser

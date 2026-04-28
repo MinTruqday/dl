@@ -6,11 +6,13 @@ import { useRouter, usePathname } from "next/navigation";
 interface User {
   _id: string;
   email: string;
+  full_name: string;
   display_name: string;
   slug: string;
   role: string;
   avatar_url?: string;
   bio?: string;
+  wallet_balance: number;
 }
 
 interface AuthContextType {

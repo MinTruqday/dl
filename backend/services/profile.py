@@ -112,7 +112,7 @@ class ProfileService:
             
         await db["users"].delete_one({"_id": current_user.id})
         logger.info(f"User {user_id} requested to be forgotten (GDPR)")
-        return {"status": "success", "message": "Đã xóa tài khoản."}
+        return {"status": "success", "message": "Tài khoản của bạn đã được xóa hoàn toàn khỏi hệ thống theo yêu cầu."}
 
     @staticmethod
     async def get_reading_streaks(current_user):

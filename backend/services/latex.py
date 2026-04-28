@@ -117,7 +117,7 @@ class LatexService:
             return {"formatted_content": "\n".join(formatted)}
         except Exception as e:
             logger.error(f"LaTeX format error: {e}")
-            raise HTTPException(status_code=500, detail="Lỗi khi định dạng LaTeX.")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang định dạng mã LaTeX.")
 
     @staticmethod
     async def export_latex(request, current_user):
@@ -137,14 +137,14 @@ class LatexService:
             )
             await asyncio.wait_for(process.communicate(), timeout=30)
             if not os.path.exists(out_path):
-                raise HTTPException(status_code=500, detail="Không thể xuất bản file.")
+                raise HTTPException(status_code=500, detail="Máy chủ không thể tạo tập tin xuất bản theo yêu cầu.")
             with open(out_path, "rb") as f:
                 file_bytes = f.read()
             logger.info(f"LaTeX exported to {request.format} by user {current_user.id}")
             return file_bytes
         except Exception as e:
             logger.error(f"LaTeX export error: {e}")
-            raise HTTPException(status_code=500, detail="Lỗi khi xuất bản file.")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình xuất bản tập tin.")
         finally:
             for p in [tex_path, out_path]:
                 if os.path.exists(p):

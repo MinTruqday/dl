@@ -17,7 +17,7 @@ class ReviewService:
         
         review_dict = review_in.model_dump()
         review_dict["document_id"] = real_document_id
-        review_dict["user_id"] = current_user.id
+        review_dict["user_id"] = str(current_user.id)
         review_dict["full_name"] = current_user.full_name
         review_dict["avatar_url"] = current_user.avatar_url
         

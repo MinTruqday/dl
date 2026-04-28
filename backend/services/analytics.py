@@ -73,7 +73,7 @@ class AnalyticsService:
     @staticmethod
     async def get_author_stats(current_user):
         if current_user.role != "author":
-            raise HTTPException(status_code=403, detail="Chỉ khả dụng cho tác giả")
+            raise HTTPException(status_code=403, detail="Tính năng này chỉ dành cho tài khoản Tác giả.")
             
         db = db_client.mongodb.get_default_database()
         docs = await db["documents"].find({"author_id": str(current_user.id)}).to_list(length=1000)

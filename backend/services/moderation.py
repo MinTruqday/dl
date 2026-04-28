@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
@@ -13,7 +14,7 @@ class ModerationService:
         
         import os
         import httpx
-        rag_url = os.environ.get("AGENTIC_RAG_URL")
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             return {"is_toxic": False, "detected_keywords": [], "confidence_score": 0.0}
 
@@ -85,7 +86,7 @@ class ModerationService:
         if not report:
             raise HTTPException(status_code=404, detail="Không tìm thấy báo cáo.")
             
-        target_collection = "books"
+        target_collection = "documents"
         if report["item_type"] == "comment":
             target_collection = "comments"
         elif report["item_type"] == "feed":
@@ -94,7 +95,7 @@ class ModerationService:
             target_collection = "reviews"
 
         if action.action == "takedown":
-            if target_collection == "books":
+            if target_collection == "documents":
                 await db["documents"].update_one({"_id": report["item_id"]}, {"$set": {"status": "banned", "updated_at": datetime.utcnow()}})
             elif target_collection == "posts":
                 await db["posts"].update_one({"_id": report["item_id"]}, {"$set": {"status": "removed", "is_active": False, "updated_at": datetime.utcnow()}})
@@ -109,7 +110,7 @@ class ModerationService:
             target_item = await db[target_collection].find_one({"_id": report["item_id"]})
             if target_item:
                 author_field = "user_id"
-                if target_collection == "books":
+                if target_collection == "documents":
                     author_field = "author_id"
                 
                 bad_user_id = target_item.get(author_field)

@@ -16,7 +16,7 @@ class SocialService:
     async def upload_media(file, current_user: UserInDB):
         ext = file.filename.split(".")[-1].lower()
         if ext not in ["jpg", "jpeg", "png", "gif", "webp", "mp4"]:
-            raise HTTPException(status_code=400, detail="Chỉ hỗ trợ file ảnh hoặc video mp4")
+            raise HTTPException(status_code=400, detail="Hệ thống chỉ hỗ trợ các định dạng tệp ảnh hoặc video mp4.")
         
         filename = f"feed_{uuid.uuid4().hex}.{ext}"
         if ".." in filename:
@@ -52,7 +52,7 @@ class SocialService:
                 "full_name": doc.get("full_name", "Ẩn danh"),
                 "avatar_url": doc.get("avatar_url"),
                 "bio": doc.get("bio"),
-                "role": doc.get("role", "reader")
+                "role": doc.get("role", "READER")
             })
         return suggestions
 
@@ -92,7 +92,7 @@ class SocialService:
                 "id": str(user_doc["_id"]) if user_doc else doc["user_id"],
                 "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
                 "avatar_url": user_doc.get("avatar_url") if user_doc else None,
-                "role": user_doc.get("role", "reader") if user_doc else "reader"
+                "role": user_doc.get("role", "READER") if user_doc else "READER"
             }
             item = {
                 "id": str(doc["_id"]),
@@ -145,18 +145,18 @@ class SocialService:
         )
         await db["status_updates"].insert_one(new_post.model_dump(by_alias=True))
         logger.info(f"Post created by user {current_user.id}: {new_post.id}")
-        return {"message": "Đã đăng bài thành công", "post_id": str(new_post.id)}
+        return {"message": "Đã đăng bài thành công.", "post_id": str(new_post.id)}
 
     @staticmethod
     async def toggle_follow(target_user_id: str, current_user: UserInDB):
         if str(current_user.id) == target_user_id:
-            raise HTTPException(status_code=400, detail="Không thể tự theo dõi chính mình")
+            raise HTTPException(status_code=400, detail="Bạn không thể tự theo dõi chính mình.")
         db = db_client.mongodb.get_default_database()
         existing = await db["follows"].find_one({"follower_id": str(current_user.id), "following_id": target_user_id})
         if existing:
             await db["follows"].delete_one({"_id": existing["_id"]})
             logger.info(f"User {current_user.id} unfollowed user {target_user_id}")
-            return {"message": "Đã bỏ theo dõi"}
+            return {"message": "Đã bỏ theo dõi thành công."}
         else:
             await db["follows"].insert_one(FollowInDB(follower_id=str(current_user.id), following_id=target_user_id).model_dump(by_alias=True))
             
@@ -190,7 +190,7 @@ class SocialService:
                 })
             )
             logger.info(f"User {current_user.id} followed user {target_user_id}")
-            return {"message": "Đã theo dõi"}
+            return {"message": "Đã theo dõi thành công."}
 
     @staticmethod
     async def create_discussion(document_id: str, data: dict, current_user) -> dict:
@@ -275,7 +275,7 @@ class SocialService:
             "id": str(r["_id"]),
             "full_name": r.get("full_name", "Ẩn danh"),
             "avatar_url": r.get("avatar_url"),
-            "role": r.get("role", "reader"),
+            "role": r.get("role", "READER"),
             "score": r.get("total_views", 0) + (r.get("document_count", 0) * 10)
         } for r in results]
 
@@ -318,7 +318,7 @@ class SocialService:
             "id": str(r["_id"]),
             "full_name": r.get("full_name", "Độc giả ẩn danh"),
             "avatar_url": r.get("avatar_url"),
-            "role": r.get("role", "reader"),
+            "role": r.get("role", "READER"),
             "score": r.get("score", 0)
         } for r in results]
 
@@ -529,5 +529,5 @@ class SocialService:
             "full_name": u.get("full_name", "Ẩn danh"),
             "slug": u.get("slug", ""),
             "avatar_url": u.get("avatar_url"),
-            "role": u.get("role", "reader"),
+            "role": u.get("role", "READER"),
         } for u in users]

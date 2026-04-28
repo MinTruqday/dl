@@ -3,6 +3,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as aioredis
 import aio_pika
 from loguru import logger
+from core.config import settings
+import asyncio
 
 class DBClient:
     def __init__(self):
@@ -13,9 +15,9 @@ class DBClient:
 db_client = DBClient()
 
 async def init_db():
-    mongo_uri = os.environ.get("MONGODB_URI")
-    redis_uri = os.environ.get("REDIS_URI")
-    rabbitmq_uri = os.environ.get("RABBITMQ_URI")
+    mongo_uri = settings.MONGODB_URI
+    redis_uri = settings.REDIS_URI
+    rabbitmq_uri = settings.RABBITMQ_URI
     
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
         logger.error("MONGODB_URI, REDIS_URI, and RABBITMQ_URI must be set")
@@ -43,7 +45,7 @@ async def init_db():
 
 async def setup_indexes():
     try:
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
 
         await db["documents"].create_index([("title", "text"), ("description", "text"), ("author", "text")], background=True)
         await db["status_updates"].create_index([("created_at", -1)], background=True)

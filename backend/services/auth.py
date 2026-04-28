@@ -1,3 +1,4 @@
+from core.config import settings
 from datetime import datetime, timedelta
 import secrets
 import uuid
@@ -12,11 +13,14 @@ from loguru import logger
 class AuthService:
     @staticmethod
     async def get_google_auth_url():
-        google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
-        redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
+        google_client_id = getattr(settings, "GOOGLE_CLIENT_ID", None)
+        redirect_uri = getattr(settings, "GOOGLE_REDIRECT_URI", None)
         if not google_client_id or not redirect_uri:
             logger.error("GOOGLE_CLIENT_ID or GOOGLE_REDIRECT_URI is not set")
-            raise HTTPException(status_code=500, detail="Hệ thống chưa được cấu hình dịch vụ đăng nhập bằng Google.")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Dịch vụ đăng nhập Google chưa được thiết lập. Vui lòng liên hệ quản trị viên."
+            )
         
         auth_url = (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
@@ -27,7 +31,7 @@ class AuthService:
 
     @staticmethod
     async def register_user(user_in: UserCreate, client_ip: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         users_col = db["users"]
         if await users_col.find_one({"email": user_in.email}):
             raise HTTPException(status_code=400, detail="Địa chỉ Email này đã được sử dụng bởi một tài khoản khác.")
@@ -36,7 +40,7 @@ class AuthService:
         
         tos_accepted_at = datetime.utcnow() if user_in.agreed_to_terms else None
         user_doc = UserInDB(
-            **user_in.model_dump(exclude={"password", "agreed_to_terms"}), 
+            **user_in.model_dump(exclude={"password", "agreed_to_terms", "tos_accepted_at"}), 
             password_hash=get_password_hash(user_in.password),
             tos_accepted_at=tos_accepted_at
         )
@@ -52,7 +56,7 @@ class AuthService:
 
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user_doc = await db["users"].find_one({"$or": [{"email": username}, {"slug": username}]})
         if not user_doc or not verify_password(password, user_doc["password_hash"]):
             await db["audit_logs"].insert_one({
@@ -93,7 +97,7 @@ class AuthService:
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db["users"].find_one({"email": email})
         if user:
             otp_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
@@ -119,7 +123,7 @@ class AuthService:
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         token_doc = await db["password_reset_tokens"].find_one({"token": token, "used": False})
         if not token_doc or token_doc.get("expires_at") < datetime.utcnow():
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.")
@@ -140,7 +144,7 @@ class AuthService:
 
     @staticmethod
     async def get_featured_authors(limit: int = 5):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         cursor = db["users"].find({"role": "AUTHOR", "is_active": True}).limit(limit)
         authors = await cursor.to_list(length=limit)
         return [{
@@ -168,9 +172,9 @@ class AuthService:
 
     @staticmethod
     async def handle_google_callback(code: str, client_ip: str):
-        google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
-        google_client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
-        redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI")
+        google_client_id = getattr(settings, "GOOGLE_CLIENT_ID", None)
+        google_client_secret = getattr(settings, "GOOGLE_CLIENT_SECRET", None)
+        redirect_uri = getattr(settings, "GOOGLE_REDIRECT_URI", None)
         import httpx
         async with httpx.AsyncClient() as client:
             token_resp = await client.post("https://oauth2.googleapis.com/token", data={"code": code, "client_id": google_client_id, "client_secret": google_client_secret, "redirect_uri": redirect_uri, "grant_type": "authorization_code"})
@@ -180,7 +184,7 @@ class AuthService:
                 raise HTTPException(status_code=400, detail="Quá trình xác thực với Google thất bại. Vui lòng thử lại.")
             user_resp = await client.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         users_col = db["users"]
         email = google_user.get("email")
         user_doc = await users_col.find_one({"email": email})
