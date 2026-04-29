@@ -5,18 +5,19 @@ import hashlib
 import json
 import redis
 from sentence_transformers import SentenceTransformer
+from src.core.config import settings
 
 class EmbeddingService:
     def __init__(self):
-        self._model_name = os.environ.get("EMBEDDING_MODEL")
-        self._dimensions = int(os.environ.get("EMBEDDING_DIMENSIONS"))
-        self._batch_size = int(os.environ.get("EMBEDDING_BATCH_SIZE"))
+        self._model_name = settings.EMBEDDING_MODEL
+        self._dimensions = settings.EMBEDDING_DIMENSIONS
+        self._batch_size = settings.EMBEDDING_BATCH_SIZE
         
         logger.info(f"Loading local embedding model: {self._model_name}")
         self._model = SentenceTransformer(self._model_name)
         logger.info(f"Local embedding model loaded successfully. Dim={self._dimensions}")
 
-        redis_url = os.environ.get("REDIS_URI")
+        redis_url = settings.REDIS_URI
         try:
             self._cache = redis.from_url(redis_url, decode_responses=False)
             self._cache.ping()

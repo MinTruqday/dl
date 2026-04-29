@@ -57,7 +57,15 @@ class DocumentService:
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
             raise HTTPException(status_code=400, detail="Đường dẫn tài liệu này đã tồn tại, hãy chọn tên khác.")
+        
         doc_dict = doc_in.model_dump()
+        
+        if current_user.role == "admin":
+            doc_dict["publisher_name"] = "DocLib"
+        else:
+            if not doc_dict.get("publisher_name"):
+                doc_dict["publisher_name"] = current_user.full_name
+
         doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
         return doc_doc
@@ -210,15 +218,78 @@ class DocumentService:
         return {"message": "Đang xuất file PDF, vui lòng chờ.", "status": "compiling"}
 
     @staticmethod
-    async def get_document_by_slug(slug: str):
+    async def get_document_by_slug(slug: str, current_user=None):
         db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         document = await docs_collection.find_one({"slug": slug, "status": DocumentStatus.PUBLISHED})
         if not document:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc chưa xuất bản.")
+        
+        user_id = str(current_user.id) if current_user else None
+        has_purchased = False
+        if user_id:
+            if document.get("author_id") == user_id:
+                has_purchased = True
+            else:
+                purchases_col = db_client.mongodb.get_database("doclib").get_collection("purchases")
+                purchase = await purchases_col.find_one({"user_id": user_id, "item_id": str(document["_id"])})
+                if purchase:
+                    has_purchased = True
+        
         await docs_collection.update_one({"_id": document["_id"]}, {"$inc": {"views": 1}})
         document["views"] = document.get("views", 0) + 1
+        
+        document = serialize_document(document)
+        
+        author = await db["users"].find_one({"_id": document["author_id"]})
+        if author:
+            document["author"] = {
+                "username": author.get("full_name") or author.get("username"),
+                "avatar_url": author.get("avatar_url")
+            }
+        
+        document["has_purchased"] = has_purchased
         return document
+
+    @staticmethod
+    async def generate_ai_cover(document_id: str, current_user):
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        document = await docs_col.find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not document:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền.")
+        
+        title = document.get("title", "")
+        desc = document.get("description", "")
+        
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if not rag_url:
+            raise HTTPException(status_code=500, detail="Dịch vụ AI chưa được cấu hình.")
+            
+        import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.post(
+                    f"{rag_url}/api/inference/generate-cover",
+                    json={"title": title, "description": desc, "style": "monochrome minimalist"},
+                    timeout=90.0
+                )
+                if res.status_code != 200:
+                    raise HTTPException(status_code=res.status_code, detail="Không thể khởi tạo ảnh bìa AI vào lúc này.")
+                
+                data = res.json()
+                cover_url = data.get("cover_url")
+                if not cover_url:
+                     raise HTTPException(status_code=500, detail="Kết quả từ AI không hợp lệ.")
+        except Exception as e:
+            logger.error(f"AI Cover Gen Error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối với dịch vụ tạo ảnh AI.")
+        
+        await docs_col.update_one(
+            {"_id": document_id},
+            {"$set": {"cover_image": cover_url, "updated_at": datetime.datetime.utcnow()}}
+        )
+        return {"cover_image": cover_url, "message": "Ảnh bìa AI đã được khởi tạo thành công."}
 
     @staticmethod
     async def update_cover(document_id: str, cover_url: str, current_user):

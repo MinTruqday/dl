@@ -148,6 +148,59 @@ class SocialService:
         return {"message": "Đã đăng bài thành công.", "post_id": str(new_post.id)}
 
     @staticmethod
+    async def delete_post(post_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        post = await db["status_updates"].find_one({"_id": post_id})
+        if not post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        if post["user_id"] != str(current_user.id) and current_user.role != "ADMIN":
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xóa bài viết này.")
+        
+        await db["status_updates"].delete_one({"_id": post_id})
+        logger.info(f"Post {post_id} deleted by user {current_user.id}")
+        return {"message": "Đã xóa bài viết thành công."}
+
+    @staticmethod
+    async def react_to_post(post_id: str, reaction_type: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        post = await db["status_updates"].find_one({"_id": post_id})
+        if not post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        
+        user_id_str = str(current_user.id)
+        reaction_users = post.get("reaction_users", {})
+        
+        if user_id_str in reaction_users:
+            old_reaction = reaction_users[user_id_str]
+            if old_reaction == reaction_type:
+                await db["status_updates"].update_one(
+                    {"_id": post_id},
+                    {
+                        "$inc": {f"reactions.{reaction_type}": -1},
+                        "$unset": {f"reaction_users.{user_id_str}": ""}
+                    }
+                )
+                return {"message": "Đã bỏ cảm xúc.", "action": "removed"}
+            else:
+                await db["status_updates"].update_one(
+                    {"_id": post_id},
+                    {
+                        "$inc": {f"reactions.{old_reaction}": -1, f"reactions.{reaction_type}": 1},
+                        "$set": {f"reaction_users.{user_id_str}": reaction_type}
+                    }
+                )
+                return {"message": "Đã thay đổi cảm xúc.", "action": "changed"}
+        else:
+            await db["status_updates"].update_one(
+                {"_id": post_id},
+                {
+                    "$inc": {f"reactions.{reaction_type}": 1},
+                    "$set": {f"reaction_users.{user_id_str}": reaction_type}
+                }
+            )
+            return {"message": "Đã thả cảm xúc.", "action": "added"}
+
+    @staticmethod
     async def toggle_follow(target_user_id: str, current_user: UserInDB):
         if str(current_user.id) == target_user_id:
             raise HTTPException(status_code=400, detail="Bạn không thể tự theo dõi chính mình.")
@@ -159,12 +212,9 @@ class SocialService:
             return {"message": "Đã bỏ theo dõi thành công."}
         else:
             await db["follows"].insert_one(FollowInDB(follower_id=str(current_user.id), following_id=target_user_id).model_dump(by_alias=True))
-            
-
             target_user = await db["users"].find_one({"_id": target_user_id})
             if target_user and target_user.get("welcome_message"):
                 welcome_msg = target_user["welcome_message"]
-
                 notif = {
                     "_id": str(uuid.uuid4()),
                     "user_id": str(current_user.id),
@@ -531,3 +581,36 @@ class SocialService:
             "avatar_url": u.get("avatar_url"),
             "role": u.get("role", "READER"),
         } for u in users]
+
+    @staticmethod
+    async def vote_poll(post_id: str, option_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        post = await db["status_updates"].find_one({"_id": post_id})
+        if not post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        
+        poll_voters = post.get("poll_voters", {})
+        if str(current_user.id) in poll_voters:
+            raise HTTPException(status_code=400, detail="Bạn đã bình chọn cho bài viết này rồi.")
+        
+        poll_options = post.get("poll_options", [])
+        option_found = False
+        for opt in poll_options:
+            if opt["id"] == option_id:
+                opt["votes"] = opt.get("votes", 0) + 1
+                option_found = True
+                break
+        
+        if not option_found:
+            raise HTTPException(status_code=400, detail="Lựa chọn không hợp lệ.")
+            
+        await db["status_updates"].update_one(
+            {"_id": post_id},
+            {
+                "$set": {
+                    "poll_options": poll_options,
+                    f"poll_voters.{current_user.id}": option_id
+                }
+            }
+        )
+        return {"message": "Bình chọn thành công.", "poll_options": poll_options}

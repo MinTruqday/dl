@@ -55,6 +55,15 @@ class AdminService:
         return {"status": "success", "is_active": is_active}
 
     @staticmethod
+    async def get_author_applications(status: str = "PENDING"):
+        db = db_client.mongodb.get_default_database()
+        cursor = db["author_applications"].find({"status": status}).sort("created_at", -1)
+        apps = await cursor.to_list(length=100)
+        for a in apps:
+            a["_id"] = str(a["_id"])
+        return apps
+
+    @staticmethod
     async def review_author_application(application_id: str, review_status: str, reason: str, admin_id: str):
         db = db_client.mongodb.get_default_database()
         app = await db["author_applications"].find_one({"_id": application_id})
@@ -119,6 +128,7 @@ class AdminService:
                 "withdrawal_fee_dl": 1000,
                 "rag_top_k": 5,
                 "ai_model": getattr(settings, "LLAMA_MODEL", None),
+                "registration_enabled": True,
                 "updated_at": datetime.utcnow()
             }
             await db["settings"].insert_one(config)
@@ -276,3 +286,121 @@ class AdminService:
             logger.info(f"New dl package created: {data.get('name')}")
             return {"message": "Gói nạp dl mới đã được tạo thành công."}
         return []
+
+    @staticmethod
+    async def get_payouts():
+        db = db_client.mongodb.get_default_database()
+        cursor = db["payouts"].find().sort("created_at", -1)
+        payouts = await cursor.to_list(length=100)
+        for p in payouts:
+            p["_id"] = str(p["_id"])
+            user = await db["users"].find_one({"_id": p["author_id"]}, {"full_name": 1, "email": 1, "avatar_url": 1})
+            p["author_name"] = user.get("full_name") if user else "N/A"
+            p["author_email"] = user.get("email") if user else "N/A"
+        return payouts
+
+    @staticmethod
+    async def review_payout(payout_id: str, status: str, admin_id: str):
+        db = db_client.mongodb.get_default_database()
+        from bson import ObjectId
+        
+        payout = await db["payouts"].find_one({"_id": ObjectId(payout_id)})
+        if not payout:
+            payout = await db["payouts"].find_one({"_id": payout_id})
+
+        if not payout:
+            raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu thanh toán.")
+            
+        if payout.get("status") != "pending":
+            raise HTTPException(status_code=400, detail="Yêu cầu này đã được xử lý trước đó.")
+            
+        await db["payouts"].update_one(
+            {"_id": payout["_id"]},
+            {"$set": {
+                "status": status,
+                "reviewed_by": admin_id,
+                "reviewed_at": datetime.utcnow()
+            }}
+        )
+
+        if status == "rejected":
+            await db["users"].update_one(
+                {"_id": payout["author_id"]},
+                {"$inc": {"wallet_balance": payout["amount"]}}
+            )
+
+        await db["notifications"].insert_one({
+            "_id": str(uuid.uuid4()),
+            "user_id": payout["author_id"],
+            "title": "Yêu cầu thanh toán",
+            "message": f"Yêu cầu rút tiền {payout['amount']} dl của bạn đã được {status}.",
+            "is_read": False,
+            "created_at": datetime.utcnow()
+        })
+        
+        logger.info(f"Payout {payout_id} reviewed with status {status} by admin {admin_id}")
+        return {"status": "success", "message": "Đã xử lý yêu cầu thanh toán thành công."}
+
+    @staticmethod
+    async def create_document(data: dict):
+        db = db_client.mongodb.get_default_database()
+        doc_id = str(uuid.uuid4())
+        
+        author_id = data.get("author_id") or "doclib_system"
+        publisher_name = data.get("publisher_name") or "DocLib"
+            
+        new_doc = {
+            "_id": doc_id,
+            "title": data.get("title", "Tài liệu mới"),
+            "slug": data.get("slug") or data.get("title", "tai-lieu-moi").lower().replace(" ", "-"),
+            "description": data.get("description", ""),
+            "content": data.get("content", ""),
+            "author_id": author_id,
+            "publisher_name": publisher_name,
+            "category": data.get("category", "Chưa phân loại"),
+            "pages_count": data.get("pages_count", 0),
+            "scheduled_publish_at": data.get("publish_at"),
+            "status": "published",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "view_count": 0,
+            "chapters_count": 0
+        }
+        
+        await db["documents"].insert_one(new_doc)
+        logger.info(f"New document created by admin: {doc_id}")
+        return {"document_id": doc_id, "status": "success"}
+
+    @staticmethod
+    async def get_all_documents(limit: int = 50, offset: int = 0):
+        db = db_client.mongodb.get_default_database()
+        cursor = db["documents"].find().sort("created_at", -1).skip(offset).limit(limit)
+        docs = await cursor.to_list(length=limit)
+        for doc in docs:
+            doc["_id"] = str(doc["_id"])
+            author = await db["users"].find_one({"_id": doc.get("author_id")}, {"full_name": 1, "email": 1})
+            if author:
+                doc["author_name"] = author.get("full_name", "N/A")
+                doc["author_email"] = author.get("email", "N/A")
+        return docs
+
+    @staticmethod
+    async def update_document_status(document_id: str, status: str):
+        db = db_client.mongodb.get_default_database()
+        res = await db["documents"].update_one(
+            {"_id": document_id},
+            {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+        )
+        if res.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu để cập nhật.")
+        logger.info(f"Document {document_id} status updated to {status} by admin")
+        return {"status": "success", "document_id": document_id, "new_status": status}
+
+    @staticmethod
+    async def delete_document(document_id: str):
+        db = db_client.mongodb.get_default_database()
+        res = await db["documents"].delete_one({"_id": document_id})
+        if res.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu để xóa.")
+        logger.info(f"Document {document_id} deleted by admin")
+        return {"status": "success", "message": "Đã xóa tài liệu khỏi hệ thống."}

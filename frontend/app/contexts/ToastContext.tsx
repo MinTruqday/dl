@@ -33,27 +33,31 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-4 left-4 z-[9999] flex flex-col gap-2 pointer-events-none">
+      <div className="fixed top-12 right-12 z-[9999] flex flex-col gap-5 pointer-events-none max-w-md w-full sm:w-[450px]">
         {toasts.map((t) => (
           <div
             key={t.id}
             className={`
-              flex items-center gap-3 px-5 py-4 rounded-sm border shadow-2xl pointer-events-auto
-              transition-all duration-300 animate-in slide-in-from-left-8 fade-in
-              ${t.type === 'success' ? 'bg-white border-zinc-900 text-zinc-900' : 
-                t.type === 'error' ? 'bg-white border-zinc-900 text-zinc-900 font-bold' : 
-                'bg-zinc-900 border-zinc-900 text-white'}
+              flex items-center gap-6 px-8 py-6 border border-zinc-100 border-l-[8px] border-l-black bg-white pointer-events-auto
+              transition-all duration-500 animate-in slide-in-from-right-12 fade-in
+              ${t.type === 'success' ? 'text-emerald-600' : 
+                t.type === 'error' ? 'text-rose-600' : 
+                'text-amber-500'}
             `}
           >
-            {t.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
-            {t.type === 'error' && <XCircle className="w-5 h-5 text-red-600" />}
-            {t.type === 'info' && <Info className="w-5 h-5 text-zinc-400" />}
-            <p className="text-sm tracking-tight">{t.message}</p>
+            <div className="shrink-0">
+              {t.type === 'success' && <CheckCircle className="w-6 h-6" />}
+              {t.type === 'error' && <XCircle className="w-6 h-6" />}
+              {t.type === 'info' && <Info className="w-6 h-6" />}
+            </div>
+            <p className="text-base font-bold tracking-tight flex-1 selection:bg-black selection:text-white leading-tight">
+              {t.message}
+            </p>
             <button
               onClick={() => removeToast(t.id)}
-              className="ml-auto opacity-50 hover:opacity-100 transition-opacity p-1"
+              className="text-zinc-300 hover:text-black transition-all p-1 active:scale-90"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         ))}

@@ -65,3 +65,11 @@ async def get_detailed_history(
     current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(data=await WalletService.get_detailed_history(current_user, skip, limit, tx_type), message="Lấy lịch sử giao dịch chi tiết thành công.", status=200)
+
+@router.post("/purchase/document/{document_id}", response_model=APIResponse[Any])
+async def purchase_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await WalletService.purchase_document(document_id, current_user), message="Mua tài liệu thành công.", status=200)
+
+@router.post("/purchase/chapter/{document_id}/{chapter_id}", response_model=APIResponse[Any])
+async def purchase_chapter(document_id: str, chapter_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await WalletService.purchase_chapter(document_id, chapter_id, current_user), message="Mua chương thành công.", status=200)

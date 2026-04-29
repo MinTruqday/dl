@@ -18,9 +18,9 @@ export async function login(email: string, password: string) {
         body: formData.toString()
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Đăng nhập thất bại.");
-    return data;
+    const json = await res.json();
+    if (!res.ok) throw new Error(formatError(json.detail) || json.message || "Đăng nhập thất bại.");
+    return json.data;
 }
 
 export async function register(email: string, password: string, full_name: string, slug: string, agreed_to_terms: boolean) {
@@ -32,9 +32,9 @@ export async function register(email: string, password: string, full_name: strin
         body: JSON.stringify({ email, password, full_name, slug, agreed_to_terms })
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || "Đăng ký thất bại.");
-    return data;
+    const json = await res.json();
+    if (!res.ok) throw new Error(formatError(json.detail) || json.message || "Đăng ký thất bại.");
+    return json.data;
 }
 
 export function getToken() {
@@ -47,12 +47,14 @@ export function getToken() {
 export function setToken(token: string) {
     if (typeof window !== 'undefined') {
         localStorage.setItem('doclib_token', token);
+        userMePromise = null; // Clear cache
     }
 }
 
 export function removeToken() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('doclib_token');
+        userMePromise = null; // Clear cache
     }
 }
 
@@ -76,7 +78,8 @@ export async function getUserMe() {
                 removeToken(); 
                 return null;
             }
-            return await res.json();
+            const json = await res.json();
+            return json.data;
         } finally {
             userMePromise = null;
         }
@@ -248,6 +251,21 @@ export async function getDocumentsAPI(
     if (!res.ok) throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
     return await res.json();
 }
+
+export async function getMyDocumentsAPI(skip: number = 0, limit: number = 50) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/author/documents?skip=${skip}&limit=${limit}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || "Không thể lấy danh sách tài liệu của bạn.");
+    return json.data || json;
+}
+
 export async function getTrendingDocumentsAPI(limit: number = 5) {
     const res = await fetch(`${API_URL}/documents/trending?limit=${limit}`);
     if (!res.ok) throw new Error("Không thể tải xu hướng.");
@@ -364,7 +382,7 @@ export const saveReadingProgressAPI = async (documentId: string, scrollPercent: 
 export const getOldReadingHistoryAPI = async () => {
     const token = typeof window !== "undefined" ? localStorage.getItem("doclib_token") : null;
     if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-    const res = await fetch(`${API_URL}/reading/history`, {
+    const res = await fetch(`${API_URL}/reader/history`, {
         method: "GET",
         headers: {
             "Authorization": "Bearer " + token
@@ -427,11 +445,15 @@ export async function updateReadingProgressAPI(documentId: string, progress: num
 export async function getReadingHistoryAPI() {
     const token = getToken();
     if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-    const res = await fetch(`${API_URL}/reading/history`, {
+    const res = await fetch(`${API_URL}/reader/history`, {
         headers: { "Authorization": "Bearer " + token }
     });
     if (!res.ok) throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
     return await res.json();
+}
+
+export function getDetailedHistoryAPI(skip?: number, limit?: number, txType?: string) {
+    return getWalletHistoryAPI(skip, limit, txType);
 }
 export async function getDiscussionsAPI(documentId: string) {
     const res = await fetch(`${API_URL}/social/documents/${documentId}/discussions`);
@@ -561,8 +583,20 @@ export const resetPasswordAPI = async (token: string, newPassword: string): Prom
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, new_password: newPassword })
   });
-  if (!res.ok) throw new Error("Đặt lại mật khẩu thất bại.");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Đặt lại mật khẩu thất bại.");
+  return data.data || data;
+};
+
+export const verifyCodeAPI = async (token: string): Promise<any> => {
+  const res = await fetch(`${API_URL}/auth/verify-code`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Mã xác thực không hợp lệ.");
+  return data.data || data;
 };
 
 export const shareFeedItemAPI = async (itemId: string, text?: string): Promise<any> => {
@@ -571,7 +605,9 @@ export const shareFeedItemAPI = async (itemId: string, text?: string): Promise<a
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
     body: JSON.stringify({ item_id: itemId, text: text || "" })
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Chia sẻ thất bại.");
+  return data;
 };
 
 export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
@@ -580,38 +616,42 @@ export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email })
   });
-  if (!res.ok) throw new Error("Bắt đầu đăng nhập Passkey thất bại.");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Bắt đầu đăng nhập Passkey thất bại.");
+  return data.data || data;
 };
 
-export const passkeyLoginFinishAPI = async (email: string, credential_id: string, client_data: any, authenticator_data: any, signature: string, user_handle: string): Promise<any> => {
+export const passkeyLoginFinishAPI = async (email: string, credential: any): Promise<any> => {
   const res = await fetch(`${API_URL}/auth/passkey/login/finish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, credential_id, client_data, authenticator_data, signature, user_handle })
+    body: JSON.stringify({ email, credential })
   });
-  if (!res.ok) throw new Error("Hoàn tất đăng nhập Passkey thất bại.");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Hoàn tất đăng nhập Passkey thất bại.");
+  return data.data || data;
 };
 
 export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
   const res = await fetch(`${API_URL}/auth/passkey/register/begin`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email })
   });
-  if (!res.ok) throw new Error("Bắt đầu đăng ký Passkey thất bại.");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Bắt đầu đăng ký Passkey thất bại.");
+  return data.data || data;
 };
 
-export const passkeyRegisterFinishAPI = async (email: string, credential_id: string, credential_public_key: string, client_data: any, attestation_object: string): Promise<any> => {
+export const passkeyRegisterFinishAPI = async (email: string, credential: any): Promise<any> => {
   const res = await fetch(`${API_URL}/auth/passkey/register/finish`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-    body: JSON.stringify({ email, credential_id, credential_public_key, client_data, attestation_object })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, credential })
   });
-  if (!res.ok) throw new Error("Hoàn tất đăng ký Passkey thất bại.");
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.detail || "Hoàn tất đăng ký Passkey thất bại.");
+  return data.data || data;
 };
 export async function createStatusAPI(text: string) {
     const token = getToken();
@@ -648,17 +688,6 @@ export async function createStatusRichAPI(payload: {
     return await res.json();
 }
 
-export async function votePollAPI(statusId: string, optionIndex: number) {
-    if (typeof window === "undefined") return;
-    const token = getToken();
-    const res = await fetch(`${API_URL}/social/status/${statusId}/vote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-        body: JSON.stringify({ option_index: optionIndex })
-    });
-    if (!res.ok) throw new Error("Vote failed");
-    return await res.json();
-}
 
 export async function getStoriesAPI() {
     if (typeof window === "undefined") return [];
@@ -692,7 +721,7 @@ export async function createStoryAPI(payload: {
     return await res.json();
 }
 
-// Removed duplicated getDocumentsAPI to maintain system-wide consistency.
+
 
 export const getFoldersAPI = async (parent_id?: string) => {
   const token = getToken();
@@ -762,13 +791,17 @@ export const deleteFolderAPI = async (id: string) => {
 export const getStorageQuotaAPI = async () => {
   const token = getToken();
   const res = await fetch(`${API_URL}/documents/quota`, { headers: { "Authorization": "Bearer " + token } });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Không thể tải hạn mức dung lượng.");
+  return data;
 };
 
 export const toggleStarDocumentAPI = async (id: string) => {
   const token = getToken();
   const res = await fetch(`${API_URL}/documents/${id}/toggle-star`, { method: 'PUT', headers: { "Authorization": "Bearer " + token } });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Thao tác thất bại.");
+  return data;
 };
 
 export const lockDocumentAPI = async (id: string, password: string) => {
@@ -777,7 +810,9 @@ export const lockDocumentAPI = async (id: string, password: string) => {
     method: 'POST', body: password, 
     headers: { "Authorization": "Bearer " + token, 'Content-Type': 'text/plain' } 
   });
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Thiết lập mật khẩu thất bại.");
+  return data;
 };
 
 export const unlockDocumentAPI = async (id: string, password: string) => {
@@ -796,7 +831,9 @@ export async function monetizeDocumentAPI(id: string, price: number) {
         method: "PUT",
         headers: { Authorization: `Bearer ${getToken()}` }
     });
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Thiết lập giá thất bại.");
+    return data;
 }
 
 export async function transferDocumentAPI(id: string, newOwnerId: string) {
@@ -804,7 +841,9 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}` }
     });
-    return res.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Chuyển nhượng thất bại.");
+    return data;
 }
 
 export async function getAuditLogsAPI(id: string) {
@@ -879,17 +918,6 @@ export async function getDocumentHighlightsAPI(documentId: string) {
     return await res.json();
 }
 
-export async function createHighlightAPI(documentId: string, data: { text: string; color: string; chapter_slug?: string; start_offset?: number; end_offset?: number; note?: string }) {
-    const token = getToken();
-    if (!token) throw new Error("Không có quyền truy cập.");
-    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error("Tạo ghi chú thất bại.");
-    return await res.json();
-}
 
 export async function deleteHighlightAPI(highlightId: string) {
     const token = getToken();
@@ -910,14 +938,368 @@ export async function updateHighlightNoteAPI(highlightId: string, note: string) 
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ note })
     });
-    if (!res.ok) throw new Error("Cập nhật ghi chú thất bại.");
+    if (!res.ok) throw new Error("Cập nhật ghi chú không thành công.");
     return await res.json();
 }
 
-export const getAuthorPublicProfileAPI = async (slug: string) => ({});
-export const getNotificationsAPI = async () => [];
-export const markNotificationReadAPI = async (id: string) => ({});
-export const getAuthorRevenueAPI = async () => ({});
-export const getMySeriesAPI = async () => [];
-export const getMyDocumentsAPI = async () => [];
-export const createSeriesAPI = async (data: any) => ({});
+export const getAuthorPublicProfileAPI = async (slug: string) => {
+    const res = await fetch(`${API_URL}/social/users/${slug}`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải hồ sơ tác giả.");
+    return await res.json();
+};
+
+export const getNotificationsAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải thông báo.");
+    return await res.json();
+};
+
+export const markNotificationReadAPI = async (id: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể đánh dấu thông báo.");
+    return await res.json();
+};
+
+export const getAuthorRevenueAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/wallet/revenue`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải dữ liệu doanh thu.");
+    return await res.json();
+};
+
+export const getWalletHistoryAPI = async (skip: number = 0, limit: number = 30, txType?: string) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const params = new URLSearchParams({ skip: String(skip), limit: String(limit) });
+    if (txType) params.append("tx_type", txType);
+    const res = await fetch(`${API_URL}/wallet/history/detailed?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải lịch sử giao dịch.");
+    return await res.json();
+};
+
+export const requestPayoutAPI = async (amount: number) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/wallet/payout?amount=${amount}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Yêu cầu rút tiền không thành công.");
+    return await res.json();
+};
+
+export const getWalletBalanceAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải số dư ví.");
+    return await res.json();
+};
+
+export const inviteCoauthorAPI = async (documentId: string, targetUserId: string) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/coauthor/invite/${documentId}?target_user_id=${targetUserId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể gửi lời mời đồng tác giả.");
+    return await res.json();
+};
+
+export const searchUsersAPI = async (query: string, limit: number = 10) => {
+    const res = await fetch(`${API_URL}/social/search-users?q=${encodeURIComponent(query)}&limit=${limit}`);
+    if (!res.ok) throw new Error("Không thể tìm kiếm người dùng.");
+    return await res.json();
+};
+
+export const getMySeriesAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/author/series`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải danh sách bộ sưu tập.");
+    return await res.json();
+};
+
+export const createSeriesAPI = async (data: { title: string; description: string; document_ids: string[] }) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/author/series`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("Không thể tạo bộ sưu tập.");
+    return await res.json();
+};
+
+export const linkDocumentToSeriesAPI = async (documentId: string, seriesId: string) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/documents/${documentId}/series?series_id=${seriesId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Liên kết chuỗi tài liệu không thành công.");
+    return await res.json();
+};
+
+export const getAuthorRevenueAnalyticsAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/author/revenue`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải phân tích doanh thu.");
+    return await res.json();
+};
+
+export const getConversationsAPI = async () => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/chat/conversations`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải danh sách hội thoại.");
+    return await res.json();
+};
+
+export const getMessagesAPI = async (otherUserId: string, limit: number = 50) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/chat/messages/${otherUserId}?limit=${limit}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải lịch sử tin nhắn.");
+    return await res.json();
+};
+
+export const sendMessageAPI = async (receiverId: string, content: string) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/chat/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ receiver_id: receiverId, content })
+    });
+    if (!res.ok) throw new Error("Không thể gửi tin nhắn.");
+    return await res.json();
+};
+
+export const purchaseDocumentAPI = async (documentId: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/wallet/purchase/document/${documentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể thực hiện giao dịch mua tài liệu.");
+    }
+    return await res.json();
+};
+
+export const purchaseChapterAPI = async (documentId: string, chapterId: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/wallet/purchase/chapter/${documentId}/${chapterId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể thực hiện giao dịch mua chương.");
+    }
+    return await res.json();
+};
+
+export const depositDLAPI = async (amountVnd: number) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/payment/deposit`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ amount_vnd: amountVnd })
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể khởi tạo giao dịch nạp tiền.");
+    }
+    return await res.json();
+};
+
+
+
+export const markAllNotificationsReadAPI = async () => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/notifications/mark-all-read`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Không thể đánh dấu tất cả thông báo.");
+    return await res.json();
+};
+
+export const queryRagAPI = async (documentId: string, question: string, usePro: boolean = false) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/rag/chat`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ document_id: documentId, question, usePro })
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể nhận phản hồi từ AI.");
+    }
+    return await res.json();
+};
+
+export const ingestDocumentAPI = async (documentId: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/rag/ingest/${documentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể đồng bộ tri thức AI.");
+    }
+    return await res.json();
+};
+
+
+
+
+
+export const createHighlightAPI = async (documentId: string, text: string, color: string, note?: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ text, color, note })
+    });
+    return await res.json();
+};
+
+export const getHighlightsAPI = async (documentId: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/reading/documents/${documentId}/highlights`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return (await res.json()).data;
+};
+
+export const getDocumentVersionsAPI = async (documentId: string) => {
+    const res = await fetch(`${API_URL}/author/documents/${documentId}/versions`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải lịch sử phiên bản.");
+    return (await res.json()).data;
+};
+
+export const generateAICoverAPI = async (documentId: string) => {
+    const res = await fetch(`${API_URL}/documents/${documentId}/ai-cover`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Không thể khởi tạo ảnh bìa AI.");
+    return (await res.json()).data;
+};
+
+export const restoreVersionAPI = async (versionId: string) => {
+    const res = await fetch(`${API_URL}/author/versions/${versionId}/restore`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Khôi phục phiên bản thất bại.");
+    return await res.json();
+};
+
+export const getTrashAPI = async () => {
+    const res = await fetch(`${API_URL}/author/trash`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Không thể tải thùng rác.");
+    return (await res.json()).data;
+};
+
+export const restoreDocumentAPI = async (documentId: string) => {
+    const res = await fetch(`${API_URL}/author/documents/${documentId}/restore`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Khôi phục tài liệu thất bại.");
+    return await res.json();
+};
+
+export const softDeleteDocumentAPI = async (documentId: string) => {
+    const res = await fetch(`${API_URL}/author/documents/${documentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    if (!res.ok) throw new Error("Xóa tài liệu thất bại.");
+    return await res.json();
+};
+
+export const requestPayoutDetailedAPI = async (amount: number, bankInfo: any) => {
+    const res = await fetch(`${API_URL}/author/payout`, {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}` 
+        },
+        body: JSON.stringify({ amount, bank_info: bankInfo })
+    });
+    if (!res.ok) throw new Error("Yêu cầu rút tiền thất bại.");
+    return await res.json();
+};
+
+export const applyAuthorAPI = async (motivation: string) => {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/reader/apply-author`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ motivation })
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Không thể gửi đơn ứng tuyển.");
+    }
+    return await res.json();
+};
+
+export function formatError(detail: any): string {
+    if (!detail) return "Đã có lỗi xảy ra. Vui lòng thử lại.";
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+        return detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', ');
+    }
+    if (typeof detail === 'object') {
+        return detail.msg || detail.message || detail.detail || JSON.stringify(detail);
+    }
+    return String(detail);
+}

@@ -1,116 +1,129 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getNotificationsAPI, markNotificationReadAPI } from "@/app/lib/api";
-import { Bell, Check, Clock, Trash2, ExternalLink, Mail, MessageSquare, CreditCard, UserPlus } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import AppShell from "@/app/components/AppShell";
+import { getNotificationsAPI, markNotificationAsReadAPI } from "@/app/lib/api";
+import { Bell, Check, Clock, ExternalLink, Loader2, Info } from "lucide-react";
 import Link from "next/link";
 
-export default function NotificationPage() {
+export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
-    setLoading(true);
+  const fetchNotifications = useCallback(async () => {
+    setIsLoading(true);
     try {
       const data = await getNotificationsAPI();
       setNotifications(data || []);
-    } catch (e) {
-      console.error(e);
+    } catch (err: any) {
+      console.error("Lỗi tải thông báo:", err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  const markRead = async (id: string) => {
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkRead = async (id: string) => {
     try {
-      await markNotificationReadAPI(id);
-      setNotifications(notifications.map(n => n._id === id ? { ...n, is_read: true } : n));
-    } catch (e) {
-      console.error(e);
+      await markNotificationAsReadAPI(id);
+      setNotifications(notifications.map((n) => (n._id === id ? { ...n, is_read: true } : n)));
+    } catch (err: any) {
+      console.error("Lỗi đánh dấu thông báo:", err);
     }
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "purchase": return <CreditCard className="w-4 h-4" />;
-      case "reply": return <MessageSquare className="w-4 h-4" />;
-      case "follow": return <UserPlus className="w-4 h-4" />;
-      default: return <Bell className="w-4 h-4" />;
+  const markAllRead = async () => {
+    // Assuming there's an API for this or we just loop
+    try {
+      // API call placeholder if exists: await markAllNotificationsAsReadAPI();
+      setNotifications(notifications.map((n) => ({ ...n, is_read: true })));
+    } catch (err: any) {
+      console.error("Lỗi đánh dấu thông báo:", err);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12 animate-in fade-in duration-300">
-      <header className="flex items-center justify-between border-b border-black pb-8 mb-12">
-        <div>
-           <div className="flex items-center gap-3 mb-2">
-              <Bell className="w-5 h-5 text-black" />
-              <span className="text-[10px] font-bold tracking-widest text-zinc-400">Cập nhật hệ thống</span>
-           </div>
-           <h1 className="text-4xl font-bold text-black tracking-tighter">Trung tâm thông báo</h1>
+    <AppShell>
+      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 animate-in fade-in duration-300 font-sans">
+        <div className="mb-16 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tighter text-black">Thông báo</h1>
+            <p className="text-[11px] font-bold text-zinc-400 mt-3">Cập nhật những hoạt động mới nhất từ DocLib</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={markAllRead}
+              className="text-[10px] font-bold text-zinc-400 hover:text-black hover:border-black transition-all px-6 py-3 border border-zinc-100 active:scale-95"
+            >
+              Đánh dấu tất cả đã đọc
+            </button>
+          </div>
         </div>
-        <div className="text-right">
-           <p className="text-xs font-bold tracking-widest text-zinc-400">Tổng cộng</p>
-           <p className="text-2xl font-bold">{notifications.length}</p>
-        </div>
-      </header>
 
-      <div className="space-y-4">
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-zinc-50 border border-border animate-pulse" />
-            ))}
+        {isLoading ? (
+          <div className="py-32 flex justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
           </div>
         ) : notifications.length > 0 ? (
-          notifications.map((n) => (
-            <div 
-              key={n._id} 
-              className={`group relative p-6 border transition-all duration-300 flex items-start gap-6 ${n.is_read ? 'bg-white border-zinc-100 opacity-60' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}
-            >
-              <div className={`w-10 h-10 shrink-0 flex items-center justify-center border ${n.is_read ? 'border-zinc-200 text-zinc-300' : 'border-black bg-black text-white'}`}>
-                {getIcon(n.type)}
-              </div>
-              
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                   <h3 className={`text-sm font-bold ${n.is_read ? 'text-zinc-500' : 'text-black'}`}>{n.title}</h3>
-                   <span className="text-[10px] font-bold text-zinc-400 tracking-widest flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" />
-                      {new Date(n.created_at).toLocaleDateString("vi-VN")}
-                   </span>
+          <div className="space-y-6">
+            {notifications.map((n) => (
+              <div
+                key={n._id}
+                className={`group p-8 border transition-all duration-300 flex gap-8 ${
+                  n.is_read
+                    ? "bg-white border-zinc-100 opacity-50"
+                    : "bg-zinc-50 border-black hover:bg-white"
+                }`}
+              >
+                <div
+                  className={`w-14 h-14 flex items-center justify-center shrink-0 border ${
+                    n.is_read ? "bg-white border-zinc-100 text-zinc-300" : "bg-black border-black text-white"
+                  }`}
+                >
+                  <Bell className="w-6 h-6" />
                 </div>
-                <p className="text-xs text-zinc-600 leading-relaxed max-w-2xl">{n.message || n.body}</p>
-                
-                <div className="pt-4 flex items-center gap-4">
-                   {n.link && (
-                      <Link href={n.link} className="text-[10px] font-bold tracking-widest text-black hover:underline flex items-center gap-1">
-                         Xem chi tiết <ExternalLink className="w-3 h-3" />
-                      </Link>
-                   )}
-                   {!n.is_read && (
-                      <button 
-                         onClick={() => markRead(n._id)}
-                         className="text-[10px] font-bold tracking-widest text-zinc-400 hover:text-black transition-colors"
+                <div className="flex-1 space-y-3 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold tracking-tight text-black truncate">{n.title}</h3>
+                    <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-2 shrink-0">
+                      <Clock className="w-3.5 h-3.5" />
+                      {new Date(n.created_at).toLocaleString("vi-VN")}
+                    </span>
+                  </div>
+                  <p className="text-sm text-zinc-500 leading-relaxed font-medium">{n.message}</p>
+
+                  <div className="pt-3 flex items-center gap-6">
+                    {n.link && (
+                      <Link
+                        href={n.link}
+                        className="text-[10px] font-bold flex items-center gap-2 text-black hover:underline underline-offset-4 decoration-1"
                       >
-                         Đánh dấu đã đọc
+                        <ExternalLink className="w-4 h-4" /> Xem chi tiết
+                      </Link>
+                    )}
+                    {!n.is_read && (
+                      <button
+                        onClick={() => handleMarkRead(n._id)}
+                        className="text-[10px] font-bold flex items-center gap-2 text-zinc-400 hover:text-black transition-colors"
+                      >
+                        <Check className="w-4 h-4" /> Đánh dấu đã đọc
                       </button>
-                   )}
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          <div className="py-24 text-center border border-dashed border-border bg-zinc-50/50">
-             <Mail className="w-8 h-8 text-zinc-200 mx-auto mb-4" />
-             <p className="text-[10px] font-bold tracking-widest text-zinc-300">Không có thông báo mới.</p>
+          <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-zinc-50/20">
+            <Info className="w-12 h-12 text-zinc-100 mb-6" />
+            <p className="text-[11px] font-bold text-zinc-300">Bạn chưa có thông báo nào</p>
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -65,6 +65,9 @@ class ReadingGoalCreate(BaseModel):
 class PinnedDocumentRequest(BaseModel):
     document_ids: List[str]
 
+class SettingsUpdateRequest(BaseModel):
+    settings: dict
+
 @router.put("/settings/typography", response_model=APIResponse[Any])
 async def update_typography(data: TypographyRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.update_typography(data.model_dump(), current_user), message="Cập nhật cài đặt hiển thị văn bản thành công.", status=200)
@@ -76,6 +79,10 @@ async def get_privacy(current_user: UserInDB = Depends(get_current_user)):
 @router.put("/settings/privacy", response_model=APIResponse[Any])
 async def update_privacy(data: PrivacyRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.update_privacy_settings(data.model_dump(), current_user), message="Cập nhật cài đặt quyền riêng tư thành công.", status=200)
+
+@router.put("/settings", response_model=APIResponse[Any])
+async def update_general_settings(data: SettingsUpdateRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ReaderService.update_general_settings(data.settings, current_user), message="Cập nhật cài đặt thành công.", status=200)
 
 @router.get("/history", response_model=APIResponse[Any])
 async def get_history(skip: int = Query(0), limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
@@ -108,6 +115,10 @@ async def create_reading_list(data: ReadingListCreate, current_user: UserInDB = 
 @router.get("/lists", response_model=APIResponse[Any])
 async def get_my_reading_lists(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.get_my_reading_lists(current_user), message="Lấy danh sách đọc sách của bạn thành công.", status=200)
+
+@router.get("/lists/{list_id}", response_model=APIResponse[Any])
+async def get_reading_list_by_id(list_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ReaderService.get_reading_list_by_id(list_id, current_user), message="Lấy chi tiết danh sách đọc thành công.", status=200)
 
 @router.post("/documents/{document_id}/flashcards/generate", response_model=APIResponse[Any])
 async def generate_flashcard(document_id: str, data: FlashcardGenerateRequest, current_user: UserInDB = Depends(get_current_user)):
@@ -168,3 +179,7 @@ async def get_pinned_documents(current_user: UserInDB = Depends(get_current_user
 @router.get("/documents/{document_id}/search", response_model=APIResponse[Any])
 async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.search_in_document(document_id, q, current_user), message="Tìm kiếm trong tài liệu thành công.", status=200)
+    
+@router.post("/apply-author", response_model=APIResponse[Any])
+async def apply_author(motivation: str = Body(..., embed=True), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ReaderService.apply_for_author(motivation, current_user), message="Gửi đơn ứng tuyển thành công.", status=201)

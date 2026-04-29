@@ -4,9 +4,11 @@ from qdrant_client.http.models import Distance, VectorParams, PointStruct, Filte
 from typing import List, Dict, Optional
 from loguru import logger
 
+from src.core.config import settings
+
 class VectorStore:
     def __init__(self):
-        qdrant_url = os.environ.get("QDRANT_URL")
+        qdrant_url = settings.QDRANT_URL
         self.client = QdrantClient(url=qdrant_url)
         self.collection_name = "doclib_documents"
         self._ensure_collection()

@@ -43,3 +43,13 @@ async def proxy_rag_chat(
          raise HTTPException(status_code=result["status"], detail=result.get("answer", "Dịch vụ AI hiện đang bảo trì."))
 
     return APIResponse(data=result, message="Phản hồi từ trợ lý AI thành công.", status=200)
+
+@router.post("/ingest/{document_id}", response_model=APIResponse[Any])
+async def ingest_document(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Bạn cần đăng nhập để thực hiện hành động này.")
+    
+    # Optional: Check if user is author of document
+    # For now, let service handle it or just allow any logged in user (usually author/admin)
+    result = await RagService.ingest(document_id)
+    return APIResponse(data=result, message="Tiến trình đồng bộ tri thức AI đã được bắt đầu.", status=200)

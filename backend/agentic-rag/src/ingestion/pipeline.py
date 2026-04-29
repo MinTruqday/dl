@@ -3,19 +3,19 @@ import io
 import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger
-from typing import Dict, Optional
+from src.core.config import settings
 from src.ingestion.chunker import chunker
 from src.ingestion.embedder import embedding_service
 from src.store.vector_store import vector_store
 
 class IngestionPipeline:
     def __init__(self):
-        mongo_uri = os.getenv("MONGODB_URI")
+        mongo_uri = settings.MONGODB_URI
         self._mongo = AsyncIOMotorClient(mongo_uri)
         self._db = self._mongo.doclib
-        minio_endpoint = os.getenv("MINIO_ENDPOINT")
+        minio_endpoint = settings.MINIO_ENDPOINT
         self._minio_base = minio_endpoint.rstrip("/")
-        self._bucket = os.getenv("MINIO_BUCKET_NAME")
+        self._bucket = settings.MINIO_BUCKET_NAME
 
     async def ingest_document(self, document_id: str) -> Dict:
         document = await self._db.documents.find_one({"_id": __import__("bson").ObjectId(document_id)})
@@ -50,8 +50,8 @@ class IngestionPipeline:
                 from langchain_huggingface import HuggingFaceEndpoint
                 from langchain_core.prompts import PromptTemplate
                 
-                llama_model = os.getenv("LLAMA_MODEL")
-                hf_token = os.getenv("HF_TOKEN")
+                llama_model = settings.LLAMA_MODEL
+                hf_token = settings.HF_TOKEN
                 
                 _hf = HuggingFaceEndpoint(repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
                 llm_summary = _hf
@@ -155,8 +155,8 @@ class IngestionPipeline:
     async def _download_file(self, url: str) -> Optional[bytes]:
         try:
             from urllib.parse import urlparse
-            access_key = os.getenv("MINIO_ACCESS_KEY")
-            secret_key = os.getenv("MINIO_SECRET_KEY")
+            access_key = settings.MINIO_ACCESS_KEY
+            secret_key = settings.MINIO_SECRET_KEY
 
             if url.startswith("http"):
                 parsed = urlparse(url)

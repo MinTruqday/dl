@@ -119,8 +119,8 @@ async def submit_feedback(req: FeedbackRequest):
         raise HTTPException(status_code=400, detail="Invalid vote_type. Must be 'upvote', 'downvote', or 'hallucination_report'")
         
     try:
-        mongo_uri = os.getenv("MONGODB_URI")
-        client = AsyncIOMotorClient(mongo_uri)
+        from src.core.config import settings
+        client = AsyncIOMotorClient(settings.MONGODB_URI)
         db = client.doclib
         
         feedback_doc = {

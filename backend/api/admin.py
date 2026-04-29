@@ -151,3 +151,27 @@ async def get_security_config():
 @router.put("/security", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def update_security_config(data: dict):
     return APIResponse(data=await AdminService.update_security_config(data), message="Cập nhật cấu hình bảo mật thành công.", status=200)
+
+@router.get("/payouts", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_payouts():
+    return APIResponse(data=await AdminService.get_payouts(), message="Lấy danh sách yêu cầu thanh toán thành công.", status=200)
+
+@router.put("/payouts/{payout_id}/review", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def review_payout(payout_id: str, status: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await AdminService.review_payout(payout_id, status, str(current_user.id)), message="Xử lý yêu cầu thanh toán thành công.", status=200)
+
+@router.get("/documents", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_all_documents(limit: int = 50, offset: int = 0):
+    return APIResponse(data=await AdminService.get_all_documents(limit, offset), message="Lấy danh sách tài liệu thành công.", status=200)
+
+@router.post("/documents", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def create_document(data: dict):
+    return APIResponse(data=await AdminService.create_document(data), message="Tạo tài liệu mới thành công.", status=201)
+
+@router.put("/documents/{document_id}/status", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def update_document_status(document_id: str, status: str):
+    return APIResponse(data=await AdminService.update_document_status(document_id, status), message="Cập nhật trạng thái tài liệu thành công.", status=200)
+
+@router.delete("/documents/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def delete_document(document_id: str):
+    return APIResponse(data=await AdminService.delete_document(document_id), message="Xóa tài liệu thành công.", status=200)

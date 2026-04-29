@@ -22,13 +22,15 @@ class RouterState(TypedDict):
     image_data: str
     file_data: str
 
-llama_model = os.environ.get("LLAMA_MODEL")
+from src.core.config import settings
+
+llama_model = settings.LLAMA_MODEL
 if not llama_model:
     raise ValueError("LLAMA_MODEL is not set in environment variables")
 
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
-    huggingfacehub_api_token=os.environ.get("HF_TOKEN"),
+    huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1
 )
 router_llm = _hf_endpoint

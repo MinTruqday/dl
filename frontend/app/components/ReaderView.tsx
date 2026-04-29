@@ -9,7 +9,8 @@ import {
   updateHighlightNoteAPI,
   exportHighlightsMarkdownAPI,
 } from "@/app/lib/api";
-import { Highlighter, X, Trash2, PenTool, Download } from "lucide-react";
+import { Highlighter, X, Trash2, PenTool, Download, Loader2 } from "lucide-react";
+import { Notification } from "@/app/components/NotificationToast";
 
 const HIGHLIGHT_COLORS = [
   { value: "#e4e4e7", label: "Nhạt", className: "bg-zinc-200" },
@@ -36,21 +37,21 @@ interface ReaderViewProps {
 
 export default function ReaderView({ content, title, documentId }: ReaderViewProps) {
   const [fontSize, setFontSize] = useState(18);
-  const [theme, setTheme] = useState<"light" | "sepia" | "night">("light");
+  const [theme, setTheme] = useState<"light" | "zinc" | "night">("light");
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [selectionPopup, setSelectionPopup] = useState<{ x: number; y: number; text: string } | null>(null);
   const [editingNote, setEditingNote] = useState<{ id: string; note: string } | null>(null);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(2);
   const [searchQuery, setSearchQuery] = useState("");
-  const [toastMsg, setToastMsg] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [notification, setNotification] = useState<{ text: string; type: "error" | "success" } | null>(null);
   const articleRef = useRef<HTMLElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const themeClasses = {
     light: "bg-white text-zinc-900",
-    sepia: "bg-[#f4ecd8] text-[#5b4636]",
-    night: "bg-[#1a1a1a] text-zinc-300",
+    zinc: "bg-zinc-50 text-zinc-800",
+    night: "bg-black text-zinc-300",
   };
 
   useEffect(() => {
@@ -73,11 +74,9 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
     if (!documentId) return;
     try {
       const data = await getDocumentHighlightsAPI(documentId);
-      setHighlights(data);
-    } catch (e: any) {
-      console.error("Lỗi lấy highlight:", e);
-      setToastMsg({ text: e.message || "Không thể tải highlight.", type: "error" });
-      setTimeout(() => setToastMsg(null), 3000);
+      setHighlights(data || []);
+    } catch (err: any) {
+      console.error("Lỗi tải highlights:", err);
     }
   }, [documentId]);
 
@@ -99,10 +98,9 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
       setSelectionPopup(null);
       window.getSelection()?.removeAllRanges();
       fetchHighlights();
+      setNotification({ type: "success", text: "Đã đánh dấu đoạn văn." });
     } catch (e: any) {
-      console.error("Lỗi tạo highlight:", e);
-      setToastMsg({ text: e.message || "Tạo highlight thất bại.", type: "error" });
-      setTimeout(() => setToastMsg(null), 3000);
+      setNotification({ type: "error", text: "Không thể tạo đánh dấu lúc này." });
     }
   };
 
@@ -110,10 +108,10 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
     try {
       await deleteHighlightAPI(highlightId);
       fetchHighlights();
+      setEditingNote(null);
+      setNotification({ type: "success", text: "Đã xóa đánh dấu." });
     } catch (e: any) {
-      console.error("Lỗi xóa highlight:", e);
-      setToastMsg({ text: e.message || "Xóa highlight thất bại.", type: "error" });
-      setTimeout(() => setToastMsg(null), 3000);
+      setNotification({ type: "error", text: "Xóa đánh dấu thất bại." });
     }
   };
 
@@ -122,10 +120,9 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
       await updateHighlightNoteAPI(highlightId, note);
       setEditingNote(null);
       fetchHighlights();
+      setNotification({ type: "success", text: "Đã lưu ghi chú." });
     } catch (e: any) {
-      console.error("Lỗi cập nhật ghi chú:", e);
-      setToastMsg({ text: e.message || "Cập nhật ghi chú thất bại.", type: "error" });
-      setTimeout(() => setToastMsg(null), 3000);
+      setNotification({ type: "error", text: "Lưu ghi chú thất bại." });
     }
   };
 
@@ -140,10 +137,9 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
       a.download = data.filename;
       a.click();
       URL.revokeObjectURL(url);
+      setNotification({ type: "success", text: "Đã trích xuất danh sách ghi chú." });
     } catch (e: any) {
-      console.error("Lỗi xuất Markdown:", e);
-      setToastMsg({ text: e.message || "Trích xuất Markdown thất bại.", type: "error" });
-      setTimeout(() => setToastMsg(null), 3000);
+      setNotification({ type: "error", text: "Xuất dữ liệu thất bại." });
     }
   };
 
@@ -181,9 +177,7 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
     if (highlights.length === 0) return content;
 
     let result = content;
-    const sortedHighlights = [...highlights].sort(
-      (a, b) => b.text.length - a.text.length
-    );
+    const sortedHighlights = [...highlights].sort((a, b) => b.text.length - a.text.length);
 
     const parts: { text: string; highlight?: Highlight }[] = [];
     let remaining = result;
@@ -231,9 +225,9 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
           part.highlight ? (
             <mark
               key={i}
-              className="relative cursor-pointer transition-opacity duration-150 hover:opacity-80 rounded-none px-0.5"
+              className="relative cursor-pointer transition-all duration-150 hover:opacity-70 rounded-none px-0.5 select-none"
               style={{
-                backgroundColor: part.highlight.color + "40",
+                backgroundColor: part.highlight.color + "30",
                 borderBottom: `2px solid ${part.highlight.color}`,
               }}
               title={part.highlight.note || "Bấm để xem chi tiết"}
@@ -255,71 +249,72 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${themeClasses[theme]}`}>
-      <div className="max-w-[800px] mx-auto px-8 py-20">
-        <header className="mb-16 border-b border-current/10 pb-12">
-           <h1 className="text-4xl font-bold tracking-tighter mb-4">{title}</h1>
-           <div className="text-[12px] font-bold tracking-widest opacity-40">
-             Bản đọc trực tuyến
-             {highlights.length > 0 && (
-               <span className="ml-4 text-foreground/60">{highlights.length} ghi chú</span>
-             )}
-           </div>
+    <div className={`min-h-screen transition-all duration-700 font-sans ${themeClasses[theme]}`}>
+      {notification && (
+        <div className="fixed top-24 right-8 z-[1000] w-80 animate-in slide-in-from-right-4 duration-300">
+          <Notification type={notification.type} message={notification.text} />
+        </div>
+      )}
+
+      <div className="max-w-[840px] mx-auto px-8 py-24 md:py-32">
+        <header className="mb-20 border-b border-current/10 pb-16">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6 leading-tight">{title}</h1>
+          <div className="text-[11px] font-bold opacity-40 flex items-center gap-4">
+            <span>Bản đọc trực tuyến</span>
+            {highlights.length > 0 && (
+              <>
+                <div className="w-1 h-1 bg-current opacity-20" />
+                <span>{highlights.length} ghi chú cá nhân</span>
+              </>
+            )}
+          </div>
         </header>
 
         <article
           ref={articleRef}
-          className="leading-relaxed prose-lg whitespace-pre-wrap font-sans"
+          className="leading-relaxed whitespace-pre-wrap font-sans selection:bg-black selection:text-white"
           style={{ fontSize: `${fontSize}px` }}
         >
           {renderContentWithHighlights()}
         </article>
 
         {highlights.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-current/10 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[12px] font-bold tracking-widest opacity-40">
-                Danh sách ghi chú ({highlights.length})
-              </h3>
+          <div className="mt-24 pt-16 border-t border-current/10 animate-in fade-in duration-500">
+            <div className="flex items-center justify-between mb-10">
+              <h3 className="text-[11px] font-bold opacity-40">Danh sách ghi chú ({highlights.length})</h3>
               <button
                 onClick={handleExportMarkdown}
-                className="flex items-center gap-2 py-2 px-3 border border-current/10 text-[12px] font-bold tracking-widest opacity-60 hover:opacity-100 transition-all duration-150 hover:border-current/30"
-                title="Xuất thành tập tin"
+                className="flex items-center gap-2.5 py-3 px-5 border border-current/10 text-[10px] font-bold hover:bg-current/5 transition-all active:scale-95"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-4 h-4" />
                 Xuất Markdown
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {highlights.map((h) => (
                 <div
                   key={h.id}
-                  className="flex gap-4 items-start p-4 border border-current/10 transition-all duration-150 hover:border-current/20 group"
+                  className="flex gap-6 items-start p-6 border border-current/5 transition-all duration-300 hover:border-current/20 group bg-current/[0.02]"
                 >
-                  <div
-                    className="w-3 h-3 rounded-none shrink-0 mt-1.5"
-                    style={{ backgroundColor: h.color }}
-                  />
+                  <div className="w-3.5 h-3.5 shrink-0 mt-1.5" style={{ backgroundColor: h.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{h.text}</p>
-                    {h.note && (
-                      <p className="text-xs opacity-60 mt-1">{h.note}</p>
-                    )}
+                    <p className="text-sm font-bold truncate leading-relaxed">{h.text}</p>
+                    {h.note && <p className="text-xs opacity-50 mt-2 leading-relaxed font-medium">{h.note}</p>}
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shrink-0">
                     <button
                       onClick={() => setEditingNote({ id: h.id, note: h.note })}
-                      className="p-1.5 hover:bg-current/10 transition-colors"
-                      title="Chỉnh sửa ghi chú"
+                      className="p-2 hover:bg-current/10 transition-colors"
+                      title="Chỉnh sửa"
                     >
-                      <PenTool className="w-3.5 h-3.5" />
+                      <PenTool className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteHighlight(h.id)}
-                      className="p-1.5 hover:bg-current/10 transition-colors"
-                      title="Xoá"
+                      className="p-2 hover:bg-current/10 transition-colors"
+                      title="Xóa"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -328,28 +323,28 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
           </div>
         )}
 
-        <footer className="mt-20 pt-12 border-t border-current/10 text-center opacity-40">
-           <p className="text-[12px] font-bold tracking-widest">Hết nội dung</p>
+        <footer className="mt-32 pt-16 border-t border-current/10 text-center opacity-40">
+          <p className="text-[11px] font-bold">Hết nội dung</p>
         </footer>
       </div>
 
       {selectionPopup && (
         <div
           data-highlight-popup
-          className="fixed z-[200] flex gap-1 bg-zinc-900 border border-zinc-700 p-1.5 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="fixed z-[1000] flex gap-1 bg-black border border-zinc-800 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
           style={{
             left: `${selectionPopup.x}px`,
             top: `${selectionPopup.y}px`,
             transform: "translate(-50%, -100%)",
           }}
         >
-          <div className="flex items-center gap-1 pr-2 border-r border-zinc-700">
-            <Highlighter className="w-3.5 h-3.5 text-zinc-400 mr-1" />
+          <div className="flex items-center gap-1.5 pr-2 border-r border-zinc-800">
+            <Highlighter className="w-4 h-4 text-zinc-500 mr-1.5 ml-1" />
             {HIGHLIGHT_COLORS.map((c) => (
               <button
                 key={c.value}
                 onClick={() => handleCreateHighlight(c.value)}
-                className={`w-6 h-6 rounded-none border border-zinc-600 hover:border-white transition-all duration-150 hover:scale-110 ${c.className}`}
+                className={`w-7 h-7 border border-white/10 hover:border-white transition-all duration-300 active:scale-90 ${c.className}`}
                 title={c.label}
               />
             ))}
@@ -359,7 +354,7 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
               setSelectionPopup(null);
               window.getSelection()?.removeAllRanges();
             }}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -367,39 +362,35 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
       )}
 
       {editingNote && (
-        <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center animate-in fade-in duration-200">
-          <div className="bg-white border border-zinc-200 w-full max-w-md mx-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-100">
-              <span className="text-[12px] font-bold tracking-widest text-zinc-400">Ghi chú</span>
-              <button
-                onClick={() => setEditingNote(null)}
-                className="p-1 hover:bg-zinc-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
+        <div className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-sm">
+          <div className="bg-white border border-zinc-200 w-full max-w-lg animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
+              <span className="text-[11px] font-bold text-zinc-400">Ghi chú cá nhân</span>
+              <button onClick={() => setEditingNote(null)} className="p-2 hover:bg-zinc-50 transition-colors">
+                <X className="w-5 h-5 text-zinc-400" />
               </button>
             </div>
-            <div className="p-4">
+            <div className="p-8">
               <textarea
-                className="w-full border border-zinc-200 p-3 text-sm outline-none resize-none focus:border-zinc-400 transition-colors"
-                rows={4}
-                placeholder="Them ghi chu cho doan highlight nay"
+                className="w-full border border-zinc-100 bg-zinc-50 p-5 text-sm font-medium outline-none resize-none focus:border-black focus:bg-white transition-all min-h-[160px]"
+                placeholder=""
                 value={editingNote.note}
                 onChange={(e) => setEditingNote({ ...editingNote, note: e.target.value })}
                 autoFocus
               />
             </div>
-            <div className="flex gap-2 p-4 pt-0">
+            <div className="flex gap-3 p-8 pt-0">
               <button
                 onClick={() => handleUpdateNote(editingNote.id, editingNote.note)}
-                className="flex-1 py-2.5 bg-zinc-900 text-white text-[12px] font-bold tracking-widest hover:bg-zinc-800 transition-colors"
+                className="flex-1 py-4 bg-black text-white text-[11px] font-bold hover:bg-zinc-800 transition-all active:scale-95"
               >
-                Luu ghi chu
+                Lưu ghi chú
               </button>
               <button
                 onClick={() => handleDeleteHighlight(editingNote.id)}
-                className="py-2.5 px-4 border border-zinc-200 text-[12px] font-bold tracking-widest hover:border-zinc-400 transition-colors"
+                className="py-4 px-6 border border-zinc-200 text-[11px] font-bold text-zinc-400 hover:text-black hover:border-black transition-all active:scale-95"
               >
-                Xoá đánh dấu
+                Xóa đánh dấu
               </button>
             </div>
           </div>
@@ -414,11 +405,6 @@ export default function ReaderView({ content, title, documentId }: ReaderViewPro
         onScrollSpeedChange={setAutoScrollSpeed}
         onSearchQuery={setSearchQuery}
       />
-      {toastMsg && (
-        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 border text-sm z-[9999] shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 ${toastMsg.type === 'error' ? 'bg-zinc-100 text-zinc-900 border-zinc-300 font-medium' : 'bg-zinc-900 text-zinc-100 border-zinc-700'}`}>
-          {toastMsg.text}
-        </div>
-      )}
     </div>
   );
 }

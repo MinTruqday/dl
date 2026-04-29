@@ -32,6 +32,15 @@ class AuthService:
     @staticmethod
     async def register_user(user_in: UserCreate, client_ip: str):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
+        
+        # Check if registration is enabled
+        config = await db["settings"].find_one({"_id": "system_config"})
+        if config and not config.get("registration_enabled", True):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, 
+                detail="Cổng đăng ký thành viên hiện đang tạm đóng theo yêu cầu của hệ thống. Vui lòng quay lại sau."
+            )
+
         users_col = db["users"]
         if await users_col.find_one({"email": user_in.email}):
             raise HTTPException(status_code=400, detail="Địa chỉ Email này đã được sử dụng bởi một tài khoản khác.")
@@ -79,7 +88,14 @@ class AuthService:
             
         access_token = create_access_token(data={"sub": user_doc["email"], "sid": session_id})
         logger.info(f"User logged in: {username} from {client_ip}")
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "user": {
+                "email": user_doc["email"],
+                "has_passkey": len(user_doc.get("passkeys", [])) > 0
+            }
+        }
 
     @staticmethod
     async def revoke_all_sessions(current_user: UserInDB):
@@ -143,14 +159,22 @@ class AuthService:
         return {"status": "ok", "message": "Mật khẩu của bạn đã được thay đổi thành công."}
 
     @staticmethod
+    async def verify_reset_code(token: str, client_ip: str):
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
+        token_doc = await db["password_reset_tokens"].find_one({"token": token, "used": False})
+        if not token_doc or token_doc.get("expires_at") < datetime.utcnow():
+            raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn.")
+        
+        return {"status": "ok", "message": "Mã xác thực hợp lệ."}
+
+    @staticmethod
     async def get_featured_authors(limit: int = 5):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        cursor = db["users"].find({"role": "AUTHOR", "is_active": True}).limit(limit)
+        cursor = db["users"].find({"role": RoleEnum.AUTHOR, "is_active": True}).limit(limit)
         authors = await cursor.to_list(length=limit)
         return [{
             "id": str(a["_id"]),
             "full_name": a.get("full_name"),
-            "display_name": a.get("display_name"),
             "slug": a.get("slug"),
             "avatar_url": a.get("avatar_url"),
             "bio": a.get("bio", "Chưa có thông tin giới thiệu.")
@@ -168,7 +192,14 @@ class AuthService:
             await db_client.redis.setex(f"session_meta:{session_id}", 604800, client_ip)
             
         access_token = create_access_token(data={"sub": user_doc["email"], "sid": session_id})
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "user": {
+                "email": user_doc["email"],
+                "has_passkey": len(user_doc.get("passkeys", [])) > 0
+            }
+        }
 
     @staticmethod
     async def handle_google_callback(code: str, client_ip: str):
@@ -189,8 +220,16 @@ class AuthService:
         email = google_user.get("email")
         user_doc = await users_col.find_one({"email": email})
         if not user_doc:
+            # Check if registration is enabled for new OAuth users
+            config = await db["settings"].find_one({"_id": "system_config"})
+            if config and not config.get("registration_enabled", True):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, 
+                    detail="Hệ thống hiện đang tạm đóng cổng đăng ký mới (bao gồm cả Google). Vui lòng quay lại sau."
+                )
+
             user_id = str(uuid.uuid4())
-            user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "display_name": google_user.get("given_name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": "READER", "is_active": True, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
+            user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": RoleEnum.READER, "is_active": True, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
             await users_col.insert_one(user_doc)
             logger.info(f"New user created via Google login: {email}")
         

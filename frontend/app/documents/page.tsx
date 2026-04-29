@@ -244,7 +244,7 @@ export default function DocumentsPage() {
               <Search className="w-5 h-5 absolute left-3 top-2.5 text-muted-foreground" />
               <input 
                 type="text" 
-                placeholder="Tìm kiếm tài liệu" 
+                placeholder="" 
                 className="pl-10 pr-4 py-2 border border-border  text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -434,7 +434,7 @@ export default function DocumentsPage() {
               <input 
                 type="text" 
                 autoFocus
-                placeholder="Tên thư mục" 
+                placeholder="" 
                 className="w-full border-border  p-3 text-black mb-6 bg-background text-foreground focus-visible:ring-ring"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
@@ -462,7 +462,7 @@ export default function DocumentsPage() {
                   <label className="block text-sm font-medium text-foreground mb-2">Tên tài liệu</label>
                   <input 
                     type="text" 
-                    placeholder="Nhập tên dễ nhớ" 
+                    placeholder="" 
                     className="w-full border border-border  p-3 bg-background text-foreground focus-visible:ring-ring text-black"
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
@@ -543,7 +543,7 @@ export default function DocumentsPage() {
               <input 
                 type="password" 
                 autoFocus
-                placeholder="Nhập mật khẩu an toàn" 
+                placeholder="" 
                 className="w-full border border-border  p-3 text-black mb-6 bg-background text-foreground focus-visible:ring-ring"
                 value={lockPassword}
                 onChange={(e) => setLockPassword(e.target.value)}
@@ -571,7 +571,7 @@ export default function DocumentsPage() {
                 <label className="text-sm font-medium text-foreground">Công khai tài liệu này</label>
               </div>
               <div className="space-y-3 mb-6">
-                 <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} placeholder="Mật khẩu bảo vệ (Tùy chọn)" className="w-full border border-border  p-2.5 text-sm bg-background text-foreground focus-visible:ring-ring" />
+                 <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} placeholder="" className="w-full border border-border  p-2.5 text-sm bg-background text-foreground focus-visible:ring-ring" />
                  <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full border border-border  p-2.5 text-sm bg-background text-foreground focus-visible:ring-ring">
                     <option value="1">Hủy link sau 1 ngày</option>
                     <option value="7">Hủy link sau 7 ngày</option>
@@ -599,7 +599,7 @@ export default function DocumentsPage() {
           <div className="bg-card p-6  w-full max-w-sm border border-black">
             <h3 className="text-xl font-bold font-sans mb-4 flex items-center text-black"><DollarSign className="mr-2"/> Thương mại hóa tài liệu</h3>
             <form onSubmit={handleMonetize}>
-              <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="Nhập giá bán (dl)" required />
+              <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="" required />
               <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setMonetizeDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Lưu thiết lập</Button></div>
             </form>
           </div>
@@ -611,7 +611,7 @@ export default function DocumentsPage() {
           <div className="bg-card p-6  w-full max-w-sm border border-black">
             <h3 className="text-xl font-bold font-sans mb-4 flex items-center text-black"><Send className="mr-2"/> Chuyển nhượng quyền sở hữu</h3>
             <form onSubmit={handleTransfer}>
-              <input type="text" value={transferTargetId} onChange={e=>setTransferTargetId(e.target.value)} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="Nhập ID người nhận" required />
+              <input type="text" value={transferTargetId} onChange={e=>setTransferTargetId(e.target.value)} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="" required />
               <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setTransferDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Xác nhận chuyển</Button></div>
             </form>
           </div>

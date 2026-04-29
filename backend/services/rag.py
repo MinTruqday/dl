@@ -7,7 +7,7 @@ from core.config import settings
 class RagService:
     @staticmethod
     async def proxy_rag_chat(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Dict[str, Any]:
-        base_url = os.getenv("AGENTIC_RAG_URL", "http://agentic-rag:8100")
+        base_url = settings.AGENTIC_RAG_URL
         rag_url = f"{base_url}/chat"
         
         if current_user:
@@ -36,7 +36,7 @@ class RagService:
     @staticmethod
     async def proxy_rag_stream(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Any:
         from fastapi.responses import StreamingResponse
-        base_url = os.getenv("AGENTIC_RAG_URL", "http://agentic-rag:8100")
+        base_url = settings.AGENTIC_RAG_URL
         rag_url = f"{base_url}/stream"
         
         if current_user:
@@ -59,7 +59,7 @@ class RagService:
         """
         Gửi yêu cầu ingest tài liệu tới service Agentic RAG.
         """
-        base_url = os.getenv("AGENTIC_RAG_URL", "http://agentic-rag:8100")
+        base_url = settings.AGENTIC_RAG_URL
         ingest_url = f"{base_url}/ingest"
         
         payload = {"document_id": document_id}

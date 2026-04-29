@@ -7,8 +7,6 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-let globalSidebarOpen: boolean | null = null;
-
 export default function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -46,7 +44,7 @@ export default function AppShell({ children }: AppShellProps) {
   const sidebarIsOpen = mounted ? (isMobile ? mobileMenuOpen : sidebarOpen) : true;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white animate-in fade-in duration-300">
       <Navbar onToggleSidebar={toggleSidebar} />
 
       <Sidebar
@@ -57,7 +55,7 @@ export default function AppShell({ children }: AppShellProps) {
       />
 
       <main
-        className="transition-all duration-[250ms]"
+        className="transition-all duration-300 ease-in-out"
         style={{
           paddingTop: "var(--navbar-height)",
           marginLeft: !mounted 
@@ -70,7 +68,9 @@ export default function AppShell({ children }: AppShellProps) {
           minHeight: "100vh",
         }}
       >
-        {children}
+        <div className="animate-in slide-in-from-bottom-4 duration-300">
+          {children}
+        </div>
       </main>
     </div>
   );

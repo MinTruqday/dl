@@ -15,10 +15,11 @@ from src.store.vector_store import vector_store
 from src.ingestion.embedder import embedding_service
 from src.agents.retrieval_agent import retrieval_agent
 from src.agents.memory_agent import memory_agent
+from src.core.config import settings
 
 try:
     from sentence_transformers import CrossEncoder
-    nli_model_name = os.environ.get("NLI_MODEL_NAME")
+    nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
     logger.info(f"Loaded NLI model: {nli_model_name}")
 except Exception as e:
@@ -26,7 +27,7 @@ except Exception as e:
     logger.warning(f"Failed to load NLI model: {e}")
 
 try:
-    redis_url = os.environ.get("REDIS_URI")
+    redis_url = settings.REDIS_URI
     langchain.llm_cache = RedisCache(redis_=Redis.from_url(redis_url))
 except Exception as e:
     logger.warning(f"Failed to initialize RedisCache for Langchain: {e}")
@@ -48,8 +49,8 @@ class AgentState(TypedDict):
     file_data: str
 
 # Fixed model to ensure stability and public access
-llama_model = os.environ.get("LLAMA_MODEL")
-hf_token = os.environ.get("HF_TOKEN")
+llama_model = settings.LLAMA_MODEL
+hf_token = settings.HF_TOKEN
 
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,

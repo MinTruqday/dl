@@ -4,24 +4,24 @@ import tempfile
 from pathlib import Path
 from loguru import logger
 from typing import Dict, Optional, List
-
 import boto3
+from src.core.config import settings
 
 class ADEAgent:
     def __init__(self):
-        self._minio_base = os.environ.get("MINIO_ENDPOINT").rstrip("/")
-        self._bucket = os.environ.get("MINIO_BUCKET_NAME")
-        self._minio_access = os.environ.get("MINIO_ACCESS_KEY")
-        self._minio_secret = os.environ.get("MINIO_SECRET_KEY")
-        self._minio_region = os.environ.get("MINIO_REGION")
-        self._ade_model = os.environ.get("ADE_MODEL")
+        self._minio_base = settings.MINIO_ENDPOINT.rstrip("/")
+        self._bucket = settings.MINIO_BUCKET_NAME
+        self._minio_access = settings.MINIO_ACCESS_KEY
+        self._minio_secret = settings.MINIO_SECRET_KEY
+        self._minio_region = settings.MINIO_REGION
+        self._ade_model = settings.ADE_MODEL
 
         logger.info("ADE Agent initialized with LandingAI ADE")
 
     async def _get_client(self):
         from landingai_ade import AsyncLandingAIADE, DefaultAioHttpClient
         return AsyncLandingAIADE(
-            apikey=os.environ["VISION_AGENT_API_KEY"],
+            apikey=settings.VISION_AGENT_API_KEY,
             http_client=DefaultAioHttpClient(),
         )
 

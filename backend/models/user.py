@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 import uuid
 from enum import Enum
@@ -10,6 +10,14 @@ class KYCStatusEnum(str, Enum):
     VERIFIED = "verified"
     REJECTED = "rejected"
 
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        return None
+
 class AuthorStatusEnum(str, Enum):
     NONE = "none"
     PENDING = "pending"
@@ -17,12 +25,29 @@ class AuthorStatusEnum(str, Enum):
     REJECTED = "rejected"
     SUSPENDED = "suspended"
 
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        return None
+
 class RoleEnum(str, Enum):
     GUEST = "guest"
     READER = "reader"
+    POTENTIAL_AUTHOR = "potential_author"
     AUTHOR = "author"
     MODERATOR = "moderator"
     ADMIN = "admin"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        return None
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -48,6 +73,12 @@ class UserBase(BaseModel):
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
     blocked_users: List[str] = []
+    settings: Dict[str, Any] = {
+        "mod_notifs": True,
+        "auto_refresh": False,
+        "auto_save": True,
+        "default_visibility": "public"
+    }
 
 class UserCreate(UserBase):
     password: str
@@ -67,6 +98,7 @@ class UserInDB(UserBase):
 class UserResponse(UserBase):
     id: str = Field(alias="_id")
     created_at: datetime
+    has_passkey: bool = False
     
     class Config:
         populate_by_name = True

@@ -32,6 +32,20 @@ class ReaderService:
         return {"message": "Đã cập nhật cài đặt riêng tư."}
 
     @staticmethod
+    async def update_general_settings(new_settings: dict, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        # Merge settings
+        user = await db["users"].find_one({"_id": str(current_user.id)})
+        current_settings = user.get("settings", {}) if user else {}
+        current_settings.update(new_settings)
+        
+        await db["users"].update_one(
+            {"_id": str(current_user.id)}, 
+            {"$set": {"settings": current_settings, "updated_at": datetime.utcnow()}}
+        )
+        return {"message": "Đã cập nhật tùy chỉnh hệ thống thành công."}
+
+    @staticmethod
     async def get_reading_history(current_user, skip: int = 0, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
         history = await db["reading_history"].find({"user_id": str(current_user.id)}).sort("last_read_at", -1).skip(skip).limit(limit).to_list(length=limit)
@@ -116,6 +130,23 @@ class ReaderService:
     async def get_my_reading_lists(current_user):
         db = db_client.mongodb.get_default_database()
         return await db["reading_lists"].find({"user_id": str(current_user.id)}).to_list(100)
+
+    @staticmethod
+    async def get_reading_list_by_id(list_id: str, current_user):
+        db = db_client.mongodb.get_default_database()
+        reading_list = await db["reading_lists"].find_one({"_id": list_id, "user_id": str(current_user.id)})
+        if not reading_list:
+            raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc.")
+        
+        # Hydrate documents
+        doc_ids = reading_list.get("documents", [])
+        if doc_ids:
+            docs = await db["documents"].find({"_id": {"$in": doc_ids}}).to_list(length=100)
+            reading_list["documents_detailed"] = docs
+        else:
+            reading_list["documents_detailed"] = []
+            
+        return reading_list
 
     @staticmethod
     async def share_excerpt(data: dict, current_user) -> dict:
@@ -405,3 +436,26 @@ class ReaderService:
             results.append({"offset": idx, "snippet": snippet})
             search_from = idx + len(query)
         return {"total": len(results), "results": results, "query": query}
+
+    @staticmethod
+    async def apply_for_author(motivation: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        if current_user.role == "author" or current_user.role == "admin":
+            raise HTTPException(status_code=400, detail="Bạn đã có quyền tác giả.")
+        
+        # Check if already applied
+        existing = await db["author_applications"].find_one({"user_id": str(current_user.id), "status": "PENDING"})
+        if existing:
+            raise HTTPException(status_code=400, detail="Bạn đã có một đơn ứng tuyển đang chờ xử lý.")
+        
+        application = {
+            "_id": str(uuid.uuid4()),
+            "user_id": str(current_user.id),
+            "user_name": current_user.full_name or current_user.display_name,
+            "user_email": current_user.email,
+            "motivation": motivation,
+            "status": "PENDING",
+            "created_at": datetime.utcnow()
+        }
+        await db["author_applications"].insert_one(application)
+        return {"message": "Đã gửi đơn ứng tuyển thành công. Vui lòng chờ kiểm duyệt viên phản hồi."}

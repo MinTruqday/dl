@@ -7,8 +7,10 @@ from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
 
-BACKEND_URL = os.environ.get("CORE_BACKEND_URL")
-INTERNAL_API_URL = os.environ.get("INTERNAL_API_URL")
+from src.core.config import settings
+
+BACKEND_URL = settings.CORE_BACKEND_URL
+INTERNAL_API_URL = settings.INTERNAL_API_URL
 
 auth_token_var = contextvars.ContextVar("auth_token", default=None)
 
@@ -76,8 +78,8 @@ tools = [
     )
 ]
 
-llama_model = os.environ.get("LLAMA_MODEL")
-hf_token = os.environ.get("HF_TOKEN")
+llama_model = settings.LLAMA_MODEL
+hf_token = settings.HF_TOKEN
 
 if not llama_model:
     raise ValueError("LLAMA_MODEL environment variable is not set.")

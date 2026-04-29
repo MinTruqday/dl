@@ -10,6 +10,7 @@ from api.editor import router as editor_router
 from api.coauthor import router as coauthor_router
 from api.version import router as version_router
 from api.review import router as review_router
+from api.highlight import router as highlight_router
 from api.analytics import router as analytics_router
 from api.notification import router as notification_router
 from api.admin import router as admin_router
@@ -25,7 +26,8 @@ from api.monetization import router as monetization_router
 from api.story import router as story_router
 from api.rag import router as rag_router
 from api.inference import router as inference_router
-
+from api.chat import router as chat_router
+from api.latex import router as latex_router
 from core.storage import initialize_bucket
 import asyncio
 from core.worker import start_workers
@@ -57,7 +59,9 @@ app.add_middleware(
 )
 
 os.makedirs("public/feed_uploads", exist_ok=True)
+os.makedirs("public/uploads", exist_ok=True)
 app.mount("/feed_uploads", StaticFiles(directory="public/feed_uploads"), name="feed_uploads")
+app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
 
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
@@ -100,29 +104,25 @@ async def startup_event():
 async def shutdown_event():
     await close_db()
 
-
 app.include_router(auth_router, prefix="")
 app.include_router(profile_router, prefix="")
 app.include_router(wallet_router, prefix="/wallet")
 app.include_router(payment_router, prefix="/payment")
 app.include_router(gateway_router, prefix="/gateways")
 app.include_router(export_router)
-app.include_router(upload_router, prefix="/storage")
-
+app.include_router(upload_router)
 
 app.include_router(social_router, prefix="")
 app.include_router(story_router, prefix="")
 app.include_router(comment_router, prefix="")
 app.include_router(document_router, prefix="")
 app.include_router(review_router, prefix="")
+app.include_router(highlight_router, prefix="")
 app.include_router(version_router, prefix="")
 app.include_router(analytics_router, prefix="/analytics")
 
-
-from api.latex import router as latex_router
 app.include_router(latex_router)
 app.include_router(editor_router)
-
 
 app.include_router(guest_router, prefix="")
 app.include_router(reader_router)
@@ -131,15 +131,14 @@ app.include_router(moderator_router)
 app.include_router(admin_router)
 app.include_router(monetization_router)
 
-
 app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)
+app.include_router(chat_router)
 app.include_router(coauthor_router)
 
 from api.moderation import router as moderation_router_v2
 app.include_router(moderation_router_v2)
-
 
 @app.get("/health")
 async def health_check():

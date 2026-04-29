@@ -24,7 +24,10 @@ export const TabsTrigger = ({ value, className, children }: { value: string; cla
       type="button"
       data-state={isActive ? "active" : "inactive"}
       onClick={() => ctx?.setVal(value)}
-      className={cn("inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow", className)}
+      className={cn(
+        "inline-flex items-center justify-center whitespace-nowrap px-8 py-3 text-xs font-bold transition-all duration-300 focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-black data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-zinc-400 data-[state=inactive]:hover:text-black border-b-2 data-[state=active]:border-black data-[state=inactive]:border-transparent",
+        className
+      )}
     >
       {children}
     </button>

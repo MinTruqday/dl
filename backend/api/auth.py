@@ -18,6 +18,9 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
+class VerifyCodeRequest(BaseModel):
+    token: str
+
 class PasskeyRequest(BaseModel):
     email: EmailStr
 
@@ -27,7 +30,9 @@ class PasskeyFinishRequest(BaseModel):
 
 @router.get("/me", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=current_user, message="Lấy thông tin cá nhân thành công.", status=status.HTTP_200_OK)
+    user_data = current_user.model_dump()
+    user_data["has_passkey"] = len(current_user.passkeys) > 0
+    return APIResponse(data=user_data, message="Lấy thông tin cá nhân thành công.", status=status.HTTP_200_OK)
 
 @router.post("/register", response_model=APIResponse[UserResponse], status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(calls=3, period=60))])
 async def register_user(user_in: UserCreate, request: Request) -> Any:
@@ -48,6 +53,11 @@ async def forgot_password(payload: ForgotPasswordRequest, request: Request) -> A
 async def reset_password(payload: ResetPasswordRequest, request: Request) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(data=await AuthService.reset_password(payload.token, payload.new_password, client_ip), message="Đặt lại mật khẩu thành công.", status=status.HTTP_200_OK)
+
+@router.post("/verify-code", response_model=APIResponse[Any])
+async def verify_code(payload: VerifyCodeRequest, request: Request) -> Any:
+    client_ip = request.client.host if request.client else "unknown"
+    return APIResponse(data=await AuthService.verify_reset_code(payload.token, client_ip), message="Mã xác thực hợp lệ.", status=status.HTTP_200_OK)
 
 @router.get("/google/login", response_model=APIResponse[Any])
 async def google_login():

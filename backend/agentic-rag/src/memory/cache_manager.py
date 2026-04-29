@@ -2,6 +2,7 @@ import os
 import json
 import hashlib
 from loguru import logger
+from src.core.config import settings
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
@@ -11,9 +12,9 @@ class SemanticCache:
         self.collection_name = collection_name
         self.threshold = threshold
         
-        qdrant_url = os.environ.get("QDRANT_URL")
-        qdrant_host = os.environ.get("QDRANT_HOST")
-        qdrant_port = int(os.environ.get("QDRANT_PORT"))
+        qdrant_url = settings.QDRANT_URL
+        qdrant_host = settings.QDRANT_HOST
+        qdrant_port = settings.QDRANT_PORT
         
         if qdrant_url:
             self.client = QdrantClient(url=qdrant_url)

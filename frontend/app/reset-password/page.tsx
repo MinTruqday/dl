@@ -1,85 +1,83 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import Navbar from "@/app/components/Navbar";
 import { resetPasswordAPI } from "@/app/lib/api";
-import { useRouter } from "next/navigation";
-import { Notification } from "@/app/components/NotificationToast";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/app/contexts/ToastContext";
+import { Loader2 } from "lucide-react";
 
 export default function ResetPasswordPage() {
-  const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [info, setInfo] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
+  const [visible, setVisible] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
+
+  useEffect(() => {
+    requestAnimationFrame(() => setVisible(true));
+    if (!token) {
+      router.replace("/forgot-password");
+    }
+  }, [token, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError("");
-    setInfo("");
 
-    if (!token.trim()) {
-      setError("Vui lòng nhập mã khôi phục.");
-      return;
-    }
     if (!newPassword || newPassword.length < 6) {
-      setError("Mật khẩu mới tối thiểu 6 ký tự.");
+      showToast("Mật khẩu mới tối thiểu 6 ký tự", "error");
       return;
     }
 
     try {
       setLoading(true);
-      const data = await resetPasswordAPI(token.trim(), newPassword);
-      setInfo(data.message || "Đã đặt lại mật khẩu thành công.");
-      setTimeout(() => router.push("/login"), 1200);
+      const data = await resetPasswordAPI(token, newPassword);
+      showToast(data.message || "Đã đặt lại mật khẩu thành công", "success");
+      setTimeout(() => router.push("/login"), 1500);
     } catch (err: any) {
-      setError(err.message || "Đặt lại mật khẩu thất bại.");
+      showToast(err.message || "Đặt lại mật khẩu thất bại", "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navbar />
-      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-16">
-        <h2 className="text-center text-3xl font-extrabold text-foreground font-bold">Đặt lại mật khẩu</h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">Nhập mã khôi phục và mật khẩu mới.</p>
+      <div
+        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300 animate-in fade-in"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+      >
+        <h2 className="text-center text-4xl font-bold tracking-tight text-black">
+          Mật khẩu mới
+        </h2>
+        <p className="mt-3 text-center text-base text-zinc-500">
+          Thiết lập mật khẩu mới cho tài khoản của bạn
+        </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-card py-8 px-4 shadow sm: sm:px-10 border border-border">
+      <div
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md transition-all duration-300 delay-150 animate-in slide-in-from-bottom-4"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+      >
+        <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {info && <Notification type="success" message={info} />}
-            {error && <Notification type="error" message={error} />}
-
             <div>
-              <label htmlFor="token" className="block text-sm font-medium text-gray-700">Mã khôi phục</label>
-              <div className="mt-1">
-                <input
-                  id="token"
-                  name="token"
-                  type="text"
-                  required
-                  value={token}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setToken(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-border   focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700">Mật khẩu mới</label>
+              <label htmlFor="new-password" className="block text-base font-bold text-black">
+                Mật khẩu mới
+              </label>
               <div className="mt-1">
                 <input
                   id="new-password"
                   name="new-password"
                   type="password"
+                  placeholder=""
                   required
                   value={newPassword}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-border   focus:outline-none focus:ring-black focus:border-black sm:text-sm"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all"
                 />
               </div>
             </div>
@@ -87,15 +85,12 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4  text-sm font-medium text-white bg-black hover:bg-zinc-800 disabled:opacity-50 tracking-widest"
+              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black hover:bg-zinc-800 disabled:bg-zinc-400 transition-all active:scale-95 rounded-sm"
             >
-              {loading ? "ĐANG XỬ LÝ" : "ĐẶT LẠI MẬT KHẨU"}
+              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}
             </button>
           </form>
-
-          <div className="mt-4 text-sm text-center">
-            <a href="/login" className="text-black hover:underline font-medium">Quay lại đăng nhập</a>
-          </div>
         </div>
       </div>
     </div>

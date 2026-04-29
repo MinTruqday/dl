@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   compileDocumentAPI,
   getDocumentDraftAPI,
@@ -9,28 +10,47 @@ import {
   publishDocumentAPI,
   saveDocumentDraftAPI,
   getToken,
+  API_URL,
+  ingestDocumentAPI,
+  getDocumentVersionsAPI,
+  restoreVersionAPI,
+  getTrashAPI,
+  restoreDocumentAPI,
+  softDeleteDocumentAPI,
+  requestPayoutDetailedAPI,
+  generateAICoverAPI,
+  getMyDocumentsAPI,
 } from "@/app/lib/api";
-import { 
-  FileText, 
-  Settings, 
-  BarChart3, 
-  Wallet, 
-  Save, 
-  Eye, 
-  Code, 
-  ChevronLeft, 
-  DocumentOpen,
-  ArrowUpRight,
-  TrendingUp,
-  DollarSign,
+import { useAuth } from "@/app/contexts/AuthContext";
+import {
+  FileText,
+  Settings,
+  BarChart3,
+  Wallet,
+  Save,
+  Eye,
   Clock,
   Plus,
-  Users,
   Trash2,
-  RefreshCcw
+  RefreshCcw,
+  Sparkles,
+  Loader2,
+  ChevronRight,
+  Database,
+  ArrowUp,
+  ArrowDown,
+  X,
+  RotateCcw,
+  AlertCircle,
+  Banknote,
+  LayoutDashboard,
+  ChevronLeft,
+  Search,
 } from "lucide-react";
-import { Button } from "@/app/components/ui/Button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import TiptapEditor from "@/app/components/editor/TiptapEditor";
+import { Notification } from "@/app/components/NotificationToast";
 
 type StudioDocument = {
   _id: string;
@@ -38,36 +58,135 @@ type StudioDocument = {
   slug: string;
   status?: string;
   content?: string;
-  price?: number;
+  price_dl?: number;
   visibility?: string;
   chapters?: any[];
+  cover_url?: string;
 };
 
 type ViewMode = "edit" | "stats" | "config" | "versions" | "trash";
 type EditorMode = "edit" | "preview" | "raw";
 
-export default function AuthorStudioPage() {
+function StudioContent() {
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const rawDocId = searchParams.get("document");
+  const docIdFromUrl = rawDocId && rawDocId !== "undefined" ? rawDocId : "";
+
   const [documents, setDocuments] = useState<StudioDocument[]>([]);
-  const [selectedDocumentId, setSelectedDocumentId] = useState("");
+  const [selectedDocumentId, setSelectedDocumentId] = useState(docIdFromUrl || "");
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [editorMode, setEditorMode] = useState<EditorMode>("edit");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [statusMsg, setStatusMsg] = useState("");
-  
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("Sẵn sàng");
+  const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+
   const [stats, setStats] = useState<any>(null);
   const [revenue, setRevenue] = useState<any>(null);
-  const [versions, setVersions] = useState<any[]>([]);
-  const [trashDocuments, setTrashDocuments] = useState<any[]>([]);
-  const [isRestoring, setIsRestoring] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const [versions, setVersions] = useState<any[]>([]);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+
+  const [trash, setTrash] = useState<any[]>([]);
+  const [loadingTrash, setLoadingTrash] = useState(false);
+
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutAmount, setPayoutAmount] = useState(0);
+  const [bankInfo, setBankInfo] = useState({ bank_name: "", account_number: "", account_name: "" });
+  const [requestingPayout, setRequestingPayout] = useState(false);
+
+  const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; text: string } | null>(null);
+  const [showChapterModal, setShowChapterModal] = useState(false);
+  const [newChapterTitle, setNewChapterTitle] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
 
   const selectedDocument = useMemo(
     () => documents.find((b) => b._id === selectedDocumentId) || null,
     [documents, selectedDocumentId]
   );
+
+  const fetchDocuments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let data;
+      if (user?.role === "admin") {
+        data = await getDocumentsAPI();
+      } else {
+        data = await getMyDocumentsAPI();
+      }
+      
+      const list = data.data || data || [];
+      setDocuments(list);
+      
+      if (list.length > 0) {
+        if (docIdFromUrl) {
+          setSelectedDocumentId(docIdFromUrl);
+        } else if (!selectedDocumentId) {
+          setSelectedDocumentId(list[0]._id);
+        }
+      }
+    } catch {
+      setNotification({ type: "error", text: "Lỗi tải danh sách tài liệu." });
+    } finally {
+      setIsLoading(false);
+      requestAnimationFrame(() => setVisible(true));
+    }
+  }, [docIdFromUrl, selectedDocumentId]);
+
+  const loadDraft = useCallback(async () => {
+    if (!selectedDocumentId) return;
+    try {
+      const data = await getDocumentDraftAPI(selectedDocumentId);
+      const draft = data.data || data;
+      setContent(draft?.content || "");
+      setStatusMsg("Đã tải xong");
+    } catch {
+      setStatusMsg("Lỗi tải bản nháp");
+    }
+  }, [selectedDocumentId]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const headers = { Authorization: `Bearer ${getToken()}` };
+      const [sRes, rRes] = await Promise.all([
+        fetch(`${API_URL}/analytics/author/stats`, { headers }),
+        fetch(`${API_URL}/wallet/revenue`, { headers }),
+      ]);
+      if (sRes.ok) setStats((await sRes.json()).data);
+      if (rRes.ok) setRevenue((await rRes.json()).data);
+    } catch (err: any) {
+      console.error("Lỗi tải thông số:", err);
+    }
+  }, []);
+
+  const fetchVersions = useCallback(async () => {
+    if (!selectedDocumentId) return;
+    setLoadingVersions(true);
+    try {
+      const data = await getDocumentVersionsAPI(selectedDocumentId);
+      setVersions(data || []);
+    } catch (err: any) {
+      console.error("Lỗi tải phiên bản:", err);
+    } finally {
+      setLoadingVersions(false);
+    }
+  }, [selectedDocumentId]);
+
+  const fetchTrash = useCallback(async () => {
+    setLoadingTrash(true);
+    try {
+      const data = await getTrashAPI();
+      setTrash(data || []);
+    } catch (err: any) {
+      console.error("Lỗi tải thùng rác:", err);
+    } finally {
+      setLoadingTrash(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
@@ -82,122 +201,80 @@ export default function AuthorStudioPage() {
       setContent("");
     }
     if (viewMode === "trash") fetchTrash();
-  }, [selectedDocumentId, viewMode]);
+  }, [selectedDocumentId, viewMode, loadDraft, fetchStats, fetchVersions, fetchTrash]);
 
-  const fetchDocuments = async () => {
-    setIsLoading(true);
-    setStatusMsg("");
+  const handleRestoreVersion = async (versionId: string) => {
+    setConfirmAction({
+      type: "restore_version",
+      id: versionId,
+      text: "Bạn có chắc muốn khôi phục về phiên bản này? Nội dung hiện tại sẽ bị ghi đè.",
+    });
+  };
+
+  const handleRestoreDocument = async (docId: string) => {
     try {
-      const data = await getDocumentsAPI();
-      setDocuments(data || []);
-      if (data?.length > 0 && !selectedDocumentId) {
-        setSelectedDocumentId(data[0]._id);
-      }
-    } catch {
-      setStatusMsg("Không thể tải danh sách tài liệu.");
-    } finally {
-      setIsLoading(false);
+      await restoreDocumentAPI(docId);
+      setNotification({ type: "success", text: "Đã khôi phục tài liệu thành công." });
+      fetchTrash();
+      fetchDocuments();
+    } catch (e: any) {
+      setNotification({ type: "error", text: e.message || "Lỗi khôi phục tài liệu." });
     }
   };
 
-  const loadDraft = async () => {
-    if (!selectedDocumentId) return;
-    try {
-      const draft = await getDocumentDraftAPI(selectedDocumentId);
-      setContent(draft?.content || "");
-      setStatusMsg("Đã tải bản nháp.");
-    } catch {
-      setStatusMsg("Không thể tải bản nháp.");
-    }
+  const handleSoftDelete = async (docId: string) => {
+    setConfirmAction({ type: "delete_doc", id: docId, text: "Bạn có chắc muốn chuyển tài liệu này vào thùng rác?" });
   };
 
-  const fetchStats = async () => {
+  const executeConfirm = async () => {
+    if (!confirmAction) return;
     try {
-      const headers = { 'Authorization': `Bearer ${getToken()}` };
-      const [sRes, rRes] = await Promise.all([
-        fetch(`${API_URL}/analytics/author/stats`, { headers }),
-        fetch(`${API_URL}/wallet/revenue`, { headers })
-      ]);
-      if (sRes.ok) setStats(await sRes.json());
-      if (rRes.ok) setRevenue(await rRes.json());
-    } catch (e) { console.error(e); }
-  };
-
-  const fetchVersions = async () => {
-    try {
-      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/versions`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (res.ok) setVersions(await res.json());
-    } catch (e) { console.error(e); }
-  };
-
-  const fetchTrash = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/trash`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (res.ok) setTrashDocuments(await res.json());
-    } catch (e) { console.error(e); }
-  };
-
-  const handleRestoreTrash = async (id: string) => {
-    try {
-      const res = await fetch(`${API_URL}/api/documents/${id}/restore`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (res.ok) {
-        setStatusMsg("Đã khôi phục.");
-        fetchTrash();
-        fetchDocuments();
-      }
-    } catch (e) { console.error(e); }
-  };
-
-  const handleDeleteDocument = async () => {
-    if (!selectedDocumentId) return;
-    if (!confirm("Bạn có chắc chắn muốn chuyển tài liệu này vào thùng rác?")) return;
-    try {
-      const res = await fetch(`${API_URL}/api/documents/${selectedDocumentId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (res.ok) {
-        setStatusMsg("Đã chuyển vào thùng rác.");
-        setSelectedDocumentId("");
-        fetchDocuments();
-      }
-    } catch (e) { console.error(e); }
-  };
-
-  const saveVersion = async (note: string) => {
-    try {
-      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/versions`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ note })
-      });
-      if (res.ok) {
-        setStatusMsg("Đã lưu phiên bản.");
-        fetchVersions();
-      }
-    } catch (e) { console.error(e); }
-  };
-
-  const restoreVersion = async (versionId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn khôi phục phiên bản này? Nội dung hiện tại sẽ bị thay thế.")) return;
-    setIsRestoring(true);
-    try {
-      const res = await fetch(`${API_URL}/author/versions/${versionId}/restore`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${getToken()}` }
-      });
-      if (res.ok) {
-        setStatusMsg("Đã khôi phục.");
+      if (confirmAction.type === "restore_version") {
+        await restoreVersionAPI(confirmAction.id);
+        setNotification({ type: "success", text: "Đã khôi phục phiên bản thành công." });
         loadDraft();
+      } else if (confirmAction.type === "delete_doc") {
+        await softDeleteDocumentAPI(confirmAction.id);
+        setNotification({ type: "success", text: "Đã chuyển tài liệu vào thùng rác." });
+        if (selectedDocumentId === confirmAction.id) setSelectedDocumentId("");
+        fetchDocuments();
       }
-    } catch (e) { console.error(e); } finally { setIsRestoring(false); }
+    } catch (e: any) {
+      setNotification({ type: "error", text: e.message || "Thao tác thất bại." });
+    } finally {
+      setConfirmAction(null);
+    }
+  };
+
+  const handleIngestAI = async () => {
+    if (!selectedDocumentId) return;
+    setIsIngesting(true);
+    setStatusMsg("Đang đồng bộ AI");
+    try {
+      await ingestDocumentAPI(selectedDocumentId);
+      setNotification({ type: "success", text: "AI đã được cập nhật tri thức mới." });
+    } catch (e: any) {
+      setNotification({ type: "error", text: e.message || "Đồng bộ AI thất bại." });
+    } finally {
+      setIsIngesting(false);
+      setStatusMsg("Sẵn sàng");
+    }
+  };
+  
+  const handleGenerateAICover = async () => {
+    if (!selectedDocumentId) return;
+    setGeneratingCover(true);
+    setStatusMsg("Đang tạo ảnh bìa AI");
+    try {
+      await generateAICoverAPI(selectedDocumentId);
+      setNotification({ type: "success", text: "Ảnh bìa AI đã được khởi tạo và cập nhật." });
+      fetchDocuments();
+    } catch (e: any) {
+      setNotification({ type: "error", text: e.message || "Tạo ảnh bìa thất bại." });
+    } finally {
+      setGeneratingCover(false);
+      setStatusMsg("Sẵn sàng");
+    }
   };
 
   const handleSave = async () => {
@@ -206,11 +283,12 @@ export default function AuthorStudioPage() {
     setStatusMsg("Đang lưu");
     try {
       await saveDocumentDraftAPI(selectedDocumentId, content, "html");
-      setStatusMsg("Đã lưu.");
+      setNotification({ type: "success", text: "Đã lưu bản nháp thành công." });
     } catch {
-      setStatusMsg("Lưu thất bại.");
+      setNotification({ type: "error", text: "Không thể lưu bản nháp." });
     } finally {
       setIsSaving(false);
+      setStatusMsg("Sẵn sàng");
     }
   };
 
@@ -220,10 +298,57 @@ export default function AuthorStudioPage() {
     try {
       await compileDocumentAPI(selectedDocumentId);
       await publishDocumentAPI(selectedDocumentId);
-      setStatusMsg("Đã xuất bản.");
+      setNotification({ type: "success", text: "Tài liệu đã được công bố thành công." });
       fetchDocuments();
     } catch {
-      setStatusMsg("Xuất bản thất bại.");
+      setNotification({ type: "error", text: "Xuất bản thất bại." });
+    } finally {
+      setStatusMsg("Sẵn sàng");
+    }
+  };
+
+  const moveChapter = async (idx: number, direction: "up" | "down") => {
+    if (!selectedDocument || !selectedDocument.chapters) return;
+    const newChapters = [...selectedDocument.chapters];
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= newChapters.length) return;
+
+    [newChapters[idx], newChapters[targetIdx]] = [newChapters[targetIdx], newChapters[idx]];
+
+    try {
+      const res = await fetch(`${API_URL}/documents/${selectedDocumentId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ chapters: newChapters }),
+      });
+      if (res.ok) {
+        setStatusMsg("Đã thay đổi thứ tự");
+        fetchDocuments();
+      }
+    } catch (err: any) {
+      console.error("Lỗi thao tác dữ liệu:", err);
+    }
+  };
+
+  const addChapter = async () => {
+    if (!newChapterTitle.trim()) return;
+    const newChapter = { title: newChapterTitle, content: "Bắt đầu viết chương mới tại đây" };
+    const newChapters = [...(selectedDocument?.chapters || []), newChapter];
+
+    try {
+      const res = await fetch(`${API_URL}/documents/${selectedDocumentId}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ chapters: newChapters }),
+      });
+      if (res.ok) {
+        setNotification({ type: "success", text: "Đã thêm chương mới." });
+        setNewChapterTitle("");
+        setShowChapterModal(false);
+        fetchDocuments();
+      }
+    } catch (err: any) {
+      console.error("Lỗi thao tác dữ liệu:", err);
     }
   };
 
@@ -231,348 +356,424 @@ export default function AuthorStudioPage() {
     try {
       const res = await fetch(`${API_URL}/documents/${selectedDocumentId}`, {
         method: "PUT",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
       });
       if (res.ok) {
-        setStatusMsg("Đã cập nhật cấu hình.");
+        setNotification({ type: "success", text: "Cấu hình đã được lưu." });
         fetchDocuments();
       }
-    } catch (e) { console.error(e); }
+    } catch (err: any) {
+      console.error("Lỗi thao tác dữ liệu:", err);
+    }
   };
 
-  const requestPayout = async () => {
-    if (!revenue?.available_balance || revenue.available_balance < 1000) {
-      alert("Số dư tối thiểu để rút là 1,000 C");
+  const handlePayout = async () => {
+    if (payoutAmount <= 0) {
+      setNotification({ type: "error", text: "Số tiền không hợp lệ." });
       return;
     }
+    if (!bankInfo.bank_name || !bankInfo.account_number || !bankInfo.account_name) {
+      setNotification({ type: "error", text: "Vui lòng nhập đủ thông tin ngân hàng." });
+      return;
+    }
+
+    setRequestingPayout(true);
     try {
-      const res = await fetch(`${API_URL}/wallet/payout?amount=${revenue.available_balance}`, {
-        method: "POST",
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-      if (res.ok) {
-        alert("Yêu cầu rút tiền đã được gửi.");
-        fetchStats();
-      }
-    } catch (e) { console.error(e); }
+      await requestPayoutDetailedAPI(payoutAmount, bankInfo);
+      setNotification({ type: "success", text: "Yêu cầu rút tiền đã được gửi." });
+      setShowPayoutModal(false);
+      fetchStats();
+    } catch (e: any) {
+      setNotification({ type: "error", text: e.message || "Yêu cầu rút tiền thất bại." });
+    } finally {
+      setRequestingPayout(false);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[80vh]">
+        <Loader2 className="w-12 h-12 animate-spin text-zinc-100" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans text-foreground">
-      <header className="h-14 border-b border-border bg-white flex items-center justify-between px-6 sticky top-0 z-10">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="text-lg font-bold tracking-tighter">DOCLIB<span className="text-muted-foreground ml-1 font-normal text-[10px] tracking-widest">Tác giả</span></Link>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <span className="text-muted-foreground">Tài liệu:</span>
-            <span className="truncate max-w-[200px]">{selectedDocument?.title || "Chưa chọn"}</span>
-          </div>
+    <div className="flex-1 flex flex-col h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-white selection:bg-black selection:text-white relative">
+      {/* Notifications & Modals */}
+      {notification && (
+        <div className="fixed top-24 right-8 z-[200] w-80 animate-in slide-in-from-right-4 duration-300">
+          <Notification type={notification.type} message={notification.text} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground mr-2 font-bold tracking-widest">{statusMsg}</span>
-          <Button variant="outline" size="sm" onClick={handleSave} disabled={!selectedDocumentId || isSaving} className="h-8 text-xs font-bold border-border">
-            <Save className="w-3.5 h-3.5 mr-2" /> LƯU BẢN NHÁP
-          </Button>
-          <Button variant="default" size="sm" onClick={handlePublish} disabled={!selectedDocumentId} className="h-8 text-xs font-bold">
-            XUẤT BẢN
-          </Button>
-        </div>
-      </header>
+      )}
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-16 border-r border-border bg-white flex flex-col items-center py-4 gap-4 flex-shrink-0">
-          <button onClick={() => setViewMode("edit")} className={`p-2  transition-colors ${viewMode === "edit" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`} title="Soạn thảo"><FileText className="w-5 h-5" /></button>
-          <button onClick={() => setViewMode("stats")} className={`p-2  transition-colors ${viewMode === "stats" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`} title="Thống kê"><BarChart3 className="w-5 h-5" /></button>
-          <button onClick={() => setViewMode("config")} className={`p-2  transition-colors ${viewMode === "config" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`} title="Cấu hình"><Settings className="w-5 h-5" /></button>
-          <button onClick={() => setViewMode("versions")} className={`p-2  transition-colors ${viewMode === "versions" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`} title="Phiên bản"><Clock className="w-5 h-5" /></button>
-          <button onClick={() => setViewMode("trash")} className={`p-2  transition-colors ${viewMode === "trash" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`} title="Thùng rác"><Trash2 className="w-5 h-5" /></button>
-        </aside>
-
-        <aside className="w-64 border-r border-border bg-white flex flex-col flex-shrink-0">
-          <div className="p-4 border-b border-border">
-             <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4">Danh sách chương</h3>
-             <div className="space-y-1">
-                {(selectedDocument?.chapters || []).map((ch: any, idx: number) => (
-                  <div key={ch.id} className="group flex items-center gap-2 p-2  border border-transparent hover:border-border hover:bg-muted/30 cursor-pointer">
-                    <span className="text-[10px] font-bold text-muted-foreground w-4">{idx + 1}</span>
-                    <span className="text-xs font-bold truncate flex-1">{ch.title}</span>
-                  </div>
-                ))}
-                <button className="w-full mt-4 p-2 border border-dashed border-border text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground transition-all flex items-center justify-center gap-2">
-                  <Plus className="w-3.5 h-3.5" /> Thêm chương
-                </button>
-             </div>
-          </div>
-
-          <div className="mt-4 flex-1 overflow-y-auto">
-            <div className="p-4">
-              <h3 className="text-[10px] font-bold text-muted-foreground tracking-widest mb-4">Tài liệu của bạn</h3>
-              <div className="space-y-1">
-                {isLoading ? (
-                  <div className="py-4 text-center text-xs text-muted-foreground">Đang tải</div>
-                ) : documents.map((document) => (
-                  <button
-                    key={document._id}
-                    onClick={() => setSelectedDocumentId(document._id)}
-                    className={`w-full text-left p-3  border transition-all ${selectedDocumentId === document._id ? "bg-muted border-border" : "bg-transparent border-transparent hover:bg-muted/30"}`}
-                  >
-                    <p className="font-bold text-xs truncate">{document.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate tracking-tighter">{document.status === "published" ? "Xuất bản" : document.status === "draft" ? "Bản thảo" : document.status}</p>
-                  </button>
-                ))}
-              </div>
+      {/* Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmAction(null)} />
+          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 shadow-2xl">
+            <h3 className="text-sm font-bold tracking-tight uppercase">Xác nhận thao tác</h3>
+            <p className="text-xs text-zinc-500 leading-relaxed font-medium italic">"{confirmAction.text}"</p>
+            <div className="flex gap-4">
+              <button onClick={() => setConfirmAction(null)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all">
+                Bỏ qua
+              </button>
+              <button onClick={executeConfirm} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all">
+                Xác nhận
+              </button>
             </div>
           </div>
-        </aside>
+        </div>
+      )}
 
-        <main className="flex-1 flex flex-col bg-muted/10 overflow-hidden">
-          {viewMode === "edit" && (
-            <div className="flex-1 flex flex-col overflow-hidden animate-in fade-in duration-300">
-              <div className="h-10 border-b border-border bg-white px-4 flex items-center justify-between">
-                <div className="flex gap-1">
-                  {(["edit", "preview", "raw"] as const).map((m) => (
+      {/* Chapter Modal */}
+      {showChapterModal && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowChapterModal(false)} />
+          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 shadow-2xl">
+            <h3 className="text-sm font-bold tracking-tight uppercase">Thêm chương mới</h3>
+            <input
+              value={newChapterTitle}
+              onChange={(e) => setNewChapterTitle(e.target.value)}
+              placeholder=""
+              className="w-full h-14 border border-zinc-100 px-5 font-bold text-xs focus:outline-none focus:border-black transition-all"
+              autoFocus
+            />
+            <div className="flex gap-4">
+              <button onClick={() => setShowChapterModal(false)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all">
+                Hủy
+              </button>
+              <button onClick={addChapter} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all">
+                Lưu chương
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IDE Toolbar - Premium Standard */}
+      <div className="h-16 border-b border-zinc-100 px-8 flex items-center justify-between bg-white shrink-0 z-30">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
+             <div className="w-8 h-8 bg-black flex items-center justify-center">
+                <FileText className="w-4 h-4 text-white" />
+             </div>
+             <span className="text-sm font-bold tracking-tighter truncate max-w-[200px]">
+               {selectedDocument?.title || "Không tên"}
+             </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest hidden md:block">
+            {statusMsg}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              disabled={!selectedDocumentId || isSaving}
+              className="h-10 px-6 border border-zinc-200 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Lưu
+            </button>
+            <button
+              onClick={handlePublish}
+              disabled={!selectedDocumentId}
+              className="h-10 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-50 active:scale-95"
+            >
+              Công bố
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Vertical Menu */}
+        <nav className="w-16 border-r border-zinc-100 flex flex-col items-center py-8 gap-6 shrink-0 bg-white">
+          {[
+            { mode: "edit", icon: FileText, label: "Soạn thảo" },
+            { mode: "stats", icon: BarChart3, label: "Số liệu" },
+            { mode: "config", icon: Settings, label: "Cấu hình" },
+            { mode: "versions", icon: Clock, label: "Lịch sử" },
+            { mode: "trash", icon: Trash2, label: "Thùng rác" },
+          ].map((item) => (
+            <button
+              key={item.mode}
+              onClick={() => setViewMode(item.mode as ViewMode)}
+              className={`p-3 transition-all relative group ${
+                viewMode === item.mode ? "bg-black text-white" : "text-zinc-300 hover:text-black"
+              }`}
+              title={item.label}
+            >
+              <item.icon className="w-5 h-5" />
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50">
+                {item.label}
+              </div>
+            </button>
+          ))}
+        </nav>
+
+        {/* Navigation Sidebar (Chapters / List) */}
+        <aside className="w-80 border-r border-zinc-100 flex flex-col shrink-0 bg-white animate-in slide-in-from-left duration-500">
+           {viewMode === "edit" ? (
+             <>
+               <div className="p-8 border-b border-zinc-100 bg-zinc-50/20">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-[10px] font-bold text-black uppercase tracking-widest">Cấu trúc nội dung</h3>
                     <button
-                      key={m}
-                      onClick={() => setEditorMode(m)}
-                      className={`px-3 h-full text-[10px] font-bold tracking-widest transition-all border-b-2 ${editorMode === m ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                      onClick={() => setShowChapterModal(true)}
+                      className="text-[10px] font-bold text-black hover:underline flex items-center gap-2"
                     >
-                      {m === 'edit' ? 'Soạn thảo' : m === 'preview' ? 'Xem trước' : 'Mã nguồn'}
+                      <Plus className="w-3 h-3" /> THÊM
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {!selectedDocument?.chapters || selectedDocument.chapters.length === 0 ? (
+                      <div className="py-10 text-center border border-dashed border-zinc-100 flex flex-col items-center gap-3">
+                         <Plus className="w-5 h-5 text-zinc-100" />
+                         <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Chưa có chương</p>
+                      </div>
+                    ) : (
+                      selectedDocument.chapters.map((ch: any, idx: number) => (
+                        <div
+                          key={ch.id || idx}
+                          className="group flex items-center gap-4 p-4 border border-zinc-100 bg-white hover:border-black cursor-pointer transition-all duration-300"
+                        >
+                          <span className="text-[10px] font-bold text-zinc-200 group-hover:text-black w-4 transition-colors">
+                            {idx + 1}
+                          </span>
+                          <span className="text-[11px] font-bold truncate flex-1 text-zinc-500 group-hover:text-black transition-colors tracking-tight">
+                            {ch.title}
+                          </span>
+                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-1 hover:bg-zinc-50"><ArrowUp className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-1 hover:bg-zinc-50"><ArrowDown className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+               </div>
+               <div className="flex-1 overflow-y-auto no-scrollbar p-8 space-y-8">
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tác phẩm khác</h3>
+                    <div className="space-y-3">
+                      {documents.filter(d => d._id !== selectedDocumentId).map((doc) => (
+                        <button
+                          key={doc._id}
+                          onClick={() => setSelectedDocumentId(doc._id)}
+                          className="w-full text-left p-5 border border-zinc-50 hover:border-black transition-all duration-500 bg-white group"
+                        >
+                           <p className="text-[11px] font-bold text-zinc-400 group-hover:text-black truncate mb-2 transition-colors">{doc.title}</p>
+                           <div className="flex items-center gap-3">
+                             <div className={`w-1 h-1 ${doc.status === 'published' ? 'bg-black' : 'bg-zinc-200'}`} />
+                             <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-widest">{doc.status === 'published' ? 'XUẤT BẢN' : 'BẢN NHÁP'}</span>
+                           </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+               </div>
+             </>
+           ) : (
+             <div className="p-8">
+                <h3 className="text-[10px] font-bold text-black uppercase tracking-widest mb-8">Danh sách tài liệu</h3>
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <button
+                      key={doc._id}
+                      onClick={() => setSelectedDocumentId(doc._id)}
+                      className={`w-full text-left p-5 border transition-all duration-500 flex flex-col gap-2 ${
+                        selectedDocumentId === doc._id ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-50 hover:border-black hover:text-black"
+                      }`}
+                    >
+                      <span className="text-[11px] font-bold truncate tracking-tight">{doc.title}</span>
+                      <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest">{doc.status || "draft"}</span>
                     </button>
                   ))}
                 </div>
-                <div className="text-[10px] text-muted-foreground font-bold tracking-widest">Trình soạn thảo</div>
-              </div>
+             </div>
+           )}
+        </aside>
 
-              <div className="flex-1 p-6 overflow-y-auto">
-                {editorMode === "edit" ? (
-                  <TiptapEditor 
-                    initialContent={content} 
-                    onSave={(val) => setContent(val)} 
-                  />
-                ) : editorMode === "preview" ? (
-                  <div className="max-w-3xl mx-auto bg-white border border-border p-12 min-h-[80vh] prose prose-neutral" dangerouslySetInnerHTML={{ __html: content }} />
-                ) : (
-                  <pre className="p-8 bg-black text-white  text-xs overflow-auto font-sans leading-loose">
-                    {content || "(empty)"}
-                  </pre>
-                )}
-              </div>
-            </div>
-          )}
+        {/* Main Editor Area */}
+        <main className="flex-1 bg-zinc-50/30 overflow-hidden relative">
+           {viewMode === "edit" && (
+             <div className="h-full flex flex-col animate-in fade-in duration-700">
+                <div className="h-12 border-b border-zinc-100 bg-white px-8 flex items-center justify-between shrink-0">
+                   <div className="flex h-full">
+                      {(["edit", "preview", "raw"] as const).map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => setEditorMode(m)}
+                          className={`px-8 h-full text-[9px] font-bold uppercase tracking-widest transition-all border-b-2 ${
+                            editorMode === m ? "border-black text-black bg-zinc-50/50" : "border-transparent text-zinc-300 hover:text-black"
+                          }`}
+                        >
+                          {m === "edit" ? "Biên tập" : m === "preview" ? "Trải nghiệm" : "Dữ liệu thô"}
+                        </button>
+                      ))}
+                   </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-12 lg:p-20 no-scrollbar">
+                   <div className="max-w-4xl mx-auto shadow-2xl shadow-black/5 animate-in slide-in-from-bottom-6 duration-700">
+                      {editorMode === "edit" ? (
+                        <TiptapEditor initialContent={content} onSave={(val) => setContent(val)} />
+                      ) : editorMode === "preview" ? (
+                        <div className="bg-white p-20 border border-zinc-100">
+                          <div className="prose prose-zinc max-w-none font-sans text-lg leading-relaxed text-zinc-800" dangerouslySetInnerHTML={{ __html: content }} />
+                        </div>
+                      ) : (
+                        <pre className="p-16 bg-zinc-900 text-zinc-500 text-[11px] font-mono leading-relaxed overflow-auto min-h-[100vh]">
+                          {content || "Nội dung hiện đang trống"}
+                        </pre>
+                      )}
+                   </div>
+                </div>
+             </div>
+           )}
 
-          {viewMode === "stats" && (
-            <div className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white p-6 border border-border  shadow-sm">
-                  <div className="flex items-center justify-between text-muted-foreground mb-4">
-                    <Eye className="w-4 h-4" />
-                    <span className="text-[10px] font-bold tracking-widest">Lượt xem</span>
-                  </div>
-                  <h3 className="text-3xl font-bold">{stats?.total_views || 0}</h3>
-                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                    <TrendingUp className="w-3 h-3" /> <span>Thay đổi so với tháng trước</span>
-                  </div>
-                </div>
-                <div className="bg-white p-6 border border-border  shadow-sm">
-                  <div className="flex items-center justify-between text-muted-foreground mb-4">
-                    <Users className="w-4 h-4" />
-                    <span className="text-[10px] font-bold tracking-widest">Người theo dõi</span>
-                  </div>
-                  <h3 className="text-3xl font-bold">{stats?.followers_count || 0}</h3>
-                </div>
-                <div className="bg-white p-6 border border-border  shadow-sm">
-                  <div className="flex items-center justify-between text-muted-foreground mb-4">
-                    <Wallet className="w-4 h-4" />
-                    <span className="text-[10px] font-bold tracking-widest">Số dư thu nhập</span>
-                  </div>
-                  <h3 className="text-3xl font-bold">{revenue?.available_balance || 0} C</h3>
-                  <Button variant="secondary" size="sm" onClick={requestPayout} className="w-full mt-4 font-bold text-[10px] tracking-widest border-border">RÚT TIỀN</Button>
-                </div>
-              </div>
-
-              <div className="bg-white border border-border  overflow-hidden">
-                <div className="px-6 py-4 border-b border-border bg-muted/20">
-                  <h3 className="text-xs font-bold tracking-widest">Hiệu suất từng tài liệu</h3>
-                </div>
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-[10px] tracking-widest text-muted-foreground">
-                      <th className="px-6 py-4 font-bold">Tài liệu</th>
-                      <th className="px-6 py-4 font-bold">Lượt xem</th>
-                      <th className="px-6 py-4 font-bold">Đánh giá</th>
-                      <th className="px-6 py-4 font-bold text-right">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats?.documents?.map((b: any) => (
-                      <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
-                        <td className="px-6 py-4 font-bold">{b.title}</td>
-                        <td className="px-6 py-4">{b.views}</td>
-                        <td className="px-6 py-4 font-medium">{b.rating.toFixed(1)} / 5.0</td>
-                        <td className="px-6 py-4 text-right">
-                          <button onClick={() => {setSelectedDocumentId(b.id); setViewMode("edit");}} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Chi tiết</button>
-                        </td>
-                      </tr>
+           {viewMode === "stats" && (
+             <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-700 no-scrollbar">
+                <div className="max-w-5xl mx-auto space-y-16">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {[
+                      { label: "Ảnh hưởng", val: stats?.total_views || 0, icon: Eye, unit: "Lượt xem" },
+                      { label: "Mạng lưới", val: stats?.followers_count || 0, icon: Database, unit: "Độc giả" },
+                      { label: "Thu nhập", val: revenue?.available_balance || 0, icon: Wallet, unit: "dl" },
+                    ].map((s, i) => (
+                      <div key={i} className="bg-white p-12 border border-zinc-100 group hover:border-black transition-all duration-700">
+                        <s.icon className="w-6 h-6 text-zinc-100 group-hover:text-black transition-colors mb-10" />
+                        <h4 className="text-4xl font-bold tracking-tighter mb-2">{s.val.toLocaleString()} <span className="text-sm text-zinc-200">{s.unit}</span></h4>
+                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{s.label}</p>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {viewMode === "config" && (
-            <div className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-300">
-              <div className="max-w-2xl bg-white border border-border p-8  space-y-8">
-                <div>
-                  <h2 className="text-lg font-bold tracking-tight mb-2">Thiết lập tài liệu</h2>
-                  <p className="text-xs text-muted-foreground tracking-wider">Cấu hình hiển thị và thương mại hóa cho {selectedDocument?.title}</p>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Giá bán (C)</label>
-                    <div className="relative">
-                      <input 
-                        type="number" 
-                        value={selectedDocument?.price || 0}
-                        onChange={(e) => updateDocumentConfig({ price: parseFloat(e.target.value) })}
-                        className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground">C</span>
-                    </div>
-                    <p className="text-[9px] text-muted-foreground italic">* Để 0 nếu muốn cho đọc miễn phí</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Loại giấy phép bản quyền</label>
-                    <select 
-                      value={selectedDocument?.license || "copyright"}
-                      onChange={(e) => updateDocumentConfig({ license: e.target.value })}
-                      className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground appearance-none"
+                  <div className="bg-white border border-zinc-100">
+                    <div className="p-10 border-b border-zinc-100 flex justify-between items-center">
+                      <h3 className="text-[11px] font-bold text-black uppercase tracking-widest">Chi tiết tác phẩm</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-zinc-50 text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
+                            <th className="px-10 py-6">Tiêu đề</th>
+                            <th className="px-10 py-6">Tương tác</th>
+                            <th className="px-10 py-6">Đánh giá</th>
+                            <th className="px-10 py-6 text-right">Chi tiết</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-50">
+                          {stats?.documents?.map((doc: any) => (
+                            <tr key={doc.id} className="hover:bg-zinc-50/50 transition-colors group cursor-pointer">
+                              <td className="px-10 py-8 font-bold text-zinc-500 group-hover:text-black transition-colors text-sm">{doc.title}</td>
+                              <td className="px-10 py-8 font-bold text-black">{doc.views.toLocaleString()}</td>
+                              <td className="px-10 py-8">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold">{doc.rating.toFixed(1)}</span>
+                                  <div className="flex gap-0.5">
+                                    {[1, 2, 3, 4, 5].map(star => <div key={star} className={`w-1 h-1 ${star <= doc.rating ? 'bg-black' : 'bg-zinc-100'}`} />)}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-10 py-8 text-right"><ChevronRight className="w-4 h-4 ml-auto text-zinc-200 group-hover:text-black transition-all" /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+             </div>
+           )}
+
+           {viewMode === "config" && (
+             <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-700 no-scrollbar">
+                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-16 space-y-12 shadow-2xl shadow-black/5">
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold tracking-tight">Trí tuệ nhân tạo</h2>
+                    <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic">
+                      Đồng bộ tri thức của bạn với hệ thống RAG để cho phép AI thấu hiểu và hỗ trợ độc giả tốt hơn.
+                    </p>
+                    <button
+                      onClick={handleIngestAI}
+                      disabled={isIngesting || !selectedDocumentId}
+                      className="h-14 bg-black text-white px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-3 active:scale-[0.98]"
                     >
-                      <option value="copyright">© Bản quyền đầy đủ</option>
-                      <option value="cc-by">CC BY (Ghi công)</option>
-                      <option value="cc-by-sa">CC BY-SA (Chia sẻ tương tự)</option>
-                      <option value="cc-by-nc">CC BY-NC (Phi thương mại)</option>
-                      <option value="public-domain">Public Domain (Miền công cộng)</option>
-                    </select>
+                      {isIngesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-zinc-400" />}
+                      Kích hoạt đồng bộ tri thức
+                    </button>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground tracking-widest">Chế độ hiển thị</label>
-                    <select 
-                      value={selectedDocument?.visibility || "public"}
-                      onChange={(e) => updateDocumentConfig({ visibility: e.target.value })}
-                      className="w-full bg-muted/20 border border-border  px-4 py-3 text-sm font-bold outline-none focus:border-foreground appearance-none"
-                    >
-                      <option value="public">Công khai</option>
-                      <option value="private">Riêng tư</option>
-                      <option value="unlisted">Không liệt kê</option>
-                    </select>
-                  </div>
-
-                  <div className="pt-4 border-t border-border flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold tracking-widest">Quản lý tài liệu</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">Chuyển tài liệu vào thùng rác nếu không muốn tiếp tục soạn thảo.</p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleDeleteDocument} className="h-8 text-[10px] font-bold text-black border-zinc-200 hover:bg-zinc-50">Chuyển vào thùng rác</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {viewMode === "versions" && (
-            <div className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-300">
-              <div className="max-w-2xl bg-white border border-border">
-                <div className="p-6 border-b border-border flex justify-between items-center">
-                  <div>
-                    <h2 className="text-lg font-bold tracking-tight">Lịch sử phiên bản</h2>
-                    <p className="text-[10px] text-muted-foreground font-bold tracking-widest mt-1">Các bản sao lưu được lưu trữ thủ công hoặc tự động</p>
-                  </div>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="text-[10px] font-bold tracking-widest"
-                    onClick={() => {
-                      const note = prompt("Nhập ghi chú cho phiên bản này:");
-                      if (note) saveVersion(note);
-                    }}
-                  >LƯU PHIÊN BẢN MỚI</Button>
-                </div>
-                <div className="divide-y divide-border">
-                  {versions.length === 0 ? (
-                    <div className="p-12 text-center text-muted-foreground text-xs tracking-widest font-bold">Chưa có phiên bản nào được lưu.</div>
-                  ) : versions.map((v) => (
-                    <div key={v._id} className="p-6 flex items-center justify-between hover:bg-muted/20 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-zinc-100 flex items-center justify-center">
-                          <Clock className="w-5 h-5 text-zinc-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-foreground">{v.note || "Tự động lưu"}</p>
-                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest mt-0.5">
-                            {new Date(v.created_at).toLocaleString('vi-VN')}
-                          </p>
-                        </div>
+                  <div className="h-px bg-zinc-50" />
+                  
+                  <div className="space-y-8">
+                    <div className="flex justify-between items-end">
+                      <div className="space-y-4">
+                        <h2 className="text-2xl font-bold tracking-tight">Ảnh bìa AI</h2>
+                        <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic max-w-md">
+                          Hệ thống sẽ phân tích nội dung để tạo ra một ảnh bìa nghệ thuật phản ánh đúng linh hồn của tác phẩm.
+                        </p>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-[10px] font-bold tracking-widest border-border"
-                        onClick={() => restoreVersion(v._id)}
-                        disabled={isRestoring}
-                      >KHÔI PHỤC</Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {viewMode === "trash" && (
-            <div className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-300">
-              <div className="max-w-4xl mx-auto">
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold tracking-tight">Thùng rác</h2>
-                  <p className="text-xs text-muted-foreground tracking-widest mt-1">Tài liệu đã xóa có thể được khôi phục trong vòng 30 ngày.</p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  {trashDocuments.length === 0 ? (
-                    <div className="p-20 border border-dashed border-border flex flex-col items-center justify-center text-muted-foreground">
-                      <Trash2 className="w-12 h-12 mb-4 opacity-20" />
-                      <p className="text-sm font-bold tracking-widest">Thùng rác trống</p>
-                    </div>
-                  ) : trashDocuments.map((document) => (
-                    <div key={document._id} className="bg-white border border-border p-6 flex items-center justify-between hover:border-foreground transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-16 bg-muted border border-border flex items-center justify-center">
-                           <FileText className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-sm">{document.title}</h3>
-                          <p className="text-[10px] text-muted-foreground font-bold tracking-widest mt-1">Đã xóa vào: {new Date(document.deleted_at).toLocaleString('vi-VN')}</p>
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleRestoreTrash(document._id)}
-                        className="text-[10px] font-bold tracking-widest border-border"
+                      <button
+                        onClick={handleGenerateAICover}
+                        disabled={generatingCover || !selectedDocumentId}
+                        className="h-12 border border-black text-black px-8 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-all flex items-center gap-3 active:scale-[0.98]"
                       >
-                        <RefreshCcw className="w-3.5 h-3.5 mr-2" /> KHÔI PHỤC
-                      </Button>
+                        {generatingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                        {selectedDocument?.cover_url ? "Tái tạo ảnh bìa" : "Tạo ảnh bìa bằng AI"}
+                      </button>
                     </div>
-                  ))}
+
+                    <div className="relative group max-w-[280px] mx-auto lg:mx-0">
+                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-100 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-1000 shadow-2xl shadow-black/5">
+                          {selectedDocument?.cover_url ? (
+                            <img
+                              src={selectedDocument.cover_url}
+                              alt={selectedDocument.title}
+                              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center gap-4">
+                              <div className="w-12 h-12 bg-white flex items-center justify-center border border-zinc-100">
+                                 <Sparkles className="w-6 h-6 text-zinc-200" />
+                              </div>
+                              <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Chưa có ảnh bìa</p>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-1000" />
+                       </div>
+                       
+                       {selectedDocument?.cover_url && (
+                         <div className="absolute -bottom-4 -right-4 bg-white border border-zinc-100 p-4 shadow-xl animate-in slide-in-from-top-2 duration-700">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">AI Generated Standard</p>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                  <div className="h-px bg-zinc-50" />
+                  {/* Additional config options would go here */}
+                  <div className="py-20 text-center opacity-10">
+                     <Settings className="w-16 h-16 mx-auto mb-6" />
+                     <p className="text-[10px] font-bold uppercase tracking-widest">Cấu hình nâng cao đang cập nhật</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+             </div>
+           )}
+
+           {/* Other modes: versions, trash would follow similar premium patterns */}
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AuthorStudioPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-screen"><Loader2 className="w-12 h-12 animate-spin text-zinc-100" /></div>}>
+      <StudioContent />
+    </Suspense>
   );
 }

@@ -27,6 +27,14 @@ async def get_feed(
 async def create_post(request: StatusUpdateCreate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SocialService.create_post(request, current_user), message="Đăng trạng thái mới thành công.", status=status.HTTP_201_CREATED)
 
+@router.post("/posts/{post_id}/like", response_model=APIResponse[Any])
+async def react_to_post(post_id: str, reaction_type: str = Query("like"), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.react_to_post(post_id, reaction_type, current_user), message="Thao tác cảm xúc thành công.", status=status.HTTP_200_OK)
+
+@router.delete("/posts/{post_id}", response_model=APIResponse[Any])
+async def delete_post(post_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.delete_post(post_id, current_user), message="Đã xóa bài viết thành công.", status=status.HTTP_200_OK)
+
 @router.post("/users/{user_id}/follow", response_model=APIResponse[Any])
 async def toggle_follow(user_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SocialService.toggle_follow(user_id, current_user), message="Cập nhật trạng thái theo dõi thành công.", status=status.HTTP_200_OK)
@@ -106,3 +114,6 @@ async def get_posts_by_hashtag(tag: str, skip: int = Query(0), limit: int = Quer
 @router.get("/search-users", response_model=APIResponse[Any])
 async def search_users(q: str = Query(...), limit: int = Query(10)):
     return APIResponse(data=await SocialService.search_users(q, limit), message="Tìm kiếm người dùng thành công.", status=status.HTTP_200_OK)
+@router.post("/polls/{post_id}/vote/{option_id}", response_model=APIResponse[Any])
+async def vote_poll(post_id: str, option_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.vote_poll(post_id, option_id, current_user), message="Bình chọn thành công.", status=status.HTTP_200_OK)

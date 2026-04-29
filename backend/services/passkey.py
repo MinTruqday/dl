@@ -22,14 +22,14 @@ from datetime import datetime
 import os
 import uuid
 
-RP_ID = getattr(settings, "PASSKEY_RP_ID", None)
-RP_NAME = "DocLib"
-ORIGIN = getattr(settings, "PASSKEY_ALLOWED_ORIGINS", None)
+RP_ID = getattr(settings, "PASSKEY_RP_ID")
+RP_NAME = getattr(settings, "PASSKEY_RP_NAME")
+ORIGIN = getattr(settings, "PASSKEY_ALLOWED_ORIGINS")
 
 class PasskeyService:
     @staticmethod
     async def register_begin(email: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db["users"].find_one({"email": email})
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
@@ -54,7 +54,7 @@ class PasskeyService:
 
     @staticmethod
     async def register_finish(email: str, credential_data: dict):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db["users"].find_one({"email": email})
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
@@ -93,7 +93,7 @@ class PasskeyService:
 
     @staticmethod
     async def login_begin(email: str):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db["users"].find_one({"email": email})
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
@@ -119,7 +119,7 @@ class PasskeyService:
 
     @staticmethod
     async def login_finish(email: str, credential_data: dict):
-        db = db_client.mongodb.get_default_database()
+        db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db["users"].find_one({"email": email})
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")

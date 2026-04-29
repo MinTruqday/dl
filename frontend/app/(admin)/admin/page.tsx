@@ -1,25 +1,115 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getToken } from "@/app/lib/api";
-import { AlertTriangle, ShieldCheck, Activity, Users, Database, Settings, BarChart3, CheckCircle2, XCircle, Info, RefreshCcw, Lock, Unlock, UserPlus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState, useCallback } from "react";
+import { getToken, API_URL, formatError } from "@/app/lib/api";
+import {
+  AlertTriangle,
+  ShieldCheck,
+  Activity,
+  Users,
+  Database,
+  Settings,
+  BarChart3,
+  CheckCircle2,
+  XCircle,
+  RefreshCcw,
+  Lock,
+  Unlock,
+  UserPlus,
+  CreditCard,
+  Loader2,
+  Image as ImageIcon,
+  Plus,
+  Trash2,
+  Edit,
+  ListTree,
+  HardDrive,
+  Cpu,
+  X,
+  ChevronRight,
+  Zap,
+  LayoutDashboard,
+  Terminal,
+  Server,
+  Filter,
+  FileText,
+  Eye,
+  PlusCircle,
+  ShieldAlert,
+  UserCheck
+} from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
+import { Notification } from "@/app/components/NotificationToast";
+import { Button } from "@/components/ui/button";
 
-type TabType = "stats" | "users" | "moderation" | "config";
+type AdminTab = "overview" | "users" | "reports" | "applications" | "config";
 
 export default function AdminDashboard() {
-  const { user, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>("stats");
+  const { user, isLoading } = useAuth() as any;
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
   const [users, setUsers] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [config, setConfig] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; onConfirm: () => void } | null>(null);
+  const [visible, setVisible] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const fetchData = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const headers = { Authorization: `Bearer ${getToken()}` };
+
+      const baseEndpoints = [
+        "users",
+        "reports",
+        "applications/authors",
+        "stats",
+        "sys-health",
+        "banners",
+      ];
+
+      const fetchList = baseEndpoints.map(ep => fetch(`${API_URL}/admin/${ep}`, { headers }));
+
+      if (user?.role === "admin") {
+        fetchList.push(
+          fetch(`${API_URL}/admin/payouts`, { headers }),
+          fetch(`${API_URL}/admin/config`, { headers }),
+          fetch(`${API_URL}/admin/audit`, { headers }),
+          fetch(`${API_URL}/admin/maintenance`, { headers })
+        );
+      }
+
+      const results = await Promise.all(fetchList);
+      const data = await Promise.all(results.map((r) => (r.ok ? r.json() : null)));
+
+      if (data[0]) setUsers(data[0].data || data[0]);
+      if (data[1]) setReports(data[1].data || data[1]);
+      if (data[2]) setApplications(data[2].data || data[2]);
+      if (data[3]) setStats(data[3].data || data[3]);
+      if (data[4]) setHealth(data[4].data || data[4]);
+      if (data[5]) setBanners(data[5].data || data[5]);
+
+      if (user?.role === "admin" && data.length > 6) {
+        if (data[6]) setPayouts(data[6].data || data[6]);
+        if (data[7]) setConfig(data[7].data || data[7]);
+        if (data[8]) setAuditLogs(data[8].data || data[8]);
+        if (data[9]) setMaintenanceMode(data[9].data?.enabled || data[9].enabled || false);
+      }
+    } catch (err: any) {
+      console.error("Lỗi tải dữ liệu quản trị:", err);
+    } finally {
+      setIsRefreshing(false);
+      requestAnimationFrame(() => setVisible(true));
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -28,32 +118,22 @@ export default function AdminDashboard() {
     } else {
       fetchData();
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, fetchData]);
 
-  const fetchData = async () => {
-    setIsRefreshing(true);
+  const toggleMaintenance = async () => {
     try {
-      const headers = { 'Authorization': `Bearer ${getToken()}` };
-      
-      const [uRes, rRes, aRes, sRes, cRes, hRes] = await Promise.all([
-        fetch(`${API_URL}/admin/users`, { headers }),
-        fetch(`${API_URL}/admin/reports`, { headers }),
-        fetch(`${API_URL}/admin/applications/authors`, { headers }),
-        fetch(`${API_URL}/admin/stats`, { headers }),
-        fetch(`${API_URL}/admin/config`, { headers }),
-        fetch(`${API_URL}/admin/sys-health`, { headers })
-      ]);
-      
-      if (uRes.ok) setUsers(await uRes.json());
-      if (rRes.ok) setReports(await rRes.json());
-      if (aRes.ok) setApplications(await aRes.json());
-      if (sRes.ok) setStats(await sRes.json());
-      if (cRes.ok) setConfig(await cRes.json());
-      if (hRes.ok) setHealth(await hRes.json());
-    } catch(e) {
-      console.error(e);
-    } finally {
-      setIsRefreshing(false);
+      const res = await fetch(`${API_URL}/admin/maintenance`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !maintenanceMode, message: "Hệ thống đang bảo trì định kỳ" }),
+      });
+      if (res.ok) {
+        setMaintenanceMode(!maintenanceMode);
+        setNotification({ type: "success", text: maintenanceMode ? "Đã tắt chế độ bảo trì." : "Hệ thống đã vào trạng thái bảo trì." });
+        fetchData();
+      }
+    } catch (err: any) {
+      console.error("Lỗi chuyển chế độ bảo trì:", err);
     }
   };
 
@@ -61,392 +141,693 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`${API_URL}/admin/users/${userId}/role`, {
         method: "PUT",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role })
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
       });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
+      if (res.ok) {
+        setNotification({ type: "success", text: "Đã cập nhật vai trò người dùng." });
+        fetchData();
+      }
+    } catch (err: any) {
+      console.error("Lỗi cập nhật vai trò:", err);
+    }
   };
 
   const updateStatus = async (userId: string, isActive: boolean) => {
     try {
       const res = await fetch(`${API_URL}/admin/users/${userId}/status`, {
         method: "PUT",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: isActive })
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: isActive }),
       });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
+      if (res.ok) {
+        setNotification({ type: "success", text: isActive ? "Đã khôi phục tài khoản." : "Đã vô hiệu hóa tài khoản." });
+        fetchData();
+      }
+    } catch (err: any) {
+      console.error("Lỗi cập nhật trạng thái:", err);
+    }
   };
 
-  const toggleShadowban = async (userId: string, current: boolean) => {
-    try {
-      const res = await fetch(`${API_URL}/admin/users/${userId}/shadowban?is_shadowbanned=${!current}`, { 
-        method: "PUT", 
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-      });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
-  };
-
-  const resolveReport = async (reportId: string, action: string) => {
-    try {
-      const res = await fetch(`${API_URL}/admin/reports/${reportId}/resolve`, {
-        method: "POST",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: action })
-      });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
-  };
-
-  const reviewApplication = async (appId: string, status: string, reason: string = "Đã duyệt bởi hệ thống") => {
+  const reviewApplication = async (appId: string, status: string) => {
     try {
       const res = await fetch(`${API_URL}/admin/applications/authors/${appId}/review`, {
         method: "PUT",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, reason })
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ status, reason: status === "APPROVED" ? "Đã duyệt" : "Không đủ tiêu chuẩn" }),
       });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
+      if (res.ok) {
+        setNotification({ type: "success", text: "Đã xử lý hồ sơ ứng tuyển." });
+        fetchData();
+      } else {
+        const err = await res.json();
+        setNotification({ type: "error", text: formatError(err.detail) || "Lỗi xử lý hồ sơ." });
+      }
+    } catch (err: any) {
+      console.error("Lỗi duyệt hồ sơ:", err);
+      setNotification({ type: "error", text: "Lỗi kết nối hệ thống." });
+    }
+  };
+
+  const reviewPayout = async (payoutId: string, status: string) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/payouts/${payoutId}/review?status=${status}`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (res.ok) {
+        setNotification({ type: "success", text: "Đã phê duyệt yêu cầu thanh toán." });
+        fetchData();
+      }
+    } catch (err: any) {
+      console.error("Lỗi phê duyệt thanh toán:", err);
+    }
   };
 
   const updateConfig = async (newConfig: any) => {
     try {
       const res = await fetch(`${API_URL}/admin/config`, {
         method: "PUT",
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(newConfig)
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify(newConfig),
       });
-      if (res.ok) fetchData();
-    } catch(e) { console.error(e); }
+      if (res.ok) {
+        setNotification({ type: "success", text: "Đã cập nhật cấu hình hệ thống." });
+        fetchData();
+      }
+    } catch (err: any) {
+      console.error("Lỗi cập nhật cấu hình:", err);
+    }
   };
 
-  if (isLoading || !user) return null;
+  const toggleAuthorRegistration = () => {
+    if (!config) return;
+    const newConfig = { ...config, author_application_enabled: !config.author_application_enabled };
+    updateConfig(newConfig);
+  };
+
+  const deleteBanner = async (id: string) => {
+    setConfirmModal({
+      show: true,
+      title: "Xác nhận xóa banner này?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API_URL}/admin/banners/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${getToken()}` },
+          });
+          if (res.ok) {
+            setNotification({ type: "success", text: "Đã xóa banner." });
+            fetchData();
+          }
+        } catch (err: any) {
+          console.error("Lỗi xóa banner:", err);
+        }
+        setConfirmModal(null);
+      },
+    });
+  };
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-zinc-200" />
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: "overview", label: "Tổng quan", icon: BarChart3 },
+    { id: "users", label: "Người dùng", icon: Users },
+    { id: "reports", label: "Vi phạm", icon: AlertTriangle },
+    { id: "applications", label: "Đơn ứng tuyển", icon: UserCheck },
+    ...(user?.role === "admin"
+      ? [
+          { id: "payouts", label: "Thanh toán", icon: CreditCard },
+          { id: "audit", label: "Nhật ký", icon: ListTree },
+          { id: "config", label: "Cấu hình", icon: Settings },
+        ]
+      : []),
+  ];
 
   return (
-    <div className="container max-w-6xl mx-auto py-8 px-4 min-h-screen bg-background text-foreground font-sans">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Quản trị vận hành</h1>
-          <p className="text-muted-foreground text-sm mt-1">Chào mừng, {user.role === 'admin' ? 'Quản trị viên' : 'Kiểm duyệt viên'}</p>
+    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-10 font-sans text-black selection:bg-black selection:text-white">
+      {notification && (
+        <div className="fixed top-24 right-8 z-[1000] w-80 animate-in slide-in-from-right-4 duration-300">
+          <Notification type={notification.type} message={notification.text} />
         </div>
-        <Button variant="outline" size="sm" onClick={fetchData} disabled={isRefreshing} className="w-fit">
-          <RefreshCcw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Làm mới dữ liệu
-        </Button>
-      </div>
+      )}
 
-      <div className="flex gap-1 mb-8 overflow-x-auto pb-1 no-scrollbar border-b border-border">
-        <button 
-          onClick={() => setActiveTab("stats")}
-          className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${activeTab === "stats" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" /> Tổng quan
+      {confirmModal?.show && (
+        <div className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-md">
+          <div className="bg-white border border-zinc-200 w-full max-w-md animate-in zoom-in-95 duration-300 rounded-none shadow-2xl">
+            <div className="p-12 text-center">
+              <AlertTriangle className="w-12 h-12 text-black mx-auto mb-8 stroke-[1.5]" />
+              <h3 className="text-2xl font-bold mb-4 tracking-tighter">{confirmModal.title}</h3>
+              <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-widest mb-10 italic leading-relaxed">Dữ liệu sẽ bị xóa vĩnh viễn khỏi hệ thống.</p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setConfirmModal(null)}
+                  className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black hover:border-black transition-all"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={confirmModal.onConfirm}
+                  className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95"
+                >
+                  Xác nhận xóa
+                </button>
+              </div>
+            </div>
           </div>
-        </button>
-        <button 
-          onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${activeTab === "users" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4" /> Người dùng
+        </div>
+      )}
+
+      {/* Header */}
+      <div 
+        className="mb-10 border-b border-zinc-100 pb-10 transition-all duration-700"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+      >
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-3">
+            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black mb-3">
+              Quản trị viên
+            </h1>
+            <div className="flex items-center gap-4">
+               <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                 Root System Control <ShieldCheck className="w-3.5 h-3.5 text-zinc-100" />
+               </p>
+               {maintenanceMode && (
+                 <span className="px-3 py-1 bg-black text-white text-[9px] font-bold uppercase tracking-widest animate-pulse">Maintenance Mode</span>
+               )}
+            </div>
           </div>
-        </button>
-        <button 
-          onClick={() => setActiveTab("moderation")}
-          className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${activeTab === "moderation" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-        >
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4" /> Kiểm duyệt
-          </div>
-        </button>
-        {user.role === 'admin' && (
+          
           <button 
-            onClick={() => setActiveTab("config")}
-            className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${activeTab === "config" ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            onClick={fetchData}
+            disabled={isRefreshing}
+            className="h-14 px-12 bg-black text-white text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-4 rounded-none shadow-xl shadow-black/5"
           >
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" /> Cấu hình
-            </div>
+            {isRefreshing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCcw className="w-5 h-5" />}
+            Đồng bộ dữ liệu
           </button>
-        )}
+        </div>
       </div>
 
-      {activeTab === "stats" && (
-        <div className="space-y-8 animate-in fade-in duration-300">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-6 border border-border ">
-              <p className="text-muted-foreground text-xs font-bold tracking-widest">Tổng người dùng</p>
-              <h3 className="text-3xl font-bold mt-2">{stats?.total_users || 0}</h3>
-              <div className="flex items-center gap-1 mt-2 text-[10px] text-muted-foreground">
-                <Activity className="w-3 h-3" /> {stats?.active_users_24h || 0} hoạt động (24h)
-              </div>
+      <div className="grid lg:grid-cols-12 gap-12">
+        {/* Sidebar Navigation */}
+        <aside 
+          className="lg:col-span-3 space-y-10 transition-all duration-700 delay-150"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
+        >
+          <div className="space-y-6">
+            <div className="text-[11px] font-bold text-black uppercase tracking-[0.3em] px-1 flex items-center gap-2">
+                <Filter className="w-4 h-4 text-zinc-300" /> Bảng điều khiển
             </div>
-            <div className="bg-white p-6 border border-border ">
-              <p className="text-muted-foreground text-xs font-bold tracking-widest">Tổng tác phẩm</p>
-              <h3 className="text-3xl font-bold mt-2">{stats?.total_documents || 0}</h3>
-            </div>
-            <div className="bg-white p-6 border border-border ">
-              <p className="text-muted-foreground text-xs font-bold tracking-widest">Doanh thu hệ thống</p>
-              <h3 className="text-3xl font-bold mt-2">{stats?.total_revenue?.toLocaleString() || 0} C</h3>
-            </div>
-            <div className="bg-white p-6 border border-border ">
-              <p className="text-muted-foreground text-xs font-bold tracking-widest">Trạng thái API</p>
-              <div className="flex items-center gap-2 mt-4">
-                <div className={`w-2 h-2 rounded-none ${health?.status === 'healthy' ? 'bg-black' : 'bg-zinc-300'}`} />
-                <span className="text-[10px] font-bold tracking-widest">{health?.status || 'Đang kiểm tra'}</span>
-              </div>
-            </div>
+            <nav className="flex flex-col gap-1">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as TabType)}
+                        className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border ${
+                            activeTab === tab.id
+                            ? "bg-black text-white border-black shadow-lg shadow-black/5"
+                            : "bg-white text-zinc-400 border-zinc-100 hover:bg-zinc-50 hover:text-black"
+                        }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <tab.icon className="w-4 h-4" /> {tab.label}
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform ${activeTab === tab.id ? "rotate-90" : ""}`} />
+                    </button>
+                ))}
+            </nav>
           </div>
 
-          <div className="bg-white border border-border  overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-sm font-bold flex items-center gap-2 tracking-wider">
-                <Database className="w-4 h-4" /> Nhật ký hệ thống
-              </h3>
+          <div className="p-8 border border-zinc-100 bg-zinc-50/50 space-y-6">
+             <div className="flex items-center gap-4 text-black">
+                <Activity className="w-5 h-5" />
+                <span className="text-[11px] font-bold uppercase tracking-widest">Sức khỏe hệ thống</span>
+             </div>
+             <div className="space-y-3">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase">
+                    <span className="text-zinc-400">Database</span>
+                    <span className={health?.mongodb === 'OK' ? 'text-black' : 'text-red-500'}>{health?.mongodb || 'Wait'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase">
+                    <span className="text-zinc-400">Caching</span>
+                    <span className={health?.redis === 'OK' ? 'text-black' : 'text-red-500'}>{health?.redis || 'Wait'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase">
+                    <span className="text-zinc-400">Status</span>
+                    <span className="text-black font-black">{health?.status?.toUpperCase() || 'NORMAL'}</span>
+                </div>
+             </div>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main 
+          className="lg:col-span-9 transition-all duration-700 delay-300"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
+        >
+          {activeTab === "stats" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                  { label: "Thành viên", val: stats?.total_users || 0, icon: Users, sub: "Tổng cộng" },
+                  { label: "Tri thức", val: stats?.total_documents || 0, icon: Database, sub: "Tài liệu số" },
+                  { label: "Doanh thu", val: (stats?.total_revenue || 0).toLocaleString(), icon: CreditCard, sub: "Tổng dl" },
+                  { label: "Hoạt động", val: stats?.active_users_24h || 0, icon: Activity, sub: "Trong 24h" },
+                ].map((item, i) => (
+                  <div key={i} className="p-8 border border-zinc-100 bg-white group hover:border-black transition-all duration-500">
+                    <item.icon className="w-5 h-5 text-zinc-100 group-hover:text-black transition-colors mb-6" />
+                    <h3 className="text-3xl font-bold text-black tracking-tighter mb-2">{item.val}</h3>
+                    <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{item.label} ({item.sub})</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-12 border border-zinc-100 bg-zinc-50/10 space-y-8">
+                 <div className="flex items-center gap-4">
+                    <Server className="w-5 h-5" />
+                    <h2 className="text-sm font-bold uppercase tracking-widest">Hiệu năng máy chủ</h2>
+                 </div>
+                 <div className="grid grid-cols-3 gap-10">
+                    <div className="space-y-3">
+                        <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">CPU Usage</div>
+                        <div className="h-1 bg-zinc-100 overflow-hidden"><div className="h-full bg-black w-[15%]" /></div>
+                        <div className="text-xl font-bold tracking-tighter">15%</div>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Memory</div>
+                        <div className="h-1 bg-zinc-100 overflow-hidden"><div className="h-full bg-black w-[42%]" /></div>
+                        <div className="text-xl font-bold tracking-tighter">2.4 GB</div>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Storage</div>
+                        <div className="h-1 bg-zinc-100 overflow-hidden"><div className="h-full bg-black w-[68%]" /></div>
+                        <div className="text-xl font-bold tracking-tighter">142 GB</div>
+                    </div>
+                 </div>
+              </div>
             </div>
-            <div className="p-0">
-               <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-                 <p>Tính năng nhật ký chi tiết đang được đồng bộ dữ liệu.</p>
+          )}
+
+          {activeTab === "users" && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center gap-6">
+                 <h2 className="text-sm font-bold text-black tracking-widest uppercase">Danh sách định danh</h2>
+                 <div className="flex-1 h-px bg-zinc-50" />
+                 <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-[0.2em]">{users.length} BẢN GHI</span>
+               </div>
+
+               <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-zinc-50/50 border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
+                          <th className="px-10 py-6">Thành viên</th>
+                          <th className="px-10 py-6">Quyền hạn</th>
+                          <th className="px-10 py-6">Trạng thái</th>
+                          <th className="px-10 py-6 text-right">Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-50">
+                        {users.map((u: any) => (
+                          <tr key={u._id} className="hover:bg-zinc-50/20 transition-colors group">
+                            <td className="px-10 py-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center border border-zinc-100 font-black text-zinc-200 group-hover:bg-black group-hover:text-white transition-all">
+                                        {u.email[0].toUpperCase()}
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-black text-sm tracking-tight">{u.full_name || "Ẩn danh"}</span>
+                                        <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{u.email}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-10 py-8">
+                                <select
+                                    value={u.role}
+                                    disabled={user.role !== "admin"}
+                                    onChange={(e) => updateRole(u._id, e.target.value)}
+                                    className="bg-transparent border-b border-zinc-100 text-[11px] font-bold uppercase tracking-widest focus:border-black outline-none py-2 cursor-pointer transition-all"
+                                >
+                                    <option value="reader">Độc giả</option>
+                                    <option value="potential_author">Tác giả tiềm năng</option>
+                                    <option value="author">Tác giả</option>
+                                    <option value="moderator">Kiểm duyệt viên</option>
+                                    <option value="admin">Quản trị viên</option>
+                                </select>
+                            </td>
+                            <td className="px-10 py-8">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 ${u.is_active ? 'bg-black' : 'bg-zinc-100'}`} />
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${u.is_active ? 'text-black' : 'text-zinc-200'}`}>
+                                        {u.is_active ? 'Hoạt động' : 'Đình chỉ'}
+                                    </span>
+                                </div>
+                            </td>
+                            <td className="px-10 py-8 text-right">
+                                <button
+                                    onClick={() => updateStatus(u._id, !u.is_active)}
+                                    className={`h-10 px-6 border text-[9px] font-bold uppercase tracking-widest transition-all ${
+                                        u.is_active 
+                                        ? "border-zinc-100 text-zinc-300 hover:text-black hover:border-black" 
+                                        : "bg-black text-white border-black hover:bg-zinc-800"
+                                    }`}
+                                >
+                                    {u.is_active ? "Suspend" : "Activate"}
+                                </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {activeTab === "users" && (
-        <div className="bg-white border border-border  overflow-hidden animate-in fade-in duration-300">
-          <div className="px-6 py-4 border-b border-border bg-muted/30 flex justify-between items-center">
-            <h3 className="text-sm font-bold tracking-wider">Danh sách tài khoản</h3>
-            <span className="text-xs text-muted-foreground">{users.length} người dùng</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
-                  <th className="px-6 py-4 font-bold">Người dùng</th>
-                  <th className="px-6 py-4 font-bold">Vai trò</th>
-                  <th className="px-6 py-4 font-bold">Trạng thái</th>
-                  <th className="px-6 py-4 font-bold text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u: any) => (
-                  <tr key={u._id} className="border-b border-border last:border-0 hover:bg-muted/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-none bg-muted flex items-center justify-center font-bold text-xs">
-                          {u.email[0].toUpperCase()}
+          {activeTab === "moderation" && (
+            <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center gap-6">
+                 <h2 className="text-sm font-bold text-black tracking-widest uppercase">Hồ sơ ứng tuyển Tác giả</h2>
+                 <div className="flex-1 h-px bg-zinc-50" />
+               </div>
+
+               <div className="grid gap-6">
+                    {applications.length === 0 ? (
+                        <div className="py-40 text-center border border-dashed border-zinc-100 bg-zinc-50/20 text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
+                            Không có hồ sơ nào đang chờ
                         </div>
-                        <div>
-                          <p className="font-bold text-foreground">{u.full_name || 'Chưa đặt tên'}</p>
-                          <p className="text-[10px] text-muted-foreground">{u.email}</p>
+                    ) : (
+                        applications.map((app: any) => (
+                            <div key={app._id} className="bg-white border border-zinc-100 p-10 hover:border-black transition-all duration-500 shadow-sm flex flex-col gap-8">
+                                <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-bold tracking-tighter">{app.user_name}</h3>
+                                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{app.user_email}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 w-full md:w-auto">
+                                        <button 
+                                            onClick={() => reviewApplication(app._id, "REJECTED")}
+                                            className="flex-1 h-12 px-8 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-red-600 hover:border-red-600 transition-all"
+                                        >
+                                            Từ chối
+                                        </button>
+                                        <button 
+                                            onClick={() => reviewApplication(app._id, "APPROVED")}
+                                            className="flex-1 h-12 px-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                                        >
+                                            Duyệt hồ sơ
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-8 bg-zinc-50 border-l-[4px] border-black italic text-sm text-zinc-500 font-medium leading-relaxed">
+                                    "{app.motivation || "Ứng viên chưa cung cấp thông tin giới thiệu."}"
+                                </div>
+                            </div>
+                        ))
+                    )}
+               </div>
+            </div>
+          )}
+
+          {activeTab === "banners" && (
+            <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center justify-between gap-6">
+                 <h2 className="text-sm font-bold text-black tracking-widest uppercase">Truyền thông & Marketing</h2>
+                 <button className="h-14 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-3">
+                    <Plus className="w-5 h-5" /> Thêm Banner
+                 </button>
+               </div>
+
+               <div className="grid md:grid-cols-2 gap-8">
+                    {banners.length === 0 ? (
+                        <div className="col-span-full py-40 text-center border border-dashed border-zinc-200 bg-zinc-50/20 text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
+                            Chưa có chiến dịch nào được cấu hình
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {user.role === 'admin' ? (
-                        <select 
-                          value={u.role} 
-                          onChange={(e) => updateRole(u._id, e.target.value)}
-                          className="bg-muted/50 border border-border  px-2 py-1 text-xs outline-none focus:border-foreground"
-                        >
-                          <option value="reader">Reader</option>
-                          <option value="author">Author</option>
-                          <option value="moderator">Moderator</option>
-                          <option value="admin">Quản trị viên</option>
-                        </select>
-                      ) : (
-                        <span className="bg-muted px-2 py-1 rounded text-[10px] font-bold">{u.role}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
-                        <span className={`text-[10px] font-bold tracking-widest ${u.is_active ? 'text-black' : 'text-zinc-400'}`}>
-                          {u.is_active ? 'ĐANG HOẠT ĐỘNG' : 'ĐÃ TẠM KHÓA'}
-                        </span>
-                        {u.is_shadowbanned && <span className="text-[9px] text-zinc-500 font-bold tracking-widest">SHADOWBANNED</span>}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                       <div className="flex justify-end gap-2">
-                         <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 w-8 p-0" 
-                            onClick={() => toggleShadowban(u._id, u.is_shadowbanned)}
-                            title="Hạn chế người dùng"
-                         >
-                           {u.is_shadowbanned ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                         </Button>
-                         <Button 
-                            variant={u.is_active ? "secondary" : "default"} 
-                            size="sm" 
-                            className="h-8 text-[10px] font-bold"
-                            onClick={() => updateStatus(u._id, !u.is_active)}
-                         >
-                           {u.is_active ? "KHÓA" : "MỞ KHÓA"}
-                         </Button>
-                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                    ) : (
+                        banners.map((b: any) => (
+                            <div key={b.id} className="bg-white border border-zinc-100 group hover:border-black transition-all duration-700 shadow-sm">
+                                <div className="aspect-[16/7] bg-zinc-50 border-b border-zinc-100 overflow-hidden relative">
+                                    {b.image_url && <img src={b.image_url} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />}
+                                    <div className={`absolute top-4 right-4 px-3 py-1 text-[9px] font-bold uppercase border ${b.is_active ? 'bg-black text-white border-black' : 'bg-white text-zinc-300 border-zinc-100'}`}>
+                                        {b.is_active ? 'Active' : 'Hidden'}
+                                    </div>
+                                </div>
+                                <div className="p-8 space-y-6">
+                                    <h4 className="font-bold text-lg tracking-tight truncate">{b.title}</h4>
+                                    <div className="flex gap-2">
+                                        <button className="flex-1 h-10 border border-zinc-50 text-[9px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black hover:border-black transition-all">Edit</button>
+                                        <button onClick={() => deleteBanner(b.id)} className="flex-1 h-10 border border-zinc-50 text-[9px] font-bold uppercase tracking-widest text-zinc-200 hover:text-red-500 hover:border-red-500 transition-all">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
+               </div>
+            </div>
+          )}
 
-      {activeTab === "moderation" && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <div className="bg-white border border-border  overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
-              <h3 className="text-sm font-bold flex items-center gap-2 tracking-wider">
-                <UserPlus className="w-4 h-4" /> Đơn đăng ký tác giả ({applications.length})
-              </h3>
-            </div>
-            <div className="p-0">
-              {applications.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground text-sm">
-                  Không có đơn đăng ký nào đang chờ.
+          {activeTab === "payouts" && user.role === "admin" && (
+             <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
+                <div className="flex items-center gap-6">
+                  <h2 className="text-sm font-bold text-black tracking-widest uppercase">Yêu cầu tất toán</h2>
+                  <div className="flex-1 h-px bg-zinc-50" />
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
-                        <th className="px-6 py-4 font-bold">Người đăng ký</th>
-                        <th className="px-6 py-4 font-bold">Thông tin</th>
-                        <th className="px-6 py-4 font-bold text-right">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications.map((app: any) => (
-                        <tr key={app._id} className="border-b border-border last:border-0 hover:bg-muted/5 transition-colors">
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-foreground">{app.user_name || 'N/A'}</p>
-                            <p className="text-[10px] text-muted-foreground">{app.user_email}</p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-xs text-foreground italic">"{app.motivation || 'Không có mô tả'}"</p>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                             <div className="flex justify-end gap-2">
-                               <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => reviewApplication(app._id, 'REJECTED', 'Không đủ tiêu chuẩn')}>TỪ CHỐI</Button>
-                               <Button variant="default" size="sm" className="h-8 text-[10px] font-bold" onClick={() => reviewApplication(app._id, 'APPROVED')}>CHẤP THUẬN</Button>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr className="bg-zinc-50/50 border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
+                                    <th className="px-10 py-6">Tác giả</th>
+                                    <th className="px-10 py-6">Số tiền</th>
+                                    <th className="px-10 py-6">Ngày gửi</th>
+                                    <th className="px-10 py-6 text-right">Phê chuẩn</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-50">
+                                {payouts.map((p: any) => (
+                                    <tr key={p._id} className="hover:bg-zinc-50/20 transition-colors group">
+                                        <td className="px-10 py-8">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-bold text-black text-sm tracking-tight">{p.author_name}</span>
+                                                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{p.author_email}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-10 py-8 font-black text-lg tracking-tighter text-black">{p.amount?.toLocaleString()} <span className="text-[10px] italic">dl</span></td>
+                                        <td className="px-10 py-8 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{new Date(p.created_at).toLocaleDateString("vi-VN")}</td>
+                                        <td className="px-10 py-8 text-right">
+                                            {p.status === "pending" ? (
+                                                <div className="flex justify-end gap-3">
+                                                    <button onClick={() => reviewPayout(p._id, "rejected")} className="h-10 px-6 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all">Reject</button>
+                                                    <button onClick={() => reviewPayout(p._id, "approved")} className="h-10 px-8 bg-black text-white text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all">Approve</button>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-200">{p.status}</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-              )}
-            </div>
-          </div>
+             </div>
+          )}
 
-          <div className="bg-white border border-border  overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
-              <h3 className="text-sm font-bold flex items-center gap-2 tracking-wider">
-                <AlertTriangle className="w-4 h-4" /> Hàng đợi báo cáo ({reports.length})
-              </h3>
-            </div>
-            <div className="p-0">
-              {reports.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground text-sm">
-                  Không có nội dung nào bị báo cáo.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="bg-muted/10 border-b border-border text-muted-foreground text-[10px] tracking-widest">
-                        <th className="px-6 py-4 font-bold">Nội dung</th>
-                        <th className="px-6 py-4 font-bold">Lý do</th>
-                        <th className="px-6 py-4 font-bold text-right">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reports.map((r: any) => (
-                        <tr key={r._id} className="border-b border-border last:border-0 hover:bg-muted/5 transition-colors">
-                          <td className="px-6 py-4">
-                            <span className="bg-muted px-2 py-0.5 rounded text-[10px] font-bold mr-2">{r.item_type}</span>
-                            <span className="text-xs text-muted-foreground">{r.item_id}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-bold text-foreground text-xs">{r.reason}</p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{r.description || 'Không có mô tả chi tiết'}</p>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                             <div className="flex justify-end gap-2">
-                               <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold" onClick={() => resolveReport(r._id, 'ignore')}>BỎ QUA</Button>
-                               <Button variant="destructive" size="sm" className="h-8 text-[10px] font-bold" onClick={() => resolveReport(r._id, 'takedown')}>XÓA BỎ</Button>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+          {activeTab === "applications" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center gap-6">
+                  <h2 className="text-sm font-bold text-black tracking-widest uppercase">Đơn đăng ký tác giả</h2>
+                  <div className="flex-1 h-px bg-zinc-50" />
+                  <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-[0.2em]">{applications.length} ĐƠN CHỜ</span>
+              </div>
 
-      {activeTab === "config" && user.role === 'admin' && (
-        <div className="bg-white border border-border  overflow-hidden animate-in fade-in duration-300">
-           <div className="px-6 py-4 border-b border-border bg-muted/30">
-              <h3 className="text-sm font-bold tracking-wider">Cấu hình tham số toàn cục</h3>
-           </div>
-           <div className="p-8 max-w-2xl space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground tracking-widest">Tỉ lệ hoa hồng (0.0 - 1.0)</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={config?.commission_rate || 0} 
-                    onChange={(e) => setConfig({...config, commission_rate: parseFloat(e.target.value)})}
-                    className="w-full bg-muted/30 border border-border  px-4 py-2.5 text-sm outline-none focus:border-foreground"
-                  />
+              <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                              <tr className="bg-zinc-50/50 border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
+                                  <th className="px-10 py-6">Người ứng tuyển</th>
+                                  <th className="px-10 py-6">Lý do & Động lực</th>
+                                  <th className="px-10 py-6">Ngày gửi</th>
+                                  <th className="px-10 py-6 text-right">Xử lý</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-50">
+                              {applications.length === 0 ? (
+                                  <tr>
+                                      <td colSpan={4} className="px-10 py-32 text-center text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Không có đơn ứng tuyển nào</td>
+                                  </tr>
+                              ) : (
+                                  applications.map((app: any) => (
+                                      <tr key={app._id} className="hover:bg-zinc-50/20 transition-colors group">
+                                          <td className="px-10 py-8">
+                                              <div className="flex items-center gap-4">
+                                                  <div className="w-10 h-10 bg-black flex items-center justify-center text-white font-bold">
+                                                      {app.user_name?.[0]?.toUpperCase() || "U"}
+                                                  </div>
+                                                  <div className="flex flex-col gap-1">
+                                                      <span className="font-bold text-black uppercase tracking-widest text-[10px]">{app.user_name}</span>
+                                                      <span className="text-[9px] font-bold text-zinc-300">{app.user_email}</span>
+                                                  </div>
+                                              </div>
+                                          </td>
+                                          <td className="px-10 py-8">
+                                              <p className="text-[11px] text-zinc-500 font-medium italic line-clamp-2 max-w-md">"{app.motivation}"</p>
+                                          </td>
+                                          <td className="px-10 py-8">
+                                              <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                                                  {new Date(app.created_at).toLocaleDateString("vi-VN")}
+                                              </span>
+                                          </td>
+                                          <td className="px-10 py-8 text-right">
+                                              <div className="flex justify-end gap-3">
+                                                  <button 
+                                                      onClick={() => reviewApplication(app._id, "REJECTED")}
+                                                      className="h-9 px-6 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-red-600 hover:border-red-600 transition-all"
+                                                  >
+                                                      Từ chối
+                                                  </button>
+                                                  <button 
+                                                      onClick={() => reviewApplication(app._id, "APPROVED")}
+                                                      className="h-9 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-[0.98]"
+                                                  >
+                                                      Duyệt ngay
+                                                  </button>
+                                              </div>
+                                          </td>
+                                      </tr>
+                                  ))
+                              )}
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "audit" && user.role === "admin" && (
+            <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center gap-6">
+                 <h2 className="text-sm font-bold text-black tracking-widest uppercase">Nhật ký vận hành</h2>
+                 <div className="flex-1 h-px bg-zinc-50" />
+               </div>
+               <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+                   <div className="overflow-x-auto">
+                        <table className="w-full text-left text-[11px] border-collapse">
+                            <thead>
+                                <tr className="bg-zinc-50/50 border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
+                                    <th className="px-10 py-6">Thời gian</th>
+                                    <th className="px-10 py-6">Thao tác</th>
+                                    <th className="px-10 py-6">Đối tượng</th>
+                                    <th className="px-10 py-6">Chi tiết</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-50">
+                                {auditLogs.map((log: any, i: number) => (
+                                    <tr key={i} className="hover:bg-zinc-50/20 transition-colors">
+                                        <td className="px-10 py-6 text-zinc-300 font-bold">{new Date(log.timestamp).toLocaleTimeString("vi-VN")}</td>
+                                        <td className="px-10 py-6 font-bold text-black uppercase tracking-widest text-[10px]">{log.action}</td>
+                                        <td className="px-10 py-6 text-zinc-400 font-bold">{log.actor_id || "System"}</td>
+                                        <td className="px-10 py-6 text-zinc-500 font-medium italic truncate max-w-xs">"{log.details || log.message || "-"}"</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                   </div>
+               </div>
+            </div>
+          )}
+
+          {activeTab === "config" && user.role === "admin" && config && (
+            <div className="grid lg:grid-cols-12 gap-12 animate-in slide-in-from-bottom-4 duration-700">
+                <div className="lg:col-span-7 space-y-10">
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold tracking-tighter uppercase">Kinh tế hệ thống</h3>
+                            <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập tham số tài chính</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-bold text-black uppercase tracking-widest">Hoa hồng (%)</label>
+                                <input type="number" value={config.commission_rate * 100} className="w-full h-14 px-6 bg-zinc-50 border border-zinc-100 focus:border-black outline-none font-bold transition-all" />
+                            </div>
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-bold text-black uppercase tracking-widest">Phí rút (dl)</label>
+                                <input type="number" value={config.withdrawal_fee_dl || 1000} className="w-full h-14 px-6 bg-zinc-50 border border-zinc-100 focus:border-black outline-none font-bold transition-all" />
+                            </div>
+                        </div>
+                        <div className="pt-6">
+                            <button className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-black/5">Cập nhật tài chính</button>
+                        </div>
+                    </div>
+
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold tracking-tighter uppercase">Động cơ AI Core</h3>
+                            <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập mô hình ngôn ngữ</p>
+                        </div>
+                        <div className="relative group">
+                            <select className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black appearance-none cursor-pointer transition-all">
+                                <option value="llama3">LLama 3 (70B) - Phân tích</option>
+                                <option value="gpt-4o">GPT-4 Omni - Realtime</option>
+                            </select>
+                            <Cpu className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-hover:text-black pointer-events-none transition-all" />
+                        </div>
+                    </div>
+
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold tracking-tighter uppercase">Cộng đồng</h3>
+                            <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập quyền hạn thành viên</p>
+                        </div>
+                        <div className="flex items-center justify-between p-6 bg-zinc-50 border border-zinc-100">
+                             <span className="text-[11px] font-bold uppercase tracking-widest">Đăng ký Tác giả</span>
+                             <button 
+                                onClick={toggleAuthorRegistration}
+                                className={`w-12 h-6 transition-all relative ${config?.author_application_enabled ? 'bg-black' : 'bg-zinc-200'}`}
+                             >
+                                <div className={`absolute top-0.5 w-5 h-5 transition-all bg-white ${config?.author_application_enabled ? 'left-6.5' : 'left-0.5'}`} />
+                             </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground tracking-widest">Phí rút tiền (C)</label>
-                  <input 
-                    type="number" 
-                    value={config?.withdrawal_fee || 0} 
-                    onChange={(e) => setConfig({...config, withdrawal_fee: parseInt(e.target.value)})}
-                    className="w-full bg-muted/30 border border-border  px-4 py-2.5 text-sm outline-none focus:border-foreground"
-                  />
+
+                <div className="lg:col-span-5 space-y-10">
+                    <div className={`p-10 border transition-all duration-700 shadow-sm ${maintenanceMode ? 'bg-black text-white border-black' : 'bg-white border-zinc-100 text-black'}`}>
+                        <div className="flex items-center justify-between mb-8">
+                            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em]">Chế độ bảo trì</h3>
+                            <button onClick={toggleMaintenance} className={`w-14 h-8 transition-all relative ${maintenanceMode ? 'bg-white' : 'bg-zinc-100'}`}>
+                                <div className={`absolute top-1 w-6 h-6 transition-all ${maintenanceMode ? 'bg-black left-7' : 'bg-white left-1'}`} />
+                            </button>
+                        </div>
+                        <p className="text-[10px] font-medium leading-relaxed italic opacity-40">
+                            {maintenanceMode ? "Toàn bộ hệ thống đang được khóa để bảo trì định kỳ." : "Hệ thống đang hoạt động ổn định và công khai."}
+                        </p>
+                    </div>
+
+                    <div className="bg-white border border-zinc-100 p-10 space-y-8 shadow-sm">
+                         <h3 className="text-[11px] font-bold uppercase tracking-widest">Cơ sở hạ tầng</h3>
+                         <div className="grid gap-3">
+                            <button className="h-14 border border-zinc-50 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all flex items-center justify-center gap-3">
+                                <Database className="w-4 h-4" /> Sao lưu Database
+                            </button>
+                            <button className="h-14 border border-zinc-50 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all flex items-center justify-center gap-3">
+                                <HardDrive className="w-4 h-4" /> Xóa Cache Redis
+                            </button>
+                         </div>
+                    </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground tracking-widest">Mô hình AI mặc định</label>
-                <select 
-                  value={config?.ai_model || "gpt-4o"}
-                  onChange={(e) => setConfig({...config, ai_model: e.target.value})}
-                  className="w-full bg-muted/30 border border-border  px-4 py-2.5 text-sm outline-none focus:border-foreground appearance-none"
-                >
-                  <option value="gpt-4o">GPT-4 Omni</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                </select>
-              </div>
-              <div className="pt-4">
-                <Button onClick={() => updateConfig(config)} className="w-full md:w-fit px-8 font-bold text-xs tracking-widest h-11">
-                  Lưu cấu hình
-                </Button>
-              </div>
-              <div className="p-4 bg-muted/20 border border-border  flex gap-3">
-                <Info className="w-5 h-5 text-muted-foreground shrink-0" />
-                <p className="text-[10px] text-muted-foreground leading-relaxed">Các thay đổi về cấu hình sẽ được lưu vào cơ sở dữ liệu và áp dụng ngay lập tức cho các yêu cầu mới mà không cần khởi động lại dịch vụ Docker.</p>
-              </div>
-           </div>
-        </div>
-      )}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

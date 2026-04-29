@@ -50,12 +50,16 @@ class DocumentBase(BaseModel):
     price_dl: int = 0
     visibility: str = "public"
     password: Optional[str] = None
+    category: Optional[str] = "Chưa phân loại"
+    pages_count: Optional[int] = 0
+    preview_pages: int = 5
     scheduled_publish_at: Optional[datetime] = None
     chapters: List[Chapter] = []
     coauthors: List[str] = []
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
     flash_sale: Optional[dict] = None
+    publisher_name: Optional[str] = None
 
 
 class DocumentContentUpdate(BaseModel):
@@ -84,6 +88,7 @@ class DocumentResponse(DocumentBase):
     views: int = 0
     average_rating: float = 0.0
     rating_count: int = 0
+    has_purchased: bool = False
     
     class Config:
         populate_by_name = True

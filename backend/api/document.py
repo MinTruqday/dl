@@ -1,7 +1,7 @@
 from typing import Any
 from core.response import APIResponse
 from api.dependencies import get_current_user_optional, get_current_user, require_role
-from fastapi import APIRouter, Depends, Response, Query
+from fastapi import APIRouter, Depends, Response, Query, status
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate
@@ -72,8 +72,11 @@ async def request_compilation(
     return APIResponse(data=await DocumentService.request_compilation(document_id, current_user), message="Đã gửi yêu cầu biên dịch tài liệu.", status=status.HTTP_202_ACCEPTED)
 
 @router.get("/slug/{slug}", response_model=APIResponse[DocumentResponse])
-async def get_document_by_slug(slug: str) -> Any:
-    return APIResponse(data=await DocumentService.get_document_by_slug(slug), message="Lấy tài liệu theo đường dẫn thành công.", status=status.HTTP_200_OK)
+async def get_document_by_slug(
+    slug: str,
+    current_user: UserInDB = Depends(get_current_user_optional)
+) -> Any:
+    return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user), message="Lấy tài liệu theo đường dẫn thành công.", status=status.HTTP_200_OK)
 
 @router.put("/{document_id}/cover", response_model=APIResponse[DocumentResponse])
 async def update_cover(
@@ -119,13 +122,21 @@ async def generate_qr_code(document_id: str):
     content = await DocumentService.generate_qr_code(document_id)
     return APIResponse(data=Response(content=content, media_type="image/png"), message="Tạo mã QR cho tài liệu thành công.", status=200)
 
-@router.post("/{document_id}/series", response_model=APIResponse[Any])
-async def link_series(document_id: str, series_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await DocumentService.link_series(document_id, series_id, current_user), message="Liên kết chuỗi tài liệu thành công.", status=200)
+@router.get("/documents/{document_id}/chapters", response_model=APIResponse[Any])
+async def get_document_chapters(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
+    return APIResponse(data=await DocumentService.get_document_chapters(document_id, current_user), message="Lấy danh sách chương thành công.", status=200)
+
+@router.post("/documents/{document_id}/ai-cover", response_model=APIResponse[Any])
+async def generate_ai_cover(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await DocumentService.generate_ai_cover(document_id, current_user), message="Khởi tạo ảnh bìa AI thành công.", status=200)
 
 @router.post("/{document_id}/warnings", response_model=APIResponse[Any])
 async def set_warnings(document_id: str, warnings: List[str], current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await DocumentService.set_warnings(document_id, warnings, current_user), message="Thiết lập cảnh báo nội dung thành công.", status=200)
+
+@router.post("/{document_id}/series", response_model=APIResponse[Any])
+async def link_series(document_id: str, series_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await DocumentService.link_series(document_id, series_id, current_user), message="Liên kết chuỗi tài liệu thành công.", status=200)
 
 @router.post("/{document_id}/custom-design", response_model=APIResponse[Any])
 async def set_custom_design(document_id: str, custom_css: Optional[str] = None, custom_font: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):

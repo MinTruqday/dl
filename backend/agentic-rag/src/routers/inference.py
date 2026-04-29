@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 import asyncio
+from src.core.config import settings
 from src.memory.cache_manager import semantic_cache
 
 router = APIRouter()
@@ -47,8 +48,8 @@ async def generate_text(req: GenerationRequest):
         if cached_result:
             return {"result": cached_result, "cached": True}
 
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         def run_model():
             from transformers import pipeline
             pipe = pipeline("text-generation", model=model_name, max_new_tokens=req.max_tokens, token=hf_token)
@@ -74,8 +75,8 @@ async def generate_raw_text(req: GenerationRequest):
         if cached_result:
             return {"result": cached_result, "cached": True}
 
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         def run_model():
             from transformers import pipeline
             pipe = pipeline("text-generation", model=model_name, max_new_tokens=req.max_tokens, token=hf_token)
@@ -101,8 +102,8 @@ async def translate_text(req: TranslationRequest):
                 "Spanish": "spa_Latn", "es": "spa_Latn"
             }
             tgt_code = lang_map.get(req.target_lang, "vie_Latn")
-            model_id = os.environ.get("NLLB_MODEL")
-            hf_token = os.environ.get("HF_TOKEN")
+            model_id = settings.NLLB_MODEL
+            hf_token = settings.HF_TOKEN
             
             tokenizer = AutoTokenizer.from_pretrained(model_id, src_lang="eng_Latn", token=hf_token)
             model = AutoModelForSeq2SeqLM.from_pretrained(model_id, token=hf_token)
@@ -124,8 +125,8 @@ async def analyze_sentiment(req: SentimentRequest):
         combined_text = "\n---\n".join(req.texts[:20])
         prompt = f"Phân tích cảm xúc của các đánh giá sau đây. Trả về kết quả JSON với các trường: sentiment (positive/neutral/negative), positive_pct, negative_pct, summary (tóm tắt ngắn gọn).\n\nĐánh giá:\n{combined_text}\n\nJSON:"
         
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         
         async def call_llm():
             from langchain_huggingface import HuggingFaceEndpoint
@@ -150,8 +151,8 @@ async def check_grammar(req: GrammarRequest):
     try:
         prompt = f"Kiểm tra ngữ pháp và lỗi chính tả cho đoạn văn sau. Trả về JSON gồm: issues (danh sách lỗi), score (0-100), message (nhận xét chung).\n\nĐoạn văn: {req.text[:2000]}\n\nJSON:"
         
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         
         async def call_llm():
             from langchain_huggingface import HuggingFaceEndpoint
@@ -172,11 +173,11 @@ async def check_grammar(req: GrammarRequest):
 @router.post("/generate-cover")
 async def generate_cover(req: CoverRequest):
     try:
-        hf_token = os.environ.get("HF_TOKEN")
+        hf_token = settings.HF_TOKEN
         if not hf_token:
             raise HTTPException(status_code=500, detail="Cấu hình HF_TOKEN bị thiếu.")
-
-        model_id = "black-forest-labs/FLUX.1-schnell"
+        
+        model_id = settings.IMAGE_GEN_MODEL
         api_url = f"https://api-inference.huggingface.co/models/{model_id}"
         headers = {"Authorization": f"Bearer {hf_token}"}
         
@@ -197,13 +198,13 @@ async def generate_cover(req: CoverRequest):
         
         s3 = boto3.client(
             "s3",
-            endpoint_url=os.environ.get("MINIO_ENDPOINT"),
-            aws_access_key_id=os.environ.get("MINIO_ACCESS_KEY"),
-            aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY"),
-            region_name=os.environ.get("MINIO_REGION", "us-east-1")
+            endpoint_url=settings.MINIO_ENDPOINT,
+            aws_access_key_id=settings.MINIO_ACCESS_KEY,
+            aws_secret_access_key=settings.MINIO_SECRET_KEY,
+            region_name=settings.MINIO_REGION
         )
         
-        bucket = os.environ.get("MINIO_BUCKET_NAME")
+        bucket = settings.MINIO_BUCKET_NAME
         filename = f"covers/{uuid.uuid4()}.jpg"
         
         s3.upload_fileobj(
@@ -213,7 +214,7 @@ async def generate_cover(req: CoverRequest):
             ExtraArgs={'ContentType': 'image/jpeg'}
         )
         
-        cover_url = f"{os.environ.get('MINIO_ENDPOINT')}/{bucket}/{filename}"
+        cover_url = f"{settings.MINIO_ENDPOINT}/{bucket}/{filename}"
         
         return {
             "cover_url": cover_url, 
@@ -237,8 +238,8 @@ async def generate_flashcard(req: FlashcardRequest):
             except:
                 pass
 
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         
         async def call_llm():
             from langchain_huggingface import HuggingFaceEndpoint
@@ -277,8 +278,8 @@ async def chat_endpoint(req: ChatRequest):
         
         prompt = f"Bạn là một trợ lý AI hữu ích. Dưới đây là ngữ cảnh cuộc trò chuyện:\n{history_context}\n\nUser: {req.message}\nAI:"
         
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         
         async def call_llm():
             from langchain_huggingface import HuggingFaceEndpoint
@@ -304,8 +305,8 @@ async def get_synonyms(req: SynonymsRequest):
     try:
         prompt = f"Liệt kê 5 từ đồng nghĩa với từ '{req.word}' trong ngữ cảnh: '{req.context}'. Chỉ trả về danh sách các từ cách nhau bởi dấu phẩy, không giải thích thêm."
         
-        model_name = os.environ.get('LLAMA_MODEL')
-        hf_token = os.environ.get("HF_TOKEN")
+        model_name = settings.LLAMA_MODEL
+        hf_token = settings.HF_TOKEN
         
         async def call_llm():
             from langchain_huggingface import HuggingFaceEndpoint
