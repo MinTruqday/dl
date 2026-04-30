@@ -113,6 +113,7 @@ class StatusUpdateCreate(BaseModel):
     bg_color: Optional[str] = None
     font_style: Optional[str] = None
     repost_post_id: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
 
 class StatusUpdateInDB(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
@@ -145,6 +146,7 @@ class StatusUpdateInDB(BaseModel):
     bg_color: Optional[str] = None
     font_style: Optional[str] = None
     repost_post_id: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     reactions: Dict[str, int] = {}

@@ -1336,16 +1336,75 @@ export async function createStoryAPI(payload: {
     font_style?: string,
     music_url?: string,
     music_title?: string,
-    privacy?: string
+    privacy?: string,
+    poll_options?: string[],
+    quiz_options?: string[],
+    correct_option?: number
 }) {
-    if (typeof window === "undefined") return;
     const token = getToken();
-    const res = await fetch(`${API_URL}/social/story`, {
+    const res = await fetch(`${API_URL}/social/stories`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
         body: JSON.stringify(payload)
     });
-    if (!res.ok) throw new Error("Story failed");
+    if (!res.ok) throw new Error("Không thể đăng tin tức.");
+    return await res.json();
+}
+
+export async function getMyStoriesAPI() {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/me`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Không thể tải tin tức của bạn.");
+    return await res.json();
+}
+
+export async function getArchivedStoriesAPI() {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/me/archive`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Không thể tải kho lưu trữ tin tức.");
+    return await res.json();
+}
+
+export async function recordStoryViewAPI(storyId: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/${storyId}/view`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    return res.ok;
+}
+
+export async function reactToStoryAPI(storyId: string, reactionType: string = "heart") {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/${storyId}/react?reaction_type=${reactionType}`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Thao tác cảm xúc thất bại.");
+    return await res.json();
+}
+
+export async function archiveStoryAPI(storyId: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/${storyId}/archive`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Giao thức lưu trữ thất bại.");
+    return await res.json();
+}
+
+export async function deleteStoryAPI(storyId: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/social/stories/${storyId}`, {
+        method: "DELETE",
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Xóa tin tức thất bại.");
     return await res.json();
 }
 

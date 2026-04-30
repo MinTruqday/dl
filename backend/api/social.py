@@ -9,6 +9,10 @@ from services.social import SocialService
 
 router = APIRouter(prefix="/social")
 
+@router.get("/ai/feed-summary", response_model=APIResponse[Any])
+async def get_ai_feed_summary(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data={"summary": await SocialService.generate_ai_feed_summary(current_user)}, message="Tạo tóm tắt bảng tin thành công.", status=status.HTTP_200_OK)
+
 @router.get("/intersection-friends", response_model=APIResponse[Any], dependencies=[Depends(RateLimiter(calls=50, period=120))])
 async def get_friend_suggestions(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data={"suggestions": await SocialService.get_friend_suggestions_by_intersection(current_user)}, message="Lấy gợi ý bạn bè thành công.", status=status.HTTP_200_OK)

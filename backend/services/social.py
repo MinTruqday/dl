@@ -10,8 +10,33 @@ from models.social import StatusUpdateInDB, FollowInDB
 from loguru import logger
 import shutil
 import os
+import httpx
+from core.config import settings
 
 class SocialService:
+    @staticmethod
+    async def generate_ai_feed_summary(current_user: UserInDB) -> str:
+        feed = await SocialService.get_social_feed("foryou", None, 0, 10, current_user)
+        if not feed:
+            return "Chưa có nội dung mới nào để tóm tắt."
+        
+        texts = [f"{item['user']['full_name']}: {item['content']}" for item in feed if item.get('content')]
+        combined_text = "\n".join(texts)
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{settings.AGENTIC_RAG_URL}/inference/summarize",
+                    json={"text": combined_text, "language": "vi"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data.get("summary", "Không thể tạo tóm tắt vào lúc này.")
+        except Exception as e:
+            logger.error(f"Lỗi tóm tắt AI: {str(e)}")
+            
+        return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
+
     @staticmethod
     async def upload_media(file, current_user: UserInDB):
         ext = file.filename.split(".")[-1].lower()
@@ -37,21 +62,35 @@ class SocialService:
         db = db_client.mongodb.get_default_database()
         user_col = db["users"]
         follows_col = db["follows"]
-        following = await follows_col.find({"follower_id": current_user.id}).to_list(None)
-        exclude_ids = [f["following_id"] for f in following] + [current_user.id]
+        
+        following = await follows_col.find({"follower_id": str(current_user.id)}).to_list(length=None)
+        exclude_ids = [f["following_id"] for f in following] + [str(current_user.id)]
+        
+        user_tags = current_user.interests if hasattr(current_user, 'interests') else []
+        
         pipeline = [
             {"$match": {"_id": {"$nin": exclude_ids}, "is_active": True}},
-            {"$sample": {"size": 5}},
-            {"$project": {"_id": 1, "full_name": 1, "avatar_url": 1, "bio": 1, "role": 1}}
+            {"$addFields": {
+                "total_match": {
+                    "$size": {
+                        "$setIntersection": ["$interests", user_tags]
+                    }
+                }
+            }},
+            {"$sort": {"total_match": -1}},
+            {"$limit": 5},
+            {"$project": {"_id": 1, "full_name": 1, "avatar_url": 1, "bio": 1, "role": 1, "total_match": 1}}
         ]
+        
         suggestions_cursor = await user_col.aggregate(pipeline).to_list(length=5)
         suggestions = []
         for doc in suggestions_cursor:
             suggestions.append({
-                "id": str(doc["_id"]),
-                "full_name": doc.get("full_name", "Ẩn danh"),
+                "_id": str(doc["_id"]),
+                "display_name": doc.get("full_name", "Người dùng"),
                 "avatar_url": doc.get("avatar_url"),
                 "bio": doc.get("bio"),
+                "total_match": doc.get("total_match", 0),
                 "role": doc.get("role", "READER")
             })
         return suggestions
@@ -103,6 +142,13 @@ class SocialService:
                 "poll_options": doc.get("poll_options", []),
                 "attached_document_id": doc.get("attached_document_id"),
                 "attached_document_title": doc.get("attached_document_title"),
+                "is_premium": doc.get("is_premium", False),
+                "price": doc.get("price", 0),
+                "read_progress": doc.get("read_progress"),
+                "item_type": doc.get("item_type", "post"),
+                "quote_text": doc.get("quote_text"),
+                "bg_color": doc.get("bg_color"),
+                "font_style": doc.get("font_style"),
                 "created_at": doc.get("created_at", datetime.utcnow()).isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at"),
                 "reactions": doc.get("reactions", {}),
                 "user_reaction": doc.get("reaction_users", {}).get(str(current_user.id)) if current_user else None,
@@ -138,8 +184,19 @@ class SocialService:
             tags=final_tags,
             mentions=mentions_ids,
             privacy=request.privacy or "public",
+            comment_privacy=request.comment_privacy or "public",
             attached_document_id=request.attached_document_id,
             attached_document_title=request.attached_document_title,
+            media_urls=request.media_urls or [],
+            is_premium=request.is_premium,
+            price=request.price or 0,
+            read_progress=request.read_progress,
+            item_type=request.item_type or "post",
+            quote_text=request.quote_text,
+            bg_color=request.bg_color,
+            font_style=request.font_style,
+            repost_post_id=request.repost_post_id,
+            scheduled_at=request.scheduled_at,
             poll_options=[{"id": str(uuid.uuid4()), "text": opt, "votes": 0} for opt in request.poll_options] if request.poll_options else [],
             created_at=datetime.utcnow()
         )
@@ -412,6 +469,7 @@ class SocialService:
             "title": b.get("title"),
             "author": b.get("author", "Unknown"),
             "cover_url": b.get("cover_url"),
+            "mentions": b.get("views", 0),
             "average_rating": b.get("average_rating", 0)
         } for b in documents]
 

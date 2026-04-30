@@ -275,7 +275,7 @@ export default function DocumentDetailsPage() {
                     <div className="space-y-3">
                          <button 
                             onClick={handleRead}
-                            className="w-full h-18 bg-black text-white text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all flex items-center justify-center gap-4 active:scale-95 rounded-sm"
+                            className="w-full h-14 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 active:scale-95 rounded-sm"
                          >
                             <BookOpen className="w-4 h-4" />
                             Đọc tài liệu ngay
@@ -283,7 +283,7 @@ export default function DocumentDetailsPage() {
 
                          <button 
                             onClick={handlePreview}
-                            className="w-full h-18 bg-white text-black border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.3em] hover:border-black transition-all flex items-center justify-center gap-4 active:scale-95 rounded-sm"
+                            className="w-full h-14 bg-white text-black border border-zinc-200 text-[11px] font-bold uppercase tracking-[0.2em] hover:border-black transition-all flex items-center justify-center gap-3 active:scale-95 rounded-sm"
                          >
                             <Eye className="w-4 h-4" />
                             Xem trước nội dung
@@ -292,7 +292,7 @@ export default function DocumentDetailsPage() {
                          {docData.is_premium && (
                             <button 
                                 onClick={handlePurchase}
-                                className="w-full h-18 bg-zinc-50 text-black border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-black hover:text-white transition-all flex items-center justify-center gap-4 active:scale-95 rounded-sm"
+                                className="w-full h-14 bg-zinc-50 text-black border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all flex items-center justify-center gap-3 active:scale-95 rounded-sm"
                             >
                                 <ShoppingCart className="w-4 h-4" />
                                 Sở hữu {docData.price_dl?.toLocaleString()} DL
@@ -301,17 +301,17 @@ export default function DocumentDetailsPage() {
                     </div>
 
                     <div className="pt-12 border-t border-zinc-100 grid grid-cols-2 gap-6">
-                        <button onClick={handleBookmark} className="flex flex-col items-center gap-4 group transition-all">
-                            <div className={`w-full h-18 border flex items-center justify-center transition-all rounded-sm ${isBookmarked ? 'bg-black text-white border-black' : 'bg-white text-zinc-100 border-zinc-100 group-hover:border-black group-hover:text-black'}`}>
+                        <button onClick={handleBookmark} className="flex flex-col items-center gap-3 group transition-all">
+                            <div className={`w-full h-14 border flex items-center justify-center transition-all rounded-sm ${isBookmarked ? 'bg-black text-white border-black' : 'bg-white text-zinc-300 border-zinc-200 group-hover:border-black group-hover:text-black'}`}>
                                 <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
                             </div>
-                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest group-hover:text-black">{isBookmarked ? "Đã lưu" : "Lưu lại"}</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover:text-black transition-colors">{isBookmarked ? "Đã lưu" : "Lưu lại"}</span>
                         </button>
-                        <button onClick={handleShare} className="flex flex-col items-center gap-4 group transition-all">
-                            <div className="w-full h-18 border border-zinc-100 text-zinc-100 flex items-center justify-center bg-white group-hover:border-black group-hover:text-black transition-all rounded-sm">
+                        <button onClick={handleShare} className="flex flex-col items-center gap-3 group transition-all">
+                            <div className="w-full h-14 border border-zinc-200 text-zinc-300 flex items-center justify-center bg-white group-hover:border-black group-hover:text-black transition-all rounded-sm">
                                 <Share2 className="w-5 h-5" />
                             </div>
-                            <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest group-hover:text-black">Chia sẻ</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-hover:text-black transition-colors">Chia sẻ</span>
                         </button>
                     </div>
 
