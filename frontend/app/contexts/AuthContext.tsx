@@ -32,23 +32,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const fetchUser = async () => {
-    setIsLoading(true);
     const token = getToken();
-    if (token) {
-      try {
-        const data = await getUserMe();
-        if (data) {
-          setUser(data);
-          // Sync token and role to cookie for middleware
-          document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
-          document.cookie = `role=${data.role}; path=/; max-age=604800; SameSite=Lax`;
-        } else {
-          logoutState();
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-        logoutState();
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const data = await getUserMe();
+      if (data) {
+        setUser(data);
+        document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `role=${data.role}; path=/; max-age=604800; SameSite=Lax`;
+      } else {
+        clearAuth();
       }
+    } catch (error) {
+      clearAuth();
     }
     setIsLoading(false);
   };
@@ -59,17 +60,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginState = async (token: string) => {
     localStorage.setItem("doclib_token", token);
-    // Sync token to cookie for middleware
     document.cookie = `token=${token}; path=/; max-age=604800; SameSite=Lax`;
     await fetchUser();
   };
 
-  const logoutState = () => {
+  const clearAuth = () => {
     localStorage.removeItem("doclib_token");
-    // Clear cookies
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     setUser(null);
+  };
+
+  const logoutState = () => {
+    clearAuth();
     router.push("/login");
   };
 

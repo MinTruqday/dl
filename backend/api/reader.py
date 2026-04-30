@@ -88,6 +88,14 @@ async def update_general_settings(data: SettingsUpdateRequest, current_user: Use
 async def get_history(skip: int = Query(0), limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.get_reading_history(current_user, skip, limit), message="Lấy lịch sử đọc sách thành công.", status=200)
 
+@router.delete("/history", response_model=APIResponse[Any])
+async def clear_history(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ReaderService.clear_reading_history(current_user), message="Đã xóa toàn bộ lịch sử đọc sách.", status=200)
+
+@router.delete("/history/{document_id}", response_model=APIResponse[Any])
+async def delete_history_item(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ReaderService.delete_history_item(document_id, current_user), message="Đã xóa mục lịch sử thành công.", status=200)
+
 @router.post("/progress", response_model=APIResponse[Any])
 async def update_progress(data: ProgressUpdate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ReaderService.update_progress(data, current_user), message="Cập nhật tiến độ đọc sách thành công.", status=200)

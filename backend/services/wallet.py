@@ -144,6 +144,23 @@ class WalletService:
         return txs
 
     @staticmethod
+    async def get_detailed_history(current_user, skip: int = 0, limit: int = 30, tx_type: str = None):
+        db = db_client.mongodb.get_default_database()
+        query = {"user_id": str(current_user.id)}
+        if tx_type:
+            query["type"] = tx_type
+            
+        cursor = db["transactions"].find(query).sort("created_at", -1).skip(skip).limit(limit)
+        txs = await cursor.to_list(length=limit)
+        
+        for tx in txs:
+            tx["_id"] = str(tx["_id"])
+            if isinstance(tx.get("created_at"), datetime):
+                tx["created_at"] = tx["created_at"].isoformat()
+                
+        return txs
+
+    @staticmethod
     async def unlock_post(req, current_user):
         db = db_client.mongodb.get_default_database()
         target_post = await db["status_updates"].find_one({"_id": ObjectId(req.post_id)})

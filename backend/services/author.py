@@ -13,32 +13,82 @@ from models.user import UserInDB
 
 class AuthorService:
     @staticmethod
-    async def invite_coauthor(document_id: str, invitee_id_or_email: str, current_user) -> dict:
+    async def send_collaboration_invite(document_id: str, invitee_email: str, role: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền truy cập.")
 
-        invitee = await db["users"].find_one({
-            "$or": [{"_id": invitee_id_or_email}, {"email": invitee_id_or_email}]
-        })
+        invitee = await db["users"].find_one({"email": invitee_email})
         if not invitee:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng này trên hệ thống.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng với email này.")
         
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
-            raise HTTPException(status_code=400, detail="Bạn không thể tự mời chính mình làm đồng tác giả.")
+            raise HTTPException(status_code=400, detail="Bạn không thể tự mời chính mình cộng tác.")
+            
+        existing_invite = await db["collaboration_invites"].find_one({
+            "document_id": document_id,
+            "invitee_id": invitee_id,
+            "status": "PENDING"
+        })
+        if existing_invite:
+            raise HTTPException(status_code=400, detail="Đã có một lời mời đang chờ người này xác nhận.")
             
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail="Người này đã là đồng tác giả của tài liệu.")
+            raise HTTPException(status_code=400, detail="Người này đã là cộng tác viên của tài liệu.")
             
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {"$push": {"coauthors": invitee_id}, "$set": {"updated_at": datetime.utcnow()}}
+        invite = {
+            "_id": str(uuid.uuid4()),
+            "document_id": document_id,
+            "document_title": doc.get("title", "Tài liệu không tên"),
+            "inviter_id": str(current_user.id),
+            "inviter_name": current_user.full_name,
+            "invitee_id": invitee_id,
+            "role": role,
+            "status": "PENDING",
+            "created_at": datetime.utcnow()
+        }
+        await db["collaboration_invites"].insert_one(invite)
+        logger.info(f"User {current_user.id} invited {invitee_id} to collaborate on {document_id}")
+        return {"message": "Đã gửi lời mời cộng tác thành công.", "invite_id": invite["_id"]}
+
+    @staticmethod
+    async def get_my_collaboration_invites(current_user) -> list:
+        db = db_client.mongodb.get_default_database()
+        invites = await db["collaboration_invites"].find(
+            {"invitee_id": str(current_user.id), "status": "PENDING"}
+        ).sort("created_at", -1).to_list(length=100)
+        return invites
+
+    @staticmethod
+    async def respond_to_collaboration_invite(invite_id: str, status: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        invite = await db["collaboration_invites"].find_one({
+            "_id": invite_id,
+            "invitee_id": str(current_user.id),
+            "status": "PENDING"
+        })
+        if not invite:
+            raise HTTPException(status_code=404, detail="Lời mời không tồn tại hoặc đã được xử lý.")
+            
+        if status not in ["ACCEPTED", "REJECTED"]:
+            raise HTTPException(status_code=400, detail="Trạng thái phản hồi không hợp lệ.")
+            
+        await db["collaboration_invites"].update_one(
+            {"_id": invite_id},
+            {"$set": {"status": status, "responded_at": datetime.utcnow()}}
         )
-        logger.info(f"User {current_user.id} invited {invitee_id} as co-author for document {document_id}")
-        return {"message": "Đã thêm đồng tác giả thành công."}
+        
+        if status == "ACCEPTED":
+            await db["documents"].update_one(
+                {"_id": invite["document_id"]},
+                {"$push": {"coauthors": str(current_user.id)}, "$set": {"updated_at": datetime.utcnow()}}
+            )
+            
+        logger.info(f"User {current_user.id} {status} collaboration invite {invite_id}")
+        return {"message": f"Đã { 'chấp nhận' if status == 'ACCEPTED' else 'từ chối' } lời mời cộng tác."}
 
     @staticmethod
     async def reply_to_review(review_id: str, reply_text: str, current_user) -> dict:
@@ -217,6 +267,24 @@ class AuthorService:
             }
             for c in coupons
         ]
+
+    @staticmethod
+    async def toggle_coupon_status(coupon_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        coupon = await db["coupons"].find_one({"_id": coupon_id, "author_id": str(current_user.id)})
+        if not coupon:
+            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
+        new_status = not coupon.get("is_active", True)
+        await db["coupons"].update_one({"_id": coupon_id}, {"$set": {"is_active": new_status}})
+        return {"message": "Đã cập nhật trạng thái mã giảm giá.", "is_active": new_status}
+
+    @staticmethod
+    async def delete_coupon(coupon_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        res = await db["coupons"].delete_one({"_id": coupon_id, "author_id": str(current_user.id)})
+        if res.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
+        return {"message": "Đã xóa mã giảm giá thành công."}
 
     @staticmethod
     async def get_chapter_dropoff(document_id: str, current_user) -> list:
@@ -491,7 +559,6 @@ class AuthorService:
             })
         return result
 
-    # Monetization methods
     @staticmethod
     async def create_subscription_plan(plan_data: dict, current_user: UserInDB):
         db = db_client.mongodb.get_default_database()
@@ -594,3 +661,47 @@ class AuthorService:
         
         logger.info(f"User {current_user.id} tipped {amount} dl to author {author_id}")
         return {"message": f"Bạn đã gửi {amount} dl ủng hộ tác giả thành công."}
+
+    @staticmethod
+    async def get_assets(current_user, asset_type: str = "all") -> list:
+        db = db_client.mongodb.get_default_database()
+        query = {"author_id": str(current_user.id)}
+        if asset_type != "all":
+            query["type"] = {"$regex": asset_type, "$options": "i"}
+        
+        assets = await db["assets"].find(query).sort("created_at", -1).to_list(length=200)
+        return [
+            {
+                "id": str(a["_id"]),
+                "filename": a.get("filename", ""),
+                "type": a.get("type", "unknown"),
+                "size_bytes": a.get("size_bytes", 0),
+                "url": a.get("url", ""),
+                "created_at": a["created_at"].isoformat() if isinstance(a.get("created_at"), datetime) else a.get("created_at"),
+            }
+            for a in assets
+        ]
+
+    @staticmethod
+    async def upload_asset(data: dict, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        asset = {
+            "_id": str(uuid.uuid4()),
+            "author_id": str(current_user.id),
+            "filename": data["filename"],
+            "type": data.get("type", "image"),
+            "size_bytes": data.get("size_bytes", 0),
+            "url": data["url"],
+            "created_at": datetime.utcnow(),
+        }
+        await db["assets"].insert_one(asset)
+        logger.info(f"Author {current_user.id} uploaded asset: {data['filename']}")
+        return {"message": "Tải lên tài nguyên thành công.", "asset": asset}
+
+    @staticmethod
+    async def delete_asset(asset_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        res = await db["assets"].delete_one({"_id": asset_id, "author_id": str(current_user.id)})
+        if res.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Tài nguyên không tồn tại.")
+        return {"message": "Đã xóa tài nguyên thành công."}

@@ -8,15 +8,18 @@ from src.store.vector_store import vector_store
 llama_model = os.environ.get("LLAMA_MODEL")
 hf_token = os.environ.get("HF_TOKEN")
 
+from langchain_huggingface import ChatHuggingFace
 _hf = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
-    temperature=0.1
+    temperature=0.1,
+    task="conversational"
 )
+_llm = ChatHuggingFace(llm=_hf)
 
 class RetrievalAgent:
     def __init__(self):
-        self.llm = _hf
+        self.llm = _llm
 
     async def multi_query_retrieve(self, question: str, document_id: Optional[str] = None, k: int = 5) -> List[Dict]:
         logger.info(f"Multi-query retrieval for: {question}")
@@ -31,7 +34,8 @@ class RetrievalAgent:
         )
         
         try:
-            queries_text = self.llm.invoke(prompt.format(question=question))
+            response = self.llm.invoke(prompt.format(question=question))
+            queries_text = response.content
             queries = [q.strip() for q in queries_text.split("\n") if q.strip()]
             queries.append(question)
         except Exception as e:

@@ -19,7 +19,10 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/explore') || 
     pathname.startsWith('/leaderboard') || 
     pathname.startsWith('/search') || 
+    pathname.startsWith('/document') ||
     pathname.startsWith('/documents') ||
+    pathname.startsWith('/authors') ||
+    pathname.startsWith('/preview') ||
     pathname.startsWith('/auth/google/callback')
 
   if (!token && !isAuthRoute && !isPublicRoute) {

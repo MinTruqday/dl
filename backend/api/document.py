@@ -122,11 +122,11 @@ async def generate_qr_code(document_id: str):
     content = await DocumentService.generate_qr_code(document_id)
     return APIResponse(data=Response(content=content, media_type="image/png"), message="Tạo mã QR cho tài liệu thành công.", status=200)
 
-@router.get("/documents/{document_id}/chapters", response_model=APIResponse[Any])
+@router.get("/{document_id}/chapters", response_model=APIResponse[Any])
 async def get_document_chapters(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
     return APIResponse(data=await DocumentService.get_document_chapters(document_id, current_user), message="Lấy danh sách chương thành công.", status=200)
 
-@router.post("/documents/{document_id}/ai-cover", response_model=APIResponse[Any])
+@router.post("/{document_id}/ai-cover", response_model=APIResponse[Any])
 async def generate_ai_cover(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await DocumentService.generate_ai_cover(document_id, current_user), message="Khởi tạo ảnh bìa AI thành công.", status=200)
 

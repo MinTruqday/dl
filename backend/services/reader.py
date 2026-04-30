@@ -34,7 +34,6 @@ class ReaderService:
     @staticmethod
     async def update_general_settings(new_settings: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        # Merge settings
         user = await db["users"].find_one({"_id": str(current_user.id)})
         current_settings = user.get("settings", {}) if user else {}
         current_settings.update(new_settings)
@@ -51,10 +50,35 @@ class ReaderService:
         history = await db["reading_history"].find({"user_id": str(current_user.id)}).sort("last_read_at", -1).skip(skip).limit(limit).to_list(length=limit)
         result = []
         for h in history:
-            doc = await db["documents"].find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1, "cover_url": 1})
+            doc = await db["documents"].find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1, "cover_url": 1, "author_id": 1})
             if doc:
-                result.append({"document_id": h["document_id"], "document_title": doc.get("title", ""), "document_slug": doc.get("slug", ""), "cover_url": doc.get("cover_url"), "progress_percentage": h.get("progress_percentage", 0), "last_read_at": h["last_read_at"].isoformat() if isinstance(h.get("last_read_at"), datetime) else ""})
+                author_name = "Tri thức DocLib"
+                author = await db["users"].find_one({"_id": doc.get("author_id")}, {"full_name": 1})
+                if author:
+                    author_name = author.get("full_name") or author_name
+                
+                result.append({
+                    "document_id": h["document_id"], 
+                    "document_title": doc.get("title", ""), 
+                    "document_slug": doc.get("slug", ""), 
+                    "author_name": author_name,
+                    "cover_url": doc.get("cover_url"), 
+                    "progress_percentage": h.get("progress_percentage", 0), 
+                    "last_read_at": h["last_read_at"].isoformat() if isinstance(h.get("last_read_at"), datetime) else ""
+                })
         return result
+
+    @staticmethod
+    async def clear_reading_history(current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["reading_history"].delete_many({"user_id": str(current_user.id)})
+        return {"status": "success"}
+
+    @staticmethod
+    async def delete_history_item(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["reading_history"].delete_one({"user_id": str(current_user.id), "document_id": document_id})
+        return {"status": "success"}
 
     @staticmethod
     async def update_progress(data, current_user):
@@ -138,7 +162,6 @@ class ReaderService:
         if not reading_list:
             raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc.")
         
-        # Hydrate documents
         doc_ids = reading_list.get("documents", [])
         if doc_ids:
             docs = await db["documents"].find({"_id": {"$in": doc_ids}}).to_list(length=100)
@@ -443,7 +466,6 @@ class ReaderService:
         if current_user.role == "author" or current_user.role == "admin":
             raise HTTPException(status_code=400, detail="Bạn đã có quyền tác giả.")
         
-        # Check if already applied
         existing = await db["author_applications"].find_one({"user_id": str(current_user.id), "status": "PENDING"})
         if existing:
             raise HTTPException(status_code=400, detail="Bạn đã có một đơn ứng tuyển đang chờ xử lý.")

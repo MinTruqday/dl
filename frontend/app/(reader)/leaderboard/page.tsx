@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { Trophy, Star, TrendingUp, Users, ChevronRight, User, FileText, Filter, Sparkles, Award } from "lucide-react";
+import { Trophy, Star, TrendingUp, Users, ChevronRight, FileText, Sparkles, Award, Clock, Calendar } from "lucide-react";
 import { API_URL, getToken } from "@/app/lib/api";
 
 interface LeaderboardDocument {
@@ -39,7 +39,7 @@ export default function LeaderboardPage() {
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         const res = await fetch(`${API_URL}/analytics/leaderboard`, { headers });
-        if (!res.ok) throw new Error("Failed to fetch leaderboard");
+        if (!res.ok) throw new Error("Không thể tải bảng xếp hạng");
         const json = await res.json();
         setData(json.data || json);
       } catch (e) {
@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
     else if (index === 2) style = "bg-zinc-500 text-white border-zinc-500";
 
     return (
-      <div className={`w-10 h-10 shrink-0 flex items-center justify-center font-bold text-[13px] border transition-all ${style}`}>
+      <div className={`w-10 h-10 shrink-0 flex items-center justify-center font-bold text-[13px] border transition-all rounded-sm ${style}`}>
         {index + 1}
       </div>
     );
@@ -68,10 +68,9 @@ export default function LeaderboardPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      {/* Header - Premium Standard */}
       <div 
-        className="mb-12 border-b border-zinc-100 pb-10 transition-all duration-700"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+        className="mb-12 border-b border-zinc-100 pb-10 transition-all duration-300"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-3">
@@ -79,19 +78,18 @@ export default function LeaderboardPage() {
               Vinh danh
             </h1>
             <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Knowledge Hall of Fame <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
+              Bảng vàng tri thức <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-zinc-50 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-zinc-50 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
              <Award className="w-4 h-4" /> Tôn vinh giá trị tri thức
           </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        {/* Sidebar Controls */}
         <aside 
-          className="lg:col-span-3 space-y-10 transition-all duration-700 delay-150"
+          className="lg:col-span-3 space-y-10 transition-all duration-300 delay-75"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
           <div className="space-y-6">
@@ -107,7 +105,7 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border ${
+                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border rounded-sm ${
                     activeTab === tab.id
                       ? "bg-black text-white border-black"
                       : "bg-white text-zinc-400 border-zinc-100 hover:bg-zinc-50 hover:text-black"
@@ -122,49 +120,56 @@ export default function LeaderboardPage() {
             </nav>
           </div>
 
-          <div className="p-8 border border-zinc-100 bg-zinc-50/30 space-y-4">
-             <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2">Thống kê hệ thống</div>
-             <div className="space-y-3">
-                <div className="flex justify-between text-[11px] font-medium">
-                   <span className="text-zinc-400">Thời gian cập nhật:</span>
-                   <span className="text-black font-bold">10 phút trước</span>
+          <div className="p-8 border border-zinc-100 bg-zinc-50/30 space-y-6 rounded-sm">
+             <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                Hệ thống dữ liệu
+             </div>
+             <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                   <Clock className="w-3.5 h-3.5 text-zinc-300" />
+                   <div className="flex-1">
+                      <p className="text-[9px] text-zinc-400 uppercase font-bold tracking-tighter">Cập nhật lần cuối</p>
+                      <p className="text-[11px] text-black font-bold">Vừa xong</p>
+                   </div>
                 </div>
-                <div className="flex justify-between text-[11px] font-medium">
-                   <span className="text-zinc-400">Chu kỳ:</span>
-                   <span className="text-black font-bold uppercase tracking-widest text-[9px]">Hàng tháng</span>
+                <div className="flex items-center gap-3">
+                   <Calendar className="w-3.5 h-3.5 text-zinc-300" />
+                   <div className="flex-1">
+                      <p className="text-[9px] text-zinc-400 uppercase font-bold tracking-tighter">Chu kỳ thống kê</p>
+                      <p className="text-[11px] text-black font-bold uppercase tracking-widest text-[9px]">Thời gian thực</p>
+                   </div>
                 </div>
              </div>
           </div>
         </aside>
 
-        {/* Main Content Area */}
         <div 
-          className="lg:col-span-9 transition-all duration-700 delay-300"
+          className="lg:col-span-9 transition-all duration-300 delay-150"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
           {loading ? (
             <div className="grid grid-cols-1 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-24 border border-zinc-100 bg-white animate-pulse" />
+                <div key={i} className="h-24 border border-zinc-100 bg-white animate-pulse rounded-sm" />
               ))}
             </div>
           ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
               {((activeTab === "authors" ? data?.top_authors : (activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating)) || []).length > 0 ? (
                 <div className="space-y-4">
                   {(activeTab === "views" || activeTab === "rating") ? (
                     ((activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).map((document, index) => (
                       <div
                         key={`${document._id}-${index}`}
-                        className="group flex items-center justify-between p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-700"
+                        className="group flex items-center justify-between p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-300 rounded-sm"
                       >
                         <div className="flex items-center gap-10">
                           {renderRankNumber(index)}
-                          <div className="relative w-16 h-20 bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0 grayscale group-hover:grayscale-0 transition-all duration-700">
+                          <div className="relative w-16 h-20 bg-zinc-50 border border-zinc-100 overflow-hidden shrink-0 grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">
                             {document.cover_image ? (
                               <img
                                 src={document.cover_image.startsWith("http") ? document.cover_image : `${API_URL}/storage/${document.cover_image}`}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                 alt={document.title}
                               />
                             ) : (
@@ -211,16 +216,16 @@ export default function LeaderboardPage() {
                       {(data?.top_authors || []).map((author, index) => (
                         <Link
                           key={`${author._id}-${index}`}
-                          href={`/profile/${author.slug}`}
-                          className="group flex items-center justify-between p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-700"
+                          href={`/authors/${author.slug}`}
+                          className="group flex items-center justify-between p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-300 rounded-sm"
                         >
                           <div className="flex items-center gap-6">
                             {renderRankNumber(index)}
-                            <div className="relative w-14 h-14 border border-zinc-100 overflow-hidden shrink-0 bg-zinc-50 grayscale group-hover:grayscale-0 transition-all duration-700">
+                            <div className="relative w-14 h-14 border border-zinc-100 overflow-hidden shrink-0 bg-zinc-50 grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">
                               {author.avatar_url ? (
                                 <img
                                   src={author.avatar_url.startsWith("http") ? author.avatar_url : `${API_URL}/storage/${author.avatar_url}`}
-                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                   alt={author.display_name}
                                 />
                               ) : (
@@ -245,7 +250,7 @@ export default function LeaderboardPage() {
                   )}
                 </div>
               ) : (
-                <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30">
+                <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30 rounded-sm">
                   <Trophy className="w-16 h-16 text-zinc-100 mb-10 stroke-[1]" />
                   <h2 className="text-2xl font-bold tracking-tighter text-black mb-4">Bảng xếp hạng đang trống</h2>
                   <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-xs leading-loose">

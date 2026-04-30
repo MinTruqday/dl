@@ -54,7 +54,8 @@ class AssetUploadRequest(BaseModel):
     url: str = ""
 
 class CoauthorInviteRequest(BaseModel):
-    user_id_or_email: str
+    email: str
+    role: str = "editor"
 
 class ReviewReplyRequest(BaseModel):
     reply_text: str
@@ -89,6 +90,14 @@ async def create_coupon(data: CouponCreateRequest, current_user: UserInDB = Depe
 @router.get("/coupons", response_model=APIResponse[Any])
 async def get_my_coupons(current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
     return APIResponse(data=await AuthorService.get_my_coupons(current_user), message="Lấy danh sách mã giảm giá thành công.", status=200)
+
+@router.patch("/coupons/{coupon_id}/toggle", response_model=APIResponse[Any])
+async def toggle_coupon_status(coupon_id: str, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
+    return APIResponse(data=await AuthorService.toggle_coupon_status(coupon_id, current_user), message="Cập nhật trạng thái thành công.", status=200)
+
+@router.delete("/coupons/{coupon_id}", response_model=APIResponse[Any])
+async def delete_coupon(coupon_id: str, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
+    return APIResponse(data=await AuthorService.delete_coupon(coupon_id, current_user), message="Xóa mã giảm giá thành công.", status=200)
 
 @router.get("/documents/{document_id}/dropoff", response_model=APIResponse[Any])
 async def get_chapter_dropoff(document_id: str, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
@@ -152,7 +161,15 @@ async def restore_document_version(version_id: str, current_user: UserInDB = Dep
 
 @router.post("/documents/{document_id}/coauthors", response_model=APIResponse[Any])
 async def invite_coauthor(document_id: str, data: CoauthorInviteRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
-    return APIResponse(data=await AuthorService.invite_coauthor(document_id, data.user_id_or_email, current_user), message="Gửi lời mời đồng tác giả thành công.", status=201)
+    return APIResponse(data=await AuthorService.send_collaboration_invite(document_id, data.email, data.role, current_user), message="Gửi lời mời đồng tác giả thành công.", status=201)
+
+@router.get("/collaboration/invites", response_model=APIResponse[Any])
+async def get_collaboration_invites(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await AuthorService.get_my_collaboration_invites(current_user), message="Lấy danh sách lời mời thành công.", status=200)
+
+@router.post("/collaboration/respond/{invite_id}", response_model=APIResponse[Any])
+async def respond_to_invite(invite_id: str, status: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await AuthorService.respond_to_collaboration_invite(invite_id, status, current_user), message="Xử lý lời mời thành công.", status=200)
 
 @router.post("/reviews/{review_id}/reply", response_model=APIResponse[Any])
 async def reply_to_review(review_id: str, data: ReviewReplyRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):

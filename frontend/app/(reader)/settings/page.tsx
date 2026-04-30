@@ -3,9 +3,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import {
-  API_URL,
-  getToken,
-  formatError,
+  getPrivacySettingsAPI,
+  updatePrivacySettingsAPI,
+  updateTypographyAPI,
+  applyAuthorAPI,
+  updateGeneralSettingsAPI,
+  getMaintenanceModeAPI,
+  getAdminConfigAPI,
+  toggleMaintenanceModeAPI,
+  updateAdminConfigAPI
 } from "@/app/lib/api";
 import {
   Settings,
@@ -32,10 +38,10 @@ import {
   UserPlus,
   BookOpen,
   Award,
-  Clock
+  Clock,
+  ArrowRight,
+  AlertCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Notification } from "@/app/components/NotificationToast";
 
 type TabKey = "appearance" | "privacy" | "notifications" | "account" | "apply_author" | "author" | "moderator" | "admin";
@@ -47,178 +53,80 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Typography Settings
   const [fontFamily, setFontFamily] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
   const [lineHeight, setLineHeight] = useState(1.8);
 
-  // Privacy Settings
   const [hideActivity, setHideActivity] = useState(false);
   const [hideLibrary, setHideLibrary] = useState(false);
 
-  // Author Application
   const [motivation, setMotivation] = useState("");
   const [portfolio, setPortfolio] = useState("");
 
-  // Author Settings
   const [autoSave, setAutoSave] = useState(true);
   const [defaultVisibility, setDefaultVisibility] = useState("public");
   const [payoutInfo, setPayoutInfo] = useState("");
 
-  // Moderator Settings
   const [modNotifs, setModNotifs] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(false);
 
-  // Admin Settings
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [registrationEnabled, setRegistrationEnabled] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      requestAnimationFrame(() => setVisible(true));
-      fetchSettings();
-      
-      // Initialize from user.settings if available
-      if (user.settings) {
+  const fetchData = useCallback(async () => {
+    try {
+      const privacyRes = await getPrivacySettingsAPI();
+      setHideActivity(privacyRes.data?.hide_reading_activity || false);
+      setHideLibrary(privacyRes.data?.hide_library || false);
+
+      if (user?.role === "admin") {
+        const maintData = await getMaintenanceModeAPI();
+        setMaintenanceMode(maintData.data?.enabled || maintData.enabled || false);
+        
+        const configData = await getAdminConfigAPI();
+        setRegistrationEnabled(configData.data?.registration_enabled ?? true);
+      }
+
+      if (user?.settings) {
         setModNotifs(user.settings.mod_notifs ?? true);
         setAutoRefresh(user.settings.auto_refresh ?? false);
         setAutoSave(user.settings.auto_save ?? true);
         setDefaultVisibility(user.settings.default_visibility ?? "public");
       }
-
-      if (user.role === "admin") {
-        fetchAdminConfig();
-      }
+    } catch (err: any) {
+      setNotification({ type: "error", text: "Không thể đồng bộ dữ liệu cài đặt." });
     }
   }, [user]);
 
-  const fetchSettings = async () => {
-    const token = getToken();
-    try {
-      const res = await fetch(`${API_URL}/reader/settings/privacy`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setHideActivity(json.data?.hide_reading_activity || false);
-        setHideLibrary(json.data?.hide_library || false);
-      }
-    } catch (err) {
-      console.error("Lỗi tải cài đặt:", err);
+  useEffect(() => {
+    if (user) {
+      requestAnimationFrame(() => setVisible(true));
+      fetchData();
     }
-  };
+  }, [user, fetchData]);
 
-  const fetchAdminConfig = async () => {
-    const token = getToken();
+  const handleUpdateGeneral = async (newSettings: any) => {
     try {
-      const maintenanceRes = await fetch(`${API_URL}/admin/maintenance`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (maintenanceRes.ok) {
-        const json = await maintenanceRes.json();
-        setMaintenanceMode(json.data?.enabled || false);
-      }
-
-      const configRes = await fetch(`${API_URL}/admin/config`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (configRes.ok) {
-        const json = await configRes.json();
-        setRegistrationEnabled(json.data?.registration_enabled ?? true);
-      }
-    } catch (err) {
-      console.error("Lỗi tải cấu hình quản trị viên:", err);
-    }
-  };
-
-  const updateGeneralSettings = async (newSettings: any) => {
-    const token = getToken();
-    try {
-      const res = await fetch(`${API_URL}/reader/settings`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ settings: newSettings }),
-      });
-      if (res.ok) {
-        refreshUser?.();
-        return true;
-      }
-    } catch (err) {
-      console.error("Lỗi cập nhật cài đặt:", err);
-    }
-    return false;
-  };
-
-  const handleToggleMaintenance = async () => {
-    const token = getToken();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/admin/maintenance`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ enabled: !maintenanceMode, message: "Hệ thống đang bảo trì." }),
-      });
-      if (res.ok) {
-        setMaintenanceMode(!maintenanceMode);
-        setNotification({ type: "success", text: `Đã ${!maintenanceMode ? "bật" : "tắt"} chế độ bảo trì.` });
-      }
-    } catch (err) {
-      setNotification({ type: "error", text: "Không thể cập nhật chế độ bảo trì." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleRegistration = async () => {
-    const token = getToken();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/admin/config`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ registration_enabled: !registrationEnabled }),
-      });
-      if (res.ok) {
-        setRegistrationEnabled(!registrationEnabled);
-        setNotification({ type: "success", text: `Đã ${!registrationEnabled ? "mở" : "đóng"} cổng đăng ký.` });
-      }
-    } catch (err) {
-      setNotification({ type: "error", text: "Không thể cập nhật cấu hình đăng ký." });
-    } finally {
-      setLoading(false);
+      await updateGeneralSettingsAPI(newSettings);
+      refreshUser?.();
+      return true;
+    } catch (err: any) {
+      setNotification({ type: "error", text: "Không thể cập nhật cấu hình cá nhân." });
+      return false;
     }
   };
 
   const handleSaveTypography = async () => {
     setLoading(true);
-    setNotification(null);
     try {
-      const res = await fetch(`${API_URL}/reader/settings/typography`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          font_family: fontFamily,
-          font_size: fontSize,
-          line_height: lineHeight,
-        }),
+      await updateTypographyAPI({
+        font_family: fontFamily,
+        font_size: fontSize,
+        line_height: lineHeight,
       });
-      if (res.ok) {
-        setNotification({ type: "success", text: "Đã cập nhật tùy chỉnh hiển thị thành công." });
-      }
-    } catch (err) {
-      setNotification({ type: "error", text: "Lỗi hệ thống khi cập nhật." });
+      setNotification({ type: "success", text: "Đã lưu tùy chỉnh hiển thị." });
+    } catch (err: any) {
+      setNotification({ type: "error", text: err.message || "Lỗi cập nhật hiển thị." });
     } finally {
       setLoading(false);
     }
@@ -226,24 +134,14 @@ export default function SettingsPage() {
 
   const handleSavePrivacy = async () => {
     setLoading(true);
-    setNotification(null);
     try {
-      const res = await fetch(`${API_URL}/reader/settings/privacy`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hide_reading_activity: hideActivity,
-          hide_library: hideLibrary,
-        }),
+      await updatePrivacySettingsAPI({
+        hide_reading_activity: hideActivity,
+        hide_library: hideLibrary,
       });
-      if (res.ok) {
-        setNotification({ type: "success", text: "Đã cập nhật cài đặt quyền riêng tư." });
-      }
-    } catch (err) {
-      setNotification({ type: "error", text: "Lỗi hệ thống khi cập nhật." });
+      setNotification({ type: "success", text: "Đã cập nhật quyền riêng tư." });
+    } catch (err: any) {
+      setNotification({ type: "error", text: err.message || "Lỗi cập nhật riêng tư." });
     } finally {
       setLoading(false);
     }
@@ -256,43 +154,57 @@ export default function SettingsPage() {
     }
     setLoading(true);
     try {
-        const res = await fetch(`${API_URL}/reader/apply-author`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ motivation, portfolio }),
-        });
-        if (res.ok) {
-            setNotification({ type: "success", text: "Đã gửi đơn ứng tuyển thành công. Vui lòng chờ phê duyệt." });
-            setMotivation("");
-            setPortfolio("");
-            refreshUser?.();
-        } else {
-            const err = await res.json();
-            setNotification({ type: "error", text: err.detail || "Không thể gửi đơn ứng tuyển." });
-        }
-    } catch (err) {
-        setNotification({ type: "error", text: "Lỗi kết nối máy chủ." });
+        await applyAuthorAPI(motivation);
+        setNotification({ type: "success", text: "Đã gửi đơn ứng tuyển thành công. Vui lòng chờ phê duyệt." });
+        setMotivation("");
+        setPortfolio("");
+        refreshUser?.();
+    } catch (err: any) {
+        setNotification({ type: "error", text: err.message || "Không thể gửi đơn ứng tuyển." });
     } finally {
         setLoading(false);
+    }
+  };
+
+  const handleToggleMaintenance = async () => {
+    setLoading(true);
+    try {
+      await toggleMaintenanceModeAPI(!maintenanceMode);
+      setMaintenanceMode(!maintenanceMode);
+      setNotification({ type: "success", text: !maintenanceMode ? "Đã kích hoạt bảo trì." : "Đã tắt bảo trì." });
+    } catch (err: any) {
+      setNotification({ type: "error", text: "Lỗi thao tác bảo trì hệ thống." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleRegistration = async () => {
+    setLoading(true);
+    try {
+      await updateAdminConfigAPI({ registration_enabled: !registrationEnabled });
+      setRegistrationEnabled(!registrationEnabled);
+      setNotification({ type: "success", text: !registrationEnabled ? "Đã mở đăng ký." : "Đã đóng đăng ký." });
+    } catch (err: any) {
+      setNotification({ type: "error", text: "Lỗi cập nhật cấu hình đăng ký." });
+    } finally {
+      setLoading(false);
     }
   };
 
   const CustomSwitch = ({ active, onToggle, color = "black" }: { active: boolean, onToggle: () => void, color?: string }) => (
     <button 
       onClick={onToggle}
-      className={`w-16 h-9 transition-all relative rounded-none shrink-0 border border-zinc-100 ${active ? (color === "red" ? "bg-red-600 border-red-600" : "bg-black border-black") : "bg-zinc-200"}`}
+      className={`w-16 h-9 transition-all relative shrink-0 rounded-sm border ${active ? (color === "red" ? "bg-red-600 border-red-600" : "bg-black border-black") : "bg-zinc-100 border-zinc-200"}`}
     >
-      <div className={`absolute top-1 w-7 h-7 bg-white transition-all shadow-sm ${active ? "left-8" : "left-1"}`} />
+      <div className={`absolute top-1 w-7 h-7 bg-white transition-all rounded-sm ${active ? "left-8" : "left-1"}`} />
     </button>
   );
 
   if (authLoading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-200" />
+      <div className="flex h-[80vh] items-center justify-center bg-white">
+        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
       </div>
     );
   }
@@ -302,7 +214,7 @@ export default function SettingsPage() {
     { id: "privacy", label: "Quyền riêng tư", icon: Shield, roles: ["reader", "potential_author", "author", "moderator", "admin"] },
     { id: "notifications", label: "Thông báo", icon: Bell, roles: ["reader", "potential_author", "author", "moderator", "admin"] },
     { id: "account", label: "Tài khoản & Bảo mật", icon: Lock, roles: ["reader", "potential_author", "author", "moderator", "admin"] },
-    ...(user?.role === "reader" || (user?.author_status === "pending" || user?.author_status === "none") ? [{ id: "apply_author", label: "Đăng ký Tác giả", icon: UserPlus, roles: ["reader"] }] : []),
+    ...(user?.role === "reader" && user?.author_status !== "pending" && user?.author_status !== "approved" ? [{ id: "apply_author", label: "Đăng ký Tác giả", icon: UserPlus, roles: ["reader"] }] : []),
     { id: "author", label: "Cấu hình Tác giả", icon: PenTool, roles: ["author", "admin"] },
     { id: "moderator", label: "Kiểm duyệt viên", icon: ShieldCheck, roles: ["moderator", "admin"] },
     { id: "admin", label: "Quản trị viên", icon: Zap, roles: ["admin"] },
@@ -316,88 +228,83 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Header */}
       <header 
-        className="mb-10 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 transition-all duration-700"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+        className="mb-12 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 transition-all duration-300"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
-        <div>
-          <h1 className="text-5xl font-bold tracking-tighter leading-none text-black mb-3">
-            Cài đặt
-          </h1>
+        <div className="space-y-4">
+          <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">Cài đặt</h1>
           <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            Preferences & Control Center <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
+            Tùy chọn & Kiểm soát hệ thống <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
           </p>
         </div>
       </header>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        {/* Navigation Sidebar */}
         <aside 
-          className="lg:col-span-4 space-y-8 transition-all duration-700 delay-150"
+          className="lg:col-span-4 space-y-8 transition-all duration-300 delay-75"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
           <div className="space-y-6">
             <div className="text-[11px] font-bold text-black uppercase tracking-[0.3em] px-1 flex items-center gap-2">
                 <Settings className="w-4 h-4 text-zinc-300" /> Tùy chỉnh cá nhân
             </div>
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-2">
                 {sections.map((section) => (
                     <button
                         key={section.id}
                         onClick={() => setActiveSection(section.id as TabKey)}
-                        className={`flex items-center justify-between px-6 py-5 text-[11px] font-bold uppercase tracking-widest transition-all border ${
+                        className={`flex items-center justify-between px-8 py-5 text-[11px] font-bold uppercase tracking-widest transition-all rounded-sm border ${
                             activeSection === section.id
-                            ? "bg-black text-white border-black shadow-lg shadow-black/5"
+                            ? "bg-black text-white border-black"
                             : "bg-white text-zinc-400 border-zinc-100 hover:bg-zinc-50 hover:text-black"
                         }`}
                     >
                         <div className="flex items-center gap-4">
                             <section.icon className="w-4.5 h-4.5" /> {section.label}
                         </div>
-                        <ChevronRight className={`w-3.5 h-3.5 transition-transform ${activeSection === section.id ? "rotate-90" : ""}`} />
+                        <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-300 ${activeSection === section.id ? "rotate-90" : ""}`} />
                     </button>
                 ))}
             </nav>
           </div>
 
-          <div className="p-8 border border-zinc-100 bg-zinc-50/50 space-y-4">
-             <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2">Quyền hạn tài khoản</div>
-             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-[10px] font-bold uppercase italic">
+          <div className="p-10 border border-zinc-100 bg-zinc-50/30 space-y-6 rounded-sm">
+             <div className="text-[10px] font-bold text-black uppercase tracking-widest">Định danh hiện tại</div>
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-black flex items-center justify-center text-white text-[11px] font-bold uppercase italic rounded-sm">
                     {user?.role?.slice(0, 3)}
                 </div>
-                <div className="flex flex-col">
-                    <span className="text-xs font-bold text-black uppercase">{user?.role}</span>
-                    <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest italic">Identity Verified</span>
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs font-bold text-black uppercase tracking-tighter">{user?.role}</span>
+                    <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest italic">Xác minh danh tính</span>
                 </div>
              </div>
           </div>
         </aside>
 
-        {/* Content Area */}
         <main 
-          className="lg:col-span-8 transition-all duration-700 delay-300"
+          className="lg:col-span-8 transition-all duration-300 delay-150"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
-          <div className="bg-white border border-zinc-100 p-10 lg:p-16 min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-2xl shadow-black/[0.02]">
+          <div className="bg-white border border-zinc-100 p-10 lg:p-16 min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-300 rounded-sm">
             {activeSection === "appearance" && (
               <div className="space-y-12">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter">Hiển thị & Kiểu chữ</h2>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tùy biến môi trường tiếp nhận tri thức</p>
+                <div className="space-y-3">
+                  <h2 className="text-4xl font-bold tracking-tighter">Hiển thị & Kiểu chữ</h2>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Tùy biến không gian tiếp nhận tri thức</p>
                 </div>
 
                 <div className="space-y-12">
                   <div className="space-y-6">
                     <label className="text-[11px] font-bold text-black uppercase tracking-widest">Hệ phông chữ ưu tiên</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {["Inter", "Roboto", "Outfit", "Noto Sans", "Source Sans"].map((font) => (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {["Inter", "Roboto", "Outfit", "Noto Sans", "Source Sans Pro"].map((font) => (
                         <button
                           key={font}
                           onClick={() => setFontFamily(font)}
-                          className={`h-16 border text-xs font-bold transition-all flex items-center justify-center ${
-                            fontFamily === font ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black"
+                          className={`h-16 border text-[11px] font-bold uppercase tracking-widest transition-all flex items-center justify-center rounded-sm ${
+                            fontFamily === font ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-100 hover:border-black hover:text-black"
                           }`}
                           style={{ fontFamily: font }}
                         >
@@ -414,7 +321,7 @@ export default function SettingsPage() {
                         type="number"
                         value={fontSize}
                         onChange={(e) => setFontSize(parseInt(e.target.value))}
-                        className="w-full h-14 px-6 border border-zinc-100 focus:border-black bg-zinc-50/30 text-sm font-bold transition-all outline-none"
+                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
                       />
                     </div>
                     <div className="space-y-4">
@@ -424,96 +331,95 @@ export default function SettingsPage() {
                         step="0.1"
                         value={lineHeight}
                         onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-                        className="w-full h-14 px-6 border border-zinc-100 focus:border-black bg-zinc-50/30 text-sm font-bold transition-all outline-none"
+                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="pt-12 border-t border-zinc-50 flex justify-end">
-                   <Button 
+                   <button 
                     onClick={handleSaveTypography}
                     disabled={loading}
-                    className="h-14 px-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-none hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-black/10"
+                    className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center gap-4 disabled:opacity-50"
                    >
-                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Lưu tùy chỉnh"}
-                   </Button>
+                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                     Lưu tùy chỉnh
+                   </button>
                 </div>
               </div>
             )}
 
             {activeSection === "apply_author" && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tighter">Đăng ký Tác giả</h2>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Trở thành một phần của cộng đồng tri thức chuyên sâu</p>
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-3">
+                        <h2 className="text-4xl font-bold tracking-tighter">Đăng ký Tác giả</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Tham gia đội ngũ sáng tạo nội dung tri thức</p>
                     </div>
 
                     {user?.author_status === "pending" ? (
-                        <div className="py-20 text-center space-y-6">
-                            <div className="w-20 h-20 bg-zinc-50 border border-zinc-100 flex items-center justify-center mx-auto">
-                                <Clock className="w-8 h-8 text-zinc-200" />
-                            </div>
-                            <div className="space-y-2">
-                                <h4 className="text-xl font-bold tracking-tight">Đang chờ phê duyệt</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                                    Hồ sơ của bạn đang được đội ngũ **Kiểm duyệt viên** đánh giá. Quá trình này thường mất từ 24-48h.
+                        <div className="py-24 text-center space-y-8 border border-dashed border-zinc-200 bg-zinc-50/10 rounded-sm">
+                            <Clock className="w-16 h-16 text-zinc-100 mx-auto stroke-[1]" />
+                            <div className="space-y-3">
+                                <h4 className="text-2xl font-bold tracking-tight">Hồ sơ đang được xem xét</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                                    Hệ thống đã ghi nhận đơn ứng tuyển của bạn. Vui lòng chờ phản hồi từ đội ngũ Kiểm duyệt DocLib.
                                 </p>
                             </div>
                         </div>
                     ) : (
-                        <div className="space-y-8">
-                            <div className="p-10 border border-zinc-100 bg-zinc-50/30 space-y-6">
-                                <div className="flex items-center gap-4 text-black mb-4">
+                        <div className="space-y-10">
+                            <div className="p-10 border border-zinc-100 bg-zinc-50/20 space-y-8 rounded-sm">
+                                <div className="flex items-center gap-4 text-black border-b border-zinc-50 pb-6">
                                     <Award className="w-6 h-6" />
-                                    <h4 className="text-sm font-bold uppercase tracking-widest">Lợi ích khi trở thành Tác giả</h4>
+                                    <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">Đặc quyền của Tác giả DocLib</h4>
                                 </div>
-                                <ul className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-8">
                                     {[
-                                        "Sở hữu trang hồ sơ chuyên nghiệp với huy hiệu Tác giả.",
-                                        "Xuất bản và quản lý kho tri thức của riêng bạn.",
-                                        "Nhận nhuận bút từ lượt xem và đóng góp của độc giả.",
-                                        "Tham gia cộng đồng sáng tạo và phản biện chuyên sâu."
+                                        "Xuất bản tài liệu không giới hạn",
+                                        "Xây dựng cộng đồng độc giả riêng",
+                                        "Nhận nhuận bút & đóng góp tài chính",
+                                        "Huy hiệu Tác giả xác minh"
                                     ].map((item, i) => (
-                                        <li key={i} className="flex items-start gap-4 text-xs font-medium text-zinc-500">
+                                        <div key={i} className="flex items-start gap-3">
                                             <Sparkles className="w-3.5 h-3.5 text-black shrink-0" />
-                                            {item}
-                                        </li>
+                                            <span className="text-[12px] font-medium text-zinc-500 leading-tight">{item}</span>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             </div>
 
-                            <div className="space-y-6">
+                            <div className="space-y-8">
                                 <div className="space-y-4">
-                                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">Mục tiêu sáng tác & Giới thiệu bản thân</label>
+                                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">Động lực & Chuyên môn sáng tác</label>
                                     <textarea 
                                         value={motivation}
                                         onChange={(e) => setMotivation(e.target.value)}
-                                        className="w-full min-h-[160px] p-6 border border-zinc-100 focus:border-black bg-white text-sm font-medium transition-all outline-none leading-relaxed"
-                                        placeholder=""
+                                        className="w-full min-h-[200px] p-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-medium transition-all outline-none leading-relaxed rounded-sm"
+                                        placeholder="Hãy chia sẻ về lĩnh vực bạn muốn viết và kinh nghiệm của bạn"
                                     />
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">Portfolio / Link tham khảo (Nếu có)</label>
+                                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">Portfolio / Sản phẩm tham chiếu (URL)</label>
                                     <input 
                                         type="text"
                                         value={portfolio}
                                         onChange={(e) => setPortfolio(e.target.value)}
-                                        className="w-full h-14 px-6 border border-zinc-100 focus:border-black bg-white text-sm font-bold transition-all outline-none"
-                                        placeholder=""
+                                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-bold transition-all outline-none rounded-sm"
+                                        placeholder="https://"
                                     />
                                 </div>
                             </div>
 
                             <div className="pt-8 border-t border-zinc-50">
-                                <Button 
+                                <button 
                                     onClick={handleApplyAuthor}
                                     disabled={loading}
-                                    className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-none hover:bg-zinc-800 transition-all shadow-xl shadow-black/10 flex items-center gap-4"
+                                    className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
                                 >
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <UserPlus className="w-5 h-5" />}
-                                    Gửi đơn ứng tuyển Tác giả
-                                </Button>
+                                    Gửi đơn ứng tuyển xác thực
+                                </button>
                             </div>
                         </div>
                     )}
@@ -522,75 +428,76 @@ export default function SettingsPage() {
 
             {activeSection === "privacy" && (
               <div className="space-y-12">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter">Quyền riêng tư</h2>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Quản lý tính minh bạch của tài khoản</p>
+                <div className="space-y-3">
+                  <h2 className="text-4xl font-bold tracking-tighter">Quyền riêng tư</h2>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Thiết lập khả năng hiển thị cá nhân</p>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-zinc-50/30 group hover:border-black transition-all duration-500">
+                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-zinc-50/10 group hover:border-black transition-all duration-300 rounded-sm">
                     <div className="space-y-2">
-                       <h4 className="text-base font-bold tracking-tight">Chế độ đọc ẩn danh</h4>
-                       <p className="text-[11px] font-medium text-zinc-400 max-w-sm leading-relaxed">Không công khai lịch sử và tài liệu bạn đang tiếp nhận trên các luồng xã hội.</p>
+                       <h4 className="text-lg font-bold tracking-tight">Chế độ đọc ẩn danh</h4>
+                       <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">Không hiển thị lịch sử đọc và tương tác của bạn trên luồng cộng đồng.</p>
                     </div>
                     <CustomSwitch active={hideActivity} onToggle={() => setHideActivity(!hideActivity)} />
                   </div>
 
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-zinc-50/30 group hover:border-black transition-all duration-500">
+                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-zinc-50/10 group hover:border-black transition-all duration-300 rounded-sm">
                     <div className="space-y-2">
-                       <h4 className="text-base font-bold tracking-tight">Thư viện nội bộ</h4>
-                       <p className="text-[11px] font-medium text-zinc-400 max-w-sm leading-relaxed">Giới hạn quyền truy cập bộ sưu tập cá nhân, chỉ mình bạn có quyền xem.</p>
+                       <h4 className="text-lg font-bold tracking-tight">Thư viện nội bộ</h4>
+                       <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">Giới hạn quyền truy cập bộ sưu tập tri thức cá nhân đối với người dùng khác.</p>
                     </div>
                     <CustomSwitch active={hideLibrary} onToggle={() => setHideLibrary(!hideLibrary)} />
                   </div>
                 </div>
 
                 <div className="pt-12 border-t border-zinc-50 flex justify-end">
-                   <Button 
+                   <button 
                     onClick={handleSavePrivacy}
                     disabled={loading}
-                    className="h-14 px-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-none hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-black/10"
+                    className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center gap-4"
                    >
-                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Cập nhật riêng tư"}
-                   </Button>
+                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Shield className="w-5 h-5" />}
+                     Cập nhật quyền
+                   </button>
                 </div>
               </div>
             )}
 
             {activeSection === "author" && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tighter">Cấu hình Tác giả</h2>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tối ưu hóa quy trình sáng tác tri thức</p>
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-3">
+                        <h2 className="text-4xl font-bold tracking-tighter">Cấu hình Tác giả</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Quản lý hiệu suất sáng tác</p>
                     </div>
 
                     <div className="space-y-8">
-                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all">
+                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all rounded-sm">
                             <div className="space-y-2">
-                                <h4 className="text-base font-bold tracking-tight">Tự động lưu bản nháp</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm">Hệ thống tự động sao lưu nội dung mỗi 30 giây trong IDE.</p>
+                                <h4 className="text-lg font-bold tracking-tight">Tự động sao lưu bản thảo</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm italic leading-relaxed">Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30 giây trong quá trình soạn thảo.</p>
                             </div>
                             <CustomSwitch 
                                 active={autoSave} 
                                 onToggle={async () => {
-                                    const success = await updateGeneralSettings({ auto_save: !autoSave });
+                                    const success = await handleUpdateGeneral({ auto_save: !autoSave });
                                     if (success) setAutoSave(!autoSave);
                                 }} 
                             />
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-[11px] font-bold text-black uppercase tracking-widest">Chế độ hiển thị mặc định</label>
+                            <label className="text-[11px] font-bold text-black uppercase tracking-widest">Trạng thái xuất bản mặc định</label>
                             <div className="grid grid-cols-2 gap-4">
                                 {["public", "private"].map((mode) => (
                                     <button
                                         key={mode}
                                         onClick={async () => {
-                                            const success = await updateGeneralSettings({ default_visibility: mode });
+                                            const success = await handleUpdateGeneral({ default_visibility: mode });
                                             if (success) setDefaultVisibility(mode);
                                         }}
-                                        className={`h-14 border text-[11px] font-bold uppercase tracking-widest transition-all ${
-                                            defaultVisibility === mode ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black"
+                                        className={`h-16 border text-[11px] font-bold uppercase tracking-widest transition-all rounded-sm ${
+                                            defaultVisibility === mode ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-100 hover:border-black hover:text-black"
                                         }`}
                                     >
                                         {mode === "public" ? "Công khai" : "Riêng tư"}
@@ -600,56 +507,58 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-[11px] font-bold text-black uppercase tracking-widest">Thông tin thụ hưởng (Bank Info)</label>
+                            <label className="text-[11px] font-bold text-black uppercase tracking-widest">Thông tin thanh toán thụ hưởng</label>
                             <textarea
                                 value={payoutInfo}
                                 onChange={(e) => setPayoutInfo(e.target.value)}
-                                placeholder=""
-                                className="w-full min-h-[120px] p-6 border border-zinc-100 focus:border-black bg-zinc-50/30 text-sm font-medium transition-all outline-none leading-relaxed"
+                                placeholder="STK, Ngân hàng, Tên chủ tài khoản"
+                                className="w-full min-h-[140px] p-8 border border-zinc-100 focus:border-black bg-zinc-50/10 text-[13px] font-medium transition-all outline-none leading-relaxed rounded-sm"
                             />
                         </div>
                     </div>
 
                     <div className="pt-12 border-t border-zinc-50 flex justify-end">
-                        <Button className="h-14 px-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-none shadow-xl shadow-black/10">Lưu cấu hình sáng tác</Button>
+                        <button className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all flex items-center gap-4">
+                            <Save className="w-5 h-5" /> Lưu cấu hình
+                        </button>
                     </div>
                 </div>
             )}
 
             {activeSection === "moderator" && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tighter">Kiểm duyệt viên</h2>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Quản lý hiệu suất kiểm soát nội dung</p>
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-3">
+                        <h2 className="text-4xl font-bold tracking-tighter">Điều hành viên</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Cấu hình hiệu suất giám sát</p>
                     </div>
 
                     <div className="space-y-8">
-                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all">
+                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all rounded-sm">
                             <div className="space-y-2">
-                                <h4 className="text-base font-bold tracking-tight">Thông báo báo cáo vi phạm</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm">Nhận thông báo ngay lập tức khi có người dùng gửi báo cáo mới.</p>
+                                <h4 className="text-lg font-bold tracking-tight">Thông báo vi phạm thời gian thực</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm">Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng đồng mới.</p>
                             </div>
                             <CustomSwitch 
                                 active={modNotifs} 
                                 onToggle={async () => {
-                                    const success = await updateGeneralSettings({ mod_notifs: !modNotifs });
+                                    const success = await handleUpdateGeneral({ mod_notifs: !modNotifs });
                                     if (success) {
                                         setModNotifs(!modNotifs);
-                                        setNotification({ type: "success", text: `Đã ${!modNotifs ? "bật" : "tắt"} thông báo báo cáo.` });
+                                        setNotification({ type: "success", text: `Đã ${!modNotifs ? "bật" : "tắt"} thông báo.` });
                                     }
                                 }} 
                             />
                         </div>
 
-                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all">
+                        <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all rounded-sm">
                             <div className="space-y-2">
-                                <h4 className="text-base font-bold tracking-tight">Tự động làm mới hàng chờ</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm">Cập nhật danh sách tài liệu chờ duyệt mỗi 60 giây.</p>
+                                <h4 className="text-lg font-bold tracking-tight">Tự động làm mới hàng chờ duyệt</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm italic leading-relaxed">Cập nhật danh sách bản thảo chờ phê duyệt mỗi 60 giây.</p>
                             </div>
                             <CustomSwitch 
                                 active={autoRefresh} 
                                 onToggle={async () => {
-                                    const success = await updateGeneralSettings({ auto_refresh: !autoRefresh });
+                                    const success = await handleUpdateGeneral({ auto_refresh: !autoRefresh });
                                     if (success) {
                                         setAutoRefresh(!autoRefresh);
                                         setNotification({ type: "success", text: `Đã ${!autoRefresh ? "bật" : "tắt"} tự động làm mới.` });
@@ -662,25 +571,25 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "admin" && (
-                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
-                    <div className="space-y-2">
-                        <h2 className="text-3xl font-bold tracking-tighter">Quản trị viên</h2>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Thiết lập vận hành toàn cầu</p>
+                <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="space-y-3">
+                        <h2 className="text-4xl font-bold tracking-tighter">Quản trị cấp cao</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Kiểm soát vận hành toàn cầu DocLib</p>
                     </div>
 
                     <div className="grid gap-6">
-                        <div className="p-10 border border-zinc-100 bg-zinc-50/50 flex items-center justify-between group hover:border-black transition-all duration-500">
+                        <div className="p-10 border border-zinc-100 bg-zinc-50/30 flex items-center justify-between group hover:border-black transition-all duration-300 rounded-sm">
                             <div className="space-y-2">
-                                <h4 className="text-base font-bold tracking-tight text-red-600">Chế độ bảo trì (Maintenance)</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm">Chặn tất cả các thao tác ghi dữ liệu từ phía người dùng.</p>
+                                <h4 className="text-lg font-bold tracking-tight text-red-600">Chế độ bảo trì hệ thống</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed italic">Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để nâng cấp kỹ thuật.</p>
                             </div>
                             <CustomSwitch active={maintenanceMode} onToggle={handleToggleMaintenance} color="red" />
                         </div>
 
-                        <div className="p-10 border border-zinc-100 bg-white flex items-center justify-between group hover:border-black transition-all duration-500">
+                        <div className="p-10 border border-zinc-100 bg-white flex items-center justify-between group hover:border-black transition-all duration-300 rounded-sm">
                             <div className="space-y-2">
-                                <h4 className="text-base font-bold tracking-tight">Đăng ký người dùng mới</h4>
-                                <p className="text-[11px] font-medium text-zinc-400 max-w-sm">Mở hoặc đóng cổng đăng ký tài khoản mới.</p>
+                                <h4 className="text-lg font-bold tracking-tight">Đăng ký tài khoản mới</h4>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm">Cho phép hoặc chặn quyền đăng ký tài khoản cho người dùng mới.</p>
                             </div>
                             <CustomSwitch active={registrationEnabled} onToggle={handleToggleRegistration} />
                         </div>
@@ -689,49 +598,50 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "notifications" && (
-              <div className="space-y-12 flex flex-col items-center justify-center h-full min-h-[400px] text-center">
-                <div className="w-20 h-20 bg-zinc-50 border border-zinc-100 flex items-center justify-center mb-6">
-                  <Bell className="w-8 h-8 text-zinc-200 stroke-[1]" />
+              <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-8 animate-in fade-in duration-300">
+                <div className="w-20 h-20 bg-zinc-50 border border-zinc-100 flex items-center justify-center rounded-sm">
+                  <Bell className="w-10 h-10 text-zinc-100 stroke-[1]" />
                 </div>
-                <div className="space-y-2">
-                   <h3 className="text-xl font-bold tracking-tighter">Trung tâm thông báo</h3>
-                   <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest max-w-xs leading-relaxed">
-                     Hệ thống thông báo đẩy đang được đồng bộ hóa.
+                <div className="space-y-3">
+                   <h3 className="text-2xl font-bold tracking-tighter">Trung tâm thông báo</h3>
+                   <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
+                     Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của bạn.
                    </p>
                 </div>
               </div>
             )}
 
             {activeSection === "account" && (
-              <div className="space-y-12">
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-bold tracking-tighter">Tài khoản & Bảo mật</h2>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Lớp phòng thủ định danh cuối cùng</p>
+              <div className="space-y-12 animate-in fade-in duration-300">
+                <div className="space-y-3">
+                  <h2 className="text-4xl font-bold tracking-tighter">Định danh & Bảo mật</h2>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Quản lý lớp phòng thủ tài khoản</p>
                 </div>
 
                 <div className="space-y-6">
-                   <div className="p-10 border border-zinc-100 flex items-center justify-between hover:border-black transition-all duration-500">
-                      <div className="space-y-1">
-                         <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Trạng thái xác minh</span>
-                         <div className="text-sm font-bold flex items-center gap-2">
-                            <div className="w-2 h-2 bg-black" /> Tài khoản đã định danh cấp cao
+                   <div className="p-10 border border-zinc-100 flex items-center justify-between hover:border-black transition-all duration-300 rounded-sm group">
+                      <div className="space-y-2">
+                         <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Trạng thái xác thực</span>
+                         <div className="text-base font-bold flex items-center gap-3">
+                            <ShieldCheck className="w-5 h-5 text-black" /> Tài khoản đã định danh cấp cao
                          </div>
                       </div>
-                      <Button variant="outline" className="text-[10px] font-bold uppercase tracking-widest border-zinc-100 rounded-none h-14 px-8 hover:border-black transition-all">Đổi mật khẩu</Button>
+                      <button className="h-14 px-10 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all rounded-sm">Đổi mật khẩu</button>
                    </div>
 
-                   <div className="p-10 border border-zinc-100 flex items-center justify-between hover:border-black transition-all duration-500">
-                      <div className="space-y-1">
-                         <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Địa chỉ Email</span>
-                         <div className="text-sm font-bold">{user?.email || "Chưa cập nhật"}</div>
+                   <div className="p-10 border border-zinc-100 flex items-center justify-between hover:border-black transition-all duration-300 rounded-sm group">
+                      <div className="space-y-2">
+                         <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Địa chỉ Email liên kết</span>
+                         <div className="text-base font-bold tracking-tight">{user?.email || "Chưa định danh"}</div>
                       </div>
-                      <Button variant="outline" className="text-[10px] font-bold uppercase tracking-widest border-zinc-100 rounded-none h-14 px-8 hover:border-black transition-all">Cập nhật</Button>
+                      <button className="h-14 px-10 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all rounded-sm">Cập nhật Email</button>
                    </div>
                 </div>
 
-                <div className="pt-20 border-t border-zinc-50">
-                   <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest leading-relaxed max-w-2xl">
-                     * Bạn đang quản lý các thiết lập bảo mật cấp cao. Mọi thay đổi quan trọng sẽ yêu cầu xác thực 2 lớp qua email đã đăng ký.
+                <div className="pt-20 border-t border-zinc-50 flex items-center gap-4">
+                   <AlertCircle className="w-5 h-5 text-zinc-100 shrink-0" />
+                   <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest leading-relaxed italic">
+                     DocLib yêu cầu xác thực hai lớp cho mọi thay đổi quan trọng liên quan đến bảo mật và tài chính.
                    </p>
                 </div>
               </div>

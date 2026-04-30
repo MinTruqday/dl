@@ -50,7 +50,7 @@ async def chat_endpoint(req: ChatRequest):
     
     try:
         config = {"configurable": {"thread_id": f"{req.user_id}_{req.document_id or 'global'}"}}
-        result = router_agent_app.invoke(initial_state, config=config)
+        result = await router_agent_app.ainvoke(initial_state, config=config)
         return {
             "answer": result.get("final_answer", "Xin lỗi, tôi gặp sự cố khi xử lý câu hỏi."),
             "route": result.get("route", "unknown")
@@ -76,19 +76,19 @@ async def stream_endpoint(req: ChatRequest):
     async def response_generator():
         try:
             config = {"configurable": {"thread_id": f"{req.user_id}_{req.document_id or 'global'}"}}
-            for chunk in router_agent_app.stream(initial_state, config=config, stream_mode="updates"):
+            async for chunk in router_agent_app.astream(initial_state, config=config, stream_mode="updates"):
                 import json
-                if "rag" in chunk:
-                    msg = chunk["rag"].get("final_answer", "")
+                for node_name, node_output in chunk.items():
+                    yield f"event: status\ndata: {json.dumps({'node': node_name})}\n\n"
+                    msg = node_output.get("final_answer", "")
                     if msg:
-                        yield f"data: {json.dumps({'answer': msg})}\n\n"
-                elif "chat" in chunk:
-                    msg = chunk["chat"].get("final_answer", "")
-                    if msg:
-                        yield f"data: {json.dumps({'answer': msg})}\n\n"
+                        yield f"event: message\ndata: {json.dumps({'chunk': msg})}\n\n"
+            
+            yield "event: done\ndata: [DONE]\n\n"
+            
         except Exception as e:
             logger.error(f"Streaming error: {e}")
-            yield f"data: {json.dumps({'error': 'Streaming failed'})}\n\n"
+            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
 
     from fastapi.responses import StreamingResponse
     return StreamingResponse(response_generator(), media_type="text/event-stream")

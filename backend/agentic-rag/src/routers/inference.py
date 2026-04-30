@@ -129,9 +129,11 @@ async def analyze_sentiment(req: SentimentRequest):
         hf_token = settings.HF_TOKEN
         
         async def call_llm():
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1)
-            res = await llm.ainvoke(prompt)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1, task="conversational")
+            llm = ChatHuggingFace(llm=_hf)
+            response = await llm.ainvoke(prompt)
+            res = response.content
 
             import json
             import re
@@ -155,9 +157,11 @@ async def check_grammar(req: GrammarRequest):
         hf_token = settings.HF_TOKEN
         
         async def call_llm():
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1)
-            res = await llm.ainvoke(prompt)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1, task="conversational")
+            llm = ChatHuggingFace(llm=_hf)
+            response = await llm.ainvoke(prompt)
+            res = response.content
             import json
             import re
             match = re.search(r'\{.*\}', res, re.DOTALL)
@@ -242,9 +246,11 @@ async def generate_flashcard(req: FlashcardRequest):
         hf_token = settings.HF_TOKEN
         
         async def call_llm():
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.3)
-            res = await llm.ainvoke(prompt)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.3, task="conversational")
+            llm = ChatHuggingFace(llm=_hf)
+            response = await llm.ainvoke(prompt)
+            res = response.content
             import json
             import re
             match = re.search(r'\{.*\}', res, re.DOTALL)
@@ -282,9 +288,11 @@ async def chat_endpoint(req: ChatRequest):
         hf_token = settings.HF_TOKEN
         
         async def call_llm():
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.5)
-            return await llm.ainvoke(prompt)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.5, task="conversational")
+            llm = ChatHuggingFace(llm=_hf)
+            response = await llm.ainvoke(prompt)
+            return response.content
             
         result = await call_llm()
         result = result.strip()
@@ -309,9 +317,11 @@ async def get_synonyms(req: SynonymsRequest):
         hf_token = settings.HF_TOKEN
         
         async def call_llm():
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1)
-            return await llm.ainvoke(prompt)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1, task="conversational")
+            llm = ChatHuggingFace(llm=_hf)
+            response = await llm.ainvoke(prompt)
+            return response.content
             
         result = await call_llm()
         synonyms = [s.strip() for s in result.split(",")]

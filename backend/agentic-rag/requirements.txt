@@ -28,3 +28,4 @@ motor>=3.4.0
 pymongo<5.0.0
 pymupdf==1.24.2
 landingai-ade>=0.1.0
+markitdown[all]

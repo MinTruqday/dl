@@ -52,12 +52,14 @@ class AgentState(TypedDict):
 llama_model = settings.LLAMA_MODEL
 hf_token = settings.HF_TOKEN
 
+from langchain_huggingface import ChatHuggingFace
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
-    temperature=0.1
+    temperature=0.1,
+    task="conversational"
 )
-llm = _hf_endpoint
+llm = ChatHuggingFace(llm=_hf_endpoint)
 llm_generate = llm
 
 try:
@@ -94,7 +96,8 @@ def contextualize_question(state: AgentState):
     )
     
     try:
-        new_q = llm.invoke(prompt.format(history=history_str, question=question)).strip()
+        response = llm.invoke(prompt.format(history=history_str, question=question))
+        new_q = response.content.strip()
         logger.info(f"Contextualized: {question} -> {new_q}")
         return {"question": new_q}
     except Exception as e:
@@ -109,7 +112,8 @@ def route_question(state: AgentState):
         input_variables=["question"]
     )
     try:
-        res = llm.invoke(prompt.format(question=question)).strip().lower()
+        response = llm.invoke(prompt.format(question=question))
+        res = response.content.strip().lower()
         route = "direct" if "direct" in res else "rag"
     except Exception as e:
         logger.error(f"RAG Error: {e}")
@@ -121,7 +125,7 @@ def decide_initial_route(state: AgentState):
         return "generate_direct"
     return "retrieve_db"
 
-def retrieve_db(state: AgentState):
+async def retrieve_db(state: AgentState):
     logger.info("RetrievalAgent: Retrieving from internal database")
     question = state["question"]
     document_id = state.get("document_id")
@@ -129,11 +133,12 @@ def retrieve_db(state: AgentState):
 
     if embedder:
         prompt = PromptTemplate(
-            template="Bạn là ReasoningAgent. Câu hỏi gốc: {question}. Hãy lý luận và tạo ra 3 câu hỏi con (sub-queries) bằng tiếng Việt để quyét đa góc độ. Chỉ trả về 3 câu, mỗi câu trên 1 dòng.",
+            template="Bạn là ReasoningAgent. Câu hỏi gốc: {question}. Hãy lý luận và tạo ra 3 câu hỏi con (sub-queries) bằng tiếng Việt để quét đa góc độ. Chỉ trả về 3 câu, mỗi câu trên 1 dòng.",
             input_variables=["question"]
         )
         try:
-            sub_queries_res = llm.invoke(prompt.format(question=question)).strip()
+            response = llm.invoke(prompt.format(question=question))
+            sub_queries_res = response.content.strip()
             queries = [q.strip("- ") for q in sub_queries_res.split("\n") if q.strip()]
             queries.append(question)
         except Exception as e:
@@ -142,7 +147,7 @@ def retrieve_db(state: AgentState):
             
         extracted_docs = []
         for q in queries[:4]: 
-            results = retrieval_agent.retrieve(query=q, document_id=document_id, k=3)
+            results = await retrieval_agent.retrieve(query=q, document_id=document_id, k=3)
             for doc in results:
                 chunk_id = doc.get("metadata", {}).get("chunk_id", "unknown")
                 doc_name = doc.get("metadata", {}).get("title", "Tài liệu hệ thống")
@@ -177,7 +182,8 @@ def grade_documents(state: AgentState):
     filtered_docs = []
     for d in documents:
         try:
-            res = llm.invoke(prompt.format(context=d, question=question)).strip().lower()
+            response = llm.invoke(prompt.format(context=d, question=question))
+            res = response.content.strip().lower()
             if "yes" in res:
                 filtered_docs.append(d)
                 logger.info("Document graded as: RELEVANT (yes)")
@@ -224,7 +230,8 @@ def transform_query(state: AgentState):
         input_variables=["question"]
     )
     chain = prompt | llm
-    new_question = chain.invoke({"question": question}).strip()
+    response = chain.invoke({"question": question})
+    new_question = response.content.strip()
     return {"question": new_question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
 
 def generate_direct(state: AgentState):
@@ -232,7 +239,8 @@ def generate_direct(state: AgentState):
     question = state["question"]
     user_context = memory_agent.get_context(question, user_id)
     prompt_str = f"Trò chuyện vui vẻ tự nhiên. Không cần tìm kiếm. \nThông tin cá nhân: {user_context}\nCâu hỏi: {question}"
-    generation = llm_generate.invoke(prompt_str)
+    response = llm_generate.invoke(prompt_str)
+    generation = response.content
     if user_id != "guess_user":
         memory_agent.add_memory([
             {"role": "user", "content": question},
@@ -262,6 +270,7 @@ def generate(state: AgentState):
         - Tóm tắt ý chính ngay ở câu đầu tiên.
         - Trình bày chi tiết bằng các gạch đầu dòng rõ ràng.
         - Mọi thông tin sinh ra phải trích dẫn theo kiểu Inline Citation ngay tại câu (VD: 'Theo tài liệu [1] thì...').
+        - NẾU người dùng yêu cầu xuất file, tạo bảng biểu để tải về, hoặc tạo file mã nguồn, HÃY bọc nội dung file đó trong một markdown code block với định dạng tương ứng (Ví dụ: ```csv\nid,name\n1,Test\n``` hoặc ```python\nprint("hello")\n```). Hệ thống sẽ tự động biến nó thành nút tải xuống cho người dùng. Kèm theo một vài lời giải thích ngắn gọn bên ngoài block.
         
         Bạn ĐANG đọc các tài liệu từ: {source_name}.
         
@@ -277,12 +286,22 @@ def generate(state: AgentState):
     
     formatted_prompt = prompt.format(question=question, documents=docs_str, source_name=source_name, user_context=user_context)
     
-    content_blocks = [{"type": "text", "text": formatted_prompt}]
     if state.get("image_data"):
-        content_blocks.append({"type": "image_url", "image_url": {"url": state["image_data"]}})
-        
-    messages = [HumanMessage(content=content_blocks)]
-    generation = llm_generate.invoke(formatted_prompt)
+        content_blocks = [
+            {"type": "text", "text": formatted_prompt},
+            {"type": "image_url", "image_url": {"url": state["image_data"]}}
+        ]
+        messages = [HumanMessage(content=content_blocks)]
+        try:
+            response = llm_generate.invoke(messages)
+            generation = response.content
+        except Exception as e:
+            logger.error(f"Multimodal generation failed: {e}")
+            response = llm_generate.invoke(formatted_prompt)
+            generation = response.content
+    else:
+        response = llm_generate.invoke(formatted_prompt)
+        generation = response.content
     
     if user_id != "guess_user":
         memory_agent.add_memory([

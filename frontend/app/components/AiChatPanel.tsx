@@ -1,10 +1,17 @@
 "use client";
 
 import { API_URL, getToken } from "@/app/lib/api";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Cpu, Zap, Coins, Paperclip, Image as ImageIcon, FileText, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useToast } from "@/app/contexts/ToastContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import "katex/dist/katex.min.css";
+import "highlight.js/styles/github-dark.css";
 
 export default function AiChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
@@ -159,6 +166,9 @@ export default function AiChatPanel() {
         check_hallucination: "Đang xác thực thông tin",
         sql_agent: "Đang kiểm tra tài khoản",
         guest_router: "Đang khởi tạo kết nối",
+        route_query: "Đang định tuyến yêu cầu",
+        rag: "Đang xử lý tạo sinh tăng cường bằng truy xuất",
+        chat: "Đang trò chuyện",
       };
 
       let isDone = false;
@@ -186,7 +196,9 @@ export default function AiChatPanel() {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
                 if (lastMsg.role === "assistant") {
-                  lastMsg.thoughts = [...(lastMsg.thoughts || []), nodeVi];
+                  if (!lastMsg.thoughts?.includes(nodeVi)) {
+                    lastMsg.thoughts = [...(lastMsg.thoughts || []), nodeVi];
+                  }
                 }
                 return updated;
               });
@@ -253,7 +265,7 @@ export default function AiChatPanel() {
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-[100] w-[380px] h-[600px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
+        <div className="fixed bottom-24 right-6 z-[100] w-[450px] h-[700px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300 shadow-2xl">
 
           <div className="px-5 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-3">
@@ -302,7 +314,7 @@ export default function AiChatPanel() {
               messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`max-w-[90%] text-sm leading-relaxed animate-in fade-in duration-300 flex flex-col ${
+                  className={`max-w-[98%] text-sm leading-relaxed animate-in fade-in duration-300 flex flex-col ${
                     msg.role === "user" ? "self-end items-end" : "self-start items-start w-full"
                   }`}
                 >
@@ -310,7 +322,7 @@ export default function AiChatPanel() {
                     className={`px-5 py-4 border ${
                       msg.role === "user"
                         ? "bg-black text-white border-black"
-                        : "bg-white border-zinc-100 text-black w-fit max-w-full"
+                        : "bg-white border-zinc-100 text-black w-full"
                     }`}
                   >
                     {msg.role === "assistant" && usePro && msg.thoughts && msg.thoughts.length > 0 && (
@@ -329,18 +341,56 @@ export default function AiChatPanel() {
                         </div>
                       </details>
                     )}
-                    <div className="whitespace-pre-wrap font-medium">
-                      {msg.content ? (
-                        msg.content
-                      ) : msg.role === "assistant" ? (
-                        <div className="flex gap-2 items-center py-1">
-                          <div className="w-1.5 h-1.5 bg-zinc-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <div className="w-1.5 h-1.5 bg-zinc-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <div className="w-1.5 h-1.5 bg-zinc-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </div>
-                      ) : (
-                        ""
-                      )}
+                    <div className="w-full prose prose-sm max-w-none dark:prose-invert">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                        components={{
+                          p: ({ children }) => <p className="mb-4 last:mb-0 font-medium leading-relaxed">{children}</p>,
+                          code({ node, inline, className, children, ...props }: any) {
+                            const match = /language-(\w+)/.exec(className || "");
+                            const content = String(children).replace(/\n$/, "");
+                            
+                            if (!inline && match) {
+                              const lang = match[1];
+                              const handleDownload = () => {
+                                const blob = new Blob([content], { type: "text/plain" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `doclib_${Date.now()}.${lang}`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              };
+
+                              return (
+                                <button
+                                  onClick={handleDownload}
+                                  className="my-3 flex items-center gap-2 text-blue-600 hover:text-blue-800 font-bold underline transition-colors cursor-pointer group"
+                                  title="Nhấp để tải xuống"
+                                >
+                                  <FileText className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                  <span>doclib_output.{lang}</span>
+                                </button>
+                              );
+                            }
+                            return (
+                              <code className={`${className} bg-zinc-100 px-1 py-0.5 rounded text-black font-mono text-[13px]`} {...props}>
+                                {children}
+                              </code>
+                            );
+                          },
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto my-4 border border-zinc-100">
+                              <table className="min-w-full divide-y divide-zinc-200">{children}</table>
+                            </div>
+                          ),
+                          th: ({ children }) => <th className="px-3 py-2 bg-zinc-50 text-left text-[11px] font-bold text-black uppercase tracking-wider">{children}</th>,
+                          td: ({ children }) => <td className="px-3 py-2 whitespace-nowrap text-zinc-600 border-t border-zinc-100">{children}</td>,
+                        }}
+                      >
+                        {msg.content || (msg.role === "assistant" ? "..." : "")}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 </div>
@@ -380,7 +430,7 @@ export default function AiChatPanel() {
             )}
 
             {showAttachments && (
-              <div className="absolute bottom-full left-4 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300 z-50">
+              <div className="absolute bottom-full left-4 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300 z-50 shadow-xl">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -448,7 +498,7 @@ export default function AiChatPanel() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder=""
+                  placeholder="Nhập câu hỏi..."
                   disabled={isSending}
                   className="flex-1 h-full text-sm bg-transparent outline-none font-medium"
                 />

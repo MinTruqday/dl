@@ -1,5 +1,6 @@
 import httpx
 import os
+import uuid
 from typing import Dict, Any, List, Optional
 from loguru import logger
 from core.config import settings
@@ -12,6 +13,8 @@ class RagService:
         
         if current_user:
             payload["user_id"] = str(current_user.id)
+        else:
+            payload["user_id"] = f"guest_{uuid.uuid4().hex[:8]}"
             
         headers = {"Content-Type": "application/json"}
         if auth_header:
@@ -25,13 +28,13 @@ class RagService:
                 return response.json()
             else:
                 logger.error(f"RAG Service error: {response.status_code} - {response.text}")
-                return {"answer": "Hệ thống RAG hiện đang bận, vui lòng thử lại sau.", "status": response.status_code}
+                return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": response.status_code}
         except httpx.ReadError:
             logger.error("RAG chat exception: ReadError - Service closed connection unexpectedly.")
-            return {"answer": "Hệ thống AI gặp sự cố trong lúc xử lý, vui lòng thử lại sau.", "status": 503}
+            return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": 503}
         except Exception as e:
             logger.error(f"RAG chat exception: {type(e).__name__} - {str(e)}")
-            return {"answer": f"Lỗi kết nối tới AI: {str(e)}", "status": 500}
+            return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": 500}
 
     @staticmethod
     async def proxy_rag_stream(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Any:
@@ -41,24 +44,32 @@ class RagService:
         
         if current_user:
             payload["user_id"] = str(current_user.id)
+        else:
+            payload["user_id"] = f"guest_{uuid.uuid4().hex[:8]}"
             
         headers = {"Content-Type": "application/json"}
         if auth_header:
             headers["Authorization"] = auth_header
 
         async def stream_generator():
-            async with httpx.AsyncClient() as client:
-                async with client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
-                    async for chunk in response.aiter_bytes():
-                        yield chunk
+            try:
+                async with httpx.AsyncClient() as client:
+                    async with client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
+                        if response.status_code != 200:
+                            logger.error(f"RAG Stream error: {response.status_code}")
+                            yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
+                            return
+                        
+                        async for chunk in response.aiter_bytes():
+                            yield chunk
+            except Exception as e:
+                logger.error(f"RAG stream exception: {str(e)}")
+                yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
 
         return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
     @staticmethod
     async def ingest(document_id: str) -> Dict[str, Any]:
-        """
-        Gửi yêu cầu ingest tài liệu tới service Agentic RAG.
-        """
         base_url = settings.AGENTIC_RAG_URL
         ingest_url = f"{base_url}/ingest"
         
@@ -72,7 +83,7 @@ class RagService:
                 return response.json()
             else:
                 logger.error(f"RAG Ingest error: {response.status_code} - {response.text}")
-                return {"status": "error", "message": f"Lỗi đồng bộ AI: {response.status_code}"}
+                return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}
         except Exception as e:
             logger.error(f"RAG ingest exception: {e}")
-            return {"status": "error", "message": str(e)}
+            return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}

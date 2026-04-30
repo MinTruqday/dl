@@ -94,3 +94,11 @@ async def request_data_export(current_user: UserInDB = Depends(get_current_user)
 @router.post("/gdpr/delete", response_model=APIResponse[Any])
 async def request_data_deletion(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ProfileService.right_to_be_forgotten(current_user), message="Yêu cầu xóa dữ liệu định danh (GDPR) đã được gửi.", status=status.HTTP_202_ACCEPTED)
+
+@router.post("/bookmarks/{document_id}", response_model=APIResponse[Any])
+async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ProfileService.toggle_bookmark(document_id, current_user), message="Cập nhật danh sách lưu trữ thành công.", status=200)
+
+@router.get("/bookmarks", response_model=APIResponse[Any])
+async def get_bookmarks(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ProfileService.get_bookmarks(current_user), message="Lấy danh sách lưu trữ thành công.", status=200)

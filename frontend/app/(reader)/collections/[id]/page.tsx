@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   ArrowLeft, 
-  BookOpen, 
   MoreVertical, 
   Share2, 
   Plus, 
@@ -17,8 +16,7 @@ import {
   Sparkles,
   ChevronRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { API_URL, getToken } from "@/app/lib/api";
+import { getReadingListByIdAPI, API_URL } from "@/app/lib/api";
 import Link from "next/link";
 
 export default function CollectionDetailPage() {
@@ -29,19 +27,14 @@ export default function CollectionDetailPage() {
   const [visible, setVisible] = useState(false);
 
   const fetchCollectionDetail = useCallback(async () => {
+    if (!id) return;
     try {
-      const res = await fetch(`${API_URL}/reader/lists/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (res.ok) {
-        const json = await res.json();
-        const data = json.data || json;
-        setCollection(data);
-      } else {
-        router.push("/collections");
-      }
+      const res = await getReadingListByIdAPI(id as string);
+      const data = res.data || res;
+      setCollection(data);
     } catch (err: any) {
       console.error("Lỗi tải chi tiết bộ sưu tập:", err);
+      router.push("/collections");
     } finally {
       setLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -64,9 +57,8 @@ export default function CollectionDetailPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      {/* Navigation & Actions */}
       <div 
-        className="mb-12 flex items-center justify-between transition-all duration-700"
+        className="mb-12 flex items-center justify-between transition-all duration-300"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <button 
@@ -78,27 +70,26 @@ export default function CollectionDetailPage() {
         </button>
 
         <div className="flex gap-2">
-          <button className="p-3 border border-zinc-100 hover:border-black transition-all">
+          <button className="p-3 border border-zinc-100 hover:border-black transition-all rounded-sm">
             <Share2 className="w-4 h-4" />
           </button>
-          <button className="p-3 border border-zinc-100 hover:border-black transition-all">
+          <button className="p-3 border border-zinc-100 hover:border-black transition-all rounded-sm">
             <Settings className="w-4 h-4" />
           </button>
-          <button className="p-3 border border-zinc-100 hover:border-red-500 hover:text-red-500 transition-all">
+          <button className="p-3 border border-zinc-100 hover:border-red-500 hover:text-red-500 transition-all rounded-sm">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Header Section */}
       <div 
-        className="mb-16 border-b border-zinc-100 pb-12 transition-all duration-700 delay-150"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+        className="mb-16 border-b border-zinc-100 pb-12 transition-all duration-300 delay-75"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="max-w-4xl">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-2 h-2 bg-black rounded-none" />
-            <span className="text-[10px] font-bold tracking-[0.5em] uppercase text-zinc-400">Collection Details</span>
+            <div className="w-2 h-2 bg-black rounded-sm" />
+            <span className="text-[10px] font-bold tracking-[0.5em] uppercase text-zinc-400">Chi tiết bộ sưu tập</span>
           </div>
           <h1 className="text-6xl font-bold tracking-tighter leading-none text-black mb-8">
             {collection.name}
@@ -109,20 +100,19 @@ export default function CollectionDetailPage() {
         </div>
       </div>
 
-      {/* Content Grid */}
       <div 
-        className="w-full transition-all duration-700 delay-300"
+        className="w-full transition-all duration-300 delay-150"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold tracking-widest uppercase bg-black text-white px-4 py-2">
-              {collection.documents_detailed?.length || 0} TÀI LIỆU TRONG DANH SÁCH
+            <span className="text-[10px] font-bold tracking-widest uppercase bg-black text-white px-4 py-2 rounded-sm">
+              {collection.documents_detailed?.length || 0} Tài liệu trong danh sách
             </span>
           </div>
-          <Button className="h-12 px-8 bg-zinc-50 text-black border border-zinc-100 hover:bg-black hover:text-white hover:border-black text-[10px] font-bold tracking-widest uppercase transition-all active:scale-95">
-            <Plus className="w-4 h-4 mr-2" /> Thêm tài liệu
-          </Button>
+          <button className="h-12 px-8 bg-zinc-50 text-black border border-zinc-100 hover:bg-black hover:text-white hover:border-black text-[10px] font-bold tracking-widest uppercase transition-all active:scale-95 rounded-sm flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Thêm tài liệu
+          </button>
         </div>
 
         {collection.documents_detailed?.length > 0 ? (
@@ -130,15 +120,19 @@ export default function CollectionDetailPage() {
             {collection.documents_detailed.map((doc: any, index: number) => (
               <div 
                 key={doc._id}
-                className="group flex items-center gap-8 p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-500"
+                className="group flex items-center gap-8 p-6 border border-zinc-100 bg-white hover:border-black transition-all duration-300 rounded-sm"
               >
                 <div className="text-[10px] font-bold text-zinc-200 w-6 shrink-0">
                   {(index + 1).toString().padStart(2, '0')}
                 </div>
                 
-                <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+                <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">
                   {doc.cover_url ? (
-                    <img src={doc.cover_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={doc.title} />
+                    <img 
+                      src={doc.cover_url.startsWith("http") ? doc.cover_url : `${API_URL}/storage/${doc.cover_url}`} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                      alt={doc.title} 
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <FileText className="w-6 h-6 text-zinc-100" />
@@ -155,8 +149,8 @@ export default function CollectionDetailPage() {
                   </Link>
                   <div className="flex items-center gap-6 mt-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-1 bg-zinc-300" />
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Tác giả: {doc.author_name || "Vô danh"}</span>
+                      <div className="w-1 h-1 bg-zinc-300 rounded-sm" />
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Tác giả: {doc.author_name || "Tri thức DocLib"}</span>
                     </div>
                     <div className="flex items-center gap-4">
                        <span className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-300">
@@ -170,17 +164,17 @@ export default function CollectionDetailPage() {
                 </div>
 
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                   <button className="p-3 border border-zinc-100 hover:bg-zinc-50 transition-all">
+                   <button className="p-3 border border-zinc-100 hover:bg-zinc-50 transition-all rounded-sm">
                      <Share2 className="w-4 h-4" />
                    </button>
-                   <button className="p-3 border border-zinc-100 hover:bg-zinc-50 transition-all">
+                   <button className="p-3 border border-zinc-100 hover:bg-zinc-50 transition-all rounded-sm">
                      <MoreVertical className="w-4 h-4" />
                    </button>
                 </div>
                 
                 <Link 
                   href={`/document/${doc.slug}`}
-                  className="w-12 h-12 flex items-center justify-center border border-zinc-100 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all"
+                  className="w-12 h-12 flex items-center justify-center border border-zinc-100 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all rounded-sm"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </Link>
@@ -188,23 +182,22 @@ export default function CollectionDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="py-32 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30">
-            <div className="w-20 h-20 border border-zinc-100 bg-white flex items-center justify-center mb-8">
+          <div className="py-32 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30 rounded-sm">
+            <div className="w-20 h-20 border border-zinc-100 bg-white flex items-center justify-center mb-8 rounded-sm">
               <FileText className="w-8 h-8 text-zinc-100" />
             </div>
             <h2 className="text-2xl font-bold tracking-tighter text-black mb-3">Bộ sưu tập này đang trống</h2>
-            <p className="text-sm font-medium text-zinc-400 mb-8 max-w-xs text-center">
+            <p className="text-sm font-medium text-zinc-400 mb-8 max-w-xs text-center uppercase tracking-widest leading-loose">
               Hãy thêm những tài liệu giá trị vào đây để xây dựng kho tàng tri thức của riêng bạn.
             </p>
             <Link href="/">
-              <Button className="h-14 px-12 bg-black text-white text-[11px] font-bold tracking-widest uppercase hover:bg-zinc-800 transition-all shadow-xl">
+              <button className="h-14 px-12 bg-black text-white text-[11px] font-bold tracking-widest uppercase hover:bg-zinc-800 transition-all rounded-sm">
                 Khám phá tài liệu ngay
-              </Button>
+              </button>
             </Link>
           </div>
         )}
       </div>
-
     </div>
   );
 }

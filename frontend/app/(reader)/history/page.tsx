@@ -7,19 +7,20 @@ import {
   Calendar, 
   Search, 
   Loader2, 
-  Info, 
   Sparkles, 
   BookOpen, 
   ChevronRight,
-  TrendingUp,
   FileText,
   Filter,
   CheckCircle2,
 } from "lucide-react";
-import { getReadingHistoryAPI } from "@/app/lib/api";
+import { 
+  getReadingHistoryAPI, 
+  clearReadingHistoryAPI, 
+  deleteReadingHistoryItemAPI,
+  API_URL 
+} from "@/app/lib/api";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export default function ReadingHistoryPage() {
   const [history, setHistory] = useState<any[]>([]);
@@ -27,12 +28,14 @@ export default function ReadingHistoryPage() {
   const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "reading" | "completed">("all");
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getReadingHistoryAPI();
-      setHistory(Array.isArray(data) ? data : []);
+      const historyData = data.data || data;
+      setHistory(Array.isArray(historyData) ? historyData : []);
     } catch (err: any) {
       console.error("Lỗi tải lịch sử:", err);
     } finally {
@@ -41,12 +44,35 @@ export default function ReadingHistoryPage() {
     }
   }, []);
 
+  const handleClearHistory = async () => {
+    if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử đọc sách không?")) return;
+    try {
+      await clearReadingHistoryAPI();
+      setHistory([]);
+    } catch (err: any) {
+      alert("Không thể xóa lịch sử. Vui lòng thử lại sau.");
+    }
+  };
+
+  const handleDeleteItem = async (documentId: string) => {
+    setIsDeleting(documentId);
+    try {
+      await deleteReadingHistoryItemAPI(documentId);
+      setHistory(prev => prev.filter(item => item.document_id !== documentId));
+    } catch (err: any) {
+      alert("Không thể xóa mục này.");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
 
   const filteredHistory = history.filter((item) => {
-    const matchesSearch = (item.document_title || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const title = item.document_title || "";
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase());
     if (activeTab === "all") return matchesSearch;
     if (activeTab === "reading") return matchesSearch && (item.progress_percentage || 0) < 100;
     if (activeTab === "completed") return matchesSearch && (item.progress_percentage || 0) === 100;
@@ -63,10 +89,9 @@ export default function ReadingHistoryPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      {/* Header - Premium Standard */}
       <div 
-        className="mb-12 border-b border-zinc-100 pb-10 transition-all duration-700"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)" }}
+        className="mb-12 border-b border-zinc-100 pb-10 transition-all duration-300"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-3">
@@ -74,22 +99,22 @@ export default function ReadingHistoryPage() {
               Lịch sử đọc
             </h1>
             <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Knowledge Reading Journey <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
+              Hành trình khám phá tri thức <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
             </p>
           </div>
           
-          <Button 
-            className="h-14 px-8 bg-zinc-50 text-zinc-400 hover:text-black hover:bg-white border border-zinc-100 hover:border-black text-[10px] font-bold tracking-widest uppercase transition-all rounded-none"
+          <button 
+            onClick={handleClearHistory}
+            className="h-14 px-8 bg-zinc-50 text-zinc-400 hover:text-black hover:bg-white border border-zinc-100 hover:border-black text-[10px] font-bold tracking-widest uppercase transition-all rounded-sm"
           >
-            <Trash2 className="w-4 h-4 mr-2" /> Xóa toàn bộ lịch sử
-          </Button>
+            <Trash2 className="w-4 h-4 mr-2 inline" /> Xóa toàn bộ lịch sử
+          </button>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        {/* Sidebar Controls */}
         <aside 
-          className="lg:col-span-3 space-y-10 transition-all duration-700 delay-150"
+          className="lg:col-span-3 space-y-10 transition-all duration-300 delay-75"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
           <div className="space-y-6">
@@ -105,7 +130,7 @@ export default function ReadingHistoryPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border ${
+                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border rounded-sm ${
                     activeTab === tab.id
                       ? "bg-black text-white border-black"
                       : "bg-white text-zinc-400 border-zinc-100 hover:bg-zinc-50 hover:text-black"
@@ -126,16 +151,16 @@ export default function ReadingHistoryPage() {
             </div>
             <div className="relative">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
-              <Input 
-                placeholder=""
+              <input 
+                placeholder="Nhập tên tài liệu..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-14 h-14 bg-zinc-50/50 border-zinc-100 focus:bg-white focus:border-black transition-all text-xs font-bold rounded-none"
+                className="w-full pl-14 h-14 bg-zinc-50/50 border border-zinc-100 focus:bg-white focus:border-black outline-none transition-all text-xs font-bold rounded-sm px-4"
               />
             </div>
           </div>
 
-          <div className="p-8 border border-zinc-100 bg-zinc-50/30 space-y-4">
+          <div className="p-8 border border-zinc-100 bg-zinc-50/30 space-y-4 rounded-sm">
              <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2">Thống kê hành trình</div>
              <div className="space-y-3">
                 <div className="flex justify-between text-[11px] font-medium">
@@ -144,15 +169,14 @@ export default function ReadingHistoryPage() {
                 </div>
                 <div className="flex justify-between text-[11px] font-medium">
                    <span className="text-zinc-400">Hoàn tất:</span>
-                   <span className="text-black font-bold">{history.filter(h => h.progress_percentage === 100).length}</span>
+                   <span className="text-black font-bold">{history.filter(h => (h.progress_percentage || 0) >= 100).length}</span>
                 </div>
              </div>
           </div>
         </aside>
 
-        {/* Main Content Area */}
         <div 
-          className="lg:col-span-9 transition-all duration-700 delay-300"
+          className="lg:col-span-9 transition-all duration-300 delay-150"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
         >
           {filteredHistory.length > 0 ? (
@@ -160,12 +184,16 @@ export default function ReadingHistoryPage() {
               {filteredHistory.map((item, index) => (
                 <div
                   key={item.document_id + index}
-                  className="group flex items-center justify-between p-8 border border-zinc-100 bg-white hover:border-black transition-all duration-700"
+                  className={`group flex flex-col md:flex-row items-start md:items-center justify-between p-8 border border-zinc-100 bg-white hover:border-black transition-all duration-300 rounded-sm ${isDeleting === item.document_id ? "opacity-50 pointer-events-none" : ""}`}
                 >
-                  <div className="flex items-center gap-8 flex-1 min-w-0">
-                    <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+                  <div className="flex items-center gap-8 flex-1 min-w-0 w-full md:w-auto">
+                    <div className="w-16 h-20 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">
                       {item.cover_url ? (
-                        <img src={item.cover_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.document_title} />
+                        <img 
+                          src={item.cover_url.startsWith("http") ? item.cover_url : `${API_URL}/storage/${item.cover_url}`} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                          alt={item.document_title} 
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <FileText className="w-8 h-8 text-zinc-100 stroke-[1]" />
@@ -193,7 +221,7 @@ export default function ReadingHistoryPage() {
                       </Link>
 
                       <div className="max-w-md space-y-2">
-                         <div className="w-full bg-zinc-50 h-1 relative overflow-hidden">
+                         <div className="w-full bg-zinc-50 h-1 relative overflow-hidden rounded-full">
                            <div 
                              className="bg-black h-full transition-all duration-1000"
                              style={{ width: `${item.progress_percentage || 0}%` }}
@@ -207,14 +235,17 @@ export default function ReadingHistoryPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 ml-8">
+                  <div className="flex items-center gap-4 mt-6 md:mt-0 ml-0 md:ml-8 w-full md:w-auto">
                     <Link
-                      href={`/documents/viewer/${item.document_id}`}
-                      className="bg-black text-white text-[10px] font-bold tracking-[0.2em] uppercase px-10 h-14 flex items-center justify-center hover:bg-zinc-800 transition-all active:scale-95 shadow-xl shadow-black/5 rounded-none"
+                      href={`/document/${item.document_slug}`}
+                      className="flex-1 md:flex-none bg-black text-white text-[10px] font-bold tracking-[0.2em] uppercase px-10 h-14 flex items-center justify-center hover:bg-zinc-800 transition-all active:scale-95 rounded-sm"
                     >
                       Tiếp tục đọc
                     </Link>
-                    <button className="w-14 h-14 border border-zinc-50 flex items-center justify-center text-zinc-200 hover:text-black hover:border-black transition-all active:scale-95 group/trash">
+                    <button 
+                      onClick={() => handleDeleteItem(item.document_id)}
+                      className="w-14 h-14 border border-zinc-100 flex items-center justify-center text-zinc-200 hover:text-red-500 hover:border-red-500 transition-all active:scale-95 group/trash rounded-sm"
+                    >
                       <Trash2 className="w-4 h-4 group-hover/trash:scale-110 transition-transform" />
                     </button>
                   </div>
@@ -222,8 +253,8 @@ export default function ReadingHistoryPage() {
               ))}
             </div>
           ) : (
-            <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30">
-              <div className="w-24 h-24 border border-zinc-100 bg-white flex items-center justify-center mb-10">
+            <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/30 rounded-sm">
+              <div className="w-24 h-24 border border-zinc-100 bg-white flex items-center justify-center mb-10 rounded-sm">
                 <Clock className="w-10 h-10 text-zinc-100 stroke-[1]" />
               </div>
               <h2 className="text-3xl font-bold tracking-tighter text-black mb-4">Lịch sử trống</h2>
@@ -231,9 +262,9 @@ export default function ReadingHistoryPage() {
                 Bạn chưa đọc tài liệu nào gần đây. Hãy bắt đầu khám phá kho tàng tri thức của DocLib.
               </p>
               <Link href="/">
-                <Button className="h-16 px-14 bg-black text-white text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all shadow-2xl shadow-black/10 rounded-none">
+                <button className="h-16 px-14 bg-black text-white text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all rounded-sm">
                   Khám phá ngay
-                </Button>
+                </button>
               </Link>
             </div>
           )}

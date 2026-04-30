@@ -1,6 +1,7 @@
 import os
 import io
 import uuid
+from typing import Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger
 from src.core.config import settings
@@ -145,12 +146,8 @@ class IngestionPipeline:
         file_bytes = await self._download_file(file_url)
         if not file_bytes:
             return ""
-        if file_url.endswith(".pdf"):
-            return self._extract_pdf(file_bytes)
-        elif file_url.endswith(".epub"):
-            return self._extract_epub(file_bytes)
-        else:
-            return self._extract_pdf(file_bytes)
+        
+        return self._extract_with_markitdown(file_bytes, file_url)
 
     async def _download_file(self, url: str) -> Optional[bytes]:
         try:
@@ -189,79 +186,32 @@ class IngestionPipeline:
             logger.error(f"Download error: {e}")
             return None
 
-    def _extract_pdf(self, data: bytes) -> str:
+    def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
         try:
-            import pdf2image
-            import pytesseract
+            import tempfile
+            import os
+            from markitdown import MarkItDown
             
-            logger.info("Starting OCR extraction for PDF using pytesseract")
-            images = pdf2image.convert_from_bytes(data)
-            pages_text = []
+            ext = os.path.splitext(file_url)[1] or ".pdf"
             
-            for i, img in enumerate(images):
-                text = pytesseract.image_to_string(img, lang="vie+eng")
-                if text.strip():
-                    pages_text.append(text.strip())
-                    
-            full_text = "\n\n".join(pages_text)
-            logger.info(f"PDF OCR extracted: {len(images)} pages, {len(full_text)} chars")
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                tmp.write(data)
+                tmp_path = tmp.name
+                
+            logger.info(f"Starting MarkItDown extraction for {ext} file")
+            md = MarkItDown()
+            result = md.convert(tmp_path)
+            full_text = result.text_content
+            
+            os.remove(tmp_path)
+            
+            logger.info(f"MarkItDown extracted {len(full_text)} chars")
             return full_text
         except ImportError:
-            logger.error("Missing pdf2image or pytesseract. Please install them to use OCR.")
+            logger.error("Missing markitdown.")
             return ""
         except Exception as e:
-            logger.error(f"PDF OCR extraction error: {e}")
-            return ""
-
-    def _extract_epub(self, data: bytes) -> str:
-        try:
-            import zipfile
-            from html.parser import HTMLParser
-
-            class HTMLStripper(HTMLParser):
-                def __init__(self):
-                    super().__init__()
-                    self.result = []
-                    self._skip = False
-
-                def handle_starttag(self, tag, attrs):
-                    if tag in ("script", "style"):
-                        self._skip = True
-                    elif tag in ("p", "div", "br", "h1", "h2", "h3", "h4", "li"):
-                        self.result.append("\n")
-
-                def handle_endtag(self, tag):
-                    if tag in ("script", "style"):
-                        self._skip = False
-
-                def handle_data(self, data):
-                    if not self._skip:
-                        self.result.append(data)
-
-                def get_text(self):
-                    return "".join(self.result)
-
-            buf = io.BytesIO(data)
-            parts = []
-            with zipfile.ZipFile(buf) as zf:
-                html_files = sorted([
-                    n for n in zf.namelist()
-                    if n.endswith((".xhtml", ".html", ".htm"))
-                    and "toc" not in n.lower()
-                    and "nav" not in n.lower()
-                ])
-                for html_file in html_files:
-                    raw_html = zf.read(html_file).decode("utf-8", errors="ignore")
-                    stripper = HTMLStripper()
-                    stripper.feed(raw_html)
-                    text = stripper.get_text().strip()
-                    if len(text) > 50:
-                        parts.append(text)
-            full_text = "\n\n".join(parts)
-            logger.info(f"EPUB extracted: {len(parts)} sections, {len(full_text)} chars")
-            return full_text
-        except Exception as e:
-            logger.error(f"EPUB extraction error: {e}")
+            logger.error(f"MarkItDown extraction error: {e}")
             return ""
 
 ingestion_pipeline = IngestionPipeline()

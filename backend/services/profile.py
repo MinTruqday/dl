@@ -201,3 +201,25 @@ class ProfileService:
         logger.info(f"GDPR takeout prepared for user {user_id}")
         await publish_event("user_notifications", {"user_id": user_id, "message": "Liên kết tải dữ liệu đã sẵn sàng.", "data": full_data})
         return {"status": "processing", "message": "Đang chuẩn bị dữ liệu. Vui lòng chờ."}
+
+    @staticmethod
+    async def toggle_bookmark(document_id, current_user):
+        db = db_client.mongodb.get_default_database()
+        user_id = str(current_user.id)
+        user = await db["users"].find_one({"_id": user_id})
+        bookmarks = user.get("bookmarks", [])
+        if document_id in bookmarks:
+            await db["users"].update_one({"_id": user_id}, {"$pull": {"bookmarks": document_id}})
+            return {"status": "unbookmarked", "message": "Đã xóa khỏi danh sách lưu trữ."}
+        await db["users"].update_one({"_id": user_id}, {"$addToSet": {"bookmarks": document_id}})
+        return {"status": "bookmarked", "message": "Đã thêm vào danh sách lưu trữ."}
+
+    @staticmethod
+    async def get_bookmarks(current_user):
+        db = db_client.mongodb.get_default_database()
+        user = await db["users"].find_one({"_id": str(current_user.id)})
+        bookmark_ids = user.get("bookmarks", [])
+        documents = await db["documents"].find({"_id": {"$in": bookmark_ids}}).to_list(length=100)
+        for doc in documents:
+            doc["_id"] = str(doc["_id"])
+        return documents

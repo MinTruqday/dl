@@ -28,12 +28,14 @@ llama_model = settings.LLAMA_MODEL
 if not llama_model:
     raise ValueError("LLAMA_MODEL is not set in environment variables")
 
+from langchain_huggingface import ChatHuggingFace
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.1
+    temperature=0.1,
+    task="conversational"
 )
-router_llm = _hf_endpoint
+router_llm = ChatHuggingFace(llm=_hf_endpoint)
 
 class RouteDecision(BaseModel):
     destination: Literal["rag", "billing", "chat"] = Field(description="Luồng AI mà câu hỏi cần được gửi đến.")
@@ -58,7 +60,7 @@ def route_query(state: RouterState):
     
     try:
         response = router_llm.invoke(prompt.format(question=question))
-        decision = response.strip().lower()
+        decision = response.content.strip().lower()
     except Exception as e:
         logger.error(f"Router LLM error: {e}")
         decision = "rag"
@@ -76,7 +78,7 @@ def route_query(state: RouterState):
     logger.info(f"Routing decision: {route.upper()}")
     return {"route": route, "question": question}
 
-def rag_node(state: RouterState):
+async def rag_node(state: RouterState):
     logger.info("Directing to Document RAG node")
     initial_rag_state = {
         "question": state["question"],
@@ -93,18 +95,18 @@ def rag_node(state: RouterState):
         "file_data": state.get("file_data")
     }
     
-    rag_result = rag_agent_app.invoke(initial_rag_state)
+    rag_result = await rag_agent_app.ainvoke(initial_rag_state)
     answer = rag_result.get("generation", "Tôi không tìm thấy thông tin liên quan trong tài liệu này.")
     return {"final_answer": answer, "route": "rag"}
 
-def billing_node(state: RouterState):
+async def billing_node(state: RouterState):
     logger.info("Directing to Billing/Wallet node")
     question = state["question"]
     user_id = state["user_id"] or "guest_user"
     messages = [HumanMessage(content=f"Truy vấn từ ID người dùng <{user_id}>: {question}")]
     
     try:
-        response = billing_agent_app.invoke({"messages": messages})
+        response = await billing_agent_app.ainvoke({"messages": messages})
         answer = response["messages"][-1].content
     except Exception as e:
         logger.error(f"Billing agent error: {e}")
@@ -112,14 +114,14 @@ def billing_node(state: RouterState):
         
     return {"final_answer": answer, "route": "billing"}
 
-def multi_node(state: RouterState):
+async def multi_node(state: RouterState):
     logger.info("Directing to Multi-Agent reasoning node")
     question = state["question"]
     user_id = state["user_id"] or "guest_user"
     document_id = state.get("document_id")
 
     try:
-        billing_resp = billing_agent_app.invoke({"messages": [HumanMessage(content=f"Truy vấn từ ID <{user_id}>: Lấy tình trạng ví/dl của tôi để phục vụ cho câu hỏi sau: {question}")]})
+        billing_resp = await billing_agent_app.ainvoke({"messages": [HumanMessage(content=f"Truy vấn từ ID <{user_id}>: Lấy tình trạng ví/dl của tôi để phục vụ cho câu hỏi sau: {question}")]})
         wallet_context = billing_resp["messages"][-1].content
     except Exception as e:
         logger.error(f"Wallet context retrieval error: {e}")
@@ -138,7 +140,7 @@ def multi_node(state: RouterState):
         "document_id": document_id
     }
     try:
-        rag_result = rag_agent_app.invoke(initial_rag_state)
+        rag_result = await rag_agent_app.ainvoke(initial_rag_state)
         answer = rag_result.get("generation", "Tôi không tìm thấy dữ liệu phù hợp trong tài liệu.")
     except Exception as e:
         logger.error(f"RAG execution error in multi-node: {e}")
@@ -149,11 +151,12 @@ def multi_node(state: RouterState):
 def chat_node(state: RouterState):
     logger.info("Directing to Casual Chat node")
     prompt = PromptTemplate(
-        template="Trả lời người dùng vui vẻ, ngắn gọn và thân thiện nhất.\nUser: {question}",
+        template="Bạn là trợ lý ảo thân thiện của DocLib. Trả lời người dùng vui vẻ, ngắn gọn.\nNẾU người dùng yêu cầu tạo file, xuất file, hoặc mã nguồn, hãy bọc nội dung file đó trong markdown code block (ví dụ: ```csv\n...``` hoặc ```python\n...```). Hệ thống sẽ tự tạo nút tải xuống.\nUser: {question}",
         input_variables=["question"]
     )
     try:
-        answer = router_llm.invoke(prompt.format(question=state["question"])).strip()
+        response = router_llm.invoke(prompt.format(question=state["question"]))
+        answer = response.content.strip()
     except Exception as e:
         logger.error(f"Chat LLM error: {e}")
         answer = "Chào bạn! DocLib rất vui được hỗ trợ bạn."

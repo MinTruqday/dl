@@ -434,6 +434,36 @@ export default function TiptapEditor({
               <Sparkles className="w-4 h-4" />
               Gợi ý từ ngữ
             </button>
+            <button
+              onClick={async () => {
+                const text = editor.getText();
+                if (!text || text.length < 50) {
+                  showToast("Vui lòng viết thêm nội dung (tối thiểu 50 từ) để kiểm tra ngữ pháp", "info");
+                  return;
+                }
+                showToast("Đang phân tích ngữ pháp bằng AI", "info");
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inference/grammar-check`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${getToken()}`,
+                    },
+                    body: JSON.stringify({ text }),
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    showToast(`Kết quả AI: ${data.message} (Điểm: ${data.score}/100)`, "success");
+                  }
+                } catch (err) {
+                   showToast("Lỗi kết nối máy chủ AI", "error");
+                }
+              }}
+              className="px-4 py-1.5 bg-zinc-900 text-white hover:bg-black transition-all duration-300 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+            >
+              <CheckSquare className="w-4 h-4 text-zinc-400" />
+              Kiểm tra ngữ pháp AI
+            </button>
           </div>
         </div>
         <div className="flex gap-2">

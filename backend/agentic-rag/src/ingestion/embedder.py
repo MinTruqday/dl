@@ -47,6 +47,9 @@ class EmbeddingService:
 
         return embedding
 
+    def embed_query(self, query: str) -> List[float]:
+        return self.embed_single(query)
+
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         all_embeddings = []
         uncached_indices = []

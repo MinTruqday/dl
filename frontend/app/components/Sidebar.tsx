@@ -18,6 +18,10 @@ import {
   UserCheck,
   AlertTriangle,
   Users,
+  Ticket,
+  FolderOpen,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function Sidebar({
@@ -69,7 +73,7 @@ export default function Sidebar({
         title={!isOpen ? label : undefined}
         className={`
           flex items-center text-[13px] font-bold tracking-tight
-          transition-all duration-300 ease-in-out group relative w-full h-14
+          transition-all duration-300 ease-in-out group relative w-full h-14 shrink-0
           ${isOpen ? "px-6 gap-4" : "px-0 justify-center"}
           ${active
             ? "bg-black text-white"
@@ -119,56 +123,65 @@ export default function Sidebar({
           ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
         `}
       >
-        <div className="flex-1 overflow-y-auto py-2 scroll-smooth flex flex-col no-scrollbar">
-          {[
-            { icon: Search, label: "Khám phá", href: "/" },
-            { icon: FileText, label: "Bảng tin", href: "/feed" },
-            { icon: Trophy, label: "Vinh danh", href: "/leaderboard" },
-          ].map((item) => (
-            <NavLink key={item.href} {...item} />
-          ))}
-
-          <NavLink href="/collections" label="Bộ sưu tập" icon={Bookmark} requireAuth />
+        <div className="flex-1 overflow-y-auto py-2 scroll-smooth flex flex-col pb-20 no-scrollbar">
+          <NavLink icon={Search} label="Khám phá" href="/" />
+          <NavLink icon={FileText} label="Bảng tin" href="/feed" />
+          <NavLink icon={Trophy} label="Vinh danh" href="/leaderboard" />
           <NavLink href="/history" label="Lịch sử đọc" icon={History} requireAuth />
           <NavLink href="/library" label="Thư viện cá nhân" icon={Library} requireAuth />
-
           <NavLink href="/profile" label="Hồ sơ" icon={User} requireAuth />
+          <NavLink href="/collections" label="Bộ sưu tập" icon={Bookmark} requireAuth />
           <NavLink href="/wallet" label="Ví điện tử" icon={Wallet} requireAuth />
-
-
-          {/* Author & Management - Spacing mt-10 */}
-          <div className="mt-10 border-t border-zinc-50 pt-4">
-            <NavLink
-              href="/studio/dashboard"
-              label="Bảng điều khiển"
-              icon={User}
-              roles={["author", "admin"]}
-            />
-            <NavLink
-              href="/studio/create"
-              label="Sáng tác"
-              icon={PenTool}
-              roles={["author", "admin"]}
-            />
-            <NavLink
-              href="/studio/payouts"
-              label="Doanh thu"
-              icon={Wallet}
-              roles={["author", "admin"]}
-            />
-          </div>
-
+          
+          <NavLink
+            href="/studio/create"
+            label="Sáng tác"
+            icon={PenTool}
+            roles={["author", "admin"]}
+          />
+          <NavLink
+            href="/studio/coupons"
+            label="Mã giảm giá"
+            icon={Ticket}
+            roles={["author", "admin"]}
+          />
+          <NavLink
+            href="/studio/collab"
+            label="Hợp tác"
+            icon={Users}
+            roles={["author", "admin"]}
+          />
+          <NavLink
+            href="/studio/assets"
+            label="Kho lưu trữ"
+            icon={FolderOpen}
+            roles={["author", "admin"]}
+          />
+          <NavLink
+            href="/studio/payouts"
+            label="Doanh thu"
+            icon={Wallet}
+            roles={["author", "admin"]}
+          />
+          
           <NavLink
             href="/documents-management"
             label="Kho tài liệu"
             icon={FileText}
             roles={["admin", "author"]}
           />
-
+          
+          {/* Broken out Moderator features */}
           <NavLink
-            href="/moderator"
-            label="Kiểm duyệt viên"
-            icon={Shield}
+            href="/moderator?tab=documents"
+            label="Duyệt bản thảo"
+            icon={CheckCircle2}
+            roles={["moderator", "admin"]}
+          />
+          <NavLink
+            href="/moderator?tab=logs"
+            label="Lịch sử kiểm duyệt"
+            icon={Clock}
             roles={["moderator", "admin"]}
           />
 
@@ -196,7 +209,7 @@ export default function Sidebar({
             icon={Settings}
             roles={["admin"]}
           />
-
+          
           <NavLink href="/settings" label="Cài đặt" icon={Settings} requireAuth />
         </div>
       </aside>

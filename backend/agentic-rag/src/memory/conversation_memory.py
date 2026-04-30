@@ -55,11 +55,18 @@ class ConversationMemory:
         try:
             model_name = os.environ.get('LLAMA_MODEL')
             hf_token = os.environ.get("HF_TOKEN")
-            from langchain_huggingface import HuggingFaceEndpoint
-            llm = HuggingFaceEndpoint(repo_id=model_name, huggingfacehub_api_token=hf_token, temperature=0.1)
+            from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+            _hf = HuggingFaceEndpoint(
+                repo_id=model_name,
+                huggingfacehub_api_token=hf_token,
+                temperature=0.1,
+                task="conversational"
+            )
+            llm = ChatHuggingFace(llm=_hf)
             
-            new_summary = await llm.ainvoke(prompt)
-            mem["summary"] = new_summary.strip()
+            response = await llm.ainvoke(prompt)
+            new_summary = response.content.strip()
+            mem["summary"] = new_summary
             
             mem["recent_messages"] = mem["recent_messages"][-keep_count:]
             logger.info(f"Summarized session {session_id} memory to save context window.")

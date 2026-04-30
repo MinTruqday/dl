@@ -23,7 +23,7 @@ def serialize_document(document):
     if "created_at" not in document:
         document["created_at"] = datetime.datetime.utcnow()
     if "author_id" not in document:
-        document["author_id"] = "Unknown"
+        document["author_id"] = "Unknown Author"
     return document
 
 from services.notification import NotificationService
@@ -61,7 +61,7 @@ class DocumentService:
         doc_dict = doc_in.model_dump()
         
         if current_user.role == "admin":
-            doc_dict["publisher_name"] = "DocLib"
+            doc_dict["publisher_name"] = "DocLib Institutional"
         else:
             if not doc_dict.get("publisher_name"):
                 doc_dict["publisher_name"] = current_user.full_name
@@ -182,7 +182,7 @@ class DocumentService:
                     else:
                         chapter["locked"] = False
             except Exception as e:
-                logger.error(f"Error parsing chapters: {e}")
+                logger.error(f"Giao thức phân tích chương mục thất bại: {e}")
         return document
 
     @staticmethod
@@ -282,8 +282,8 @@ class DocumentService:
                 if not cover_url:
                      raise HTTPException(status_code=500, detail="Kết quả từ AI không hợp lệ.")
         except Exception as e:
-            logger.error(f"AI Cover Gen Error: {e}")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối với dịch vụ tạo ảnh AI.")
+            logger.error(f"Giao thức khởi tạo ảnh bìa AI thất bại: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối với dịch vụ mạng lưới trí tuệ nhân tạo.")
         
         await docs_col.update_one(
             {"_id": document_id},
@@ -415,8 +415,6 @@ class DocumentService:
     async def get_ai_recommendations(limit: int, reference_document_id: str = None):
         db = db_client.mongodb.get_default_database()
         
-        import os
-        import httpx
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         
         if reference_document_id and rag_url:
@@ -434,9 +432,9 @@ class DocumentService:
                             query = {"status": DocumentStatus.PUBLISHED, "_id": {"$ne": reference_document_id}}
                             cursor = db["documents"].find(query).limit(limit)
                             documents = await cursor.to_list(length=limit)
-                            return [{"document_id": str(d["_id"]), "score": 0.95, "title": d.get("title", "Untitled"), "cover_url": d.get("cover_url")} for d in documents]
+                            return [serialize_document(d) for d in documents]
             except Exception as e:
-                logger.error(f"AI Recommendation error via RAG: {e}")
+                logger.error(f"Giao thức đề xuất tri thức thất bại: {e}")
 
         query = {"status": DocumentStatus.PUBLISHED}
         if reference_document_id:
@@ -452,7 +450,7 @@ class DocumentService:
             ]).to_list(length=limit - len(documents))
             documents.extend(extra)
             
-        return [{"document_id": str(d["_id"]), "score": 0.8, "title": d.get("title", "Untitled"), "cover_url": d.get("cover_url")} for d in documents]
+        return [serialize_document(d) for d in documents]
 
     @staticmethod
     async def get_seo_meta(document_id: str):

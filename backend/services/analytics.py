@@ -41,32 +41,42 @@ class AnalyticsService:
     @staticmethod
     async def get_leaderboard():
         db = db_client.mongodb.get_default_database()
-        top_docs = await db["documents"].find({"status": "published"}).sort("views", -1).limit(10).to_list(10)
-        top_authors = await db["users"].find({"role": "author"}).sort("followers_count", -1).limit(10).to_list(10)
-        if not top_authors:
-            top_authors = await db["users"].find({"role": "author"}).limit(10).to_list(10)
+        
+        top_by_views = await db["documents"].find({"status": "published"}).sort("views", -1).limit(10).to_list(10)
+        top_by_rating = await db["documents"].find({"status": "published"}).sort("average_rating", -1).limit(10).to_list(10)
+        top_authors_list = await db["users"].find({"role": "author"}).sort("followers_count", -1).limit(10).to_list(10)
+        
+        if not top_authors_list:
+            top_authors_list = await db["users"].find({"role": "author"}).limit(10).to_list(10)
             
+        async def hydrate_document(doc):
+            author = await db["users"].find_one({"_id": doc.get("author_id")}, {"full_name": 1, "slug": 1})
+            return {
+                "_id": str(doc["_id"]),
+                "title": doc.get("title"),
+                "slug": doc.get("slug"),
+                "author": {
+                    "_id": str(author["_id"]) if author else "",
+                    "display_name": author.get("full_name") if author else "Vô danh",
+                    "slug": author.get("slug") if author else ""
+                },
+                "views_count": doc.get("views", 0),
+                "rating_avg": doc.get("average_rating", 0),
+                "cover_image": doc.get("cover_url")
+            }
+
         return {
-            "top_documents": [
-                {
-                    "id": str(b["_id"]),
-                    "title": b.get("title"),
-                    "slug": b.get("slug"),
-                    "author_id": b.get("author_id"),
-                    "views": b.get("views", 0),
-                    "average_rating": b.get("average_rating", 0),
-                    "cover_url": b.get("cover_url")
-                } for b in top_docs
-            ],
+            "top_documents_by_views": [await hydrate_document(d) for d in top_by_views],
+            "top_documents_by_rating": [await hydrate_document(d) for d in top_by_rating],
             "top_authors": [
                 {
-                    "id": str(a["_id"]),
-                    "full_name": a.get("full_name"),
+                    "_id": str(a["_id"]),
+                    "display_name": a.get("full_name"),
                     "slug": a.get("slug"),
                     "avatar_url": a.get("avatar_url"),
                     "followers_count": a.get("followers_count", 0),
                     "badges": a.get("badges", [])
-                } for a in top_authors
+                } for a in top_authors_list
             ]
         }
 

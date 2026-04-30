@@ -1,76 +1,53 @@
 "use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import AppShell from "@/app/components/AppShell";
-import { Folder, FileText, Search, Plus, Upload, Trash2, Home, File, Image as ImageIcon, CheckCircle, ChevronRight, Download, Star, Lock, Unlock, Database, Filter, LayoutGrid, List, Tag, Globe, Share2, Archive, DollarSign, Send, History, QrCode } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-import { formatBytes } from "@/app/lib/utils";
 import { 
-  getFoldersAPI, getDocumentsAPI, getStorageQuotaAPI, 
-  createFolderAPI, uploadDocumentAPI, deleteFolderAPI, 
-  deleteDocumentAPI, toggleStarDocumentAPI, lockDocumentAPI,
-  monetizeDocumentAPI, transferDocumentAPI, getAuditLogsAPI 
-} from "@/app/lib/api";
+  Folder, FileText, Search, Plus, Upload, Trash2, Home, File, 
+  Image as ImageIcon, CheckCircle, ChevronRight, Download, Star, 
+  Lock, Unlock, Database, Filter, LayoutGrid, List, Tag, Globe, 
+  Share2, Archive, DollarSign, Send, History, QrCode, ShieldAlert,
+  Loader2, MoreHorizontal, Settings, Info
+} from "lucide-react";
+import Link from "next/link";
+import { getToken, API_URL, getFoldersAPI, getDocumentsAPI, getStorageQuotaAPI, createFolderAPI, uploadDocumentAPI, deleteFolderAPI, deleteDocumentAPI, toggleStarDocumentAPI, lockDocumentAPI, monetizeDocumentAPI, transferDocumentAPI, getAuditLogsAPI } from "@/app/lib/api";
+import { formatBytes } from "@/app/lib/utils";
+import { Notification } from "@/app/components/NotificationToast";
 
 export default function DocumentsPage() {
   const [currentFolder, setCurrentFolder] = useState<any>(null);
   const [folders, setFolders] = useState<any[]>([]);
   const [documents, setDocuments] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const [monetizeDocId, setMonetizeDocId] = useState<string|null>(null);
-  const [monetizePrice, setMonetizePrice] = useState<number>(0);
-  
-  const [transferDocId, setTransferDocId] = useState<string|null>(null);
-  const [transferTargetId, setTransferTargetId] = useState<string>("");
-
-  const [auditDocId, setAuditDocId] = useState<string|null>(null);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") return;
-      
-      const container = window;
-      const step = 200;
-      if (e.key === "j") container.scrollBy(0, step);
-      if (e.key === "k") container.scrollBy(0, -step);
-      if (e.key === "h") container.scrollBy(-step, 0);
-      if (e.key === "l") container.scrollBy(step, 0);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const [loading, setLoading] = useState(false);
-
-  const [quota, setQuota] = useState<{used: number, limit: number, percent: number}>({used: 0, limit: 100, percent: 0});
+  const [quota, setQuota] = useState<{used: number, limit: number, percent: number}>({used: 0, limit: 5000000000, percent: 0});
   const [filterStar, setFilterStar] = useState(false);
   const [filterFormat, setFilterFormat] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid"|"list">("grid");
-  
+  const [breadcrumbs, setBreadcrumbs] = useState<any[]>([]);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [lockDocId, setLockDocId] = useState<string | null>(null);
   const [lockPassword, setLockPassword] = useState("");
-
   const [shareDocId, setShareDocId] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [sharePassword, setSharePassword] = useState("");
   const [shareExpires, setShareExpires] = useState("7");
   const [publicUrl, setPublicUrl] = useState("");
-
-
-  const [breadcrumbs, setBreadcrumbs] = useState<any[]>([]);
-
-  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
-  
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [uploadTitle, setUploadTitle] = useState("");
-  const [uploading, setUploading] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [monetizeDocId, setMonetizeDocId] = useState<string|null>(null);
+  const [monetizePrice, setMonetizePrice] = useState<number>(0);
+  const [transferDocId, setTransferDocId] = useState<string|null>(null);
+  const [transferTargetId, setTransferTargetId] = useState<string>("");
+  const [auditDocId, setAuditDocId] = useState<string|null>(null);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -83,13 +60,13 @@ export default function DocumentsPage() {
       const [fData, dData, qData] = await Promise.all([
         getFoldersAPI(search ? undefined : folderId),
         getDocumentsAPI(folderId, search, filterStar, filterFormat),
-        getStorageQuotaAPI().catch(() => ({used:0, limit:100, percent:0}))
+        getStorageQuotaAPI().catch(() => ({used: 0, limit: 5000000000, percent: 0}))
       ]);
       setFolders((search || filterStar || filterFormat !== "all") ? [] : fData); 
       setDocuments(dData);
       setQuota(qData);
     } catch (e) {
-      console.error(e);
+        setNotification({ type: "error", text: "Không thể kết nối mạng lưới dữ liệu DocLib" });
     } finally {
       setLoading(false);
     }
@@ -102,9 +79,10 @@ export default function DocumentsPage() {
       await createFolderAPI(newFolderName, currentFolder ? currentFolder._id : null);
       setIsFolderModalOpen(false);
       setNewFolderName("");
+      setNotification({ type: "success", text: "Đã tạo thư mục lưu trữ mới" });
       loadData();
     } catch (e) {
-      console.error("Failed to create folder");
+      setNotification({ type: "error", text: "Giao thức tạo thư mục thất bại" });
     }
   };
 
@@ -117,64 +95,24 @@ export default function DocumentsPage() {
       setIsUploadModalOpen(false);
       setFileToUpload(null);
       setUploadTitle("");
+      setNotification({ type: "success", text: "Đã tích hợp tài liệu vào hệ thống" });
       loadData();
     } catch (e) {
-      console.error("Failed to upload document");
+      setNotification({ type: "error", text: "Giao thức tải lên thất bại" });
     } finally {
       setUploading(false);
     }
   };
 
-  
   const handleToggleStar = async (id: string, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    await toggleStarDocumentAPI(id);
-    loadData();
-  };
-
-  
-  const handleBackupZIP = () => {
-    window.open(`${process.env.NEXT_PUBLIC_API_URL}/documents/export/backup?user=` + localStorage.getItem("doclib_token"), "_blank");
-  };
-
-    const handleMonetize = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if(monetizeDocId) {
-      await monetizeDocumentAPI(monetizeDocId, monetizePrice);
-      setMonetizeDocId(null);
-      loadData();
-    }
-  };
-
-  const handleTransfer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if(transferDocId && transferTargetId) {
-      await transferDocumentAPI(transferDocId, transferTargetId);
-      setTransferDocId(null);
-      loadData();
-    }
-  };
-
-  const loadAuditLogs = async (id: string) => {
-    const logs = await getAuditLogsAPI(id);
-    setAuditLogs(logs);
-    setAuditDocId(id);
-  };
-
-  const handleShareSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if(!shareDocId) return;
     try {
-       const API_URL = process.env.NEXT_PUBLIC_API_URL;
-       const res = await fetch(API_URL + "/documents/" + shareDocId + "/share?is_public=" + isPublic + "&password=" + sharePassword + "&expires_in_days=" + shareExpires, {
-         method: "POST",
-         headers: { "Authorization": "Bearer " + localStorage.getItem("token") }
-       });
-       const data = await res.json();
-       setPublicUrl(window.location.origin + "/documents/viewer/" + shareDocId + "?pwd=" + sharePassword);
-       
-    } catch(e) { console.error(e); }
-  }
+        await toggleStarDocumentAPI(id);
+        loadData();
+    } catch (err) {
+        setNotification({ type: "error", text: "Giao thức đánh dấu thất bại" });
+    }
+  };
 
   const handleLockDocument = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,170 +121,201 @@ export default function DocumentsPage() {
       await lockDocumentAPI(lockDocId, lockPassword);
       setLockDocId(null);
       setLockPassword("");
+      setNotification({ type: "success", text: "Đã thiết lập lớp bảo mật cho thực thể" });
       loadData();
     } catch(err) {
-      console.error("Failed to lock document");
+      setNotification({ type: "error", text: "Giao thức bảo mật thất bại" });
     }
   };
 
-  const handleNavigateFolder = (folder: any) => {
-    setBreadcrumbs([...breadcrumbs, folder]);
-    setCurrentFolder(folder);
-    setSearch("");
-  };
-
-  const handleBreadcrumbClick = (index: number) => {
-    if (index === -1) {
-      setBreadcrumbs([]);
-      setCurrentFolder(null);
-    } else {
-      const newBread = breadcrumbs.slice(0, index + 1);
-      setBreadcrumbs(newBread);
-      setCurrentFolder(newBread[newBread.length - 1]);
+  const handleShareSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!shareDocId) return;
+    try {
+       const token = getToken();
+       const res = await fetch(`${API_URL}/documents/${shareDocId}/share?is_public=${isPublic}&password=${sharePassword}&expires_in_days=${shareExpires}`, {
+         method: "POST",
+         headers: { "Authorization": `Bearer ${token}` }
+       });
+       if (res.ok) {
+           setPublicUrl(`${window.location.origin}/documents/viewer/${shareDocId}?pwd=${sharePassword}`);
+           setNotification({ type: "success", text: "Giao thức chia sẻ đã được kích hoạt" });
+       }
+    } catch(e) { 
+        setNotification({ type: "error", text: "Giao thức chia sẻ thất bại" });
     }
-    setSearch("");
-  };
+  }
 
   const handleDeleteFolder = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if(confirm("Bạn có chắc muốn xóa thư mục này?")) {
-      await deleteFolderAPI(id);
-      loadData();
+    try {
+        await deleteFolderAPI(id);
+        setNotification({ type: "success", text: "Đã loại bỏ thư mục khỏi hệ thống" });
+        loadData();
+    } catch (err) {
+        setNotification({ type: "error", text: "Giao thức xóa thư mục thất bại" });
     }
   };
 
   const handleDeleteDoc = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if(confirm("Bạn có chắc muốn xóa tài liệu này?")) {
-      await deleteDocumentAPI(id, true);
-      loadData();
+    e.preventDefault(); e.stopPropagation();
+    try {
+        await deleteDocumentAPI(id, true);
+        setNotification({ type: "success", text: "Đã loại bỏ tài liệu khỏi hệ thống" });
+        loadData();
+    } catch (err) {
+        setNotification({ type: "error", text: "Giao thức xóa tài liệu thất bại" });
     }
   };
 
   const getFileIcon = (fmt: string) => {
-    if(['pdf'].includes(fmt)) return <FileText className="text-black font-bold outline-black w-8 h-8" />;
-    if(['doc', 'docx'].includes(fmt)) return <FileText className="text-black w-8 h-8" />;
-    if(['jpg', 'png', 'jpeg'].includes(fmt)) return <ImageIcon className="text-black w-8 h-8" />;
-    return <File className="text-muted-foreground w-8 h-8" />;
+    const className = "w-10 h-10 text-black stroke-[1.5]";
+    if(['pdf'].includes(fmt)) return <FileText className={className} />;
+    if(['doc', 'docx'].includes(fmt)) return <FileText className={className} />;
+    if(['jpg', 'png', 'jpeg'].includes(fmt)) return <ImageIcon className={className} />;
+    return <File className={className} />;
   };
 
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto px-4 py-6 pb-12 w-full">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-sans font-bold text-foreground">Tài liệu & Học liệu</h1>
-            <p className="text-muted-foreground mt-1">Quản lý, phân loại và đọc tài liệu cá nhân</p>
+      <div className="max-w-7xl mx-auto px-10 py-12 pb-24 w-full font-sans">
+        {notification && (
+            <div className="fixed top-24 right-8 z-[1100] w-80 animate-in slide-in-from-right-4 duration-300">
+                <Notification type={notification.type} message={notification.text} />
+            </div>
+        )}
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20 border-b border-zinc-100 pb-16">
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-black flex items-center justify-center rounded-sm">
+                    <Database className="w-6 h-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-black uppercase tracking-widest">Tài liệu & Học liệu</h1>
+            </div>
+            <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest leading-loose max-w-lg">Quản lý, phân loại và kiến tạo không gian tri thức cá nhân hóa</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-5 h-5 absolute left-3 top-2.5 text-muted-foreground" />
+          
+          <div className="flex items-center gap-6">
+            <div className="relative group">
+              <Search className="w-4 h-4 absolute left-5 top-5 text-zinc-300 group-focus-within:text-black transition-all" />
               <input 
                 type="text" 
                 placeholder="" 
-                className="pl-10 pr-4 py-2 border border-border  text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-80 pl-14 h-14 bg-zinc-50/50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm placeholder:text-zinc-200"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline"
+            <button
               onClick={() => setIsFolderModalOpen(true)}
-              className="flex items-center gap-2"
+              className="h-14 px-8 border border-zinc-100 flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest hover:border-black hover:bg-zinc-50 transition-all active:scale-95 rounded-sm"
             >
-              <Plus className="w-5 h-5" /> Thư mục
-            </Button>
-            
-            <Button variant="secondary" onClick={handleBackupZIP}
-              className="flex items-center gap-2 px-4 py-2  hover:bg-black  font-medium transition"
-            >
-              <Archive className="w-5 h-5" /> Sao lưu ZIP
-            </Button>
-            <Button 
+              <Plus className="w-4 h-4" /> Thư mục
+            </button>
+            <button 
               onClick={() => setIsUploadModalOpen(true)}
-
-              className="flex items-center gap-2 "
+              className="h-14 px-10 bg-black text-white flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all active:scale-95 rounded-sm"
             >
-              <Upload className="w-5 h-5" /> Tải lên
-            </Button>
+              <Upload className="w-4 h-4" /> Tải lên
+            </button>
           </div>
         </div>
 
-        
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-card p-4  border border-border ">
-          <div className="flex items-center gap-4 flex-1">
-            <Button variant={!filterStar && filterFormat==="all" ? "default" : "outline"} onClick={() => { setFilterStar(false); setFilterFormat("all"); }} className="px-3 py-1.5 h-auto text-sm font-medium">Tất cả</Button>
-            <Button variant={filterStar ? "default" : "outline"} onClick={() => setFilterStar(!filterStar)} className={`px-3 py-1.5 h-auto text-sm font-medium flex items-center gap-1 ${filterStar ? "!bg-black !text-white" : ""}`}><Star className="w-4 h-4"/> Yêu thích</Button>
+        <div className="flex flex-wrap items-center justify-between gap-12 mb-16">
+          <div className="flex items-center gap-6">
+            <button 
+                onClick={() => { setFilterStar(false); setFilterFormat("all"); }} 
+                className={`px-8 h-12 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm border ${!filterStar && filterFormat==="all" ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-100 hover:border-black hover:text-black"}`}
+            >
+                Tất cả
+            </button>
+            <button 
+                onClick={() => setFilterStar(!filterStar)} 
+                className={`px-8 h-12 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm border flex items-center gap-3 ${filterStar ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-100 hover:border-black hover:text-black"}`}
+            >
+                <Star className={`w-3.5 h-3.5 ${filterStar ? "fill-white" : ""}`} /> Yêu thích
+            </button>
             
-            <div className="h-6 w-px bg-gray-300"></div>
+            <div className="h-6 w-px bg-zinc-100 mx-4"></div>
             
-            <select value={filterFormat} onChange={(e) => setFilterFormat(e.target.value)} className="text-sm border-border  py-1.5 pl-3 pr-8 focus-visible:ring-ring bg-background text-foreground text-foreground font-medium">
+            <select 
+                value={filterFormat} 
+                onChange={(e) => setFilterFormat(e.target.value)} 
+                className="h-12 border border-zinc-100 px-6 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-black transition-all rounded-sm bg-white text-black"
+            >
               <option value="all">Mọi định dạng</option>
               <option value="pdf">Định dạng PDF</option>
               <option value="docx">Văn bản Word</option>
               <option value="latex">Mã nguồn LaTeX</option>
-              <option value="zip">Tệp nén lưu trữ</option>
             </select>
-
-            <div className="h-6 w-px bg-gray-300 mx-2"></div>
-            <Button variant={viewMode === "grid" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("grid")} className="h-8 w-8"><LayoutGrid className="w-4 h-4 text-foreground"/></Button>
-            <Button variant={viewMode === "list" ? "secondary" : "ghost"} size="icon" onClick={() => setViewMode("list")} className="h-8 w-8"><List className="w-4 h-4 text-foreground"/></Button>
           </div>
           
-          <div className="flex items-center gap-3 min-w-[200px]">
-            <Database className="w-5 h-5 text-muted-foreground"/>
-            <div className="flex-1">
-              <div className="flex justify-between text-xs mb-1 font-medium text-gray-600">
-                <span>Lưu trữ</span>
-                <span>{formatBytes(quota.used)} / 5GB</span>
+          <div className="flex items-center gap-8 min-w-[320px]">
+            <div className="flex-1 space-y-3">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">
+                <span>Dung lượng lưu trữ</span>
+                <span>{formatBytes(quota.used)} / {formatBytes(quota.limit)}</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-none overflow-hidden">
-                <div className={`h-full rounded-none ${quota.percent > 80 ? 'bg-black' : 'bg-black'}`} style={{width: `${Math.max(quota.percent, 1)}%`}}></div>
+              <div className="h-1 bg-zinc-50 rounded-full overflow-hidden">
+                <div className="h-full bg-black transition-all duration-1000" style={{width: `${Math.max(quota.percent, 2)}%`}}></div>
               </div>
+            </div>
+            <div className="flex bg-zinc-50 p-1 border border-zinc-100 rounded-sm">
+                <button onClick={() => setViewMode("grid")} className={`p-2.5 transition-all rounded-sm ${viewMode === 'grid' ? 'bg-black text-white' : 'text-zinc-200 hover:text-black'}`}><LayoutGrid className="w-4 h-4"/></button>
+                <button onClick={() => setViewMode("list")} className={`p-2.5 transition-all rounded-sm ${viewMode === 'list' ? 'bg-black text-white' : 'text-zinc-200 hover:text-black'}`}><List className="w-4 h-4"/></button>
             </div>
           </div>
         </div>
 
-        {!search && (
-          <div className="flex items-center gap-2 mb-6 text-sm font-medium text-gray-600 bg-card p-3  border border-border ">
-            <Button variant="ghost" size="sm" onClick={() => handleBreadcrumbClick(-1)} className="flex items-center gap-1">
-              <Home className="w-4 h-4" /> Gốc
-            </Button>
+        <div className="flex items-center gap-4 mb-16 p-4 bg-zinc-50/20 border border-zinc-50 rounded-sm overflow-x-auto scrollbar-none">
+            <button onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }} className="p-2 text-zinc-300 hover:text-black transition-all active:scale-90"><Home className="w-4 h-4" /></button>
             {breadcrumbs.map((b, idx) => (
               <React.Fragment key={b._id}>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                <Button 
-                  onClick={() => handleBreadcrumbClick(idx)}
-                  className={`hover:text-black ${idx === breadcrumbs.length - 1 ? 'text-black' : ''}`}
+                <ChevronRight className="w-3.5 h-3.5 text-zinc-100" />
+                <button 
+                  onClick={() => {
+                      const newBread = breadcrumbs.slice(0, idx + 1);
+                      setBreadcrumbs(newBread);
+                      setCurrentFolder(newBread[newBread.length - 1]);
+                  }}
+                  className={`text-[10px] font-bold uppercase tracking-widest transition-all px-4 py-2 rounded-sm ${idx === breadcrumbs.length - 1 ? 'bg-black text-white' : 'text-zinc-300 hover:text-black hover:bg-zinc-50'}`}
                 >
                   {b.name}
-                </Button>
+                </button>
               </React.Fragment>
             ))}
-          </div>
-        )}
+        </div>
 
         {loading ? (
-          <div className="text-center py-20 text-muted-foreground">Đang tải dữ liệu</div>
+          <div className="flex flex-col items-center justify-center py-40 gap-10">
+              <Loader2 className="w-12 h-12 animate-spin text-zinc-100 stroke-[1]" />
+              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.5em]">Đang truy xuất mạng lưới tri thức</p>
+          </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-24">
             {folders.length > 0 && (
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-4 font-sans">Thư mục</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="space-y-10">
+                <div className="flex items-center gap-4 border-l-4 border-black pl-6">
+                    <h3 className="text-sm font-bold text-black uppercase tracking-widest">Hệ thống thư mục</h3>
+                    <div className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">{folders.length} ĐƠN VỊ</div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {folders.map(f => (
                     <div 
                       key={f._id} 
-                      onClick={() => handleNavigateFolder(f)}
-                      className="bg-card p-4  border border-border  hover: cursor-pointer transition group flex items-center justify-between"
+                      onClick={() => { setBreadcrumbs([...breadcrumbs, f]); setCurrentFolder(f); }}
+                      className="group bg-white p-10 border border-zinc-100 hover:border-black transition-all duration-500 cursor-pointer rounded-sm relative"
                     >
-                      <div className="flex items-center gap-3">
-                        <Folder className="w-8 h-8 text-black fill-zinc-100" />
-                        <span className="font-semibold text-foreground group-hover:text-black truncate max-w-[150px]">{f.name}</span>
+                      <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm transition-all group-hover:bg-black group-hover:rotate-12">
+                            <Folder className="w-6 h-6 text-zinc-200 group-hover:text-white" />
+                        </div>
+                        <span className="text-[13px] font-bold text-black uppercase tracking-tight truncate flex-1">{f.name}</span>
                       </div>
-                      <Button onClick={(e) => handleDeleteFolder(f._id, e)} className="text-muted-foreground hover:text-black font-bold outline-black p-1 opacity-0 group-hover:opacity-100 transition">
+                      <button onClick={(e) => handleDeleteFolder(f._id, e)} className="absolute top-6 right-6 p-2 text-zinc-100 hover:text-black transition-all opacity-0 group-hover:opacity-100">
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -354,48 +323,49 @@ export default function DocumentsPage() {
             )}
 
             {(documents.length > 0 || search) && (
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-4 font-sans">Tài liệu</h3>
+              <div className="space-y-10">
+                <div className="flex items-center gap-4 border-l-4 border-black pl-6">
+                    <h3 className="text-sm font-bold text-black uppercase tracking-widest">Kho lưu trữ tri thức</h3>
+                    <div className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">{documents.length} THỰC THỂ</div>
+                </div>
                 {documents.length === 0 ? (
-                  <div className="bg-card p-10 text-center  border border-border text-muted-foreground ">
-                    Không tìm thấy tài liệu nào khớp với "{search}"
+                  <div className="py-40 text-center border border-dashed border-zinc-100 rounded-sm">
+                    <Search className="w-12 h-12 text-zinc-50 mx-auto mb-8 stroke-[1]" />
+                    <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest px-10">Không tìm thấy thực thể tri thức tương ứng với truy vấn</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8" : "space-y-4"}>
                     {documents.map(d => (
-                      <Link href={`/documents/viewer/${d._id}`} key={d._id}>
-                        <div className="bg-card p-4  border border-border  hover: hover:-translate-y-1 transition group flex flex-col h-full cursor-pointer relative">
-                          <div className="flex justify-between items-start mb-4">
+                      <Link href={`/documents/viewer/${d._id}`} key={d._id} className="block">
+                        <div className={`group bg-white border border-zinc-100 hover:border-black transition-all duration-700 relative rounded-sm ${viewMode === 'grid' ? 'p-10 h-full flex flex-col' : 'p-6 flex items-center gap-10'}`}>
+                          <div className={viewMode === 'grid' ? "flex justify-between items-start mb-8" : "shrink-0"}>
                             {getFileIcon(d.format)}
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
-                              <Button onClick={(e) => handleToggleStar(d._id, e)} className={`p-1.5 rounded-none transition ${d.starred ? 'text-black bg-gray-100 opacity-100' : 'text-muted-foreground hover:text-black bg-background text-foreground hover:bg-gray-100'}`}>
-                                <Star className={`w-4 h-4 ${d.starred ? 'fill-black' : ''}`} />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLockDocId(d._id); }} className=" hover:text-black hover:bg-gray-100 rounded-none h-8 w-8 transition">
-                                {d.password_hash || d.file_url === '/locked' ? <Lock className="w-4 h-4 text-black" /> : <Unlock className="w-4 h-4" />}
-                              </Button>
-                              
-                              <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShareDocId(d._id); setIsPublic(d.is_public || false); }} className=" hover:text-black hover:bg-gray-100 rounded-none h-8 w-8 transition">
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                                                            <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMonetizeDocId(d._id); setMonetizePrice(d.price || 0); }} className=" hover:text-black hover:bg-zinc-50 rounded-none h-8 w-8 transition">
-                                <DollarSign className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTransferDocId(d._id); setTransferTargetId(""); }} className=" hover:text-black hover:bg-zinc-50 rounded-none h-8 w-8 transition">
-                                <Send className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); e.stopPropagation(); loadAuditLogs(d._id); }} className=" hover:text-black hover:bg-zinc-50 rounded-none h-8 w-8 transition">
-                                <History className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={(e) => handleDeleteDoc(d._id, e)} className=" hover:text-black font-bold outline-black hover:bg-gray-100 rounded-none h-8 w-8 transition">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                            <div className={`flex gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 ${viewMode === 'grid' ? '' : 'absolute right-6 top-1/2 -translate-y-1/2'}`}>
+                                <button onClick={(e) => handleToggleStar(d._id, e)} className={`p-2.5 rounded-sm border transition-all ${d.starred ? 'bg-black text-white border-black' : 'bg-white text-zinc-200 border-zinc-100 hover:border-black hover:text-black'}`}>
+                                    <Star className={`w-3.5 h-3.5 ${d.starred ? 'fill-white' : ''}`} />
+                                </button>
+                                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLockDocId(d._id); }} className="p-2.5 bg-white text-zinc-200 border border-zinc-100 hover:border-black hover:text-black rounded-sm transition-all">
+                                    {d.password_hash ? <Lock className="w-3.5 h-3.5 text-black" /> : <Unlock className="w-3.5 h-3.5" />}
+                                </button>
+                                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShareDocId(d._id); setIsPublic(d.is_public || false); }} className="p-2.5 bg-white text-zinc-200 border border-zinc-100 hover:border-black hover:text-black rounded-sm transition-all">
+                                    <Share2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={(e) => handleDeleteDoc(d._id, e)} className="p-2.5 bg-white text-zinc-200 border border-zinc-100 hover:text-black hover:border-black rounded-sm transition-all">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
                           </div>
-                          <h4 className="font-bold text-foreground leading-tight mb-2 line-clamp-2" title={d.title}>{d.title}</h4>
-                          <div className="mt-auto pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-medium">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-foreground">{d.format}</span>
-                            <span>{formatBytes(d.size)}</span>
+                          
+                          <div className={viewMode === 'grid' ? "flex-1 mb-8" : "flex-1 min-w-0"}>
+                            <h4 className="text-[13px] font-bold text-black uppercase tracking-tight leading-relaxed line-clamp-2 mb-2" title={d.title}>{d.title}</h4>
+                            {viewMode === 'list' && (
+                                <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{formatBytes(d.size)} • {new Date(d.created_at || Date.now()).toLocaleDateString("vi-VN")}</p>
+                            )}
+                          </div>
+
+                          <div className={viewMode === 'grid' ? "pt-6 border-t border-zinc-50 flex items-center justify-between" : "hidden md:flex items-center gap-6 pr-48"}>
+                            <span className="text-[9px] font-bold uppercase tracking-widest bg-zinc-50 px-3 py-1.5 text-zinc-400 group-hover:bg-black group-hover:text-white transition-all rounded-sm">{d.format}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-300">{formatBytes(d.size)}</span>
                           </div>
                         </div>
                       </Link>
@@ -406,19 +376,15 @@ export default function DocumentsPage() {
             )}
 
             {folders.length === 0 && documents.length === 0 && !search && (
-              <div className="bg-card py-24 px-6 text-center  border border-dashed border-border ">
-                <div className="bg-gray-100 w-20 h-20 rounded-none flex items-center justify-center mx-auto mb-6">
-                  <Upload className="w-10 h-10 text-black" />
+              <div className="py-60 text-center border border-dashed border-zinc-100 bg-zinc-50/10 rounded-sm">
+                <div className="w-24 h-24 bg-zinc-50 flex items-center justify-center mx-auto mb-10 rounded-sm">
+                  <Upload className="w-10 h-10 text-zinc-200 stroke-[1.5]" />
                 </div>
-                <h2 className="text-xl font-bold font-sans text-foreground mb-2">Chưa có tài liệu nào</h2>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">Upload tài liệu PDF, DOCX, EPUB hoặc tạo thư mục mới để bắt đầu tổ chức không gian học tập của bạn.</p>
-                <div className="flex justify-center gap-3">
-                  <Button onClick={() => setIsUploadModalOpen(true)}>
-                    Tải tài liệu lên
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsFolderModalOpen(true)} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" /> Thư mục trống
-                  </Button>
+                <h2 className="text-xl font-bold text-black uppercase tracking-widest mb-4">Hệ thống tri thức rỗng</h2>
+                <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest max-w-lg mx-auto leading-loose mb-12">Khởi tạo không gian lưu trữ bằng cách tải lên các thực thể tri thức đa định dạng hoặc tạo đơn vị thư mục mới</p>
+                <div className="flex justify-center gap-6">
+                  <button onClick={() => setIsUploadModalOpen(true)} className="h-16 px-12 bg-black text-white text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all active:scale-95 rounded-sm">Tải lên ngay</button>
+                  <button onClick={() => setIsFolderModalOpen(true)} className="h-16 px-12 border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.3em] hover:border-black transition-all active:scale-95 rounded-sm">Tạo thư mục</button>
                 </div>
               </div>
             )}
@@ -426,23 +392,23 @@ export default function DocumentsPage() {
         )}
       </div>
 
+      {/* Modals are updated to match the premium rounded-sm / monochromatic style */}
       {isFolderModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card p-6  w-full max-w-md  border border-border">
-            <h3 className="text-xl font-bold font-sans text-foreground mb-4">Tạo Thư Mục Mới</h3>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white p-12 w-full max-w-lg border border-zinc-100 rounded-sm animate-in zoom-in-95 duration-300">
+            <h3 className="text-sm font-bold text-black uppercase tracking-widest mb-10">Kiến tạo thư mục tri thức</h3>
             <form onSubmit={handleCreateFolder}>
               <input 
                 type="text" 
                 autoFocus
-                placeholder="" 
-                className="w-full border-border  p-3 text-black mb-6 bg-background text-foreground focus-visible:ring-ring"
+                className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm mb-10"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 required
               />
-              <div className="flex justify-end gap-3 text-sm font-medium">
-                <Button variant="secondary" type="button" onClick={() => setIsFolderModalOpen(false)} className="px-4 py-2  transition">Hủy</Button>
-                <Button type="submit" className="px-4 py-2  hover:bg-gray-800 transition ">Tạo mới</Button>
+              <div className="flex justify-end gap-6">
+                <button type="button" onClick={() => setIsFolderModalOpen(false)} className="h-14 px-8 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all">Hủy bỏ</button>
+                <button type="submit" className="h-14 px-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 rounded-sm">Xác nhận tạo</button>
               </div>
             </form>
           </div>
@@ -450,80 +416,68 @@ export default function DocumentsPage() {
       )}
 
       {isUploadModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card   w-full max-w-lg border border-border overflow-hidden">
-            <div className="p-6 border-b border-border bg-background text-foreground/50 flex justify-between items-center">
-              <h3 className="text-xl font-bold font-sans text-foreground">Tải Tài Liệu Lên</h3>
-              <Button variant="ghost" size="icon" type="button" onClick={() => setIsUploadModalOpen(false)} className="h-8 w-8 text-muted-foreground hover:text-foreground">✕</Button>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-2xl border border-zinc-100 rounded-sm animate-in zoom-in-95 duration-300 overflow-hidden">
+            <div className="p-10 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/30">
+              <h3 className="text-sm font-bold text-black uppercase tracking-widest">Tích hợp thực thể tri thức</h3>
+              <button onClick={() => setIsUploadModalOpen(false)} className="p-2 text-zinc-300 hover:text-black transition-all">✕</button>
             </div>
-            <div className="p-6 text-black">
-              <form onSubmit={handleFileUpload}>
-                <div className="mb-5">
-                  <label className="block text-sm font-medium text-foreground mb-2">Tên tài liệu</label>
+            <div className="p-12">
+              <form onSubmit={handleFileUpload} className="space-y-10">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Danh xưng thực thể</label>
                   <input 
                     type="text" 
-                    placeholder="" 
-                    className="w-full border border-border  p-3 bg-background text-foreground focus-visible:ring-ring text-black"
+                    className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm"
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
                     required
                   />
                 </div>
                 
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-foreground mb-2">Chọn file dữ liệu</label>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Giao thức tải tệp</label>
                   <div 
-                    className={`border-2 border-dashed  p-8 text-center transition-colors cursor-pointer 
-                      ${fileToUpload ? 'border-black bg-zinc-50' : 'border-border hover:border-gray-300 bg-background text-foreground'}`}
+                    className={`border-2 border-dashed h-60 flex flex-col items-center justify-center transition-all cursor-pointer rounded-sm
+                      ${fileToUpload ? 'border-black bg-zinc-50' : 'border-zinc-100 hover:border-black bg-zinc-50/20'}`}
                     onClick={() => !fileToUpload && fileInputRef.current?.click()}
                   >
                     {fileToUpload ? (
-                      <div className="flex flex-col items-center text-center">
-                        <CheckCircle className="w-10 h-10 text-black mb-3" />
-                        <span className="font-bold text-foreground line-clamp-1">{fileToUpload.name}</span>
-                        <span className="text-sm text-muted-foreground mt-1">{formatBytes(fileToUpload.size)}</span>
-                        <Button 
+                      <div className="flex flex-col items-center gap-6 p-10">
+                        <CheckCircle className="w-10 h-10 text-black" />
+                        <div className="text-center">
+                            <span className="text-[12px] font-bold text-black uppercase tracking-tight block max-w-md truncate">{fileToUpload.name}</span>
+                            <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-2 block">{formatBytes(fileToUpload.size)}</span>
+                        </div>
+                        <button 
                           type="button" 
                           onClick={(e) => { e.stopPropagation(); setFileToUpload(null); setUploadTitle(""); }}
-                          className="mt-4 text-black font-bold outline-black text-sm hover:underline font-medium relative z-20 cursor-pointer"
+                          className="text-[10px] font-bold text-zinc-300 hover:text-black uppercase tracking-widest underline underline-offset-8"
                         >
-                          Xóa file
-                        </Button>
+                          Hủy bỏ tệp này
+                        </button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center">
-                        <div className="bg-card p-3 rounded-none  mb-4">
-                          <Upload className="w-6 h-6 text-black" />
+                      <div className="flex flex-col items-center gap-6">
+                        <div className="w-16 h-16 bg-white border border-zinc-100 flex items-center justify-center rounded-sm">
+                          <Upload className="w-6 h-6 text-zinc-200" />
                         </div>
-                        <span className="font-semibold text-foreground">Nhấn để chọn file</span>
-                        <span className="text-xs text-muted-foreground mt-2">Đa định dạng (Tối đa 50MB)</span>
+                        <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Kéo thả hoặc nhấn để chọn thực thể tri thức</span>
                       </div>
                     )}
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      className="hidden" 
-                      onChange={(e) => {
+                    <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          setFileToUpload(file);
-                          if (!uploadTitle) setUploadTitle(file.name.split('.')[0]);
-                        }
-                      }}
-                    />
+                        if (file) { setFileToUpload(file); if (!uploadTitle) setUploadTitle(file.name.split('.')[0]); }
+                    }} />
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 text-sm font-medium pt-4 border-t border-border">
-                  <Button variant="secondary" type="button" onClick={() => setIsUploadModalOpen(false)} className="px-5 py-2.5  transition" disabled={uploading}>Hủy</Button>
-                  <Button type="submit" 
-                    disabled={!fileToUpload || !uploadTitle || uploading} 
-                    className="px-6 py-2.5  hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition  flex items-center gap-2 cursor-pointer"
-                  >
-                    {uploading ? (
-                      <>Đang xử lý</>
-                    ) : 'Tải lên hoàn tất'}
-                  </Button>
+                <div className="flex justify-end gap-6 pt-6 border-t border-zinc-50">
+                  <button type="button" onClick={() => setIsUploadModalOpen(false)} className="h-14 px-8 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all" disabled={uploading}>Hủy bỏ</button>
+                  <button type="submit" disabled={!fileToUpload || !uploadTitle || uploading} className="h-14 px-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-30 transition-all flex items-center gap-4 active:scale-95 rounded-sm">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    Kích hoạt tải lên
+                  </button>
                 </div>
               </form>
             </div>
@@ -532,26 +486,25 @@ export default function DocumentsPage() {
       )}
 
       {lockDocId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card p-6  w-full max-w-sm  border border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-gray-100 p-3 rounded-none"><Lock className="w-6 h-6 text-black" /></div>
-              <h3 className="text-xl font-bold font-sans text-foreground">Khóa Tài Liệu</h3>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white p-12 w-full max-w-md border border-zinc-100 rounded-sm animate-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-6 mb-10">
+              <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm"><Lock className="w-5 h-5 text-black" /></div>
+              <h3 className="text-sm font-bold text-black uppercase tracking-widest">Thiết lập bảo mật</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-6">Mật khẩu được mã hóa một chiều. Bạn không thể lấy lại file nếu quên mật khẩu này.</p>
+            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest leading-loose mb-10 px-1">Mật khẩu sẽ được mã hóa đa lớp. Nội dung sẽ không thể truy cập nếu đánh mất mật mã này.</p>
             <form onSubmit={handleLockDocument}>
               <input 
                 type="password" 
                 autoFocus
-                placeholder="" 
-                className="w-full border border-border  p-3 text-black mb-6 bg-background text-foreground focus-visible:ring-ring"
+                className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm mb-10"
                 value={lockPassword}
                 onChange={(e) => setLockPassword(e.target.value)}
                 required
               />
-              <div className="flex justify-end gap-3 text-sm font-medium">
-                <Button type="button" onClick={() => { setLockDocId(null); setLockPassword(""); }} className="px-4 py-2.5 text-gray-600 hover:bg-gray-100  transition">Hủy bỏ</Button>
-                <Button type="submit" className="px-6 py-2.5  hover:bg-gray-800 transition ">Thiết lập Khóa</Button>
+              <div className="flex justify-end gap-6">
+                <button type="button" onClick={() => { setLockDocId(null); setLockPassword(""); }} className="h-14 px-8 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all">Hủy bỏ</button>
+                <button type="submit" className="h-14 px-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 rounded-sm">Kích hoạt khóa</button>
               </div>
             </form>
           </div>
@@ -559,80 +512,45 @@ export default function DocumentsPage() {
       )}
 
       {shareDocId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card p-6  w-full max-w-sm  border border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-gray-100 p-3 rounded-none"><Globe className="w-6 h-6 text-black" /></div>
-              <h3 className="text-xl font-bold font-sans text-foreground">Chia sẻ & Public</h3>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1200] flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-white p-12 w-full max-w-lg border border-zinc-100 rounded-sm animate-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-6 mb-12">
+              <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm"><Globe className="w-5 h-5 text-black" /></div>
+              <h3 className="text-sm font-bold text-black uppercase tracking-widest">Giao thức chia sẻ</h3>
             </div>
-            <form onSubmit={handleShareSubmit}>
-              <div className="flex items-center gap-2 mb-4">
-                <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-4 h-4 text-black focus:ring-black" />
-                <label className="text-sm font-medium text-foreground">Công khai tài liệu này</label>
+            <form onSubmit={handleShareSubmit} className="space-y-10">
+              <div className="flex items-center gap-4 bg-zinc-50/50 p-6 rounded-sm border border-zinc-50">
+                <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-5 h-5 accent-black cursor-pointer" />
+                <label className="text-[11px] font-bold text-black uppercase tracking-widest cursor-pointer">Công khai thực thể tri thức</label>
               </div>
-              <div className="space-y-3 mb-6">
-                 <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} placeholder="" className="w-full border border-border  p-2.5 text-sm bg-background text-foreground focus-visible:ring-ring" />
-                 <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full border border-border  p-2.5 text-sm bg-background text-foreground focus-visible:ring-ring">
-                    <option value="1">Hủy link sau 1 ngày</option>
-                    <option value="7">Hủy link sau 7 ngày</option>
-                    <option value="30">Hủy link sau 30 ngày</option>
-                 </select>
+              <div className="space-y-6">
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Mật mã truy cập (Nếu cần)</label>
+                    <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black rounded-sm" />
+                 </div>
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Thời hạn hiệu lực</label>
+                    <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest focus:outline-none focus:border-black rounded-sm">
+                        <option value="1">Hết hạn sau 24 giờ</option>
+                        <option value="7">Hết hạn sau 07 ngày</option>
+                        <option value="30">Hết hạn sau 30 ngày</option>
+                    </select>
+                 </div>
               </div>
-                            {publicUrl && (
-                 <div className="mb-4 p-4 bg-background text-foreground flex flex-col items-center rounded border border-border">
-                   <div className="text-xs text-black break-all select-all mb-3 text-center">{publicUrl}</div>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`} alt="QR Code" />
-                   <p className="text-xs text-muted-foreground mt-2"><QrCode className="inline w-3 h-3"/> Quét để tải tài liệu</p>
+              {publicUrl && (
+                 <div className="p-10 bg-zinc-50/50 border border-zinc-100 flex flex-col items-center rounded-sm space-y-8 animate-in fade-in duration-500">
+                    <div className="text-[10px] font-bold text-black break-all select-all text-center tracking-widest uppercase bg-white p-4 border border-zinc-100 w-full rounded-sm">{publicUrl}</div>
+                    <div className="p-6 bg-white border border-zinc-100 rounded-sm">
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`} className="grayscale" alt="QR Code" />
+                    </div>
+                    <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2"><QrCode className="w-3 h-3"/> Quét mã để tiếp cận thực thể</p>
                  </div>
               )}
-              <div className="flex justify-end gap-3 text-sm font-medium">
-                <Button type="button" onClick={() => { setShareDocId(null); setPublicUrl(""); }} className="px-4 py-2.5 text-gray-600 hover:bg-gray-100  transition">Đóng</Button>
-                <Button type="submit" className="px-6 py-2.5  hover:bg-gray-800 transition ">Cập nhật Link</Button>
+              <div className="flex justify-end gap-6 pt-6 border-t border-zinc-50">
+                <button type="button" onClick={() => { setShareDocId(null); setPublicUrl(""); }} className="h-14 px-8 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all">Đóng</button>
+                <button type="submit" className="h-14 px-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 rounded-sm">Cập nhật giao thức</button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {monetizeDocId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card p-6  w-full max-w-sm border border-black">
-            <h3 className="text-xl font-bold font-sans mb-4 flex items-center text-black"><DollarSign className="mr-2"/> Thương mại hóa tài liệu</h3>
-            <form onSubmit={handleMonetize}>
-              <input type="number" min="0" step="1000" value={monetizePrice} onChange={e=>setMonetizePrice(Number(e.target.value))} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="" required />
-              <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setMonetizeDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Lưu thiết lập</Button></div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {transferDocId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card p-6  w-full max-w-sm border border-black">
-            <h3 className="text-xl font-bold font-sans mb-4 flex items-center text-black"><Send className="mr-2"/> Chuyển nhượng quyền sở hữu</h3>
-            <form onSubmit={handleTransfer}>
-              <input type="text" value={transferTargetId} onChange={e=>setTransferTargetId(e.target.value)} className="w-full border  p-3 mb-6 bg-background text-foreground border-border" placeholder="" required />
-              <div className="flex justify-end gap-3"><Button variant="secondary" type="button" onClick={()=>setTransferDocId(null)} >Hủy</Button><Button type="submit" className="px-4 py-2 bg-black text-white rounded-none hover:bg-zinc-800">Xác nhận chuyển</Button></div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {auditDocId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card p-6  w-full max-w-lg  max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold font-sans flex items-center text-black"><History className="mr-2 w-5 h-5"/> Nhật ký hoạt động</h3>
-              <Button variant="ghost" size="icon" onClick={()=>setAuditDocId(null)} className="h-8 w-8 text-muted-foreground hover:text-foreground text-sm">✕</Button>
-            </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-              {auditLogs.length === 0 ? <p className="text-center text-muted-foreground py-10">Chưa có hoạt động nào được ghi nhận.</p> : auditLogs.map(log => (
-                 <div key={log.id} className="text-sm p-3 bg-background text-foreground  border border-border">
-                    <span className="font-sans text-xs text-muted-foreground block mb-1">{new Date(log.timestamp).toLocaleString("vi-VN")}</span>
-                    <strong className="text-foreground">{log.action === 'VIEW' ? 'XEM' : log.action === 'DOWNLOAD' ? 'TẢI VỀ' : log.action}</strong> bởi <span className="text-black font-sans">{log.user_id}</span>
-                 </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -640,5 +558,3 @@ export default function DocumentsPage() {
     </AppShell>
   );
 }
-
-

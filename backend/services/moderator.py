@@ -101,7 +101,18 @@ class ModeratorService:
     async def get_moderator_activity_log(moderator_id: str) -> list:
         db = db_client.mongodb.get_default_database()
         logs = await db["audit_logs"].find({"actor_id": moderator_id}).sort("timestamp", -1).limit(50).to_list(length=50)
-        return [{"action": l.get("action"), "timestamp": l["timestamp"].isoformat() if isinstance(l.get("timestamp"), datetime) else ""} for l in logs]
+        result = []
+        for l in logs:
+            target_id = l.get("document_id") or l.get("target_user_id") or l.get("payout_id") or l.get("item_id") or "N/A"
+            target_type = "Tài liệu" if "document_id" in l else "Người dùng" if "target_user_id" in l else "Thanh toán" if "payout_id" in l else "Đối tượng"
+            result.append({
+                "action": l.get("action"),
+                "target_id": target_id,
+                "target_type": target_type,
+                "reason": l.get("reason", ""),
+                "created_at": l["timestamp"].isoformat() if isinstance(l.get("timestamp"), datetime) else l.get("timestamp", ""),
+            })
+        return result
 
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:
