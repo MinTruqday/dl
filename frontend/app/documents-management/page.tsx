@@ -239,7 +239,7 @@ export default function DocumentManagementPage() {
                                       type="text" 
                                       value={newDoc.title}
                                       onChange={(e) => setNewDoc({...newDoc, title: e.target.value})}
-                                      placeholder="Nhập tên tài liệu..."
+                                      placeholder="Nhập tên tài liệu"
                                       className="w-full h-16 border-b border-zinc-100 focus:border-black outline-none font-bold text-xl transition-all placeholder:text-zinc-100" 
                                   />
                               </div>
@@ -276,7 +276,7 @@ export default function DocumentManagementPage() {
                                   <textarea 
                                       value={newDoc.description}
                                       onChange={(e) => setNewDoc({...newDoc, description: e.target.value})}
-                                      placeholder="Nhập mô tả tóm tắt về nội dung tài liệu..."
+                                      placeholder="Nhập mô tả tóm tắt về nội dung tài liệu"
                                       className="w-full h-40 border border-zinc-100 p-6 focus:border-black outline-none font-medium text-sm transition-all resize-none no-scrollbar leading-relaxed rounded-sm" 
                                   />
                               </div>
@@ -397,7 +397,7 @@ export default function DocumentManagementPage() {
                 </div>
                 <input 
                   type="text"
-                  placeholder="Tìm kiếm theo tiêu đề hoặc tác giả..."
+                  placeholder="Tìm kiếm theo tiêu đề hoặc tác giả"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-16 pl-16 pr-8 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-lg tracking-tight transition-all placeholder:text-zinc-100 rounded-sm"

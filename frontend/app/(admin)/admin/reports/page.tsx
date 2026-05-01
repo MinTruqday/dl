@@ -126,7 +126,7 @@ export default function ReportsManagementPage() {
                 </div>
                 <input 
                   type="text"
-                  placeholder="Tìm kiếm theo lý do, ID đối tượng hoặc người báo cáo..."
+                  placeholder="Tìm kiếm theo lý do, ID đối tượng hoặc người báo cáo"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-16 pl-16 pr-8 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-lg tracking-tight transition-all placeholder:text-zinc-100 rounded-sm"

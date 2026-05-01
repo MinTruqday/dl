@@ -39,6 +39,18 @@ async def react_to_post(post_id: str, reaction_type: str = Query("like"), curren
 async def delete_post(post_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SocialService.delete_post(post_id, current_user), message="Đã xóa bài viết thành công.", status=status.HTTP_200_OK)
 
+@router.post("/posts/{post_id}/repost", response_model=APIResponse[Any])
+async def repost_post(post_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.repost_post(post_id, current_user), message="Đã chia sẻ lại bài viết thành công.", status=status.HTTP_201_CREATED)
+
+@router.post("/posts/{post_id}/pin", response_model=APIResponse[Any])
+async def toggle_pin_post(post_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.toggle_pin_post(post_id, current_user), message="Đã cập nhật trạng thái ghim.", status=status.HTTP_200_OK)
+
+@router.post("/posts/{post_id}/hide", response_model=APIResponse[Any])
+async def hide_post(post_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await SocialService.hide_post(post_id, current_user), message="Đã ẩn bài viết thành công.", status=status.HTTP_200_OK)
+
 @router.post("/users/{user_id}/follow", response_model=APIResponse[Any])
 async def toggle_follow(user_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SocialService.toggle_follow(user_id, current_user), message="Cập nhật trạng thái theo dõi thành công.", status=status.HTTP_200_OK)

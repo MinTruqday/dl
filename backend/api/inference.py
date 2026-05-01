@@ -35,3 +35,7 @@ async def grammar_check(payload: dict, current_user: UserInDB = Depends(get_curr
 @router.post("/synonyms", response_model=APIResponse[Any])
 async def get_synonyms(payload: dict, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await proxy_post("synonyms", payload), message="Tìm từ đồng nghĩa thành công.", status=200)
+
+@router.post("/translate", response_model=APIResponse[Any])
+async def translate_text(payload: dict, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await proxy_post("translate", payload), message="Dịch thuật thành công.", status=status.HTTP_200_OK)

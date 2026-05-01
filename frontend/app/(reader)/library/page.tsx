@@ -298,7 +298,7 @@ export default function LibraryPage() {
              </div>
              <input 
                type="text" 
-               placeholder="Nhập từ khóa..."
+               placeholder="Nhập từ khóa"
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
                className="w-full h-12 bg-zinc-50 border border-zinc-100 px-5 text-[11px] font-bold outline-none focus:border-black transition-all rounded-sm"

@@ -76,13 +76,22 @@ async def stream_endpoint(req: ChatRequest):
     async def response_generator():
         try:
             config = {"configurable": {"thread_id": f"{req.user_id}_{req.document_id or 'global'}"}}
-            async for chunk in router_agent_app.astream(initial_state, config=config, stream_mode="updates"):
-                import json
-                for node_name, node_output in chunk.items():
+            import json
+            
+            async for event in router_agent_app.astream_events(initial_state, config=config, version="v2"):
+                kind = event["event"]
+                
+                if kind == "on_node_start":
+                    node_name = event["name"]
                     yield f"event: status\ndata: {json.dumps({'node': node_name})}\n\n"
-                    msg = node_output.get("final_answer", "")
-                    if msg:
-                        yield f"event: message\ndata: {json.dumps({'chunk': msg})}\n\n"
+                
+                elif kind == "on_chat_model_stream":
+                    tags = event.get("tags", [])
+                    # Only stream tokens from the generator tagged as 'final_generator'
+                    if "final_generator" in tags:
+                        content = event["data"]["chunk"].content
+                        if content:
+                            yield f"event: message\ndata: {json.dumps({'chunk': content})}\n\n"
             
             yield "event: done\ndata: [DONE]\n\n"
             

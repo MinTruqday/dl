@@ -134,7 +134,7 @@ export default function UsersManagementPage() {
                 </div>
                 <input 
                   type="text"
-                  placeholder="Tìm kiếm theo tên hoặc email người dùng..."
+                  placeholder="Tìm kiếm theo tên hoặc email người dùng"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-16 pl-16 pr-8 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-lg tracking-tight transition-all placeholder:text-zinc-100 rounded-sm"

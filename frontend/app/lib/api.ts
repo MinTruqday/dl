@@ -39,9 +39,16 @@ export async function register(email: string, password: string, full_name: strin
 
 export function getToken() {
     if (typeof window !== 'undefined') {
-        return localStorage.getItem('doclib_token');
+        const t = localStorage.getItem('doclib_token');
+        if (t === 'null' || t === 'undefined') return null;
+        return t;
     }
     return null;
+}
+
+export function getAuthHeaders() {
+    const token = getToken();
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
 export function setToken(token: string) {
@@ -260,10 +267,9 @@ export async function getTagsCategoriesAPI() {
 }
 
 export async function getFeedMe(offset: number = 0, limit: number = 10) {
-    const token = getToken();
-    if (!token) return null;
+    const headers = getAuthHeaders();
     const res = await fetch(`${API_URL}/social/feed?skip=${offset}&limit=${limit}`, {
-        headers: { "Authorization": "Bearer " + token }
+        headers
     });
     if (!res.ok) return null;
     return await res.json();
@@ -2027,4 +2033,27 @@ export function formatError(detail: any): string {
         return detail.msg || detail.message || detail.detail || JSON.stringify(detail);
     }
     return String(detail);
+}
+
+export async function triggerCollectionAPI(source: string, url?: string, index_type?: string, target_class?: string) {
+    const res = await fetch(`${API_URL}/collector/trigger`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({ source, url, index_type, target_class })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Không thể kích hoạt tiến trình thu thập.");
+    return data;
+}
+
+export async function getCollectorStatsAPI() {
+    const res = await fetch(`${API_URL}/collector/stats`, {
+        headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Không thể lấy số liệu thống kê thu thập.");
+    return data;
 }

@@ -33,7 +33,8 @@ _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1,
-    task="conversational"
+    task="conversational",
+    streaming=True
 )
 router_llm = ChatHuggingFace(llm=_hf_endpoint)
 
@@ -148,14 +149,15 @@ async def multi_node(state: RouterState):
 
     return {"final_answer": answer, "route": "multi"}
 
-def chat_node(state: RouterState):
+async def chat_node(state: RouterState):
     logger.info("Directing to Casual Chat node")
     prompt = PromptTemplate(
         template="Bạn là trợ lý ảo thân thiện của DocLib. Trả lời người dùng vui vẻ, ngắn gọn.\nNẾU người dùng yêu cầu tạo file, xuất file, hoặc mã nguồn, hãy bọc nội dung file đó trong markdown code block (ví dụ: ```csv\n...``` hoặc ```python\n...```). Hệ thống sẽ tự tạo nút tải xuống.\nUser: {question}",
         input_variables=["question"]
     )
     try:
-        response = router_llm.invoke(prompt.format(question=state["question"]))
+        tagged_llm = router_llm.with_config({"tags": ["final_generator"]})
+        response = await tagged_llm.ainvoke(prompt.format(question=state["question"]))
         answer = response.content.strip()
     except Exception as e:
         logger.error(f"Chat LLM error: {e}")

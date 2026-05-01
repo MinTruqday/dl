@@ -130,7 +130,7 @@ export default function NotificationToast() {
         return (
           <div
             key={n.id}
-            className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white shadow-sm transition-all animate-in slide-in-from-right-8 fade-in duration-300 pointer-events-auto ${typeStyles}`}
+            className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white transition-all animate-in slide-in-from-right-8 fade-in duration-300 pointer-events-auto ${typeStyles}`}
           >
             <div className="flex justify-between items-start gap-4">
               <div className="flex-1">

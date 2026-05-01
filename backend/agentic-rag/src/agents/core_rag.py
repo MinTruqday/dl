@@ -16,6 +16,7 @@ from src.ingestion.embedder import embedding_service
 from src.agents.retrieval_agent import retrieval_agent
 from src.agents.memory_agent import memory_agent
 from src.core.config import settings
+from src.utils.file_processor import extract_text_from_base64
 
 try:
     from sentence_transformers import CrossEncoder
@@ -57,10 +58,11 @@ _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
     temperature=0.1,
-    task="conversational"
+    task="conversational",
+    streaming=True
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
-llm_generate = llm
+llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 try:
     embedder = embedding_service
@@ -123,7 +125,16 @@ def route_question(state: AgentState):
 def decide_initial_route(state: AgentState):
     if state.get("route") == "direct": 
         return "generate_direct"
-    return "retrieve_db"
+    return "preprocess_file"
+
+def preprocess_file(state: AgentState):
+    file_data = state.get("file_data")
+    if file_data and file_data.startswith("data:"):
+        logger.info("Processing uploaded file data")
+        extracted_text = extract_text_from_base64(file_data)
+        if extracted_text:
+            return {"file_data": extracted_text}
+    return {}
 
 async def retrieve_db(state: AgentState):
     logger.info("RetrievalAgent: Retrieving from internal database")
@@ -234,12 +245,12 @@ def transform_query(state: AgentState):
     new_question = response.content.strip()
     return {"question": new_question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
 
-def generate_direct(state: AgentState):
+async def generate_direct(state: AgentState):
     user_id = state.get("user_id", "guess_user")
     question = state["question"]
     user_context = memory_agent.get_context(question, user_id)
     prompt_str = f"Trò chuyện vui vẻ tự nhiên. Không cần tìm kiếm. \nThông tin cá nhân: {user_context}\nCâu hỏi: {question}"
-    response = llm_generate.invoke(prompt_str)
+    response = await llm_generate.ainvoke(prompt_str)
     generation = response.content
     if user_id != "guess_user":
         memory_agent.add_memory([
@@ -248,7 +259,7 @@ def generate_direct(state: AgentState):
         ], user_id)
     return {"generation": generation}
 
-def generate(state: AgentState):
+async def generate(state: AgentState):
     logger.info(f"Generating answer based on {state.get('current_source', 'Unknown').upper()}")
     question = state["question"]
     documents = state.get("documents", [])
@@ -293,14 +304,14 @@ def generate(state: AgentState):
         ]
         messages = [HumanMessage(content=content_blocks)]
         try:
-            response = llm_generate.invoke(messages)
+            response = await llm_generate.ainvoke(messages)
             generation = response.content
         except Exception as e:
             logger.error(f"Multimodal generation failed: {e}")
-            response = llm_generate.invoke(formatted_prompt)
+            response = await llm_generate.ainvoke(formatted_prompt)
             generation = response.content
     else:
-        response = llm_generate.invoke(formatted_prompt)
+        response = await llm_generate.ainvoke(formatted_prompt)
         generation = response.content
     
     if user_id != "guess_user":
@@ -356,6 +367,7 @@ def decide_after_generate(state: AgentState):
         return END
 
 workflow = StateGraph(AgentState)
+workflow.add_node("preprocess_file", preprocess_file)
 workflow.add_node("route_question", route_question)
 workflow.add_node("retrieve_db", retrieve_db)
 workflow.add_node("retrieve_internet", retrieve_internet)
@@ -367,7 +379,8 @@ workflow.add_node("grade_generation", grade_generation)
 workflow.add_node("contextualize_question", contextualize_question)
 workflow.set_entry_point("contextualize_question")
 workflow.add_edge("contextualize_question", "route_question")
-workflow.add_conditional_edges("route_question", decide_initial_route, {"retrieve_db": "retrieve_db", "generate_direct": "generate_direct"})
+workflow.add_conditional_edges("route_question", decide_initial_route, {"preprocess_file": "preprocess_file", "generate_direct": "generate_direct"})
+workflow.add_edge("preprocess_file", "retrieve_db")
 workflow.add_edge("generate_direct", END)
 workflow.add_conditional_edges("retrieve_db", decide_after_retrieve, {"grade_documents": "grade_documents", "retrieve_internet": "retrieve_internet", "generate": "generate"})
 workflow.add_edge("retrieve_internet", "grade_documents")

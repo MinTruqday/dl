@@ -28,6 +28,7 @@ from api.rag import router as rag_router
 from api.inference import router as inference_router
 from api.chat import router as chat_router
 from api.latex import router as latex_router
+from api.collector import router as collector_router
 from core.storage import initialize_bucket
 import asyncio
 from core.worker import start_workers
@@ -136,6 +137,7 @@ app.include_router(inference_router)
 app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
+app.include_router(collector_router)
 
 from api.moderation import router as moderation_router_v2
 app.include_router(moderation_router_v2)

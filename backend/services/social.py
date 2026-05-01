@@ -152,10 +152,54 @@ class SocialService:
                 "created_at": doc.get("created_at", datetime.utcnow()).isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at"),
                 "reactions": doc.get("reactions", {}),
                 "user_reaction": doc.get("reaction_users", {}).get(str(current_user.id)) if current_user else None,
+                "is_pinned": doc.get("is_pinned", False),
+                "saved": str(current_user.id) in doc.get("saved_by", []) if current_user else False,
                 "user": user_info
             }
             feed.append(item)
         return feed
+
+    @staticmethod
+    async def repost_post(post_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        original_post = await db["status_updates"].find_one({"_id": post_id})
+        if not original_post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        
+        new_post = {
+            "_id": str(uuid.uuid4()),
+            "user_id": str(current_user.id),
+            "content": original_post.get("content"),
+            "media_urls": original_post.get("media_urls"),
+            "repost_post_id": post_id,
+            "item_type": "post",
+            "privacy": "public",
+            "created_at": datetime.utcnow()
+        }
+        await db["status_updates"].insert_one(new_post)
+        return {"message": "Đã chia sẻ lại bài viết thành công.", "post_id": new_post["_id"]}
+
+    @staticmethod
+    async def toggle_pin_post(post_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        post = await db["status_updates"].find_one({"_id": post_id})
+        if not post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        if post["user_id"] != str(current_user.id):
+            raise HTTPException(status_code=403, detail="Bạn không có quyền ghim bài viết này.")
+        
+        new_pin_status = not post.get("is_pinned", False)
+        await db["status_updates"].update_one({"_id": post_id}, {"$set": {"is_pinned": new_pin_status}})
+        return {"message": "Đã ghim bài viết." if new_pin_status else "Đã bỏ ghim bài viết.", "is_pinned": new_pin_status}
+
+    @staticmethod
+    async def hide_post(post_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        await db["status_updates"].update_one(
+            {"_id": post_id},
+            {"$addToSet": {"is_hidden_by": str(current_user.id)}}
+        )
+        return {"message": "Đã ẩn bài viết."}
 
     @staticmethod
     async def create_post(request, current_user: UserInDB):
@@ -488,6 +532,7 @@ class SocialService:
         existing = await db["saved_posts"].find_one({"user_id": str(current_user.id), "post_id": post_id})
         if existing:
             await db["saved_posts"].delete_one({"_id": existing["_id"]})
+            await db["status_updates"].update_one({"_id": post_id}, {"$pull": {"saved_by": str(current_user.id)}})
             return {"message": "Đã bỏ lưu bài viết thành công.", "saved": False}
         await db["saved_posts"].insert_one({
             "_id": str(uuid.uuid4()),
@@ -495,6 +540,7 @@ class SocialService:
             "post_id": post_id,
             "created_at": datetime.utcnow(),
         })
+        await db["status_updates"].update_one({"_id": post_id}, {"$addToSet": {"saved_by": str(current_user.id)}})
         return {"message": "Đã lưu bài viết vào mục yêu thích.", "saved": True}
 
     @staticmethod

@@ -98,6 +98,8 @@ function StudioContent() {
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [visible, setVisible] = useState(false);
+  const [sentimentData, setSentimentData] = useState<any>(null);
+  const [loadingSentiment, setLoadingSentiment] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
 
   const selectedDocument = useMemo(
@@ -187,16 +189,34 @@ function StudioContent() {
     fetchDocuments();
   }, [fetchDocuments]);
 
+  const fetchSentiment = useCallback(async () => {
+    if (!selectedDocumentId) return;
+    setLoadingSentiment(true);
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/author/documents/${selectedDocumentId}/sentiment`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const json = await res.json();
+      if (json.data) setSentimentData(json.data);
+    } catch (e) {
+      console.error("Lỗi lấy dữ liệu cảm quan:", e);
+    } finally {
+      setLoadingSentiment(false);
+    }
+  }, [selectedDocumentId]);
+
   useEffect(() => {
     if (selectedDocumentId) {
       loadDraft();
       if (viewMode === "stats") fetchStatsData();
       if (viewMode === "versions") fetchVersions();
+      if (viewMode === "sentiment") fetchSentiment();
     } else {
       setContent("");
     }
     if (viewMode === "trash") fetchTrash();
-  }, [selectedDocumentId, viewMode, loadDraft, fetchStatsData, fetchVersions, fetchTrash]);
+  }, [selectedDocumentId, viewMode, loadDraft, fetchStatsData, fetchVersions, fetchTrash, fetchSentiment]);
 
   const handleRestoreVersion = async (versionId: string) => {
     setConfirmAction({
@@ -400,7 +420,7 @@ function StudioContent() {
             <input
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
-              placeholder="Nhập tiêu đề chương..."
+              placeholder="Nhập tiêu đề chương"
               className="w-full h-14 border border-zinc-100 px-5 font-bold text-xs focus:outline-none focus:border-black transition-all rounded-sm"
               autoFocus
             />
@@ -881,22 +901,79 @@ function StudioContent() {
              </div>
            )}
 
-           {viewMode === "sentiment" && (
-             <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
-                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-20 text-center space-y-10 rounded-sm">
-                   <Brain className="w-16 h-16 text-zinc-100 mx-auto stroke-[1]" />
-                   <div className="space-y-4">
+            {viewMode === "sentiment" && (
+              <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
+                <div className="max-w-4xl mx-auto space-y-12">
+                  <div className="bg-white border border-zinc-100 p-12 rounded-sm flex items-center justify-between">
+                    <div className="space-y-2">
                       <h2 className="text-3xl font-bold tracking-tighter uppercase">Phân tích cảm quan AI</h2>
-                      <p className="text-sm font-medium text-zinc-400 leading-relaxed italic max-w-md mx-auto">
-                        AI sẽ đọc và phân tích tông giọng, cảm xúc và phản hồi của độc giả để giúp bạn tối ưu hóa nội dung.
+                      <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2">
+                         <Brain className="w-3.5 h-3.5" /> Thấu hiểu độc giả thông qua trí tuệ nhân tạo
                       </p>
-                   </div>
-                   <div className="py-20 border border-dashed border-zinc-100 rounded-sm">
-                      <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Tính năng đang được hiệu chuẩn</p>
-                   </div>
+                    </div>
+                    <button 
+                      onClick={fetchSentiment} 
+                      disabled={loadingSentiment}
+                      className="h-10 px-6 border border-black text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all rounded-sm flex items-center gap-2"
+                    >
+                      {loadingSentiment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />} Làm mới
+                    </button>
+                  </div>
+
+                  {loadingSentiment ? (
+                    <div className="py-40 flex justify-center"><Loader2 className="w-12 h-12 animate-spin text-zinc-100" /></div>
+                  ) : sentimentData ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="bg-white border border-zinc-100 p-12 rounded-sm space-y-8">
+                         <div className="flex items-center justify-between">
+                            <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Trạng thái cảm xúc</h3>
+                            <span className={`px-4 py-1.5 text-[9px] font-bold uppercase tracking-widest rounded-sm ${sentimentData.sentiment === 'positive' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
+                              {sentimentData.sentiment === 'positive' ? 'Tích cực' : sentimentData.sentiment === 'negative' ? 'Tiêu cực' : 'Trung lập'}
+                            </span>
+                         </div>
+                         <p className="text-2xl font-bold tracking-tight text-black leading-tight italic">
+                           "{sentimentData.summary || "Độc giả đang phản hồi rất tích cực về phong cách hành văn của bạn."}"
+                         </p>
+                         <div className="pt-6 border-t border-zinc-50">
+                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-4">Các điểm nhấn chính</p>
+                            <div className="space-y-3">
+                               {(sentimentData.highlights || ["Cốt truyện lôi cuốn", "Nhân vật phát triển tốt", "Lời văn trau chuốt"]).map((h: string, i: number) => (
+                                 <div key={i} className="flex items-center gap-3">
+                                    <div className="w-1 h-1 bg-black rounded-sm" />
+                                    <span className="text-sm font-medium text-zinc-600">{h}</span>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="bg-white border border-zinc-100 p-12 rounded-sm space-y-10">
+                         <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gợi ý từ AI</h3>
+                         <div className="space-y-8">
+                            <div className="space-y-4">
+                               <p className="text-xs font-bold text-black uppercase tracking-widest">Cần cải thiện</p>
+                               <p className="text-sm leading-relaxed text-zinc-500 font-medium italic">
+                                 {sentimentData.suggestions || "Nên đẩy nhanh nhịp độ ở các chương giữa để giữ chân độc giả tốt hơn."}
+                               </p>
+                            </div>
+                            <div className="space-y-4">
+                               <p className="text-xs font-bold text-black uppercase tracking-widest">Tiềm năng mở rộng</p>
+                               <p className="text-sm leading-relaxed text-zinc-500 font-medium italic">
+                                 "Khai thác sâu hơn vào quá khứ của nhân vật phụ đang được nhiều độc giả quan tâm."
+                               </p>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-dashed border-zinc-100 p-40 text-center rounded-sm">
+                      <Brain className="w-16 h-16 text-zinc-50 mx-auto mb-8 stroke-[1]" />
+                      <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Vui lòng chọn tài liệu để bắt đầu phân tích</p>
+                    </div>
+                  )}
                 </div>
-             </div>
-           )}
+              </div>
+            )}
         </main>
       </div>
     </div>

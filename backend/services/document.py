@@ -27,6 +27,7 @@ def serialize_document(document):
     return document
 
 from services.notification import NotificationService
+from services.rag import RagService
 
 class DocumentService:
     @staticmethod
@@ -97,6 +98,11 @@ class DocumentService:
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
         await trigger_document_publish_job(document_id, user_id)
+        try:
+            await RagService.ingest(document_id)
+        except Exception as e:
+            logger.error(f"Failed to trigger automatic ingestion for {document_id}: {e}")
+            
         await docs_collection.update_one(
             {"_id": document_id},
             {"$set": {
@@ -444,8 +450,15 @@ class DocumentService:
         documents = await cursor.to_list(length=limit)
         
         if len(documents) < limit:
+            existing_ids = [doc["_id"] for doc in documents]
+            if reference_document_id:
+                existing_ids.append(reference_document_id)
+            
             extra = await db["documents"].aggregate([
-                {"$match": {"status": DocumentStatus.PUBLISHED, "_id": {"$ne": reference_document_id}}},
+                {"$match": {
+                    "status": DocumentStatus.PUBLISHED, 
+                    "_id": {"$nin": existing_ids}
+                }},
                 {"$sample": {"size": limit - len(documents)}}
             ]).to_list(length=limit - len(documents))
             documents.extend(extra)

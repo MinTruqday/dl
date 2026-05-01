@@ -185,7 +185,7 @@ class NXBSTStreamState:
                     "content_format": "pdf",
                     "price": 0.0,
                     "visibility": "public",
-                    "author_id": "nxbst_crawler",
+                    "author_id": "nxbst_collector",
                     "status": "published",
                     "views": 0,
                     "average_rating": 0.0

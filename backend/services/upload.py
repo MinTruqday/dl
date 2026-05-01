@@ -37,7 +37,7 @@ class UploadService:
 
     @staticmethod
     async def upload_document(file):
-        allowed_extensions = ["pdf", "epub", "mobi", "docx", "txt", "zip"]
+        allowed_extensions = ["pdf", "epub", "mobi", "docx", "doc", "xlsx", "xls", "pptx", "ppt", "txt", "zip", "csv", "json", "md", "png", "jpg", "jpeg", "webp"]
         ext = file.filename.split(".")[-1].lower()
         
         if ext not in allowed_extensions:

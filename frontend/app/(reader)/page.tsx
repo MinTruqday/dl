@@ -7,6 +7,7 @@ import {
   getAIRecommendationsAPI,
   getFeaturedAuthorsAPI,
   semanticSearchAPI,
+  getAuthHeaders,
   API_URL 
 } from "@/app/lib/api";
 import { useAuth } from "@/app/contexts/AuthContext";
@@ -285,7 +286,7 @@ export default function ExplorePage() {
             </div>
             <div className="space-y-6">
               {trending.length > 0 ? trending.map((document, i) => (
-                <Link key={document._id} href={`/document/${document.slug}`} className="group block space-y-2">
+                <Link key={`trending-${document._id || i}`} href={`/document/${document.slug}`} className="group block space-y-2">
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-black/20">0{i + 1}</span>
                     <div className="h-[1px] flex-1 bg-zinc-100 group-hover:bg-black transition-colors" />
@@ -349,8 +350,8 @@ export default function ExplorePage() {
                 <h2 className="text-xl font-bold uppercase tracking-tight">Gợi ý dành riêng cho bạn</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {recommendations.map((doc) => (
-                  <Link key={doc._id} href={`/document/${doc.slug}`} className="flex gap-6 p-6 border border-zinc-100 hover:border-black transition-all group bg-white">
+                {recommendations.map((doc, i) => (
+                  <Link key={`rec-${doc._id || i}`} href={`/document/${doc.slug}`} className="flex gap-6 p-6 border border-zinc-100 hover:border-black transition-all group bg-white">
                     <div className="w-24 h-32 bg-zinc-50 shrink-0 border border-zinc-100 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300">
                       {doc.cover_url ? (
                         <img src={doc.cover_url} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
@@ -392,9 +393,9 @@ export default function ExplorePage() {
               </div>
             ) : documents.length > 0 ? (
               <div className={`grid gap-10 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-                {documents.map((document) => (
+                {documents.map((document, i) => (
                   <Link
-                    key={document._id}
+                    key={`doc-${document._id || i}`}
                     href={`/document/${document.slug}`}
                     className={`group animate-in fade-in slide-in-from-bottom-4 duration-300 ${viewMode === "grid" ? "space-y-5" : "flex gap-8 items-center border border-zinc-100 p-6 bg-white hover:border-black transition-all"}`}
                   >

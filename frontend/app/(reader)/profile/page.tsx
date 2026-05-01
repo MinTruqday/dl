@@ -285,7 +285,7 @@ export default function ProfilePage() {
                   type="number"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Nhập giá trị..."
+                  placeholder="Nhập giá trị"
                   className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm transition-all placeholder:text-zinc-100"
                 />
                 <button
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Mô tả ngắn gọn về hành trình tri thức của bạn..."
+                  placeholder="Mô tả ngắn gọn về hành trình tri thức của bạn"
                   className="w-full min-h-[260px] p-10 text-sm border border-zinc-100 rounded-sm focus:outline-none focus:border-black transition-all font-medium bg-zinc-50/20"
                 />
               </div>

@@ -13,7 +13,7 @@ export default function DocumentPreviewModal({ isOpen, onClose, document }: Prev
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-500 backdrop-blur-2xl bg-black/40">
-      <div className="bg-white w-full max-w-5xl h-full max-h-[85vh] shadow-[0_0_100px_rgba(0,0,0,0.3)] flex flex-col relative overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
+      <div className="bg-white w-full max-w-5xl h-full max-h-[85vh] border border-black flex flex-col relative overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-700">
         
         {/* Header */}
         <div className="p-8 border-b border-zinc-100 flex items-center justify-between shrink-0">
@@ -52,7 +52,7 @@ export default function DocumentPreviewModal({ isOpen, onClose, document }: Prev
             <div className="relative h-64 mt-10">
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 via-zinc-50/80 to-transparent z-10" />
               <div className="absolute inset-0 flex flex-col items-center justify-center z-20 gap-6">
-                <div className="w-16 h-16 bg-white border border-zinc-100 flex items-center justify-center shadow-xl">
+                <div className="w-16 h-16 bg-white border border-zinc-100 flex items-center justify-center">
                   <Lock className="w-6 h-6 text-zinc-300" />
                 </div>
                 <div className="text-center">

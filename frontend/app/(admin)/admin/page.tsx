@@ -280,7 +280,7 @@ export default function AdminDashboard() {
 
       {confirmModal?.show && (
         <div className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-md">
-          <div className="bg-white border border-zinc-200 w-full max-w-md animate-in zoom-in-95 duration-300 rounded-none shadow-2xl">
+          <div className="bg-white border border-zinc-200 w-full max-w-md animate-in zoom-in-95 duration-300 rounded-none ">
             <div className="p-12 text-center">
               <AlertTriangle className="w-12 h-12 text-black mx-auto mb-8 stroke-[1.5]" />
               <h3 className="text-2xl font-bold mb-4 tracking-tighter">{confirmModal.title}</h3>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
           <button 
             onClick={fetchData}
             disabled={isRefreshing}
-            className="h-14 px-12 bg-black text-white text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-4 rounded-none shadow-xl shadow-black/5"
+            className="h-14 px-12 bg-black text-white text-[11px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all active:scale-95 flex items-center gap-4 rounded-none border border-black/5"
           >
             {isRefreshing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCcw className="w-5 h-5" />}
             Đồng bộ dữ liệu
@@ -336,7 +336,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        {/* Sidebar Navigation */}
         <aside 
           className="lg:col-span-3 space-y-10 transition-all duration-700 delay-150"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
@@ -352,7 +351,7 @@ export default function AdminDashboard() {
                         onClick={() => setActiveTab(tab.id as TabType)}
                         className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest transition-all border ${
                             activeTab === tab.id
-                            ? "bg-black text-white border-black shadow-lg shadow-black/5"
+                            ? "bg-black text-white border-black border border-black/5"
                             : "bg-white text-zinc-400 border-zinc-100 hover:bg-zinc-50 hover:text-black"
                         }`}
                     >
@@ -387,7 +386,6 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-        {/* Main Content Area */}
         <main 
           className="lg:col-span-9 transition-all duration-700 delay-300"
           style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
@@ -443,7 +441,7 @@ export default function AdminDashboard() {
                  <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-[0.2em]">{users.length} BẢN GHI</span>
                </div>
 
-               <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+               <div className="bg-white border border-zinc-100 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
@@ -525,7 +523,7 @@ export default function AdminDashboard() {
                         </div>
                     ) : (
                         applications.map((app: any) => (
-                            <div key={app._id} className="bg-white border border-zinc-100 p-10 hover:border-black transition-all duration-500 shadow-sm flex flex-col gap-8">
+                            <div key={app._id} className="bg-white border border-zinc-100 p-10 hover:border-black transition-all duration-500 flex flex-col gap-8">
                                 <div className="flex flex-col md:flex-row justify-between items-start gap-8">
                                     <div className="space-y-2">
                                         <h3 className="text-xl font-bold tracking-tighter">{app.user_name}</h3>
@@ -572,7 +570,7 @@ export default function AdminDashboard() {
                         </div>
                     ) : (
                         banners.map((b: any) => (
-                            <div key={b.id} className="bg-white border border-zinc-100 group hover:border-black transition-all duration-700 shadow-sm">
+                            <div key={b.id} className="bg-white border border-zinc-100 group hover:border-black transition-all duration-700">
                                 <div className="aspect-[16/7] bg-zinc-50 border-b border-zinc-100 overflow-hidden relative">
                                     {b.image_url && <img src={b.image_url} alt="" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />}
                                     <div className={`absolute top-4 right-4 px-3 py-1 text-[9px] font-bold uppercase border ${b.is_active ? 'bg-black text-white border-black' : 'bg-white text-zinc-300 border-zinc-100'}`}>
@@ -599,7 +597,7 @@ export default function AdminDashboard() {
                   <h2 className="text-sm font-bold text-black tracking-widest uppercase">Yêu cầu tất toán</h2>
                   <div className="flex-1 h-px bg-zinc-50" />
                 </div>
-                <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+                <div className="bg-white border border-zinc-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                             <thead>
@@ -648,7 +646,7 @@ export default function AdminDashboard() {
                   <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-[0.2em]">{applications.length} ĐƠN CHỜ</span>
               </div>
 
-              <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+              <div className="bg-white border border-zinc-100 overflow-hidden">
                   <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                           <thead>
@@ -718,7 +716,7 @@ export default function AdminDashboard() {
                  <h2 className="text-sm font-bold text-black tracking-widest uppercase">Nhật ký vận hành</h2>
                  <div className="flex-1 h-px bg-zinc-50" />
                </div>
-               <div className="bg-white border border-zinc-100 overflow-hidden shadow-sm">
+               <div className="bg-white border border-zinc-100 overflow-hidden">
                    <div className="overflow-x-auto">
                         <table className="w-full text-left text-[11px] border-collapse">
                             <thead>
@@ -748,7 +746,7 @@ export default function AdminDashboard() {
           {activeTab === "config" && user.role === "admin" && config && (
             <div className="grid lg:grid-cols-12 gap-12 animate-in slide-in-from-bottom-4 duration-700">
                 <div className="lg:col-span-7 space-y-10">
-                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10">
                         <div className="space-y-1">
                             <h3 className="text-lg font-bold tracking-tighter uppercase">Kinh tế hệ thống</h3>
                             <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập tham số tài chính</p>
@@ -764,11 +762,11 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                         <div className="pt-6">
-                            <button className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-black/5">Cập nhật tài chính</button>
+                            <button className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all border border-black/5">Cập nhật tài chính</button>
                         </div>
                     </div>
 
-                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10">
                         <div className="space-y-1">
                             <h3 className="text-lg font-bold tracking-tighter uppercase">Động cơ AI Core</h3>
                             <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập mô hình ngôn ngữ</p>
@@ -782,7 +780,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white border border-zinc-100 p-12 space-y-10 shadow-sm">
+                    <div className="bg-white border border-zinc-100 p-12 space-y-10">
                         <div className="space-y-1">
                             <h3 className="text-lg font-bold tracking-tighter uppercase">Cộng đồng</h3>
                             <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Thiết lập quyền hạn thành viên</p>
@@ -800,7 +798,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="lg:col-span-5 space-y-10">
-                    <div className={`p-10 border transition-all duration-700 shadow-sm ${maintenanceMode ? 'bg-black text-white border-black' : 'bg-white border-zinc-100 text-black'}`}>
+                    <div className={`p-10 border transition-all duration-700 ${maintenanceMode ? 'bg-black text-white border-black' : 'bg-white border-zinc-100 text-black'}`}>
                         <div className="flex items-center justify-between mb-8">
                             <h3 className="text-[11px] font-bold uppercase tracking-[0.2em]">Chế độ bảo trì</h3>
                             <button onClick={toggleMaintenance} className={`w-14 h-8 transition-all relative ${maintenanceMode ? 'bg-white' : 'bg-zinc-100'}`}>
@@ -812,7 +810,7 @@ export default function AdminDashboard() {
                         </p>
                     </div>
 
-                    <div className="bg-white border border-zinc-100 p-10 space-y-8 shadow-sm">
+                    <div className="bg-white border border-zinc-100 p-10 space-y-8">
                          <h3 className="text-[11px] font-bold uppercase tracking-widest">Cơ sở hạ tầng</h3>
                          <div className="grid gap-3">
                             <button className="h-14 border border-zinc-50 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all flex items-center justify-center gap-3">

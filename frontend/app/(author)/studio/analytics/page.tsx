@@ -166,7 +166,7 @@ export default function AuthorAnalyticsPage() {
                 <button
                   onClick={analyzeSentiment}
                   disabled={processing || !selectedDocumentId}
-                  className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center justify-center gap-4 active:scale-[0.98] shadow-xl shadow-black/5"
+                  className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 transition-all flex items-center justify-center gap-4 active:scale-[0.98]"
                 >
                   {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                   Khởi tạo phân tích AI

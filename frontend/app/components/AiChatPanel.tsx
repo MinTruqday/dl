@@ -172,18 +172,25 @@ export default function AiChatPanel() {
       };
 
       let isDone = false;
+      let buffer = "";
+
       while (!isDone) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunkStr = decoder.decode(value, { stream: true });
+        
+        buffer += decoder.decode(value, { stream: true });
+        
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
 
-        const events = chunkStr.split("\n\n");
-        for (const ev of events) {
+        for (const ev of lines) {
           if (!ev.trim()) continue;
-          const lines = ev.split("\n");
+          
+          const eventLines = ev.split("\n");
           let type = "";
           let data = "";
-          for (const line of lines) {
+          
+          for (const line of eventLines) {
             if (line.startsWith("event:")) type = line.replace("event:", "").trim();
             else if (line.startsWith("data:")) data = line.replace("data:", "").trim();
           }
@@ -259,13 +266,13 @@ export default function AiChatPanel() {
           transition-all duration-300 active:scale-90
           ${isOpen ? "bg-black text-white hover:bg-zinc-800" : "bg-white text-black hover:bg-zinc-50"}
         `}
-        title="Trợ lý AI"
+        title="DocLib AI"
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </button>
 
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-[100] w-[450px] h-[700px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300 shadow-2xl">
+        <div className="fixed bottom-24 right-6 z-[100] w-[450px] h-[700px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
 
           <div className="px-5 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-3">
@@ -275,8 +282,8 @@ export default function AiChatPanel() {
               <div>
                 <h3 className="text-sm font-bold text-black tracking-tight">DocLib AI</h3>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-pulse" />
-                  <p className="text-[11px] text-zinc-400 font-bold">Trợ lý tri thức</p>
+                  <div className="w-1.5 h-1.5 bg-zinc-400 rounded-sm animate-pulse" />
+                  <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-tight">Trợ lý tri thức</p>
                 </div>
               </div>
             </div>
@@ -325,9 +332,9 @@ export default function AiChatPanel() {
                         : "bg-white border-zinc-100 text-black w-full"
                     }`}
                   >
-                    {msg.role === "assistant" && usePro && msg.thoughts && msg.thoughts.length > 0 && (
-                      <details className="mb-4 border-b border-zinc-100 pb-4 cursor-pointer">
-                        <summary className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 hover:text-black transition-colors list-none">
+                    {msg.role === "assistant" && msg.thoughts && msg.thoughts.length > 0 && (
+                      <details className="mb-4 border-b border-zinc-100 pb-4 cursor-pointer group/thoughts">
+                        <summary className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 group-hover/thoughts:text-black transition-colors list-none">
                           <Cpu className="w-3.5 h-3.5" />
                           <span>Quá trình xử lý tri thức</span>
                         </summary>
@@ -335,7 +342,17 @@ export default function AiChatPanel() {
                           {msg.thoughts.map((t, idx2) => (
                             <div key={idx2} className="text-[12px] text-zinc-500 flex items-center gap-3">
                               <div className="w-1 h-1 bg-zinc-300 shrink-0" />
-                              <span className="font-medium">{t}</span>
+                              <div className="prose prose-sm max-w-none prose-zinc">
+                                <ReactMarkdown 
+                                  remarkPlugins={[remarkGfm, remarkMath]}
+                                  rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                  components={{
+                                    p: ({children}) => <span className="font-medium leading-relaxed">{children}</span>
+                                  }}
+                                >
+                                  {t}
+                                </ReactMarkdown>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -389,7 +406,7 @@ export default function AiChatPanel() {
                           td: ({ children }) => <td className="px-3 py-2 whitespace-nowrap text-zinc-600 border-t border-zinc-100">{children}</td>,
                         }}
                       >
-                        {msg.content || (msg.role === "assistant" ? "..." : "")}
+                        {msg.content || (msg.role === "assistant" ? "" : "")}
                       </ReactMarkdown>
                     </div>
                   </div>
@@ -430,12 +447,12 @@ export default function AiChatPanel() {
             )}
 
             {showAttachments && (
-              <div className="absolute bottom-full left-4 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300 z-50 shadow-xl">
+              <div className="absolute bottom-full left-4 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300 z-50">
                 <input
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
-                  accept=".txt,.md,.json,.pdf"
+                  accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.epub,.mobi,.zip,.csv"
                   onChange={(e) => handleFileUpload(e, "file")}
                 />
                 <input
@@ -498,7 +515,7 @@ export default function AiChatPanel() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Nhập câu hỏi..."
+                  placeholder="Nhập câu hỏi"
                   disabled={isSending}
                   className="flex-1 h-full text-sm bg-transparent outline-none font-medium"
                 />

@@ -112,7 +112,7 @@ export default function AuthorApplicationsPage() {
                         key={f.id}
                         onClick={() => setStatusFilter(f.id)}
                         className={`px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm ${
-                            statusFilter === f.id ? "bg-white text-black shadow-sm" : "text-zinc-400 hover:text-black"
+                            statusFilter === f.id ? "bg-white text-black " : "text-zinc-400 hover:text-black"
                         }`}
                     >
                         {f.label}
@@ -141,7 +141,7 @@ export default function AuthorApplicationsPage() {
                 </div>
                 <input 
                   type="text"
-                  placeholder="Tìm kiếm theo tên hoặc email ứng viên..."
+                  placeholder="Tìm kiếm theo tên hoặc email ứng viên"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-16 pl-16 pr-8 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-lg tracking-tight transition-all placeholder:text-zinc-100 rounded-sm"

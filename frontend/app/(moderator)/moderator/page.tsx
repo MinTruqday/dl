@@ -6,7 +6,9 @@ import {
   getReportsAPI, 
   moderateDocumentAPI, 
   resolveReportAPI, 
-  getModeratorActivityAPI 
+  getModeratorActivityAPI,
+  triggerCollectionAPI,
+  getCollectorStatsAPI
 } from "@/app/lib/api";
 import { 
     ShieldCheck, 
@@ -14,7 +16,7 @@ import {
     CheckCircle2, 
     XCircle, 
     Clock, 
-    User, 
+    User as UserIcon, 
     BookOpen,
     Eye,
     Loader2,
@@ -26,13 +28,17 @@ import {
     Zap,
     Award,
     Activity,
-    ShieldAlert
+    ShieldAlert,
+    DownloadCloud,
+    Database,
+    Link as LinkIcon,
+    Globe
 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Notification } from "@/app/components/NotificationToast";
 import { useRouter, useSearchParams } from "next/navigation";
 
-type ModTab = "documents" | "reports" | "logs";
+type ModTab = "documents" | "reports" | "logs" | "collector";
 
 export default function ModerationDashboard() {
     const { user, isLoading: authLoading } = useAuth() as any;
@@ -44,6 +50,8 @@ export default function ModerationDashboard() {
     const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
     const [activityLogs, setActivityLogs] = useState<any[]>([]);
+    const [collectorStats, setCollectorStats] = useState<any>(null);
+    const [collectionForm, setCollectionForm] = useState({ source: "AnnaArchive", url: "", index_type: "list", target_class: "10" });
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -61,6 +69,13 @@ export default function ModerationDashboard() {
             setPendingDocuments(docsRes.data || docsRes || []);
             setReports(reportsRes.data || reportsRes || []);
             setActivityLogs(logsRes.data || logsRes || []);
+
+            try {
+                const statsRes = await getCollectorStatsAPI();
+                setCollectorStats(statsRes.data || statsRes);
+            } catch (err) {
+                console.error("Failed to fetch collector stats:", err);
+            }
         } catch (err: any) {
             setNotification({ type: "error", text: "Không thể kết nối hệ thống kiểm duyệt." });
         } finally {
@@ -111,6 +126,20 @@ export default function ModerationDashboard() {
         }
     };
 
+    const handleTriggerCollection = async () => {
+        try {
+            setIsRefreshing(true);
+            await triggerCollectionAPI(collectionForm.source, collectionForm.url, collectionForm.index_type, collectionForm.target_class);
+            setNotification({ type: "success", text: "Đã kích hoạt tiến trình thu thập thành công." });
+            setCollectionForm({ ...collectionForm, url: "" });
+            fetchData();
+        } catch (err: any) {
+            setNotification({ type: "error", text: err.message || "Không thể kích hoạt tiến trình thu thập." });
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
     if (authLoading || isLoading) {
         return (
             <div className="min-h-[80vh] flex items-center justify-center bg-white">
@@ -134,7 +163,9 @@ export default function ModerationDashboard() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                     <div className="space-y-4">
                         <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-                            {activeTab === "documents" ? "Duyệt bản thảo" : activeTab === "reports" ? "Báo cáo vi phạm" : "Nhật ký điều hành"}
+                            {activeTab === "documents" ? "Duyệt bản thảo" : 
+                             activeTab === "reports" ? "Báo cáo vi phạm" : 
+                             activeTab === "collector" ? "Thu thập dữ liệu" : "Nhật ký điều hành"}
                         </h1>
                         <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
                             Hệ thống kiểm soát nội dung DocLib <ShieldCheck className="w-3.5 h-3.5 text-zinc-100" />
@@ -146,13 +177,14 @@ export default function ModerationDashboard() {
                             {[
                                 { id: "documents", label: "Tài liệu", icon: BookOpen },
                                 { id: "reports", label: "Báo cáo", icon: ShieldAlert },
+                                { id: "collector", label: "Thu thập", icon: DownloadCloud },
                                 { id: "logs", label: "Nhật ký", icon: Activity },
                             ].map((tab) => (
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabChange(tab.id as ModTab)}
                                     className={`flex items-center gap-2 px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all rounded-sm ${
-                                        activeTab === tab.id ? "bg-white text-black shadow-sm" : "text-zinc-400 hover:text-black"
+                                        activeTab === tab.id ? "bg-white text-black " : "text-zinc-400 hover:text-black"
                                     }`}
                                 >
                                     <tab.icon className="w-3.5 h-3.5" />
@@ -203,7 +235,7 @@ export default function ModerationDashboard() {
                                                 <div className="min-w-0 space-y-3">
                                                     <h3 className="font-bold text-2xl text-black truncate tracking-tighter">{doc.title}</h3>
                                                     <div className="flex flex-wrap items-center gap-6 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                                                        <span className="flex items-center gap-2 text-black"><User className="w-3.5 h-3.5" /> {doc.author_name}</span>
+                                                        <span className="flex items-center gap-2 text-black"><UserIcon className="w-3.5 h-3.5" /> {doc.author_name}</span>
                                                         <span className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {new Date(doc.created_at).toLocaleDateString("vi-VN")}</span>
                                                     </div>
                                                 </div>
@@ -230,7 +262,7 @@ export default function ModerationDashboard() {
                                             <div className="flex items-center gap-4 w-full md:w-auto">
                                                 <button 
                                                     onClick={() => reviewDocument(doc._id, "REJECTED")}
-                                                    className="flex-1 md:flex-none h-14 px-12 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-red-500 hover:border-red-500 transition-all rounded-sm"
+                                                    className="flex-1 md:flex-none h-14 px-12 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black hover:border-black transition-all rounded-sm"
                                                 >
                                                     Từ chối
                                                 </button>
@@ -322,7 +354,145 @@ export default function ModerationDashboard() {
                     </div>
                 )}
 
-                {activeTab === "logs" && (
+                {activeTab === "collector" && (
+                    <div className="space-y-12 animate-in fade-in duration-300">
+                        <div className="grid md:grid-cols-3 gap-8">
+                            <div className="md:col-span-1 space-y-10">
+                                <div className="space-y-4">
+                                    <h2 className="text-[11px] font-bold text-black tracking-[0.2em] uppercase px-2">Cấu hình thu thập</h2>
+                                    <div className="bg-white border border-zinc-100 p-8 space-y-8 rounded-sm">
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Nguồn dữ liệu</label>
+                                            <select 
+                                                value={collectionForm.source}
+                                                onChange={(e) => setCollectionForm({...collectionForm, source: e.target.value})}
+                                                className="w-full h-12 px-4 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all rounded-sm"
+                                            >
+                                                <option value="AnnaArchive">Anna Archive</option>
+                                                <option value="NXBST">NXB Sự Thật</option>
+                                                <option value="NXBGDC">NXB Giáo Dục</option>
+                                            </select>
+                                        </div>
+
+                                        {collectionForm.source === "AnnaArchive" && (
+                                            <>
+                                                <div className="space-y-4">
+                                                    <label className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Loại chỉ mục</label>
+                                                    <select 
+                                                        value={collectionForm.index_type}
+                                                        onChange={(e) => setCollectionForm({...collectionForm, index_type: e.target.value})}
+                                                        className="w-full h-12 px-4 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all rounded-sm"
+                                                    >
+                                                        <option value="list">Danh sách (List)</option>
+                                                        <option value="detail">Chi tiết (Detail)</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <label className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">URL mục tiêu</label>
+                                                    <input 
+                                                        type="text"
+                                                        value={collectionForm.url}
+                                                        onChange={(e) => setCollectionForm({...collectionForm, url: e.target.value})}
+                                                        placeholder="Nhập đường dẫn URL"
+                                                        className="w-full h-12 px-4 bg-zinc-50 border border-zinc-100 text-[11px] font-medium outline-none focus:border-black transition-all rounded-sm"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {collectionForm.source === "NXBST" && (
+                                            <div className="space-y-4">
+                                                <label className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">URL chi tiết (Tùy chọn)</label>
+                                                <input 
+                                                    type="text"
+                                                    value={collectionForm.url}
+                                                    onChange={(e) => setCollectionForm({...collectionForm, url: e.target.value})}
+                                                    placeholder="Để trống để chạy toàn bộ danh sách"
+                                                    className="w-full h-12 px-4 bg-zinc-50 border border-zinc-100 text-[11px] font-medium outline-none focus:border-black transition-all rounded-sm"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {collectionForm.source === "NXBGDC" && (
+                                            <div className="space-y-4">
+                                                <label className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Khối lớp (Target Class)</label>
+                                                <select 
+                                                    value={collectionForm.target_class}
+                                                    onChange={(e) => setCollectionForm({...collectionForm, target_class: e.target.value})}
+                                                    className="w-full h-12 px-4 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all rounded-sm"
+                                                >
+                                                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(c => (
+                                                        <option key={c} value={String(c)}>Lớp {c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        <button 
+                                            onClick={handleTriggerCollection}
+                                            disabled={isRefreshing}
+                                            className="w-full h-14 bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-3 rounded-sm disabled:opacity-50"
+                                        >
+                                            <DownloadCloud className="w-4 h-4" /> Bắt đầu thu thập
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2 space-y-10">
+                                <div className="space-y-4">
+                                    <h2 className="text-[11px] font-bold text-black tracking-[0.2em] uppercase px-2">Trạng thái hệ thống thu thập</h2>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="bg-white border border-zinc-100 p-8 rounded-sm space-y-4">
+                                            <div className="flex items-center gap-3 text-zinc-300">
+                                                <Database className="w-4 h-4" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Tổng tài liệu thu thập</span>
+                                            </div>
+                                            <p className="text-4xl font-bold tracking-tighter text-black">{collectorStats?.total_documents_collected || 0}</p>
+                                        </div>
+                                        <div className="bg-white border border-zinc-100 p-8 rounded-sm space-y-4">
+                                            <div className="flex items-center gap-3 text-zinc-300">
+                                                <Activity className="w-4 h-4" />
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Trạng thái Worker</span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-2.5 h-2.5 bg-zinc-400 rounded-full animate-pulse" />
+                                                <p className="text-xl font-bold tracking-tight text-black uppercase">Đang hoạt động</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h2 className="text-[11px] font-bold text-black tracking-[0.2em] uppercase px-2">Nguồn dữ liệu sẵn dụng</h2>
+                                    <div className="grid gap-4">
+                                        {[
+                                            { name: "Anna Archive", status: "Hoạt động", type: "Thư viện mở", icon: Globe },
+                                            { name: "NXB Sự Thật", status: "Hoạt động", type: "Chính trị - Pháp luật", icon: ShieldCheck },
+                                            { name: "NXB Giáo Dục", status: "Hoạt động", type: "Sách giáo khoa", icon: BookOpen },
+                                        ].map((source, i) => (
+                                            <div key={i} className="flex items-center justify-between p-8 border border-zinc-100 bg-white rounded-sm hover:border-black transition-all duration-300">
+                                                <div className="flex items-center gap-6">
+                                                    <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center border border-zinc-100 rounded-sm">
+                                                        <source.icon className="w-5 h-5 text-zinc-300" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <h4 className="font-bold text-black uppercase tracking-tight text-sm">{source.name}</h4>
+                                                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{source.type}</p>
+                                                    </div>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full" />
+                                                    {source.status}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                     <div className="space-y-10 animate-in fade-in duration-300">
                         <div className="flex items-center justify-between px-2">
                             <h2 className="text-[11px] font-bold text-black tracking-[0.2em] uppercase">Nhật ký hoạt động ({activityLogs.length})</h2>

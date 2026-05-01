@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import AppShell from "@/app/components/AppShell";
 import Link from "next/link";
-import { getToken } from "@/app/lib/api";
-import { Heart, MessageCircle, Globe, Sparkles, Users, Lock, Share2, PlusSquare, ArrowUp, Send, CheckCircle, XCircle, X, Bookmark, BookText, BarChart2, Trash2, Trophy, EyeOff, Edit3, Flag, Eye, Image as ImageIcon, Quote, PenTool, Book, FileText, HelpCircle, AtSign, Pin, Archive, Link as LinkIcon, Plus, Lightbulb, Flame, Smile, Coins, TrendingUp, Hash, ArrowUpRight, ChevronRight } from "lucide-react";
+import { getToken, getAuthHeaders, API_URL } from "@/app/lib/api";
+import { Heart, MessageCircle, Globe, Sparkles, Users, User as UserIcon, Lock, Share2, PlusSquare, ArrowUp, Send, CheckCircle, XCircle, X, Bookmark, BookText, BarChart2, Trash2, Trophy, EyeOff, Edit3, Flag, Eye, Image as ImageIcon, Quote, PenTool, Book, FileText, HelpCircle, AtSign, Pin, Archive, Link as LinkIcon, Plus, Lightbulb, Flame, Smile, Coins, TrendingUp, Hash, ArrowUpRight, ChevronRight, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import confetti from "canvas-confetti";
@@ -62,6 +62,7 @@ export default function Feed() {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem("doclib_feed_draft");
@@ -106,7 +107,7 @@ export default function Feed() {
       if (storyId) {
         fetch(`${API_URL}/social/stories/${storyId}/view`, {
           method: "POST", 
-          headers: { 'Authorization': `Bearer ${getToken()}` }
+          headers: getAuthHeaders()
         }).catch(e => console.error("Error viewing story:", e));
       }
     }
@@ -115,7 +116,7 @@ export default function Feed() {
   const reactToStory = async (storyId: string) => {
     try {
       await fetch(`${API_URL}/social/stories/${storyId}/react?reaction_type=heart`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` }
+        method: "POST", headers: getAuthHeaders()
       });
       showToast("Đã phản hồi tin", "success");
     } catch(e) { console.error("Reaction err:", e) }
@@ -125,7 +126,7 @@ export default function Feed() {
     setIsFetchingViewers(true);
     try {
       const res = await fetch(`${API_URL}/social/stories/${storyId}/viewers`, {
-        headers: { 'Authorization': `Bearer ${getToken()}` }
+        headers: getAuthHeaders()
       });
       if (res.ok) {
         const data = await res.json();
@@ -139,7 +140,7 @@ export default function Feed() {
   const votePoll = async (storyId: string, optionIdx: number) => {
     try {
       const res = await fetch(`${API_URL}/social/stories/${storyId}/poll/vote?option_index=${optionIdx}`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` }
+        method: "POST", headers: getAuthHeaders()
       });
       if (res.ok) {
         showToast("Đã bình chọn", "success");
@@ -151,7 +152,7 @@ export default function Feed() {
   const answerQuiz = async (storyId: string, optionIdx: number) => {
     try {
       const res = await fetch(`${API_URL}/social/stories/${storyId}/quiz/answer?option_index=${optionIdx}`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` }
+        method: "POST", headers: getAuthHeaders()
       });
       if (res.ok) {
         fetchStories(); 
@@ -168,7 +169,7 @@ export default function Feed() {
     setIsReplying(true);
     try {
       const res = await fetch(`${API_URL}/social/stories/${storyId}/reply?message=${encodeURIComponent(replyMessage)}`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` }
+        method: "POST", headers: getAuthHeaders()
       });
       if (res.ok) {
         showToast("Đã gửi tin nhắn cho tác giả.", "success");
@@ -190,7 +191,7 @@ export default function Feed() {
     const match = val.match(/\/(book|document)\s+([^\n]+)$/);
     if (match && match[2].length > 1) {
       try {
-        const res = await fetch(`${API_URL}/documents?q=${encodeURIComponent(match[2])}&limit=5`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        const res = await fetch(`${API_URL}/documents?q=${encodeURIComponent(match[2])}&limit=5`, { headers: getAuthHeaders() });
         if (res.ok) setDocumentSuggestions((await res.json()));
       } catch(e) { console.error("API error:", e); }
     } else {
@@ -239,7 +240,7 @@ export default function Feed() {
     try {
       const res = await fetch(`${API_URL}/social/upload-media`, {
         method: "POST",
-        headers: { 'Authorization': `Bearer ${getToken()}` },
+        headers: getAuthHeaders(),
         body: formData
       });
       const data = await res.json();
@@ -274,15 +275,18 @@ export default function Feed() {
     fetchStories();
     fetchRanking();
     fetchReaderRanking();
+    if (showStoryArchive) {
+      fetchArchivedStories();
+    }
     if (currentUser && currentUser._id) {
       fetchSuggestions();
       fetchWallet();
     }
-  }, [(currentUser?._id || "")]);
+  }, [(currentUser?._id || ""), showStoryArchive]);
 
   const fetchSuggestions = async () => {
     try {
-      const res = await fetch(`${API_URL}/social/intersection-friends`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/intersection-friends`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setSuggestions(json.data?.suggestions || json.suggestions || []);
@@ -328,7 +332,7 @@ export default function Feed() {
 
   const recordView = async (postId: string) => {
     try {
-      await fetch(`${API_URL}/social/posts/${postId}/view`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
+      await fetch(`${API_URL}/social/posts/${postId}/view`, { method: "POST", headers: getAuthHeaders() });
     } catch(e) { console.error("API error:", e); }
   };
 
@@ -339,7 +343,7 @@ export default function Feed() {
     try {
       const skip = reset ? 0 : page * 10;
       const limit = 10;
-      const res = await fetch(`${API_URL}/social/feed?tab=${tab}&skip=${skip}&limit=${limit}${itemType ? `&item_type=${itemType}` : ''}${filter === 'trending' ? '&sort=trending' : ''}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/feed?tab=${tab}&skip=${skip}&limit=${limit}${itemType ? `&item_type=${itemType}` : ''}${filter === 'trending' ? '&sort=trending' : ''}`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         const newData = json.data || json;
@@ -350,13 +354,13 @@ export default function Feed() {
         else setPage(1);
       } else throw new Error();
 
-      const tagRes = await fetch(`${API_URL}/social/trending-tags`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const tagRes = await fetch(`${API_URL}/social/trending-tags`, { headers: getAuthHeaders() });
       if (tagRes.ok) {
         const tagJson = await tagRes.json();
         setTrendingTags(tagJson.data || tagJson);
       }
       
-      const booksRes = await fetch(`${API_URL}/social/suggested-documents`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const booksRes = await fetch(`${API_URL}/social/suggested-documents`, { headers: getAuthHeaders() });
       if (booksRes.ok) {
         const booksJson = await booksRes.json();
         setDocumentSuggestions(booksJson.data || booksJson);
@@ -370,7 +374,7 @@ export default function Feed() {
 
   const fetchStories = async () => {
     try {
-      const res = await fetch(`${API_URL}/social/stories`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/stories`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setStories((json.data?.stories || json.data || json.stories || []));
@@ -380,7 +384,7 @@ export default function Feed() {
 
   const fetchArchivedStories = async () => {
     try {
-      const res = await fetch(`${API_URL}/social/stories/me/archive`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/stories/me/archive`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setArchivedStories((json.data?.stories || json.data || json.stories || []));
@@ -390,7 +394,7 @@ export default function Feed() {
 
   const fetchRanking = async () => {
     try {
-      const res = await fetch(`${API_URL}/social/ranking`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/ranking`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setRanking(json.data || json || []);
@@ -400,7 +404,7 @@ export default function Feed() {
 
   const fetchReaderRanking = async () => {
     try {
-      const res = await fetch(`${API_URL}/social/reader-ranking`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/reader-ranking`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setReaderRanking(json.data || json || []);
@@ -434,7 +438,7 @@ export default function Feed() {
 
     try {
       const res = await fetch(`${API_URL}/social/stories`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        method: "POST", headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
            text_content: storyText || undefined,
            media_url: storyMediaUrl || undefined,
@@ -471,11 +475,74 @@ export default function Feed() {
     } catch(e) { console.error("API error:", e); }
   };
 
+  const deleteStory = async (storyId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa tin này không?")) return;
+    try {
+      const res = await fetch(`${API_URL}/social/stories/${storyId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        showToast("Đã xóa tin thành công", "success");
+        setViewingStoryMode(false);
+        fetchStories();
+      }
+    } catch (e) {
+      console.error("API error:", e);
+    }
+  };
+
+  const repostPost = async (postId: string) => {
+    if (!currentUser) return showToast("Vui lòng đăng nhập để thực hiện.", "error");
+    try {
+      const res = await fetch(`${API_URL}/social/posts/${postId}/repost`, {
+        method: "POST",
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        showToast("Đã chia sẻ lại bài viết thành công", "success");
+        fetchFeed(true);
+      } else {
+        const json = await res.json();
+        showToast(json.message || "Không thể chia sẻ lại bài viết", "error");
+      }
+    } catch (e) { 
+      showToast("Lỗi kết nối máy chủ", "error"); 
+    }
+  };
+
+
+  const translatePost = async (postId: string, text: string) => {
+    if (isTranslating) return;
+    setIsTranslating(true);
+    showToast("Đang dịch nội dung", "info");
+    try {
+      const res = await fetch(`${API_URL}/inference/translate`, {
+        method: "POST",
+        headers: { 
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text, target_lang: "vi" })
+      });
+      const json = await res.json();
+      if (json.data?.result) {
+        setTranslationModal({ text: json.data.result });
+      } else {
+        showToast("Không thể dịch nội dung này", "error");
+      }
+    } catch (e) {
+      showToast("Lỗi kết nối dịch thuật", "error");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const deletePost = async (postId: string) => {
     if(!confirm("Bạn có chắc chắn muốn xoá bài viết này không?")) return;
     try {
       const res = await fetch(`${API_URL}/social/posts/${postId}`, {
-        method: "DELETE", headers: { 'Authorization': `Bearer ${getToken()}` }
+        method: "DELETE", headers: getAuthHeaders()
       });
       if (res.ok) {
         showToast("Đã xóa bài viết thành công", "success");
@@ -486,7 +553,7 @@ export default function Feed() {
 
   const fetchWallet = async () => {
     try {
-      const res = await fetch(`${API_URL}/wallet/balance`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/wallet/balance`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         setWalletBalance(json.data?.balance || json.balance || 0);
@@ -502,7 +569,7 @@ export default function Feed() {
     try {
       const res = await fetch(`${API_URL}/social/upload-media`, {
         method: "POST",
-        headers: { 'Authorization': `Bearer ${getToken()}` },
+        headers: getAuthHeaders(),
         body: formData
       });
       const json = await res.json();
@@ -526,7 +593,7 @@ export default function Feed() {
       const privacy = privacyEl ? privacyEl.value : "public";
       const db_poll_opts = [pollText1, pollText2].filter(p => p.trim());
       const res = await fetch(`${API_URL}/social/posts`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        method: "POST", headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content,
           privacy: privacy,
@@ -561,7 +628,7 @@ export default function Feed() {
 
   const toggleLike = async (postId: string, reactionType: string = "like", event?: React.MouseEvent) => {
     try {
-      const res = await fetch(`${API_URL}/social/posts/${postId}/like?reaction_type=${reactionType}`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/posts/${postId}/like?reaction_type=${reactionType}`, { method: "POST", headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         if (data.message === "Đã thích" && event) {
@@ -584,7 +651,7 @@ export default function Feed() {
         payload.text = `@${replyToContext.userName} ${commentText}`;
       }
       const res = await fetch(`${API_URL}/comments`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        method: "POST", headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -597,7 +664,7 @@ export default function Feed() {
   const handleVote = async (postId: string, amount: number) => {
     try {
       const res = await fetch(`${API_URL}/wallet/vote`, {
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        method: "POST", headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ item_id: postId, item_type: "post", amount })
       });
       if (res.ok) {
@@ -611,22 +678,16 @@ export default function Feed() {
 
   const toggleSave = async (postId: string) => {
     try {
-      const res = await fetch(`${API_URL}/social/posts/${postId}/save`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
+      const res = await fetch(`${API_URL}/social/posts/${postId}/save`, { method: "POST", headers: getAuthHeaders() });
       if (res.ok) fetchFeed(true);
     } catch(e) { console.error("API error:", e); }
   };
 
-  const handleShare = async (postId: string) => {
-    try {
-      const res = await fetch(`${API_URL}/social/posts/${postId}/share`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (res.ok) { showToast("Đã chia sẻ bài viết", "success"); fetchFeed(true); }
-    } catch(e) { console.error("API error:", e); }
-  };
 
   const submitPollVote = async (postId: string, optionId: string) => {
     try {
       const res = await fetch(`${API_URL}/social/polls/${postId}/vote/${optionId}`, { 
-        method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } 
+        method: "POST", headers: getAuthHeaders() 
       });
       if (res.ok) { showToast("Bình chọn thành công", "success"); fetchFeed(true); }
     } catch(e) { console.error("API error:", e); }
@@ -635,29 +696,23 @@ export default function Feed() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState("");
 
-  const repostPost = async (postId: string) => {
-    try {
-      const res = await fetch(`${API_URL}/social/posts/${postId}/repost`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } });
-      if (res.ok) { showToast("Đã chia sẻ lại bài viết thành công!", "success"); fetchFeed(true); } else showToast("Chia sẻ thất bại", "error");
-    } catch(e) { console.error("API error:", e); }
-  };
 
   const togglePinPost = async (postId: string) => {
-    try { const res = await fetch(`${API_URL}/social/posts/${postId}/pin`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } }); if (res.ok) fetchFeed(true); } catch(e) { console.error("API error:", e); }
+    try { const res = await fetch(`${API_URL}/social/posts/${postId}/pin`, { method: "POST", headers: getAuthHeaders() }); if (res.ok) fetchFeed(true); } catch(e) { console.error("API error:", e); }
   };
 
   const reportPost = async (postId: string) => {
     const reason = prompt("Vui lòng nhập lý do báo cáo để Quản trị viên xem xét:");
     if (!reason || !reason.trim()) return;
-    try { const res = await fetch(`${API_URL}/social/posts/${postId}/report?reason=${encodeURIComponent(reason)}`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } }); if (res.ok) showToast("Cảm ơn, báo cáo đã được ghi nhận.", "success"); } catch(e) { console.error("API error:", e); }
+    try { const res = await fetch(`${API_URL}/social/posts/${postId}/report?reason=${encodeURIComponent(reason)}`, { method: "POST", headers: getAuthHeaders() }); if (res.ok) showToast("Cảm ơn, báo cáo đã được ghi nhận.", "success"); } catch(e) { console.error("API error:", e); }
   };
 
   const hidePost = async (postId: string) => {
-    try { const res = await fetch(`${API_URL}/social/posts/${postId}/hide`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } }); if (res.ok) { showToast("Đã ẩn.", "info"); fetchFeed(true); } } catch(e) { console.error("API error:", e); }
+    try { const res = await fetch(`${API_URL}/social/posts/${postId}/hide`, { method: "POST", headers: getAuthHeaders() }); if (res.ok) { showToast("Đã ẩn.", "info"); fetchFeed(true); } } catch(e) { console.error("API error:", e); }
   };
 
   const followUser = async (userId: string) => {
-    try { const res = await fetch(`${API_URL}/social/users/${userId}/follow`, { method: "POST", headers: { 'Authorization': `Bearer ${getToken()}` } }); if (res.ok) { showToast((await res.json()).message, "success"); fetchSuggestions(); } } catch(e) { console.error("API error:", e); }
+    try { const res = await fetch(`${API_URL}/social/users/${userId}/follow`, { method: "POST", headers: getAuthHeaders() }); if (res.ok) { showToast((await res.json()).message, "success"); fetchSuggestions(); } } catch(e) { console.error("API error:", e); }
   };
 
 
@@ -666,7 +721,7 @@ export default function Feed() {
     try { 
       const res = await fetch(`${API_URL}/social/posts/${postId}`, { 
         method: "PUT", 
-        headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' }, 
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ content: editingContent }) 
       }); 
       if (res.ok) { 
@@ -748,6 +803,25 @@ export default function Feed() {
                 </div>
               ))}
             </div>
+
+            {trendingTags.length > 0 && (
+              <div className="bg-card border border-border p-8 rounded-sm">
+                <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
+                  <Hash className="w-4 h-4" /> Xu hướng Hashtag
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {trendingTags.map((tag: any, i: number) => (
+                    <Link 
+                      key={i} 
+                      href={`/search?q=${encodeURIComponent(tag.tag)}&type=posts`}
+                      className="px-4 py-2 bg-zinc-50 border border-zinc-100 text-[10px] font-bold text-zinc-400 hover:border-black hover:text-black transition-all rounded-sm uppercase tracking-widest"
+                    >
+                      #{tag.tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-card border border-border p-8 rounded-sm">
               <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
@@ -842,15 +916,22 @@ export default function Feed() {
                 <div 
                   key={story.id} 
                   className="relative w-32 h-48 rounded-sm overflow-hidden cursor-pointer shrink-0 group bg-black border border-zinc-200 flex flex-col hover:border-black transition-all duration-300"
-                  onClick={() => { setActiveStoryIndex(idx); setViewingStoryMode(true); setStoryProgress(0); }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 z-10" onClick={() => { setActiveStoryIndex(idx); setViewingStoryMode(true); setStoryProgress(0); }}></div>
                   {story.media_url ? (
                     <img src={story.media_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center p-4 text-center bg-zinc-900" style={{ color: story.text_color || '#ffffff' }}>
                       <span className="text-[10px] font-bold tracking-tighter leading-tight line-clamp-4">{story.text_content}</span>
                     </div>
+                  )}
+                  {currentUser && (story.user_id === currentUser.id || story.author_id === currentUser.id) && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); deleteStory(story.id); }}
+                      className="absolute top-2 right-2 z-20 h-8 w-8 bg-black/40 text-white flex items-center justify-center border border-white/20 hover:bg-red-500 hover:border-red-500 transition-all rounded-sm"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
               ))}
@@ -880,7 +961,7 @@ export default function Feed() {
 
                       <div className="relative">
                         {documentSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 z-50 bg-white border border-zinc-200 mt-2 overflow-hidden w-full max-w-md animate-in slide-in-from-top-2 duration-300 rounded-sm shadow-2xl">
+                          <div className="absolute top-full left-0 z-50 bg-white border border-zinc-200 mt-2 overflow-hidden w-full max-w-md animate-in slide-in-from-top-2 duration-300 rounded-sm">
                             <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-100">
                               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] flex items-center gap-2">
                                 <BookText className="w-3.5 h-3.5" /> Gợi ý tài liệu
@@ -1005,7 +1086,7 @@ export default function Feed() {
                       showToast("Đang phân tích bảng tin", "info");
                       try {
                         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/social/ai/feed-summary`, { 
-                          headers: { 'Authorization': `Bearer ${getToken()}` }
+                          headers: getAuthHeaders()
                         });
                         const json = await res.json();
                         if (json.data?.summary) {
@@ -1018,7 +1099,7 @@ export default function Feed() {
                     disabled={isSummarizing}
                     className="h-10 px-8 border border-black text-black font-bold uppercase text-[10px] tracking-widest hover:bg-black hover:text-white transition-all disabled:opacity-50 rounded-sm"
                   >
-                    {isSummarizing ? "Đang xử lý..." : "Bắt đầu tóm tắt"}
+                    {isSummarizing ? "Đang xử lý" : "Bắt đầu tóm tắt"}
                   </button>
                 </div>
                 {aiSummary && (
@@ -1050,7 +1131,7 @@ export default function Feed() {
                         {post.user?.avatar_url ? (
                           <img src={post.user.avatar_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" />
                         ) : (
-                          <User className="w-6 h-6 stroke-[1]" />
+                          <UserIcon className="w-6 h-6 stroke-[1]" />
                         )}
                       </div>
                       <div className="flex-1">
@@ -1062,6 +1143,9 @@ export default function Feed() {
                       </div>
                       
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => translatePost(post.id, post.content)} className="p-3 hover:bg-zinc-50 transition-all rounded-sm text-zinc-300 hover:text-black">
+                          <Sparkles className="w-4 h-4" />
+                        </button>
                         {(currentUser?._id || "") && (currentUser?._id === post.author_id || currentUser?._id === post.user_id) ? (
                           <>
                             <button onClick={() => togglePinPost(post.id)} className="p-3 hover:bg-zinc-50 transition-all rounded-sm text-zinc-300 hover:text-black">
@@ -1072,9 +1156,14 @@ export default function Feed() {
                             </button>
                           </>
                         ) : (
-                          <button onClick={() => reportPost(post.id)} className="p-3 hover:bg-zinc-50 transition-all rounded-sm text-zinc-300 hover:text-black">
-                            <Flag className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button onClick={() => hidePost(post.id)} className="p-3 hover:bg-zinc-50 transition-all rounded-sm text-zinc-300 hover:text-black">
+                              <EyeOff className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => reportPost(post.id)} className="p-3 hover:bg-zinc-50 transition-all rounded-sm text-zinc-300 hover:text-black">
+                              <Flag className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1130,8 +1219,8 @@ export default function Feed() {
                         <button onClick={() => toggleSave(post.id)} className={`h-12 w-12 flex items-center justify-center border transition-all rounded-sm ${post.saved ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-black hover:text-black'}`}>
                           <Bookmark className={`w-4 h-4 ${post.saved ? 'fill-white' : ''}`} />
                         </button>
-                        <button onClick={() => handleShare(post.id)} className="h-12 w-12 flex items-center justify-center border border-zinc-100 bg-white text-zinc-400 hover:border-black hover:text-black transition-all rounded-sm">
-                          <Share2 className="w-4 h-4" />
+                        <button onClick={() => repostPost(post.id)} className="h-12 w-12 flex items-center justify-center border border-zinc-100 bg-white text-zinc-400 hover:border-black hover:text-black transition-all rounded-sm" title="Chia sẻ lại">
+                          <RotateCw className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -1168,7 +1257,7 @@ export default function Feed() {
                             <div className="flex gap-4 items-center">
                               <Input
                                 className="h-12 bg-white border-zinc-100 text-xs font-bold focus-visible:ring-black rounded-sm"
-                                placeholder="Viết bình luận của bạn..."
+                                placeholder="Viết bình luận của bạn"
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') submitComment(post.id) }}
@@ -1192,7 +1281,7 @@ export default function Feed() {
               {!loading && hasMore && (
                 <div className="flex justify-center pt-10">
                   <button onClick={() => fetchFeed()} disabled={loading} className="h-16 px-16 bg-white border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.2em] hover:border-black transition-all disabled:opacity-30 rounded-sm">
-                    {loading ? "Đang tải..." : "Xem thêm bài viết"}
+                    {loading ? "Đang tải" : "Xem thêm bài viết"}
                   </button>
                 </div>
               )}
@@ -1387,6 +1476,7 @@ export default function Feed() {
                         value={opt}
                         onChange={(e) => {
                           const newOpts = [...storyQuizOptions];
+                          newOpts[idx] = e.target.value;
                           setStoryQuizOptions(newOpts);
                         }}
                         className="w-full bg-white/10  text-white text-sm border border-white/20 outline-none px-3 py-2 placeholder:text-white/50 focus:bg-white/20 transition-all font-medium text-center"
@@ -1449,10 +1539,23 @@ export default function Feed() {
                   {isStoryUploading ? <div className="w-4 h-4 rounded-none border-2 border-foreground border-t-transparent animate-spin"/> : <ImageIcon className="w-5 h-5 text-foreground" />}
                   <input type="file" className="hidden" accept="image/*" onChange={handleStoryImageUpload} />
                 </label>
-              </div></div></div></div>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {viewingStoryMode && activeStoryIndex >= 0 && stories[activeStoryIndex] && (
             <div className="fixed inset-0 z-[200] bg-black/95 backblur-sm flex justify-center items-center animate-in fade-in-0 duration-200 text-white">
               <div className="absolute top-4 right-4 z-[210] flex gap-4 hidden md:flex">
+                {(stories[activeStoryIndex].user_id === (currentUser?._id || "") || stories[activeStoryIndex].author_id === (currentUser?._id || "")) && (
+                  <button 
+                    onClick={() => deleteStory(stories[activeStoryIndex].id || stories[activeStoryIndex]._id)} 
+                    className="text-white hover:text-red-400 p-2 bg-white/10 hover:bg-white/20 rounded-none transition-colors backblur-md"
+                    title="Xóa tin này"
+                  >
+                    <Trash2 className="w-6 h-6"/>
+                  </button>
+                )}
                 <button onClick={() => { setViewingStoryMode(false); setStoryProgress(0); }} className="text-white hover:text-gray-300 p-2 bg-white/10 hover:bg-white/20 rounded-none transition-colors  backblur-md">
                   <X className="w-6 h-6"/>
                 </button>
@@ -1460,7 +1563,20 @@ export default function Feed() {
               
               <div className="flex-1 flex flex-col justify-between items-center relative overflow-hidden w-full max-w-sm mx-auto h-[100dvh] md:h-[85vh] md:w-[400px] group md:  md:border border-border/50"
                    style={{ backgroundColor: stories[activeStoryIndex].background_color || '#18181b' }}>
-                 
+                 <div className="absolute top-4 right-4 z-[210] flex gap-2 md:hidden">
+                    {(stories[activeStoryIndex].user_id === (currentUser?._id || "") || stories[activeStoryIndex].author_id === (currentUser?._id || "")) && (
+                      <button 
+                        onClick={() => deleteStory(stories[activeStoryIndex].id || stories[activeStoryIndex]._id)} 
+                        className="text-white hover:text-red-400 p-1 bg-black/20 hover:bg-black/40 rounded-none transition-colors backblur-md"
+                        title="Xóa tin này"
+                      >
+                        <Trash2 className="w-5 h-5"/>
+                      </button>
+                    )}
+                    <button onClick={() => { setViewingStoryMode(false); setStoryProgress(0); }} className="text-white hover:text-gray-300 p-1 bg-black/20 hover:bg-black/40 rounded-none transition-colors  backblur-md">
+                        <X className="w-5 h-5"/>
+                    </button>
+                 </div>
 
                  <div className="absolute top-0 left-0 right-0 px-2 pt-2 flex gap-1 z-[205] w-full bg-gradient-to-b from-black/50 to-transparent pb-4">
                     {stories.map((s, idx) => (
@@ -1473,10 +1589,6 @@ export default function Feed() {
                     ))}
                  </div>
                  
-
-                 <button onClick={() => { setViewingStoryMode(false); setStoryProgress(0); }} className="absolute top-4 right-4 z-[210] text-white hover:text-gray-300 p-1 bg-black/20 hover:bg-black/40 rounded-none transition-colors  backblur-md md:hidden">
-                    <X className="w-5 h-5"/>
-                 </button>
 
                  {stories[activeStoryIndex].media_url && (
                     <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center">

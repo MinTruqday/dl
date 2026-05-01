@@ -145,7 +145,7 @@ export default function AuthorAssetsPage() {
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
               <input
                 type="text"
-                placeholder="TÌM KIẾM TẬP TIN TRONG KHO LƯU TRỮ..."
+                placeholder="Tìm kiếm tập tin trong kho lưu trữ"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full h-16 pl-16 pr-8 border border-zinc-100 bg-white text-lg font-bold tracking-tight focus:outline-none focus:border-black transition-all rounded-sm placeholder:text-zinc-100"

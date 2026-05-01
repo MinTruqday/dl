@@ -152,7 +152,7 @@ export default function ReadingHistoryPage() {
             <div className="relative">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
               <input 
-                placeholder="Nhập tên tài liệu..."
+                placeholder="Nhập tên tài liệu"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-14 h-14 bg-zinc-50/50 border border-zinc-100 focus:bg-white focus:border-black outline-none transition-all text-xs font-bold rounded-sm px-4"
