@@ -37,7 +37,7 @@ class AIService:
             async with httpx.AsyncClient() as client:
                 if req.action == "translate":
                     res = await client.post(
-                        f"{rag_url}/api/inference/translate",
+                        f"{rag_url}/inference/translate",
                         json={"text": req.text, "target_lang": req.target_lang},
                         timeout=30.0
                     )
@@ -55,7 +55,7 @@ class AIService:
                         raise HTTPException(status_code=400, detail="Hành động không hợp lệ.")
 
                     res = await client.post(
-                        f"{rag_url}/api/inference/generate",
+                        f"{rag_url}/inference/generate",
                         json={"prompt": prompt, "max_tokens": 150},
                         timeout=30.0
                     )
@@ -72,7 +72,7 @@ class AIService:
             raise HTTPException(status_code=503, detail="Dịch vụ AI hiện chưa được cấu hình.")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/api/inference/generate-flashcard", json={"text": text, "context": context})
+                resp = await client.post(f"{rag_url}/inference/generate-flashcard", json={"text": text, "context": context})
                 if resp.status_code == 200:
                     data = resp.json()
                     db = db_client.mongodb.get_default_database()
@@ -129,7 +129,7 @@ class AIService:
             return {"score": 100, "message": "AI không khả dụng."}
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/api/inference/grammar-check", json={"text": text[:5000]})
+                resp = await client.post(f"{rag_url}/inference/grammar-check", json={"text": text[:5000]})
                 if resp.status_code == 200: 
                     return resp.json()
         except Exception as e:
@@ -143,9 +143,23 @@ class AIService:
             return {"message": "AI không khả dụng."}
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{rag_url}/api/inference/generate-cover", json={"title": title, "description": description, "style": style})
+                resp = await client.post(f"{rag_url}/inference/generate-cover", json={"title": title, "description": description, "style": style})
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
             logger.warning(f"AI: Cover generation failed: {e}")
         return {"message": "Dịch vụ tạo ảnh bìa hiện chưa khả dụng."}
+
+    @staticmethod
+    async def generate_code(prompt: str, language: str = "python") -> dict:
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if not rag_url:
+            return {"message": "AI không khả dụng."}
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/generate-code", json={"prompt": prompt, "language": language})
+                if resp.status_code == 200:
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Code generation failed: {e}")
+        return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}

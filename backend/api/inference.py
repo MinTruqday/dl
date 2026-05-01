@@ -39,3 +39,7 @@ async def get_synonyms(payload: dict, current_user: UserInDB = Depends(get_curre
 @router.post("/translate", response_model=APIResponse[Any])
 async def translate_text(payload: dict, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await proxy_post("translate", payload), message="Dịch thuật thành công.", status=status.HTTP_200_OK)
+
+@router.post("/generate-code", response_model=APIResponse[Any])
+async def generate_code(payload: dict, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await proxy_post("generate-code", payload), message="Tạo mã nguồn thành công.", status=status.HTTP_200_OK)

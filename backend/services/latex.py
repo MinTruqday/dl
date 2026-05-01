@@ -8,6 +8,8 @@ import zipfile
 import io
 from fastapi import HTTPException
 from loguru import logger
+from datetime import datetime
+from core.database import db_client
 
 class LatexService:
 
@@ -161,3 +163,12 @@ class LatexService:
             zip_file.writestr("README.md", "Exported from DocLib Studio".encode("utf-8"))
             zip_file.writestr(".gitignore", "*.pdf\n*.aux\n*.log\n*.out".encode("utf-8"))
         return zip_buffer.getvalue()
+
+    @staticmethod
+    async def auto_save(request):
+        db = db_client.mongodb.get_default_database()
+        await db["documents"].update_one(
+            {"_id": request.document_id},
+            {"$set": {"content": request.content, "updated_at": datetime.utcnow()}}
+        )
+        return {"status": "success", "timestamp": datetime.utcnow().isoformat()}

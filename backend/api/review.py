@@ -3,11 +3,11 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, status
 from typing import List, Any
 from models.user import UserInDB
-from models.comment import ReviewCreate, ReviewResponse
+from models.review import ReviewCreate, ReviewResponse
 from api.dependency import get_current_user
 from services.review import ReviewService
 
-router = APIRouter(prefix="/reading")
+router = APIRouter(prefix="/reviews")
 
 @router.post("/{document_id}/review", response_model=APIResponse[ReviewResponse])
 async def create_document_review(document_id: str, review_in: ReviewCreate, current_user: UserInDB = Depends(get_current_user)) -> Any:

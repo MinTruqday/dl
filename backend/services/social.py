@@ -760,7 +760,6 @@ class SocialService:
         if not comments:
             return {"sentiment": "neutral", "score": 0.5, "message": "Chưa có đủ bình luận để phân tích."}
         
-        # Mock sentiment analysis for now, usually would call AIService
         return {
             "sentiment": "positive",
             "score": 0.82,

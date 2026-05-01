@@ -200,7 +200,7 @@ class EditorService:
 
     @staticmethod
     async def check_grammar(document_id: str, chapter_id: str, current_user) -> dict:
-        from services.ai_assistant import AIAssistantService
+        from services.ai import AIService
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc: 
@@ -210,17 +210,17 @@ class EditorService:
         if not chapter: 
             raise HTTPException(status_code=404, detail="Chương không tồn tại.")
             
-        return await AIAssistantService.check_grammar(chapter.get("content", ""))
+        return await AIService.check_grammar(chapter.get("content", ""))
 
     @staticmethod
     async def generate_cover(document_id: str, style: str, current_user) -> dict:
-        from services.ai_assistant import AIAssistantService
+        from services.ai import AIService
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc: 
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
             
-        data = await AIAssistantService.generate_cover(doc.get("title", ""), doc.get("description", ""), style)
+        data = await AIService.generate_cover(doc.get("title", ""), doc.get("description", ""), style)
         if data.get("cover_url"):
             await db["documents"].update_one({"_id": document_id}, {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.utcnow()}})
             logger.info(f"Workspace: Cover generated for {document_id}")

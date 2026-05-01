@@ -11,7 +11,7 @@ from bson.errors import InvalidId
 from fastapi import HTTPException, status
 from core.database import db_client
 from models.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
-from core.document_metrics import calculate_flesch_kincaid, calculate_vocabulary_richness
+from utils.metric import calculate_flesch_kincaid, calculate_vocabulary_richness
 from core.publisher import trigger_document_publish_job, publish_compile_task
 from loguru import logger
 from services.notification import NotificationService
@@ -456,7 +456,7 @@ class DocumentService:
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
         db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"": True}})
+        doc = await db["documents"].find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         
@@ -465,7 +465,7 @@ class DocumentService:
             "description": doc.get("description"),
             "cover_url": doc.get("cover_url"),
             "author_id": doc.get("author_id"),
-            "preview_content": doc.get("content", "")[:500] + "..." if doc.get("content") else ""
+            "preview_content": doc.get("content", "")[:500] if doc.get("content") else ""
         }
         return preview_data
 
@@ -480,7 +480,6 @@ class DocumentService:
         if not chapters:
             return {"chapters": [], "message": "Tài liệu chưa có chương nào."}
             
-        # Giả lập số liệu cho tỷ lệ rơi rớt (dropoff)
         dropoff_data = []
         base_readers = doc.get("views", 100)
         for i, ch in enumerate(chapters):

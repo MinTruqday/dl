@@ -27,7 +27,6 @@ async def init_db():
     db_client.mongodb = AsyncIOMotorClient(mongo_uri)
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
     
-    import asyncio
     max_retries = 5
     for i in range(max_retries):
         try:
