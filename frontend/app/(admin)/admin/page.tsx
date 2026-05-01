@@ -42,7 +42,7 @@ import { useAuth } from "@/app/contexts/AuthContext";
 import { Notification } from "@/app/components/NotificationToast";
 import { Button } from "@/components/ui/button";
 
-type AdminTab = "overview" | "users" | "reports" | "applications" | "config";
+type AdminTab = "overview" | "users" | "reports" | "applications" | "config" | "collector";
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth() as any;
@@ -61,6 +61,10 @@ export default function AdminDashboard() {
   const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ show: boolean; title: string; onConfirm: () => void } | null>(null);
   const [visible, setVisible] = useState(false);
+  const [collectionSource, setCollectionSource] = useState("AnnaArchive");
+  const [collectionUrl, setCollectionUrl] = useState("");
+  const [collectionType, setCollectionType] = useState("list");
+  const [collectorStats, setCollectorStats] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
@@ -102,6 +106,13 @@ export default function AdminDashboard() {
         if (data[7]) setConfig(data[7].data || data[7]);
         if (data[8]) setAuditLogs(data[8].data || data[8]);
         if (data[9]) setMaintenanceMode(data[9].data?.enabled || data[9].enabled || false);
+      }
+      if (user?.role === "admin") {
+        const statsRes = await fetch(`${API_URL}/collector/stats`, { headers });
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setCollectorStats(statsData.data || statsData);
+        }
       }
     } catch (err: any) {
       console.error("Lỗi tải dữ liệu quản trị:", err);
@@ -248,6 +259,36 @@ export default function AdminDashboard() {
     });
   };
 
+    });
+  };
+  
+  const triggerCollection = async () => {
+    setIsRefreshing(true);
+    try {
+        const res = await fetch(`${API_URL}/collector/trigger`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                source: collectionSource, 
+                url: collectionUrl, 
+                index_type: collectionType 
+            }),
+        });
+        if (res.ok) {
+            setNotification({ type: "success", text: "Yêu cầu thu thập dữ liệu đã được gửi thành công." });
+            setCollectionUrl("");
+            fetchData();
+        } else {
+            const err = await res.json();
+            setNotification({ type: "error", text: formatError(err.detail) || "Lỗi khi kích hoạt thu thập." });
+        }
+    } catch (err) {
+        console.error("Lỗi thu thập:", err);
+    } finally {
+        setIsRefreshing(false);
+    }
+  };
+
   if (isLoading || !user) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -264,6 +305,7 @@ export default function AdminDashboard() {
     ...(user?.role === "admin"
       ? [
           { id: "payouts", label: "Thanh toán", icon: CreditCard },
+          { id: "collector", label: "Thu thập", icon: Database },
           { id: "audit", label: "Nhật ký", icon: ListTree },
           { id: "config", label: "Cấu hình", icon: Settings },
         ]
@@ -822,6 +864,124 @@ export default function AdminDashboard() {
                          </div>
                     </div>
                 </div>
+            </div>
+          )}
+
+          {activeTab === "collector" && user.role === "admin" && (
+            <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
+               <div className="flex items-center gap-6">
+                  <h2 className="text-sm font-bold text-black tracking-widest uppercase">Trung tâm thu thập dữ liệu</h2>
+                  <div className="flex-1 h-px bg-zinc-50" />
+               </div>
+
+               <div className="grid lg:grid-cols-2 gap-12">
+                  <div className="space-y-10">
+                     <div className="bg-white border border-zinc-100 p-12 space-y-10">
+                        <div className="space-y-2">
+                           <h3 className="text-xl font-bold tracking-tighter uppercase">Kích hoạt tiến trình</h3>
+                           <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest leading-relaxed">
+                             Tự động hóa việc thu thập tri thức từ các nguồn học thuật uy tín.
+                           </p>
+                        </div>
+
+                        <div className="space-y-8">
+                           <div className="space-y-4">
+                              <label className="text-[10px] font-bold text-black uppercase tracking-widest">Nguồn dữ liệu</label>
+                              <div className="relative group">
+                                 <select 
+                                   value={collectionSource}
+                                   onChange={(e) => setCollectionSource(e.target.value)}
+                                   className="w-full h-14 px-6 bg-zinc-50 border border-zinc-100 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black appearance-none cursor-pointer transition-all"
+                                 >
+                                    <option value="AnnaArchive">Anna's Archive</option>
+                                    <option value="NXBST">NXB Sự Thật</option>
+                                    <option value="NXBGDC">NXB Giáo Dục</option>
+                                 </select>
+                                 <PlusCircle className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-hover:text-black pointer-events-none transition-all" />
+                              </div>
+                           </div>
+
+                           {collectionSource === "AnnaArchive" && (
+                              <div className="space-y-4">
+                                 <label className="text-[10px] font-bold text-black uppercase tracking-widest">Loại chỉ mục</label>
+                                 <div className="flex gap-4">
+                                    {["list", "detail"].map((type) => (
+                                       <button
+                                         key={type}
+                                         onClick={() => setCollectionType(type)}
+                                         className={`flex-1 h-12 border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                                           collectionType === type ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:text-black hover:border-black'
+                                         }`}
+                                       >
+                                          {type}
+                                       </button>
+                                    ))}
+                                 </div>
+                              </div>
+                           )}
+
+                           <div className="space-y-4">
+                              <label className="text-[10px] font-bold text-black uppercase tracking-widest">Đường dẫn nguồn (URL)</label>
+                              <input 
+                                type="text"
+                                placeholder="https://..."
+                                value={collectionUrl}
+                                onChange={(e) => setCollectionUrl(e.target.value)}
+                                className="w-full h-14 px-6 bg-zinc-50 border border-zinc-100 focus:border-black outline-none font-bold text-sm transition-all"
+                              />
+                           </div>
+
+                           <button 
+                             onClick={triggerCollection}
+                             disabled={isRefreshing}
+                             className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-95 flex items-center justify-center gap-4"
+                           >
+                             {isRefreshing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5" />}
+                             Kích hoạt thu thập
+                           </button>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-10">
+                     <div className="bg-black text-white p-12 space-y-10 border border-black transition-all group">
+                        <div className="flex items-center justify-between">
+                           <div className="space-y-2">
+                              <h3 className="text-xl font-bold tracking-tighter uppercase">Thống kê tri thức</h3>
+                              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Dữ liệu đã thu thập</p>
+                           </div>
+                           <Database className="w-8 h-8 text-zinc-800 group-hover:text-white transition-all duration-700" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-12 pt-4">
+                           <div className="space-y-1">
+                              <div className="text-4xl font-black tracking-tighter">{collectorStats?.total_documents_collected || 0}</div>
+                              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Tài liệu đã số hóa</div>
+                           </div>
+                           <div className="space-y-1">
+                              <div className="text-4xl font-black tracking-tighter">{collectorStats?.active_sources?.length || 0}</div>
+                              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Nguồn dữ liệu hoạt động</div>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="bg-white border border-zinc-100 p-12 space-y-8">
+                        <h3 className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-3 text-black">
+                           <ShieldAlert className="w-4 h-4" /> Lưu ý an toàn
+                        </h3>
+                        <div className="space-y-4">
+                           <p className="text-[11px] text-zinc-400 font-medium leading-relaxed italic">
+                             "Hành động thu thập dữ liệu có thể tốn nhiều tài nguyên mạng và CPU của máy chủ AI Gateway. Hãy đảm bảo URL nguồn là chính xác trước khi kích hoạt."
+                           </p>
+                           <div className="h-px bg-zinc-50" />
+                           <div className="flex items-center gap-3">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                              <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Hệ thống sẵn sàng</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
             </div>
           )}
         </main>

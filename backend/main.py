@@ -132,15 +132,22 @@ app.include_router(moderator_router)
 app.include_router(admin_router)
 app.include_router(monetization_router)
 
+from api.reading import router as reading_router
+from api.library import router as library_router
+from api.feedback import router as feedback_router
+from api.ai import router as ai_router
+
+app.include_router(reading_router)
+app.include_router(library_router)
+app.include_router(feedback_router)
+app.include_router(ai_router)
+
 app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
 app.include_router(collector_router)
-
-from api.moderation import router as moderation_router_v2
-app.include_router(moderation_router_v2)
 
 @app.get("/health")
 async def health_check():

@@ -174,3 +174,89 @@ class AnalyticsService:
             "locations": {},
             "gender_ratio": {}
         }
+
+    @staticmethod
+    async def get_author_revenue_analytics(current_user):
+        db = db_client.mongodb.get_default_database()
+        author_id = str(current_user.id)
+        docs = await db["documents"].find({"author_id": author_id}).to_list(length=200)
+        total_views = sum(b.get("views", 0) for b in docs)
+        
+        purchase_pipeline = [
+            {"$match": {"document_id": {"$in": [str(b["_id"]) for b in docs]}, "item_type": "document"}},
+            {"$group": {"_id": None, "total_sales": {"$sum": 1}, "total_revenue": {"$sum": "$price"}}},
+        ]
+        
+        sales_data = await db["purchases"].aggregate(purchase_pipeline).to_list(length=1)
+        total_sales = sales_data[0]["total_sales"] if sales_data else 0
+        total_revenue = sales_data[0]["total_revenue"] if sales_data else 0
+        
+        recent_sales = await db["purchases"].find(
+            {"document_id": {"$in": [str(b["_id"]) for b in docs]}}
+        ).sort("purchased_at", -1).limit(10).to_list(length=10)
+        
+        chart_data = []
+        for s in recent_sales:
+            doc = next((b for b in docs if str(b["_id"]) == s.get("document_id")), None)
+            chart_data.append({
+                "document_title": doc.get("title", "") if doc else "Tài liệu ẩn",
+                "price": s.get("price", 0),
+                "date": s["purchased_at"].isoformat() if isinstance(s.get("purchased_at"), datetime) else s.get("purchased_at"),
+            })
+            
+        return {
+            "total_views": total_views,
+            "total_sales": total_sales,
+            "total_revenue": total_revenue,
+            "total_documents": len(docs),
+            "recent_sales": chart_data,
+            "currency": "dl"
+        }
+
+    @staticmethod
+    async def get_chapter_dropoff(document_id: str, current_user) -> list:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
+            
+        chapters = doc.get("chapters", [])
+        result = []
+        for ch in chapters:
+            readers = await db["reading_history"].count_documents({
+                "document_id": document_id,
+                "current_chapter_slug": ch.get("id"),
+            })
+            result.append({
+                "chapter_id": ch.get("id", ""),
+                "chapter_title": ch.get("title", ""),
+                "order": ch.get("order", 0),
+                "readers_at_chapter": readers,
+            })
+        return result
+
+    @staticmethod
+    async def analyze_reader_sentiment(document_id: str, current_user) -> dict:
+        from core.config import settings
+        import httpx
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not doc: 
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
+            
+        reviews = await db["reviews"].find({"document_id": document_id}).to_list(length=100)
+        if not reviews: 
+            return {"sentiment": "neutral", "summary": "Chưa có đánh giá nào để phân tích."}
+            
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if rag_url:
+            texts = [r.get("review_text", "") for r in reviews if r.get("review_text")]
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    resp = await client.post(f"{rag_url}/api/inference/analyze-sentiment", json={"texts": texts})
+                    if resp.status_code == 200: 
+                        return resp.json()
+            except Exception as e: 
+                logger.warning(f"RAG: Phân tích cảm xúc thất bại: {e}")
+                
+        return {"sentiment": "neutral", "summary": "Dịch vụ AI phân tích hiện không khả dụng."}

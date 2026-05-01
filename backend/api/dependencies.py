@@ -68,7 +68,6 @@ class RateLimiter:
         self.period = period
 
     async def __call__(self, request: Request):
-        # Bypass rate limiting in test environment
         if settings.MONGODB_DB_NAME == "doclib_test":
             return True
 
