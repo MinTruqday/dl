@@ -161,7 +161,7 @@ export default function LibraryPage() {
                 {filteredContinueDocs.map((doc) => (
                   <Link 
                     key={doc.document_id}
-                    href={`/document/${doc.document_slug}`}
+                    href={`/documents/${doc.document_slug}`}
                     className={`group border border-zinc-100 p-6 bg-white hover:border-black transition-all duration-300 flex ${viewMode === "grid" ? "flex-col justify-between" : "items-center gap-6"} rounded-sm`}
                   >
                     <div className={`flex ${viewMode === "grid" ? "flex-col space-y-4" : "items-center gap-6 flex-1"}`}>
@@ -263,7 +263,7 @@ export default function LibraryPage() {
                 pinnedDocs.map((doc) => (
                   <Link 
                     key={doc.id}
-                    href={`/document/${doc.slug}`}
+                    href={`/documents/${doc.slug}`}
                     className="flex items-center gap-4 p-4 bg-white border border-zinc-100 hover:border-black transition-all group rounded-sm"
                   >
                     <div className="w-10 h-14 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">

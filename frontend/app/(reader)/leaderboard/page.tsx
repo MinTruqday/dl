@@ -180,7 +180,7 @@ export default function LeaderboardPage() {
                           </div>
                           <div className="space-y-2">
                             <Link
-                              href={`/document/${document.slug}`}
+                              href={`/documents/${document.slug}`}
                               className="text-lg font-bold text-black group-hover:underline underline-offset-4 decoration-1 tracking-tight block"
                             >
                               {document.title}

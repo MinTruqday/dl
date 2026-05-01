@@ -214,7 +214,7 @@ export default function ReadingHistoryPage() {
                       </div>
                       
                       <Link 
-                        href={`/document/${item.document_slug}`}
+                        href={`/documents/${item.document_slug}`}
                         className="text-xl font-bold text-black hover:underline underline-offset-4 decoration-1 tracking-tight truncate block mb-4 group-hover:translate-x-1 transition-transform"
                       >
                         {item.document_title}
@@ -237,7 +237,7 @@ export default function ReadingHistoryPage() {
 
                   <div className="flex items-center gap-4 mt-6 md:mt-0 ml-0 md:ml-8 w-full md:w-auto">
                     <Link
-                      href={`/document/${item.document_slug}`}
+                      href={`/documents/${item.document_slug}`}
                       className="flex-1 md:flex-none bg-black text-white text-[10px] font-bold tracking-[0.2em] uppercase px-10 h-14 flex items-center justify-center hover:bg-zinc-800 transition-all active:scale-95 rounded-sm"
                     >
                       Tiếp tục đọc

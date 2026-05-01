@@ -134,38 +134,38 @@ export default function Sidebar({
           <NavLink href="/wallet" label="Ví điện tử" icon={Wallet} requireAuth />
           
           <NavLink
-            href="/studio/create"
+            href="/create"
             label="Sáng tác"
             icon={PenTool}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/studio/coupons"
+            href="/coupons"
             label="Mã giảm giá"
             icon={Ticket}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/studio/collab"
+            href="/collab"
             label="Hợp tác"
             icon={Users}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/studio/assets"
+            href="/assets"
             label="Kho lưu trữ"
             icon={FolderOpen}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/studio/payouts"
+            href="/payouts"
             label="Doanh thu"
             icon={Wallet}
             roles={["author", "admin"]}
           />
           
           <NavLink
-            href="/documents-management"
+            href="/my-documents"
             label="Kho tài liệu"
             icon={FileText}
             roles={["admin", "author"]}
@@ -173,38 +173,38 @@ export default function Sidebar({
           
           {/* Broken out Moderator features */}
           <NavLink
-            href="/moderator?tab=documents"
+            href="/moderator/documents"
             label="Duyệt bản thảo"
             icon={CheckCircle2}
             roles={["moderator", "admin"]}
           />
           <NavLink
-            href="/moderator?tab=logs"
+            href="/moderator/logs"
             label="Lịch sử kiểm duyệt"
             icon={Clock}
             roles={["moderator", "admin"]}
           />
 
           <NavLink
-            href="/admin/users"
+            href="/users"
             label="Quản lý người dùng"
             icon={Users}
             roles={["admin"]}
           />
           <NavLink
-            href="/admin/applications"
+            href="/author-applications"
             label="Đơn ứng tuyển"
             icon={UserCheck}
             roles={["admin", "moderator"]}
           />
           <NavLink
-            href="/admin/reports"
+            href="/admin-reports"
             label="Báo cáo vi phạm"
             icon={AlertTriangle}
             roles={["admin", "moderator"]}
           />
           <NavLink
-            href="/admin/config"
+            href="/config"
             label="Cấu hình hệ thống"
             icon={Settings}
             roles={["admin"]}

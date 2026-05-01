@@ -211,7 +211,7 @@ export default function SearchResultsPage() {
               </div>
             ) : results.length > 0 ? (
               results.map((document) => (
-                <Link key={document._id} href={`/document/${document.slug}`} className="group p-8 bg-white border border-zinc-100 hover:border-black transition-all duration-300 flex gap-10 rounded-sm active:scale-[0.99]">
+                <Link key={document._id} href={`/documents/${document.slug}`} className="group p-8 bg-white border border-zinc-100 hover:border-black transition-all duration-300 flex gap-10 rounded-sm active:scale-[0.99]">
                   <div className="w-32 h-44 bg-zinc-50 border border-zinc-100 shrink-0 overflow-hidden relative rounded-sm">
                     {document.cover_url ? (
                        <img src={document.cover_url} alt={document.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 grayscale group-hover:grayscale-0" />

@@ -166,7 +166,7 @@ export default function AuthorProfilePage() {
               {documents.length > 0 ? (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {documents.map((doc) => (
-                    <a key={doc.id || doc._id} href={`/document/${doc.slug || doc.id || doc._id}`} className="group block bg-white border border-zinc-100 p-6 hover:border-black transition-all">
+                    <a key={doc.id || doc._id} href={`/documents/${doc.slug || doc.id || doc._id}`} className="group block bg-white border border-zinc-100 p-6 hover:border-black transition-all">
                       <div className="aspect-[2/3] w-full bg-zinc-50 border border-zinc-50 relative overflow-hidden mb-6">
                         {doc.cover_image ? (
                           <img src={doc.cover_image} alt={doc.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500" />

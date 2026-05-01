@@ -370,7 +370,7 @@ export default function ProfilePage() {
                 ) : bookmarks.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {bookmarks.map((doc) => (
-                            <Link href={`/document/${doc.slug || doc._id}`} key={doc._id} className="group border border-zinc-100 p-8 rounded-sm hover:border-black transition-all duration-700 bg-white">
+                            <Link href={`/documents/${doc.slug || doc._id}`} key={doc._id} className="group border border-zinc-100 p-8 rounded-sm hover:border-black transition-all duration-700 bg-white">
                                 <div className="flex items-start gap-6">
                                     <div className="w-16 h-20 bg-zinc-50 border border-zinc-50 flex items-center justify-center rounded-sm transition-all group-hover:bg-black group-hover:rotate-6">
                                         <FileText className="w-8 h-8 text-zinc-100 group-hover:text-white stroke-[1.5]" />

@@ -9,6 +9,20 @@ const protectedRoutes: Record<string, string[]> = {
   '/admin': ['admin'],
   '/profile': ['reader', 'author', 'admin'],
   '/wallet': ['reader', 'author', 'admin'],
+  '/moderator': ['moderator', 'admin'],
+  '/create': ['author', 'admin'],
+  '/analytics': ['author', 'admin'],
+  '/assets': ['author', 'admin'],
+  '/collab': ['author', 'admin'],
+  '/coupons': ['author', 'admin'],
+  '/my-documents': ['author', 'admin'],
+  '/payouts': ['author', 'admin'],
+  '/upload': ['author', 'admin'],
+  '/config': ['admin'],
+  '/users': ['admin'],
+  '/admin-reports': ['admin', 'moderator'],
+  '/author-applications': ['admin', 'moderator'],
+  '/system': ['admin'],
 };
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {

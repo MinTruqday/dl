@@ -142,7 +142,7 @@ export default function CollectionDetailPage() {
 
                 <div className="flex-1 min-w-0">
                   <Link 
-                    href={`/document/${doc.slug}`}
+                    href={`/documents/${doc.slug}`}
                     className="text-lg font-bold text-black hover:underline underline-offset-8 decoration-1 tracking-tight truncate block"
                   >
                     {doc.title}
@@ -173,7 +173,7 @@ export default function CollectionDetailPage() {
                 </div>
                 
                 <Link 
-                  href={`/document/${doc.slug}`}
+                  href={`/documents/${doc.slug}`}
                   className="w-12 h-12 flex items-center justify-center border border-zinc-100 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all rounded-sm"
                 >
                   <ChevronRight className="w-5 h-5" />

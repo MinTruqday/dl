@@ -1188,7 +1188,7 @@ export default function Feed() {
                       )}
 
                       {post.attached_document_id && (
-                        <Link href={`/document/${post.attached_document_id}`} className="flex items-center justify-between p-6 bg-zinc-50 border border-transparent hover:border-black hover:bg-white transition-all duration-300 rounded-sm">
+                        <Link href={`/documents/${post.attached_document_id}`} className="flex items-center justify-between p-6 bg-zinc-50 border border-transparent hover:border-black hover:bg-white transition-all duration-300 rounded-sm">
                           <div className="flex items-center gap-6">
                             <div className="w-12 h-16 bg-white border border-zinc-100 rounded-sm flex items-center justify-center shrink-0">
                                <BookText className="w-6 h-6 text-zinc-200" />

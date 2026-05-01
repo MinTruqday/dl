@@ -286,7 +286,7 @@ export default function ExplorePage() {
             </div>
             <div className="space-y-6">
               {trending.length > 0 ? trending.map((document, i) => (
-                <Link key={`trending-${document._id || i}`} href={`/document/${document.slug}`} className="group block space-y-2">
+                <Link key={`trending-${document._id || i}`} href={`/documents/${document.slug}`} className="group block space-y-2">
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-bold text-black/20">0{i + 1}</span>
                     <div className="h-[1px] flex-1 bg-zinc-100 group-hover:bg-black transition-colors" />
@@ -351,7 +351,7 @@ export default function ExplorePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {recommendations.map((doc, i) => (
-                  <Link key={`rec-${doc._id || i}`} href={`/document/${doc.slug}`} className="flex gap-6 p-6 border border-zinc-100 hover:border-black transition-all group bg-white">
+                  <Link key={`rec-${doc._id || i}`} href={`/documents/${doc.slug}`} className="flex gap-6 p-6 border border-zinc-100 hover:border-black transition-all group bg-white">
                     <div className="w-24 h-32 bg-zinc-50 shrink-0 border border-zinc-100 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300">
                       {doc.cover_url ? (
                         <img src={doc.cover_url} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
@@ -396,7 +396,7 @@ export default function ExplorePage() {
                 {documents.map((document, i) => (
                   <Link
                     key={`doc-${document._id || i}`}
-                    href={`/document/${document.slug}`}
+                    href={`/documents/${document.slug}`}
                     className={`group animate-in fade-in slide-in-from-bottom-4 duration-300 ${viewMode === "grid" ? "space-y-5" : "flex gap-8 items-center border border-zinc-100 p-6 bg-white hover:border-black transition-all"}`}
                   >
                     <div className={`${viewMode === "grid" ? "aspect-[3/4] w-full" : "w-32 h-44 shrink-0"} bg-zinc-50 border border-zinc-100 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300`}>
