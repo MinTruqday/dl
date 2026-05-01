@@ -6,16 +6,16 @@ import { API_URL } from '@/app/lib/api';
 export const suggestionRenderer = {
   items: async ({ query }: { query: string }) => {
     try {
-      const res = await fetch(`${API_URL}/latex-snippets`);
-      const data = await res.json();
-      return data.snippets
+      const res = await fetch(`${API_URL}/editor/latex`);
+      const response = await res.json();
+      const snippets = response.data?.snippets || [];
+      return snippets
         .filter((item: any) => item.label.toLowerCase().includes(query.toLowerCase()) || 
                                (item.detail && item.detail.toLowerCase().includes(query.toLowerCase())))
         .slice(0, 15);
-    } catch {
-      return [
-        { label: '\\frac', type: 'command', insertText: '\\frac{1}{2}', detail: 'Fraction' }
-      ];
+    } catch (error) {
+      console.error('Failed to fetch LaTeX snippets:', error);
+      return [];
     }
   },
 

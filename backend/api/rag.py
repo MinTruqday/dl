@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Request, HTTPException
-from .dependencies import get_current_user_optional, get_db
+from .dependency import get_current_user_optional, get_db
 from models.user import UserInDB
 from services.rag import RagService
 from motor.motor_asyncio import AsyncIOMotorDatabase

@@ -1,7 +1,7 @@
 from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from .dependencies import get_current_user
+from .dependency import get_current_user
 from models.user import UserInDB
 import httpx
 from core.config import settings

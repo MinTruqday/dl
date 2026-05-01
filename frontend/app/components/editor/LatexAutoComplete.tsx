@@ -10,14 +10,9 @@ export const LatexAutocomplete = Extension.create({
       suggestion: {
         char: '\\',
         command: ({ editor, range, props }: any) => {
-          const detail = props.detail || '';
+          const category = props.category || '';
           
-          if (
-            detail.includes('[Cơ bản]') ||
-            detail.includes('[Trình bày]') ||
-            detail.includes('[Số liệu và Bảng biểu]') ||
-            detail.includes('[Cấu trúc tài liệu]')
-          ) {
+          if (category === 'environment') {
              editor
               .chain()
               .focus()
@@ -25,7 +20,7 @@ export const LatexAutocomplete = Extension.create({
               .setLatexBlock({ text: props.insertText })
               .run();
           } 
-          else if (detail.includes('[Toán học]')) {
+          else if (category === 'math') {
              editor
               .chain()
               .focus()

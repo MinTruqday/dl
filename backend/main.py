@@ -46,7 +46,7 @@ from api.administration import router as administration_router
 from api.moderation import router as moderation_router
 from api.telemetry import router as telemetry_router
 from api.banner import router as banner_router
-from api.config import router as config_router
+# from api.config import router as config_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -138,7 +138,7 @@ app.include_router(administration_router)
 app.include_router(moderation_router)
 app.include_router(telemetry_router)
 app.include_router(banner_router)
-app.include_router(config_router)
+# app.include_router(config_router)
 
 @app.get("/health")
 async def health_check():

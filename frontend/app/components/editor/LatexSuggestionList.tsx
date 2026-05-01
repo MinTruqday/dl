@@ -47,26 +47,33 @@ export const LatexSuggestionList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="bg-card   border border-border overflow-hidden w-64">
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden w-80 animate-in fade-in slide-in-from-top-2 duration-200">
       {props.items.length ? (
-        props.items.map((item: any, index: number) => (
-          <button
-            className={`w-full text-left px-4 py-2 text-sm ${
-              index === selectedIndex ? 'bg-gray-100 text-black font-semibold' : 'text-gray-700 hover:bg-background'
-            }`}
-            key={index}
-            onClick={() => selectItem(index)}
-          >
-            <div className="flex justify-between items-center">
-              <code className="bg-gray-100 px-1 rounded">{item.label}</code>
-              <span className="text-xs text-muted-foreground max-w-[50%] truncate ml-2">
-                {item.detail}
-              </span>
-            </div>
-          </button>
-        ))
+        <div className="py-1">
+          {props.items.map((item: any, index: number) => (
+            <button
+              className={`w-full text-left px-3 py-1.5 text-sm flex flex-col gap-0.5 transition-colors ${
+                index === selectedIndex ? 'bg-gray-100 text-black' : 'text-gray-600 hover:bg-gray-50'
+              }`}
+              key={index}
+              onClick={() => selectItem(index)}
+            >
+              <div className="flex justify-between items-center w-full">
+                <span className="font-mono font-medium text-black">{item.label}</span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+                  {item.type || 'Lệnh'}
+                </span>
+              </div>
+              {item.detail && (
+                <span className="text-xs text-gray-400 truncate w-full">
+                  {item.detail}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       ) : (
-        <div className="text-sm p-4 text-muted-foreground text-center">Không tìm thấy lệnh</div>
+        <div className="text-sm p-4 text-gray-400 text-center">Không tìm thấy lệnh phù hợp</div>
       )}
     </div>
   );
