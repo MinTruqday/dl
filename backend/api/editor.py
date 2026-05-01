@@ -7,7 +7,16 @@ from services.editor import EditorService, manager
 from typing import List, Optional
 from loguru import logger
 
+from services.document import DocumentService
+from pydantic import BaseModel
+
 router = APIRouter(prefix="/editor")
+
+class ChapterCreate(BaseModel):
+    title: str
+    content: str
+    is_premium: bool = False
+    price_dl: int = 0
 
 @router.websocket("/ws/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):
@@ -113,3 +122,22 @@ async def generate_cover(document_id: str, style: str = "minimalist", current_us
         data=await EditorService.generate_cover(document_id, style, current_user),
         message="Khởi tạo ảnh bìa AI thành công."
     )
+@router.post("/{document_id}/chapters", response_model=APIResponse[Any])
+async def add_chapter(
+    document_id: str,
+    chapter_in: ChapterCreate,
+    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
+) -> Any:
+    return APIResponse(data=await DocumentService.add_chapter(document_id, chapter_in, current_user), message="Thêm chương mới thành công.", status=201)
+
+@router.put("/{document_id}/cover", response_model=APIResponse[Any])
+async def update_cover(
+    document_id: str,
+    cover_url: str,
+    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
+) -> Any:
+    return APIResponse(data=await DocumentService.update_cover(document_id, cover_url, current_user), message="Cập nhật ảnh bìa thành công.", status=200)
+
+@router.post("/{document_id}/ai-cover", response_model=APIResponse[Any])
+async def generate_ai_cover(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await DocumentService.generate_ai_cover(document_id, current_user), message="Khởi tạo ảnh bìa AI thành công.", status=200)

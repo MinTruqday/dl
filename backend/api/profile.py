@@ -9,9 +9,6 @@ from pydantic import BaseModel
 import json
 import io
 
-class AuthorApplicationBase(BaseModel):
-    portfolio_url: str
-    reason: str
 
 router = APIRouter(prefix="/profile")
 
@@ -61,17 +58,8 @@ async def request_data_takeout(current_user: UserInDB = Depends(get_current_user
     stream = io.BytesIO(json.dumps(takeout_payload, ensure_ascii=False, indent=2, default=str).encode("utf-8"))
     return StreamingResponse(stream, media_type="application/json", headers={"Content-Disposition": f"attachment; filename=doclib_takeout_{current_user.slug}.json"})
 
-@router.post("/apply-author", response_model=APIResponse[Any])
-async def apply_author(application: AuthorApplicationBase, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.apply_author(application, current_user), message="Gửi yêu cầu trở thành tác giả thành công.", status=200)
 
-@router.post("/upload-kyc", response_model=APIResponse[Any])
-async def upload_kyc(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.upload_kyc(file, current_user), message="Tải lên tài liệu định danh thành công.", status=200)
 
-@router.delete("/right-to-be-forgotten", response_model=APIResponse[Any], dependencies=[Depends(RateLimiter(calls=1, period=86400))])
-async def right_to_be_forgotten(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.right_to_be_forgotten(current_user), message="Yêu cầu xóa tài khoản đã được ghi nhận.", status=status.HTTP_202_ACCEPTED)
 
 @router.get("/streaks", response_model=APIResponse[Any])
 async def get_reading_streaks(current_user: UserInDB = Depends(get_current_user)):
@@ -85,21 +73,7 @@ async def get_badges(current_user: UserInDB = Depends(get_current_user)):
 async def block_user(target_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ProfileService.block_user(target_id, current_user), message="Đã chặn người dùng này thành công.", status=200)
 
-@router.post("/gdpr/export", response_model=APIResponse[Any])
-async def request_data_export(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.request_data_export(current_user), message="Gửi yêu cầu xuất dữ liệu cá nhân (GDPR) thành công.", status=200)
 
-@router.post("/gdpr/delete", response_model=APIResponse[Any])
-async def request_data_deletion(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.right_to_be_forgotten(current_user), message="Yêu cầu xóa dữ liệu định danh (GDPR) đã được gửi.", status=status.HTTP_202_ACCEPTED)
-
-@router.post("/bookmarks/{document_id}", response_model=APIResponse[Any])
-async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.toggle_bookmark(document_id, current_user), message="Cập nhật danh sách lưu trữ thành công.", status=200)
-
-@router.get("/bookmarks", response_model=APIResponse[Any])
-async def get_bookmarks(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ProfileService.get_bookmarks(current_user), message="Lấy danh sách lưu trữ thành công.", status=200)
 
 @router.put("/brand-page", response_model=APIResponse[Any], dependencies=[Depends(get_current_user)])
 async def update_brand_page(data: dict, current_user: UserInDB = Depends(get_current_user)):

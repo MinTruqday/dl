@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
 from models.user import UserInDB, RoleEnum
@@ -9,19 +9,12 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/moderation")
 
-class ModerationActionRequest(BaseModel):
-    reason: str
-    duration_hours: Optional[int] = 24
+class ResolveReportRequest(BaseModel):
+    action: str
 
 class ModerateDocumentRequest(BaseModel):
     action: str
     reason: str
-
-class ResolveReportRequest(BaseModel):
-    action: str
-
-class NoteRequest(BaseModel):
-    note: str
 
 @router.get("/reports", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_reports(status: str = "pending", skip: int = 0, limit: int = 30):
@@ -35,20 +28,6 @@ async def resolve_report(report_id: str, req: ResolveReportRequest, current_user
     return APIResponse(
         data=await ModerationService.resolve_report(report_id, req.action, current_user), 
         message="Xử lý báo cáo thành công."
-    )
-
-@router.post("/users/{user_id}/warn", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def warn_user(user_id: str, req: ModerationActionRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await ModerationService.warn_user(user_id, req.reason, current_user),
-        message="Gửi cảnh báo thành công."
-    )
-
-@router.post("/users/{user_id}/lock", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def lock_user(user_id: str, req: ModerationActionRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await ModerationService.lock_user(user_id, req.reason, req.duration_hours, current_user),
-        message="Khóa tài khoản thành công."
     )
 
 @router.get("/approval-queue", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
@@ -87,9 +66,9 @@ async def get_moderator_notes(user_id: str):
     )
 
 @router.post("/users/{user_id}/notes", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def add_moderator_note(user_id: str, req: NoteRequest, current_user: UserInDB = Depends(get_current_user)):
+async def add_moderator_note(user_id: str, note: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await ModerationService.add_moderator_note(user_id, req.note, current_user),
+        data=await ModerationService.add_moderator_note(user_id, note, current_user),
         message="Thêm ghi chú thành công.",
         status=201
     )

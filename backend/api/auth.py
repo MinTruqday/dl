@@ -21,12 +21,6 @@ class ResetPasswordRequest(BaseModel):
 class VerifyCodeRequest(BaseModel):
     token: str
 
-class PasskeyRequest(BaseModel):
-    email: EmailStr
-
-class PasskeyFinishRequest(BaseModel):
-    email: EmailStr
-    credential: dict
 
 @router.get("/me", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
@@ -69,22 +63,4 @@ async def google_callback(code: str, request: Request):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(data=await AuthService.handle_google_callback(code, client_ip), message="Đăng nhập Google thành công.", status=200)
 
-@router.get("/authors/featured", response_model=APIResponse[Any])
-async def get_featured_authors(limit: int = 5):
-    return APIResponse(data=await AuthService.get_featured_authors(limit), message="Lấy danh sách tác giả nổi bật thành công.", status=200)
 
-@router.post("/passkey/register/begin", response_model=APIResponse[Any])
-async def passkey_register_begin(payload: PasskeyRequest):
-    return APIResponse(data=await PasskeyService.register_begin(payload.email), message="Khởi tạo đăng ký Passkey thành công.", status=200)
-
-@router.post("/passkey/register/finish", response_model=APIResponse[Any])
-async def passkey_register_finish(payload: PasskeyFinishRequest):
-    return APIResponse(data=await PasskeyService.register_finish(payload.email, payload.credential), message="Hoàn tất đăng ký Passkey thành công.", status=200)
-
-@router.post("/passkey/login/begin", response_model=APIResponse[Any])
-async def passkey_login_begin(payload: PasskeyRequest):
-    return APIResponse(data=await PasskeyService.login_begin(payload.email), message="Khởi tạo đăng nhập Passkey thành công.", status=200)
-
-@router.post("/passkey/login/finish", response_model=APIResponse[Any])
-async def passkey_login_finish(payload: PasskeyFinishRequest):
-    return APIResponse(data=await PasskeyService.login_finish(payload.email, payload.credential), message="Đăng nhập bằng Passkey thành công.", status=200)
