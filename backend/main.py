@@ -1,5 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 from core.database import init_db, close_db, db_client
+from core.config import settings
+from core.storage import initialize_bucket
+from core.worker import start_workers
+from prometheus_fastapi_instrumentator import Instrumentator
+from loguru import logger
+import asyncio
+import os
+import sys
+import time
+
 from api.auth import router as auth_router
 from api.comment import router as comment_router
 from api.document import router as document_router
@@ -11,41 +25,32 @@ from api.coauthor import router as coauthor_router
 from api.version import router as version_router
 from api.review import router as review_router
 from api.highlight import router as highlight_router
-from api.analytics import router as analytics_router
 from api.notification import router as notification_router
-from api.admin import router as admin_router
 from api.wallet import router as wallet_router
 from api.payment import router as payment_router
 from api.export import router as export_router
 from api.gateway import router as gateway_router
-from api.guest import router as guest_router
-from api.reader import router as reader_router
-from api.author import router as author_router
-from api.moderator import router as moderator_router
+from api.read import router as read_router
 from api.monetization import router as monetization_router
+from api.payout import router as payout_router
 from api.story import router as story_router
 from api.rag import router as rag_router
 from api.inference import router as inference_router
 from api.chat import router as chat_router
 from api.latex import router as latex_router
 from api.collector import router as collector_router
-from core.storage import initialize_bucket
-import asyncio
-from core.worker import start_workers
-from fastapi.middleware.cors import CORSMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
-import os
-from fastapi.staticfiles import StaticFiles
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from loguru import logger
-import sys
+from api.library import router as library_router
+from api.feedback import router as feedback_router
+from api.ai import router as ai_router
+from api.administration import router as administration_router
+from api.moderation import router as moderation_router
+from api.telemetry import router as telemetry_router
+from api.banner import router as banner_router
+from api.config import router as config_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
 logger.add("logs/backend.log", rotation="10 MB", level="INFO")
-
-from core.config import settings
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION, docs_url="/docs", redoc_url="/redoc")
 
@@ -63,9 +68,6 @@ os.makedirs("public/feed_uploads", exist_ok=True)
 os.makedirs("public/uploads", exist_ok=True)
 app.mount("/feed_uploads", StaticFiles(directory="public/feed_uploads"), name="feed_uploads")
 app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
-
-from fastapi.exceptions import RequestValidationError
-from fastapi import HTTPException
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -85,7 +87,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
-    import time
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
@@ -112,7 +113,6 @@ app.include_router(payment_router, prefix="/payment")
 app.include_router(gateway_router, prefix="/gateways")
 app.include_router(export_router)
 app.include_router(upload_router)
-
 app.include_router(social_router, prefix="")
 app.include_router(story_router, prefix="")
 app.include_router(comment_router, prefix="")
@@ -120,34 +120,25 @@ app.include_router(document_router, prefix="")
 app.include_router(review_router, prefix="")
 app.include_router(highlight_router, prefix="")
 app.include_router(version_router, prefix="")
-app.include_router(analytics_router, prefix="/analytics")
-
 app.include_router(latex_router)
 app.include_router(editor_router)
-
-app.include_router(guest_router, prefix="")
-app.include_router(reader_router)
-app.include_router(author_router)
-app.include_router(moderator_router)
-app.include_router(admin_router)
 app.include_router(monetization_router)
-
-from api.reading import router as reading_router
-from api.library import router as library_router
-from api.feedback import router as feedback_router
-from api.ai import router as ai_router
-
-app.include_router(reading_router)
+app.include_router(payout_router)
+app.include_router(read_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
 app.include_router(ai_router)
-
 app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
 app.include_router(collector_router)
+app.include_router(administration_router)
+app.include_router(moderation_router)
+app.include_router(telemetry_router)
+app.include_router(banner_router)
+app.include_router(config_router)
 
 @app.get("/health")
 async def health_check():
@@ -166,7 +157,6 @@ async def health_check():
     else:
         redis_status = "not_configured"
         
-    import os
     try:
         cpu_load = os.getloadavg()[0] / os.cpu_count() * 100
     except Exception:
@@ -190,6 +180,5 @@ async def health_check():
             "memory_usage": "N/A", 
             "disk_usage": f"{disk_usage:.1f}%"
         },
-        "version": "1.0.0-batch4"
+        "version": "1.0.0-production"
     }
-

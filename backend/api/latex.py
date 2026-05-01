@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 from models.user import UserInDB, RoleEnum
-from api.dependencies import require_role
+from api.dependency import require_role
 from services.latex import LatexService
 import time
 

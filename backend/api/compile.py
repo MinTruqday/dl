@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB, RoleEnum
-from api.dependencies import require_role
+from api.dependency import require_role
 from services.compile import CompileService
 from services.editor import EditorService
 from io import BytesIO

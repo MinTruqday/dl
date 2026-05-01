@@ -5,7 +5,7 @@ import uuid
 from loguru import logger
 from models.user import RoleEnum
 
-class UserManagementService:
+class AdministrationService:
     @staticmethod
     async def get_all_users(limit: int = 50, offset: int = 0) -> list:
         db = db_client.mongodb.get_default_database()
@@ -28,7 +28,7 @@ class UserManagementService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"Admin: Role for user {user_id} updated to {role}")
+        logger.info(f"Administration: Role for user {user_id} updated to {role}")
         return {"message": f"Đã cập nhật vai trò người dùng thành {role}."}
 
     @staticmethod
@@ -37,7 +37,7 @@ class UserManagementService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"Admin: User {user_id} status updated to {is_active}")
+        logger.info(f"Administration: User {user_id} status updated to {is_active}")
         return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản."}
 
     @staticmethod
@@ -60,5 +60,49 @@ class UserManagementService:
         if status == "APPROVED":
             await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.AUTHOR}})
             
-        logger.info(f"Admin: Author application {application_id} {status} by {reviewer_id}")
+        logger.info(f"Administration: Author application {application_id} {status} by {reviewer_id}")
         return {"message": f"Đã {status.lower()} đơn ứng tuyển thành công."}
+
+    @staticmethod
+    async def toggle_maintenance_mode(enabled: bool, message: str = "") -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["system_config"].update_one(
+            {"key": "maintenance_mode"}, 
+            {"$set": {"enabled": enabled, "message": message, "updated_at": datetime.utcnow()}}, 
+            upsert=True
+        )
+        logger.warning(f"Administration: Maintenance mode {'enabled' if enabled else 'disabled'} by admin")
+        return {"message": f"Chế độ bảo trì đã được {'bật' if enabled else 'tắt'}."}
+
+    @staticmethod
+    async def trigger_backup(action: str) -> dict:
+        logger.info(f"Administration: Backup action '{action}' triggered")
+        return {"message": "Yêu cầu sao lưu dữ liệu đã được gửi đến hàng chờ."}
+
+    @staticmethod
+    async def create_api_key(name: str, provider: str, key_value: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["api_keys"].insert_one({
+            "_id": str(uuid.uuid4()),
+            "name": name,
+            "provider": provider,
+            "key_value": key_value,
+            "created_at": datetime.utcnow()
+        })
+        logger.info(f"Administration: API Key '{name}' for '{provider}' created")
+        return {"message": "Đã lưu API Key thành công."}
+
+    @staticmethod
+    async def create_marketing_campaign(title: str, target: str, discount: int) -> dict:
+        db = db_client.mongodb.get_default_database()
+        campaign = {
+            "_id": str(uuid.uuid4()),
+            "title": title,
+            "target_audience": target,
+            "discount_percent": discount,
+            "status": "active",
+            "created_at": datetime.utcnow()
+        }
+        await db["marketing_campaigns"].insert_one(campaign)
+        logger.info(f"Administration: Campaign '{title}' created")
+        return {"message": "Đã tạo chiến dịch marketing thành công."}

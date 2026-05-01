@@ -49,7 +49,5 @@ async def ingest_document(document_id: str, current_user: UserInDB = Depends(get
     if not current_user:
         raise HTTPException(status_code=401, detail="Bạn cần đăng nhập để thực hiện hành động này.")
     
-    # Optional: Check if user is author of document
-    # For now, let service handle it or just allow any logged in user (usually author/admin)
     result = await RagService.ingest(document_id)
     return APIResponse(data=result, message="Tiến trình đồng bộ tri thức AI đã được bắt đầu.", status=200)

@@ -78,7 +78,7 @@ class EditorService:
 
     @staticmethod
     async def get_latex():
-        from api.latex_data import LATEX_COMMANDS, LATEX_PACKAGES, LATEX_ENVIRONMENTS
+        from core.latex import LATEX_COMMANDS, LATEX_PACKAGES, LATEX_ENVIRONMENTS
         return {
             "commands": LATEX_COMMANDS,
             "packages": LATEX_PACKAGES,

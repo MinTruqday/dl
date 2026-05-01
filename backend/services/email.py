@@ -54,6 +54,4 @@ Trân trọng,
             logger.info(f"Password reset email sent successfully to {email}")
         else:
             logger.error(f"Failed to send email to {email}")
-            # Không raise exception để tránh làm gián đoạn luồng chính của user 
-            # (họ vẫn nhận được thông báo chung ở auth service)
 

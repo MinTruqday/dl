@@ -7,7 +7,7 @@ import httpx
 import json
 from loguru import logger
 
-class AIAssistantService:
+class AIService:
     @staticmethod
     async def semantic_search(query: str, current_user) -> list:
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)

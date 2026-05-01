@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from typing import Optional
 from models.user import UserInDB
 from models.social import StoryCreate
-from api.dependencies import get_current_user, get_current_user_optional, RateLimiter
+from api.dependency import get_current_user, get_current_user_optional, RateLimiter
 from services.story import StoryService
 
 router = APIRouter(prefix="/social/stories")

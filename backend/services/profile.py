@@ -223,3 +223,48 @@ class ProfileService:
         for doc in documents:
             doc["_id"] = str(doc["_id"])
         return documents
+
+    @staticmethod
+    async def update_brand_page(data: dict, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        update_fields = {}
+        if "cover_image_url" in data:
+            update_fields["author_profile.cover_image_url"] = data["cover_image_url"]
+        if "welcome_video_url" in data:
+            update_fields["author_profile.welcome_video_url"] = data["welcome_video_url"]
+        if "custom_theme" in data:
+            update_fields["author_profile.custom_theme"] = data["custom_theme"]
+        
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="Không có thông tin nào để cập nhật.")
+            
+        update_fields["updated_at"] = datetime.utcnow()
+        await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
+        logger.info(f"Profile: Brand page updated for author {current_user.id}")
+        return {"message": "Cập nhật trang tác giả cá nhân thành công."}
+
+    @staticmethod
+    async def get_author_public_profile(slug: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        author = await db["users"].find_one({"slug": slug, "role": "AUTHOR", "is_active": True})
+        if not author:
+            raise HTTPException(status_code=404, detail="Không tìm thấy trang tác giả.")
+            
+        author_id = str(author["_id"])
+        docs = await db["documents"].find({"author_id": author_id, "status": "PUBLISHED"}).sort("created_at", -1).limit(10).to_list(length=10)
+        
+        return {
+            "id": author_id,
+            "full_name": author.get("full_name", "Tác giả ẩn danh"),
+            "avatar_url": author.get("avatar_url"),
+            "bio": author.get("bio", ""),
+            "cover_image_url": author.get("author_profile", {}).get("cover_image_url"),
+            "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
+            "custom_theme": author.get("author_profile", {}).get("custom_theme"),
+            "recent_documents": [{
+                "id": str(d["_id"]),
+                "title": d.get("title"),
+                "slug": d.get("slug"),
+                "cover_url": d.get("cover_url")
+            } for d in docs]
+        }

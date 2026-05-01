@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from datetime import datetime, timedelta
 from loguru import logger
 
-class ReadingService:
+class ReadService:
     @staticmethod
     async def update_typography(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()

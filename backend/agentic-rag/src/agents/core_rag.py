@@ -49,7 +49,6 @@ class AgentState(TypedDict):
     image_data: str
     file_data: str
 
-# Fixed model to ensure stability and public access
 llama_model = settings.LLAMA_MODEL
 hf_token = settings.HF_TOKEN
 

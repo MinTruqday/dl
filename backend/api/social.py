@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, status, UploadFile, File
 from typing import List, Optional
 from models.user import UserInDB
 from models.social import StatusUpdateCreate, StoryCreate
-from api.dependencies import get_current_user, get_current_user_optional, RateLimiter
+from api.dependency import get_current_user, get_current_user_optional, RateLimiter, require_permissions
 from services.social import SocialService
 
 router = APIRouter(prefix="/social")
@@ -133,3 +133,25 @@ async def search_users(q: str = Query(...), limit: int = Query(10)):
 @router.post("/polls/{post_id}/vote/{option_id}", response_model=APIResponse[Any])
 async def vote_poll(post_id: str, option_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SocialService.vote_poll(post_id, option_id, current_user), message="Bình chọn thành công.", status=status.HTTP_200_OK)
+
+@router.post("/share-excerpt", response_model=APIResponse[Any])
+async def share_excerpt(data: dict, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await SocialService.share_excerpt(data, current_user), 
+        message="Chia sẻ trích đoạn thành công.", 
+        status=status.HTTP_201_CREATED
+    )
+
+@router.get("/featured-authors", response_model=APIResponse[Any])
+async def get_featured_authors(limit: int = 10):
+    return APIResponse(
+        data=await SocialService.get_featured_authors(limit),
+        message="Lấy danh sách tác giả nổi bật thành công."
+    )
+
+@router.get("/documents/{document_id}/sentiment", response_model=APIResponse[Any], dependencies=[Depends(require_permissions(["documents:read_any"]))])
+async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await SocialService.analyze_reader_sentiment(document_id, current_user),
+        message="Phân tích cảm xúc độc giả thành công."
+    )

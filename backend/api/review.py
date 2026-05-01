@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from typing import List, Any
 from models.user import UserInDB
 from models.comment import ReviewCreate, ReviewResponse
-from api.dependencies import get_current_user
+from api.dependency import get_current_user
 from services.review import ReviewService
 
 router = APIRouter(prefix="/reading")

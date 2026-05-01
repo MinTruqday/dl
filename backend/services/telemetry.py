@@ -49,3 +49,35 @@ class TelemetryService:
             {"metric": metric_name, "value": value},
             current_user
         )
+    @staticmethod
+    async def get_system_stats() -> dict:
+        db = db_client.mongodb.get_default_database()
+        total_users = await db["users"].count_documents({})
+        total_documents = await db["documents"].count_documents({})
+        total_authors = await db["users"].count_documents({"role": "AUTHOR"})
+        return {
+            "total_users": total_users,
+            "total_documents": total_documents,
+            "total_authors": total_authors,
+            "timestamp": datetime.utcnow()
+        }
+
+    @staticmethod
+    async def get_sys_health() -> dict:
+        db = db_client.mongodb.get_default_database()
+        try:
+            await db.command("ping")
+            mongo_status = "healthy"
+        except Exception:
+            mongo_status = "unhealthy"
+            
+        return {
+            "status": "online",
+            "mongodb": mongo_status,
+            "timestamp": datetime.utcnow()
+        }
+
+    @staticmethod
+    async def get_moderator_activity_log(moderator_id: str) -> list:
+        db = db_client.mongodb.get_default_database()
+        return await db["moderator_activity"].find({"moderator_id": moderator_id}).sort("timestamp", -1).to_list(length=100)

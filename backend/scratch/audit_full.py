@@ -12,26 +12,17 @@ def audit_files(directory):
                     
                     has_error = False
                     
-                    # 1. Check for response_model=APIResponse in APIRouter endpoints
                     if "router = APIRouter" in content:
                         decorators = re.findall(r"@router\.(get|post|put|delete|patch)\((.*?)\)", content, re.DOTALL)
                         for method, args in decorators:
-                            # Skip if it returns a stream or something similar if it's explicitly handled
                             if "response_model=APIResponse" not in args and "response_model=Any" not in args:
                                 has_error = True
                                 break
                     
-                    # 2. Check for os.getenv (should use settings)
                     if "os.getenv" in content:
-                        # Exclude core/config.py itself
                         if "core/config.py" not in path:
                             has_error = True
                     
-                    # 3. Check for HTTPException English messages
-                    # This is a bit subjective, but we can look for common English words in HTTPException details
-                    # Or just flag all HTTPException calls for manual review if they look un-localized.
-                    # For now, let's look for "detail=" with quotes containing English letters but no Vietnamese marks
-                    # Actually, let's just flag files with HTTPException for review.
                     
                     if has_error and path not in files_with_errors:
                         files_with_errors.append(path)

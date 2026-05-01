@@ -26,7 +26,6 @@ class ChatService:
         cursor = db_client.mongodb["messages"].find(query).sort("created_at", -1).limit(limit)
         messages = await cursor.to_list(length=limit)
         
-        # Mark as read
         await db_client.mongodb["messages"].update_many(
             {"sender_id": other_user_id, "receiver_id": current_user.id, "is_read": False},
             {"$set": {"is_read": True}}
@@ -36,7 +35,6 @@ class ChatService:
 
     @staticmethod
     async def get_conversations(current_user: UserInDB):
-        # Find all messages where user is sender or receiver
         pipeline = [
             {
                 "$match": {

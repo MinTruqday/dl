@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 from typing import List, Optional, Any
 from models.user import UserInDB
 from models.comment import CommentCreate, CommentResponse
-from api.dependencies import get_current_user, require_permissions, RateLimiter
+from api.dependency import get_current_user, require_permissions, RateLimiter
 from services.comment import CommentService
 from pydantic import BaseModel
 
@@ -44,3 +44,9 @@ async def edit_comment(comment_id: str, data: CommentEditRequest, current_user: 
 async def get_post_comments(post_id: str, current_user: Optional[UserInDB] = Depends(get_current_user)):
     return APIResponse(data=await CommentService.get_nested_comments(post_id, current_user), message="Lấy danh sách bình luận bài viết thành công.", status=200)
 
+@router.delete("/users/{user_id}/comments/bulk", response_model=APIResponse[Any], dependencies=[Depends(require_permissions(["comments:delete_any"]))])
+async def bulk_delete_comments(user_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await CommentService.bulk_delete_comments(user_id, current_user),
+        message="Xóa hàng loạt bình luận thành công."
+    )

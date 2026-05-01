@@ -14,7 +14,6 @@ ENV PATH=/root/.local/bin:$PATH
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
-
 COPY --from=builder /root/.local /root/.local
 COPY . .
 

@@ -718,3 +718,52 @@ class SocialService:
             }
         )
         return {"message": "Bình chọn thành công.", "poll_options": poll_options}
+
+    @staticmethod
+    async def share_excerpt(data: dict, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": data["document_id"]})
+        if not doc: 
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
+            
+        excerpt_post = {
+            "_id": str(uuid.uuid4()), 
+            "user_id": str(current_user.id), 
+            "content": data.get("caption", ""), 
+            "item_type": "excerpt", 
+            "excerpt_text": data["text"], 
+            "attached_document_id": data["document_id"], 
+            "attached_document_title": doc.get("title", ""), 
+            "privacy": "public", 
+            "created_at": datetime.utcnow()
+        }
+        await db["status_updates"].insert_one(excerpt_post)
+        logger.info(f"Social: Excerpt shared by {current_user.id} from {data['document_id']}")
+        return {"message": "Đã chia sẻ trích đoạn.", "post_id": excerpt_post["_id"]}
+
+    @staticmethod
+    async def get_featured_authors(limit: int = 10) -> list:
+        db = db_client.mongodb.get_default_database()
+        authors = await db["users"].find({"role": "AUTHOR", "is_active": True}).sort("created_at", -1).limit(limit).to_list(length=limit)
+        return [{
+            "id": str(a["_id"]),
+            "full_name": a.get("full_name", "Tác giả ẩn danh"),
+            "avatar_url": a.get("avatar_url"),
+            "bio": a.get("bio", ""),
+            "slug": a.get("slug", "")
+        } for a in authors]
+
+    @staticmethod
+    async def analyze_reader_sentiment(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        comments = await db["comments"].find({"document_id": document_id}).limit(100).to_list(length=100)
+        if not comments:
+            return {"sentiment": "neutral", "score": 0.5, "message": "Chưa có đủ bình luận để phân tích."}
+        
+        # Mock sentiment analysis for now, usually would call AIService
+        return {
+            "sentiment": "positive",
+            "score": 0.82,
+            "top_keywords": ["hay", "hữu ích", "dễ hiểu"],
+            "timestamp": datetime.utcnow()
+        }

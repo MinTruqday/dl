@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB
-from api.dependencies import get_current_user, RateLimiter
+from api.dependency import get_current_user, RateLimiter
 from services.profile import ProfileService
 from pydantic import BaseModel
 import json
@@ -58,8 +58,6 @@ async def update_settings(data: dict, current_user: UserInDB = Depends(get_curre
 @router.get("/takeout", response_model=Any, dependencies=[Depends(RateLimiter(calls=2, period=3600))])
 async def request_data_takeout(current_user: UserInDB = Depends(get_current_user)):
     takeout_payload = await ProfileService.request_data_takeout(current_user)
-    # Note: Returning StreamingResponse directly inside APIResponse might be tricky depending on how the frontend handles it.
-    # But fixing the syntax error for now.
     stream = io.BytesIO(json.dumps(takeout_payload, ensure_ascii=False, indent=2, default=str).encode("utf-8"))
     return StreamingResponse(stream, media_type="application/json", headers={"Content-Disposition": f"attachment; filename=doclib_takeout_{current_user.slug}.json"})
 
@@ -102,3 +100,17 @@ async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get
 @router.get("/bookmarks", response_model=APIResponse[Any])
 async def get_bookmarks(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ProfileService.get_bookmarks(current_user), message="Lấy danh sách lưu trữ thành công.", status=200)
+
+@router.put("/brand-page", response_model=APIResponse[Any], dependencies=[Depends(get_current_user)])
+async def update_brand_page(data: dict, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ProfileService.update_brand_page(data, current_user),
+        message="Cập nhật trang tác giả thành công."
+    )
+
+@router.get("/author/{slug}", response_model=APIResponse[Any])
+async def get_author_public_profile(slug: str):
+    return APIResponse(
+        data=await ProfileService.get_author_public_profile(slug),
+        message="Lấy thông tin trang tác giả thành công."
+    )

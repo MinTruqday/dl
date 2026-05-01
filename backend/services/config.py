@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 from loguru import logger
 
-class SystemConfigService:
+class ConfigService:
     @staticmethod
     async def manage_tags(action: str, tag_name: str, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
@@ -60,3 +60,8 @@ class SystemConfigService:
         )
         logger.info(f"System: NSFW sensitivity set to '{level}' by {current_moderator.id}")
         return {"message": f"Thiết lập bộ lọc NSFW mức '{level}' thành công."}
+
+    @staticmethod
+    async def get_system_notices() -> list:
+        db = db_client.mongodb.get_default_database()
+        return await db["system_notices"].find({"is_active": True}).sort("created_at", -1).to_list(length=100)

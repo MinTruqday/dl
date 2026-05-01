@@ -1,19 +1,37 @@
 from typing import Any
+from fastapi import APIRouter, Depends
+from api.dependency import require_role, get_current_user
+from models.user import UserInDB, RoleEnum
 from core.response import APIResponse
-from fastapi import APIRouter, WebSocket, Depends
-from api.dependencies import get_current_user
 from services.telemetry import TelemetryService
+from services.administration import AdministrationService
 
-router = APIRouter()
+router = APIRouter(prefix="/telemetry")
 
-@router.websocket("/ws/telemetry/read/{document_id}/{chapter_idx}")
-async def websocket_read_telemetry(websocket: WebSocket, document_id: str, chapter_idx: int):
-    await TelemetryService.websocket_read_telemetry(websocket, document_id, chapter_idx)
+@router.get("/stats", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_stats():
+    return APIResponse(
+        data=await TelemetryService.get_system_stats(), 
+        message="Lấy thống kê hệ thống thành công."
+    )
 
-@router.post("/telemetry/heatmap", response_model=APIResponse[Any])
-async def record_reading_heatmap(payload: dict, current_user = Depends(get_current_user)):
-    return APIResponse(data=await TelemetryService.record_reading_heatmap(payload, current_user), message="Ghi nhận bản đồ nhiệt (heatmap) đọc sách thành công.", status=200)
+@router.get("/sys-health", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_sys_health():
+    return APIResponse(
+        data=await TelemetryService.get_sys_health(), 
+        message="Kiểm tra sức khỏe hệ thống thành công."
+    )
 
-@router.post("/telemetry/scroll-speed", response_model=APIResponse[Any])
-async def analyze_scroll_velocity(payload: dict, current_user = Depends(get_current_user)):
-    return APIResponse(data=await TelemetryService.analyze_scroll_velocity(payload, current_user), message="Phân tích tốc độ cuộn trang thành công.", status=200)
+@router.get("/audit", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_audit_logs(limit: int = 50, offset: int = 0):
+    return APIResponse(
+        data=await TelemetryService.get_activity_stats(days=30), 
+        message="Lấy nhật ký hệ thống thành công."
+    )
+
+@router.get("/activity", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def get_moderator_activity(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await TelemetryService.get_moderator_activity_log(str(current_user.id)),
+        message="Lấy nhật ký hoạt động điều hành thành công."
+    )

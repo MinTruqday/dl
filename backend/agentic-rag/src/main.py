@@ -87,7 +87,6 @@ async def stream_endpoint(req: ChatRequest):
                 
                 elif kind == "on_chat_model_stream":
                     tags = event.get("tags", [])
-                    # Only stream tokens from the generator tagged as 'final_generator'
                     if "final_generator" in tags:
                         content = event["data"]["chunk"].content
                         if content:

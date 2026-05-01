@@ -1,6 +1,6 @@
 from typing import Any
 from core.response import APIResponse
-from api.dependencies import get_current_user_optional, get_current_user, require_role
+from api.dependency import get_current_user_optional, get_current_user, require_role
 from fastapi import APIRouter, Depends, Response, Query, status
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
@@ -149,3 +149,87 @@ async def get_ai_recommendations(limit: int = 10, current_user: UserInDB = Depen
 @router.get("/{document_id}/seo-meta", response_model=APIResponse[Any])
 async def get_seo_meta(document_id: str):
     return APIResponse(data=await DocumentService.get_seo_meta(document_id), message="Lấy thông tin SEO tài liệu thành công.", status=200)
+
+@router.get("/me/list", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def get_my_documents(skip: int = 0, limit: int = 50, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_my_documents(current_user, skip, limit),
+        message="Lấy danh sách tài liệu cá nhân thành công."
+    )
+
+@router.get("/preview/{slug}", response_model=APIResponse[Any])
+async def get_document_preview(slug: str):
+    return APIResponse(
+        data=await DocumentService.get_document_preview(slug),
+        message="Lấy bản xem trước tài liệu thành công."
+    )
+
+@router.get("/{document_id}/analytics/dropoff", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def get_document_dropoff(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_document_dropoff(document_id, current_user),
+        message="Lấy tỷ lệ rơi rớt độc giả thành công."
+    )
+
+class SchedulePublishRequest(BaseModel):
+    publish_at: str
+
+@router.post("/{document_id}/schedule", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def schedule_publish(document_id: str, req: SchedulePublishRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.schedule_publish(document_id, req.publish_at, current_user),
+        message="Lên lịch xuất bản thành công."
+    )
+
+class FreePreviewRequest(BaseModel):
+    chapter_ids: list
+
+@router.post("/{document_id}/free-preview", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def set_free_preview(document_id: str, req: FreePreviewRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.set_free_preview(document_id, req.chapter_ids, current_user),
+        message="Thiết lập chương đọc thử thành công."
+    )
+
+@router.delete("/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def soft_delete_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.soft_delete_document(document_id, current_user),
+        message="Chuyển tài liệu vào thùng rác thành công."
+    )
+
+@router.post("/{document_id}/restore", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def restore_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.restore_document(document_id, current_user),
+        message="Khôi phục tài liệu thành công."
+    )
+
+@router.get("/me/trash", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def get_trash(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_trash(current_user),
+        message="Lấy danh sách thùng rác thành công."
+    )
+
+class DocumentPasswordRequest(BaseModel):
+    password: str
+
+@router.post("/{document_id}/password", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def set_document_password(document_id: str, req: DocumentPasswordRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.set_document_password(document_id, req.password, current_user),
+        message="Thiết lập mật khẩu tài liệu thành công."
+    )
+
+class SeriesCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = ""
+    document_ids: list = []
+
+@router.post("/series", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.create_series(req.model_dump(), current_user),
+        message="Tạo chuỗi tài liệu thành công."
+    )

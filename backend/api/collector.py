@@ -2,7 +2,7 @@ from typing import Any, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from models.user import UserInDB, RoleEnum
-from api.dependencies import require_role
+from api.dependency import require_role
 from services.collector import CollectorService
 from pydantic import BaseModel
 

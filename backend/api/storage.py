@@ -2,7 +2,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File
 from models.user import UserInDB, RoleEnum
-from api.dependencies import require_role
+from api.dependency import require_role
 from services.storage import StorageService
 
 router = APIRouter(prefix="/storage")

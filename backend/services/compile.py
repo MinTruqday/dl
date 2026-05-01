@@ -16,11 +16,9 @@ class CompileService:
         try:
             with tempfile.TemporaryDirectory() as tmpdir:
                 tex_file = os.path.join(tmpdir, "main.tex")
-                # Ghi file đồng bộ trong tempdir thường nhanh, nhưng có thể dùng aiofiles nếu cần
                 with open(tex_file, "w", encoding="utf-8") as f:
                     f.write(content)
                 
-                # Chạy Tectonic bất đồng bộ
                 process = await asyncio.create_subprocess_exec(
                     "tectonic", tex_file, "--outdir", tmpdir,
                     stdout=asyncio.subprocess.PIPE,

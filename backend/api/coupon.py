@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
-from api.dependencies import require_role
+from api.dependency import require_role
 from models.user import UserInDB, RoleEnum
 from core.response import APIResponse
 from services.coupon import CouponService

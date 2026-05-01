@@ -3,7 +3,6 @@ import sys
 import os
 from datetime import datetime
 
-# Add the backend directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.database import db_client, init_db, close_db
@@ -18,7 +17,6 @@ async def seed_users():
     db = db_client.mongodb[settings.MONGODB_DB_NAME]
     users_col = db["users"]
     
-    # Clear existing test users
     test_emails = [
         "admin@doclib.com", 
         "moderator@doclib.com", 
@@ -85,7 +83,6 @@ async def seed_users():
     ]
     
     for user_data in users_to_create:
-        # Create UserInDB instance to ensure UUID _id is a string
         user_obj = UserInDB(**user_data)
         user_dict = user_obj.model_dump(by_alias=True)
         

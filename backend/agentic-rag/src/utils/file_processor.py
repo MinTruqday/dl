@@ -6,13 +6,11 @@ from loguru import logger
 
 def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> str:
     try:
-        # Remove data:URL prefix if present
         if "," in base64_data:
             base64_data = base64_data.split(",")[1]
             
         file_bytes = base64.b64decode(base64_data)
         
-        # Determine extension
         ext = os.path.splitext(filename)[1] or ".pdf"
         
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:

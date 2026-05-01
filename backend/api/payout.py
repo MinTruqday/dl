@@ -1,6 +1,6 @@
 from typing import Any
 from fastapi import APIRouter, Depends
-from api.dependencies import require_role
+from api.dependency import require_role, get_current_user
 from models.user import UserInDB, RoleEnum
 from core.response import APIResponse
 from services.payout import PayoutService
@@ -12,17 +12,31 @@ class PayoutRequest(BaseModel):
     amount: int
     bank_info: dict
 
-@router.post("", response_model=APIResponse[Any])
-async def request_payout(data: PayoutRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
+@router.post("", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def request_payout(data: PayoutRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await PayoutService.request_payout(data.model_dump(), current_user),
-        message="Yêu cầu rút tiền đã được gửi.",
+        message="Yêu cầu rút tiền thành công.",
         status=201
     )
 
-@router.get("", response_model=APIResponse[Any])
-async def get_my_payouts(current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
+@router.get("/queue", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def get_payout_queue(status: str = "PENDING"):
+    return APIResponse(
+        data=await PayoutService.get_payout_queue(status),
+        message="Lấy hàng đợi thanh toán thành công."
+    )
+
+@router.post("/{payout_id}/verify", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def verify_payout(payout_id: str, action: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await PayoutService.verify_payout(payout_id, action, current_user),
+        message="Xử lý thanh toán thành công."
+    )
+
+@router.get("/my", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def get_my_payouts(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await PayoutService.get_my_payouts(current_user),
-        message="Lấy lịch sử rút tiền thành công."
+        message="Lấy danh sách yêu cầu rút tiền thành công."
     )

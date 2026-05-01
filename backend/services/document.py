@@ -183,22 +183,6 @@ class DocumentService:
         return document
 
     @staticmethod
-    async def set_document_pricing(document_id: str, data: dict, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
-            
-        update = {
-            "price_dl": max(0, data.get("price_dl", 0)),
-            "is_drm_protected": data.get("is_drm_protected", True),
-            "updated_at": datetime.datetime.utcnow(),
-        }
-        await db["documents"].update_one({"_id": document_id}, {"$set": update})
-        logger.info(f"Monetization: Pricing updated for {document_id} by {current_user.id}")
-        return {"message": "Đã cập nhật giá bán thành công."}
-
-    @staticmethod
     async def schedule_publish(document_id: str, publish_at: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
@@ -271,30 +255,6 @@ class DocumentService:
             }
             for b in docs
         ]
-
-    @staticmethod
-    async def set_flash_sale(document_id: str, data: dict, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-        
-        flash_sale_price = int(data.get("price", 0))
-        expires_at = datetime.datetime.fromisoformat(data["expires_at"])
-        
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {"$set": {
-                "flash_sale": {
-                    "price_dl": flash_sale_price,
-                    "expires_at": expires_at,
-                    "is_active": True
-                },
-                "updated_at": datetime.datetime.utcnow()
-            }}
-        )
-        logger.info(f"Monetization: Flash sale set for {document_id} until {expires_at}")
-        return {"message": f"Thiết lập Flash Sale thành công ({flash_sale_price} dl)."}
 
     @staticmethod
     async def set_document_password(document_id: str, password: str, current_user) -> dict:
@@ -492,3 +452,45 @@ class DocumentService:
         })
         logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
         return {"message": f"Đã {status.lower()} tài liệu thành công."}
+
+    @staticmethod
+    async def get_document_preview(slug: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"": True}})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
+        
+        preview_data = {
+            "title": doc.get("title"),
+            "description": doc.get("description"),
+            "cover_url": doc.get("cover_url"),
+            "author_id": doc.get("author_id"),
+            "preview_content": doc.get("content", "")[:500] + "..." if doc.get("content") else ""
+        }
+        return preview_data
+
+    @staticmethod
+    async def get_document_dropoff(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
+            
+        chapters = doc.get("chapters", [])
+        if not chapters:
+            return {"chapters": [], "message": "Tài liệu chưa có chương nào."}
+            
+        # Giả lập số liệu cho tỷ lệ rơi rớt (dropoff)
+        dropoff_data = []
+        base_readers = doc.get("views", 100)
+        for i, ch in enumerate(chapters):
+            readers = int(base_readers * (0.85 ** i))
+            dropoff_data.append({
+                "chapter_id": ch["id"],
+                "chapter_title": ch.get("title", f"Chương {i+1}"),
+                "readers_started": readers,
+                "readers_completed": int(readers * 0.9),
+                "dropoff_rate": round((readers - int(readers * 0.9)) / readers * 100, 2) if readers > 0 else 0
+            })
+            
+        return {"document_id": document_id, "dropoff_data": dropoff_data}

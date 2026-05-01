@@ -36,7 +36,6 @@ async def run_format_converter(payload: dict):
                     f.write(data)
                     
         logger.info(f"[Calibre Subprocess]: Starting render of {pdf_path}")
-        # Fixed typo: cCreate_subprocess_exec -> create_subprocess_exec
         process = await asyncio.create_subprocess_exec(
             "ebookconvert", input_path, pdf_path,
             stdout=asyncio.subprocess.PIPE,

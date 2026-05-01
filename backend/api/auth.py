@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from models.user import UserCreate, UserInDB, UserResponse
-from api.dependencies import get_current_user, RateLimiter
+from api.dependency import get_current_user, RateLimiter
 from services.auth import AuthService
 from pydantic import BaseModel, EmailStr
 from typing import Any

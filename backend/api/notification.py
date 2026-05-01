@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
 from models.user import UserInDB, RoleEnum
-from api.dependencies import get_current_user, get_current_user_token_param, require_role, RateLimiter
+from api.dependency import get_current_user, get_current_user_token_param, require_role, RateLimiter
 from services.notification import NotificationService
 from pydantic import BaseModel
 
@@ -52,3 +52,14 @@ async def update_notification_settings(data: NotificationSettingsUpdate, current
 @router.post("/notifications/mark-all-read", response_model=APIResponse[Any])
 async def mark_all_read(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await NotificationService.mark_all_read(current_user), message="Đã đánh dấu tất cả thông báo là đã đọc.", status=200)
+
+class NewsletterRequest(BaseModel):
+    email: str
+
+@router.post("/newsletter/subscribe", response_model=APIResponse[Any])
+async def subscribe_newsletter(req: NewsletterRequest):
+    return APIResponse(
+        data=await NotificationService.subscribe_newsletter(req.email),
+        message="Đăng ký nhận bản tin thành công.",
+        status=201
+    )

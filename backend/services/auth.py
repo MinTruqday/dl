@@ -33,7 +33,6 @@ class AuthService:
     async def register_user(user_in: UserCreate, client_ip: str):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
         
-        # Check if registration is enabled
         config = await db["settings"].find_one({"_id": "system_config"})
         if config and not config.get("registration_enabled", True):
             raise HTTPException(
@@ -220,7 +219,6 @@ class AuthService:
         email = google_user.get("email")
         user_doc = await users_col.find_one({"email": email})
         if not user_doc:
-            # Check if registration is enabled for new OAuth users
             config = await db["settings"].find_one({"_id": "system_config"})
             if config and not config.get("registration_enabled", True):
                 raise HTTPException(
