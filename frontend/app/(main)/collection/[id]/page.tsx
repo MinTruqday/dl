@@ -16,7 +16,7 @@ import {
   Sparkles,
   ChevronRight
 } from "lucide-react";
-import { getReadingListByIdAPI } from "@/services/reading.service";
+import { getReadingListByIdAPI } from "@/services/read.service";
 import { API_URL } from "@/services/auth.service";
 import Link from "next/link";
 

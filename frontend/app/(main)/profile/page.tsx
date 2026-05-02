@@ -7,7 +7,7 @@ import { updateProfileAPI } from "@/services/settings.service";
 import { depositDLAPI, getDetailedHistoryAPI } from "@/services/wallet.service";
 import { applyAuthorAPI } from "@/services/settings.service";
 import { uploadMediaAPI } from "@/services/storage.service";
-import { getBookmarksAPI } from "@/services/reading.service";
+import { getBookmarksAPI } from "@/services/read.service";
 import {
   User,
   Camera,

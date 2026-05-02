@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getToken } from "@/services/auth.service";
-import { getLibraryAPI, addToLibraryAPI, removeFromLibraryAPI } from "@/services/reading.service";
+import { getLibraryAPI, addToLibraryAPI, removeFromLibraryAPI } from "@/services/read.service";
 import { ToastContainer } from "./Toast";
 import { Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 

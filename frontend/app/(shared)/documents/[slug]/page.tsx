@@ -4,7 +4,7 @@ import { useToast } from "@/contexts/ToastContext";
 import React, { useEffect, useState, useCallback } from "react";
 import { API_URL, getToken } from "@/services/auth.service";
 import { getDocumentBySlugAPI, purchaseDocumentAPI } from "@/services/document.service";
-import { toggleBookmarkAPI } from "@/services/reading.service";
+import { toggleBookmarkAPI } from "@/services/read.service";
 import { useParams, useRouter } from "next/navigation";
 import { 
   BookOpen, 

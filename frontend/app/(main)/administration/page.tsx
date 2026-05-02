@@ -2,25 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getToken, API_URL } from "@/services/auth.service";
-import { 
-  getAdminUsersAPI, 
-  updateUserRoleAPI, 
-  updateUserStatusAPI, 
-  getAuthorApplicationsAPI, 
-  reviewAuthorApplicationAPI, 
-  getAdminConfigAPI, 
-  updateAdminConfigAPI, 
-  getSystemHealthAPI, 
-  getMaintenanceModeAPI, 
-  toggleMaintenanceModeAPI,
-  getAdminReportsAPI,
-  getCollectorStatsAPI,
-  triggerCollectionAPI,
-  getPayoutsAPI,
-  reviewPayoutAPI,
-  getBannersAPI,
-  deleteBannerAPI
-} from "@/services/admin.service";
+import { getAdminReportsAPI } from "@/services/moderation.service";
+import { getAuthorApplicationsAPI, reviewAuthorApplicationAPI, getAdminConfigAPI, updateAdminConfigAPI, getSystemHealthAPI, getMaintenanceModeAPI, toggleMaintenanceModeAPI, getCollectorStatsAPI, triggerCollectionAPI, getPayoutsAPI, reviewPayoutAPI, getBannersAPI, deleteBannerAPI } from "@/services/administration.service";
+import { getAdminUsersAPI, updateUserRoleAPI, updateUserStatusAPI } from "@/services/user.service";
 import { getAuditLogsAPI } from "@/services/document.service";
 import {
   AlertTriangle,

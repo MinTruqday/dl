@@ -42,3 +42,14 @@ export async function voteItemAPI(itemId: string, itemType: string, amount: numb
     if (!res.ok) throw new Error("Bình chọn/Tặng thưởng thất bại.");
     return await res.json();
 }
+
+
+export async function getAuthorStatsAPI() {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const res = await fetch(`${API_URL}/wallet/revenue`, {
+        headers: { "Authorization": "Bearer " + token }
+    });
+    if (!res.ok) throw new Error("Không thể tải thông số phân tích.");
+    return await res.json();
+}

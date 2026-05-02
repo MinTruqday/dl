@@ -9,12 +9,7 @@ import {
   updateGeneralSettingsAPI,
 } from "@/services/settings.service";
 import { applyAuthorAPI } from "@/services/settings.service";
-import {
-  getMaintenanceModeAPI,
-  getAdminConfigAPI,
-  toggleMaintenanceModeAPI,
-  updateAdminConfigAPI
-} from "@/services/admin.service";
+import { getMaintenanceModeAPI, getAdminConfigAPI, toggleMaintenanceModeAPI, updateAdminConfigAPI } from "@/services/administration.service";
 import {
   Settings,
   Type,

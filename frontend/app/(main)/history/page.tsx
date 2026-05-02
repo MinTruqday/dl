@@ -18,7 +18,7 @@ import {
   getReadingHistoryAPI, 
   clearReadingHistoryAPI, 
   deleteReadingHistoryItemAPI,
-} from "@/services/reading.service";
+} from "@/services/read.service";
 import { API_URL } from "@/services/auth.service";
 import Link from "next/link";
 

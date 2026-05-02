@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  getAuthorApplicationsAPI, 
-  reviewAuthorApplicationAPI 
-} from "@/services/admin.service";
+import { getAuthorApplicationsAPI, reviewAuthorApplicationAPI } from "@/services/administration.service";
 import {
   UserCheck,
   Loader2,

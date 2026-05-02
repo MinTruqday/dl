@@ -16,7 +16,7 @@ import {
   getMyDocumentsAPI,
   updateDocumentAPI,
 } from "@/services/document.service";
-import { getAuthorStatsAPI } from "@/services/analytics.service";
+import { getAuthorStatsAPI } from "@/services/wallet.service";
 import { getRevenueAPI, requestPayoutDetailedAPI } from "@/services/monetization.service";
 import { 
   ingestDocumentAPI, 

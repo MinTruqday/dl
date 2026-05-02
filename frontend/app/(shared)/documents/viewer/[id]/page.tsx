@@ -11,7 +11,7 @@ import {
   deleteHighlightAPI,
   toggleBookmarkAPI,
   getBookmarksAPI
-} from "@/services/reading.service";
+} from "@/services/read.service";
 import {
   Lock,
   AlertTriangle,

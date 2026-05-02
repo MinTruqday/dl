@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Trophy, Star, TrendingUp, Users, ChevronRight, FileText, Sparkles, Award, Clock, Calendar } from "lucide-react";
 import { API_URL } from "@/services/auth.service";
-import { getLeaderboardAPI } from "@/services/analytics.service";
+import { getSocialRankingAPI } from "@/services/social.service";
 
 interface LeaderboardDocument {
   _id: string;
@@ -35,7 +35,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const json = await getLeaderboardAPI();
+        const json = await getSocialRankingAPI();
         setData(json.data || json);
       } catch (e) {
         console.error(e);

@@ -8,7 +8,7 @@ import {
   deleteHighlightAPI,
   updateHighlightNoteAPI,
   exportHighlightsMarkdownAPI,
-} from "@/services/reading.service";
+} from "@/services/read.service";
 import { Highlighter, X, Trash2, PenTool, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 

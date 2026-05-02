@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, X, Send, Loader2, ShieldAlert } from "lucide-react";
-import { createReportAPI } from "@/services/admin.service";
+import { createReportAPI } from "@/services/moderation.service";
 import { getToken } from "@/services/auth.service";
 import { useToast } from "@/contexts/ToastContext";
 

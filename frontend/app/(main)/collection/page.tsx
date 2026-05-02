@@ -19,7 +19,7 @@ import {
 import { 
   getReadingListsAPI, 
   createReadingListAPI 
-} from "@/services/reading.service";
+} from "@/services/read.service";
 import Link from "next/link";
 
 export default function CollectionsPage() {

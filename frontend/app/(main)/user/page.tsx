@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  getAdminUsersAPI, 
-  updateUserRoleAPI, 
-  updateUserStatusAPI 
-} from "@/services/admin.service";
+import { getAdminUsersAPI, updateUserRoleAPI, updateUserStatusAPI } from "@/services/user.service";
 import {
   Users,
   Loader2,

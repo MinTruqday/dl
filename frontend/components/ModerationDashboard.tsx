@@ -1,15 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  getApprovalQueueAPI, 
-  getReportsAPI, 
-  moderateDocumentAPI, 
-  resolveReportAPI, 
-  getModeratorActivityAPI,
-  triggerCollectionAPI,
-  getCollectorStatsAPI
-} from "@/services/admin.service";
+import { getApprovalQueueAPI, getReportsAPI, moderateDocumentAPI, resolveReportAPI, getModeratorActivityAPI } from "@/services/moderation.service";
+import { triggerCollectionAPI, getCollectorStatsAPI } from "@/services/administration.service";
 import { 
     ShieldCheck, 
     AlertTriangle, 

@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { 
-  getAdminReportsAPI, 
-  resolveReportAPI 
-} from "@/services/admin.service";
+import { getAdminReportsAPI, resolveReportAPI } from "@/services/moderation.service";
 import {
   AlertTriangle,
   Loader2,
