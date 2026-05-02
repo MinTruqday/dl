@@ -28,7 +28,7 @@ import {
 import Review from "@/app/components/Review";
 import Comment from "@/app/components/Comment";
 import { useAuth } from "@/app/contexts/AuthContext";
-import Report from "@/app/components/Report";
+import Report from "@/components/Report";
 
 export default function DocumentDetailsPage() {
   const params = useParams();
@@ -42,7 +42,6 @@ export default function DocumentDetailsPage() {
   const [activeTab, setActiveTab] = useState<"about" | "preview" | "reviews" | "comments">("about");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const fetchDocument = useCallback(async () => {

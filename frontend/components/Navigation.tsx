@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { semanticSearchAPI } from "@/services/search.service";
 import { useRouter } from "next/navigation";
 import { Bell, User, Menu, LogOut, ChevronDown, Search, X, Monitor } from "lucide-react";
-import AiChatPanel from "./AiChatPanel";
+import AiChat from "./AiChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 
@@ -263,7 +263,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
         </div>
       </nav>
 
-      {user && <AiChatPanel />}
+      {user && <AiChat />}
     </>
   );
 }

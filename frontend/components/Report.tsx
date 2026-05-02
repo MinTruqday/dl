@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, X, Send, Loader2, ShieldAlert } from "lucide-react";
-import { createReportAPI } from "@/services/moderation.service";
-import { getToken } from "@/services/auth.service";
+import { X, Send, Loader2, ShieldAlert } from "lucide-react";
+import { submitReportAPI } from "@/services/report.service";
 import { useToast } from "@/contexts/ToastContext";
 
 interface ReportModalProps {
@@ -14,29 +13,29 @@ interface ReportModalProps {
 
 export default function Report({ itemId, itemType, onClose }: ReportModalProps) {
   const [reason, setReason] = useState("");
-  const [description, setDescription] = useState("");
+  const [detail, setDetail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const { showToast } = useToast();
 
   const handleSubmit = async () => {
     if (!reason.trim()) {
-        showToast("Vui lòng nhập lý do báo cáo", "error");
+        showToast("Vui lòng cung cấp lý do báo cáo", "error");
         return;
     }
     
     setIsSubmitting(true);
     try {
-      await createReportAPI({
+      await submitReportAPI({
         item_id: itemId,
         item_type: itemType,
         reason: reason,
-        description: description
+        detail: detail
       });
 
       showToast("Báo cáo đã được gửi tới hội đồng điều hành", "success");
       setTimeout(onClose, 2000);
     } catch (err: any) {
-      showToast(err.message || "Mất kết nối với hệ thống điều hành", "error");
+      showToast(err.message || "Giao thức kết nối hệ thống điều hành thất bại", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -44,8 +43,6 @@ export default function Report({ itemId, itemType, onClose }: ReportModalProps) 
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[1001] animate-in fade-in duration-300 p-6 font-sans">
-      
-      
       <div className="bg-white p-12 w-full max-w-lg border border-zinc-100 animate-in zoom-in-95 duration-300 rounded-sm">
         <div className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-4">
@@ -54,7 +51,7 @@ export default function Report({ itemId, itemType, onClose }: ReportModalProps) 
             </div>
             <div>
                 <h3 className="text-sm font-bold text-black uppercase tracking-widest">Báo cáo vi phạm</h3>
-                <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">Bảo vệ sự trong sạch của mạng lưới tri thức</p>
+                <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">Duy trì tiêu chuẩn tri thức của hệ thống</p>
             </div>
           </div>
           <button onClick={onClose} className="p-3 hover:bg-zinc-50 transition-all active:scale-90 rounded-sm">
@@ -67,8 +64,7 @@ export default function Report({ itemId, itemType, onClose }: ReportModalProps) 
                 <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Lý do chính yếu</label>
                 <input
                     type="text"
-                    className="w-full h-14 px-6 bg-zinc-50 border border-zinc-50 text-sm font-medium focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm placeholder:text-zinc-200"
-                    placeholder=""
+                    className="w-full h-14 px-6 bg-zinc-50 border border-zinc-100 text-sm font-medium focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm placeholder:text-zinc-200"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     disabled={isSubmitting}
@@ -76,12 +72,11 @@ export default function Report({ itemId, itemType, onClose }: ReportModalProps) 
             </div>
 
             <div className="space-y-3">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Mô tả chi tiết (Tùy chọn)</label>
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Chi tiết bổ sung</label>
                 <textarea
-                    className="w-full p-6 bg-zinc-50 border border-zinc-50 text-sm font-medium h-32 resize-none focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm placeholder:text-zinc-200"
-                    placeholder=""
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-6 bg-zinc-50 border border-zinc-100 text-sm font-medium h-32 resize-none focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm placeholder:text-zinc-200"
+                    value={detail}
+                    onChange={(e) => setDetail(e.target.value)}
                     disabled={isSubmitting}
                 />
             </div>
@@ -99,7 +94,7 @@ export default function Report({ itemId, itemType, onClose }: ReportModalProps) 
         </div>
         
         <p className="text-[9px] text-center text-zinc-300 font-bold uppercase tracking-widest mt-10">
-            Hành động này sẽ được ghi nhận và xem xét bởi đội ngũ điều hành trong 24h
+            Hành động này sẽ được ghi nhận và xem xét bởi đội ngũ điều hành trong vòng 24 giờ làm việc
         </p>
       </div>
     </div>

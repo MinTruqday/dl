@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import Navbar from "./Navbar";
-import Sidebar from "./Sidebar";
+import Navigation from "./Navigation";
+import Menu from "./Menu";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -45,9 +45,9 @@ export default function Workspace({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white animate-in fade-in duration-300">
-      <Navbar onToggleSidebar={toggleSidebar} />
+      <Navigation onToggleSidebar={toggleSidebar} />
 
-      <Sidebar
+      <Menu
         isOpen={sidebarIsOpen}
         onToggle={toggleSidebar}
         isMobileOverlay={isMobile}

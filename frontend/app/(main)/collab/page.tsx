@@ -63,7 +63,7 @@ export default function StudioCollabPage() {
     setActionLoading(true);
     try {
       await respondToInviteAPI(inviteId, status);
-      showToast(status === "ACCEPTED" ? "Đã chấp nhận lời mời cộng tác." : "Đã từ chối lời mời cộng tác.",, "success");
+      showToast(status === "ACCEPTED" ? "Đã chấp nhận lời mời cộng tác." : "Đã từ chối lời mời cộng tác.", "success");
       loadData();
     } catch (err: any) {
       showToast(err.message || "Xử lý lời mời thất bại", "error");

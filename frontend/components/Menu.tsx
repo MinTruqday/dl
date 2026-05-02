@@ -25,7 +25,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-export default function Sidebar({
+export default function Menu({
   isOpen,
   onToggle,
   isMobileOverlay = false,
@@ -194,13 +194,13 @@ export default function Sidebar({
           />
           <NavLink
             href="/applications"
-            label="Đơn ứng tuyển"
+            label="Đăng ký tác giả"
             icon={UserCheck}
             roles={["admin", "moderator"]}
           />
           <NavLink
             href="/reports"
-            label="Báo cáo"
+            label="Báo cáo vi phạm"
             icon={AlertTriangle}
             roles={["admin", "moderator"]}
           />
