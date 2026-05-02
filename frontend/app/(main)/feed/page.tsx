@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import AppShell from "@/components/AppShell";
+import Workspace from "@/components/Workspace";
 import Link from "next/link";
 import { 
   getFeedAPI, 
@@ -42,8 +42,8 @@ import { API_URL } from "@/services/auth.service";
 import { 
   Heart, MessageCircle, Globe, Sparkles, Users, User as UserIcon, Lock, Share2, PlusSquare, ArrowUp, Send, CheckCircle, XCircle, X, Bookmark, BookText, BarChart2, Trash2, Trophy, EyeOff, Edit3, Flag, Eye, Image as ImageIcon, Quote, PenTool, Book, FileText, HelpCircle, AtSign, Pin, Archive, Link as LinkIcon, Plus, Lightbulb, Flame, Smile, Coins, TrendingUp, Hash, ArrowUpRight, ChevronRight, RotateCw 
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import confetti from "canvas-confetti";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";

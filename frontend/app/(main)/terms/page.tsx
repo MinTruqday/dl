@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AppShell from "@/components/AppShell";
+import Workspace from "@/components/Workspace";
 import { ShieldCheck, FileText, Lock, Scale } from "lucide-react";
 
 export default function TermsPage() {
@@ -31,7 +31,7 @@ export default function TermsPage() {
   ];
 
   return (
-    <AppShell>
+    <Workspace>
       <div className="max-w-3xl mx-auto px-4 py-12 md:py-20 transition-all duration-500" style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}>
         <div className="mb-16 border-b border-zinc-200 pb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black mb-4">Điều khoản & chính sách</h1>
@@ -74,6 +74,6 @@ export default function TermsPage() {
           </p>
         </div>
       </div>
-    </AppShell>
+    </Workspace>
   );
 }

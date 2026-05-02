@@ -28,7 +28,7 @@ function bytesToB64url(bytes: ArrayBuffer): string {
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-export default function PasskeyPrompt({ email, onClose, onSuccess }: PasskeyPromptProps) {
+export default function Passkey({ email, onClose, onSuccess }: PasskeyPromptProps) {
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
 

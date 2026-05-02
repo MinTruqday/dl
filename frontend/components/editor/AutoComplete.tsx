@@ -2,8 +2,8 @@ import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import { suggestionRenderer } from './LatexSuggestion';
 
-export const LatexAutocomplete = Extension.create({
-  name: 'latexAutocomplete',
+export const AutoComplete = Extension.create({
+  name: 'latexAutoCompletion',
 
   addOptions() {
     return {

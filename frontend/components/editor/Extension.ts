@@ -2,7 +2,7 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import LatexBlockNodeView from './LatexBlockNodeView'
 
-export const LatexBlockExtension = Node.create({
+export const Extension = Node.create({
   name: 'latexBlock',
   group: 'block',
   content: 'text*',

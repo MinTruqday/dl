@@ -46,7 +46,7 @@ import {
   Banknote,
   Brain,
 } from "lucide-react";
-import TiptapEditor from "@/components/editor/TiptapEditor";
+import Editor from "@/components/editor/Editor";
 import { useToast } from "@/contexts/ToastContext";
 
 type StudioDocument = {
@@ -656,7 +656,7 @@ function StudioContent() {
                 <div className="flex-1 overflow-y-auto p-12 lg:p-20 no-scrollbar">
                    <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-6 duration-300">
                       {editorMode === "edit" ? (
-                        <TiptapEditor initialContent={content} onSave={(val) => setContent(val)} />
+                        <Editor initialContent={content} onSave={(val) => setContent(val)} />
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-20 border border-zinc-100 rounded-sm">
                           <div className="prose prose-zinc max-w-none font-sans text-lg leading-relaxed text-zinc-800" dangerouslySetInnerHTML={{ __html: content }} />

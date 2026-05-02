@@ -12,7 +12,7 @@ interface NavbarProps {
   onToggleSidebar?: () => void;
 }
 
-export default function Navbar({ onToggleSidebar }: NavbarProps) {
+export default function Navigation({ onToggleSidebar }: NavbarProps) {
   const { user, logoutState } = useAuth() as any;
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);

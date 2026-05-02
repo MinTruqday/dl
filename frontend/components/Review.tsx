@@ -10,7 +10,7 @@ interface ReviewSectionProps {
   documentId: string;
 }
 
-export default function ReviewSection({ documentId }: ReviewSectionProps) {
+export default function Review({ documentId }: ReviewSectionProps) {
   const { user } = useAuth() as any;
   const [reviews, setReviews] = useState<any[]>([]);
   const [rating, setRating] = useState(5);

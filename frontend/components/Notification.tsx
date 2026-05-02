@@ -50,7 +50,7 @@ type StreamNotification = {
   type?: string;
 };
 
-export default function NotificationToast() {
+export default function Notification() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<StreamNotification[]>([]);
 

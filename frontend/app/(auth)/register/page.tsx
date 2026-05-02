@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { register } from "@/services/auth.service";
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/Navigation";
 import { X, Loader2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
-import PasskeyPrompt from "@/components/PasskeyPrompt";
+import Passkey from "@/components/Passkey";
 
 export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");
@@ -48,10 +48,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans animate-in fade-in duration-300">
-      <Navbar />
+      <Navigation />
 
       {registeredEmail && (
-        <PasskeyPrompt 
+        <Passkey 
           email={registeredEmail} 
           onClose={() => router.push("/login")} 
           onSuccess={() => router.push("/login")} 

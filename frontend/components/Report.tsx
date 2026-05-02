@@ -12,7 +12,7 @@ interface ReportModalProps {
   onClose: () => void;
 }
 
-export default function ReportModal({ itemId, itemType, onClose }: ReportModalProps) {
+export default function Report({ itemId, itemType, onClose }: ReportModalProps) {
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

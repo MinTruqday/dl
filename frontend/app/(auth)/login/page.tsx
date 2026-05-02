@@ -1,6 +1,6 @@
 "use client";
 
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/Navigation";
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Fingerprint } from "lucide-react";
@@ -12,7 +12,7 @@ import {
 } from "@/services/auth.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import PasskeyPrompt from "@/components/PasskeyPrompt";
+import Passkey from "@/components/Passkey";
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {
   const pad = "=".repeat((4 - (b64url.length % 4)) % 4);
@@ -134,10 +134,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <Navbar />
+      <Navigation />
       
       {pendingPasskeyEmail && (
-        <PasskeyPrompt 
+        <Passkey 
           email={pendingPasskeyEmail} 
           onClose={() => router.push("/")} 
           onSuccess={() => router.push("/")} 

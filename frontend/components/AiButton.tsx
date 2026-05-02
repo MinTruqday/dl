@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Sparkles, X, Send, Brain, Command } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function FloatingAI() {
+export default function AiButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { user } = useAuth() as any;

@@ -26,7 +26,7 @@ interface NestedCommentsProps {
   itemType?: "document" | "post";
 }
 
-export default function NestedComments({ itemId, itemType = "document" }: NestedCommentsProps) {
+export default function Comment({ itemId, itemType = "document" }: NestedCommentsProps) {
   const { user } = useAuth() as any;
   const [comments, setComments] = useState<Comment[]>([]);
   const [newText, setNewText] = useState("");

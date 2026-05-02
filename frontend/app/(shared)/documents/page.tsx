@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import AppShell from "@/app/components/AppShell";
+import Workspace from "@/app/components/Workspace";
 import { 
   Folder, FileText, Search, Plus, Upload, Trash2, Home, File, 
   Image as ImageIcon, CheckCircle, ChevronRight, Download, Star, 
@@ -191,7 +191,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <AppShell>
+    <Workspace>
       <div className="max-w-7xl mx-auto px-10 py-12 pb-24 w-full font-sans">
         
 
@@ -565,6 +565,6 @@ export default function DocumentsPage() {
         </div>
       )}
 
-    </AppShell>
+    </Workspace>
   );
 }

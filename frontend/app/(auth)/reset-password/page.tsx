@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/Navigation";
 import { resetPasswordAPI } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <Navbar />
+      <Navigation />
       <div
         className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300 animate-in fade-in"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}

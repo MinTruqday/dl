@@ -15,7 +15,7 @@ declare module '@tiptap/core' {
   }
 }
 
-export const LatexBlockExtension = Node.create<LatexBlockOptions>({
+export const Extension = Node.create<LatexBlockOptions>({
   name: 'latexBlock',
 
   group: 'block',

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import PasskeyPrompt from "@/components/PasskeyPrompt";
+import Passkey from "@/components/Passkey";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function GoogleCallbackPage() {
   if (pendingPasskeyEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <PasskeyPrompt 
+        <Passkey 
           email={pendingPasskeyEmail} 
           onClose={() => router.push("/")} 
           onSuccess={() => router.push("/")} 

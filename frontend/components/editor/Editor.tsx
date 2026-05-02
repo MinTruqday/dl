@@ -4,8 +4,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Mathematics from "@tiptap/extension-mathematics";
 import React, { useState, useEffect, useCallback } from "react";
-import { LatexBlockExtension } from "./LatexBlockExtension";
-import { LatexAutocomplete } from "./LatexAutoComplete";
+import { Extension } from "./Extension";
+import { AutoComplete } from "./AutoComplete";
 import "katex/dist/katex.min.css";
 import {
   Code,
@@ -64,7 +64,7 @@ import Superscript from "@tiptap/extension-superscript";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import Youtube from "@tiptap/extension-youtube";
 
-export default function TiptapEditor({
+export default function Editor({
   initialContent,
   onSave,
 }: {
@@ -83,8 +83,8 @@ export default function TiptapEditor({
         dropCursor: false,
       }),
       Mathematics,
-      LatexBlockExtension,
-      LatexAutocomplete,
+      Extension,
+      AutoComplete,
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,

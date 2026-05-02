@@ -24,7 +24,7 @@ const protectedRoutes: Record<string, string[]> = {
   '/system': ['admin'],
 };
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function Auth({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();

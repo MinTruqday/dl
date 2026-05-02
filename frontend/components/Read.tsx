@@ -35,7 +35,7 @@ interface ReaderViewProps {
   documentId?: string;
 }
 
-export default function ReaderView({ content, title, documentId }: ReaderViewProps) {
+export default function Read({ content, title, documentId }: ReaderViewProps) {
   const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState<"light" | "zinc" | "night">("light");
   const [highlights, setHighlights] = useState<Highlight[]>([]);

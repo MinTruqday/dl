@@ -24,7 +24,7 @@ interface ReaderToolsProps {
   onSearchQuery?: (query: string) => void;
 }
 
-export default function ReaderTools({
+export default function ReadToolbar({
   onFontSizeChange,
   onThemeChange,
   textContent,

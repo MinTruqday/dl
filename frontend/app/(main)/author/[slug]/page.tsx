@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import AppShell from "@/components/AppShell";
+import Workspace from "@/components/Workspace";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { User, ShieldCheck, UserPlus, Users, Link as LinkIcon, BookOpen, AlertCircle, Loader2 } from "lucide-react";
 import { getUserProfileAPI, followUserAPI } from "@/services/social.service";
 import { getDocumentsAPI } from "@/services/document.service";
@@ -60,30 +60,30 @@ export default function AuthorProfilePage() {
 
   if (loading) {
     return (
-      <AppShell>
+      <Workspace>
         <div className="flex h-[80vh] items-center justify-center">
           <div className="flex flex-col items-center gap-6">
             <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
             <p className="text-[11px] font-bold text-zinc-300">Đang đồng bộ dữ liệu tri thức</p>
           </div>
         </div>
-      </AppShell>
+      </Workspace>
     );
   }
 
   if (error || !author) {
     return (
-      <AppShell>
+      <Workspace>
         <div className="flex h-[80vh] flex-col items-center justify-center gap-6 animate-in fade-in duration-300">
           <AlertCircle className="w-16 h-16 text-zinc-300" />
           <p className="text-sm font-bold text-zinc-400">{error || "Tác giả không tồn tại"}</p>
         </div>
-      </AppShell>
+      </Workspace>
     );
   }
 
   return (
-    <AppShell>
+    <Workspace>
       <div 
         className="max-w-5xl mx-auto px-4 py-12 md:py-20 transition-all duration-300 font-sans" 
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(12px)" }}
@@ -203,6 +203,6 @@ export default function AuthorProfilePage() {
           )}
         </div>
       </div>
-    </AppShell>
+    </Workspace>
   );
 }

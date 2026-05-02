@@ -14,7 +14,7 @@ import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
 
-export default function AiChatPanel() {
+export default function AiChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [usePro, setUsePro] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string; thoughts?: string[] }[]>([]);

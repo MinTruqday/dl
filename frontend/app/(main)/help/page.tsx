@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AppShell from "@/components/AppShell";
+import Workspace from "@/components/Workspace";
 import { HelpCircle, Book, MessageCircle, Shield, LifeBuoy, Search } from "lucide-react";
 
 export default function HelpPage() {
@@ -34,7 +34,7 @@ export default function HelpPage() {
   const filteredFaqs = faqs.filter((f) => f.q.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <AppShell>
+    <Workspace>
       <div
         className="max-w-4xl mx-auto px-6 py-12 md:py-20 transition-all duration-300 font-sans"
         style={{
@@ -117,6 +117,6 @@ export default function HelpPage() {
           </button>
         </div>
       </div>
-    </AppShell>
+    </Workspace>
   );
 }

@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 
-export default function LatexBlockNodeView(props: NodeViewProps) {
+export default function NodeView(props: NodeViewProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

@@ -29,7 +29,7 @@ import {
   BookOpen
 } from "lucide-react";
 import Link from "next/link";
-import { Notification as Toast } from "@/components/NotificationToast";
+import { Notification as Toast } from "@/components/Notification";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);

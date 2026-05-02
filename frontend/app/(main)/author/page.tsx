@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import AppShell from "@/components/AppShell";
+import Workspace from "@/components/Workspace";
 import { getSocialRankingAPI } from "@/services/social.service";
 import { Search, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -42,7 +42,7 @@ export default function AuthorsPage() {
   });
 
   return (
-    <AppShell>
+    <Workspace>
       <div
         className="max-w-6xl mx-auto px-6 py-12 md:py-20 transition-all duration-300 font-sans"
         style={{
@@ -124,6 +124,6 @@ export default function AuthorsPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </Workspace>
   );
 }

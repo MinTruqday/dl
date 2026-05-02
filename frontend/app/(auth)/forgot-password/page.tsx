@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
+import Navigation from "@/components/Navigation";
 import { forgotPasswordAPI } from "@/services/auth.service";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
-      <Navbar />
+      <Navigation />
       <div
         className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}

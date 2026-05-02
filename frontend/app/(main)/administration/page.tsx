@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 type AdminTab = "overview" | "users" | "reports" | "applications" | "config" | "collector";
 

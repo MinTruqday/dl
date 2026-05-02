@@ -10,7 +10,7 @@ interface DiscussionSectionProps {
   documentId: string;
 }
 
-export default function DiscussionSection({ documentId }: DiscussionSectionProps) {
+export default function Discussion({ documentId }: DiscussionSectionProps) {
   const { user } = useAuth() as any;
   const [discussions, setDiscussions] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);

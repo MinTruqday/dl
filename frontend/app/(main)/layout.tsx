@@ -1,9 +1,9 @@
-import AppShell from '@/components/AppShell'
+import Workspace from '@/components/Workspace'
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppShell>
+    <Workspace>
       {children}
-    </AppShell>
+    </Workspace>
   )
 }

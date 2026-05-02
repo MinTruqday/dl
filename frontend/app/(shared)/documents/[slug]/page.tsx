@@ -25,10 +25,10 @@ import {
   CheckCircle2,
   Flag
 } from "lucide-react";
-import ReviewSection from "@/app/components/ReviewSection";
-import NestedComments from "@/app/components/NestedComments";
+import Review from "@/app/components/Review";
+import Comment from "@/app/components/Comment";
 import { useAuth } from "@/app/contexts/AuthContext";
-import ReportModal from "@/app/components/ReportModal";
+import Report from "@/app/components/Report";
 
 export default function DocumentDetailsPage() {
   const params = useParams();
@@ -169,7 +169,7 @@ export default function DocumentDetailsPage() {
         
 
         {showReportModal && (
-            <ReportModal 
+            <Report 
                 itemId={docData._id || docData.id} 
                 itemType="document" 
                 onClose={() => setShowReportModal(false)} 
@@ -445,11 +445,11 @@ export default function DocumentDetailsPage() {
                             </div>
                         )}
 
-                        {activeTab === "reviews" && <ReviewSection documentId={docData._id || docData.id} />}
+                        {activeTab === "reviews" && <Review documentId={docData._id || docData.id} />}
                         
                         {activeTab === "comments" && (
                             <div className="bg-zinc-50/30 p-12 border border-zinc-100 rounded-sm">
-                                <NestedComments itemId={docData._id || docData.id} itemType="document" />
+                                <Comment itemId={docData._id || docData.id} itemType="document" />
                             </div>
                         )}
                     </div>

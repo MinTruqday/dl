@@ -7,7 +7,7 @@ const MonacoEditor = dynamic(
   { ssr: false, loading: () => <div className="h-40 bg-gray-100 animate-pulse flex items-center justify-center">Đang tải môi trường soạn thảo</div> }
 );
 
-export const LatexCodeBlock = (props: NodeViewProps) => {
+export const CodeBlock = (props: NodeViewProps) => {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {

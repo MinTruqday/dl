@@ -8,7 +8,7 @@ interface PreviewModalProps {
   document: any;
 }
 
-export default function DocumentPreviewModal({ isOpen, onClose, document }: PreviewModalProps) {
+export default function Preview({ isOpen, onClose, document }: PreviewModalProps) {
   if (!isOpen) return null;
 
   return (

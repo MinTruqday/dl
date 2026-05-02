@@ -33,7 +33,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 type ModTab = "documents" | "reports" | "logs" | "collector";
 
-export default function ModerationDashboard({ initialTab }: { initialTab?: ModTab }) {
+export default function Moderation({ initialTab }: { initialTab?: ModTab }) {
     const { user, isLoading: authLoading } = useAuth() as any;
     const router = useRouter();
     const searchParams = useSearchParams();

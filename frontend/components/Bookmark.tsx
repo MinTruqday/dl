@@ -6,7 +6,7 @@ import { getLibraryAPI, addToLibraryAPI, removeFromLibraryAPI } from "@/services
 import { ToastContainer } from "./Toast";
 import { Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 
-export default function BookmarkButton({ documentId }: { documentId: string }) {
+export default function Bookmark({ documentId }: { documentId: string }) {
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<any[]>([]);
