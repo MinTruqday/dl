@@ -20,6 +20,10 @@ async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):
 async def update_my_profile(data: dict, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ProfileService.update_profile(data, current_user), message="Cập nhật hồ sơ thành công.", status=200)
 
+@router.post("/author-application", response_model=APIResponse[Any])
+async def apply_author(data: dict, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ProfileService.apply_author(data, current_user), message="Gửi đơn đăng ký thành công.", status=201)
+
 @router.get("/settings", response_model=APIResponse[Any])
 async def get_settings(current_user: UserInDB = Depends(get_current_user)):
     from core.database import db_client

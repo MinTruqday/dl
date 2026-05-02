@@ -48,11 +48,8 @@ from api.telemetry import router as telemetry_router
 from api.banner import router as banner_router
 from api.user import router as user_router
 from api.discovery import router as discovery_router
-from api.author import router as author_router
 from api.passkey import router as passkey_router
 from api.publish import router as publish_router
-from api.export import router as export_router
-# from api.config import router as config_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -146,11 +143,8 @@ app.include_router(telemetry_router)
 app.include_router(banner_router)
 app.include_router(user_router)
 app.include_router(discovery_router)
-app.include_router(author_router)
 app.include_router(passkey_router)
 app.include_router(publish_router)
-app.include_router(export_router)
-# app.include_router(config_router)
 
 @app.get("/health")
 async def health_check():

@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import PasskeyPrompt from "@/app/components/PasskeyPrompt";
+import PasskeyPrompt from "@/components/PasskeyPrompt";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();

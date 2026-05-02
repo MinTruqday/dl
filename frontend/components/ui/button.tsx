@@ -1,50 +1,47 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "../../lib/utils"
+"use client";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-sm px-3",
-        lg: "h-11 rounded-sm px-8",
-        icon: "h-10 w-10",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+import React from "react";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+type ButtonSize = "sm" | "md" | "lg" | "icon";
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+  icon?: React.ReactNode;
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
+export function Button({
+  variant = "primary",
+  size = "md",
+  className = "",
+  children,
+  icon,
+  ...props
+}: ButtonProps) {
+  const vClass = {
+    primary: "bg-black text-white border-black hover:bg-zinc-800",
+    secondary: "bg-white text-black border-zinc-200 hover:border-black hover:bg-zinc-50",
+    outline: "bg-transparent text-black border-zinc-200 hover:border-black hover:bg-zinc-50",
+    ghost: "bg-transparent text-black border-transparent hover:bg-zinc-50",
+    danger: "bg-zinc-50 text-black border-zinc-200 hover:bg-zinc-100 hover:border-black",
+  };
 
-export { Button, buttonVariants }
+  const sClass = {
+    sm: "px-3 py-1.5 text-[11px] font-bold border",
+    md: "px-5 py-2.5 text-xs font-bold border",
+    lg: "px-8 py-3.5 text-sm font-bold border",
+    icon: "p-2 border border-zinc-200 hover:border-black hover:bg-zinc-50",
+  };
+
+  return (
+    <button
+      className={`inline-flex items-center justify-center font-sans transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-none active:scale-[0.98] ${vClass[variant]} ${sClass[size]} ${className}`}
+      {...props}
+    >
+      {icon && <span className={children ? "mr-2" : ""}>{icon}</span>}
+      {children}
+    </button>
+  );
+}
