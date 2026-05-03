@@ -47,7 +47,6 @@ export default function DocumentDetailsPage() {
     "about" | "preview" | "reviews" | "comments"
   >("about");
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [visible, setVisible] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const fetchDocument = useCallback(async () => {
@@ -70,11 +69,6 @@ export default function DocumentDetailsPage() {
     if (slug) fetchDocument();
   }, [slug, fetchDocument]);
 
-  useEffect(() => {
-    if (!loading) {
-      requestAnimationFrame(() => setVisible(true));
-    }
-  }, [loading]);
 
   const handleRead = () => {
     if (!docData) return;
@@ -157,7 +151,7 @@ export default function DocumentDetailsPage() {
     return (
       <div className="flex h-[80vh] items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-8">
-          <Loader2 className="w-12 h-12 animate-spin text-zinc-100" />
+          <Loader2 className="w-12 h-12 text-zinc-100" />
           <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
             Đang giải mã mạng lưới tri thức
           </p>
@@ -168,14 +162,14 @@ export default function DocumentDetailsPage() {
 
   if (error || !docData) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center gap-10 animate-in fade-in font-sans">
+      <div className="flex h-[80vh] flex-col items-center justify-center gap-10 font-sans">
         <AlertCircle className="w-20 h-20 text-zinc-50 stroke-[1]" />
         <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest">
           {error || "Thực thể tri thức không tồn tại"}
         </p>
         <button
           onClick={() => router.back()}
-          className="h-14 px-12 bg-black text-white text-[11px] font-bold uppercase tracking-widest active:scale-95 rounded-sm"
+          className="h-14 px-12 bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-sm"
         >
           Quay lại hành trình
         </button>
@@ -194,32 +188,12 @@ export default function DocumentDetailsPage() {
           />
         )}
 
-        <div
-          className="relative h-[500px] overflow-hidden bg-white border border-zinc-100 flex items-center mb-20 ease-out rounded-sm"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(20px)",
-          }}
-        >
-          <div
-            className="absolute inset-0 z-0 transition-transform "
-            style={{ transform: visible ? "scale(1)" : "scale(1.05)" }}
-          >
-            {docData.cover_image && (
-              <img
-                src={docData.cover_image}
-                className="w-full h-full object-cover opacity-5 grayscale"
-                alt=""
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-50 via-zinc-50/90 to-transparent" />
-          </div>
+        <div className="relative h-[420px] overflow-hidden bg-white border border-zinc-100 flex items-center mb-10 rounded-sm">
+          <div className="absolute inset-0 z-0 bg-white" />
 
           <div className="w-full px-12 relative z-10 grid grid-cols-12 gap-24 items-center h-full">
-            <div
-              className={`col-span-4 hidden lg:flex justify-center delay-300 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
-            >
-              <div className="aspect-[2/3] w-full max-w-[280px] bg-white border border-zinc-100 p-4 relative group rounded-sm">
+            <div className="col-span-4 hidden lg:flex justify-center">
+              <div className="aspect-[2/3] w-full max-w-[240px] bg-white border border-zinc-100 p-4 relative group rounded-sm">
                 <div className="w-full h-full border border-zinc-50 relative overflow-hidden rounded-sm bg-white">
                   {docData.cover_image ? (
                     <img
@@ -239,10 +213,8 @@ export default function DocumentDetailsPage() {
               </div>
             </div>
 
-            <div className="col-span-12 lg:col-span-8 space-y-14">
-              <div
-                className={`flex flex-wrap items-center gap-8 delay-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-              >
+            <div className="col-span-12 lg:col-span-8 space-y-8">
+              <div className="flex flex-wrap items-center gap-8">
                 <span className="px-5 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-sm">
                   {docData.category_name || "Tri thức"}
                 </span>
@@ -258,22 +230,25 @@ export default function DocumentDetailsPage() {
                 </div>
               </div>
 
-              <h1
-                className={`text-6xl lg:text-8xl font-bold tracking-tighter text-black leading-[0.85] max-w-5xl text-balance delay-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+              <h1 
+                className={`font-bold tracking-tighter text-black leading-none max-w-full whitespace-nowrap ${
+                  docData.title.length < 10 ? "text-6xl lg:text-8xl" :
+                  docData.title.length < 20 ? "text-5xl lg:text-7xl" :
+                  docData.title.length < 30 ? "text-4xl lg:text-6xl" :
+                  "text-3xl lg:text-4xl"
+                }`}
               >
                 {docData.title}
               </h1>
 
-              <div
-                className={`flex flex-wrap items-center gap-16 pt-6 delay-1000 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-              >
+              <div className="flex flex-wrap items-center gap-16 pt-6">
                 <button
                   onClick={() =>
                     router.push(
                       `/authors/${docData.author?.slug || docData.author_id}`,
                     )
                   }
-                  className="flex items-center gap-5 group"
+                  className="flex items-center gap-5"
                 >
                   <div className="w-12 h-12 bg-white border border-zinc-100 flex items-center justify-center overflow-hidden rounded-sm">
                     {docData.author?.avatar_url ? (
@@ -317,19 +292,13 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
 
-        <div
-          className=" delay-300"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
+        <div>
           <div className="grid grid-cols-12 gap-20 items-start">
-            <div className="col-span-12 lg:col-span-3 space-y-14 lg:sticky lg:top-32">
+            <div className="col-span-12 lg:col-span-3 space-y-8 lg:sticky lg:top-32">
               <div className="space-y-3">
                 <button
                   onClick={handleRead}
-                  className="w-full h-14 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 rounded-sm"
+                  className="w-full h-14 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 rounded-sm"
                 >
                   <BookOpen className="w-4 h-4" />
                   Đọc tài liệu ngay
@@ -337,7 +306,7 @@ export default function DocumentDetailsPage() {
 
                 <button
                   onClick={handlePreview}
-                  className="w-full h-14 bg-white text-black border border-zinc-200 text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 rounded-sm"
+                  className="w-full h-14 bg-white text-black border border-zinc-200 text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 rounded-sm"
                 >
                   <Eye className="w-4 h-4" />
                   Xem trước nội dung
@@ -346,7 +315,7 @@ export default function DocumentDetailsPage() {
                 {docData.is_premium && (
                   <button
                     onClick={handlePurchase}
-                    className="w-full h-14 bg-white text-black border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 rounded-sm"
+                    className="w-full h-14 bg-white text-black border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 rounded-sm"
                   >
                     <ShoppingCart className="w-4 h-4" />
                     Sở hữu {docData.price_dl?.toLocaleString()} DL
@@ -354,36 +323,36 @@ export default function DocumentDetailsPage() {
                 )}
               </div>
 
-              <div className="pt-12 border-t border-zinc-100 grid grid-cols-2 gap-6">
+              <div className="pt-8 border-t border-zinc-100 grid grid-cols-2 gap-6">
                 <button
                   onClick={handleBookmark}
-                  className="flex flex-col items-center gap-3 group "
+                  className="flex flex-col items-center gap-3"
                 >
                   <div
-                    className={`w-full h-14 border flex items-center justify-center rounded-sm ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-200 group-hover:border-zinc-300"}`}
+                    className={`w-full h-14 border flex items-center justify-center rounded-sm ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-zinc-300 border-zinc-200"}`}
                   >
                     <Bookmark
                       className={`w-5 h-5 ${isBookmarked ? "fill-current" : ""}`}
                     />
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                     {isBookmarked ? "Đã lưu" : "Lưu lại"}
                   </span>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex flex-col items-center gap-3 group "
+                  className="flex flex-col items-center gap-3"
                 >
                   <div className="w-full h-14 border border-zinc-200 text-zinc-300 flex items-center justify-center bg-white rounded-sm">
                     <Share2 className="w-5 h-5" />
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                     Chia sẻ
                   </span>
                 </button>
               </div>
 
-              <div className="space-y-8 pt-12 border-t border-zinc-100">
+              <div className="space-y-6 pt-8 border-t border-zinc-100">
                 <div className="flex items-center gap-4 text-[11px] font-bold text-black uppercase tracking-[0.3em]">
                   <ShieldCheck className="w-4 h-4 text-zinc-200" /> Hệ thống
                   chứng thực
@@ -400,14 +369,14 @@ export default function DocumentDetailsPage() {
                 </div>
               </div>
 
-              <div className="space-y-8 pt-12 border-t border-zinc-100">
+              <div className="space-y-6 pt-8 border-t border-zinc-100">
                 <div className="flex items-center gap-4 text-[11px] font-bold text-black uppercase tracking-[0.3em]">
                   <Flag className="w-4 h-4 text-zinc-200" /> Phản hồi thực thể
                 </div>
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={() => setShowReportModal(true)}
-                    className="h-16 px-8 border border-zinc-100 bg-white text-[10px] font-bold uppercase tracking-widest flex items-center justify-between rounded-sm group"
+                    className="h-16 px-8 border border-zinc-100 bg-white text-[10px] font-bold uppercase tracking-widest flex items-center justify-between rounded-sm"
                   >
                     Báo cáo vi phạm{" "}
                     <ChevronRight className="w-4 h-4 text-zinc-100 " />
@@ -416,10 +385,10 @@ export default function DocumentDetailsPage() {
               </div>
             </div>
 
-            <div className="col-span-12 lg:col-span-9 space-y-20">
+            <div className="col-span-12 lg:col-span-9 space-y-10">
               <div
                 id="document-tabs"
-                className="border-b border-zinc-100 flex gap-16 overflow-x-auto scrollbar-hide"
+                className="border-b border-zinc-100 flex gap-12 overflow-x-auto scrollbar-hide"
               >
                 {[
                   { id: "about", label: "Tóm lược nội dung" },
@@ -430,7 +399,7 @@ export default function DocumentDetailsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`pb-10 text-[11px] font-bold uppercase tracking-[0.3em] relative shrink-0 ${
+                    className={`pb-6 text-[11px] font-bold uppercase tracking-[0.3em] relative shrink-0 ${
                       activeTab === tab.id ? "text-black" : "text-zinc-200 "
                     }`}
                   >
@@ -442,9 +411,9 @@ export default function DocumentDetailsPage() {
                 ))}
               </div>
 
-              <div className="min-h-[800px] animate-in fade-in slide-in-from-bottom-4 ">
+              <div className="min-h-[800px]">
                 {activeTab === "about" && (
-                  <div className="space-y-20">
+                  <div className="space-y-10">
                     <div className="prose prose-zinc max-w-none">
                       <div className="text-black leading-[2] text-lg font-medium space-y-10">
                         {docData.description ? (
@@ -465,7 +434,7 @@ export default function DocumentDetailsPage() {
                     </div>
 
                     {docData.tags && docData.tags.length > 0 && (
-                      <div className="pt-20 border-t border-zinc-100 space-y-10">
+                      <div className="pt-10 border-t border-zinc-100 space-y-6">
                         <h4 className="text-[11px] font-bold text-zinc-200 uppercase tracking-[0.4em]">
                           Mạng lưới từ khóa liên kết
                         </h4>
@@ -552,7 +521,7 @@ export default function DocumentDetailsPage() {
                                   </div>
                                   <button
                                     onClick={handlePurchase}
-                                    className="h-24 px-20 bg-black text-white text-[12px] font-bold uppercase tracking-[0.5em] rounded-sm active:scale-95"
+                                    className="h-24 px-20 bg-black text-white text-[12px] font-bold uppercase tracking-[0.5em] rounded-sm"
                                   >
                                     Sở hữu toàn bộ tri thức
                                   </button>

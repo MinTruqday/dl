@@ -15,6 +15,7 @@ interface ReviewSectionProps {
 
 export default function Review({ documentId }: ReviewSectionProps) {
   const { user } = useAuth() as any;
+  const { showToast } = useToast();
   const [reviews, setReviews] = useState<any[]>([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -78,7 +79,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
       {user ? (
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in rounded-sm"
+          className="bg-white border border-zinc-100 p-12 space-y-12 rounded-sm"
         >
           <div className="space-y-6 text-center md:text-left">
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
@@ -90,7 +91,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
                   key={s}
                   type="button"
                   onClick={() => setRating(s)}
-                  className={`p-2 active:scale-90 ${
+                  className={`p-2 ${
                     s <= rating ? "text-black" : "text-zinc-100 "
                   }`}
                 >
@@ -119,7 +120,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full md:w-auto px-16 h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.4em] flex items-center justify-center gap-4 active:scale-95 rounded-sm"
+              className="w-full md:w-auto px-16 h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.4em] flex items-center justify-center gap-4 rounded-sm"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -152,7 +153,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
           reviews.map((rev) => (
             <div
               key={rev._id}
-              className="group space-y-8 animate-in fade-in pb-16 border-b border-zinc-50 last:border-0"
+              className="space-y-8 pb-16 border-b border-zinc-50 last:border-0"
             >
               <div className="flex items-start justify-between gap-6">
                 <div className="flex items-center gap-6">

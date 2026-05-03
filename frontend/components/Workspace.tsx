@@ -59,7 +59,7 @@ export default function Workspace({ children }: AppShellProps) {
       />
 
       <main
-        className=" ease-in-out"
+        className="relative"
         style={{
           paddingTop: "var(--navbar-height)",
           marginLeft: !mounted
@@ -72,7 +72,7 @@ export default function Workspace({ children }: AppShellProps) {
           minHeight: "100vh",
         }}
       >
-        <div className="animate-in slide-in-from-bottom-4 ">{children}</div>
+        {children}
       </main>
     </div>
   );
