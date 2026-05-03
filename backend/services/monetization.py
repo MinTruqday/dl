@@ -153,11 +153,11 @@ class MonetizationService:
         author_id = str(current_user.id)
         
         pipeline = [
-            {"": {"user_id": author_id, "type": TransactionType.RECEIVE}},
-            {"": {
+            {"$match": {"user_id": author_id, "type": TransactionType.RECEIVE}},
+            {"$group": {
                 "_id": None,
-                "total_revenue": {"": ""},
-                "transaction_count": {"": 1}
+                "total_revenue": {"$sum": "$amount"},
+                "transaction_count": {"$sum": 1}
             }}
         ]
         

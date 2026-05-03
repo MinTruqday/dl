@@ -100,3 +100,9 @@ async def submit_policy_proposal(data: dict, current_user: UserInDB = Depends(ge
         data=await ModerationService.submit_policy_proposal(data, current_user),
         message="Gửi đề xuất chính sách thành công."
     )
+@router.get("/audit-logs", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def get_moderator_activity(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ModerationService.get_moderator_activity_log(str(current_user.id)),
+        message="Lấy nhật ký hoạt động thành công."
+    )

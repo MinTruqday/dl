@@ -2,53 +2,49 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
   updateTypographyAPI,
   updateGeneralSettingsAPI,
+  applyAuthorAPI,
+  updateProfileAPI,
 } from "@/services/settings.service";
-import { applyAuthorAPI } from "@/services/settings.service";
-import { getMaintenanceModeAPI, getAdminConfigAPI, toggleMaintenanceModeAPI, updateAdminConfigAPI } from "@/services/administration.service";
+import { 
+  getMaintenanceModeAPI, 
+  getAdminConfigAPI, 
+  toggleMaintenanceModeAPI, 
+  updateAdminConfigAPI 
+} from "@/services/administration.service";
 import {
   Settings,
   Type,
   Shield,
   Bell,
-  Globe,
   Lock,
-  Eye,
-  EyeOff,
   ChevronRight,
   Save,
   Loader2,
   Sparkles,
-  Smartphone,
-  Moon,
-  Sun,
-  Monitor,
   PenTool,
   ShieldCheck,
-  CreditCard,
-  History,
   Zap,
   UserPlus,
-  BookOpen,
   Award,
   Clock,
-  ArrowRight,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert
 } from "lucide-react";
-import { useToast } from "@/contexts/ToastContext";
 
 type TabKey = "appearance" | "privacy" | "notifications" | "account" | "apply_author" | "author" | "moderator" | "admin";
 
 export default function SettingsPage() {
+  const { showToast } = useToast();
   const { user, isLoading: authLoading, refreshUser } = useAuth() as any;
   const [visible, setVisible] = useState(false);
   const [activeSection, setActiveSection] = useState<TabKey>("appearance");
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const [fontFamily, setFontFamily] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
@@ -89,11 +85,12 @@ export default function SettingsPage() {
         setAutoRefresh(user.settings.auto_refresh ?? false);
         setAutoSave(user.settings.auto_save ?? true);
         setDefaultVisibility(user.settings.default_visibility ?? "public");
+        setPayoutInfo(user.settings.payout_info || "");
       }
     } catch (err: any) {
-      showToast("Không thể đồng bộ dữ liệu cài đặt.", "error");
+      showToast("Không thể đồng bộ dữ liệu cài đặt", "error");
     }
-  }, [user]);
+  }, [user, showToast]);
 
   useEffect(() => {
     if (user) {
@@ -108,7 +105,7 @@ export default function SettingsPage() {
       refreshUser?.();
       return true;
     } catch (err: any) {
-      showToast("Không thể cập nhật cấu hình cá nhân.", "error");
+      showToast("Không thể cập nhật cấu hình cá nhân", "error");
       return false;
     }
   };
@@ -121,9 +118,9 @@ export default function SettingsPage() {
         font_size: fontSize,
         line_height: lineHeight,
       });
-      showToast("Đã lưu tùy chỉnh hiển thị.", "success");
+      showToast("Đã lưu tùy chỉnh hiển thị", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật hiển thị.", "error");
+      showToast(err.message || "Lỗi cập nhật hiển thị", "error");
     } finally {
       setLoading(false);
     }
@@ -136,9 +133,9 @@ export default function SettingsPage() {
         hide_reading_activity: hideActivity,
         hide_library: hideLibrary,
       });
-      showToast("Đã cập nhật quyền riêng tư.", "success");
+      showToast("Đã cập nhật quyền riêng tư", "success");
     } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật riêng tư.", "error");
+      showToast(err.message || "Lỗi cập nhật riêng tư", "error");
     } finally {
       setLoading(false);
     }
@@ -146,18 +143,18 @@ export default function SettingsPage() {
 
   const handleApplyAuthor = async () => {
     if (!motivation) {
-        showToast("Vui lòng nhập lý do ứng tuyển.", "error");
+        showToast("Vui lòng nhập lý do ứng tuyển", "error");
         return;
     }
     setLoading(true);
     try {
-        await applyAuthorAPI(motivation);
-        showToast("Đã gửi đơn ứng tuyển thành công. Vui lòng chờ phê duyệt.", "success");
+        await applyAuthorAPI({ motivation, portfolio });
+        showToast("Đã gửi đơn ứng tuyển thành công", "success");
         setMotivation("");
         setPortfolio("");
         refreshUser?.();
     } catch (err: any) {
-        showToast(err.message || "Không thể gửi đơn ứng tuyển.", "error");
+        showToast(err.message || "Không thể gửi đơn ứng tuyển", "error");
     } finally {
         setLoading(false);
     }
@@ -168,9 +165,9 @@ export default function SettingsPage() {
     try {
       await toggleMaintenanceModeAPI(!maintenanceMode);
       setMaintenanceMode(!maintenanceMode);
-      showToast(!maintenanceMode ? "Đã kích hoạt bảo trì." : "Đã tắt bảo trì.", "success");
+      showToast(!maintenanceMode ? "Đã kích hoạt bảo trì" : "Đã tắt bảo trì", "success");
     } catch (err: any) {
-      showToast("Lỗi thao tác bảo trì hệ thống.", "error");
+      showToast("Lỗi thao tác bảo trì hệ thống", "error");
     } finally {
       setLoading(false);
     }
@@ -181,9 +178,9 @@ export default function SettingsPage() {
     try {
       await updateAdminConfigAPI({ registration_enabled: !registrationEnabled });
       setRegistrationEnabled(!registrationEnabled);
-      showToast(!registrationEnabled ? "Đã mở đăng ký." : "Đã đóng đăng ký.", "success");
+      showToast(!registrationEnabled ? "Đã mở đăng ký" : "Đã đóng đăng ký", "success");
     } catch (err: any) {
-      showToast("Lỗi cập nhật cấu hình đăng ký.", "error");
+      showToast("Lỗi cập nhật cấu hình đăng ký", "error");
     } finally {
       setLoading(false);
     }
@@ -192,9 +189,9 @@ export default function SettingsPage() {
   const CustomSwitch = ({ active, onToggle, color = "black" }: { active: boolean, onToggle: () => void, color?: string }) => (
     <button 
       onClick={onToggle}
-      className={`w-16 h-9 transition-all relative shrink-0 rounded-sm border ${active ? (color === "red" ? "bg-red-600 border-red-600" : "bg-black border-black") : "bg-zinc-100 border-zinc-200"}`}
+      className={`w-14 h-8 transition-all relative shrink-0 rounded-sm border ${active ? (color === "red" ? "bg-red-600 border-red-600" : "bg-black border-black") : "bg-zinc-100 border-zinc-200"}`}
     >
-      <div className={`absolute top-1 w-7 h-7 bg-white transition-all rounded-sm ${active ? "left-8" : "left-1"}`} />
+      <div className={`absolute top-1 w-6 h-6 bg-white transition-all rounded-sm ${active ? "left-7" : "left-1"}`} />
     </button>
   );
 
@@ -219,8 +216,6 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      
-
       <header 
         className="mb-12 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 transition-all duration-300"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
@@ -263,8 +258,8 @@ export default function SettingsPage() {
           </div>
 
           <div className="p-10 border border-zinc-100 bg-zinc-50/30 space-y-6 rounded-sm">
-             <div className="text-[10px] font-bold text-black uppercase tracking-widest">Định danh hiện tại</div>
-             <div className="flex items-center gap-4">
+             <div className="text-[10px] font-bold text-black uppercase tracking-widest text-center">Định danh hiện tại</div>
+             <div className="flex items-center justify-center gap-4">
                 <div className="w-12 h-12 bg-black flex items-center justify-center text-white text-[11px] font-bold uppercase italic rounded-sm">
                     {user?.role?.slice(0, 3)}
                 </div>
@@ -285,11 +280,11 @@ export default function SettingsPage() {
               <div className="space-y-12">
                 <div className="space-y-3">
                   <h2 className="text-4xl font-bold tracking-tighter">Hiển thị & Kiểu chữ</h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Tùy biến không gian tiếp nhận tri thức</p>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Tùy biến không gian tiếp nhận tri thức</p>
                 </div>
 
                 <div className="space-y-12">
-                  <div className="space-y-6">
+                  <div className="space-y-6 text-center">
                     <label className="text-[11px] font-bold text-black uppercase tracking-widest">Hệ phông chữ ưu tiên</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {["Inter", "Roboto", "Outfit", "Noto Sans", "Source Sans Pro"].map((font) => (
@@ -308,29 +303,29 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-10">
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-center">
                       <label className="text-[11px] font-bold text-black uppercase tracking-widest">Cỡ chữ văn bản (px)</label>
                       <input
                         type="number"
                         value={fontSize}
                         onChange={(e) => setFontSize(parseInt(e.target.value))}
-                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
+                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-center text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
                       />
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-center">
                       <label className="text-[11px] font-bold text-black uppercase tracking-widest">Độ giãn dòng</label>
                       <input
                         type="number"
                         step="0.1"
                         value={lineHeight}
                         onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
+                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-zinc-50/20 text-center text-lg font-bold tracking-tight transition-all outline-none rounded-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-12 border-t border-zinc-50 flex justify-end">
+                <div className="pt-12 border-t border-zinc-50 flex justify-center">
                    <button 
                     onClick={handleSaveTypography}
                     disabled={loading}
@@ -347,7 +342,7 @@ export default function SettingsPage() {
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-3">
                         <h2 className="text-4xl font-bold tracking-tighter">Đăng ký Tác giả</h2>
-                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Tham gia đội ngũ sáng tạo nội dung tri thức</p>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Tham gia đội ngũ sáng tạo nội dung tri thức</p>
                     </div>
 
                     {user?.author_status === "pending" ? (
@@ -363,7 +358,7 @@ export default function SettingsPage() {
                     ) : (
                         <div className="space-y-10">
                             <div className="p-10 border border-zinc-100 bg-zinc-50/20 space-y-8 rounded-sm">
-                                <div className="flex items-center gap-4 text-black border-b border-zinc-50 pb-6">
+                                <div className="flex items-center justify-center gap-4 text-black border-b border-zinc-50 pb-6">
                                     <Award className="w-6 h-6" />
                                     <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">Đặc quyền của Tác giả DocLib</h4>
                                 </div>
@@ -383,7 +378,7 @@ export default function SettingsPage() {
                             </div>
 
                             <div className="space-y-8">
-                                <div className="space-y-4">
+                                <div className="space-y-4 text-center">
                                     <label className="text-[11px] font-bold text-black uppercase tracking-widest">Động lực & Chuyên môn sáng tác</label>
                                     <textarea 
                                         value={motivation}
@@ -392,13 +387,13 @@ export default function SettingsPage() {
                                         placeholder="Hãy chia sẻ về lĩnh vực bạn muốn viết và kinh nghiệm của bạn"
                                     />
                                 </div>
-                                <div className="space-y-4">
+                                <div className="space-y-4 text-center">
                                     <label className="text-[11px] font-bold text-black uppercase tracking-widest">Portfolio / Sản phẩm tham chiếu (URL)</label>
                                     <input 
                                         type="text"
                                         value={portfolio}
                                         onChange={(e) => setPortfolio(e.target.value)}
-                                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-bold transition-all outline-none rounded-sm"
+                                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-bold transition-all outline-none text-center rounded-sm"
                                         placeholder="https://"
                                     />
                                 </div>
@@ -423,7 +418,7 @@ export default function SettingsPage() {
               <div className="space-y-12">
                 <div className="space-y-3">
                   <h2 className="text-4xl font-bold tracking-tighter">Quyền riêng tư</h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Thiết lập khả năng hiển thị cá nhân</p>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Thiết lập khả năng hiển thị cá nhân</p>
                 </div>
 
                 <div className="space-y-6">
@@ -444,7 +439,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="pt-12 border-t border-zinc-50 flex justify-end">
+                <div className="pt-12 border-t border-zinc-50 flex justify-center">
                    <button 
                     onClick={handleSavePrivacy}
                     disabled={loading}
@@ -461,7 +456,7 @@ export default function SettingsPage() {
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-3">
                         <h2 className="text-4xl font-bold tracking-tighter">Cấu hình Tác giả</h2>
-                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Quản lý hiệu suất sáng tác</p>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Quản lý hiệu suất sáng tác</p>
                     </div>
 
                     <div className="space-y-8">
@@ -479,7 +474,7 @@ export default function SettingsPage() {
                             />
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-center">
                             <label className="text-[11px] font-bold text-black uppercase tracking-widest">Trạng thái xuất bản mặc định</label>
                             <div className="grid grid-cols-2 gap-4">
                                 {["public", "private"].map((mode) => (
@@ -499,19 +494,27 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-center">
                             <label className="text-[11px] font-bold text-black uppercase tracking-widest">Thông tin thanh toán thụ hưởng</label>
                             <textarea
                                 value={payoutInfo}
                                 onChange={(e) => setPayoutInfo(e.target.value)}
                                 placeholder="STK, Ngân hàng, Tên chủ tài khoản"
-                                className="w-full min-h-[140px] p-8 border border-zinc-100 focus:border-black bg-zinc-50/10 text-[13px] font-medium transition-all outline-none leading-relaxed rounded-sm"
+                                className="w-full min-h-[140px] p-8 border border-zinc-100 focus:border-black bg-zinc-50/10 text-[13px] font-medium transition-all outline-none leading-relaxed text-center rounded-sm"
                             />
                         </div>
                     </div>
 
-                    <div className="pt-12 border-t border-zinc-50 flex justify-end">
-                        <button className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all flex items-center gap-4">
+                    <div className="pt-12 border-t border-zinc-50 flex justify-center">
+                        <button 
+                            onClick={async () => {
+                                setLoading(true);
+                                await handleUpdateGeneral({ payout_info: payoutInfo });
+                                setLoading(false);
+                                showToast("Đã lưu thông tin thụ hưởng", "success");
+                            }}
+                            className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm hover:bg-zinc-800 transition-all flex items-center gap-4"
+                        >
                             <Save className="w-5 h-5" /> Lưu cấu hình
                         </button>
                     </div>
@@ -521,15 +524,15 @@ export default function SettingsPage() {
             {activeSection === "moderator" && (
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-3">
-                        <h2 className="text-4xl font-bold tracking-tighter">Điều hành viên</h2>
-                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Cấu hình hiệu suất giám sát</p>
+                        <h2 className="text-4xl font-bold tracking-tighter">Kiểm duyệt viên</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Cấu hình hiệu suất giám sát</p>
                     </div>
 
                     <div className="space-y-8">
                         <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group hover:border-black transition-all rounded-sm">
                             <div className="space-y-2">
                                 <h4 className="text-lg font-bold tracking-tight">Thông báo vi phạm thời gian thực</h4>
-                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm">Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng đồng mới.</p>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng đồng mới.</p>
                             </div>
                             <CustomSwitch 
                                 active={modNotifs} 
@@ -537,7 +540,7 @@ export default function SettingsPage() {
                                     const success = await handleUpdateGeneral({ mod_notifs: !modNotifs });
                                     if (success) {
                                         setModNotifs(!modNotifs);
-                                        showToast(`Đã ${!modNotifs ? "bật" : "tắt"} thông báo.`, "success");
+                                        showToast(`Đã ${!modNotifs ? "bật" : "tắt"} thông báo`, "success");
                                     }
                                 }} 
                             />
@@ -554,7 +557,7 @@ export default function SettingsPage() {
                                     const success = await handleUpdateGeneral({ auto_refresh: !autoRefresh });
                                     if (success) {
                                         setAutoRefresh(!autoRefresh);
-                                        showToast(`Đã ${!autoRefresh ? "bật" : "tắt"} tự động làm mới.`, "success");
+                                        showToast(`Đã ${!autoRefresh ? "bật" : "tắt"} tự động làm mới`, "success");
                                     }
                                 }} 
                             />
@@ -566,8 +569,8 @@ export default function SettingsPage() {
             {activeSection === "admin" && (
                 <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-300">
                     <div className="space-y-3">
-                        <h2 className="text-4xl font-bold tracking-tighter">Quản trị cấp cao</h2>
-                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Kiểm soát vận hành toàn cầu DocLib</p>
+                        <h2 className="text-4xl font-bold tracking-tighter">Quản trị viên</h2>
+                        <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Kiểm soát vận hành toàn cầu DocLib</p>
                     </div>
 
                     <div className="grid gap-6">
@@ -582,7 +585,7 @@ export default function SettingsPage() {
                         <div className="p-10 border border-zinc-100 bg-white flex items-center justify-between group hover:border-black transition-all duration-300 rounded-sm">
                             <div className="space-y-2">
                                 <h4 className="text-lg font-bold tracking-tight">Đăng ký tài khoản mới</h4>
-                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm">Cho phép hoặc chặn quyền đăng ký tài khoản cho người dùng mới.</p>
+                                <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">Cho phép hoặc chặn quyền đăng ký tài khoản cho người dùng mới.</p>
                             </div>
                             <CustomSwitch active={registrationEnabled} onToggle={handleToggleRegistration} />
                         </div>
@@ -598,7 +601,7 @@ export default function SettingsPage() {
                 <div className="space-y-3">
                    <h3 className="text-2xl font-bold tracking-tighter">Trung tâm thông báo</h3>
                    <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
-                     Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của bạn.
+                     Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của bạn
                    </p>
                 </div>
               </div>
@@ -608,7 +611,7 @@ export default function SettingsPage() {
               <div className="space-y-12 animate-in fade-in duration-300">
                 <div className="space-y-3">
                   <h2 className="text-4xl font-bold tracking-tighter">Định danh & Bảo mật</h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">Quản lý lớp phòng thủ tài khoản</p>
+                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">Quản lý lớp phòng thủ tài khoản</p>
                 </div>
 
                 <div className="space-y-6">
@@ -616,7 +619,7 @@ export default function SettingsPage() {
                       <div className="space-y-2">
                          <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Trạng thái xác thực</span>
                          <div className="text-base font-bold flex items-center gap-3">
-                            <ShieldCheck className="w-5 h-5 text-black" /> Tài khoản đã định danh cấp cao
+                            <ShieldAlert className="w-5 h-5 text-black" /> Tài khoản đã định danh cấp cao
                          </div>
                       </div>
                       <button className="h-14 px-10 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all rounded-sm">Đổi mật khẩu</button>
@@ -631,10 +634,10 @@ export default function SettingsPage() {
                    </div>
                 </div>
 
-                <div className="pt-20 border-t border-zinc-50 flex items-center gap-4">
+                <div className="pt-20 border-t border-zinc-50 flex items-center justify-center gap-4">
                    <AlertCircle className="w-5 h-5 text-zinc-100 shrink-0" />
-                   <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest leading-relaxed italic">
-                     DocLib yêu cầu xác thực hai lớp cho mọi thay đổi quan trọng liên quan đến bảo mật và tài chính.
+                   <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest leading-relaxed italic text-center">
+                     DocLib yêu cầu xác thực hai lớp cho mọi thay đổi quan trọng liên quan đến bảo mật và tài chính
                    </p>
                 </div>
               </div>

@@ -63,11 +63,25 @@ export async function uploadImageAPI(file: File) {
     const token = getToken();
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch(`${API_URL}/upload/image`, {
+    const res = await fetch(`${API_URL}/upload/image/`, {
         method: "POST",
         headers: { "Authorization": "Bearer " + token },
         body: formData
     });
     if (!res.ok) return null;
+    return await res.json();
+}
+
+export async function uploadMediaAPI(file: File) {
+    const token = getToken();
+    if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_URL}/upload/media/`, {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: formData
+    });
+    if (!res.ok) throw new Error("Tải phương tiện lên thất bại.");
     return await res.json();
 }

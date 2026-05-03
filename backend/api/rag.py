@@ -6,7 +6,7 @@ from models.user import UserInDB
 from services.rag import RagService
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-router = APIRouter(prefix="/rag")
+router = APIRouter(prefix="/ai")
 
 @router.post("/stream", response_model=Any)
 async def proxy_rag_stream(
@@ -17,7 +17,7 @@ async def proxy_rag_stream(
     auth_header = req.headers.get("Authorization")
     return await RagService.proxy_rag_stream(payload, auth_header, current_user)
 
-@router.post("/chat", response_model=APIResponse[Any])
+@router.post("/query", response_model=APIResponse[Any])
 async def proxy_rag_chat(
     payload: dict, 
     req: Request, 

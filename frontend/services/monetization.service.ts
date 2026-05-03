@@ -3,7 +3,7 @@ import { API_URL, getToken } from './auth.service';
 export async function getAuthorRevenueAPI() {
     const token = getToken();
     if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-    const res = await fetch(`${API_URL}/monetization/analytics/revenue`, {
+    const res = await fetch(`${API_URL}/monetization/analytics/revenue/`, {
         headers: { "Authorization": "Bearer " + token }
     });
     if (!res.ok) throw new Error("Không thể tải số liệu doanh thu.");
@@ -15,7 +15,7 @@ export const getRevenueAPI = getAuthorRevenueAPI;
 
 export async function setDocumentPricingAPI(documentId: string, price: number) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/monetization/documents/${documentId}/pricing`, {
+    const res = await fetch(`${API_URL}/monetization/documents/${documentId}/pricing/`, {
         method: "PUT",
         headers: { 
             "Authorization": "Bearer " + token,
@@ -29,7 +29,7 @@ export async function setDocumentPricingAPI(documentId: string, price: number) {
 
 export async function requestPayoutDetailedAPI(amount: number, bankInfo: any) {
     const token = getToken();
-    const res = await fetch(`${API_URL}/payouts`, {
+    const res = await fetch(`${API_URL}/payouts/`, {
         method: "POST",
         headers: { 
             "Authorization": "Bearer " + token,
@@ -43,7 +43,7 @@ export async function requestPayoutDetailedAPI(amount: number, bankInfo: any) {
 
 export async function getMyPayoutsAPI() {
     const token = getToken();
-    const res = await fetch(`${API_URL}/payouts/my`, {
+    const res = await fetch(`${API_URL}/payouts/my/`, {
         headers: { "Authorization": "Bearer " + token }
     });
     if (!res.ok) throw new Error("Không thể tải danh sách yêu cầu rút tiền.");

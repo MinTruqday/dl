@@ -6,4 +6,4 @@ T = TypeVar("T")
 class APIResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
     message: str
-    status: int
+    status: int = 200

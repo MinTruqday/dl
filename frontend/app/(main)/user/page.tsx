@@ -21,6 +21,7 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function UsersManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -146,7 +147,7 @@ export default function UsersManagementPage() {
                   </thead>
                   <tbody className="divide-y divide-zinc-50">
                     {filteredUsers.map((u: any) => (
-                      <tr key={u._id} className="hover:bg-zinc-50/20 transition-all duration-300 group">
+                      <tr key={u.id} className="hover:bg-zinc-50/20 transition-all duration-300 group">
                         <td className="px-10 py-10">
                             <div className="flex items-center gap-8">
                                 <div className="w-14 h-14 bg-zinc-50 flex items-center justify-center border border-zinc-100 font-black text-zinc-200 group-hover:bg-black group-hover:text-white transition-all duration-300 rounded-sm overflow-hidden">
@@ -168,7 +169,7 @@ export default function UsersManagementPage() {
                             <div className="relative inline-block w-full max-w-[200px]">
                                 <select
                                     value={u.role}
-                                    onChange={(e) => handleUpdateRole(u._id, e.target.value)}
+                                    onChange={(e) => handleUpdateRole(u.id, e.target.value)}
                                     className="w-full bg-transparent border-b border-zinc-100 text-[10px] font-bold uppercase tracking-widest focus:border-black outline-none py-3 cursor-pointer appearance-none transition-all group-hover:border-black"
                                 >
                                     <option value="reader">Độc giả</option>
@@ -191,7 +192,7 @@ export default function UsersManagementPage() {
                         <td className="px-10 py-10 text-right">
                             <div className="flex justify-end gap-3">
                                 <button 
-                                    onClick={() => handleUpdateStatus(u._id, !u.is_active)}
+                                    onClick={() => handleUpdateStatus(u.id, !u.is_active)}
                                     className={`h-11 px-8 text-[9px] font-bold uppercase tracking-[0.2em] border transition-all rounded-sm ${
                                         u.is_active 
                                         ? 'text-zinc-300 border-zinc-100 hover:text-red-500 hover:border-red-500' 

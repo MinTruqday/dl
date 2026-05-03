@@ -86,6 +86,22 @@ async def update_brand_page(data: dict, current_user: UserInDB = Depends(get_cur
         message="Cập nhật trang tác giả thành công."
     )
 
+@router.get("/bookmarks", response_model=APIResponse[Any])
+async def get_bookmarks(current_user: UserInDB = Depends(get_current_user)):
+    from services.read import ReadService
+    return APIResponse(
+        data=await ReadService.get_bookmarks(current_user),
+        message="Lấy danh sách đánh dấu thành công."
+    )
+
+@router.post("/bookmarks/{document_id}", response_model=APIResponse[Any])
+async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from services.read import ReadService
+    return APIResponse(
+        data=await ReadService.toggle_bookmark(document_id, current_user),
+        message="Đã cập nhật trạng thái lưu trữ."
+    )
+
 @router.get("/author/{slug}", response_model=APIResponse[Any])
 async def get_author_public_profile(slug: str):
     return APIResponse(

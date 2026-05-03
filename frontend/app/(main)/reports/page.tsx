@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getAdminReportsAPI, resolveReportAPI } from "@/services/moderation.service";
+import { getReportsAPI as getAdminReportsAPI, resolveReportAPI } from "@/services/moderation.service";
 import {
   AlertTriangle,
   Loader2,
@@ -26,6 +26,7 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function ReportsManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const [reports, setReports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -139,7 +140,7 @@ export default function ReportsManagementPage() {
                   </thead>
                   <tbody className="divide-y divide-zinc-50">
                     {filteredReports.map((report: any) => (
-                      <tr key={report._id} className="hover:bg-zinc-50/20 transition-all duration-300 group">
+                      <tr key={report.id} className="hover:bg-zinc-50/20 transition-all duration-300 group">
                         <td className="px-10 py-10">
                             <div className="flex items-center gap-8">
                                 <div className="w-14 h-14 bg-zinc-50 flex items-center justify-center border border-zinc-100 group-hover:bg-black transition-all duration-300 rounded-sm">
@@ -179,13 +180,13 @@ export default function ReportsManagementPage() {
                         <td className="px-10 py-10 text-right">
                             <div className="flex justify-end gap-3">
                                 <button 
-                                    onClick={() => handleResolve(report._id, "DISMISSED")}
+                                    onClick={() => handleResolve(report.id, "DISMISSED")}
                                     className="h-11 px-8 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black hover:border-black transition-all rounded-sm"
                                 >
                                     Bỏ qua
                                 </button>
                                 <button 
-                                    onClick={() => handleResolve(report._id, "RESOLVED")}
+                                    onClick={() => handleResolve(report.id, "RESOLVED")}
                                     className="h-11 px-10 bg-black text-white text-[9px] font-bold uppercase tracking-[0.2em] hover:bg-zinc-800 transition-all active:scale-[0.98] rounded-sm"
                                 >
                                     Xử lý vi phạm

@@ -14,21 +14,21 @@ class BannerRequest(BaseModel):
     link_url: Optional[str] = None
     priority: int = 0
 
-@router.get("", response_model=APIResponse[Any])
+@router.get("/", response_model=APIResponse[Any])
 async def get_active_banners():
     return APIResponse(
         data=await BannerService.get_banners(active_only=True), 
         message="Lấy danh sách banner quảng cáo thành công."
     )
 
-@router.get("/all", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.get("/all/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_all_banners():
     return APIResponse(
         data=await BannerService.get_banners(active_only=False), 
         message="Lấy toàn bộ danh sách banner thành công."
     )
 
-@router.post("", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.post("/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_banner(data: BannerRequest):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump()), 
@@ -36,7 +36,7 @@ async def create_banner(data: BannerRequest):
         status=201
     )
 
-@router.delete("/{banner_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.delete("/{banner_id}/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def delete_banner(banner_id: str):
     return APIResponse(
         data=await BannerService.delete_banner(banner_id), 

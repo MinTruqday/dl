@@ -1,7 +1,9 @@
 import { API_URL, getToken, getAuthHeaders } from './auth.service';
 
 export async function getFeaturedAuthorsAPI(limit: number = 5) {
-    const res = await fetch(`${API_URL}/guest/authors/featured?limit=${limit}`);
+    const res = await fetch(`${API_URL}/social/featured-authors?limit=${limit}`, {
+        headers: getAuthHeaders()
+    });
     if (!res.ok) throw new Error("Không thể tải danh sách tác giả.");
     return await res.json();
 }
@@ -115,7 +117,7 @@ export async function createDiscussionAPI(documentId: string, title: string, con
     return await res.json();
 }
 export async function getBannersAPI() {
-    const res = await fetch(`${API_URL}/guest/banners`);
+    const res = await fetch(`${API_URL}/banners`);
     if (!res.ok) throw new Error("Không thể tải danh sách tiêu điểm.");
     return await res.json();
 }
@@ -415,3 +417,23 @@ export const searchUsersAPI = async (query: string, limit: number = 10) => {
     if (!res.ok) throw new Error("Không thể tìm kiếm người dùng.");
     return await res.json();
 };
+
+export async function getDocumentReviewsAPI(documentId: string) {
+    const res = await fetch(`${API_URL}/reading/${documentId}/reviews`);
+    if (!res.ok) throw new Error("Không thể tải đánh giá.");
+    return await res.json();
+}
+
+export async function createDocumentReviewAPI(documentId: string, rating: number, text: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/reading/${documentId}/review`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ rating, comment: text })
+    });
+    if (!res.ok) throw new Error("Đánh giá thất bại.");
+    return await res.json();
+}

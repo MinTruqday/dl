@@ -192,9 +192,9 @@ export default function ProfilePage() {
           <h1 className="text-4xl font-bold tracking-tighter uppercase text-black leading-none">
             Hồ sơ & Định danh
           </h1>
-          <p className="text-zinc-300 text-[11px] font-bold uppercase tracking-widest flex items-center gap-4">
+          <div className="text-zinc-300 text-[11px] font-bold uppercase tracking-widest flex items-center gap-4">
             QUẢN LÝ THỰC THỂ CÁ NHÂN <div className="w-2 h-2 bg-black rounded-full animate-pulse" /> <Sparkles className="w-4 h-4 text-zinc-100" />
-          </p>
+          </div>
         </div>
         <button
           onClick={logoutState}

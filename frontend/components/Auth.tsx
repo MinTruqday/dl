@@ -15,7 +15,7 @@ const protectedRoutes: Record<string, string[]> = {
   '/assets': ['author', 'admin'],
   '/collab': ['author', 'admin'],
   '/coupon': ['author', 'admin'],
-  '/my-documents': ['author', 'admin'],
+  '/library': ['author', 'admin'],
   '/payout': ['author', 'admin'],
   '/upload': ['author', 'admin'],
   '/user': ['admin'],

@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getToken, API_URL } from "@/services/auth.service";
-import { getAdminReportsAPI } from "@/services/moderation.service";
-import { getAuthorApplicationsAPI, reviewAuthorApplicationAPI, getAdminConfigAPI, updateAdminConfigAPI, getSystemHealthAPI, getMaintenanceModeAPI, toggleMaintenanceModeAPI, getCollectorStatsAPI, triggerCollectionAPI, getPayoutsAPI, reviewPayoutAPI, getBannersAPI, deleteBannerAPI } from "@/services/administration.service";
+import { getAuthorApplicationsAPI, reviewAuthorApplicationAPI, getAdminConfigAPI, updateAdminConfigAPI, getSystemHealthAPI, getMaintenanceModeAPI, toggleMaintenanceModeAPI, getCollectorStatsAPI, triggerCollectionAPI, getPayoutsAPI, reviewPayoutAPI, getBannersAPI, deleteBannerAPI, getAdminReportsAPI } from "@/services/administration.service";
 import { getAdminUsersAPI, updateUserRoleAPI, updateUserStatusAPI } from "@/services/user.service";
 import { getAuditLogsAPI } from "@/services/document.service";
 import {
@@ -204,9 +203,6 @@ export default function AdminDashboard() {
     });
   };
 
-    });
-  };
-  
   const triggerCollection = async () => {
     setIsRefreshing(true);
     try {

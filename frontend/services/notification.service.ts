@@ -11,20 +11,18 @@ export const getNotificationsAPI = async () => {
 };
 
 export const markNotificationReadAPI = async (id: string) => {
-    const token = getToken();
     const res = await fetch(`${API_URL}/notifications/${id}/read`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Không thể đánh dấu thông báo.");
     return await res.json();
 };
 
 export const markAllNotificationsReadAPI = async () => {
-    const token = getToken();
     const res = await fetch(`${API_URL}/notifications/mark-all-read`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders()
     });
     if (!res.ok) throw new Error("Không thể đánh dấu tất cả thông báo.");
     return await res.json();

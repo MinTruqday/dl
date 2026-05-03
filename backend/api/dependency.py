@@ -52,9 +52,13 @@ async def get_current_user_optional(token: Optional[str] = Depends(OAuth2Passwor
 async def get_current_user_token_param(token: str) -> UserInDB:
     return await get_current_user(token)
 
-def require_role(required_roles: List[str]):
+def require_role(required_roles: List[RoleEnum]):
     async def role_checker(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
+        if current_user.role == RoleEnum.ADMIN:
+            return current_user
+            
         if current_user.role not in required_roles:
+            logger.warning(f"Role Access Denied: User {current_user.email} has role {current_user.role}, but need {required_roles}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Bạn không có quyền thực hiện thao tác này."

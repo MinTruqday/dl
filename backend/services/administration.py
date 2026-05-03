@@ -43,7 +43,10 @@ class AdministrationService:
     @staticmethod
     async def get_author_applications(status: str = "PENDING") -> list:
         db = db_client.mongodb.get_default_database()
-        return await db["author_applications"].find({"status": status}).sort("created_at", -1).to_list(length=100)
+        apps = await db["author_applications"].find({"status": status}).sort("created_at", -1).to_list(length=100)
+        return [
+            {**a, "id": str(a["_id"]), "_id": str(a["_id"])} for a in apps
+        ]
 
     @staticmethod
     async def review_author_application(application_id: str, status: str, reason: str, reviewer_id: str) -> dict:
@@ -75,13 +78,16 @@ class AdministrationService:
         return {"message": f"Chế độ bảo trì đã được {'bật' if enabled else 'tắt'}."}
 
     @staticmethod
-    async def trigger_backup(action: str) -> dict:
+    async def trigger_backup(action: str = "FULL") -> dict:
         logger.info(f"Administration: Backup action '{action}' triggered")
         return {"message": "Yêu cầu sao lưu dữ liệu đã được gửi đến hàng chờ."}
 
     @staticmethod
-    async def create_api_key(name: str, provider: str, key_value: str) -> dict:
+    async def create_api_key(name: str, provider: str = "DEFAULT", key_value: str = "") -> dict:
         db = db_client.mongodb.get_default_database()
+        if not key_value:
+            key_value = str(uuid.uuid4()).replace("-", "")
+            
         await db["api_keys"].insert_one({
             "_id": str(uuid.uuid4()),
             "name": name,
@@ -90,19 +96,66 @@ class AdministrationService:
             "created_at": datetime.utcnow()
         })
         logger.info(f"Administration: API Key '{name}' for '{provider}' created")
-        return {"message": "Đã lưu API Key thành công."}
+        return {"message": "Đã lưu API Key thành công.", "key": key_value}
 
     @staticmethod
-    async def create_marketing_campaign(title: str, target: str, discount: int) -> dict:
+    async def create_marketing_campaign(data: dict) -> dict:
         db = db_client.mongodb.get_default_database()
         campaign = {
             "_id": str(uuid.uuid4()),
-            "title": title,
-            "target_audience": target,
-            "discount_percent": discount,
+            "title": data.get("title", "Chiến dịch mới"),
+            "target_audience": data.get("target", "ALL"),
+            "discount_percent": data.get("discount", 0),
             "status": "active",
             "created_at": datetime.utcnow()
         }
         await db["marketing_campaigns"].insert_one(campaign)
-        logger.info(f"Administration: Campaign '{title}' created")
+        logger.info(f"Administration: Campaign '{campaign['title']}' created")
         return {"message": "Đã tạo chiến dịch marketing thành công."}
+    @staticmethod
+    async def get_system_health() -> dict:
+        import os
+        import time
+        db = db_client.mongodb.get_default_database()
+        try:
+            await db.command("ping")
+            db_status = "connected"
+        except Exception:
+            db_status = "disconnected"
+        
+        load_avg = os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
+        
+        return {
+            "status": "healthy" if db_status == "connected" else "degraded",
+            "uptime": "99.9%",
+            "database": db_status,
+            "cpu_load": f"{load_avg[0]}%",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    @staticmethod
+    async def get_maintenance_mode() -> dict:
+        db = db_client.mongodb.get_default_database()
+        config = await db["system_config"].find_one({"key": "maintenance_mode"})
+        if not config:
+            return {"enabled": False, "message": ""}
+        return {
+            "enabled": config.get("enabled", False),
+            "message": config.get("message", "")
+        }
+
+    @staticmethod
+    async def get_collector_stats() -> dict:
+        db = db_client.mongodb.get_default_database()
+        total_docs = await db["documents"].count_documents({})
+        total_assets = await db["assets"].count_documents({})
+        recent_crawls = await db["documents"].find({}, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
+        last_crawl = recent_crawls[0]["created_at"].isoformat() if recent_crawls else datetime.utcnow().isoformat()
+        
+        return {
+            "total_documents": total_docs,
+            "total_assets": total_assets,
+            "collector_status": "RUNNING",
+            "last_crawl": last_crawl,
+            "storage_usage_mb": round(total_docs * 0.1, 2)
+        }

@@ -1,3 +1,4 @@
+from typing import List, Any
 from core.config import settings
 import datetime
 import os
@@ -47,6 +48,39 @@ class DocumentService:
             "tags": [tag["_id"] for tag in tags_list],
             "categories": [category["_id"] for category in categories_list]
         }
+
+    @staticmethod
+    async def get_trending_documents(limit: int = 5) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        cursor = docs_col.find({"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}).sort("views", -1).limit(limit)
+        documents = await cursor.to_list(length=limit)
+        return [serialize_document(d) for d in documents]
+
+    @staticmethod
+    async def get_semantic_search(query: str, limit: int = 10) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        # Simple regex fallback as semantic search is usually handled by a separate engine
+        cursor = docs_col.find({
+            "status": DocumentStatus.PUBLISHED, 
+            "is_deleted": {"$ne": True},
+            "$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"description": {"$regex": query, "$options": "i"}}
+            ]
+        }).limit(limit)
+        documents = await cursor.to_list(length=limit)
+        return [serialize_document(d) for d in documents]
+
+    @staticmethod
+    async def get_ai_recommendations(limit: int = 10) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        # Simplified recommendation logic based on rating and views
+        cursor = docs_col.find({"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}).sort([("average_rating", -1), ("views", -1)]).limit(limit)
+        documents = await cursor.to_list(length=limit)
+        return [serialize_document(d) for d in documents]
 
     @staticmethod
     async def create_document(doc_in: DocumentCreate, current_user):

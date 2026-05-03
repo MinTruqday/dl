@@ -90,3 +90,27 @@ async def search_in_document(document_id: str, q: str = Query(...), current_user
         data=await ReadService.search_in_document(document_id, q, current_user),
         message="Tìm kiếm trong tài liệu thành công."
     )
+@router.post("/documents/{document_id}/highlights", response_model=APIResponse[Any])
+async def create_highlight(document_id: str, data: dict, current_user: UserInDB = Depends(get_current_user)):
+    from services.highlight import HighlightService
+    return APIResponse(
+        data=await HighlightService.create_highlight(document_id, data, current_user),
+        message="Tạo điểm nhấn thành công.",
+        status=201
+    )
+
+@router.get("/documents/{document_id}/highlights", response_model=APIResponse[Any])
+async def get_highlights(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from services.highlight import HighlightService
+    return APIResponse(
+        data=await HighlightService.get_highlights(document_id, current_user),
+        message="Lấy danh sách điểm nhấn thành công."
+    )
+
+@router.delete("/highlights/{highlight_id}", response_model=APIResponse[Any])
+async def delete_highlight(highlight_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from services.highlight import HighlightService
+    return APIResponse(
+        data=await HighlightService.delete_highlight(highlight_id, current_user),
+        message="Xóa điểm nhấn thành công."
+    )

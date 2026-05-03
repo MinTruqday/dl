@@ -36,6 +36,20 @@ async def list_documents(
 ) -> Any:
     return APIResponse(data=await DocumentService.list_documents(limit, offset, q, sort_by, category, tag), message="Lấy danh sách tài liệu thành công.", status=status.HTTP_200_OK)
 
+@router.get("/me", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_my_documents(skip: int = 0, limit: int = 50, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_my_documents(current_user, skip, limit),
+        message="Lấy danh sách tài liệu cá nhân thành công."
+    )
+
+@router.get("/me/trash", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_trash(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_trash(current_user),
+        message="Lấy danh sách thùng rác thành công."
+    )
+
 @router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_id(
     document_id: str,
@@ -73,19 +87,6 @@ class InviteCoauthorRequest(BaseModel):
 class DocumentPasswordRequest(BaseModel):
     password: str
 
-@router.get("/me", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_my_documents(skip: int = 0, limit: int = 50, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.get_my_documents(current_user, skip, limit),
-        message="Lấy danh sách tài liệu cá nhân thành công."
-    )
-
-@router.get("/me/trash", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_trash(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.get_trash(current_user),
-        message="Lấy danh sách thùng rác thành công."
-    )
 
 @router.post("/series", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):
@@ -137,4 +138,10 @@ async def get_document_dropoff(document_id: str, current_user: UserInDB = Depend
         data=await DocumentService.get_document_dropoff(document_id, current_user),
         message="Lấy tỷ lệ rơi rớt độc giả thành công."
     )
-
+@router.get("/{document_id}/audit-logs/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_document_audit_logs(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    # Placeholder logic to retrieve document-specific audit logs
+    return APIResponse(
+        data=[], 
+        message="Lấy nhật ký hoạt động tài liệu thành công."
+    )

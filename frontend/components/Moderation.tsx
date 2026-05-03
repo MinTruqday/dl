@@ -39,6 +39,7 @@ export default function Moderation({ initialTab }: { initialTab?: ModTab }) {
     const searchParams = useSearchParams();
     const tabFromUrl = searchParams.get("tab") as ModTab;
     
+    const { showToast } = useToast();
     const [activeTab, setActiveTab] = useState<ModTab>(initialTab || tabFromUrl || "documents");
     const [pendingDocuments, setPendingDocuments] = useState<any[]>([]);
     const [reports, setReports] = useState<any[]>([]);
@@ -482,6 +483,8 @@ export default function Moderation({ initialTab }: { initialTab?: ModTab }) {
                         </div>
                     </div>
                 )}
+
+                {activeTab === "logs" && (
                     <div className="space-y-10 animate-in fade-in duration-300">
                         <div className="flex items-center justify-between px-2">
                             <h2 className="text-[11px] font-bold text-black tracking-[0.2em] uppercase">Nhật ký hoạt động ({activityLogs.length})</h2>

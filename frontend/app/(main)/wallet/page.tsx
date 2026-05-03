@@ -38,6 +38,7 @@ interface Transaction {
 
 export default function WalletPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const [balance, setBalance] = useState<number>(0);
   const [history, setHistory] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);

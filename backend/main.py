@@ -15,6 +15,7 @@ import sys
 import time
 
 from api.auth import router as auth_router
+from api.asset import router as asset_router
 from api.comment import router as comment_router
 from api.document import router as document_router
 from api.upload import router as upload_router
@@ -50,6 +51,7 @@ from api.user import router as user_router
 from api.discovery import router as discovery_router
 from api.passkey import router as passkey_router
 from api.publish import router as publish_router
+from api.coupon import router as coupon_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -74,19 +76,28 @@ app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    response = JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+    response = JSONResponse(status_code=422, content={"detail": exc.errors()})
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global Exception on {request.method} {request.url}: {repr(exc)}")
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={"detail": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."},
     )
+    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
@@ -110,6 +121,7 @@ async def shutdown_event():
     await close_db()
 
 app.include_router(auth_router, prefix="")
+app.include_router(asset_router)
 app.include_router(profile_router, prefix="")
 app.include_router(wallet_router, prefix="/wallet")
 app.include_router(payment_router, prefix="/payment")
@@ -121,12 +133,10 @@ app.include_router(story_router, prefix="")
 app.include_router(comment_router, prefix="")
 app.include_router(document_router, prefix="")
 app.include_router(review_router, prefix="")
-app.include_router(highlight_router, prefix="")
 app.include_router(version_router, prefix="")
 app.include_router(latex_router)
 app.include_router(editor_router)
 app.include_router(monetization_router)
-app.include_router(payout_router)
 app.include_router(read_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
@@ -137,14 +147,16 @@ app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
 app.include_router(collector_router)
-app.include_router(administration_router)
+app.include_router(administration_router, prefix="/admin", tags=["Administration"])
+app.include_router(payout_router, prefix="/admin", tags=["Payout"])
+app.include_router(banner_router, prefix="/admin", tags=["Banner"])
 app.include_router(moderation_router)
 app.include_router(telemetry_router)
-app.include_router(banner_router)
 app.include_router(user_router)
 app.include_router(discovery_router)
 app.include_router(passkey_router)
 app.include_router(publish_router)
+app.include_router(coupon_router)
 
 @app.get("/health")
 async def health_check():

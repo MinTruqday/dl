@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const router = useRouter();
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConv, setSelectedConv] = useState<any>(null);

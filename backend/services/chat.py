@@ -12,7 +12,8 @@ class ChatService:
             receiver_id=receiver_id,
             content=content
         )
-        await db_client.mongodb["messages"].insert_one(message.model_dump(by_alias=True))
+        db = db_client.mongodb.get_default_database()
+        await db["messages"].insert_one(message.model_dump(by_alias=True))
         return message
 
     @staticmethod
@@ -23,10 +24,11 @@ class ChatService:
                 {"sender_id": other_user_id, "receiver_id": current_user.id}
             ]
         }
-        cursor = db_client.mongodb["messages"].find(query).sort("created_at", -1).limit(limit)
+        db = db_client.mongodb.get_default_database()
+        cursor = db["messages"].find(query).sort("created_at", -1).limit(limit)
         messages = await cursor.to_list(length=limit)
         
-        await db_client.mongodb["messages"].update_many(
+        await db["messages"].update_many(
             {"sender_id": other_user_id, "receiver_id": current_user.id, "is_read": False},
             {"$set": {"is_read": True}}
         )
@@ -65,12 +67,13 @@ class ChatService:
             }
         ]
         
-        cursor = db_client.mongodb["messages"].aggregate(pipeline)
+        db = db_client.mongodb.get_default_database()
+        cursor = db["messages"].aggregate(pipeline)
         conversations = await cursor.to_list(length=100)
         
         results = []
         for conv in conversations:
-            other_user = await db_client.mongodb["users"].find_one({"_id": conv["_id"]})
+            other_user = await db["users"].find_one({"_id": conv["_id"]})
             if other_user:
                 results.append({
                     "other_user_id": conv["_id"],

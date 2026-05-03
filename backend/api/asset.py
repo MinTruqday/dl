@@ -15,7 +15,7 @@ class AssetUploadRequest(BaseModel):
     url: str = ""
 
 @router.get("", response_model=APIResponse[Any])
-async def get_my_assets(type: str = Query("all"), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):
+async def get_my_assets(type: str = Query("all"), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))):
     return APIResponse(
         data=await AssetService.get_assets(current_user, type),
         message="Lấy danh sách tài nguyên thành công."

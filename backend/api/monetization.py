@@ -70,7 +70,7 @@ async def set_flash_sale(document_id: str, data: FlashSaleRequest, current_user:
         message="Thiết lập Flash Sale thành công."
     )
 
-@router.get("/analytics/revenue", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+@router.get("/analytics/revenue", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))])
 async def get_author_revenue(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await MonetizationService.get_author_revenue_analytics(current_user),

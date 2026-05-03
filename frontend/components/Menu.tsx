@@ -167,7 +167,7 @@ export default function Menu({
           />
           
           <NavLink
-            href="/my-documents"
+            href="/library"
             label="Kho tài liệu"
             icon={FileText}
             roles={["admin", "author"]}

@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Workspace from "@/app/components/Workspace";
+import Workspace from "@/components/Workspace";
 import { 
   Folder, FileText, Search, Plus, Upload, Trash2, Home, File, 
   Image as ImageIcon, CheckCircle, ChevronRight, Download, Star, 

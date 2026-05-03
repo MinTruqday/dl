@@ -73,7 +73,10 @@ class SocialService:
             {"$addFields": {
                 "total_match": {
                     "$size": {
-                        "$setIntersection": ["$interests", user_tags]
+                        "$setIntersection": [
+                            {"$ifNull": ["$interests", []]}, 
+                            user_tags
+                        ]
                     }
                 }
             }},

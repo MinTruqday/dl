@@ -1,4 +1,4 @@
-import { API_URL, getToken } from './auth.service';
+import { API_URL, getToken, getAuthHeaders } from './auth.service';
 
 export async function saveDocumentDraftAPI(documentId: string, content: string, format: string) {
     const token = getToken();
@@ -105,6 +105,20 @@ export async function getDocumentsAPI(
     return await res.json();
 }
 
+export async function getDocumentBySlugAPI(slug: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/documents/slug/${slug}`, {
+        method: 'GET',
+        headers: token ? {
+            'Authorization': `Bearer ${token}`
+        } : {}
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Không thể truy xuất dữ liệu tài liệu.");
+    return data;
+}
+
 export async function getMyDocumentsAPI(skip: number = 0, limit: number = 50) {
     const token = getToken();
     const res = await fetch(`${API_URL}/documents/me?skip=${skip}&limit=${limit}`, {
@@ -119,17 +133,17 @@ export async function getMyDocumentsAPI(skip: number = 0, limit: number = 50) {
     return json.data || json;
 }
 
-export async function getTrendingDocumentsAPI(limit: number = 5) {
-    const res = await fetch(`${API_URL}/documents/trending?limit=${limit}`);
+export const getTrendingDocumentsAPI = async (limit: number = 3) => {
+    const res = await fetch(`${API_URL}/discovery/trending?limit=${limit}`);
     if (!res.ok) throw new Error("Không thể tải xu hướng.");
     return await res.json();
-}
+};
 
-export async function getTagsCategoriesAPI() {
-    const res = await fetch(`${API_URL}/documents/tags-and-categories`);
+export const getTagsCategoriesAPI = async () => {
+    const res = await fetch(`${API_URL}/discovery/tags-and-categories`, { headers: getAuthHeaders() });
     if (!res.ok) throw new Error("Không thể tải danh mục.");
     return await res.json();
-}
+};
 
 export async function createDocumentAPI(data: any) {
     const token = getToken();
@@ -183,14 +197,11 @@ export async function deleteAdminDocumentAPI(docId: string) {
     return await res.json();
 }
 
-export async function getAIRecommendationsAPI(limit: number = 4) {
-    const token = getToken();
-    const res = await fetch(`${API_URL}/discovery/recommendations/ai?limit=${limit}`, {
-        headers: token ? { "Authorization": `Bearer ${token}` } : {}
-    });
-    if (!res.ok) return [];
+export const getAIRecommendationsAPI = async (limit: number = 4) => {
+    const res = await fetch(`${API_URL}/discovery/recommendations/ai?limit=${limit}`, { headers: getAuthHeaders() });
+    if (!res.ok) throw new Error("Không thể tải gợi ý từ AI.");
     return await res.json();
-}
+};
 
 export async function getDocumentVersionsAPI(documentId: string) {
     const token = getToken();
@@ -329,8 +340,9 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
 }
 
 export async function getAuditLogsAPI(id: string) {
+    if (!id || id === 'undefined') return [];
     const token = getToken();
-    const res = await fetch(`${API_URL}/documents/${id}/audit_logs`, {
+    const res = await fetch(`${API_URL}/documents/${id}/audit-logs/`, {
          headers: { Authorization: `Bearer ${token}` }
     });
     if(!res.ok) return [];
@@ -352,4 +364,17 @@ export async function getDocumentAnalyticsAPI(id: string) {
 export async function getAcademicMetricsAPI(id: string) {
     const res = await fetch(`${API_URL}/documents/${id}/metrics`);
     return res.ok ? res.json() : null;
+}
+
+export async function purchaseDocumentAPI(documentId: string) {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/wallet/purchase/document/${documentId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Không thể thực hiện giao dịch mua tài liệu.");
+    }
+    return await res.json();
 }
