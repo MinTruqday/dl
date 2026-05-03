@@ -2,7 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import Workspace from "@/components/Workspace";
-import { HelpCircle, Book, MessageCircle, Shield, LifeBuoy, Search } from "lucide-react";
+import {
+  HelpCircle,
+  Book,
+  MessageCircle,
+  Shield,
+  LifeBuoy,
+  Search,
+} from "lucide-react";
 
 export default function HelpPage() {
   const [visible, setVisible] = useState(false);
@@ -31,19 +38,23 @@ export default function HelpPage() {
     },
   ];
 
-  const filteredFaqs = faqs.filter((f) => f.q.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFaqs = faqs.filter((f) =>
+    f.q.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <Workspace>
       <div
-        className="max-w-4xl mx-auto px-6 py-12 md:py-20 transition-all duration-300 font-sans"
+        className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(12px)",
         }}
       >
         <div className="text-center mb-20 space-y-6">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">Trung tâm hỗ trợ</h1>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">
+            Trung tâm hỗ trợ
+          </h1>
           <p className="text-zinc-500 font-medium max-w-xl mx-auto text-sm leading-relaxed">
             Giải đáp các thắc mắc về trải nghiệm sử dụng hệ thống DocLib
           </p>
@@ -52,7 +63,7 @@ export default function HelpPage() {
             <input
               type="text"
               placeholder=""
-              className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:border-black focus:bg-white transition-all text-sm font-bold"
+              className="w-full h-14 pl-12 pr-4 bg-white border border-zinc-200 rounded-none focus:outline-none focus:border-black focus:bg-white text-sm font-bold"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -79,11 +90,13 @@ export default function HelpPage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="p-8 border border-zinc-200 rounded-none hover:border-black transition-all group cursor-pointer active:scale-[0.98]"
+              className="p-8 border border-zinc-200 rounded-none group cursor-pointer active:scale-[0.98]"
             >
-              <item.icon className="w-8 h-8 mb-6 text-zinc-200 group-hover:text-black transition-colors" />
+              <item.icon className="w-8 h-8 mb-6 text-zinc-200 transition-colors" />
               <h3 className="font-bold text-black mb-3">{item.title}</h3>
-              <p className="text-[11px] text-zinc-400 leading-relaxed font-bold">{item.desc}</p>
+              <p className="text-[11px] text-zinc-400 leading-relaxed font-bold">
+                {item.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -94,25 +107,36 @@ export default function HelpPage() {
           </h2>
           <div className="space-y-4">
             {filteredFaqs.map((faq, i) => (
-              <div key={i} className="p-8 bg-zinc-50 border border-zinc-200 rounded-none hover:bg-white transition-all">
+              <div
+                key={i}
+                className="p-8 bg-white border border-zinc-200 rounded-none "
+              >
                 <h4 className="font-bold text-black mb-3 flex items-center gap-3">
                   <HelpCircle className="w-4 h-4 text-zinc-400" />
                   {faq.q}
                 </h4>
-                <p className="text-sm text-zinc-500 leading-relaxed font-medium">{faq.a}</p>
+                <p className="text-sm text-zinc-500 leading-relaxed font-medium">
+                  {faq.a}
+                </p>
               </div>
             ))}
             {filteredFaqs.length === 0 && (
-              <p className="text-center py-20 text-zinc-300 font-bold italic text-sm">Không tìm thấy kết quả phù hợp</p>
+              <p className="text-center py-20 text-zinc-300 font-bold italic text-sm">
+                Không tìm thấy kết quả phù hợp
+              </p>
             )}
           </div>
         </div>
 
-        <div className="mt-24 p-12 bg-black text-white rounded-none text-center animate-in slide-in-from-bottom-8 duration-300">
+        <div className="mt-24 p-12 bg-black text-white rounded-none text-center animate-in slide-in-from-bottom-8 ">
           <MessageCircle className="w-10 h-10 mx-auto mb-6 text-zinc-400" />
-          <h2 className="text-2xl font-bold mb-3 tracking-tight">Cần thêm thông tin?</h2>
-          <p className="text-zinc-400 mb-10 text-[11px] font-bold">Liên hệ với chúng tôi để được giải đáp thắc mắc</p>
-          <button className="px-10 py-4 bg-white text-black font-bold text-[11px] hover:bg-zinc-200 transition-all active:scale-95">
+          <h2 className="text-2xl font-bold mb-3 tracking-tight">
+            Cần thêm thông tin?
+          </h2>
+          <p className="text-zinc-400 mb-10 text-[11px] font-bold">
+            Liên hệ với chúng tôi để được giải đáp thắc mắc
+          </p>
+          <button className="px-10 py-4 bg-white text-black font-bold text-[11px] active:scale-95">
             Gửi yêu cầu hỗ trợ
           </button>
         </div>

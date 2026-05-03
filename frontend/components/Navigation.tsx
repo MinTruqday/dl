@@ -3,7 +3,16 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { semanticSearchAPI } from "@/services/search.service";
 import { useRouter } from "next/navigation";
-import { Bell, User, Menu, LogOut, ChevronDown, Search, X, Monitor } from "lucide-react";
+import {
+  Bell,
+  User,
+  Menu,
+  LogOut,
+  ChevronDown,
+  Search,
+  X,
+  Monitor,
+} from "lucide-react";
 import AiChat from "./AiChat";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -23,10 +32,16 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
         setShowNotifications(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setShowUserMenu(false);
       }
     };
@@ -58,7 +73,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-zinc-100 font-sans animate-in fade-in duration-300"
+        className="fixed top-0 left-0 right-0 z-[100] bg-white border-b border-zinc-100 font-sans animate-in fade-in "
         style={{ height: "var(--navbar-height)" }}
       >
         <div className="h-full flex items-center justify-between px-6 max-w-[1440px] mx-auto w-full">
@@ -66,7 +81,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
             {onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className="p-2.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-all active:scale-95"
+                className="p-2.5 text-zinc-400 active:scale-95"
                 aria-label="Mở trình đơn"
               >
                 <Menu className="w-5 h-5" />
@@ -76,12 +91,17 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
               href="/"
               className="text-2xl font-bold tracking-tighter text-black leading-none flex items-center gap-2 group active:scale-95 transition-transform"
             >
-              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs">DL</div>
+              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs">
+                DL
+              </div>
               <span className="hidden sm:block">DocLib</span>
             </Link>
           </div>
 
-          <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden lg:block group mx-12">
+          <form
+            onSubmit={handleSearch}
+            className="flex-1 max-w-xl hidden lg:block group mx-12"
+          >
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within:text-black transition-colors" />
               <input
@@ -89,13 +109,13 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-100 rounded-sm pl-12 pr-12 py-3 text-sm font-bold focus:bg-white focus:border-black focus:outline-none transition-all placeholder:text-zinc-200"
+                className="w-full bg-white border border-zinc-100 rounded-sm pl-12 pr-12 py-3 text-sm font-bold focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-200"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-zinc-100 transition-all active:scale-90"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 active:scale-90"
                 >
                   <X className="w-3.5 h-3.5 text-zinc-400" />
                 </button>
@@ -109,8 +129,8 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-3 text-zinc-400 hover:bg-zinc-50 hover:text-black transition-all active:scale-95 ${
-                      showNotifications ? "bg-zinc-50 text-black" : ""
+                    className={`relative p-3 text-zinc-400 active:scale-95 ${
+                      showNotifications ? "bg-white text-black" : ""
                     }`}
                     aria-label="Thông báo"
                   >
@@ -121,11 +141,15 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                   </button>
 
                   {showNotifications && (
-                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-100 overflow-hidden z-[200] animate-in fade-in slide-in-from-top-2 duration-300 rounded-sm">
-                      <div className="px-6 py-5 border-b border-zinc-50 flex items-center justify-between bg-zinc-50/20">
-                        <span className="text-[11px] font-bold text-black">Thông báo</span>
+                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-100 overflow-hidden z-[200] animate-in fade-in slide-in-from-top-2 rounded-sm">
+                      <div className="px-6 py-5 border-b border-zinc-50 flex items-center justify-between bg-white/20">
+                        <span className="text-[11px] font-bold text-black">
+                          Thông báo
+                        </span>
                         {unreadCount > 0 && (
-                          <span className="px-2 py-0.5 bg-black text-white text-[9px] font-bold">{unreadCount} mới</span>
+                          <span className="px-2 py-0.5 bg-black text-white text-[9px] font-bold">
+                            {unreadCount} mới
+                          </span>
                         )}
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">
@@ -134,8 +158,8 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-6 py-5 cursor-pointer transition-colors hover:bg-zinc-50 ${
-                                  !notif.is_read ? "bg-zinc-50/30" : ""
+                                className={`px-6 py-5 cursor-pointer transition-colors ${
+                                  !notif.is_read ? "bg-white" : ""
                                 }`}
                                 onClick={() => {
                                   if (!notif.is_read) markAsRead(notif._id);
@@ -144,13 +168,17 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                                 }}
                               >
                                 <div className="flex gap-4 items-start">
-                                  {!notif.is_read && <span className="mt-2 w-1.5 h-1.5 bg-black shrink-0" />}
+                                  {!notif.is_read && (
+                                    <span className="mt-2 w-1.5 h-1.5 bg-black shrink-0" />
+                                  )}
                                   <div className={!notif.is_read ? "" : "pl-5"}>
                                     <p className="text-[13px] text-zinc-700 leading-relaxed font-medium">
                                       {notif.message}
                                     </p>
                                     <span className="text-[10px] text-zinc-300 mt-2 block font-bold">
-                                      {new Date(notif.created_at).toLocaleDateString("vi-VN")}
+                                      {new Date(
+                                        notif.created_at,
+                                      ).toLocaleDateString("vi-VN")}
                                     </span>
                                   </div>
                                 </div>
@@ -160,14 +188,16 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                         ) : (
                           <div className="py-20 text-center">
                             <Bell className="w-10 h-10 mx-auto text-zinc-50 mb-4" />
-                            <p className="text-[11px] font-bold text-zinc-300">Không có thông báo mới</p>
+                            <p className="text-[11px] font-bold text-zinc-300">
+                              Không có thông báo mới
+                            </p>
                           </div>
                         )}
                       </div>
                       <Link
                         href="/notification"
                         onClick={() => setShowNotifications(false)}
-                        className="block py-4 text-center text-[10px] font-bold text-zinc-400 hover:text-black border-t border-zinc-50 bg-zinc-50/20 transition-all hover:bg-zinc-50 active:scale-95"
+                        className="block py-4 text-center text-[10px] font-bold text-zinc-400 border-t border-zinc-50 bg-white/20 active:scale-95"
                       >
                         Xem tất cả thông báo
                       </Link>
@@ -178,13 +208,17 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-3 py-2 text-zinc-400 hover:bg-zinc-50 transition-all active:scale-95 ${
-                      showUserMenu ? "bg-zinc-50" : ""
+                    className={`flex items-center gap-3 px-3 py-2 text-zinc-400 active:scale-95 ${
+                      showUserMenu ? "bg-white" : ""
                     }`}
                   >
-                    <div className="w-9 h-9 bg-zinc-50 border border-zinc-100 text-black flex items-center justify-center relative group-hover:border-black transition-all rounded-sm overflow-hidden">
+                    <div className="w-9 h-9 bg-white border border-zinc-100 text-black flex items-center justify-center relative rounded-sm overflow-hidden">
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} className="w-full h-full object-cover grayscale" alt="" />
+                        <img
+                          src={user.avatar_url}
+                          className="w-full h-full object-cover grayscale"
+                          alt=""
+                        />
                       ) : (
                         <User className="w-5 h-5" />
                       )}
@@ -203,22 +237,26 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-300 hidden sm:block transition-transform duration-300 ${
+                      className={`w-3.5 h-3.5 text-zinc-300 hidden sm:block transition-transform ${
                         showUserMenu ? "rotate-180 text-black" : ""
                       }`}
                     />
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-3 w-64 bg-white border border-zinc-100 overflow-hidden z-[200] py-2 animate-in fade-in slide-in-from-top-2 duration-300 rounded-sm">
-                      <div className="px-6 py-5 border-b border-zinc-50 mb-2 bg-zinc-50/20">
-                        <p className="text-[10px] font-bold text-zinc-400 mb-1">Tài khoản</p>
-                        <p className="text-sm font-bold truncate text-black">{user.email}</p>
+                    <div className="absolute right-0 mt-3 w-64 bg-white border border-zinc-100 overflow-hidden z-[200] py-2 animate-in fade-in slide-in-from-top-2 rounded-sm">
+                      <div className="px-6 py-5 border-b border-zinc-50 mb-2 bg-white/20">
+                        <p className="text-[10px] font-bold text-zinc-400 mb-1">
+                          Tài khoản
+                        </p>
+                        <p className="text-sm font-bold truncate text-black">
+                          {user.email}
+                        </p>
                       </div>
                       <Link
                         href="/profile"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all active:scale-95"
+                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-500 active:scale-95"
                       >
                         <User className="w-4 h-4" />
                         Hồ sơ cá nhân
@@ -226,7 +264,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <Link
                         href="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-500 hover:text-black hover:bg-zinc-50 transition-all active:scale-95"
+                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-500 active:scale-95"
                       >
                         <Monitor className="w-4 h-4" />
                         Cài đặt hệ thống
@@ -234,7 +272,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <div className="border-t border-zinc-50 my-2" />
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-300 hover:text-black hover:bg-zinc-50 transition-all w-full text-left active:scale-95"
+                        className="flex items-center gap-4 px-6 py-3.5 text-[11px] font-bold text-zinc-300 w-full text-left active:scale-95"
                       >
                         <LogOut className="w-4 h-4" />
                         Đăng xuất tài khoản
@@ -247,13 +285,13 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
               <div className="flex items-center gap-3 ml-4">
                 <Link
                   href="/login"
-                  className="px-6 py-3 text-sm font-bold text-zinc-500 hover:text-black transition-all active:scale-95"
+                  className="px-6 py-3 text-sm font-bold text-zinc-500 active:scale-95"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
-                  className="px-8 py-3 text-sm font-bold text-white bg-black hover:bg-zinc-800 transition-all active:scale-95 rounded-sm"
+                  className="px-8 py-3 text-sm font-bold text-white bg-black active:scale-95 rounded-sm"
                 >
                   Đăng ký
                 </Link>

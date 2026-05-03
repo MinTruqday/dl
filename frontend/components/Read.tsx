@@ -1,4 +1,11 @@
 "use client";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReaderTools from "./ReaderTools";
@@ -9,12 +16,19 @@ import {
   updateHighlightNoteAPI,
   exportHighlightsMarkdownAPI,
 } from "@/services/read.service";
-import { Highlighter, X, Trash2, PenTool, Download, Loader2 } from "lucide-react";
+import {
+  Highlighter,
+  X,
+  Trash2,
+  PenTool,
+  Download,
+  Loader2,
+} from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 
 const HIGHLIGHT_COLORS = [
   { value: "#e4e4e7", label: "Nhạt", className: "bg-zinc-200" },
-  { value: "#71717a", label: "Vừa", className: "bg-zinc-500" },
+  { value: "#71717a", label: "Vừa", className: "bg-white0" },
   { value: "#18181b", label: "Đậm", className: "bg-zinc-900" },
 ];
 
@@ -39,18 +53,28 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
   const [fontSize, setFontSize] = useState(18);
   const [theme, setTheme] = useState<"light" | "zinc" | "night">("light");
   const [highlights, setHighlights] = useState<Highlight[]>([]);
-  const [selectionPopup, setSelectionPopup] = useState<{ x: number; y: number; text: string } | null>(null);
-  const [editingNote, setEditingNote] = useState<{ id: string; note: string } | null>(null);
+  const [selectionPopup, setSelectionPopup] = useState<{
+    x: number;
+    y: number;
+    text: string;
+  } | null>(null);
+  const [editingNote, setEditingNote] = useState<{
+    id: string;
+    note: string;
+  } | null>(null);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(false);
   const [autoScrollSpeed, setAutoScrollSpeed] = useState(2);
   const [searchQuery, setSearchQuery] = useState("");
-  const [notification, setNotification] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [notification, setNotification] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
   const articleRef = useRef<HTMLElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const themeClasses = {
     light: "bg-white text-zinc-900",
-    zinc: "bg-zinc-50 text-zinc-800",
+    zinc: "bg-white text-zinc-800",
     night: "bg-black text-zinc-300",
   };
 
@@ -165,7 +189,10 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest("[data-highlight-popup]") && !window.getSelection()?.toString().trim()) {
+      if (
+        !target.closest("[data-highlight-popup]") &&
+        !window.getSelection()?.toString().trim()
+      ) {
         setSelectionPopup(null);
       }
     };
@@ -177,20 +204,27 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
     if (highlights.length === 0) return content;
 
     let result = content;
-    const sortedHighlights = [...highlights].sort((a, b) => b.text.length - a.text.length);
+    const sortedHighlights = [...highlights].sort(
+      (a, b) => b.text.length - a.text.length,
+    );
 
     const parts: { text: string; highlight?: Highlight }[] = [];
     let remaining = result;
 
     if (sortedHighlights.length > 0) {
-      const allIndices: { start: number; end: number; highlight: Highlight }[] = [];
+      const allIndices: { start: number; end: number; highlight: Highlight }[] =
+        [];
 
       for (const h of sortedHighlights) {
         let searchFrom = 0;
         while (true) {
           const idx = remaining.indexOf(h.text, searchFrom);
           if (idx === -1) break;
-          allIndices.push({ start: idx, end: idx + h.text.length, highlight: h });
+          allIndices.push({
+            start: idx,
+            end: idx + h.text.length,
+            highlight: h,
+          });
           searchFrom = idx + h.text.length;
         }
       }
@@ -199,7 +233,10 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
 
       const filtered: typeof allIndices = [];
       for (const idx of allIndices) {
-        if (filtered.length === 0 || idx.start >= filtered[filtered.length - 1].end) {
+        if (
+          filtered.length === 0 ||
+          idx.start >= filtered[filtered.length - 1].end
+        ) {
           filtered.push(idx);
         }
       }
@@ -209,7 +246,10 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
         if (f.start > cursor) {
           parts.push({ text: remaining.slice(cursor, f.start) });
         }
-        parts.push({ text: remaining.slice(f.start, f.end), highlight: f.highlight });
+        parts.push({
+          text: remaining.slice(f.start, f.end),
+          highlight: f.highlight,
+        });
         cursor = f.end;
       }
       if (cursor < remaining.length) {
@@ -225,7 +265,7 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
           part.highlight ? (
             <mark
               key={i}
-              className="relative cursor-pointer transition-all duration-150 hover:opacity-70 rounded-none px-0.5 select-none"
+              className="relative cursor-pointer rounded-none px-0.5 select-none"
               style={{
                 backgroundColor: part.highlight.color + "30",
                 borderBottom: `2px solid ${part.highlight.color}`,
@@ -242,19 +282,19 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
             </mark>
           ) : (
             <span key={i}>{part.text}</span>
-          )
+          ),
         )}
       </>
     );
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-700 font-sans ${themeClasses[theme]}`}>
-      
-
+    <div className={`min-h-screen font-sans ${themeClasses[theme]}`}>
       <div className="max-w-[840px] mx-auto px-8 py-24 md:py-32">
         <header className="mb-20 border-b border-current/10 pb-16">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6 leading-tight">{title}</h1>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6 leading-tight">
+            {title}
+          </h1>
           <div className="text-[11px] font-bold opacity-40 flex items-center gap-4">
             <span>Bản đọc trực tuyến</span>
             {highlights.length > 0 && (
@@ -275,12 +315,14 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
         </article>
 
         {highlights.length > 0 && (
-          <div className="mt-24 pt-16 border-t border-current/10 animate-in fade-in duration-500">
+          <div className="mt-24 pt-16 border-t border-current/10 animate-in fade-in ">
             <div className="flex items-center justify-between mb-10">
-              <h3 className="text-[11px] font-bold opacity-40">Danh sách ghi chú ({highlights.length})</h3>
+              <h3 className="text-[11px] font-bold opacity-40">
+                Danh sách ghi chú ({highlights.length})
+              </h3>
               <button
                 onClick={handleExportMarkdown}
-                className="flex items-center gap-2.5 py-3 px-5 border border-current/10 text-[10px] font-bold hover:bg-current/5 transition-all active:scale-95"
+                className="flex items-center gap-2.5 py-3 px-5 border border-current/10 text-[10px] font-bold active:scale-95"
               >
                 <Download className="w-4 h-4" />
                 Xuất Markdown
@@ -290,24 +332,33 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
               {highlights.map((h) => (
                 <div
                   key={h.id}
-                  className="flex gap-6 items-start p-6 border border-current/5 transition-all duration-300 hover:border-current/20 group bg-current/[0.02]"
+                  className="flex gap-6 items-start p-6 border border-current/5 group bg-current/[0.02]"
                 >
-                  <div className="w-3.5 h-3.5 shrink-0 mt-1.5" style={{ backgroundColor: h.color }} />
+                  <div
+                    className="w-3.5 h-3.5 shrink-0 mt-1.5"
+                    style={{ backgroundColor: h.color }}
+                  />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate leading-relaxed">{h.text}</p>
-                    {h.note && <p className="text-xs opacity-50 mt-2 leading-relaxed font-medium">{h.note}</p>}
+                    <p className="text-sm font-bold truncate leading-relaxed">
+                      {h.text}
+                    </p>
+                    {h.note && (
+                      <p className="text-xs opacity-50 mt-2 leading-relaxed font-medium">
+                        {h.note}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shrink-0">
+                  <div className="flex gap-1 opacity-0 transition-opacity shrink-0">
                     <button
                       onClick={() => setEditingNote({ id: h.id, note: h.note })}
-                      className="p-2 hover:bg-current/10 transition-colors"
+                      className="p-2 transition-colors"
                       title="Chỉnh sửa"
                     >
                       <PenTool className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteHighlight(h.id)}
-                      className="p-2 hover:bg-current/10 transition-colors"
+                      className="p-2 transition-colors"
                       title="Xóa"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -327,7 +378,7 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
       {selectionPopup && (
         <div
           data-highlight-popup
-          className="fixed z-[1000] flex gap-1 bg-black border border-zinc-800 p-2 animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="fixed z-[1000] flex gap-1 bg-black border border-zinc-800 p-2 animate-in fade-in slide-in-from-bottom-2 "
           style={{
             left: `${selectionPopup.x}px`,
             top: `${selectionPopup.y}px`,
@@ -340,7 +391,7 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
               <button
                 key={c.value}
                 onClick={() => handleCreateHighlight(c.value)}
-                className={`w-7 h-7 border border-white/10 hover:border-white transition-all duration-300 active:scale-90 ${c.className}`}
+                className={`w-7 h-7 border border-white/10 active:scale-90 ${c.className}`}
                 title={c.label}
               />
             ))}
@@ -350,48 +401,49 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
               setSelectionPopup(null);
               window.getSelection()?.removeAllRanges();
             }}
-            className="p-1.5 text-zinc-500 hover:text-white transition-colors"
+            className="p-1.5 text-zinc-500 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {editingNote && (
-        <div className="fixed inset-0 z-[2000] bg-black/80 flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-sm">
-          <div className="bg-white border border-zinc-200 w-full max-w-lg animate-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100">
-              <span className="text-[11px] font-bold text-zinc-400">Ghi chú cá nhân</span>
-              <button onClick={() => setEditingNote(null)} className="p-2 hover:bg-zinc-50 transition-colors">
-                <X className="w-5 h-5 text-zinc-400" />
-              </button>
-            </div>
-            <div className="p-8">
-              <textarea
-                className="w-full border border-zinc-100 bg-zinc-50 p-5 text-sm font-medium outline-none resize-none focus:border-black focus:bg-white transition-all min-h-[160px]"
-                placeholder=""
-                value={editingNote.note}
-                onChange={(e) => setEditingNote({ ...editingNote, note: e.target.value })}
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3 p-8 pt-0">
-              <button
-                onClick={() => handleUpdateNote(editingNote.id, editingNote.note)}
-                className="flex-1 py-4 bg-black text-white text-[11px] font-bold hover:bg-zinc-800 transition-all active:scale-95"
-              >
-                Lưu ghi chú
-              </button>
-              <button
-                onClick={() => handleDeleteHighlight(editingNote.id)}
-                className="py-4 px-6 border border-zinc-200 text-[11px] font-bold text-zinc-400 hover:text-black hover:border-black transition-all active:scale-95"
-              >
-                Xóa đánh dấu
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!editingNote}
+        onClose={() => setEditingNote(null)}
+        className="max-w-lg"
+      >
+        <ModalHeader>
+          <ModalTitle>Ghi chú cá nhân</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <textarea
+            className="w-full border border-zinc-100 bg-white p-6 text-sm font-medium outline-none resize-none focus:border-black min-h-[160px] rounded-sm transition-colors"
+            placeholder=""
+            value={editingNote?.note}
+            onChange={(e) =>
+              setEditingNote({ ...editingNote, note: e.target.value })
+            }
+            autoFocus
+          />
+        </ModalContent>
+        <ModalFooter className="flex gap-4">
+          <button
+            onClick={() =>
+              handleUpdateNote(editingNote.id, editingNote.note)
+            }
+            className="flex-1 h-14 bg-black text-white text-[11px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-transform"
+          >
+            Lưu ghi chú
+          </button>
+          <button
+            onClick={() => handleDeleteHighlight(editingNote.id)}
+            className="h-14 px-8 border border-zinc-200 text-[11px] font-bold text-zinc-400 uppercase tracking-widest active:scale-95 rounded-sm transition-transform"
+          >
+            Xóa đánh dấu
+          </button>
+        </ModalFooter>
+      </Modal>
 
       <ReaderTools
         textContent={content}

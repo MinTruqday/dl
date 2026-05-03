@@ -19,7 +19,10 @@ function b64urlToBuffer(b64url: string): ArrayBuffer {
   const b64 = (b64url + pad).replace(/-/g, "+").replace(/_/g, "/");
   const raw = atob(b64);
   const bytes = Uint8Array.from(raw, (c) => c.charCodeAt(0));
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
 }
 
 function bytesToB64url(bytes: ArrayBuffer): string {
@@ -60,16 +63,18 @@ export default function LoginPage() {
           rpId: begin.public_key.rpId,
           timeout: begin.public_key.timeout,
           userVerification: begin.public_key.userVerification,
-          allowCredentials: (begin.public_key.allowCredentials || []).map((c: any) => ({
-            type: c.type,
-            id: b64urlToBuffer(c.id),
-          })),
+          allowCredentials: (begin.public_key.allowCredentials || []).map(
+            (c: any) => ({
+              type: c.type,
+              id: b64urlToBuffer(c.id),
+            }),
+          ),
         },
       });
 
       const cred = assertion as PublicKeyCredential;
       const resp = cred.response as AuthenticatorAssertionResponse;
-      
+
       const credentialJSON = {
         id: cred.id,
         rawId: bytesToB64url(cred.rawId),
@@ -114,12 +119,15 @@ export default function LoginPage() {
 
     try {
       const data = await login(email, password);
-      
+
       await loginState(data.access_token);
-      
+
       if (!data.user?.has_passkey) {
         setPendingPasskeyEmail(data.user?.email || email);
-        showToast("Đăng nhập thành công. Hãy cân nhắc thiết lập Passkey", "success");
+        showToast(
+          "Đăng nhập thành công. Hãy cân nhắc thiết lập Passkey",
+          "success",
+        );
       } else {
         showToast("Đăng nhập thành công", "success");
         router.push("/");
@@ -130,42 +138,56 @@ export default function LoginPage() {
     }
   };
 
-  const [pendingPasskeyEmail, setPendingPasskeyEmail] = useState<string | null>(null);
+  const [pendingPasskeyEmail, setPendingPasskeyEmail] = useState<string | null>(
+    null,
+  );
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navigation />
-      
+
       {pendingPasskeyEmail && (
-        <Passkey 
-          email={pendingPasskeyEmail} 
-          onClose={() => router.push("/")} 
-          onSuccess={() => router.push("/")} 
+        <Passkey
+          email={pendingPasskeyEmail}
+          onClose={() => router.push("/")}
+          onSuccess={() => router.push("/")}
         />
       )}
-      <div 
-        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+      <div
+        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 "
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <h2 className="text-center text-4xl font-bold tracking-tight text-black">
           Đăng nhập DocLib
         </h2>
         <p className="mt-3 text-center text-base text-zinc-500">
           Hoặc{" "}
-          <a href="/register" className="font-bold text-black hover:underline active:scale-95 inline-block transition-transform">
+          <a
+            href="/register"
+            className="font-bold text-black active:scale-95 inline-block transition-transform"
+          >
             tạo tài khoản mới
           </a>
         </p>
       </div>
 
-      <div 
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md transition-all duration-300 delay-150"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+      <div
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md delay-150"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="email" className="block text-base font-bold text-black">
+              <label
+                htmlFor="email"
+                className="block text-base font-bold text-black"
+              >
                 Email hoặc tên tài khoản
               </label>
               <div className="mt-1">
@@ -176,14 +198,19 @@ export default function LoginPage() {
                   autoComplete="username"
                   required
                   value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setEmail(e.target.value)
+                  }
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base "
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-base font-bold text-black">
+              <label
+                htmlFor="password"
+                className="block text-base font-bold text-black"
+              >
                 Mật khẩu
               </label>
               <div className="mt-1">
@@ -193,14 +220,16 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setPassword(e.target.value)
+                  }
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base "
                 />
                 <div className="mt-2 text-right">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-xs font-medium text-zinc-500 hover:text-black active:scale-95 transition-transform"
+                    className="text-xs font-medium text-zinc-500 active:scale-95 transition-transform"
                   >
                     {showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   </button>
@@ -216,13 +245,19 @@ export default function LoginPage() {
                   type="checkbox"
                   className="h-4 w-4 text-black focus:ring-black border-zinc-300 rounded-sm"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-base text-zinc-600">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-base text-zinc-600"
+                >
                   Ghi nhớ đăng nhập
                 </label>
               </div>
 
               <div className="text-base">
-                <a href="/forgot-password" className="font-bold text-black hover:underline active:scale-95 inline-block transition-transform">
+                <a
+                  href="/forgot-password"
+                  className="font-bold text-black active:scale-95 inline-block transition-transform"
+                >
                   Quên mật khẩu
                 </a>
               </div>
@@ -232,7 +267,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-transparent rounded-sm text-base font-bold text-white bg-black hover:bg-zinc-800 focus:outline-none transition-all active:scale-95 disabled:bg-zinc-400 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-transparent rounded-sm text-base font-bold text-white bg-black focus:outline-none active:scale-95 disabled:bg-zinc-400 disabled:cursor-not-allowed"
               >
                 {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
                 {isSubmitting ? "Đang xử lý" : "Đăng nhập ngay"}
@@ -246,7 +281,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-zinc-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-zinc-500">Đăng nhập bằng phương thức khác</span>
+                <span className="px-2 bg-white text-zinc-500">
+                  Đăng nhập bằng phương thức khác
+                </span>
               </div>
             </div>
 
@@ -255,12 +292,15 @@ export default function LoginPage() {
                 type="button"
                 onClick={async () => {
                   if (!email) {
-                    showToast("Vui lòng nhập email trước để dùng Passkey", "error");
+                    showToast(
+                      "Vui lòng nhập email trước để dùng Passkey",
+                      "error",
+                    );
                     return;
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center py-2 px-4 border border-zinc-200 rounded-sm bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all gap-2 items-center"
+                className="w-full inline-flex justify-center py-2 px-4 border border-zinc-200 rounded-sm bg-white text-sm font-medium text-zinc-700 active:scale-95 gap-2 items-center"
               >
                 <Fingerprint className="w-4 h-4 text-black" />
                 Passkey
@@ -268,15 +308,15 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={async () => {
-                try {
-                  showToast("Đang kết nối tới Google", "info");
-                  const url = await getGoogleLoginUrlAPI();
-                  window.location.href = url;
-                } catch (err: any) {
-                  showToast("Không thể kết nối với google", "error");
-                }
+                  try {
+                    showToast("Đang kết nối tới Google", "info");
+                    const url = await getGoogleLoginUrlAPI();
+                    window.location.href = url;
+                  } catch (err: any) {
+                    showToast("Không thể kết nối với google", "error");
+                  }
                 }}
-                className="w-full inline-flex justify-center py-2 px-4 border border-zinc-200 rounded-sm bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 active:scale-95 transition-all"
+                className="w-full inline-flex justify-center py-2 px-4 border border-zinc-200 rounded-sm bg-white text-sm font-medium text-zinc-700 active:scale-95 "
               >
                 Google
               </button>

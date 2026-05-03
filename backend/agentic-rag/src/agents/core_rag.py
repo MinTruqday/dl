@@ -1,12 +1,12 @@
 import operator
+import os
+import langchain
 from typing import Annotated, Sequence, TypedDict, List
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-import os
 from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
-import langchain
-from langchain_huggingface import HuggingFaceEndpoint
+from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_community.cache import RedisCache
 from redis import Redis
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -31,7 +31,7 @@ try:
     redis_url = settings.REDIS_URI
     langchain.llm_cache = RedisCache(redis_=Redis.from_url(redis_url))
 except Exception as e:
-    logger.warning(f"Failed to initialize RedisCache for Langchain: {e}")
+    logger.warning(f"Failed to initialize RedisCache: {e}")
 
 class AgentState(TypedDict):
     chat_history: List[dict]
@@ -52,7 +52,6 @@ class AgentState(TypedDict):
 llama_model = settings.LLAMA_MODEL
 hf_token = settings.HF_TOKEN
 
-from langchain_huggingface import ChatHuggingFace
 _hf_endpoint = HuggingFaceEndpoint(
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
@@ -70,46 +69,57 @@ except Exception as e:
     embedder = None
 
 def contextualize_question(state: AgentState):
-    logger.info("Contextualize question")
+    logger.info("Contextualizing question")
     question = state["question"]
     history = state.get("chat_history", [])
     
-    if not history or len(history) == 0:
+    if not history:
         return {"question": question, "chat_history": history}
 
     history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-5:]])
     
     prompt = PromptTemplate(
-        template="""Dựa vào Lịch sử trò chuyện và Câu hỏi mới nhất.
-        Nhiệm vụ của bạn:
-        1. Đánh giá xem Câu hỏi mới nhất có phụ thuộc ngữ cảnh không (ví dụ: chứa các đại từ 'nó', 'tài liệu đó', 'ông ấy', hoặc ý nghĩa bị khuyết thiếu).
-        2. Nếu CÓ phụ thuộc: Viết lại câu hỏi kết hợp với chủ đề từ Lịch sử để nó trọn vẹn ngữ nghĩa.
-        3. Nếu KHÔNG phụ thuộc (câu hỏi đã độc lập): PHẢI giữ nguyên và trả về chính xác Câu hỏi mới nhất.
-        
-        Tuyệt đối KHÔNG trả lời câu hỏi. Mọi phản hồi chỉ chứa một câu hỏi duy nhất (đã giữ nguyên hoặc viết lại).
-        
-        Lịch sử Chat:
-        {history}
-        
-        Câu hỏi mới nhất: {question}
-        Câu kết quả:""",
+        template="""Bạn là một hệ thống thấu hiểu ngôn ngữ tự nhiên.
+Dưới đây là lịch sử trò chuyện và câu nói mới nhất của người dùng.
+
+Nhiệm vụ của bạn là trích xuất ý định thực sự của người dùng trong câu nói mới nhất thành một câu truy vấn độc lập, rõ ràng và trọn vẹn ý nghĩa.
+
+Nguyên tắc hoạt động:
+- Tự suy luận xem câu nói mới nhất đang nối tiếp chủ đề cũ hay đã chuyển sang chủ đề mới.
+- Khôi phục mọi đại từ ẩn ý như nó, cái đó, ông ấy thành danh từ hoặc thực thể cụ thể dựa vào ngữ cảnh.
+- Trả về duy nhất một câu truy vấn hoàn chỉnh đại diện cho ý định đó, không giải thích, không trò chuyện.
+
+Lịch sử trò chuyện:
+{history}
+
+Câu nói mới nhất: {question}
+Truy vấn hoàn chỉnh:""",
         input_variables=["history", "question"]
     )
     
     try:
         response = llm.invoke(prompt.format(history=history_str, question=question))
         new_q = response.content.strip()
-        logger.info(f"Contextualized: {question} -> {new_q}")
+        logger.info(f"Contextualized query: {new_q}")
         return {"question": new_q}
     except Exception as e:
         logger.error(f"Contextualization failed: {e}")
         return {"question": question}
 
 def route_question(state: AgentState):
-    logger.info("Route question")
+    logger.info("Routing question")
     question = state["question"]
     prompt = PromptTemplate(
-        template="Phân loại câu hỏi: Trả lời 'direct' nếu là câu giao tiếp xã giao thuần túy (xin chào, ai tạo ra bạn). Trả lời 'rag' nếu cần thông tin thực tế, kiến thức, nhân vật, tóm tắt tài liệu.\nCâu hỏi: {question}\nPhân loại:",
+        template="""Bạn là hệ thống Điều phối thông minh (Router). Nhiệm vụ của bạn là quyết định cách tốt nhất để phản hồi người dùng.
+
+Câu hỏi của người dùng: "{question}"
+
+Hãy đánh giá: Để trả lời câu hỏi này một cách chính xác nhất, bạn có cần tra cứu các tài liệu chuyên môn, dự án, quy trình hoặc dữ liệu bên ngoài không?
+
+- Nếu câu trả lời là có (câu hỏi về kiến thức, tài liệu, dữ liệu cụ thể): Trả về 'rag'
+- Nếu câu trả lời là không (giao tiếp chào hỏi, tâm sự, hoặc hỏi về bản thân AI): Trả về 'direct'
+
+Chỉ trả về duy nhất một từ ('rag' hoặc 'direct'), không kèm theo bất kỳ dấu câu hay lời giải thích nào khác.""",
         input_variables=["question"]
     )
     try:
@@ -117,7 +127,7 @@ def route_question(state: AgentState):
         res = response.content.strip().lower()
         route = "direct" if "direct" in res else "rag"
     except Exception as e:
-        logger.error(f"RAG Error: {e}")
+        logger.error(f"Routing error: {e}")
         route = "rag"
     return {"current_source": "db", "route": route}
 
@@ -136,33 +146,47 @@ def preprocess_file(state: AgentState):
     return {}
 
 async def retrieve_db(state: AgentState):
-    logger.info("RetrievalAgent: Retrieving from internal database")
+    logger.info("Retrieving from internal database")
     question = state["question"]
     document_id = state.get("document_id")
     documents = []
 
     if embedder:
         prompt = PromptTemplate(
-            template="Bạn là ReasoningAgent. Câu hỏi gốc: {question}. Hãy lý luận và tạo ra 3 câu hỏi con (sub-queries) bằng tiếng Việt để quét đa góc độ. Chỉ trả về 3 câu, mỗi câu trên 1 dòng.",
+            template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
+
+            Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
+            Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh tri thức khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
+
+            Nhiệm vụ của bạn:
+            - Nếu câu hỏi thuộc dạng tra cứu sự thật đơn giản (1 nhánh): Trả về đúng một từ "SIMPLE".
+            - Nếu câu hỏi phức tạp (nhiều nhánh): Đúc kết các nhánh suy nghĩ của bạn thành danh sách các câu truy vấn tối ưu nhất. In ra mỗi câu trên một dòng (tối đa 3 câu).
+
+            Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn). Không in ra quá trình suy nghĩ.""",
             input_variables=["question"]
         )
+        
+        queries = [question]
         try:
             response = llm.invoke(prompt.format(question=question))
-            sub_queries_res = response.content.strip()
-            queries = [q.strip("- ") for q in sub_queries_res.split("\n") if q.strip()]
-            queries.append(question)
+            decision = response.content.strip()
+            if "SIMPLE" not in decision.upper():
+                logger.info("Complex query detected. Adding sub-queries")
+                for q in decision.split("\n"):
+                    q_clean = q.strip("- 123. ")
+                    if q_clean and q_clean.lower() != question.lower():
+                        queries.append(q_clean)
         except Exception as e:
-            logger.error(f"RAG Error: {e}")
-            queries = [question]
+            logger.error(f"Retrieval strategy error: {e}")
             
         extracted_docs = []
-        for q in queries[:4]: 
+        for q in list(dict.fromkeys(queries))[:4]: 
             results = await retrieval_agent.retrieve(query=q, document_id=document_id, k=3)
             for doc in results:
                 chunk_id = doc.get("metadata", {}).get("chunk_id", "unknown")
-                doc_name = doc.get("metadata", {}).get("title", "Tài liệu hệ thống")
+                doc_name = doc.get("metadata", {}).get("title", "System Document")
                 text = doc.get("text", "")
-                formatted_doc = f"[Nguồn Tài liệu: {doc_name} | ID: {chunk_id}]\n{text}"
+                formatted_doc = f"[Nguồn: {doc_name} | ID: {chunk_id}]\n{text}"
                 extracted_docs.append(formatted_doc)
         documents = list(set(extracted_docs))
     return {"documents": documents, "question": question, "current_source": "db"}
@@ -178,7 +202,7 @@ def retrieve_internet(state: AgentState):
             content = d.get("content", str(d))
             documents.append(f"[Nguồn Internet: Tavily Web Search]\n{content}")
     except Exception as e:
-        logger.error(f"Tavily search error: {e}")
+        logger.error(f"Internet search error: {e}")
     return {"documents": documents, "current_source": "internet"}
 
 def grade_documents(state: AgentState):
@@ -186,7 +210,13 @@ def grade_documents(state: AgentState):
     question = state["question"]
     documents = state.get("documents", [])
     prompt = PromptTemplate(
-        template="Tài liệu sau CÓ LIÊN QUAN hoặc chứa MỘT PHẦN thông tin hữu ích để trả lời cho câu hỏi không? Hãy nới lỏng tiêu chí: Nếu tài liệu đóng góp bất kỳ bằng chứng/manh mối nào để giải quyết câu hỏi thì trả lời `yes`. Chỉ trả lời `no` nếu tài liệu HOÀN TOÀN KHÔNG liên quan.\n\nTài liệu: {context}\n\nCâu hỏi: {question}\n\nĐánh giá (yes/no):",
+        template="""Bạn là Chuyên gia Thẩm định Dữ liệu. 
+        Hãy đánh giá: Tài liệu này có chứa thông tin, manh mối hoặc bối cảnh nào giúp ích cho việc trả lời câu hỏi không?
+        Nếu có giá trị tham khảo, trả về 'yes'. Nếu hoàn toàn lạc đề, trả về 'no'.
+        
+        Tài liệu: {context}
+        Câu hỏi: {question}
+        Kết luận (yes/no):""",
         input_variables=["context", "question"]
     )
     filtered_docs = []
@@ -196,11 +226,11 @@ def grade_documents(state: AgentState):
             res = response.content.strip().lower()
             if "yes" in res:
                 filtered_docs.append(d)
-                logger.info("Document graded as: RELEVANT (yes)")
+                logger.info("Document relevant")
             else:
-                logger.info("Document graded as: IRRELEVANT (no)")
+                logger.info("Document irrelevant")
         except Exception as e:
-            logger.error(f"RAG Error: {e}")
+            logger.error(f"Grading error: {e}")
             filtered_docs.append(d)
     return {"documents": filtered_docs}
 
@@ -212,43 +242,44 @@ def decide_after_grade(state: AgentState):
     use_web = state.get("use_web", False)
     if current_source == "db":
         if use_web:
-            logger.info("Database empty. Falling back to internet search.")
+            logger.info("No relevant docs in DB. Falling back to internet")
             return "retrieve_internet"
-        else:
-            logger.info("Database empty. Web search disabled. Generating from knowledge base only.")
-            return "generate"
+        return "generate"
     else:
         if retry_count < 2:
-            logger.info("Internet search empty. Rewriting query.")
             return "transform_query"
-        else:
-            return "generate"
+        return "generate"
 
 def transform_query(state: AgentState):
     logger.info("Rewriting query")
     question = state["question"]
     prompt = PromptTemplate(
-        template="""Tạo 1 câu truy vấn khóa (keyword) ngắn gọn, sắc bén hơn để tìm kiếm tài liệu. 
-        Ví dụ:
-        - Câu hỏi cũ: Các mẹo để lập trình web tốt hơn là gì
-        - Câu hỏi mới: Mẹo lập trình web hiệu quả
-        - Câu hỏi cũ: Ai là người viết tác phẩm Tắt Đèn
-        - Câu hỏi mới: Tác giả tác phẩm Tắt Đèn
-        Câu hỏi cũ: {question}
+        template="""Bạn là Chuyên gia Khai thác Dữ liệu. Người dùng đã hỏi: "{question}" nhưng hệ thống chưa tìm được thông tin.
+        Dựa trên bản năng của hệ thống tìm kiếm, hãy suy đoán xem người dùng thực sự đang tìm kiếm điều gì. 
+        Loại bỏ các từ ngữ dư thừa, chuyển đổi câu hỏi thành một cụm từ khóa hoặc thuật ngữ chuyên môn có xác suất trúng đích cao nhất.
         
-        Câu hỏi mới:""",
+        Chỉ trả về duy nhất câu truy vấn mới đã được tối ưu hóa.""",
         input_variables=["question"]
     )
     chain = prompt | llm
-    response = chain.invoke({"question": question})
-    new_question = response.content.strip()
-    return {"question": new_question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
+    try:
+        response = chain.invoke({"question": question})
+        new_question = response.content.strip()
+        logger.info(f"Transformed query: {new_question}")
+        return {"question": new_question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
+    except Exception as e:
+        logger.error(f"Transformation failed: {e}")
+        return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
     user_id = state.get("user_id", "guess_user")
     question = state["question"]
     user_context = memory_agent.get_context(question, user_id)
-    prompt_str = f"Trò chuyện vui vẻ tự nhiên. Không cần tìm kiếm. \nThông tin cá nhân: {user_context}\nCâu hỏi: {question}"
+    prompt_str = f"""Bạn là DocLib AI - một trợ lý thông minh và tinh tế.
+    Nhiệm vụ của bạn là giao tiếp tự nhiên với người dùng. Dựa vào thông tin bạn biết về họ, hãy thể hiện sự thấu cảm và phản hồi như một cộng sự đắc lực. Hãy linh hoạt và thấu hiểu. Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
+    
+    Thông tin người dùng: {user_context}
+    Câu hỏi: {question}"""
     response = await llm_generate.ainvoke(prompt_str)
     generation = response.content
     if user_id != "guess_user":
@@ -259,7 +290,7 @@ async def generate_direct(state: AgentState):
     return {"generation": generation}
 
 async def generate(state: AgentState):
-    logger.info(f"Generating answer based on {state.get('current_source', 'Unknown').upper()}")
+    logger.info("Generating answer")
     question = state["question"]
     documents = state.get("documents", [])
     user_id = state.get("user_id", "guess_user")
@@ -269,30 +300,34 @@ async def generate(state: AgentState):
         documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data']}")
         
     prompt = PromptTemplate(
-        template="""Điều này rất quan trọng với dự án của tôi, xin hãy làm tốt nhất có thể!
-        Bạn là một Chuyên gia Phân tích Tài liệu Học thuật túc trực tại hệ thống DocLib. 
-        Dựa vào TÀI LIỆU bên dưới, hãy phân tích để trả lời CÂU HỎI. Nếu tài liệu không chứa đủ thông tin để trả lời, hãy trả lời chính xác là: 'Tôi không có đủ thông tin từ tài liệu để trả lời câu hỏi này'.
-        
-        Thông tin bộ nhớ cá nhân hoá:
+        template="""Bạn là Cố vấn Thông thái của hệ thống DocLib. 
+        Dựa trên nền tảng tài liệu được cung cấp, hãy phân tích để giải quyết trọn vẹn câu hỏi của người dùng.
+
+        Quy trình tư duy:
+        Bước 1: Quét tài liệu để trích xuất bằng chứng liên quan trực tiếp đến câu hỏi.
+        Bước 2: Kết nối các bằng chứng bằng tư duy phản biện. Nếu tài liệu thiếu thông tin, hãy thông báo tôi không có đủ thông tin.
+        Bước 3: Lập dàn ý ngầm (đi thẳng vào trọng tâm và cung cấp minh chứng).
+        Bước 4: Sinh câu trả lời cuối cùng, linh hoạt sử dụng markdown như bảng biểu hoặc mã nguồn nếu cần thiết.
+
+        Nguyên tắc cốt lõi:
+        - Trích dẫn nguồn inline như [1], [2] khi tham khảo dữ kiện từ tài liệu.
+        - Tự động phản hồi bằng chính ngôn ngữ của người dùng.
+        - Tuyệt đối không tự bịa thông tin.
+
+        Thông tin cá nhân hoá:
         {user_context}
         
-        ĐỊNH DẠNG TRẢ LỜI:
-        - Tóm tắt ý chính ngay ở câu đầu tiên.
-        - Trình bày chi tiết bằng các gạch đầu dòng rõ ràng.
-        - Mọi thông tin sinh ra phải trích dẫn theo kiểu Inline Citation ngay tại câu (VD: 'Theo tài liệu [1] thì...').
-        - NẾU người dùng yêu cầu xuất file, tạo bảng biểu để tải về, hoặc tạo file mã nguồn, HÃY bọc nội dung file đó trong một markdown code block với định dạng tương ứng (Ví dụ: ```csv\nid,name\n1,Test\n``` hoặc ```python\nprint("hello")\n```). Hệ thống sẽ tự động biến nó thành nút tải xuống cho người dùng. Kèm theo một vài lời giải thích ngắn gọn bên ngoài block.
+        Nguồn tài liệu: {source_name}
         
-        Bạn ĐANG đọc các tài liệu từ: {source_name}.
-        
-        Tài liệu:
+        Tài liệu tham khảo:
         {documents}
         
-        Câu hỏi: {question}
-        Trả lời:""",
+        Câu hỏi người dùng: {question}
+        Kết quả phản hồi:""",
         input_variables=["question", "documents", "source_name", "user_context"]
     )
-    source_name = "Kho tài liệu nội bộ (Độ tin cậy Tuyệt Đối)" if state.get("current_source") == "db" else "Internet (Độ tin cậy Tham Khảo)"
-    docs_str = "\n\n".join(documents) if documents else ""
+    source_name = "Kho tài liệu nội bộ" if state.get("current_source") == "db" else "Internet"
+    docs_str = "\n\n".join(documents) if documents else "Không có tài liệu tham khảo cụ thể."
     
     formatted_prompt = prompt.format(question=question, documents=docs_str, source_name=source_name, user_context=user_context)
     
@@ -306,7 +341,7 @@ async def generate(state: AgentState):
             response = await llm_generate.ainvoke(messages)
             generation = response.content
         except Exception as e:
-            logger.error(f"Multimodal generation failed: {e}")
+            logger.error(f"Multimodal failed: {e}")
             response = await llm_generate.ainvoke(formatted_prompt)
             generation = response.content
     else:
@@ -321,10 +356,10 @@ async def generate(state: AgentState):
     return {"generation": generation}
 
 def grade_generation(state: AgentState):
-    logger.info("Grading generation strictly via NLI")
+    logger.info("Grading generation via NLI")
     documents = state.get("documents", [])
     generation = state["generation"]
-    if not documents or "Tôi không biết" in generation:
+    if not documents or "không có đủ thông tin" in generation.lower():
         return {"hallucination_pass": "yes"}
     docs_str = "".join(documents)
     if nli_model:
@@ -343,10 +378,9 @@ def grade_generation(state: AgentState):
 
 def check_hallucination(state: AgentState):
     if state.get("hallucination_pass", "yes") == "yes":
-        logger.info("Generation passed hallucination check.")
         return END
     else:
-        logger.info("Hallucination detected. Rewriting query to find better documents.")
+        logger.info("Hallucination detected. Rewriting query")
         if state.get("retry_count", 0) > 2: return END
         return "transform_query"
 

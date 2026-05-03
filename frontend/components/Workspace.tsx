@@ -41,10 +41,14 @@ export default function Workspace({ children }: AppShellProps) {
     }
   };
 
-  const sidebarIsOpen = mounted ? (isMobile ? mobileMenuOpen : sidebarOpen) : true;
+  const sidebarIsOpen = mounted
+    ? isMobile
+      ? mobileMenuOpen
+      : sidebarOpen
+    : true;
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white animate-in fade-in duration-300">
+    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white animate-in fade-in ">
       <Navigation onToggleSidebar={toggleSidebar} />
 
       <Menu
@@ -55,22 +59,20 @@ export default function Workspace({ children }: AppShellProps) {
       />
 
       <main
-        className="transition-all duration-300 ease-in-out"
+        className=" ease-in-out"
         style={{
           paddingTop: "var(--navbar-height)",
-          marginLeft: !mounted 
+          marginLeft: !mounted
             ? "var(--sidebar-width-expanded)"
             : isMobile
-            ? 0
-            : sidebarOpen
-            ? "var(--sidebar-width-expanded)"
-            : "var(--sidebar-width-collapsed)",
+              ? 0
+              : sidebarOpen
+                ? "var(--sidebar-width-expanded)"
+                : "var(--sidebar-width-collapsed)",
           minHeight: "100vh",
         }}
       >
-        <div className="animate-in slide-in-from-bottom-4 duration-300">
-          {children}
-        </div>
+        <div className="animate-in slide-in-from-bottom-4 ">{children}</div>
       </main>
     </div>
   );

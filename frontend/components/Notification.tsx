@@ -14,7 +14,12 @@ interface NotificationProps {
   className?: string;
 }
 
-export function Notification({ type, message, title, className = "" }: NotificationProps) {
+export function Notification({
+  type,
+  message,
+  title,
+  className = "",
+}: NotificationProps) {
   const getStyles = () => {
     switch (type) {
       case "error":
@@ -31,12 +36,16 @@ export function Notification({ type, message, title, className = "" }: Notificat
 
   return (
     <div
-      className={`border-l-[6px] p-4 text-sm font-semibold transition-all duration-300 font-sans ${getStyles()} ${className}`}
+      className={`border-l-[6px] p-4 text-sm font-semibold font-sans ${getStyles()} ${className}`}
     >
-      {title && <h4 className="font-bold text-base mb-1 tracking-tight">{title}</h4>}
+      {title && (
+        <h4 className="font-bold text-base mb-1 tracking-tight">{title}</h4>
+      )}
       <div className="leading-relaxed font-medium">
-        {typeof message === 'object' && message !== null && !React.isValidElement(message) 
-          ? JSON.stringify(message) 
+        {typeof message === "object" &&
+        message !== null &&
+        !React.isValidElement(message)
+          ? JSON.stringify(message)
           : message}
       </div>
     </div>
@@ -71,7 +80,9 @@ export default function Notification() {
       if (cancelled || retryCount >= MAX_RETRIES) return;
 
       try {
-        eventSource = new EventSource(`${API_URL}/notifications/stream?token=${token}`);
+        eventSource = new EventSource(
+          `${API_URL}/notifications/stream?token=${token}`,
+        );
 
         eventSource.addEventListener("connected", () => {
           retryCount = 0;
@@ -89,7 +100,9 @@ export default function Notification() {
             setNotifications((prev) => [...prev, newNotif]);
 
             setTimeout(() => {
-              setNotifications((prev) => prev.filter((n) => n.id !== newNotif.id));
+              setNotifications((prev) =>
+                prev.filter((n) => n.id !== newNotif.id),
+              );
             }, 5000);
           } catch (err) {
             console.error("Lỗi phân tích thông báo:", err);
@@ -130,16 +143,22 @@ export default function Notification() {
         return (
           <div
             key={n.id}
-            className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white transition-all animate-in slide-in-from-right-8 fade-in duration-300 pointer-events-auto ${typeStyles}`}
+            className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto ${typeStyles}`}
           >
             <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
-                {n.title && <h4 className="font-bold text-base mb-1 tracking-tight">{n.title}</h4>}
+                {n.title && (
+                  <h4 className="font-bold text-base mb-1 tracking-tight">
+                    {n.title}
+                  </h4>
+                )}
                 <p className="leading-relaxed font-bold">{n.body}</p>
               </div>
               <button
-                onClick={() => setNotifications((prev) => prev.filter((x) => x.id !== n.id))}
-                className="opacity-40 hover:opacity-100 transition-opacity p-1 -mt-1 -mr-1"
+                onClick={() =>
+                  setNotifications((prev) => prev.filter((x) => x.id !== n.id))
+                }
+                className="opacity-40 transition-opacity p-1 -mt-1 -mr-1"
               >
                 <X className="w-4 h-4" />
               </button>

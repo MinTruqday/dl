@@ -1,35 +1,33 @@
-import { Extension } from '@tiptap/core';
-import Suggestion from '@tiptap/suggestion';
-import { suggestionRenderer } from './LatexSuggestion';
+import { Extension } from "@tiptap/core";
+import Suggestion from "@tiptap/suggestion";
+import { suggestionRenderer } from "./LatexSuggestion";
 
 export const AutoComplete = Extension.create({
-  name: 'latexAutoCompletion',
+  name: "latexAutoCompletion",
 
   addOptions() {
     return {
       suggestion: {
-        char: '\\',
+        char: "\\",
         command: ({ editor, range, props }: any) => {
-          const category = props.category || '';
-          
-          if (category === 'environment') {
-             editor
+          const category = props.category || "";
+
+          if (category === "environment") {
+            editor
               .chain()
               .focus()
               .deleteRange(range)
               .setLatexBlock({ text: props.insertText })
               .run();
-          } 
-          else if (category === 'math') {
-             editor
+          } else if (category === "math") {
+            editor
               .chain()
               .focus()
               .deleteRange(range)
               .insertContent(`$${props.insertText}$ `)
               .run();
-          } 
-          else {
-             editor
+          } else {
+            editor
               .chain()
               .focus()
               .deleteRange(range)
@@ -46,9 +44,8 @@ export const AutoComplete = Extension.create({
       Suggestion({
         editor: this.editor,
         ...this.options.suggestion,
-        ...suggestionRenderer
+        ...suggestionRenderer,
       }),
     ];
   },
 });
-

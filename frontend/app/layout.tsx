@@ -1,26 +1,26 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-sans',
-})
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
-  title: 'DocLib',
-  description: 'Hệ thống quản lý tài liệu thông minh',
-}
+  title: "DocLib",
+  description: "Hệ thống quản lý tài liệu thông minh",
+};
 
-import { AuthProvider } from '@/contexts/AuthContext'
-import { Theme } from '@/components/Theme'
-import { ToastProvider } from '@/contexts/ToastContext'
-import { NotificationProvider } from '@/contexts/NotificationContext'
+import { AuthProvider } from "@/contexts/AuthContext";
+import { Theme } from "@/components/Theme";
+import { ToastProvider } from "@/contexts/ToastContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="vi" suppressHydrationWarning>
@@ -33,13 +33,11 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <ToastProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
+              <NotificationProvider>{children}</NotificationProvider>
             </ToastProvider>
           </Theme>
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

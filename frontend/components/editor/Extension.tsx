@@ -1,31 +1,30 @@
-import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer } from '@tiptap/react';
-import { LatexCodeBlock } from './LatexCodeBlock';
+import { Node, mergeAttributes } from "@tiptap/core";
+import { ReactNodeViewRenderer } from "@tiptap/react";
+import { LatexCodeBlock } from "./LatexCodeBlock";
 
 export interface LatexBlockOptions {
   HTMLAttributes: Record<string, any>;
 }
 
-declare module '@tiptap/core' {
+declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     latexBlock: {
-      
       setLatexBlock: (attributes?: { text?: string }) => ReturnType;
     };
   }
 }
 
 export const Extension = Node.create<LatexBlockOptions>({
-  name: 'latexBlock',
+  name: "latexBlock",
 
-  group: 'block',
+  group: "block",
 
-  content: 'inline*',
+  content: "inline*",
 
   addOptions() {
     return {
       HTMLAttributes: {
-        class: 'latex-block',
+        class: "latex-block",
       },
     };
   },
@@ -33,11 +32,11 @@ export const Extension = Node.create<LatexBlockOptions>({
   addAttributes() {
     return {
       text: {
-        default: '',
-        parseHTML: element => element.getAttribute('data-text') || '',
-        renderHTML: attributes => {
+        default: "",
+        parseHTML: (element) => element.getAttribute("data-text") || "",
+        renderHTML: (attributes) => {
           return {
-            'data-text': attributes.text,
+            "data-text": attributes.text,
           };
         },
       },
@@ -47,13 +46,17 @@ export const Extension = Node.create<LatexBlockOptions>({
   parseHTML() {
     return [
       {
-        tag: 'div.latex-block',
+        tag: "div.latex-block",
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
+    return [
+      "div",
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes),
+      0,
+    ];
   },
 
   addNodeView() {
@@ -63,7 +66,7 @@ export const Extension = Node.create<LatexBlockOptions>({
   addCommands() {
     return {
       setLatexBlock:
-        attributes =>
+        (attributes) =>
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,

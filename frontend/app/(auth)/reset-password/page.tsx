@@ -47,8 +47,11 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navigation />
       <div
-        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300 animate-in fade-in"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 animate-in fade-in"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <h2 className="text-center text-4xl font-bold tracking-tight text-black">
           Mật khẩu mới
@@ -59,13 +62,19 @@ export default function ResetPasswordPage() {
       </div>
 
       <div
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md transition-all duration-300 delay-150 animate-in slide-in-from-bottom-4"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md delay-150 animate-in slide-in-from-bottom-4"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="new-password" className="block text-base font-bold text-black">
+              <label
+                htmlFor="new-password"
+                className="block text-base font-bold text-black"
+              >
                 Mật khẩu mới
               </label>
               <div className="mt-1">
@@ -76,8 +85,10 @@ export default function ResetPasswordPage() {
                   placeholder=""
                   required
                   value={newPassword}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setNewPassword(e.target.value)
+                  }
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base "
                 />
               </div>
             </div>
@@ -85,7 +96,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black hover:bg-zinc-800 disabled:bg-zinc-400 transition-all active:scale-95 rounded-sm"
+              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black disabled:bg-zinc-400 active:scale-95 rounded-sm"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
               {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}

@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-*, html, body, button, input, select, textarea, pre, code {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif !important;
+*,
+html,
+body,
+button,
+input,
+select,
+textarea,
+pre,
+code {
+  font-family:
+    var(--font-sans), ui-sans-serif, system-ui, sans-serif !important;
 }
 
 @layer base {
@@ -81,7 +90,6 @@
   }
 
   @media (max-width: 768px) {
-
     .app-main,
     .app-main.sidebar-collapsed {
       margin-left: 0;

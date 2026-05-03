@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getNestedCommentsAPI, createNestedCommentAPI } from "@/services/social.service";
-import { MessageSquare, CornerDownRight, Reply, Send, Loader2, User } from "lucide-react";
+import {
+  getNestedCommentsAPI,
+  createNestedCommentAPI,
+} from "@/services/social.service";
+import {
+  MessageSquare,
+  CornerDownRight,
+  Reply,
+  Send,
+  Loader2,
+  User,
+} from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -26,7 +36,10 @@ interface NestedCommentsProps {
   itemType?: "document" | "post";
 }
 
-export default function Comment({ itemId, itemType = "document" }: NestedCommentsProps) {
+export default function Comment({
+  itemId,
+  itemType = "document",
+}: NestedCommentsProps) {
   const { user } = useAuth() as any;
   const [comments, setComments] = useState<Comment[]>([]);
   const [newText, setNewText] = useState("");
@@ -41,7 +54,7 @@ export default function Comment({ itemId, itemType = "document" }: NestedComment
       const data = await getNestedCommentsAPI(itemId);
       setComments(Array.isArray(data.data) ? data.data : []);
     } catch (err: any) {
-        showToast("Không thể kết nối mạng lưới thảo luận", "error");
+      showToast("Không thể kết nối mạng lưới thảo luận", "error");
     } finally {
       setLoading(false);
     }
@@ -54,11 +67,11 @@ export default function Comment({ itemId, itemType = "document" }: NestedComment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-        showToast("Vui lòng đăng nhập để tham gia thảo luận", "error");
-        return;
+      showToast("Vui lòng đăng nhập để tham gia thảo luận", "error");
+      return;
     }
     if (!newText.trim()) return;
-    
+
     setSubmitting(true);
     try {
       await createNestedCommentAPI(itemId, {
@@ -78,20 +91,25 @@ export default function Comment({ itemId, itemType = "document" }: NestedComment
   };
 
   return (
-    <div className="mt-16 animate-in fade-in duration-500 font-sans">
-
-
+    <div className="mt-16 animate-in fade-in font-sans">
       <div className="flex items-center justify-between border-b border-zinc-100 pb-8 mb-12">
         <div className="flex items-center gap-4">
-            <MessageSquare className="w-5 h-5 text-black" />
-            <h3 className="text-sm font-bold text-black uppercase tracking-widest">Thảo luận cộng đồng</h3>
+          <MessageSquare className="w-5 h-5 text-black" />
+          <h3 className="text-sm font-bold text-black uppercase tracking-widest">
+            Thảo luận cộng đồng
+          </h3>
         </div>
-        <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{comments.length} PHẢN HỒI</div>
+        <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+          {comments.length} PHẢN HỒI
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-16 bg-zinc-50/30 p-10 border border-zinc-100 rounded-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="mb-16 bg-white p-10 border border-zinc-100 rounded-sm"
+      >
         <textarea
-          className="w-full border border-zinc-100 p-6 bg-white focus:border-black outline-none transition-all text-sm font-medium resize-none min-h-[140px] rounded-sm placeholder:text-zinc-200"
+          className="w-full border border-zinc-100 p-6 bg-white focus:border-black outline-none text-sm font-medium resize-none min-h-[140px] rounded-sm placeholder:text-zinc-200"
           placeholder=""
           value={newText}
           onChange={(e) => setNewText(e.target.value)}
@@ -102,17 +120,23 @@ export default function Comment({ itemId, itemType = "document" }: NestedComment
             <button
               type="button"
               onClick={() => setReplyTo(null)}
-              className="text-[10px] font-bold text-zinc-400 hover:text-black uppercase tracking-widest px-4 py-2 border border-dashed border-zinc-100 hover:border-black transition-all rounded-sm"
+              className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-4 py-2 border border-dashed border-zinc-100 rounded-sm"
             >
               Hủy phản hồi hệ thống
             </button>
-          ) : <div />}
+          ) : (
+            <div />
+          )}
           <button
             type="submit"
             disabled={submitting || !newText.trim()}
-            className="bg-black text-white px-12 h-14 text-[11px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all flex items-center gap-4 active:scale-95 rounded-sm disabled:opacity-50"
+            className="bg-black text-white px-12 h-14 text-[11px] font-bold uppercase tracking-[0.3em] flex items-center gap-4 active:scale-95 rounded-sm disabled:opacity-50"
           >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
             Gửi thảo luận
           </button>
         </div>
@@ -120,58 +144,75 @@ export default function Comment({ itemId, itemType = "document" }: NestedComment
 
       <div className="space-y-8">
         {loading && comments.length === 0 ? (
-            <div className="space-y-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-32 bg-zinc-50/50 animate-pulse border border-zinc-100 rounded-sm" />)}
-            </div>
-        ) : comments.map((c) => {
-          const depth = (c.path.match(/,/g) || []).length - 1;
-          return (
-            <div
-              key={c._id}
-              className={`border border-zinc-100 p-8 bg-white transition-all hover:border-black relative group animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-sm ${
-                depth > 0 ? "ml-8 md:ml-16 border-l-4 border-l-black/5" : ""
-              }`}
-            >
-              {depth > 0 && (
-                <CornerDownRight className="absolute -left-8 top-8 w-5 h-5 text-zinc-100 hidden md:block" />
-              )}
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center text-[11px] font-bold text-black border border-zinc-100 rounded-sm overflow-hidden">
-                    {c.user?.avatar_url ? (
-                        <img src={c.user.avatar_url} className="w-full h-full object-cover grayscale" alt="" />
-                    ) : <User className="w-4 h-4 text-zinc-200" />}
-                  </div>
-                  <div>
-                    <span className="font-bold text-sm text-black uppercase tracking-tight">
+          <div className="space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-32 bg-white animate-pulse border border-zinc-100 rounded-sm"
+              />
+            ))}
+          </div>
+        ) : (
+          comments.map((c) => {
+            const depth = (c.path.match(/,/g) || []).length - 1;
+            return (
+              <div
+                key={c._id}
+                className={`border border-zinc-100 p-8 bg-white relative group animate-in fade-in slide-in-from-bottom-2 rounded-sm ${
+                  depth > 0 ? "ml-8 md:ml-16 border-l-4 border-l-black/5" : ""
+                }`}
+              >
+                {depth > 0 && (
+                  <CornerDownRight className="absolute -left-8 top-8 w-5 h-5 text-zinc-100 hidden md:block" />
+                )}
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-white flex items-center justify-center text-[11px] font-bold text-black border border-zinc-100 rounded-sm overflow-hidden">
+                      {c.user?.avatar_url ? (
+                        <img
+                          src={c.user.avatar_url}
+                          className="w-full h-full object-cover grayscale"
+                          alt=""
+                        />
+                      ) : (
+                        <User className="w-4 h-4 text-zinc-200" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="font-bold text-sm text-black uppercase tracking-tight">
                         {c.user?.display_name || "Độc giả tri thức"}
-                    </span>
-                    <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">
+                      </span>
+                      <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">
                         {new Date(c.created_at).toLocaleDateString("vi-VN")}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <p className="text-zinc-600 text-base leading-loose font-medium max-w-5xl">{c.text || c.content}</p>
-              <div className="flex justify-end mt-4">
-                <button
+                <p className="text-zinc-600 text-base leading-loose font-medium max-w-5xl">
+                  {c.text || c.content}
+                </p>
+                <div className="flex justify-end mt-4">
+                  <button
                     onClick={() => {
-                        setReplyTo(c._id);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setReplyTo(c._id);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
-                    className="text-[10px] font-bold text-zinc-300 hover:text-black uppercase tracking-widest flex items-center gap-2 transition-all opacity-0 group-hover:opacity-100"
-                >
+                    className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2 opacity-0  "
+                  >
                     <Reply className="w-3.5 h-3.5" />
                     Phản hồi tri thức
-                </button>
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
         {!loading && comments.length === 0 && (
-          <div className="text-center py-24 border border-dashed border-zinc-100 bg-zinc-50/10 rounded-sm">
+          <div className="text-center py-24 border border-dashed border-zinc-100 bg-white/10 rounded-sm">
             <MessageSquare className="w-12 h-12 text-zinc-50 mx-auto mb-6 stroke-[1]" />
-            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">Chưa có thảo luận nào cho thực thể này</p>
+            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
+              Chưa có thảo luận nào cho thực thể này
+            </p>
           </div>
         )}
       </div>

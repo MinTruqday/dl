@@ -33,7 +33,9 @@ export default function VerifyCodePage() {
       await verifyCodeAPI(token.trim());
       showToast("Mã xác thực hợp lệ", "success");
       setTimeout(() => {
-        router.push(`/reset-password?token=${encodeURIComponent(token.trim())}`);
+        router.push(
+          `/reset-password?token=${encodeURIComponent(token.trim())}`,
+        );
       }, 1200);
     } catch (err: any) {
       showToast(err.message || "Mã xác thực không hợp lệ", "error");
@@ -46,8 +48,11 @@ export default function VerifyCodePage() {
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navigation />
       <div
-        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 transition-all duration-300 animate-in fade-in"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 animate-in fade-in"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <h2 className="text-center text-4xl font-bold tracking-tight text-black">
           Xác thực mã
@@ -58,13 +63,19 @@ export default function VerifyCodePage() {
       </div>
 
       <div
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md transition-all duration-300 delay-150 animate-in slide-in-from-bottom-4"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(16px)" }}
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md delay-150 animate-in slide-in-from-bottom-4"
+        style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+        }}
       >
         <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="token" className="block text-base font-bold text-black">
+              <label
+                htmlFor="token"
+                className="block text-base font-bold text-black"
+              >
                 Mã xác thực
               </label>
               <div className="mt-1">
@@ -75,8 +86,10 @@ export default function VerifyCodePage() {
                   placeholder=""
                   required
                   value={token}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setToken(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-center text-2xl tracking-widest font-bold transition-all"
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setToken(e.target.value)
+                  }
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-center text-2xl tracking-widest font-bold "
                 />
               </div>
             </div>
@@ -84,7 +97,7 @@ export default function VerifyCodePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black hover:bg-zinc-800 disabled:bg-zinc-400 transition-all active:scale-95 rounded-sm"
+              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black disabled:bg-zinc-400 active:scale-95 rounded-sm"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
               {loading ? "Đang xử lý" : "Tiếp tục"}
@@ -92,9 +105,9 @@ export default function VerifyCodePage() {
           </form>
 
           <div className="mt-4 text-sm text-center">
-            <button 
+            <button
               onClick={() => router.back()}
-              className="text-zinc-400 hover:text-black font-medium transition-colors"
+              className="text-zinc-400 font-medium transition-colors"
             >
               Quay lại
             </button>

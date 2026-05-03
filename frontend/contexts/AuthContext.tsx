@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     try {
       const data = await getUserMe();
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchUser();
-  }, [pathname]); 
+  }, [pathname]);
 
   const loginState = async (token: string) => {
     localStorage.setItem("doclib_token", token);
@@ -75,7 +75,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, loginState, logoutState }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        loginState,
+        logoutState,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

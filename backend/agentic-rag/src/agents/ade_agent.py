@@ -1,10 +1,10 @@
 import os
 import io
 import tempfile
+import boto3
 from pathlib import Path
 from loguru import logger
 from typing import Dict, Optional, List
-import boto3
 from src.core.config import settings
 
 class ADEAgent:
@@ -15,7 +15,6 @@ class ADEAgent:
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
         self._ade_model = settings.ADE_MODEL
-
         logger.info("ADE Agent initialized with LandingAI ADE")
 
     async def _get_client(self):
@@ -70,7 +69,7 @@ class ADEAgent:
                 "chunk_count": len(chunks),
             }
 
-            logger.info(f"LandingAI ADE parsed: {len(chunks)} chunks, {len(markdown)} chars markdown")
+            logger.info(f"LandingAI ADE parsed: {len(chunks)} chunks")
             return output
 
         except Exception as e:
@@ -86,7 +85,6 @@ class ADEAgent:
             return []
 
         chunks = parse_result.get("chunks", [])
-
         ingestion_chunks = []
         for i, chunk in enumerate(chunks):
             text = chunk.get("text", "")
@@ -108,7 +106,6 @@ class ADEAgent:
     async def _download_from_minio(self, file_url: str) -> tuple:
         try:
             from urllib.parse import urlparse
-
             if file_url.startswith("http"):
                 parsed = urlparse(file_url)
                 path_parts = parsed.path.lstrip("/").split("/", 1)
@@ -142,4 +139,3 @@ class ADEAgent:
             return None, ""
 
 ade_agent = ADEAgent()
-

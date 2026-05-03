@@ -39,7 +39,18 @@ import {
   Video,
   Sparkles,
 } from "lucide-react";
-import { compilePreviewAPI, getSynonymsAPI, grammarCheckAPI } from "@/services/editor.service";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
+import {
+  compilePreviewAPI,
+  getSynonymsAPI,
+  grammarCheckAPI,
+} from "@/services/editor.service";
 import { useToast } from "@/contexts/ToastContext";
 
 import Placeholder from "@tiptap/extension-placeholder";
@@ -75,6 +86,7 @@ export default function Editor({
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
   const { showToast } = useToast();
+  const [linkModal, setLinkModal] = useState({ isOpen: false, url: "" });
 
   const editor = useEditor({
     extensions: [
@@ -104,8 +116,15 @@ export default function Editor({
       Subscript,
       Superscript,
       Dropcursor.configure({ color: "#000000", width: 2 }),
-      Youtube.configure({ inline: false, width: 840, height: 472.5, controls: true }),
-      Placeholder.configure({ placeholder: "Bắt đầu soạn thảo nội dung hoặc gõ \\ để chèn mã LaTeX" }),
+      Youtube.configure({
+        inline: false,
+        width: 840,
+        height: 472.5,
+        controls: true,
+      }),
+      Placeholder.configure({
+        placeholder: "Bắt đầu soạn thảo nội dung hoặc gõ \\ để chèn mã LaTeX",
+      }),
     ],
     content: initialContent || "",
     editorProps: {
@@ -121,7 +140,11 @@ export default function Editor({
   });
 
   useEffect(() => {
-    if (editor && initialContent !== undefined && editor.getHTML() !== initialContent) {
+    if (
+      editor &&
+      initialContent !== undefined &&
+      editor.getHTML() !== initialContent
+    ) {
       editor.commands.setContent(initialContent);
     }
   }, [initialContent, editor]);
@@ -134,7 +157,8 @@ export default function Editor({
     return () => clearInterval(interval);
   }, [editor, onSave]);
 
-  const estimatedReadTime = Math.ceil((editor?.storage.characterCount.words() || 0) / 200) || 1;
+  const estimatedReadTime =
+    Math.ceil((editor?.storage.characterCount.words() || 0) / 200) || 1;
 
   const handleCompile = async () => {
     if (!editor) return;
@@ -147,7 +171,8 @@ export default function Editor({
         if (node.type === "latexBlock") {
           latexContent += node.attrs.text + "\n\n";
         } else if (node.type === "paragraph") {
-          const text = node.content?.map((c: any) => c.text || "").join("") || "";
+          const text =
+            node.content?.map((c: any) => c.text || "").join("") || "";
           latexContent += text + "\n\n";
         }
       });
@@ -180,7 +205,12 @@ export default function Editor({
     try {
       const data = await getSynonymsAPI(
         word,
-        editor.getText().substring(Math.max(0, from - 100), Math.min(editor.getText().length, to + 100))
+        editor
+          .getText()
+          .substring(
+            Math.max(0, from - 100),
+            Math.min(editor.getText().length, to + 100),
+          ),
       );
       if (data.synonyms && data.synonyms.length > 0) {
         showToast(`Gợi ý cho "${word}": ${data.synonyms.join(", ")}`, "info");
@@ -198,14 +228,14 @@ export default function Editor({
   }
 
   return (
-    <div className="flex flex-col w-full h-[85vh] mx-auto bg-white border border-zinc-200 animate-in fade-in duration-300 relative font-sans">
+    <div className="flex flex-col w-full h-[85vh] mx-auto bg-white border border-zinc-200 animate-in fade-in relative font-sans">
       <div className="flex justify-between items-center bg-white border-b border-zinc-200 p-3">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
               onClick={() => editor.chain().focus().undo().run()}
               disabled={!editor.can().undo()}
-              className="p-2 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 transition-all"
+              className="p-2 bg-white text-zinc-600 disabled:opacity-30 "
               title="Hoàn tác"
             >
               <Undo className="w-4 h-4" />
@@ -213,7 +243,7 @@ export default function Editor({
             <button
               onClick={() => editor.chain().focus().redo().run()}
               disabled={!editor.can().redo()}
-              className="p-2 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-30 transition-all"
+              className="p-2 bg-white text-zinc-600 disabled:opacity-30 "
               title="Làm lại"
             >
               <Redo className="w-4 h-4" />
@@ -223,35 +253,35 @@ export default function Editor({
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
               onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("bold") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("bold") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="In đậm"
             >
               <Bold className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("italic") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("italic") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="In nghiêng"
             >
               <Italic className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("underline") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("underline") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Gạch chân"
             >
               <UnderlineIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("strike") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("strike") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Gạch ngang"
             >
               <Strikethrough className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleHighlight().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("highlight") ? "bg-zinc-200 text-black" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("highlight") ? "bg-zinc-200 text-black" : "bg-white text-zinc-600 "}`}
               title="Tô sáng"
             >
               <Highlighter className="w-4 h-4" />
@@ -261,28 +291,28 @@ export default function Editor({
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
               onClick={() => editor.chain().focus().toggleCode().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("code") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("code") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Mã nội dòng"
             >
               <CodeIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("codeBlock") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("codeBlock") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Khối mã"
             >
               <SquareTerminal className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("blockquote") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("blockquote") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Trích dẫn"
             >
               <Quote className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="p-2 transition-all duration-300 bg-white text-zinc-600 hover:bg-zinc-50"
+              className="p-2 bg-white text-zinc-600 "
               title="Đường phân cách"
             >
               <Minus className="w-4 h-4" />
@@ -292,14 +322,14 @@ export default function Editor({
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
               onClick={() => editor.chain().focus().toggleSubscript().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("subscript") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("subscript") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Chỉ số dưới"
             >
               <SubscriptIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleSuperscript().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("superscript") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("superscript") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Chỉ số trên"
             >
               <SuperscriptIcon className="w-4 h-4" />
@@ -309,28 +339,32 @@ export default function Editor({
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
               onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive({ textAlign: "left" }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive({ textAlign: "left" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Căn trái"
             >
               <AlignLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => editor.chain().focus().setTextAlign("center").run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive({ textAlign: "center" }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              onClick={() =>
+                editor.chain().focus().setTextAlign("center").run()
+              }
+              className={`p-2 ${editor.isActive({ textAlign: "center" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Căn giữa"
             >
               <AlignCenter className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive({ textAlign: "right" }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive({ textAlign: "right" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Căn phải"
             >
               <AlignRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive({ textAlign: "justify" }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              onClick={() =>
+                editor.chain().focus().setTextAlign("justify").run()
+              }
+              className={`p-2 ${editor.isActive({ textAlign: "justify" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Căn đều"
             >
               <AlignJustify className="w-4 h-4" />
@@ -339,57 +373,63 @@ export default function Editor({
 
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={`w-8 h-8 shrink-0 transition-all duration-300 font-bold text-xs ${editor.isActive("heading", { level: 1 }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 1 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
             >
               H1
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={`w-8 h-8 shrink-0 transition-all duration-300 font-bold text-xs ${editor.isActive("heading", { level: 2 }) ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 2 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
             >
               H2
             </button>
             <button
               onClick={() => editor.chain().focus().toggleTaskList().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("taskList") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("taskList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Danh sách công việc"
             >
               <CheckSquare className="w-4 h-4" />
             </button>
             <button
               onClick={() => {
-                const url = window.prompt("Nhập URL liên kết:");
-                if (url) {
-                  editor.chain().focus().setLink({ href: url }).run();
-                }
+                const previousUrl = editor.getAttributes("link").href;
+                setLinkModal({ isOpen: true, url: previousUrl || "" });
               }}
-              className={`p-2 transition-all duration-300 ${editor.isActive("link") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("link") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Chèn liên kết"
             >
               <LinkIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={`p-2 transition-all duration-300 ${editor.isActive("bulletList") ? "bg-black text-white" : "bg-white text-zinc-600 hover:bg-zinc-50"}`}
+              className={`p-2 ${editor.isActive("bulletList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
               title="Danh sách"
             >
               <List className="w-4 h-4" />
             </button>
             <button
               onClick={() => {
-                const headings = editor.getJSON().content?.filter((n: any) => n.type === "heading") || [];
+                const headings =
+                  editor
+                    .getJSON()
+                    .content?.filter((n: any) => n.type === "heading") || [];
                 let tocHtml =
-                  "<div class='toc-container bg-zinc-50 p-6 border border-zinc-200 mb-8'><h2 class='text-sm font-bold mb-4'>Mục lục</h2><ul class='space-y-2'>";
+                  "<div class='toc-container bg-white p-6 border border-zinc-200 mb-8'><h2 class='text-sm font-bold mb-4'>Mục lục</h2><ul class='space-y-2'>";
                 headings.forEach((h: any) => {
-                  const text = h.content?.map((c: any) => c.text || "").join("") || "";
+                  const text =
+                    h.content?.map((c: any) => c.text || "").join("") || "";
                   const level = h.attrs.level;
-                  tocHtml += `<li class='text-xs ${level === 1 ? "font-bold" : "ml-4"} hover:underline cursor-pointer'>${text}</li>`;
+                  tocHtml += `<li class='text-xs ${level === 1 ? "font-bold" : "ml-4"} cursor-pointer'>${text}</li>`;
                 });
                 tocHtml += "</ul></div>";
                 editor.chain().focus().insertContent(tocHtml).run();
               }}
-              className="p-2 transition-all duration-300 bg-white text-zinc-600 hover:bg-zinc-50"
+              className="p-2 bg-white text-zinc-600 "
               title="Tạo mục lục"
             >
               <List className="w-4 h-4 text-zinc-400" />
@@ -398,15 +438,17 @@ export default function Editor({
 
           <div className="flex gap-2 ml-2">
             <button
-              onClick={() => editor.chain().focus().setLatexBlock({ text: "" }).run()}
-              className="px-4 py-1.5 bg-black text-white hover:bg-zinc-800 transition-all duration-300 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+              onClick={() =>
+                editor.chain().focus().setLatexBlock({ text: "" }).run()
+              }
+              className="px-4 py-1.5 bg-black text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
             >
               <Code className="w-4 h-4" />
               Mã LaTeX
             </button>
             <button
               onClick={handleSynonyms}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-all duration-300 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
             >
               <Sparkles className="w-4 h-4" />
               Gợi ý từ ngữ
@@ -415,19 +457,24 @@ export default function Editor({
               onClick={async () => {
                 const text = editor.getText();
                 if (!text || text.length < 50) {
-                  showToast("Vui lòng viết thêm nội dung (tối thiểu 50 từ) để kiểm tra ngữ pháp", "info");
+                  showToast(
+                    "Vui lòng viết thêm nội dung (tối thiểu 50 từ) để kiểm tra ngữ pháp",
+                    "info",
+                  );
                   return;
                 }
                 showToast("Đang phân tích ngữ pháp bằng AI", "info");
                 try {
-                try {
                   const data = await grammarCheckAPI(text);
-                  showToast(`Kết quả AI: ${data.message} (Điểm: ${data.score}/100)`, "success");
+                  showToast(
+                    `Kết quả AI: ${data.message} (Điểm: ${data.score}/100)`,
+                    "success",
+                  );
                 } catch (err: any) {
-                   showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
+                  showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
                 }
               }}
-              className="px-4 py-1.5 bg-zinc-900 text-white hover:bg-black transition-all duration-300 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+              className="px-4 py-1.5 bg-zinc-900 text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
             >
               <CheckSquare className="w-4 h-4 text-zinc-400" />
               Kiểm tra ngữ pháp AI
@@ -438,7 +485,7 @@ export default function Editor({
           {isPreview ? (
             <button
               onClick={() => setIsPreview(false)}
-              className="px-4 py-1.5 bg-zinc-100 text-black border border-zinc-200 text-xs font-bold hover:bg-zinc-200 transition-all duration-300 flex items-center gap-2 active:scale-[0.98]"
+              className="px-4 py-1.5 bg-zinc-100 text-black border border-zinc-200 text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
             >
               <ChevronLeft className="w-4 h-4" />
               Soạn thảo
@@ -447,7 +494,7 @@ export default function Editor({
             <button
               onClick={handleCompile}
               disabled={isCompiling}
-              className="px-4 py-1.5 bg-black text-white disabled:bg-zinc-100 disabled:text-zinc-400 text-xs font-bold hover:bg-zinc-800 transition-all duration-300 flex items-center gap-2 active:scale-[0.98]"
+              className="px-4 py-1.5 bg-black text-white disabled:bg-zinc-100 disabled:text-zinc-400 text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
             >
               {isCompiling ? (
                 <>
@@ -465,7 +512,7 @@ export default function Editor({
               onSave?.(editor.getHTML());
               showToast("Đã lưu tài liệu thành công", "success");
             }}
-            className="px-4 py-1.5 bg-black text-white text-xs font-bold hover:bg-zinc-800 transition-all duration-300 flex items-center gap-2 active:scale-[0.98]"
+            className="px-4 py-1.5 bg-black text-white text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
           >
             <Save className="w-4 h-4" />
             Lưu
@@ -473,19 +520,19 @@ export default function Editor({
         </div>
       </div>
 
-      <div className="flex-1 w-full flex overflow-hidden relative bg-zinc-50/10">
+      <div className="flex-1 w-full flex overflow-hidden relative bg-white/10">
         <div
-          className={`h-full overflow-y-auto transition-all duration-300 ease-in-out ${
+          className={`h-full overflow-y-auto ease-in-out ${
             isPreview ? "w-1/2 border-r border-zinc-200" : "w-full"
           } flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-100`}
         >
-          <div className="w-full max-w-4xl bg-white border border-zinc-200 min-h-[800px] animate-in fade-in duration-300">
+          <div className="w-full max-w-4xl bg-white border border-zinc-200 min-h-[800px] animate-in fade-in ">
             <EditorContent editor={editor} className="h-full" />
           </div>
         </div>
 
         {isPreview && previewPdfUrl && (
-          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-zinc-50 flex flex-col relative animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative animate-in slide-in-from-right-8 fade-in ">
             <div className="px-4 py-3 bg-black text-white text-xs flex justify-between items-center z-10">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 bg-zinc-800">
@@ -493,14 +540,16 @@ export default function Editor({
                 </div>
                 <span className="font-bold tracking-tight flex flex-col">
                   Bản in PDF
-                  <span className="text-[11px] text-zinc-400 font-medium">Đã hoàn thành biên dịch</span>
+                  <span className="text-[11px] text-zinc-400 font-medium">
+                    Đã hoàn thành biên dịch
+                  </span>
                 </span>
               </div>
               <div className="flex gap-2">
                 <a
                   href={previewPdfUrl}
                   download="doclib-preview.pdf"
-                  className="p-1.5 hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-white"
+                  className="p-1.5 transition-colors text-zinc-300 "
                   title="Tải xuống"
                 >
                   <Download className="w-4 h-4" />
@@ -519,12 +568,68 @@ export default function Editor({
         )}
       </div>
 
-
       <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1.5 border border-zinc-200 text-[11px] font-bold text-zinc-400 pointer-events-none flex gap-4">
         <span>{editor.storage.characterCount.words()} từ</span>
         <span>{editor.storage.characterCount.characters()} ký tự</span>
         <span>Khoảng {estimatedReadTime} phút đọc</span>
       </div>
+
+      <Modal
+        isOpen={linkModal.isOpen}
+        onClose={() => setLinkModal({ ...linkModal, isOpen: false })}
+        className="max-w-md"
+      >
+        <ModalHeader>
+          <ModalTitle>Chèn liên kết</ModalTitle>
+        </ModalHeader>
+        <ModalContent className="space-y-6">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+            Nhập địa chỉ URL bạn muốn liên kết đến phần văn bản đang chọn.
+          </p>
+          <div className="space-y-3">
+            <label className="text-[9px] font-bold text-black uppercase tracking-widest">Địa chỉ URL</label>
+            <input
+              type="text"
+              value={linkModal.url}
+              onChange={(e) => setLinkModal({ ...linkModal, url: e.target.value })}
+              placeholder="https://example.com"
+              autoFocus
+              className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold outline-none focus:border-black rounded-sm"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (linkModal.url) {
+                    editor.chain().focus().setLink({ href: linkModal.url }).run();
+                  } else {
+                    editor.chain().focus().unsetLink().run();
+                  }
+                  setLinkModal({ ...linkModal, isOpen: false });
+                }
+              }}
+            />
+          </div>
+        </ModalContent>
+        <ModalFooter className="flex gap-4">
+          <button
+            onClick={() => setLinkModal({ ...linkModal, isOpen: false })}
+            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            onClick={() => {
+              if (linkModal.url) {
+                editor.chain().focus().setLink({ href: linkModal.url }).run();
+              } else {
+                editor.chain().focus().unsetLink().run();
+              }
+              setLinkModal({ ...linkModal, isOpen: false });
+            }}
+            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all flex items-center justify-center"
+          >
+            Xác nhận
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

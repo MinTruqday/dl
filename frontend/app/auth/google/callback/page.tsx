@@ -16,7 +16,9 @@ export default function GoogleCallbackPage() {
     if (code) {
       const handleCallback = async () => {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google/callback?code=${code}`);
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/callback?code=${code}`,
+          );
           const data = await res.json();
           const authData = data.data || data;
 
@@ -38,15 +40,17 @@ export default function GoogleCallbackPage() {
     }
   }, [searchParams, loginState, router]);
 
-  const [pendingPasskeyEmail, setPendingPasskeyEmail] = useState<string | null>(null);
+  const [pendingPasskeyEmail, setPendingPasskeyEmail] = useState<string | null>(
+    null,
+  );
 
   if (pendingPasskeyEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <Passkey 
-          email={pendingPasskeyEmail} 
-          onClose={() => router.push("/")} 
-          onSuccess={() => router.push("/")} 
+        <Passkey
+          email={pendingPasskeyEmail}
+          onClose={() => router.push("/")}
+          onSuccess={() => router.push("/")}
         />
       </div>
     );
@@ -56,11 +60,13 @@ export default function GoogleCallbackPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white font-sans">
         <div className="bg-white p-12 border border-zinc-200 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-black tracking-tight">Lỗi xác thực</h2>
+          <h2 className="text-2xl font-bold text-black tracking-tight">
+            Lỗi xác thực
+          </h2>
           <p className="mt-3 text-base text-zinc-500">{error}</p>
-          <button 
+          <button
             onClick={() => router.push("/login")}
-            className="mt-8 w-full py-3 bg-black text-white font-bold text-sm active:scale-95 transition-all hover:bg-zinc-800"
+            className="mt-8 w-full py-3 bg-black text-white font-bold text-sm active:scale-95 "
           >
             Quay lại đăng nhập
           </button>
@@ -73,7 +79,9 @@ export default function GoogleCallbackPage() {
     <div className="min-h-screen flex items-center justify-center bg-white font-sans">
       <div className="text-center">
         <Loader2 className="h-10 w-10 animate-spin text-black mx-auto" />
-        <p className="mt-6 text-base font-bold text-black">Đang xử lý đăng nhập bằng Google</p>
+        <p className="mt-6 text-base font-bold text-black">
+          Đang xử lý đăng nhập bằng Google
+        </p>
       </div>
     </div>
   );

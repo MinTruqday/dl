@@ -1,18 +1,22 @@
-import { ReactRenderer } from '@tiptap/react';
-import tippy, { Instance } from 'tippy.js';
-import { LatexSuggestionList } from './LatexSuggestionList';
-import { getLatexSnippetsAPI } from '@/services/editor.service';
+import { ReactRenderer } from "@tiptap/react";
+import tippy, { Instance } from "tippy.js";
+import { LatexSuggestionList } from "./LatexSuggestionList";
+import { getLatexSnippetsAPI } from "@/services/editor.service";
 
 export const suggestionRenderer = {
   items: async ({ query }: { query: string }) => {
     try {
       const snippets = await getLatexSnippetsAPI();
       return snippets
-        .filter((item: any) => item.label.toLowerCase().includes(query.toLowerCase()) || 
-                               (item.detail && item.detail.toLowerCase().includes(query.toLowerCase())))
+        .filter(
+          (item: any) =>
+            item.label.toLowerCase().includes(query.toLowerCase()) ||
+            (item.detail &&
+              item.detail.toLowerCase().includes(query.toLowerCase())),
+        )
         .slice(0, 15);
     } catch (error) {
-      console.error('Failed to fetch LaTeX snippets:', error);
+      console.error("Failed to fetch LaTeX snippets:", error);
       return [];
     }
   },
@@ -32,14 +36,14 @@ export const suggestionRenderer = {
           return;
         }
 
-        popup = tippy('body', {
+        popup = tippy("body", {
           getReferenceClientRect: props.clientRect,
           appendTo: () => document.body,
           content: component.element,
           showOnCreate: true,
           interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
+          trigger: "manual",
+          placement: "bottom-start",
         });
       },
 
@@ -56,7 +60,7 @@ export const suggestionRenderer = {
       },
 
       onKeyDown: (props: any) => {
-        if (props.event.key === 'Escape') {
+        if (props.event.key === "Escape") {
           popup[0].hide();
           return true;
         }

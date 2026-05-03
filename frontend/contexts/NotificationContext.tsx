@@ -1,8 +1,17 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { API_URL, getToken } from "@/services/auth.service";
-import { getNotificationsAPI, markNotificationReadAPI } from "@/services/notification.service";
+import {
+  getNotificationsAPI,
+  markNotificationReadAPI,
+} from "@/services/notification.service";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";
 
@@ -21,9 +30,15 @@ interface NotificationContextType {
   markAsRead: (id: string) => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+);
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -33,18 +48,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     try {
       const data = await getNotificationsAPI();
       setNotifications(data.data || data || []);
-    } catch (e) {
-    }
+    } catch (e) {}
   }, [user]);
 
   const markAsRead = useCallback(async (id: string) => {
     try {
       await markNotificationReadAPI(id);
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, is_read: true } : n))
+        prev.map((n) => (n._id === id ? { ...n, is_read: true } : n)),
       );
-    } catch (e) {
-    }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -58,15 +71,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const token = getToken();
     if (!token) return;
 
-    const eventSource = new EventSource(`${API_URL}/notifications/stream?token=${token}`);
+    const eventSource = new EventSource(
+      `${API_URL}/notifications/stream?token=${token}`,
+    );
 
     eventSource.onmessage = (event) => {
       try {
         const newNotif = JSON.parse(event.data);
         setNotifications((prev) => [newNotif, ...prev]);
         showToast(newNotif.message || "Bạn có thông báo mới", "info");
-      } catch (e) {
-      }
+      } catch (e) {}
     };
 
     eventSource.onerror = (e) => {
@@ -81,7 +95,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, fetchNotifications, markAsRead }}>
+    <NotificationContext.Provider
+      value={{ notifications, unreadCount, fetchNotifications, markAsRead }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -90,7 +106,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error("useNotifications must be used within a NotificationProvider");
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
 }

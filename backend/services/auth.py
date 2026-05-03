@@ -65,16 +65,26 @@ class AuthService:
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        user_doc = await db["users"].find_one({"$or": [{"email": username}, {"slug": username}]})
-        if not user_doc or not verify_password(password, user_doc["password_hash"]):
+        
+        is_email = "@" in username
+        if is_email:
+            user_doc = await db["users"].find_one({"email": username})
+            if not user_doc:
+                raise HTTPException(status_code=401, detail="Địa chỉ Email này không tồn tại trên hệ thống.")
+        else:
+            user_doc = await db["users"].find_one({"slug": username})
+            if not user_doc:
+                raise HTTPException(status_code=401, detail="Tên tài khoản này không tồn tại trên hệ thống.")
+
+        if not verify_password(password, user_doc["password_hash"]):
             await db["audit_logs"].insert_one({
-                "action": "LOGIN_FAILED", 
-                "actor_email": username, 
+                "action": "LOGIN_FAILED_WRONG_PASSWORD", 
+                "actor_email": user_doc["email"], 
                 "ip": client_ip, 
                 "timestamp": datetime.utcnow()
             })
-            logger.warning(f"Login failed for: {username} from {client_ip}")
-            raise HTTPException(status_code=401, detail="Email/Tên đăng nhập hoặc mật khẩu không chính xác.")
+            logger.warning(f"Login failed: Incorrect password for - {username} from {client_ip}")
+            raise HTTPException(status_code=401, detail="Mật khẩu bạn nhập không chính xác.")
         
         if not user_doc.get("is_active", True):
             raise HTTPException(status_code=403, detail="Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên.")

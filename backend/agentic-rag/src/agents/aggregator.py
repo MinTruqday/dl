@@ -31,7 +31,7 @@ class AggregatorAgent:
             final_state = router_agent_app.invoke(initial_state, config=config)
             elapsed = time.time() - start_time
             
-            answer = final_state.get("final_answer", "DocLib không nhận được phản hồi từ hệ thống.")
+            answer = final_state.get("final_answer", "DocLib không nhận được phản hồi từ hệ thống")
             route = final_state.get("route", "unknown")
             
             logger.info(f"Query processed successfully in {elapsed:.2f}s via {route.upper()} route")
@@ -45,9 +45,9 @@ class AggregatorAgent:
             }
             
         except Exception as e:
-            logger.error(f"LangGraph Orchestration Error: {str(e)}")
+            logger.error(f"LangGraph orchestration error: {str(e)}")
             return {
-                "answer": "Hệ thống hiện đang gặp sự cố kỹ thuật trong quá trình xử lý. Rất mong bạn vui lòng thử lại sau.",
+                "answer": "Hệ thống hiện đang gặp sự cố kỹ thuật trong quá trình xử lý, rất mong bạn vui lòng thử lại sau",
                 "quality_score": 0,
                 "sources": [],
                 "react_steps": 0,

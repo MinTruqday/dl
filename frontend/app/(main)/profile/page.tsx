@@ -25,7 +25,7 @@ import {
   FileText,
   ArrowUpRight,
   ArrowDownLeft,
-  Settings
+  Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
@@ -40,13 +40,18 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
-  const [notification, setNotification] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [visible, setVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info" | "bookmarks" | "history">("info");
-  
+  const [activeTab, setActiveTab] = useState<"info" | "bookmarks" | "history">(
+    "info",
+  );
+
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  
+
   const [bookmarks, setBookmarks] = useState<any[]>([]);
   const [isBookmarksLoading, setIsBookmarksLoading] = useState(false);
 
@@ -75,7 +80,7 @@ export default function ProfilePage() {
       const res = await getDetailedHistoryAPI();
       setHistoryList(res.data || res || []);
     } catch (err: any) {
-        showToast("Không thể tải lịch sử tài chính", "error");
+      showToast("Không thể tải lịch sử tài chính", "error");
     } finally {
       setIsHistoryLoading(false);
     }
@@ -87,7 +92,7 @@ export default function ProfilePage() {
       const res = await getBookmarksAPI();
       setBookmarks(res.data || []);
     } catch (err: any) {
-        showToast("Không thể tải bộ sưu tập cá nhân", "error");
+      showToast("Không thể tải bộ sưu tập cá nhân", "error");
     } finally {
       setIsBookmarksLoading(false);
     }
@@ -101,7 +106,11 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await updateProfileAPI({ full_name: fullName, bio, avatar_url: avatarUrl });
+      const res = await updateProfileAPI({
+        full_name: fullName,
+        bio,
+        avatar_url: avatarUrl,
+      });
       if (res && (res.status === 200 || res.id)) {
         showToast("Đã cập nhật định danh hồ sơ thành công", "success");
       } else {
@@ -160,7 +169,9 @@ export default function ProfilePage() {
     try {
       const data = await uploadMediaAPI(formData);
       if (data.url) {
-        setAvatarUrl(data.url.startsWith("http") ? data.url : `${API_URL}${data.url}`);
+        setAvatarUrl(
+          data.url.startsWith("http") ? data.url : `${API_URL}${data.url}`,
+        );
         showToast("Đã tích hợp ảnh định danh mới", "success");
       }
     } catch {
@@ -182,10 +193,8 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-10 py-16 font-sans text-black">
-      
-
-      <div 
-        className="mb-20 border-b border-zinc-100 pb-16 flex flex-col md:flex-row md:items-end justify-between gap-12 transition-opacity duration-1000"
+      <div
+        className="mb-20 border-b border-zinc-100 pb-16 flex flex-col md:flex-row md:items-end justify-between gap-12 transition-opacity "
         style={{ opacity: visible ? 1 : 0 }}
       >
         <div className="space-y-4">
@@ -193,12 +202,14 @@ export default function ProfilePage() {
             Hồ sơ & Định danh
           </h1>
           <div className="text-zinc-300 text-[11px] font-bold uppercase tracking-widest flex items-center gap-4">
-            QUẢN LÝ THỰC THỂ CÁ NHÂN <div className="w-2 h-2 bg-black rounded-full animate-pulse" /> <Sparkles className="w-4 h-4 text-zinc-100" />
+            QUẢN LÝ THỰC THỂ CÁ NHÂN{" "}
+            <div className="w-2 h-2 bg-black rounded-full animate-pulse" />{" "}
+            <Sparkles className="w-4 h-4 text-zinc-100" />
           </div>
         </div>
         <button
           onClick={logoutState}
-          className="bg-zinc-50/50 text-black hover:bg-black hover:text-white border border-zinc-100 flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest h-14 px-10 transition-all active:scale-95 rounded-sm"
+          className="bg-white text-black border border-zinc-100 flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest h-14 px-10 active:scale-95 rounded-sm"
         >
           <LogOut className="w-4 h-4" />
           Đăng xuất hệ thống
@@ -210,28 +221,43 @@ export default function ProfilePage() {
           <div className="border border-zinc-100 bg-white p-12 rounded-sm relative group">
             <div className="flex flex-col items-center gap-10">
               <div className="relative group">
-                <div className="w-52 h-52 border border-zinc-100 overflow-hidden bg-zinc-50 grayscale group-hover:grayscale-0 transition-all duration-700 rounded-sm">
+                <div className="w-52 h-52 border border-zinc-100 overflow-hidden bg-white grayscale rounded-sm">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      className="w-full h-full object-cover transition-transform  "
+                    />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-zinc-100">
                       <User className="w-20 h-20 stroke-[1]" />
                     </div>
                   )}
                 </div>
-                <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center text-white cursor-pointer backdrop-blur-[2px] rounded-sm">
+                <label className="absolute inset-0 bg-black/60 opacity-0 flex flex-col items-center justify-center text-white cursor-pointer backdrop-blur-[2px] rounded-sm">
                   <Camera className="w-6 h-6 mb-3" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Thay đổi định danh</span>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                    Thay đổi định danh
+                  </span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                  />
                 </label>
               </div>
-              
+
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3">
-                    <h2 className="text-xl font-bold text-black uppercase tracking-tight">{user.full_name || "Thực thể ẩn danh"}</h2>
-                    {user.role === "author" && <BadgeCheck className="w-5 h-5 text-black" />}
+                  <h2 className="text-xl font-bold text-black uppercase tracking-tight">
+                    {user.full_name || "Thực thể ẩn danh"}
+                  </h2>
+                  {user.role === "author" && (
+                    <BadgeCheck className="w-5 h-5 text-black" />
+                  )}
                 </div>
-                <div className="inline-flex items-center gap-3 px-4 py-2 bg-zinc-50 border border-zinc-100 text-[10px] font-bold text-zinc-300 uppercase tracking-widest rounded-sm">
+                <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-zinc-100 text-[10px] font-bold text-zinc-300 uppercase tracking-widest rounded-sm">
                   @{user.username || "doclib_user"}
                 </div>
               </div>
@@ -239,35 +265,48 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Giao diện quản trị</h3>
+            <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+              Giao diện quản trị
+            </h3>
             <nav className="flex flex-col gap-3">
               {[
                 { id: "info", icon: User, label: "Thông tin định danh" },
-                { id: "bookmarks", icon: Bookmark, label: "Bộ sưu tập tri thức" },
-                { id: "history", icon: History, label: "Lịch sử tương tác" }
+                {
+                  id: "bookmarks",
+                  icon: Bookmark,
+                  label: "Bộ sưu tập tri thức",
+                },
+                { id: "history", icon: History, label: "Lịch sử tương tác" },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-8 h-16 text-[10px] font-bold uppercase tracking-widest transition-all border rounded-sm ${
+                  className={`flex items-center justify-between px-8 h-16 text-[10px] font-bold uppercase tracking-widest border rounded-sm ${
                     activeTab === tab.id
                       ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-400 hover:bg-zinc-50 hover:text-black border-zinc-100"
+                      : "bg-white text-zinc-400 border-zinc-100"
                   }`}
                 >
                   <div className="flex items-center gap-4">
                     <tab.icon className="w-4 h-4" /> {tab.label}
                   </div>
-                  <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === tab.id ? "rotate-90" : ""}`} />
+                  <ChevronRight
+                    className={`w-4 h-4 transition-transform ${activeTab === tab.id ? "rotate-90" : ""}`}
+                  />
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-10 border border-zinc-100 bg-zinc-50/20 space-y-10 rounded-sm">
+          <div className="p-10 border border-zinc-100 bg-white/20 space-y-10 rounded-sm">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Nguồn lực DL</span>
-              <span className="text-2xl font-bold text-black tracking-tighter">{user.wallet_balance?.toLocaleString() || 0} <span className="text-zinc-200 text-sm italic">dl</span></span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                Nguồn lực DL
+              </span>
+              <span className="text-2xl font-bold text-black tracking-tighter">
+                {user.wallet_balance?.toLocaleString() || 0}{" "}
+                <span className="text-zinc-200 text-sm italic">dl</span>
+              </span>
             </div>
             <div className="space-y-6">
               <label className="text-[9px] font-bold text-zinc-300 uppercase tracking-[0.2em] flex items-center gap-3 px-1">
@@ -278,15 +317,19 @@ export default function ProfilePage() {
                   type="number"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="Nhập giá trị"
-                  className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm transition-all placeholder:text-zinc-100"
+                  placeholder=""
+                  className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm placeholder:text-zinc-100"
                 />
                 <button
                   onClick={handleDeposit}
                   disabled={isDepositing}
-                  className="h-14 w-full bg-black text-white hover:bg-zinc-800 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 rounded-sm"
+                  className="h-14 w-full bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm"
                 >
-                  {isDepositing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kích hoạt nạp tiền"}
+                  {isDepositing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    "Kích hoạt nạp tiền"
+                  )}
                 </button>
               </div>
             </div>
@@ -295,10 +338,14 @@ export default function ProfilePage() {
 
         <main className="lg:col-span-8">
           {activeTab === "info" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 rounded-sm">
+            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-black uppercase tracking-tight">Chi tiết thực thể</h3>
-                <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">Đồng bộ hóa dữ liệu định danh hệ thống</p>
+                <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+                  Chi tiết thực thể
+                </h3>
+                <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
+                  Đồng bộ hóa dữ liệu định danh hệ thống
+                </p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-12">
@@ -306,16 +353,18 @@ export default function ProfilePage() {
                   <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1 flex items-center gap-3">
                     <Mail className="w-3.5 h-3.5" /> Địa chỉ liên kết
                   </label>
-                  <div className="h-14 bg-zinc-50 border border-zinc-100 px-6 flex items-center text-zinc-300 text-xs font-bold rounded-sm cursor-not-allowed">
+                  <div className="h-14 bg-white border border-zinc-100 px-6 flex items-center text-zinc-300 text-xs font-bold rounded-sm cursor-not-allowed">
                     {user.email}
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Danh xưng hiển thị</label>
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                    Danh xưng hiển thị
+                  </label>
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm transition-all"
+                    className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm "
                   />
                 </div>
               </div>
@@ -327,8 +376,8 @@ export default function ProfilePage() {
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Mô tả ngắn gọn về hành trình tri thức của bạn"
-                  className="w-full min-h-[260px] p-10 text-sm border border-zinc-100 rounded-sm focus:outline-none focus:border-black transition-all font-medium bg-zinc-50/20"
+                  placeholder=""
+                  className="w-full min-h-[260px] p-10 text-sm border border-zinc-100 rounded-sm focus:outline-none focus:border-black font-medium bg-white/20"
                 />
               </div>
 
@@ -336,70 +385,103 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="bg-black text-white hover:bg-zinc-800 px-16 h-16 flex items-center gap-6 transition-all active:scale-95 rounded-sm"
+                  className="bg-black text-white px-16 h-16 flex items-center gap-6 active:scale-95 rounded-sm"
                 >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  <span className="text-[11px] font-bold uppercase tracking-[0.3em]">Cập nhật định danh</span>
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  <span className="text-[11px] font-bold uppercase tracking-[0.3em]">
+                    Cập nhật định danh
+                  </span>
                 </button>
               </div>
             </div>
           )}
 
           {activeTab === "bookmarks" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 rounded-sm">
-                <div className="flex items-center justify-between border-b border-zinc-100 pb-10">
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-black uppercase tracking-tight">Bộ sưu tập tri thức</h3>
-                        <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">Tài liệu đã được lưu trữ vào không gian cá nhân</p>
-                    </div>
-                    <div className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">{bookmarks.length} THỰC THỂ</div>
+            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-10">
+                <div className="space-y-4">
+                  <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+                    Bộ sưu tập tri thức
+                  </h3>
+                  <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
+                    Tài liệu đã được lưu trữ vào không gian cá nhân
+                  </p>
                 </div>
+                <div className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
+                  {bookmarks.length} THỰC THỂ
+                </div>
+              </div>
 
-                {isBookmarksLoading ? (
-                    <div className="py-40 flex flex-col items-center justify-center gap-10">
-                        <Loader2 className="w-12 h-12 animate-spin text-zinc-50 stroke-[1]" />
-                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Đang truy xuất bộ sưu tập</p>
-                    </div>
-                ) : bookmarks.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        {bookmarks.map((doc) => (
-                            <Link href={`/documents/${doc.slug || doc._id}`} key={doc._id} className="group border border-zinc-100 p-8 rounded-sm hover:border-black transition-all duration-700 bg-white">
-                                <div className="flex items-start gap-6">
-                                    <div className="w-16 h-20 bg-zinc-50 border border-zinc-50 flex items-center justify-center rounded-sm transition-all group-hover:bg-black group-hover:rotate-6">
-                                        <FileText className="w-8 h-8 text-zinc-100 group-hover:text-white stroke-[1.5]" />
-                                    </div>
-                                    <div className="flex-1 space-y-4">
-                                        <h4 className="text-sm font-bold text-black uppercase tracking-tight line-clamp-2 leading-relaxed">{doc.title}</h4>
-                                        <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                                            <span>{doc.publisher_name || "DocLib Institutional"}</span>
-                                            <div className="w-1 h-1 bg-zinc-100 rounded-full" />
-                                            <span>{new Date(doc.created_at).toLocaleDateString("vi-VN")}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/10 rounded-sm">
-                        <Bookmark className="w-16 h-16 text-zinc-50 mb-10 stroke-[1]" />
-                        <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">Bộ sưu tập rỗng</h4>
-                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-sm leading-loose">
-                            Bắt đầu lưu trữ các thực thể tri thức yêu thích để xây dựng không gian học thuật cá nhân của bạn
-                        </p>
-                    </div>
-                )}
+              {isBookmarksLoading ? (
+                <div className="py-40 flex flex-col items-center justify-center gap-10">
+                  <Loader2 className="w-12 h-12 animate-spin text-zinc-50 stroke-[1]" />
+                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                    Đang truy xuất bộ sưu tập
+                  </p>
+                </div>
+              ) : bookmarks.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {bookmarks.map((doc) => (
+                    <Link
+                      href={`/documents/${doc.slug || doc._id}`}
+                      key={doc._id}
+                      className="group border border-zinc-100 p-8 rounded-sm bg-white"
+                    >
+                      <div className="flex items-start gap-6">
+                        <div className="w-16 h-20 bg-white border border-zinc-50 flex items-center justify-center rounded-sm  ">
+                          <FileText className="w-8 h-8 text-zinc-100 stroke-[1.5]" />
+                        </div>
+                        <div className="flex-1 space-y-4">
+                          <h4 className="text-sm font-bold text-black uppercase tracking-tight line-clamp-2 leading-relaxed">
+                            {doc.title}
+                          </h4>
+                          <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
+                            <span>
+                              {doc.publisher_name || "DocLib Institutional"}
+                            </span>
+                            <div className="w-1 h-1 bg-zinc-100 rounded-full" />
+                            <span>
+                              {new Date(doc.created_at).toLocaleDateString(
+                                "vi-VN",
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white/10 rounded-sm">
+                  <Bookmark className="w-16 h-16 text-zinc-50 mb-10 stroke-[1]" />
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">
+                    Bộ sưu tập rỗng
+                  </h4>
+                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-sm leading-loose">
+                    Bắt đầu lưu trữ các thực thể tri thức yêu thích để xây dựng
+                    không gian học thuật cá nhân của bạn
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === "history" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 rounded-sm">
+            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
               <div className="flex items-center justify-between border-b border-zinc-100 pb-10">
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-black uppercase tracking-tight">Nhật ký mạng lưới</h3>
-                  <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">Dòng tiền và giao dịch tri thức hệ thống</p>
+                  <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+                    Nhật ký mạng lưới
+                  </h3>
+                  <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
+                    Dòng tiền và giao dịch tri thức hệ thống
+                  </p>
                 </div>
-                <div className="px-6 py-2 bg-zinc-50 border border-zinc-100 text-[9px] font-bold text-zinc-400 uppercase tracking-widest rounded-sm">
+                <div className="px-6 py-2 bg-white border border-zinc-100 text-[9px] font-bold text-zinc-400 uppercase tracking-widest rounded-sm">
                   Lịch sử gần đây
                 </div>
               </div>
@@ -407,53 +489,75 @@ export default function ProfilePage() {
               {isHistoryLoading ? (
                 <div className="py-40 flex flex-col items-center justify-center gap-10">
                   <Loader2 className="w-12 h-12 animate-spin text-zinc-50 stroke-[1]" />
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Đang tải dữ liệu mạng lưới</p>
+                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                    Đang tải dữ liệu mạng lưới
+                  </p>
                 </div>
               ) : historyList.length > 0 ? (
                 <div className="space-y-6">
                   {historyList.map((tx, idx) => (
                     <div
                       key={idx}
-                      className="group p-8 flex items-center justify-between border border-zinc-50 hover:border-black transition-all duration-700 rounded-sm bg-white"
+                      className="group p-8 flex items-center justify-between border border-zinc-50 rounded-sm bg-white"
                     >
                       <div className="flex items-center gap-10">
                         <div
-                          className={`w-14 h-14 flex items-center justify-center border transition-all duration-700 rounded-sm ${
-                            tx.amount > 0 ? "bg-white text-black border-zinc-100 group-hover:bg-black group-hover:text-white" : "bg-black text-white border-black"
+                          className={`w-14 h-14 flex items-center justify-center border rounded-sm ${
+                            tx.amount > 0
+                              ? "bg-white text-black border-zinc-100  "
+                              : "bg-black text-white border-black"
                           }`}
                         >
-                          {tx.amount > 0 ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownLeft className="w-6 h-6" />}
+                          {tx.amount > 0 ? (
+                            <ArrowUpRight className="w-6 h-6" />
+                          ) : (
+                            <ArrowDownLeft className="w-6 h-6" />
+                          )}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-black uppercase tracking-tight group-hover:translate-x-2 transition-transform duration-500">
-                            {tx.description || tx.type_display || "Giao dịch tri thức"}
+                          <p className="text-sm font-bold text-black uppercase tracking-tight transition-transform ">
+                            {tx.description ||
+                              tx.type_display ||
+                              "Giao dịch tri thức"}
                           </p>
                           <div className="flex items-center gap-4 mt-3">
-                            <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">{new Date(tx.created_at).toLocaleString("vi-VN")}</span>
+                            <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
+                              {new Date(tx.created_at).toLocaleString("vi-VN")}
+                            </span>
                             <div className="w-1 h-1 bg-zinc-100 rounded-full" />
-                            <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-widest">Mã hiệu: TX-{idx + 1000}</span>
+                            <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-widest">
+                              Mã hiệu: TX-{idx + 1000}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-2xl font-bold tracking-tighter ${tx.amount > 0 ? "text-zinc-200" : "text-black"}`}>
+                        <p
+                          className={`text-2xl font-bold tracking-tighter ${tx.amount > 0 ? "text-zinc-200" : "text-black"}`}
+                        >
                           {tx.amount > 0 ? "+" : ""}
-                          {tx.amount.toLocaleString()} <span className="text-[10px] italic">dl</span>
+                          {tx.amount.toLocaleString()}{" "}
+                          <span className="text-[10px] italic">dl</span>
                         </p>
                         <div className="mt-2 flex items-center justify-end gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
-                           <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Hoàn tất</span>
+                          <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
+                          <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
+                            Hoàn tất
+                          </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-zinc-50/10 rounded-sm">
+                <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white/10 rounded-sm">
                   <CreditCard className="w-16 h-16 text-zinc-50 mb-10 stroke-[1]" />
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">Mạng lưới rỗng</h4>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">
+                    Mạng lưới rỗng
+                  </h4>
                   <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-sm leading-loose">
-                    Bạn chưa thực hiện giao dịch nạp tiền hoặc chuyển đổi tri thức nào gần đây trên hệ thống.
+                    Bạn chưa thực hiện giao dịch nạp tiền hoặc chuyển đổi tri
+                    thức nào gần đây trên hệ thống.
                   </p>
                 </div>
               )}

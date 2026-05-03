@@ -16,7 +16,7 @@ export default function AiButton() {
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4 pointer-events-none font-sans">
       {isOpen && (
-        <div className="w-[380px] bg-white border border-zinc-200 flex flex-col animate-in slide-in-from-bottom-4 fade-in duration-300 pointer-events-auto">
+        <div className="w-[380px] bg-white border border-zinc-200 flex flex-col animate-in slide-in-from-bottom-4 fade-in pointer-events-auto">
           <header className="p-4 bg-black text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
@@ -24,19 +24,20 @@ export default function AiButton() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:opacity-60 transition-opacity p-1"
+              className=" transition-opacity p-1"
             >
               <X className="w-4 h-4" />
             </button>
           </header>
 
-          <div className="h-80 overflow-y-auto p-6 space-y-4 bg-zinc-50/50 scrollbar-thin scrollbar-thumb-zinc-200">
+          <div className="h-80 overflow-y-auto p-6 space-y-4 bg-white scrollbar-thin scrollbar-thumb-zinc-200">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-black text-white flex items-center justify-center shrink-0">
                 <Brain className="w-4 h-4" />
               </div>
               <div className="bg-white border border-zinc-100 p-3 text-xs font-medium leading-relaxed">
-                Xin chào {user.full_name}, tôi có thể giúp bạn tìm kiếm tài liệu hoặc tóm tắt kiến thức ngay lúc này.
+                Xin chào {user.full_name}, tôi có thể giúp bạn tìm kiếm tài liệu
+                hoặc tóm tắt kiến thức ngay lúc này.
               </div>
             </div>
           </div>
@@ -46,10 +47,10 @@ export default function AiButton() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3 text-xs font-bold outline-none focus:border-black transition-all duration-150"
+                className="w-full bg-white border border-zinc-200 pl-4 pr-12 py-3 text-xs font-bold outline-none focus:border-black "
                 placeholder=""
               />
-              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black text-white flex items-center justify-center hover:bg-zinc-800 transition-colors active:scale-95">
+              <button className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black text-white flex items-center justify-center transition-colors active:scale-95">
                 <Send className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -62,7 +63,7 @@ export default function AiButton() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-black text-white flex items-center justify-center border border-black hover:bg-zinc-800 active:scale-90 transition-all duration-150 pointer-events-auto"
+        className="w-14 h-14 bg-black text-white flex items-center justify-center border border-black active:scale-90 pointer-events-auto"
       >
         {isOpen ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
       </button>
