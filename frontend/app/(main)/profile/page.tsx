@@ -20,12 +20,10 @@ import {
   CreditCard,
   History,
   ChevronRight,
-  Sparkles,
   Bookmark,
   FileText,
   ArrowUpRight,
   ArrowDownLeft,
-  Settings,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
@@ -41,13 +39,9 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [depositAmount, setDepositAmount] = useState("");
   const [isDepositing, setIsDepositing] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "bookmarks" | "history">(
-    "info",
+    "info"
   );
 
   const [historyList, setHistoryList] = useState<any[]>([]);
@@ -85,7 +79,7 @@ export default function ProfilePage() {
     } finally {
       setIsHistoryLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   const fetchBookmarks = useCallback(async () => {
     setIsBookmarksLoading(true);
@@ -97,7 +91,7 @@ export default function ProfilePage() {
     } finally {
       setIsBookmarksLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     if (activeTab === "history") fetchHistory();
@@ -171,7 +165,7 @@ export default function ProfilePage() {
       const data = await uploadMediaAPI(formData);
       if (data.url) {
         setAvatarUrl(
-          data.url.startsWith("http") ? data.url : `${API_URL}${data.url}`,
+          data.url.startsWith("http") ? data.url : `${API_URL}${data.url}`
         );
         showToast("Đã tích hợp ảnh định danh mới", "success");
       }
@@ -184,8 +178,8 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <Loader2 className="w-12 h-12 animate-spin text-zinc-100 stroke-[1]" />
+      <div className="flex h-[80vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -193,53 +187,47 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-10 py-16 font-sans text-black">
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="mb-20 border-b border-zinc-100 pb-16 flex flex-col md:flex-row md:items-end justify-between gap-12 transition-opacity "
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
         style={{ opacity: visible ? 1 : 0 }}
       >
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold tracking-tighter uppercase text-black leading-none">
-            Hồ sơ & Định danh
-          </h1>
-          <div className="text-zinc-300 text-[11px] font-bold uppercase tracking-widest flex items-center gap-4">
-            QUẢN LÝ THỰC THỂ CÁ NHÂN{" "}
-            <div className="w-2 h-2 bg-black rounded-full animate-pulse" />{" "}
-            <Sparkles className="w-4 h-4 text-zinc-100" />
-          </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-black">Hồ sơ cá nhân</h1>
+          <p className="text-zinc-500 text-sm font-medium">
+            Quản lý định danh và tài sản hệ thống
+          </p>
         </div>
         <button
           onClick={logoutState}
-          className="bg-white text-black border border-zinc-100 flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest h-14 px-10 active:scale-95 rounded-sm"
+          className="h-10 px-6 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center gap-2 hover:bg-zinc-50 transition-colors rounded-none"
         >
-          <LogOut className="w-4 h-4" />
-          Đăng xuất hệ thống
+          <LogOut className="w-4 h-4" /> Đăng xuất
         </button>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-16">
-        <aside className="lg:col-span-4 space-y-12">
-          <div className="border border-zinc-100 bg-white p-12 rounded-sm relative group">
-            <div className="flex flex-col items-center gap-10">
+      <div
+        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
+      >
+        <aside className="lg:col-span-4 space-y-8">
+          <div className="border border-zinc-200 bg-white p-6">
+            <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative group">
-                <div className="w-52 h-52 border border-zinc-100 overflow-hidden bg-white grayscale rounded-sm">
+                <div className="w-32 h-32 rounded-full border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt=""
-                      className="w-full h-full object-cover transition-transform  "
+                      className="w-full h-full object-cover grayscale mix-blend-multiply"
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-zinc-100">
-                      <User className="w-20 h-20 stroke-[1]" />
-                    </div>
+                    <User className="w-10 h-10 text-zinc-400 stroke-[1]" />
                   )}
                 </div>
-                <label className="absolute inset-0 bg-black/60 opacity-0 flex flex-col items-center justify-center text-white cursor-pointer backdrop-blur-[2px] rounded-sm">
-                  <Camera className="w-6 h-6 mb-3" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    Thay đổi định danh
-                  </span>
+                <label className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-black cursor-pointer rounded-full border border-zinc-200 transition-opacity">
+                  <Camera className="w-5 h-5 mb-1" />
+                  <span className="text-[10px] font-semibold">Đổi ảnh</span>
                   <input
                     type="file"
                     className="hidden"
@@ -249,27 +237,54 @@ export default function ProfilePage() {
                 </label>
               </div>
 
-              <div className="text-center space-y-4">
-                <div className="flex items-center justify-center gap-3">
-                  <h2 className="text-xl font-bold text-black uppercase tracking-tight">
-                    {user.full_name || "Thực thể ẩn danh"}
+              <div>
+                <div className="flex items-center justify-center gap-2">
+                  <h2 className="text-lg font-semibold text-black">
+                    {user.full_name || "Ẩn danh"}
                   </h2>
                   {user.role === "author" && (
-                    <BadgeCheck className="w-5 h-5 text-black" />
+                    <BadgeCheck className="w-4 h-4 text-black" />
                   )}
                 </div>
-                <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-zinc-100 text-[10px] font-bold text-zinc-300 uppercase tracking-widest rounded-sm">
-                  @{user.username || "doclib_user"}
-                </div>
+                <p className="text-xs text-zinc-500 font-medium mt-1">
+                  @{user.username || "nguoidung"}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 border-t border-zinc-200 pt-6 mt-6">
+              <div className="flex flex-col items-center justify-center border-r border-zinc-200 px-2">
+                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
+                  Chuỗi
+                </span>
+                <span className="text-sm font-semibold text-black">
+                  {user.streak_days || 0}
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center border-r border-zinc-200 px-2">
+                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
+                  Thực thể
+                </span>
+                <span className="text-sm font-semibold text-black">
+                  {bookmarks.length || 0}
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center px-2">
+                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
+                  Nguồn lực
+                </span>
+                <span className="text-sm font-semibold text-black">
+                  {user.wallet_balance?.toLocaleString() || 0}
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+          <div className="space-y-4">
+            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2">
               Giao diện quản trị
             </h3>
-            <nav className="flex flex-col gap-3">
+            <nav className="flex flex-col border border-zinc-200 bg-white">
               {[
                 { id: "info", icon: User, label: "Thông tin định danh" },
                 {
@@ -277,289 +292,295 @@ export default function ProfilePage() {
                   icon: Bookmark,
                   label: "Bộ sưu tập tri thức",
                 },
-                { id: "history", icon: History, label: "Lịch sử tương tác" },
-              ].map((tab) => (
+                { id: "history", icon: History, label: "Nhật ký mạng lưới" },
+              ].map((tab, idx) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-8 h-16 text-[10px] font-bold uppercase tracking-widest border rounded-sm ${
+                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium transition-colors ${
+                    idx !== 2 ? "border-b border-zinc-200" : ""
+                  } ${
                     activeTab === tab.id
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-400 border-zinc-100"
+                      ? "bg-zinc-50 text-black font-semibold"
+                      : "text-zinc-500 hover:text-black hover:bg-zinc-50"
                   }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <tab.icon className="w-4 h-4" /> {tab.label}
                   </div>
-                  <ChevronRight
-                    className={`w-4 h-4 transition-transform ${activeTab === tab.id ? "rotate-90" : ""}`}
-                  />
+                  {activeTab === tab.id && (
+                    <ChevronRight className="w-4 h-4 text-black" />
+                  )}
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-10 border border-zinc-100 bg-white/20 space-y-10 rounded-sm">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-8">
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                Nguồn lực DL
-              </span>
-              <span className="text-2xl font-bold text-black tracking-tighter">
-                {user.wallet_balance?.toLocaleString() || 0}{" "}
-                <span className="text-zinc-200 text-sm italic">dl</span>
+          <div className="border border-zinc-200 bg-zinc-50 p-6 space-y-4">
+            <div className="border-b border-zinc-200 pb-3">
+              <span className="text-xs font-semibold text-black flex items-center gap-2">
+                <CreditCard className="w-4 h-4" /> Nạp nguồn lực (VNĐ)
               </span>
             </div>
-            <div className="space-y-6">
-              <label className="text-[9px] font-bold text-zinc-300 uppercase tracking-[0.2em] flex items-center gap-3 px-1">
-                <CreditCard className="w-3.5 h-3.5" /> Nạp thêm nguồn lực (VNĐ)
-              </label>
-              <div className="space-y-4">
-                <input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder=""
-                  className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm placeholder:text-zinc-100"
-                />
-                <button
-                  onClick={handleDeposit}
-                  disabled={isDepositing}
-                  className="h-14 w-full bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm"
-                >
-                  {isDepositing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    "Kích hoạt nạp tiền"
-                  )}
-                </button>
-              </div>
+            <div className="space-y-3">
+              <input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="Nhập số tiền..."
+                className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+              />
+              <button
+                onClick={handleDeposit}
+                disabled={isDepositing}
+                className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
+              >
+                {isDepositing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Kích hoạt nạp tiền"
+                )}
+              </button>
             </div>
           </div>
         </aside>
 
         <main className="lg:col-span-8">
           {activeTab === "info" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-black uppercase tracking-tight">
-                  Chi tiết thực thể
+            <div className="border border-zinc-200 bg-white p-8 space-y-8">
+              <div className="border-b border-zinc-200 pb-4">
+                <h3 className="text-sm font-semibold text-black">
+                  Thông tin định danh
                 </h3>
-                <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
-                  Đồng bộ hóa dữ liệu định danh hệ thống
+                <p className="text-xs text-zinc-500 font-medium mt-1">
+                  Cập nhật dữ liệu hệ thống cho tài khoản của bạn
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-12">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1 flex items-center gap-3">
-                    <Mail className="w-3.5 h-3.5" /> Địa chỉ liên kết
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest flex items-center gap-2">
+                    <Mail className="w-3 h-3" /> Địa chỉ liên kết
                   </label>
-                  <div className="h-14 bg-white border border-zinc-100 px-6 flex items-center text-zinc-300 text-xs font-bold rounded-sm cursor-not-allowed">
+                  <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-xs font-medium cursor-not-allowed rounded-none">
                     {user.email}
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                     Danh xưng hiển thị
                   </label>
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold focus:outline-none focus:border-black rounded-sm "
+                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1 flex items-center gap-3">
-                  <LinkIcon className="w-3.5 h-3.5" /> Tiểu sử tri thức (Bio)
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest flex items-center gap-2">
+                  <LinkIcon className="w-3 h-3" /> Tiểu sử tri thức (Bio)
                 </label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder=""
-                  className="w-full min-h-[260px] p-10 text-sm border border-zinc-100 rounded-sm focus:outline-none focus:border-black font-medium bg-white/20"
+                  placeholder="Nhập thông tin giới thiệu ngắn gọn..."
+                  className="w-full min-h-[160px] bg-white border border-zinc-200 p-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none resize-none placeholder:text-zinc-400"
                 />
               </div>
 
-              <div className="flex justify-end pt-10 border-t border-zinc-50">
+              <div className="flex justify-end pt-6 border-t border-zinc-200">
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="bg-black text-white px-16 h-16 flex items-center gap-6 active:scale-95 rounded-sm"
+                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  <span className="text-[11px] font-bold uppercase tracking-[0.3em]">
-                    Cập nhật định danh
-                  </span>
+                  Cập nhật định danh
                 </button>
               </div>
+
+              {user.role !== "author" && (
+                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                  <h3 className="text-sm font-semibold text-black">
+                    Nâng cấp tác giả
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium">
+                    Tham gia mạng lưới tác giả để xuất bản tài liệu trên hệ thống.
+                  </p>
+                  <div className="flex items-start gap-4">
+                    <input
+                      value={motivation}
+                      onChange={(e) => setMotivation(e.target.value)}
+                      placeholder="Lý do ứng tuyển..."
+                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                    />
+                    <button
+                      onClick={handleApplyAuthor}
+                      disabled={isApplying}
+                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 rounded-none shrink-0"
+                    >
+                      {isApplying ? "Đang gửi..." : "Gửi yêu cầu"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === "bookmarks" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-10">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+            <div className="border border-zinc-200 bg-white p-8 space-y-8">
+              <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
+                <div>
+                  <h3 className="text-sm font-semibold text-black">
                     Bộ sưu tập tri thức
                   </h3>
-                  <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
+                  <p className="text-xs text-zinc-500 font-medium mt-1">
                     Tài liệu đã được lưu trữ vào không gian cá nhân
                   </p>
                 </div>
-                <div className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
-                  {bookmarks.length} THỰC THỂ
-                </div>
+                <span className="text-xs font-semibold text-black">
+                  {bookmarks.length} thực thể
+                </span>
               </div>
 
               {isBookmarksLoading ? (
-                <div className="py-40 flex flex-col items-center justify-center gap-10">
-                  <Loader2 className="w-12 h-12 animate-spin text-zinc-50 stroke-[1]" />
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                    Đang truy xuất bộ sưu tập
-                  </p>
+                <div className="py-12 flex flex-col items-center justify-center gap-4 border border-dashed border-zinc-200 bg-zinc-50">
+                  <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                  <span className="text-xs font-medium text-zinc-500">
+                    Đang tải bộ sưu tập
+                  </span>
                 </div>
               ) : bookmarks.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {bookmarks.map((doc) => (
                     <Link
-                      href={`/documents/${doc.slug || doc._id}`}
                       key={doc._id}
-                      className="group border border-zinc-100 p-8 rounded-sm bg-white"
+                      href={`/documents/${doc.slug || doc._id}`}
+                      className="border border-zinc-200 bg-white group hover:bg-zinc-50 transition-colors flex flex-col"
                     >
-                      <div className="flex items-start gap-6">
-                        <div className="w-16 h-20 bg-white border border-zinc-50 flex items-center justify-center rounded-sm  ">
-                          <FileText className="w-8 h-8 text-zinc-100 stroke-[1.5]" />
-                        </div>
-                        <div className="flex-1 space-y-4">
-                          <h4 className="text-sm font-bold text-black uppercase tracking-tight line-clamp-2 leading-relaxed">
-                            {doc.title}
-                          </h4>
-                          <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                            <span>
-                              {doc.publisher_name || "DocLib Institutional"}
-                            </span>
-                            <div className="w-1 h-1 bg-zinc-100 rounded-full" />
-                            <span>
-                              {new Date(doc.created_at).toLocaleDateString(
-                                "vi-VN",
-                              )}
-                            </span>
+                      <div className="aspect-[3/4] border-b border-zinc-200 bg-zinc-50 overflow-hidden relative shrink-0">
+                        {doc.cover_url ? (
+                          <img
+                            src={
+                              doc.cover_url.startsWith("http")
+                                ? doc.cover_url
+                                : `${API_URL}/storage/${doc.cover_url}`
+                            }
+                            className="w-full h-full object-cover grayscale mix-blend-multiply"
+                            alt={doc.title}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-zinc-400 stroke-[1]" />
                           </div>
+                        )}
+                      </div>
+                      <div className="p-3 flex-1 flex flex-col justify-between">
+                        <h4 className="text-xs font-semibold text-black line-clamp-2 group-hover:underline">
+                          {doc.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-medium mt-2">
+                          <span className="truncate">
+                            {doc.publisher_name || "DocLib Institutional"}
+                          </span>
                         </div>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white/10 rounded-sm">
-                  <Bookmark className="w-16 h-16 text-zinc-50 mb-10 stroke-[1]" />
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">
+                <div className="py-12 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-zinc-50">
+                  <Bookmark className="w-8 h-8 text-zinc-300 mb-3 stroke-[1]" />
+                  <span className="text-xs font-medium text-zinc-500">
                     Bộ sưu tập rỗng
-                  </h4>
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-sm leading-loose">
-                    Bắt đầu lưu trữ các thực thể tri thức yêu thích để xây dựng
-                    không gian học thuật cá nhân của bạn
-                  </p>
+                  </span>
                 </div>
               )}
             </div>
           )}
 
           {activeTab === "history" && (
-            <div className="bg-white border border-zinc-100 p-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 rounded-sm">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-10">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-black uppercase tracking-tight">
+            <div className="border border-zinc-200 bg-white p-8 space-y-8">
+              <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
+                <div>
+                  <h3 className="text-sm font-semibold text-black">
                     Nhật ký mạng lưới
                   </h3>
-                  <p className="text-zinc-300 text-[10px] font-bold uppercase tracking-widest">
+                  <p className="text-xs text-zinc-500 font-medium mt-1">
                     Dòng tiền và giao dịch tri thức hệ thống
                   </p>
-                </div>
-                <div className="px-6 py-2 bg-white border border-zinc-100 text-[9px] font-bold text-zinc-400 uppercase tracking-widest rounded-sm">
-                  Lịch sử gần đây
                 </div>
               </div>
 
               {isHistoryLoading ? (
-                <div className="py-40 flex flex-col items-center justify-center gap-10">
-                  <Loader2 className="w-12 h-12 animate-spin text-zinc-50 stroke-[1]" />
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                <div className="py-12 flex flex-col items-center justify-center gap-4 border border-dashed border-zinc-200 bg-zinc-50">
+                  <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                  <span className="text-xs font-medium text-zinc-500">
                     Đang tải dữ liệu mạng lưới
-                  </p>
+                  </span>
                 </div>
               ) : historyList.length > 0 ? (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {historyList.map((tx, idx) => (
                     <div
                       key={idx}
-                      className="group p-8 flex items-center justify-between border border-zinc-50 rounded-sm bg-white"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 gap-4"
                     >
-                      <div className="flex items-center gap-10">
+                      <div className="flex items-center gap-4">
                         <div
-                          className={`w-14 h-14 flex items-center justify-center border rounded-sm ${
+                          className={`w-10 h-10 flex items-center justify-center border shrink-0 ${
                             tx.amount > 0
-                              ? "bg-white text-black border-zinc-100  "
-                              : "bg-black text-white border-black"
+                              ? "border-zinc-200 bg-white text-black"
+                              : "border-black bg-black text-white"
                           }`}
                         >
                           {tx.amount > 0 ? (
-                            <ArrowUpRight className="w-6 h-6" />
+                            <ArrowUpRight className="w-5 h-5" />
                           ) : (
-                            <ArrowDownLeft className="w-6 h-6" />
+                            <ArrowDownLeft className="w-5 h-5" />
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-black uppercase tracking-tight transition-transform ">
+                          <p className="text-sm font-semibold text-black">
                             {tx.description ||
                               tx.type_display ||
                               "Giao dịch tri thức"}
                           </p>
-                          <div className="flex items-center gap-4 mt-3">
-                            <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                              {new Date(tx.created_at).toLocaleString("vi-VN")}
-                            </span>
-                            <div className="w-1 h-1 bg-zinc-100 rounded-full" />
-                            <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-widest">
-                              Mã hiệu: TX-{idx + 1000}
-                            </span>
-                          </div>
+                          <p className="text-[10px] font-medium text-zinc-500 mt-1">
+                            {new Date(tx.created_at).toLocaleString("vi-VN")} •
+                            TX-{idx + 1000}
+                          </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p
-                          className={`text-2xl font-bold tracking-tighter ${tx.amount > 0 ? "text-zinc-200" : "text-black"}`}
+                      <div className="text-left sm:text-right flex flex-col sm:items-end">
+                        <span
+                          className={`text-sm font-bold ${
+                            tx.amount > 0 ? "text-black" : "text-zinc-500"
+                          }`}
                         >
                           {tx.amount > 0 ? "+" : ""}
-                          {tx.amount.toLocaleString()}{" "}
-                          <span className="text-[10px] italic">dl</span>
-                        </p>
-                        <div className="mt-2 flex items-center justify-end gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" />
-                          <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                            Hoàn tất
-                          </span>
-                        </div>
+                          {tx.amount.toLocaleString()} DL
+                        </span>
+                        <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+                          Hoàn tất
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="py-40 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white/10 rounded-sm">
-                  <CreditCard className="w-16 h-16 text-zinc-50 mb-10 stroke-[1]" />
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-black mb-4">
-                    Mạng lưới rỗng
-                  </h4>
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-sm leading-loose">
-                    Bạn chưa thực hiện giao dịch nạp tiền hoặc chuyển đổi tri
-                    thức nào gần đây trên hệ thống.
-                  </p>
+                <div className="py-12 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-zinc-50">
+                  <CreditCard className="w-8 h-8 text-zinc-300 mb-3 stroke-[1]" />
+                  <span className="text-xs font-medium text-zinc-500">
+                    Chưa có giao dịch nào
+                  </span>
                 </div>
               )}
             </div>

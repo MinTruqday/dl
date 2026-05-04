@@ -1,6 +1,6 @@
 import { ReactRenderer } from "@tiptap/react";
 import tippy, { Instance } from "tippy.js";
-import { LatexSuggestionList } from "./LatexSuggestionList";
+import { SuggestionList } from "./SuggestionList";
 import { getLatexSnippetsAPI } from "@/services/editor.service";
 
 export const suggestionRenderer = {
@@ -27,7 +27,7 @@ export const suggestionRenderer = {
 
     return {
       onStart: (props: any) => {
-        component = new ReactRenderer(LatexSuggestionList, {
+        component = new ReactRenderer(SuggestionList, {
           props,
           editor: props.editor,
         });

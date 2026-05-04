@@ -10,7 +10,6 @@ import {
   ChevronRight,
   FileText,
   Sparkles,
-  Award,
   Clock,
   Calendar,
 } from "lucide-react";
@@ -40,9 +39,7 @@ interface LeaderboardData {
 export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"views" | "rating" | "authors">(
-    "views",
-  );
+  const [activeTab, setActiveTab] = useState<"views" | "rating" | "authors">("views");
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -62,264 +59,206 @@ export default function LeaderboardPage() {
   }, []);
 
   const renderRankNumber = (index: number) => {
-    let style = "bg-white border-zinc-100 text-zinc-300";
-    if (index === 0) style = "bg-black text-white border-black";
-    else if (index === 1) style = "bg-zinc-800 text-white border-zinc-800";
-    else if (index === 2) style = "bg-white0 text-white border-zinc-500";
-
+    const isTop3 = index < 3;
     return (
       <div
-        className={`w-10 h-10 shrink-0 flex items-center justify-center font-bold text-[13px] border rounded-sm ${style}`}
+        className={`w-8 h-8 shrink-0 flex items-center justify-center font-bold text-sm border ${
+          isTop3
+            ? "border-black bg-black text-white"
+            : "border-zinc-200 bg-zinc-50 text-zinc-500"
+        }`}
       >
-        {index + 1}
+        {String(index + 1).padStart(2, "0")}
       </div>
     );
   };
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-12 border-b border-zinc-100 pb-10 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
-      >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-              Vinh danh
-            </h1>
-            <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Bảng vàng tri thức{" "}
-              <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+      <div className="mb-8 border-b border-zinc-200 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black">Bảng xếp hạng</h1>
+            <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
+              Tôn vinh giá trị tri thức <Sparkles className="w-4 h-4" />
             </p>
-          </div>
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
-            <Award className="w-4 h-4" /> Tôn vinh giá trị tri thức
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside
-          className="lg:col-span-3 space-y-10 delay-75"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-[11px] font-bold text-black uppercase tracking-[0.2em] px-1">
-              <Trophy className="w-4 h-4 text-zinc-300" /> Xếp hạng theo
-            </div>
-            <nav className="flex flex-col gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <aside className="lg:col-span-3 space-y-8 order-2 lg:order-1 hidden lg:block">
+          <div className="space-y-4">
+            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2 flex items-center gap-2">
+              <Trophy className="w-4 h-4" /> Danh mục xếp hạng
+            </h3>
+            <nav className="flex flex-col">
               {[
-                { id: "views", label: "Xem nhiều nhất", icon: TrendingUp },
-                { id: "rating", label: "Đánh giá tốt nhất", icon: Star },
+                { id: "views", label: "Tài liệu xem nhiều nhất", icon: TrendingUp },
+                { id: "rating", label: "Tài liệu đánh giá cao", icon: Star },
                 { id: "authors", label: "Tác giả nổi bật", icon: Users },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest border rounded-sm ${
+                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium border-l-[2px] transition-colors ${
                     activeTab === tab.id
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-400 border-zinc-100 "
+                      ? "border-black bg-zinc-50 text-black"
+                      : "border-transparent text-zinc-500 hover:text-black hover:bg-zinc-50"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <tab.icon className="w-4 h-4" /> {tab.label}
                   </div>
-                  <ChevronRight
-                    className={`w-3.5 h-3.5 transition-transform ${activeTab === tab.id ? "rotate-90" : ""}`}
-                  />
+                  {activeTab === tab.id && <ChevronRight className="w-4 h-4" />}
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-8 border border-zinc-100 bg-white space-y-6 rounded-sm">
-            <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2 flex items-center gap-2">
+          <div className="border border-zinc-200 bg-white p-6 space-y-4 rounded-none">
+            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2 flex items-center gap-2">
               Hệ thống dữ liệu
-            </div>
-            <div className="space-y-4">
+            </h3>
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <Clock className="w-3.5 h-3.5 text-zinc-300" />
-                <div className="flex-1">
-                  <p className="text-[9px] text-zinc-400 uppercase font-bold tracking-tighter">
-                    Cập nhật lần cuối
-                  </p>
-                  <p className="text-[11px] text-black font-bold">Vừa xong</p>
+                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4 text-zinc-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-medium text-zinc-500">Cập nhật lần cuối</span>
+                  <span className="text-xs font-semibold text-black">Vừa xong</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Calendar className="w-3.5 h-3.5 text-zinc-300" />
-                <div className="flex-1">
-                  <p className="text-[9px] text-zinc-400 uppercase font-bold tracking-tighter">
-                    Chu kỳ thống kê
-                  </p>
-                  <p className="text-[11px] text-black font-bold uppercase tracking-widest text-[9px]">
-                    Thời gian thực
-                  </p>
+                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-zinc-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-medium text-zinc-500">Chu kỳ thống kê</span>
+                  <span className="text-xs font-semibold text-black">Thời gian thực</span>
                 </div>
               </div>
             </div>
           </div>
         </aside>
 
-        <div
-          className="lg:col-span-9 delay-150"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 border border-zinc-100 bg-white animate-pulse rounded-sm"
-                />
+        <main className="lg:col-span-9 order-1 lg:order-2">
+          <div className="max-w-2xl mx-auto space-y-8">
+            <div className="flex lg:hidden mb-6 border border-zinc-200 bg-white rounded-none">
+              {[
+                { id: "views", label: "Xem nhiều" },
+                { id: "rating", label: "Đánh giá" },
+                { id: "authors", label: "Tác giả" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex-1 px-4 py-2 text-xs font-medium transition-colors border-r border-zinc-200 last:border-0 ${
+                    activeTab === tab.id
+                      ? "bg-zinc-100 text-black"
+                      : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                  }`}
+                >
+                  {tab.label}
+                </button>
               ))}
             </div>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 ">
-              {(
-                (activeTab === "authors"
-                  ? data?.top_authors
-                  : activeTab === "views"
-                    ? data?.top_documents_by_views
-                    : data?.top_documents_by_rating) || []
-              ).length > 0 ? (
-                <div className="space-y-4">
-                  {activeTab === "views" || activeTab === "rating" ? (
-                    (
-                      (activeTab === "views"
-                        ? data?.top_documents_by_views
-                        : data?.top_documents_by_rating) || []
-                    ).map((document, index) => (
-                      <div
-                        key={`${document._id}-${index}`}
-                        className="group flex items-center justify-between p-6 border border-zinc-100 bg-white rounded-sm"
-                      >
-                        <div className="flex items-center gap-10">
-                          {renderRankNumber(index)}
-                          <div className="relative w-16 h-20 bg-white border border-zinc-100 overflow-hidden shrink-0 grayscale rounded-sm">
-                            {document.cover_image ? (
-                              <img
-                                src={
-                                  document.cover_image.startsWith("http")
-                                    ? document.cover_image
-                                    : `${API_URL}/storage/${document.cover_image}`
-                                }
-                                className="w-full h-full object-cover transition-transform  "
-                                alt={document.title}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-zinc-100">
-                                <FileText className="w-8 h-8 stroke-[1]" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Link
-                              href={`/documents/${document.slug}`}
-                              className="text-lg font-bold text-black underline-offset-4 decoration-1 tracking-tight block"
-                            >
-                              {document.title}
-                            </Link>
-                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                              Tác giả:{" "}
-                              <span className="text-black transition-transform">
-                                {document.author?.display_name || "Vô danh"}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
 
-                        <div className="text-right">
-                          <div className="flex items-center justify-end gap-3 mb-2">
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-24 bg-zinc-50 border border-zinc-200 animate-pulse rounded-none" />
+                ))}
+              </div>
+            ) : (
+              <div className={`transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
+                {((activeTab === "authors" ? data?.top_authors : activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).length > 0 ? (
+                  <div className="flex flex-col border border-zinc-200 bg-white rounded-none">
+                    {activeTab === "views" || activeTab === "rating" ? (
+                      ((activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).map((document, index) => (
+                        <div key={`${document._id}-${index}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            {renderRankNumber(index)}
+                            <div className="w-12 h-16 bg-white border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
+                              {document.cover_image ? (
+                                <img
+                                  src={document.cover_image.startsWith("http") ? document.cover_image : `${API_URL}/storage/${document.cover_image}`}
+                                  className="w-full h-full object-cover grayscale mix-blend-multiply"
+                                  alt={document.title}
+                                />
+                              ) : (
+                                <FileText className="w-5 h-5 text-zinc-400 stroke-[1]" />
+                              )}
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <Link href={`/documents/${document.slug}`} className="text-sm font-semibold text-black hover:underline line-clamp-1">
+                                {document.title}
+                              </Link>
+                              <span className="text-xs font-medium text-zinc-500 mt-1 line-clamp-1">
+                                Tác giả: {document.author?.display_name || "Tác giả ẩn danh"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end shrink-0 pl-4">
                             {activeTab === "views" ? (
-                              <div className="flex items-center gap-2 text-black font-bold text-2xl tracking-tighter">
-                                <TrendingUp className="w-5 h-5 text-zinc-100" />
-                                {document.views_count?.toLocaleString() || 0}
-                              </div>
+                              <>
+                                <span className="text-lg font-bold text-black">{document.views_count?.toLocaleString() || 0}</span>
+                                <span className="text-[10px] font-medium text-zinc-500">lượt xem</span>
+                              </>
                             ) : (
-                              <div className="flex items-center gap-2 text-black font-bold text-2xl tracking-tighter">
-                                <Star className="w-5 h-5 text-zinc-100" />
-                                {document.rating_avg?.toFixed(1) || 0}
-                              </div>
+                              <>
+                                <span className="text-lg font-bold text-black">{document.rating_avg?.toFixed(1) || "0.0"}</span>
+                                <span className="text-[10px] font-medium text-zinc-500">đánh giá</span>
+                              </>
                             )}
                           </div>
-                          <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                            {activeTab === "views"
-                              ? "Tổng lượt xem"
-                              : "Điểm đánh giá"}
-                          </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(data?.top_authors || []).map((author, index) => (
-                        <Link
-                          key={`${author._id}-${index}`}
-                          href={`/authors/${author.slug}`}
-                          className="group flex items-center justify-between p-6 border border-zinc-100 bg-white rounded-sm"
-                        >
-                          <div className="flex items-center gap-6">
+                      ))
+                    ) : (
+                      (data?.top_authors || []).map((author, index) => (
+                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-50 transition-colors">
+                          <div className="flex items-center gap-4">
                             {renderRankNumber(index)}
-                            <div className="relative w-14 h-14 border border-zinc-100 overflow-hidden shrink-0 bg-white grayscale rounded-sm">
+                            <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
                               {author.avatar_url ? (
                                 <img
-                                  src={
-                                    author.avatar_url.startsWith("http")
-                                      ? author.avatar_url
-                                      : `${API_URL}/storage/${author.avatar_url}`
-                                  }
-                                  className="w-full h-full object-cover transition-transform  "
+                                  src={author.avatar_url.startsWith("http") ? author.avatar_url : `${API_URL}/storage/${author.avatar_url}`}
+                                  className="w-full h-full object-cover grayscale mix-blend-multiply"
                                   alt={author.display_name}
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-200">
-                                  {author.display_name?.[0]}
-                                </div>
+                                <span className="font-semibold text-black text-sm">{author.display_name?.[0]?.toUpperCase()}</span>
                               )}
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="text-base font-bold text-black tracking-tight transition-transform">
-                                {author.display_name}
-                              </h3>
-                              <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                                <Users className="w-3 h-3 inline mr-1" />{" "}
-                                {author.followers_count?.toLocaleString() || 0}{" "}
-                                Độc giả
-                              </p>
+                            <div className="flex flex-col justify-center">
+                              <span className="text-sm font-semibold text-black">{author.display_name}</span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">Tác giả</span>
+                              </div>
                             </div>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-zinc-100 transition-colors" />
+                          <div className="flex flex-col items-end shrink-0 pl-4">
+                            <span className="text-lg font-bold text-black">{author.followers_count?.toLocaleString() || 0}</span>
+                            <span className="text-[10px] font-medium text-zinc-500">độc giả</span>
+                          </div>
                         </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white rounded-sm">
-                  <Trophy className="w-16 h-16 text-zinc-100 mb-10 stroke-[1]" />
-                  <h2 className="text-2xl font-bold tracking-tighter text-black mb-4">
-                    Bảng xếp hạng đang trống
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest text-center max-w-xs leading-loose">
-                    Dữ liệu đang được đồng bộ. Hãy quay lại sau để xem những cá
-                    nhân xuất sắc nhất.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-none">
+                    <Trophy className="w-8 h-8 text-zinc-400 mb-4 stroke-[1]" />
+                    <h2 className="text-lg font-semibold text-black mb-2">Chưa có dữ liệu xếp hạng</h2>
+                    <p className="text-xs font-medium text-zinc-500 text-center max-w-xs">
+                      Hệ thống đang cập nhật dữ liệu, vui lòng quay lại sau.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );

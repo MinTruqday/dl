@@ -29,17 +29,13 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
-import { Notification as Toast } from "@/components/Notification";
-
+import Link from "next/link";
 export default function NotificationsPage() {
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
 
@@ -112,11 +108,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      {notification && (
-        <div className="fixed top-24 right-8 z-[1000] w-80 animate-in slide-in-from-right-4 ">
-          <Toast type={notification.type} message={notification.text} />
-        </div>
-      )}
 
       <header
         className="mb-12 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 "

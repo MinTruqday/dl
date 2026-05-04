@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { LatexCodeBlock } from "./LatexCodeBlock";
+import { CodeBlock } from "./CodeBlock";
 
 export interface LatexBlockOptions {
   HTMLAttributes: Record<string, any>;
@@ -60,7 +60,7 @@ export const Extension = Node.create<LatexBlockOptions>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(LatexCodeBlock);
+    return ReactNodeViewRenderer(CodeBlock);
   },
 
   addCommands() {

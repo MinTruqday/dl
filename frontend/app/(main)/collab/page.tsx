@@ -12,10 +12,7 @@ import {
   UserPlus,
   Mail,
   Check,
-  X,
   Loader2,
-  Info,
-  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -32,10 +29,6 @@ export default function StudioCollabPage() {
   const [role, setRole] = useState("editor");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
   const [visible, setVisible] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -71,7 +64,7 @@ export default function StudioCollabPage() {
     } catch (err: any) {
       showToast(
         err.message || "Không thể gửi lời mời cộng tác lúc này",
-        "error",
+        "error"
       );
     } finally {
       setActionLoading(false);
@@ -86,7 +79,7 @@ export default function StudioCollabPage() {
         status === "ACCEPTED"
           ? "Đã chấp nhận lời mời cộng tác."
           : "Đã từ chối lời mời cộng tác.",
-        "success",
+        "success"
       );
       loadData();
     } catch (err: any) {
@@ -99,196 +92,188 @@ export default function StudioCollabPage() {
   if (isLoading || loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="mb-12 border-b border-zinc-100 pb-10 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-              Cộng tác tri thức
-            </h1>
-            <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Quản trị cộng tác & Quyền biên tập{" "}
-              <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
-            </p>
-          </div>
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
-            <UserPlus className="w-4 h-4" /> Hệ thống làm việc nhóm DocLib
-          </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-black">Cộng tác tri thức</h1>
+          <p className="text-zinc-500 text-sm font-medium">
+            Quản trị cộng tác và phân quyền biên tập tài liệu
+          </p>
         </div>
       </div>
 
       <div
-        className="grid grid-cols-1 lg:grid-cols-12 gap-16 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
-        <section className="lg:col-span-5 space-y-10">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-10 h-10 bg-black flex items-center justify-center rounded-sm">
-              <UserPlus className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-sm font-bold text-black tracking-tight uppercase">
-              Mời cộng tác viên
+        <aside className="lg:col-span-4 space-y-6">
+          <div className="border border-zinc-200 bg-white p-6 space-y-6">
+            <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 flex items-center gap-2">
+              <UserPlus className="w-4 h-4" /> Gửi lời mời cộng tác
             </h2>
-          </div>
-
-          <div className="space-y-8 bg-white/20 p-10 border border-zinc-100 rounded-sm">
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-                Lựa chọn tài liệu
-              </label>
-              <div className="relative group">
-                <select
-                  value={selectedDocumentId}
-                  onChange={(e) => setSelectedDocumentId(e.target.value)}
-                  className="w-full h-14 px-5 bg-white border border-zinc-100 rounded-sm text-sm font-bold focus:outline-none focus:border-black appearance-none cursor-pointer"
-                >
-                  <option value="">Chọn tài liệu biên tập</option>
-                  {documents.map((doc) => (
-                    <option key={doc._id || doc.id} value={doc._id || doc.id}>
-                      {doc.title}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-200 transition-colors">
-                  <ChevronRight className="w-4 h-4 rotate-90" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-                Email người nhận
-              </label>
-              <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within:text-black transition-colors" />
-                <input
-                  type="email"
-                  placeholder=""
-                  value={collaboratorEmail}
-                  onChange={(e) => setCollaboratorEmail(e.target.value)}
-                  className="w-full h-14 pl-14 pr-5 bg-white border border-zinc-100 rounded-sm text-sm font-bold focus:outline-none focus:border-black placeholder:text-zinc-200"
-                />
-              </div>
-            </div>
 
             <div className="space-y-4">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-                Vai trò & Quyền hạn
-              </label>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setRole("editor")}
-                  className={`flex-1 py-4 text-[10px] font-bold border active:scale-95 rounded-sm ${
-                    role === "editor"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-300 border-zinc-100 "
-                  }`}
-                >
-                  Biên tập viên
-                </button>
-                <button
-                  onClick={() => setRole("viewer")}
-                  className={`flex-1 py-4 text-[10px] font-bold border active:scale-95 rounded-sm ${
-                    role === "viewer"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-300 border-zinc-100 "
-                  }`}
-                >
-                  Người xem
-                </button>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  Tài liệu
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedDocumentId}
+                    onChange={(e) => setSelectedDocumentId(e.target.value)}
+                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black appearance-none rounded-none"
+                  >
+                    <option value="">Chọn tài liệu biên tập</option>
+                    {documents.map((doc) => (
+                      <option key={doc._id || doc.id} value={doc._id || doc.id}>
+                        {doc.title}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-zinc-500" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  Email cộng tác viên
+                </label>
+                <input
+                  type="email"
+                  placeholder="nguoidung@doclib.com"
+                  value={collaboratorEmail}
+                  onChange={(e) => setCollaboratorEmail(e.target.value)}
+                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none placeholder:text-zinc-400"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  Vai trò
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setRole("editor")}
+                    className={`py-2 text-xs font-medium border transition-colors rounded-none ${
+                      role === "editor"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                    }`}
+                  >
+                    Biên tập viên
+                  </button>
+                  <button
+                    onClick={() => setRole("viewer")}
+                    className={`py-2 text-xs font-medium border transition-colors rounded-none ${
+                      role === "viewer"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                    }`}
+                  >
+                    Người xem
+                  </button>
+                </div>
               </div>
             </div>
 
             <button
               onClick={handleInvite}
-              disabled={
-                actionLoading || !selectedDocumentId || !collaboratorEmail
-              }
-              className="w-full bg-black text-white py-5 text-[11px] font-bold active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 rounded-sm uppercase tracking-widest"
+              disabled={actionLoading || !selectedDocumentId || !collaboratorEmail}
+              className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
             >
               {actionLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "Gửi lời mời cộng tác"
+                "Gửi lời mời"
               )}
             </button>
           </div>
-        </section>
+        </aside>
 
-        <section className="lg:col-span-7 space-y-10">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-10 h-10 bg-white border border-zinc-100 flex items-center justify-center rounded-sm">
-              <Mail className="w-5 h-5 text-zinc-300" />
-            </div>
-            <h2 className="text-sm font-bold text-black tracking-tight uppercase">
-              Lời mời cộng tác đang chờ
-            </h2>
-          </div>
-
-          <div className="grid gap-6">
-            {invites.length > 0 ? (
-              invites.map((invite) => (
-                <div
-                  key={invite._id}
-                  className="p-8 border border-zinc-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-8 group rounded-sm"
-                >
-                  <div className="space-y-2 min-w-0">
-                    <h4 className="font-bold text-base text-black tracking-tight truncate transition-transform ">
-                      {invite.document_title}
-                    </h4>
-                    <div className="flex items-center gap-3">
-                      <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-widest">
-                        Từ: {invite.inviter_name}
-                      </p>
-                      <div className="w-1 h-1 bg-zinc-100 rounded-sm" />
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-white border border-zinc-100 text-zinc-400 rounded-sm uppercase tracking-widest">
-                        {invite.role === "editor"
-                          ? "Quyền biên tập"
-                          : "Quyền xem"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 shrink-0">
-                    <button
-                      onClick={() => handleRespond(invite._id, "REJECTED")}
-                      className="px-8 py-3 border border-zinc-100 text-zinc-300 text-[10px] font-bold active:scale-95 rounded-sm uppercase tracking-widest"
-                    >
-                      Từ chối
-                    </button>
-                    <button
-                      onClick={() => handleRespond(invite._id, "ACCEPTED")}
-                      className="px-8 py-3 bg-black text-white text-[10px] font-bold active:scale-95 rounded-sm uppercase tracking-widest"
-                    >
-                      Chấp nhận
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-32 text-center border border-dashed border-zinc-200 bg-white/20 rounded-sm">
-                <Mail className="w-12 h-12 mx-auto mb-6 text-zinc-100" />
-                <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest">
-                  Hiện không có lời mời cộng tác nào
+        <main className="lg:col-span-8">
+          <div className="border border-zinc-200 bg-white p-8">
+            <div className="border-b border-zinc-200 pb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-black flex items-center gap-2">
+                  <Mail className="w-4 h-4" /> Lời mời đang chờ
+                </h3>
+                <p className="text-xs text-zinc-500 font-medium mt-1">
+                  Danh sách yêu cầu cộng tác tài liệu
                 </p>
               </div>
-            )}
+              <span className="text-xs font-semibold text-black">
+                {invites.length} yêu cầu
+              </span>
+            </div>
+
+            <div className="pt-4">
+              {invites.length > 0 ? (
+                <div className="space-y-4">
+                  {invites.map((invite) => (
+                    <div
+                      key={invite._id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 gap-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 border border-zinc-200 bg-white flex items-center justify-center shrink-0 rounded-none">
+                          <span className="text-xs font-bold text-black uppercase">
+                            {invite.inviter_name?.charAt(0) || "U"}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-black">
+                            {invite.document_title}
+                          </h4>
+                          <p className="text-[10px] font-medium text-zinc-500 mt-1">
+                            Từ: <span className="text-black">{invite.inviter_name}</span> • Vai trò:{" "}
+                            <span className="text-black uppercase">
+                              {invite.role === "editor"
+                                ? "Biên tập viên"
+                                : "Người xem"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => handleRespond(invite._id, "REJECTED")}
+                          className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium hover:bg-zinc-50 transition-colors rounded-none"
+                        >
+                          Từ chối
+                        </button>
+                        <button
+                          onClick={() => handleRespond(invite._id, "ACCEPTED")}
+                          className="px-4 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center gap-2"
+                        >
+                          <Check className="w-3 h-3" /> Chấp nhận
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 bg-zinc-50 border border-dashed border-zinc-200 rounded-none">
+                  <Mail className="w-5 h-5 text-zinc-400 mb-2" />
+                  <span className="text-xs font-semibold text-black">
+                    Không có lời mời nào
+                  </span>
+                  <span className="text-[10px] font-medium text-zinc-500">
+                    Bạn hiện không có yêu cầu cộng tác đang chờ xử lý
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
+        </main>
       </div>
     </div>
   );

@@ -14,7 +14,6 @@ import {
   lockDocumentAPI,
   toggleStarDocumentAPI
 } from "@/services/document.service";
-import { API_URL } from "@/services/auth.service";
 import {
   AlertTriangle,
   FileText,
@@ -27,7 +26,6 @@ import {
   Upload,
   FileCheck,
   Plus,
-  Sparkles,
   ChevronRight,
   Database,
   Lock,
@@ -39,10 +37,7 @@ import {
   LayoutGrid,
   List,
   Star,
-  Home,
-  ChevronDown,
-  MoreVertical,
-  ArrowRight
+  Home
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -281,67 +276,67 @@ export default function DocumentsPage() {
   if (authLoading || isLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center bg-white">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
   }
 
   return (
     <Workspace>
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
+      <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
         
-        {/* Modals - Keep existing logic */}
-        <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)}>
-          <ModalHeader>
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm">
+        {/* Modals */}
+        <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
+          <ModalHeader className="border-b border-zinc-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
                 <AlertTriangle className="w-5 h-5 text-black" />
               </div>
               <div>
-                <ModalTitle>{confirmModal?.title}</ModalTitle>
-                <ModalDescription>Hành động này sẽ xóa vĩnh viễn dữ liệu khỏi hệ thống</ModalDescription>
+                <ModalTitle className="text-sm font-semibold text-black">{confirmModal?.title}</ModalTitle>
+                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Hành động này sẽ xóa vĩnh viễn dữ liệu khỏi hệ thống</ModalDescription>
               </div>
             </div>
           </ModalHeader>
-          <ModalFooter className="flex gap-4">
+          <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
             <button
               onClick={() => setConfirmModal(null)}
-              className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black hover:border-black transition-all rounded-sm"
+              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none"
             >
               Hủy bỏ
             </button>
             <button
               onClick={executeDelete}
-              className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all active:scale-[0.98] rounded-sm"
+              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none"
             >
               Xác nhận
             </button>
           </ModalFooter>
         </Modal>
 
-        <Modal isOpen={createDocModal} onClose={() => setCreateDocModal(false)} className="max-w-4xl">
-          <ModalHeader>
-            <ModalTitle>{isAdmin ? "Thêm tài liệu hệ thống" : "Khởi tạo tri thức mới"}</ModalTitle>
-            <ModalDescription>Điền thông tin để bắt đầu quá trình lưu trữ chuyên sâu</ModalDescription>
+        <Modal isOpen={createDocModal} onClose={() => setCreateDocModal(false)} className="max-w-3xl rounded-none border border-zinc-200 bg-white p-0">
+          <ModalHeader className="border-b border-zinc-200 p-6">
+            <ModalTitle className="text-sm font-semibold text-black">{isAdmin ? "Thêm tài liệu hệ thống" : "Khởi tạo tri thức mới"}</ModalTitle>
+            <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Điền thông tin để bắt đầu quá trình lưu trữ chuyên sâu</ModalDescription>
           </ModalHeader>
-          <ModalContent className="grid md:grid-cols-2 gap-12 pt-6">
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Tiêu đề tài liệu</label>
+          <ModalContent className="grid md:grid-cols-2 gap-8 p-6">
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề tài liệu</label>
                 <input 
                   type="text" 
                   value={newDoc.title}
                   onChange={(e) => setNewDoc({...newDoc, title: e.target.value})}
-                  className="w-full h-14 border-b border-zinc-100 focus:border-black outline-none font-bold text-lg transition-all placeholder:text-zinc-100" 
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none" 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Thể loại</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thể loại</label>
                   <select 
                     value={newDoc.category}
                     onChange={(e) => setNewDoc({...newDoc, category: e.target.value})}
-                    className="w-full h-12 border-b border-zinc-100 focus:border-black outline-none font-bold uppercase tracking-widest text-[10px] transition-all bg-transparent"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
                   >
                     <option value="Chưa phân loại">Chưa phân loại</option>
                     <option value="Giáo trình">Giáo trình</option>
@@ -349,64 +344,66 @@ export default function DocumentsPage() {
                     <option value="Nghiên cứu">Nghiên cứu</option>
                   </select>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Giá (dl)</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Giá (DL)</label>
                   <input 
                     type="number" 
-                    className="w-full h-12 border-b border-zinc-100 focus:border-black outline-none font-bold text-base transition-all"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
                     value={newDoc.price_dl}
                     onChange={(e) => setNewDoc({ ...newDoc, price_dl: parseInt(e.target.value) || 0 })}
                   />
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Mô tả tóm lược</label>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Mô tả tóm lược</label>
                 <textarea 
                   value={newDoc.description}
                   onChange={(e) => setNewDoc({...newDoc, description: e.target.value})}
-                  className="w-full h-32 border border-zinc-100 p-4 focus:border-black outline-none font-medium text-sm transition-all resize-none rounded-sm leading-relaxed" 
+                  className="w-full h-24 p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors resize-none rounded-none" 
                 />
               </div>
             </div>
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Thực thể đính kèm</label>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thực thể đính kèm</label>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.epub" />
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className={`border border-zinc-100 p-10 flex flex-col items-center justify-center gap-4 group hover:border-black transition-all cursor-pointer rounded-sm ${file ? 'bg-black text-white' : 'bg-zinc-50/20'}`}
+                  className="border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:border-black p-6 flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer rounded-none"
                 >
-                  <div className={`w-14 h-14 flex items-center justify-center transition-all ${file ? 'bg-white text-black' : 'bg-white text-zinc-100 group-hover:bg-black group-hover:text-white'} rounded-sm`}>
-                    {file ? <FileCheck className="w-6 h-6" /> : <Upload className="w-6 h-6" />}
+                  <div className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 text-black rounded-none">
+                    {file ? <FileCheck className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
                   </div>
                   <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1 truncate max-w-[200px]">
+                    <p className="text-xs font-semibold text-black mb-1 truncate max-w-[200px]">
                       {file ? file.name : "Chọn tệp PDF/EPUB"}
                     </p>
-                    <p className={`text-[8px] font-bold uppercase tracking-[0.2em] ${file ? 'text-zinc-500' : 'text-zinc-200'}`}>
+                    <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
                       {file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Tối đa 50MB"}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Hiển thị</label>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Hiển thị</label>
                   <select 
                     value={newDoc.visibility}
                     onChange={(e) => setNewDoc({...newDoc, visibility: e.target.value})}
-                    className="w-full h-12 border-b border-zinc-100 focus:border-black outline-none font-bold uppercase tracking-widest text-[10px] transition-all bg-transparent"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
                   >
                     <option value="public">Công khai</option>
                     <option value="private">Riêng tư</option>
                   </select>
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Trạng thái</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Trạng thái</label>
                   <select 
                     value={newDoc.status}
                     onChange={(e) => setNewDoc({...newDoc, status: e.target.value})}
-                    className="w-full h-12 border-b border-zinc-100 focus:border-black outline-none font-bold uppercase tracking-widest text-[10px] transition-all bg-transparent"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
                   >
                     <option value="published">Xuất bản</option>
                     <option value="draft">Bản nháp</option>
@@ -415,103 +412,109 @@ export default function DocumentsPage() {
               </div>
             </div>
           </ModalContent>
-          <ModalFooter>
+          <ModalFooter className="border-t border-zinc-200 p-4 bg-zinc-50">
             <button 
               onClick={handleCreateDocument}
               disabled={isCreating || !file || !newDoc.title}
-              className="w-full h-16 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center justify-center gap-4 rounded-sm disabled:opacity-30"
+              className="w-full py-2 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 rounded-none disabled:opacity-50"
             >
-              {isCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Kích hoạt lưu trữ
             </button>
           </ModalFooter>
         </Modal>
 
-        <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)}>
-          <ModalHeader>
-            <ModalTitle>Kiến tạo không gian mới</ModalTitle>
-            <ModalDescription>Phân loại tri thức theo cấu trúc thư mục chuyên nghiệp</ModalDescription>
+        <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
+          <ModalHeader className="border-b border-zinc-200 p-6">
+            <ModalTitle className="text-sm font-semibold text-black">Kiến tạo không gian mới</ModalTitle>
+            <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Phân loại tri thức theo cấu trúc thư mục chuyên nghiệp</ModalDescription>
           </ModalHeader>
-          <ModalContent>
-            <div className="space-y-4">
-              <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Tên thư mục</label>
+          <ModalContent className="p-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên thư mục</label>
               <input 
                 type="text" 
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
                 autoFocus
-                className="w-full h-14 border-b border-zinc-100 focus:border-black outline-none font-bold text-lg transition-all" 
+                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none" 
               />
             </div>
           </ModalContent>
-          <ModalFooter>
+          <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
+            <button
+              onClick={() => setCreateFolderModal(false)}
+              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none"
+            >
+              Hủy bỏ
+            </button>
             <button 
               onClick={handleCreateFolder}
               disabled={!folderName}
-              className="w-full h-16 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-zinc-800 transition-all active:scale-[0.98] rounded-sm disabled:opacity-30"
+              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none disabled:opacity-50"
             >
               Tạo thư mục
             </button>
           </ModalFooter>
         </Modal>
 
-        <Modal isOpen={!!lockModal} onClose={() => setLockModal(null)}>
-          <ModalHeader>
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm">
+        <Modal isOpen={!!lockModal} onClose={() => setLockModal(null)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
+          <ModalHeader className="border-b border-zinc-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
                 <Lock className="w-5 h-5 text-black" />
               </div>
               <div>
-                <ModalTitle>Thiết lập bảo mật</ModalTitle>
-                <ModalDescription>Mã hóa đa lớp cho thực thể tri thức</ModalDescription>
+                <ModalTitle className="text-sm font-semibold text-black">Thiết lập bảo mật</ModalTitle>
+                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Mã hóa đa lớp cho thực thể tri thức</ModalDescription>
               </div>
             </div>
           </ModalHeader>
-          <ModalContent>
-            <form onSubmit={handleLockDocument} className="space-y-8">
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-loose">Mật khẩu sẽ được mã hóa và không thể khôi phục nếu bị thất lạc</p>
+          <ModalContent className="p-6">
+            <form id="lock-form" onSubmit={handleLockDocument} className="space-y-4">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest leading-relaxed">Mật khẩu sẽ được mã hóa và không thể khôi phục nếu bị thất lạc</p>
               <input 
                 type="password" 
                 autoFocus
-                className="w-full h-16 px-6 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all rounded-sm"
+                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
                 value={lockPassword}
                 onChange={(e) => setLockPassword(e.target.value)}
                 required
               />
-              <div className="flex gap-4">
-                <button type="button" onClick={() => setLockModal(null)} className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all rounded-sm">Hủy bỏ</button>
-                <button type="submit" className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm">Kích hoạt khóa</button>
-              </div>
             </form>
           </ModalContent>
+          <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
+            <button type="button" onClick={() => setLockModal(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none">Hủy bỏ</button>
+            <button type="submit" form="lock-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none">Kích hoạt khóa</button>
+          </ModalFooter>
         </Modal>
 
-        <Modal isOpen={!!shareModal} onClose={() => setShareModal(null)} className="max-w-2xl">
-          <ModalHeader>
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm">
+        <Modal isOpen={!!shareModal} onClose={() => setShareModal(null)} className="max-w-2xl rounded-none border border-zinc-200 bg-white p-0">
+          <ModalHeader className="border-b border-zinc-200 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none">
                 <Globe className="w-5 h-5 text-black" />
               </div>
               <div>
-                <ModalTitle>Giao thức chia sẻ</ModalTitle>
-                <ModalDescription>Thiết lập quyền truy cập cho cộng đồng</ModalDescription>
+                <ModalTitle className="text-sm font-semibold text-black">Giao thức chia sẻ</ModalTitle>
+                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Thiết lập quyền truy cập cho cộng đồng</ModalDescription>
               </div>
             </div>
           </ModalHeader>
-          <ModalContent className="space-y-10">
-            <form onSubmit={handleShareSubmit} className="space-y-8">
-              <div className="flex items-center gap-4 bg-zinc-50/50 p-6 rounded-sm border border-zinc-50">
-                <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-5 h-5 accent-black cursor-pointer" />
-                <label className="text-[10px] font-bold text-black uppercase tracking-widest cursor-pointer">Công khai thực thể tri thức</label>
+          <ModalContent className="p-6 space-y-6">
+            <form id="share-form" onSubmit={handleShareSubmit} className="space-y-6">
+              <div className="flex items-center gap-3 bg-zinc-50 p-4 border border-zinc-200 rounded-none">
+                <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-4 h-4 accent-black cursor-pointer rounded-none" />
+                <label className="text-xs font-semibold text-black uppercase tracking-widest cursor-pointer">Công khai thực thể tri thức</label>
               </div>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Mật mã truy cập</label>
-                  <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} className="w-full h-14 px-4 bg-zinc-50 border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black rounded-sm" />
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Mật mã truy cập</label>
+                  <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-none transition-colors" />
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Thời hạn hiệu lực</label>
-                  <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full h-14 px-4 bg-zinc-50 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:border-black rounded-sm">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thời hạn hiệu lực</label>
+                  <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium uppercase tracking-widest focus:outline-none focus:border-black rounded-none transition-colors appearance-none">
                     <option value="1">24 giờ</option>
                     <option value="7">07 ngày</option>
                     <option value="30">30 ngày</option>
@@ -519,142 +522,136 @@ export default function DocumentsPage() {
                 </div>
               </div>
               {publicUrl && (
-                <div className="p-10 bg-zinc-50 border border-zinc-100 flex flex-col items-center rounded-sm space-y-8 animate-in fade-in duration-500">
-                  <div className="text-[9px] font-bold text-black break-all select-all text-center tracking-widest uppercase bg-white p-4 border border-zinc-100 w-full rounded-sm leading-relaxed">{publicUrl}</div>
-                  <div className="p-6 bg-white border border-zinc-100 rounded-sm">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`} className="grayscale" alt="QR Code" />
+                <div className="p-6 bg-zinc-50 border border-zinc-200 flex flex-col items-center gap-6 animate-in fade-in rounded-none">
+                  <div className="text-[10px] font-semibold text-black break-all select-all text-center uppercase tracking-widest bg-white p-3 border border-zinc-200 w-full rounded-none">{publicUrl}</div>
+                  <div className="p-4 bg-white border border-zinc-200 rounded-none">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`} className="w-32 h-32 grayscale" alt="QR Code" />
                   </div>
-                  <p className="text-[8px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-3"><QrCode className="w-4 h-4"/> Quét mã để tiếp cận</p>
+                  <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2"><QrCode className="w-4 h-4"/> Quét mã để tiếp cận</p>
                 </div>
               )}
-              <div className="flex gap-4">
-                <button type="button" onClick={() => { setShareModal(null); setPublicUrl(""); }} className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-300 hover:text-black transition-all rounded-sm">Đóng</button>
-                <button type="submit" className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm">Cập nhật giao thức</button>
-              </div>
             </form>
           </ModalContent>
+          <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
+            <button type="button" onClick={() => { setShareModal(null); setPublicUrl(""); }} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none">Đóng</button>
+            <button type="submit" form="share-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none">Cập nhật giao thức</button>
+          </ModalFooter>
         </Modal>
 
         {/* Header Section */}
         <div 
-          className="mb-12 border-b border-zinc-100 pb-10 transition-all duration-300" 
-          style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
+          className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500" 
+          style={{ opacity: visible ? 1 : 0 }}
         >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-3">
-              <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-                Tài liệu & Học liệu
-              </h1>
-              <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-[0.2em] flex items-center gap-3">
-                Kiến tạo không gian tri thức cá nhân hóa <Sparkles className="w-3.5 h-3.5 text-zinc-200" />
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setCreateFolderModal(true)}
-                className="h-16 px-8 border border-zinc-100 text-black text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-all active:scale-[0.98] flex items-center gap-3 rounded-sm"
-              >
-                <FolderPlus className="w-5 h-5" />
-                Thư mục
-              </button>
-              <button 
-                onClick={() => setCreateDocModal(true)}
-                className="h-16 px-12 bg-black text-white text-[10px] font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all active:scale-[0.98] flex items-center gap-4 rounded-sm"
-              >
-                <Plus className="w-5 h-5" />
-                Thêm tài liệu
-              </button>
-            </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black">
+              Tài liệu & Học liệu
+            </h1>
+            <p className="text-zinc-500 text-sm font-medium">
+              Kiến tạo không gian tri thức cá nhân hóa
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setCreateFolderModal(true)}
+              className="h-10 px-6 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors flex items-center gap-2 rounded-none"
+            >
+              <FolderPlus className="w-4 h-4" />
+              Thư mục
+            </button>
+            <button 
+              onClick={() => setCreateDocModal(true)}
+              className="h-10 px-6 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2 rounded-none"
+            >
+              <Plus className="w-4 h-4" />
+              Thêm tài liệu
+            </button>
           </div>
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid lg:grid-cols-12 gap-12">
+        <div className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
           {/* Sidebar Filters */}
-          <aside 
-            className="lg:col-span-3 space-y-12 transition-all duration-300 delay-75"
-            style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
-          >
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-[10px] font-bold text-black uppercase tracking-[0.3em] px-1">
+          <aside className="lg:col-span-3 space-y-6">
+            {/* Search */}
+            <div className="border border-zinc-200 bg-white p-6 space-y-4">
+              <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
                 <Search className="w-4 h-4" /> Tìm kiếm tri thức
-              </div>
-              <div className="relative group">
-                <Search className="w-4 h-4 absolute left-5 top-1/2 -translate-y-1/2 text-zinc-200 group-focus-within:text-black transition-colors" />
-                <input 
-                  type="text"
-                  placeholder=""
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-14 pl-14 pr-6 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-xs tracking-tight transition-all rounded-sm"
-                />
-              </div>
+              </h3>
+              <input 
+                type="text"
+                placeholder="Nhập từ khóa..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"
+              />
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 text-[10px] font-bold text-black uppercase tracking-[0.3em] px-1">
+            {/* Filters */}
+            <div className="border border-zinc-200 bg-white p-6 space-y-4">
+              <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
                 <Database className="w-4 h-4" /> Lọc dữ liệu
-              </div>
-              <nav className="flex flex-col gap-1.5">
+              </h3>
+              <div className="space-y-3">
                 <button 
                   onClick={() => setFilterStar(!filterStar)}
-                  className={`flex items-center justify-between px-6 py-4 text-[10px] font-bold uppercase tracking-widest border rounded-sm transition-all ${
-                    filterStar ? 'bg-black text-white border-black' : 'bg-white text-zinc-400 border-zinc-100 hover:border-zinc-300'
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium border transition-colors rounded-none ${
+                    filterStar ? 'bg-black text-white border-black' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Star className={`w-4 h-4 ${filterStar ? 'fill-white' : ''}`} /> Yêu thích
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4" /> Yêu thích
                   </div>
                   {filterStar && <X className="w-3 h-3" />}
                 </button>
                 
-                <div className="pt-4 space-y-3">
-                  <label className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest px-1">Định dạng tệp</label>
-                  <select 
-                    value={filterFormat} 
-                    onChange={(e) => setFilterFormat(e.target.value)}
-                    className="w-full h-12 px-5 border border-zinc-100 bg-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all rounded-sm"
-                  >
-                    <option value="all">Mọi định dạng</option>
-                    <option value="pdf">Tài liệu PDF</option>
-                    <option value="epub">Sách EPUB</option>
-                  </select>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Định dạng tệp</label>
+                  <div className="relative">
+                    <select 
+                      value={filterFormat} 
+                      onChange={(e) => setFilterFormat(e.target.value)}
+                      className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium outline-none focus:border-black transition-colors rounded-none appearance-none"
+                    >
+                      <option value="all">Mọi định dạng</option>
+                      <option value="pdf">Tài liệu PDF</option>
+                      <option value="epub">Sách EPUB</option>
+                    </select>
+                    <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-zinc-500" />
+                  </div>
                 </div>
-              </nav>
+              </div>
             </div>
 
-            <div className="p-8 border border-zinc-100 bg-zinc-50/20 rounded-sm">
-              <p className="text-[10px] font-bold text-zinc-300 leading-relaxed uppercase tracking-tight">
+            <div className="p-6 border border-zinc-200 bg-zinc-50">
+              <p className="text-[10px] font-semibold text-zinc-500 leading-relaxed uppercase tracking-widest">
                 Hệ thống lưu trữ tri thức DocLib đảm bảo tính toàn vẹn và bảo mật tuyệt đối cho mọi thực thể dữ liệu.
               </p>
             </div>
           </aside>
 
           {/* Main Content Area */}
-          <div 
-            className="lg:col-span-9 space-y-8 transition-all duration-300 delay-150"
-            style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
-          >
+          <main className="lg:col-span-9 space-y-6">
             {/* Toolbar: Breadcrumbs & View Options */}
-            <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-zinc-50/30 p-4 border border-zinc-50 rounded-sm">
-              <div className="flex items-center gap-3 overflow-x-auto no-scrollbar max-w-full">
+            <div className="border border-zinc-200 bg-white p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <button 
                   onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }}
-                  className={`flex items-center gap-3 px-4 h-10 text-[9px] font-bold uppercase tracking-widest transition-all rounded-sm border ${!currentFolder ? 'bg-black text-white border-black' : 'bg-white text-zinc-200 border-zinc-100 hover:border-black hover:text-black'}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-colors rounded-none border ${!currentFolder ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200 hover:text-black'}`}
                 >
                   <Home className="w-3.5 h-3.5" />
                   Gốc
                 </button>
                 {breadcrumbs.map((b, idx) => (
                   <div key={b._id} className="flex items-center gap-2 shrink-0">
-                    <ChevronRight className="w-3 h-3 text-zinc-100" />
+                    <ChevronRight className="w-3 h-3 text-zinc-400" />
                     <button 
                       onClick={() => {
                         const newBread = breadcrumbs.slice(0, idx + 1);
                         setBreadcrumbs(newBread);
                         setCurrentFolder(newBread[newBread.length - 1]);
                       }}
-                      className={`px-4 h-10 text-[9px] font-bold uppercase tracking-widest transition-all rounded-sm border ${idx === breadcrumbs.length - 1 ? 'bg-black text-white border-black' : 'bg-white text-zinc-200 border-zinc-100 hover:border-black hover:text-black'}`}
+                      className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-none border ${idx === breadcrumbs.length - 1 ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200 hover:text-black'}`}
                     >
                       {b.name}
                     </button>
@@ -662,14 +659,14 @@ export default function DocumentsPage() {
                 ))}
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex bg-white p-1 border border-zinc-100 rounded-sm">
-                  <button onClick={() => setViewMode("grid")} className={`p-2.5 transition-all rounded-sm ${viewMode === 'grid' ? 'bg-black text-white' : 'text-zinc-200 hover:text-black'}`}><LayoutGrid className="w-3.5 h-3.5"/></button>
-                  <button onClick={() => setViewMode("list")} className={`p-2.5 transition-all rounded-sm ${viewMode === 'list' ? 'bg-black text-white' : 'text-zinc-200 hover:text-black'}`}><List className="w-3.5 h-3.5"/></button>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-zinc-50 border border-zinc-200 p-0.5">
+                  <button onClick={() => setViewMode("grid")} className={`p-1.5 transition-colors rounded-none ${viewMode === 'grid' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 hover:text-black'}`}><LayoutGrid className="w-4 h-4"/></button>
+                  <button onClick={() => setViewMode("list")} className={`p-1.5 transition-colors rounded-none ${viewMode === 'list' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 hover:text-black'}`}><List className="w-4 h-4"/></button>
                 </div>
                 <button 
                   onClick={fetchData}
-                  className="h-10 w-10 border border-zinc-100 bg-white flex items-center justify-center text-zinc-200 hover:text-black transition-all rounded-sm"
+                  className="h-8 w-8 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 hover:text-black hover:bg-zinc-50 transition-colors rounded-none"
                 >
                   {isRefreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
                 </button>
@@ -678,112 +675,112 @@ export default function DocumentsPage() {
 
             {/* List/Grid Content */}
             {viewMode === "list" ? (
-              <div className="bg-white border border-zinc-100 rounded-sm overflow-hidden">
+              <div className="bg-white border border-zinc-200">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="bg-zinc-50/50 border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
-                      <th className="px-10 py-6">Thực thể tri thức</th>
-                      <th className="px-10 py-6">Phân loại</th>
-                      <th className="px-10 py-6">Bảo mật</th>
-                      <th className="px-10 py-6 text-right">Hành động</th>
+                    <tr className="bg-zinc-50 border-b border-zinc-200 text-black font-semibold">
+                      <th className="px-6 py-4">Thực thể tri thức</th>
+                      <th className="px-6 py-4">Phân loại</th>
+                      <th className="px-6 py-4">Bảo mật</th>
+                      <th className="px-6 py-4 text-right">Hành động</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-50">
+                  <tbody className="divide-y divide-zinc-200">
                     {folders.map((folder: any) => (
                       <tr 
                         key={folder._id} 
-                        className="hover:bg-zinc-50/40 transition-all cursor-pointer group"
+                        className="hover:bg-zinc-50 transition-colors cursor-pointer group"
                         onClick={() => {
                           setCurrentFolder(folder);
                           setBreadcrumbs([...breadcrumbs, folder]);
                         }}
                       >
-                        <td className="px-10 py-8">
-                          <div className="flex items-center gap-8">
-                            <div className="w-12 h-12 bg-zinc-50 border border-zinc-100 flex items-center justify-center rounded-sm text-zinc-200 group-hover:text-black group-hover:bg-white transition-all">
-                              <Folder className="w-5 h-5" />
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group-hover:text-black group-hover:bg-white transition-colors">
+                              <Folder className="w-4 h-4" />
                             </div>
-                            <span className="font-bold text-black text-sm tracking-tight">{folder.name}</span>
+                            <span className="font-semibold text-black">{folder.name}</span>
                           </div>
                         </td>
-                        <td className="px-10 py-8 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Thư mục hệ thống</td>
-                        <td className="px-10 py-8">—</td>
-                        <td className="px-10 py-8 text-right">
+                        <td className="px-6 py-4 text-zinc-500 font-medium">Thư mục hệ thống</td>
+                        <td className="px-6 py-4">—</td>
+                        <td className="px-6 py-4 text-right">
                           <button 
                             onClick={(e) => {
                               e.stopPropagation();
                               setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" });
                             }}
-                            className="h-10 w-10 border border-zinc-100 flex items-center justify-center text-zinc-100 hover:text-red-500 hover:border-red-500 transition-all rounded-sm ml-auto"
+                            className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
                     ))}
                     {documents.map((doc: any) => (
-                      <tr key={doc._id || doc.id} className="hover:bg-zinc-50/20 transition-all group">
-                        <td className="px-10 py-8">
-                          <div className="flex items-center gap-8">
-                            <div className="w-12 h-16 bg-zinc-50 border border-zinc-100 flex items-center justify-center rounded-sm text-zinc-100 group-hover:text-black group-hover:bg-white transition-all">
-                              <FileText className="w-5 h-5" />
+                      <tr key={doc._id || doc.id} className="hover:bg-zinc-50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group-hover:text-black group-hover:bg-white transition-colors">
+                              <FileText className="w-4 h-4" />
                             </div>
-                            <div className="flex flex-col gap-1.5 min-w-0">
-                              <span className="font-bold text-black text-sm tracking-tight truncate max-w-md">{doc.title}</span>
-                              <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2">
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <span className="font-semibold text-black truncate max-w-sm">{doc.title}</span>
+                              <span className="text-[10px] font-medium text-zinc-500 uppercase flex items-center gap-1.5">
                                 {doc.publisher_name || "DocLib"} <ChevronRight className="w-3 h-3" /> {doc.category || "Tài liệu"}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-10 py-8">
-                          <span className={`inline-block px-4 py-1.5 text-[9px] font-bold uppercase tracking-widest rounded-sm border ${
-                            doc.status === 'published' ? 'bg-black text-white border-black' : 'bg-white text-zinc-300 border-zinc-100'
+                        <td className="px-6 py-4">
+                          <span className={`inline-block px-2 py-1 text-[10px] font-semibold uppercase border rounded-none ${
+                            doc.status === 'published' ? 'border-black text-black' : 'border-zinc-300 text-zinc-500'
                           }`}>
                             {doc.status === 'published' ? 'Đã đăng' : 'Bản nháp'}
                           </span>
                         </td>
-                        <td className="px-10 py-8">
+                        <td className="px-6 py-4">
                           {doc.is_protected ? (
-                            <div className="flex items-center gap-2 text-black">
+                            <div className="flex items-center gap-1.5 text-black">
                               <Lock className="w-3.5 h-3.5" />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Đã khóa</span>
+                              <span className="text-[10px] font-semibold uppercase">Đã khóa</span>
                             </div>
                           ) : (
-                            <span className="text-zinc-200 text-[9px] font-bold uppercase tracking-widest">Không</span>
+                            <span className="text-zinc-500 text-[10px] font-medium uppercase">Không</span>
                           )}
                         </td>
-                        <td className="px-10 py-8 text-right">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => toggleStar(doc._id || doc.id)}
-                              className={`h-10 w-10 border flex items-center justify-center transition-all rounded-sm ${doc.is_starred ? 'bg-black border-black text-white' : 'border-zinc-100 text-zinc-200 hover:text-black hover:border-black'}`}
+                              className={`p-2 transition-colors rounded-none inline-flex ${doc.is_starred ? 'text-black bg-zinc-100' : 'text-zinc-400 hover:text-black hover:bg-zinc-100'}`}
                             >
-                              <Star className={`w-3.5 h-3.5 ${doc.is_starred ? 'fill-white' : ''}`} />
+                              <Star className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })}
-                              className="h-10 w-10 border border-zinc-100 flex items-center justify-center text-zinc-200 hover:text-black hover:border-black transition-all rounded-sm"
+                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
                             >
-                              <Lock className="w-3.5 h-3.5" />
+                              <Lock className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })}
-                              className="h-10 w-10 border border-zinc-100 flex items-center justify-center text-zinc-200 hover:text-black hover:border-black transition-all rounded-sm"
+                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
                             >
-                              <Share2 className="w-3.5 h-3.5" />
+                              <Share2 className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => window.open(`/documents/viewer/${doc._id || doc.id}`, '_blank')}
-                              className="h-10 w-10 border border-zinc-100 flex items-center justify-center text-zinc-200 hover:text-black hover:border-black transition-all rounded-sm"
+                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
                             >
-                              <Eye className="w-3.5 h-3.5" />
+                              <Eye className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })}
-                              className="h-10 w-10 border border-zinc-100 flex items-center justify-center text-zinc-100 hover:text-red-500 hover:border-red-500 transition-all rounded-sm"
+                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -793,7 +790,7 @@ export default function DocumentsPage() {
                 </table>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                 {folders.map((folder: any) => (
                   <div 
                     key={folder._id}
@@ -801,38 +798,38 @@ export default function DocumentsPage() {
                       setCurrentFolder(folder);
                       setBreadcrumbs([...breadcrumbs, folder]);
                     }}
-                    className="bg-white border border-zinc-100 p-8 flex flex-col items-center justify-center gap-6 group hover:border-black transition-all cursor-pointer rounded-sm"
+                    className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4 hover:border-black transition-colors cursor-pointer rounded-none group"
                   >
-                    <div className="w-16 h-16 bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-200 group-hover:bg-black group-hover:text-white transition-all rounded-sm">
-                      <Folder className="w-6 h-6" />
+                    <div className="w-12 h-12 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-white group-hover:text-black transition-colors rounded-none">
+                      <Folder className="w-5 h-5" />
                     </div>
-                    <span className="text-[10px] font-bold text-black uppercase tracking-widest text-center">{folder.name}</span>
+                    <span className="text-xs font-semibold text-black text-center">{folder.name}</span>
                   </div>
                 ))}
                 {documents.map((doc: any) => (
                   <div 
                     key={doc._id || doc.id}
-                    className="bg-white border border-zinc-100 p-8 flex flex-col items-center justify-center gap-6 group hover:border-black transition-all rounded-sm relative"
+                    className="bg-white border border-zinc-200 p-4 flex flex-col group hover:border-black transition-colors rounded-none relative"
                   >
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-2 transition-all ${doc.is_starred ? 'text-black' : 'text-zinc-200 hover:text-black'}`}><Star className={`w-4 h-4 ${doc.is_starred ? 'fill-black' : ''}`}/></button>
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-1.5 transition-colors bg-white border border-zinc-200 rounded-none ${doc.is_starred ? 'text-black' : 'text-zinc-400 hover:text-black'}`}><Star className="w-3.5 h-3.5" /></button>
                     </div>
-                    <div className="w-20 h-28 bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-100 group-hover:bg-white group-hover:text-black transition-all rounded-sm overflow-hidden">
-                      <FileText className="w-8 h-8" />
+                    
+                    <div className="flex flex-col items-center gap-4 mb-4">
+                      <div className="w-16 h-20 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-white group-hover:text-black transition-colors rounded-none mt-2">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div className="text-center w-full">
+                        <p className="text-xs font-semibold text-black truncate w-full">{doc.title}</p>
+                        <p className="text-[10px] font-medium text-zinc-500 uppercase mt-1">{doc.category || "Tài liệu"}</p>
+                      </div>
                     </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-[10px] font-bold text-black uppercase tracking-widest truncate w-full px-2">{doc.title}</p>
-                      <p className="text-[8px] font-bold text-zinc-300 uppercase tracking-[0.2em]">{doc.category || "Tài liệu"}</p>
-                    </div>
-                    <div className="flex gap-2 w-full pt-4 border-t border-zinc-50 opacity-0 group-hover:opacity-100 transition-all">
-                      <button 
-                        onClick={() => window.open(`/documents/viewer/${doc._id || doc.id}`, '_blank')}
-                        className="flex-1 h-10 border border-zinc-100 flex items-center justify-center text-zinc-200 hover:text-black hover:border-black transition-all rounded-sm"
-                      ><Eye className="w-4 h-4"/></button>
-                      <button 
-                        onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })}
-                        className="flex-1 h-10 border border-zinc-100 flex items-center justify-center text-zinc-100 hover:text-red-500 hover:border-red-500 transition-all rounded-sm"
-                      ><Trash2 className="w-4 h-4"/></button>
+                    
+                    <div className="mt-auto border-t border-zinc-200 pt-3 flex justify-between gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button onClick={() => window.open(`/documents/viewer/${doc._id || doc.id}`, '_blank')} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Eye className="w-4 h-4"/></button>
+                       <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Lock className="w-4 h-4"/></button>
+                       <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Share2 className="w-4 h-4"/></button>
+                       <button onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Trash2 className="w-4 h-4"/></button>
                     </div>
                   </div>
                 ))}
@@ -840,19 +837,17 @@ export default function DocumentsPage() {
             )}
 
             {(documents.length === 0 && folders.length === 0) && (
-              <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-100 bg-white rounded-sm">
-                <div className="w-20 h-20 border border-zinc-100 bg-white flex items-center justify-center mb-10 rounded-sm">
-                  <Search className="w-10 h-10 text-zinc-100 stroke-[1]" />
-                </div>
-                <h2 className="text-3xl font-bold tracking-tighter text-black mb-4 uppercase">
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-zinc-50 rounded-none">
+                <Search className="w-8 h-8 text-zinc-400 mb-4" />
+                <h2 className="text-sm font-semibold text-black mb-1">
                   Không tìm thấy tri thức
                 </h2>
-                <p className="text-[10px] font-bold text-zinc-300 mb-10 max-w-xs text-center uppercase tracking-[0.2em] leading-loose">
-                  Hiện tại thư mục này không chứa bất kỳ thực thể dữ liệu nào hoặc không khớp với tiêu chí tìm kiếm
+                <p className="text-xs font-medium text-zinc-500 max-w-xs text-center">
+                  Hiện tại không có bất kỳ thực thể dữ liệu nào hoặc không khớp với tiêu chí tìm kiếm.
                 </p>
               </div>
             )}
-          </div>
+          </main>
         </div>
       </div>
     </Workspace>

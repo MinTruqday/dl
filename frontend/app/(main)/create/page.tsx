@@ -114,43 +114,31 @@ export default function CreateDocumentPage() {
   };
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white animate-in fade-in slide-in-from-bottom-8 fill-mode-both">
-      <div
-        className="mb-12 border-b border-zinc-100 pb-10 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+      <div 
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-              Khởi tạo tri thức
-            </h1>
-            <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Khởi tạo & Thiết lập không gian soạn thảo{" "}
-              <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
-            </p>
-          </div>
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
-            <PenTool className="w-4 h-4" /> Studio sáng tác chuyên nghiệp
-          </div>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-black">
+            Khởi tạo tri thức
+          </h1>
+          <p className="text-zinc-500 text-sm font-medium">
+            Khởi tạo & Thiết lập không gian soạn thảo
+          </p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 text-xs font-medium text-black rounded-none">
+          <PenTool className="w-4 h-4" /> Studio sáng tác chuyên nghiệp
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside
-          className="lg:col-span-3 space-y-10 delay-75"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-[11px] font-bold text-black uppercase tracking-[0.2em] px-1">
-              <Settings className="w-4 h-4 text-zinc-300" /> Thiết lập cơ bản
-            </div>
-            <nav className="flex flex-col gap-1">
+      <div 
+        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
+      >
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="border border-zinc-200 bg-white">
+            <nav className="flex flex-col">
               {[
                 { id: "step1", label: "Thông tin sơ bộ", icon: Info },
                 { id: "step2", label: "Kho lưu trữ nháp", icon: FolderOpen },
@@ -159,47 +147,42 @@ export default function CreateDocumentPage() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
-                  className={`flex items-center justify-between px-6 py-4 text-[11px] font-bold uppercase tracking-widest border rounded-sm ${
+                  className={`flex items-center justify-between px-6 py-4 text-xs font-semibold uppercase tracking-widest border-b border-zinc-200 last:border-b-0 transition-colors ${
                     activeStep === step.id
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-400 border-zinc-50 "
+                      ? "bg-black text-white"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <step.icon className="w-4 h-4" /> {step.label}
                   </div>
                   {activeStep === step.id && (
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4" />
                   )}
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-8 border border-zinc-100 bg-white space-y-4 rounded-sm">
-            <div className="text-[10px] font-bold text-black uppercase tracking-widest mb-2">
-              Hỗ trợ sáng tác
-            </div>
-            <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic">
-              "Hãy bắt đầu với một tiêu đề bao quát và một tóm tắt đủ sức hấp
-              dẫn để AI có thể hiểu đúng linh hồn tác phẩm của bạn."
+          <div className="p-6 border border-zinc-200 bg-zinc-50">
+            <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest leading-relaxed">
+              "Hãy bắt đầu với một tiêu đề bao quát và một tóm tắt đủ sức hấp dẫn để AI có thể hiểu đúng linh hồn tác phẩm của bạn."
             </p>
           </div>
         </aside>
 
-        <div
-          className="lg:col-span-9 delay-150"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
+        <main className="lg:col-span-9 space-y-6">
           {activeStep === "step1" ? (
-            <form onSubmit={handleCreate} className="space-y-12">
-              <div className="bg-white border border-zinc-100 p-10 md:p-16 space-y-16 rounded-sm">
-                <div className="space-y-12">
-                  <div className="space-y-6 group">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-focus-within:text-black transition-colors">
+            <form onSubmit={handleCreate} className="space-y-8">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">Thông tin sơ bộ</h3>
+                  <p className="text-xs text-zinc-500 mt-1">Cấu hình siêu dữ liệu cho tài liệu</p>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Tiêu đề tác phẩm
                     </label>
                     <input
@@ -207,13 +190,12 @@ export default function CreateDocumentPage() {
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder=""
-                      className="w-full h-16 text-3xl font-bold border-b border-zinc-100 focus:border-black bg-transparent outline-none placeholder:text-zinc-100 tracking-tight"
+                      className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-sm font-semibold outline-none transition-colors rounded-none"
                     />
                   </div>
 
-                  <div className="space-y-6 group">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-focus-within:text-black transition-colors">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Người đăng / Nhà xuất bản
                     </label>
                     <input
@@ -221,30 +203,28 @@ export default function CreateDocumentPage() {
                       type="text"
                       value={publisherName}
                       onChange={(e) => setPublisherName(e.target.value)}
-                      placeholder=""
-                      className={`w-full h-16 text-xl font-bold border-b border-zinc-100 focus:border-black bg-transparent outline-none placeholder:text-zinc-100 tracking-tight ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
                     />
                     {user?.role === "admin" && (
-                      <p className="text-[9px] font-medium text-zinc-300 italic">
+                      <p className="text-[10px] font-medium text-zinc-500 mt-1">
                         Mặc định là DocLib đối với Quản trị viên.
                       </p>
                     )}
                   </div>
 
-                  <div className="space-y-6 group">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest group-focus-within:text-black transition-colors">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Tóm tắt nội dung (Tùy chọn)
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder=""
-                      className="w-full min-h-[120px] text-lg font-medium border-b border-zinc-100 focus:border-black bg-transparent outline-none placeholder:text-zinc-100 leading-relaxed py-4 resize-none"
+                      className="w-full min-h-[120px] p-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none resize-none transition-colors rounded-none"
                     />
                   </div>
 
-                  <div className="space-y-8">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Chế độ hiển thị
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,20 +246,18 @@ export default function CreateDocumentPage() {
                           key={opt.id}
                           type="button"
                           onClick={() => setVisibility(opt.id)}
-                          className={`p-8 border text-left flex flex-col gap-6 rounded-sm ${
+                          className={`p-4 border text-left flex items-start gap-4 rounded-none transition-colors ${
                             visibility === opt.id
                               ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-400 border-zinc-100 "
+                              : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
                           }`}
                         >
-                          <opt.icon
-                            className={`w-6 h-6 ${visibility === opt.id ? "text-white" : "text-zinc-100"}`}
-                          />
+                          <opt.icon className="w-5 h-5 shrink-0 mt-0.5" />
                           <div className="space-y-1">
-                            <p className="text-sm font-bold tracking-tight uppercase">
+                            <p className={`text-xs font-semibold uppercase tracking-widest ${visibility === opt.id ? "text-white" : "text-black"}`}>
                               {opt.label}
                             </p>
-                            <p className="text-[10px] font-medium opacity-60 leading-relaxed italic">
+                            <p className={`text-[10px] font-medium leading-relaxed ${visibility === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>
                               {opt.desc}
                             </p>
                           </div>
@@ -288,111 +266,107 @@ export default function CreateDocumentPage() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-zinc-50">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-20 bg-white border border-zinc-100 overflow-hidden relative grayscale opacity-40 shrink-0 rounded-sm">
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-zinc-100 stroke-[1]" />
+                <div className="pt-6 mt-8 border-t border-zinc-200 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-14 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0 rounded-none">
+                      <FileText className="w-5 h-5 text-zinc-400" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Khởi tạo bởi: {publisherName}
+                      </p>
+                      <p className="text-xs font-semibold text-black">
+                        Sẵn sàng thiết lập không gian soạn thảo
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                      Trạng thái khởi tạo: {publisherName}
-                    </p>
-                    <p className="text-[11px] font-medium text-black">
-                      Sẵn sàng thiết lập không gian soạn thảo
-                    </p>
-                  </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading || !title.trim()}
-                  className="w-full md:w-auto h-16 px-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.3em] active:scale-[0.98] disabled:opacity-30 flex items-center justify-center gap-4 rounded-sm"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <BookOpen className="w-5 h-5" />
-                  )}
-                  Bắt đầu soạn thảo
-                </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !title.trim()}
+                    className="w-full md:w-auto h-10 px-6 bg-black text-white text-xs font-medium uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 rounded-none hover:bg-zinc-800 transition-colors"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <BookOpen className="w-4 h-4" />
+                    )}
+                    Bắt đầu soạn thảo
+                  </button>
+                </div>
               </div>
             </form>
           ) : activeStep === "step2" ? (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 ">
-              <div className="bg-white border border-zinc-100 p-10 md:p-16 space-y-12 rounded-sm">
-                <div className="space-y-2">
-                  <h3 className="text-3xl font-bold tracking-tighter uppercase">
-                    Lưu trữ bản nháp
-                  </h3>
-                  <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                    Tiếp tục hành trình xây dựng tri thức của bạn
+            <div className="border border-zinc-200 bg-white p-8 space-y-6">
+              <div className="border-b border-zinc-200 pb-4">
+                <h3 className="text-sm font-semibold text-black uppercase tracking-widest">
+                  Lưu trữ bản nháp
+                </h3>
+                <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">
+                  Tiếp tục hành trình xây dựng tri thức của bạn
+                </p>
+              </div>
+
+              {loadingDrafts ? (
+                <div className="py-24 flex justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+                </div>
+              ) : drafts.length === 0 ? (
+                <div className="py-24 flex flex-col items-center justify-center text-center border border-zinc-200 bg-zinc-50 rounded-none">
+                  <FolderOpen className="w-10 h-10 text-zinc-400 mb-4" />
+                  <p className="text-xs font-semibold text-black uppercase tracking-widest">
+                    Không có bản nháp nào được lưu trữ
                   </p>
                 </div>
-
-                {loadingDrafts ? (
-                  <div className="py-24 flex justify-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
-                  </div>
-                ) : drafts.length === 0 ? (
-                  <div className="py-24 text-center border border-dashed border-zinc-100 bg-white/20 rounded-sm">
-                    <FolderOpen className="w-16 h-16 text-zinc-100 mx-auto mb-10 stroke-[1]" />
-                    <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest">
-                      Không có bản nháp nào được lưu trữ
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {drafts.map((draft: any) => (
-                      <button
-                        key={draft._id || draft.id}
-                        onClick={() =>
-                          router.push(
-                            `/studio?document=${draft._id || draft.id}`,
-                          )
-                        }
-                        className="group flex items-center justify-between p-8 border border-zinc-100 text-left bg-white rounded-sm"
-                      >
-                        <div className="flex items-center gap-8">
-                          <div className="w-16 h-16 bg-white flex items-center justify-center shrink-0 rounded-sm">
-                            <FileText className="w-8 h-8 text-zinc-200" />
-                          </div>
-                          <div className="space-y-1">
-                            <h4 className="font-bold text-2xl text-black transition-transform tracking-tighter">
-                              {draft.title}
-                            </h4>
-                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                              Lần cuối chỉnh sửa:{" "}
-                              {new Date(
-                                draft.updated_at || draft.created_at,
-                              ).toLocaleDateString("vi-VN")}
-                            </p>
-                          </div>
+              ) : (
+                <div className="grid gap-4">
+                  {drafts.map((draft: any) => (
+                    <button
+                      key={draft._id || draft.id}
+                      onClick={() =>
+                        router.push(
+                          `/studio?document=${draft._id || draft.id}`,
+                        )
+                      }
+                      className="group flex items-center justify-between p-4 border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-black transition-colors text-left rounded-none"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none group-hover:bg-white transition-colors">
+                          <FileText className="w-4 h-4 text-zinc-400 group-hover:text-black" />
                         </div>
-                        <ArrowRight className="w-6 h-6 text-zinc-100 " />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        <div className="space-y-1">
+                          <h4 className="font-semibold text-sm text-black truncate max-w-sm">
+                            {draft.title}
+                          </h4>
+                          <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
+                            Lần cuối chỉnh sửa:{" "}
+                            {new Date(
+                              draft.updated_at || draft.created_at,
+                            ).toLocaleDateString("vi-VN")}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-black" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="bg-white border border-zinc-100 p-20 text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 rounded-sm">
-              <ShieldCheck className="w-16 h-16 text-zinc-100 mx-auto stroke-[1]" />
+            <div className="border border-zinc-200 bg-zinc-50 p-24 text-center flex flex-col items-center justify-center space-y-6 rounded-none">
+              <ShieldCheck className="w-10 h-10 text-zinc-400" />
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold tracking-tighter uppercase">
+                <h3 className="text-sm font-semibold text-black uppercase tracking-widest">
                   Cấu hình tri thức AI
                 </h3>
-                <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                <p className="text-xs font-medium text-zinc-500">
                   Tính năng đang được phát triển
                 </p>
               </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

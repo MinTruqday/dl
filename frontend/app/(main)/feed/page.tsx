@@ -97,6 +97,15 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 
+const getTimeElapsed = (dateString: string) => {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${Math.max(1, mins)} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return `${Math.floor(hours / 24)} ngày trước`;
+};
+
 export default function Feed() {
   const [posts, setPosts] = useState<any[]>([]);
   const [stories, setStories] = useState<any[]>([]);
@@ -134,9 +143,16 @@ export default function Feed() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [deleteStoryConfirm, setDeleteStoryConfirm] = useState<string | null>(null);
-  const [deletePostConfirm, setDeletePostConfirm] = useState<string | null>(null);
-  const [reportModal, setReportModal] = useState<{ postId: string; reason: string } | null>(null);
+  const [deleteStoryConfirm, setDeleteStoryConfirm] = useState<string | null>(
+    null
+  );
+  const [deletePostConfirm, setDeletePostConfirm] = useState<string | null>(
+    null
+  );
+  const [reportModal, setReportModal] = useState<{
+    postId: string;
+    reason: string;
+  } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -195,7 +211,7 @@ export default function Feed() {
         stories[activeStoryIndex].id || stories[activeStoryIndex]._id;
       if (storyId) {
         viewStoryAPI(storyId).catch((e) =>
-          console.error("Error viewing story:", e),
+          console.error("Error viewing story:", e)
         );
       }
     }
@@ -314,7 +330,7 @@ export default function Feed() {
   const [isReplying, setIsReplying] = useState(false);
 
   const handleStoryImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (!e.target.files?.length) return;
     setIsStoryUploading(true);
@@ -365,17 +381,17 @@ export default function Feed() {
   const renderContentWithTags = (text: string) => {
     if (!text) return null;
     const parts = text.split(
-      /(#[\w]+|https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+|https?:\/\/open\.spotify\.com\/(?:track|album|playlist)\/[\w]+(?:.*)?|\*\*.*?\*\*|\*[^*]+\*|^> .*$)/gm,
+      /(#[\w]+|https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+|https?:\/\/open\.spotify\.com\/(?:track|album|playlist)\/[\w]+(?:.*)?|\*\*.*?\*\*|\*[^*]+\*|^> .*$)/gm
     );
     return parts.map((part, i) => {
       const ytMatch = part.match(
-        /https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/,
+        /https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
       );
       if (ytMatch) {
         return (
           <div
             key={i}
-            className="my-3 overflow-hidden border border-border aspect-video"
+            className="my-4 overflow-hidden border border-zinc-200 aspect-video"
           >
             <iframe
               width="100%"
@@ -388,11 +404,11 @@ export default function Feed() {
         );
       }
       const spotMatch = part.match(
-        /https?:\/\/open\.spotify\.com\/(track|album|playlist)\/([\w]+)(.*)/,
+        /https?:\/\/open\.spotify\.com\/(track|album|playlist)\/([\w]+)(.*)/
       );
       if (spotMatch) {
         return (
-          <div key={i} className="my-3">
+          <div key={i} className="my-4">
             <iframe
               src={`https://open.spotify.com/embed/${spotMatch[1]}/${spotMatch[2]}`}
               width="100%"
@@ -407,7 +423,7 @@ export default function Feed() {
         return (
           <span
             key={i}
-            className="text-black dark:text-white font-medium cursor-pointer"
+            className="text-black font-semibold cursor-pointer hover:underline"
           >
             {part}
           </span>
@@ -415,14 +431,14 @@ export default function Feed() {
       }
       if (part.match(/^\*\*(.*?)\*\*$/)) {
         return (
-          <strong key={i} className="font-bold">
+          <strong key={i} className="font-semibold text-black">
             {part.replace(/\*\*/g, "")}
           </strong>
         );
       }
       if (part.match(/^\*(.*?)\*$/)) {
         return (
-          <em key={i} className="italic text-muted-foreground">
+          <em key={i} className="italic text-zinc-600">
             {part.replace(/\*/g, "")}
           </em>
         );
@@ -431,7 +447,7 @@ export default function Feed() {
         return (
           <blockquote
             key={i}
-            className="border-l-4 border-foreground pl-3 italic text-muted-foreground my-2 bg-muted/20 py-1"
+            className="border-l-2 border-black pl-4 italic text-zinc-600 my-3 bg-zinc-50 py-1"
           >
             {part.substring(2)}
           </blockquote>
@@ -461,7 +477,7 @@ export default function Feed() {
         skip,
         limit,
         itemType,
-        filter === "trending" ? "trending" : undefined,
+        filter === "trending" ? "trending" : undefined
       );
       const newData = json.data || json;
       setPosts((prev) => (reset ? newData : [...prev, ...newData]));
@@ -479,7 +495,7 @@ export default function Feed() {
       if (reset)
         showToast(
           "Không thể tải bảng tin lúc này, vui lòng thử lại sau.",
-          "error",
+          "error"
         );
     } finally {
       setLoading(false);
@@ -674,7 +690,7 @@ export default function Feed() {
 
   const [quoteText, setQuoteText] = useState("");
   const [quoteBg, setQuoteBg] = useState(
-    "bg-gray-100 dark:bg-gray-800 from-gray-200 to-gray-200",
+    "bg-gray-100 dark:bg-gray-800 from-gray-200 to-gray-200"
   );
   const [isQuoteMode, setIsQuoteMode] = useState(false);
 
@@ -683,7 +699,7 @@ export default function Feed() {
       return showToast("Bảng tin không thể trống.", "error");
     try {
       const privacyEl = document.getElementById(
-        "post-privacy",
+        "post-privacy"
       ) as HTMLSelectElement;
       const privacy = privacyEl ? privacyEl.value : "public";
       const db_poll_opts = [pollText1, pollText2].filter((p) => p.trim());
@@ -723,7 +739,7 @@ export default function Feed() {
   const toggleLike = async (
     postId: string,
     reactionType: string = "like",
-    event?: React.MouseEvent,
+    event?: React.MouseEvent
   ) => {
     try {
       const data = await toggleReactionAPI(postId, "posts", reactionType);
@@ -847,144 +863,63 @@ export default function Feed() {
 
   return (
     <>
-      <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-        <div className="mb-12 border-b border-zinc-200 pb-10 ">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-3">
-              <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-                Bảng tin
-              </h1>
-              <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                Kết nối và chia sẻ tri thức{" "}
-                <Sparkles className="w-3.5 h-3.5 text-zinc-200" />
+      <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+        <div className="mb-8 border-b border-zinc-200 pb-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold text-black">Bảng tin</h1>
+              <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
+                Kết nối và chia sẻ tri thức <Sparkles className="w-4 h-4" />
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex border border-zinc-200 p-1 bg-white rounded-sm">
-                <button
-                  onClick={() => setFilter("recent")}
-                  className={`px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-sm ${filter === "recent" ? "bg-black text-white" : "text-zinc-400 "}`}
-                >
-                  Mới nhất
-                </button>
-                <button
-                  onClick={() => setFilter("trending")}
-                  className={`px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase rounded-sm ${filter === "trending" ? "bg-black text-white" : "text-zinc-400 "}`}
-                >
-                  Xu hướng
-                </button>
-              </div>
+            <div className="flex border border-zinc-200 bg-white rounded-none">
+              <button
+                onClick={() => setFilter("recent")}
+                className={`px-4 py-2 text-xs font-medium transition-colors duration-150 border-r border-zinc-200 ${
+                  filter === "recent"
+                    ? "bg-zinc-100 text-black"
+                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                }`}
+              >
+                Mới nhất
+              </button>
+              <button
+                onClick={() => setFilter("trending")}
+                className={`px-4 py-2 text-xs font-medium transition-colors duration-150 ${
+                  filter === "trending"
+                    ? "bg-zinc-100 text-black"
+                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                }`}
+              >
+                Xu hướng
+              </button>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <aside className="lg:col-span-3 space-y-10 order-2 lg:order-1">
-            <div className="bg-card border border-border p-8 rounded-sm">
-              <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
-                <Trophy className="w-4 h-4" /> Bảng vinh danh Tác giả
+          <aside className="lg:col-span-3 space-y-8 order-2 lg:order-1 hidden lg:block">
+            <div className="border border-zinc-200 bg-white rounded-none p-6">
+              <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
+                <Trophy className="w-4 h-4" /> Bảng vinh danh tác giả
               </h3>
-
               {ranking.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground font-bold tracking-widest text-center py-4">
+                <p className="text-xs font-medium text-zinc-500 text-center py-4">
                   Chưa có dữ liệu
                 </p>
               ) : (
-                ranking.map((r, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 items-center group border-b border-border last:border-0 pb-4 mb-4 last:pb-0 last:mb-0"
-                  >
-                    <div className="w-10 h-10 bg-black text-white font-bold flex items-center shrink-0 justify-center text-[12px] border border-black tracking-tighter rounded-sm">
-                      #{i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate uppercase">
-                        {r.full_name || "Tác giả ẩn danh"}
-                      </h4>
-                      <span className="text-[10px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest uppercase">
-                        {r.score.toLocaleString("vi-VN")} điểm
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {trendingTags.length > 0 && (
-              <div className="bg-card border border-border p-8 rounded-sm">
-                <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Xu hướng Hashtag
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {trendingTags.map((tag: any, i: number) => (
-                    <Link
-                      key={i}
-                      href={`/search?q=${encodeURIComponent(tag.tag)}&type=posts`}
-                      className="px-4 py-2 bg-white border border-zinc-100 text-[10px] font-bold text-zinc-400 rounded-sm uppercase tracking-widest"
-                    >
-                      #{tag.tag}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-card border border-border p-8 rounded-sm">
-              <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
-                <Users className="w-4 h-4" /> Độc giả tích cực
-              </h3>
-
-              {readerRanking.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground font-bold tracking-widest text-center py-4">
-                  Chưa có dữ liệu
-                </p>
-              ) : (
-                readerRanking.map((r, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 items-center group border-b border-border last:border-0 pb-4 mb-4 last:pb-0 last:mb-0"
-                  >
-                    <div className="w-10 h-10 bg-zinc-200 text-black font-bold flex items-center shrink-0 justify-center text-[12px] border border-zinc-200 tracking-tighter rounded-sm">
-                      #{i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate uppercase">
-                        {r.full_name || "Độc giả ẩn danh"}
-                      </h4>
-                      <span className="text-[10px] text-zinc-400 font-bold truncate flex items-center gap-1.5 tracking-widest uppercase">
-                        {r.score.toLocaleString("vi-VN")} đóng góp
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="bg-card border border-border p-8 rounded-sm">
-              <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
-                <BookText className="w-4 h-4" /> Tài liệu đáng đọc
-              </h3>
-              {documentSuggestions.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground font-bold tracking-widest text-center py-4">
-                  Chưa có gợi ý
-                </p>
-              ) : (
-                <div className="space-y-6 pt-1">
-                  {documentSuggestions.map((b, i) => (
-                    <div
-                      key={i}
-                      className="flex gap-4 items-center group cursor-pointer border border-transparent p-2 rounded-sm"
-                    >
-                      <div className="w-12 h-16 bg-white border border-zinc-200 rounded-sm shrink-0 flex items-center justify-center overflow-hidden grayscale ">
-                        <BookText className="w-6 h-6 text-zinc-200" />
+                <div className="space-y-4">
+                  {ranking.map((r, i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
+                        #{i + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate transition-colors uppercase">
-                          {b.title}
+                        <h4 className="text-xs font-semibold text-black truncate">
+                          {r.full_name || "Tác giả ẩn danh"}
                         </h4>
-                        <span className="text-[10px] text-zinc-400 font-bold tracking-widest uppercase">
-                          {b.mentions} đề xuất
+                        <span className="text-[10px] text-zinc-500 font-medium truncate">
+                          {r.score.toLocaleString("vi-VN")} điểm
                         </span>
                       </div>
                     </div>
@@ -993,144 +928,165 @@ export default function Feed() {
               )}
             </div>
 
-            <div className="bg-card border border-border p-8 rounded-sm">
-              <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
+            {trendingTags.length > 0 && (
+              <div className="border border-zinc-200 bg-white rounded-none p-6">
+                <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
+                  <Hash className="w-4 h-4" /> Xu hướng hashtag
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {trendingTags.map((tag: any, i: number) => (
+                    <Link
+                      key={i}
+                      href={`/search?q=${encodeURIComponent(tag.tag)}&type=posts`}
+                      className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-xs font-medium text-zinc-600 hover:text-black hover:bg-zinc-100 transition-colors"
+                    >
+                      #{tag.tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="border border-zinc-200 bg-white rounded-none p-6">
+              <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" /> Gợi ý kết nối
               </h3>
               {suggestions.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-bold uppercase tracking-widest text-center py-4">
+                <p className="text-xs font-medium text-zinc-500 text-center py-4">
                   Không có gợi ý
                 </p>
               ) : (
-                suggestions.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 items-center group cursor-pointer border-b border-border last:border-0 pb-4 last:pb-0 mb-4 last:mb-0"
-                  >
-                    <div className="w-10 h-10 bg-black text-white font-bold flex items-center shrink-0 justify-center text-[12px] border border-black tracking-tighter rounded-sm">
-                      {s.display_name?.[0]?.toUpperCase() || "A"}
+                <div className="space-y-4">
+                  {suggestions.map((s, i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
+                        {s.display_name?.[0]?.toUpperCase() || "A"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-semibold text-black truncate">
+                          {s.display_name}
+                        </h4>
+                        <span className="text-[10px] text-zinc-500 font-medium truncate">
+                          {s.total_match || 0} điểm chung
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (currentUser) followUser(s._id);
+                          else showToast("Vui lòng đăng nhập.", "error");
+                        }}
+                        className="h-7 px-3 border border-zinc-200 text-[10px] font-medium hover:bg-zinc-50 transition-colors"
+                      >
+                        Theo dõi
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[12px] font-bold tracking-widest text-foreground truncate uppercase">
-                        {s.display_name}
-                      </h4>
-                      <span className="text-[10px] text-zinc-400 font-bold truncate tracking-widest uppercase">
-                        {s.total_match || 0} điểm chung
-                      </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border border-zinc-200 bg-white rounded-none p-6">
+              <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
+                <BookText className="w-4 h-4" /> Tài liệu đáng đọc
+              </h3>
+              {documentSuggestions.length === 0 ? (
+                <p className="text-xs font-medium text-zinc-500 text-center py-4">
+                  Chưa có gợi ý
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {documentSuggestions.map((b, i) => (
+                    <div key={i} className="flex gap-3 items-center">
+                      <div className="w-8 h-10 bg-zinc-50 border border-zinc-200 shrink-0 flex items-center justify-center">
+                        <BookText className="w-4 h-4 text-zinc-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-semibold text-black truncate hover:underline cursor-pointer">
+                          {b.title}
+                        </h4>
+                        <span className="text-[10px] text-zinc-500 font-medium">
+                          {b.mentions} đề xuất
+                        </span>
+                      </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        if (currentUser) followUser(s._id);
-                        else
-                          showToast(
-                            "Vui lòng đăng nhập để thực hiện.",
-                            "error",
-                          );
-                      }}
-                      title="Theo dõi"
-                      className="h-8 px-4 text-[10px] font-bold uppercase tracking-widest rounded-none shrink-0 border-zinc-200"
-                    >
-                      Theo dõi
-                    </Button>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           </aside>
 
-          <main className="lg:col-span-9 space-y-12 order-1 lg:order-2">
-            <div className="flex gap-4 overflow-x-auto pb-10 pt-2 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 border-b border-zinc-100">
-              {currentUser && (
-                <div
-                  onClick={() => setShowStoryModal(true)}
-                  className="relative w-32 h-48 rounded-sm overflow-hidden cursor-pointer shrink-0 group bg-white border border-zinc-200 flex flex-col "
-                >
-                  <div className="flex-1 bg-zinc-200 relative overflow-hidden ">
-                    {currentUser?.avatar_url ? (
-                      <img
-                        src={currentUser.avatar_url}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Plus className="w-8 h-8 text-zinc-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 bg-white text-center">
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-black">
+          <main className="lg:col-span-9 order-1 lg:order-2">
+            <div className="max-w-2xl mx-auto space-y-8">
+              <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+                {currentUser && (
+                  <div
+                    onClick={() => setShowStoryModal(true)}
+                    className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <div className="w-16 h-16 rounded-full border border-zinc-200 flex items-center justify-center relative bg-zinc-50 overflow-hidden">
+                      {currentUser?.avatar_url ? (
+                        <img
+                          src={currentUser.avatar_url}
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                        />
+                      ) : (
+                        <Plus className="w-6 h-6 text-zinc-400" />
+                      )}
+                    </div>
+                    <span className="text-[10px] font-medium text-zinc-600">
                       Tạo tin
                     </span>
                   </div>
-                </div>
-              )}
+                )}
 
-              {stories.map((story, idx) => (
-                <div
-                  key={story.id}
-                  className="relative w-32 h-48 rounded-sm overflow-hidden cursor-pointer shrink-0 group bg-black border border-zinc-200 flex flex-col "
-                >
+                {stories.map((story, idx) => (
                   <div
-                    className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 z-10"
+                    key={story.id}
                     onClick={() => {
                       setActiveStoryIndex(idx);
                       setViewingStoryMode(true);
                       setStoryProgress(0);
                     }}
-                  ></div>
-                  {story.media_url ? (
-                    <img
-                      src={story.media_url}
-                      className="w-full h-full object-cover grayscale "
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center p-4 text-center bg-zinc-900"
-                      style={{ color: story.text_color || "#ffffff" }}
-                    >
-                      <span className="text-[10px] font-bold tracking-tighter leading-tight line-clamp-4">
-                        {story.text_content}
-                      </span>
+                    className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
+                  >
+                    <div className="w-16 h-16 rounded-full border border-zinc-200 p-[2px]">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-100 border border-zinc-200">
+                        {story.user?.avatar_url ? (
+                          <img
+                            src={story.user.avatar_url}
+                            className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+                            <UserIcon className="w-6 h-6 text-zinc-400 stroke-[1]" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {currentUser &&
-                    (story.user_id === currentUser.id ||
-                      story.author_id === currentUser.id) && (
-                      <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteStoryConfirm(story.id);
-                          }}
-                        className="absolute top-2 right-2 z-20 h-8 w-8 bg-black/40 text-white flex items-center justify-center border border-white/20 rounded-sm"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                </div>
-              ))}
-            </div>
+                    <span className="text-[10px] font-medium text-zinc-600 truncate w-16 text-center">
+                      {story.user?.username || story.user?.name || "Người dùng"}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
-            <div className="space-y-12">
               {currentUser && (
-                <div className="bg-white border border-zinc-200 p-8 rounded-sm flex flex-col ">
-                  <div className="flex gap-6 items-start">
-                    <div className="w-14 h-14 bg-zinc-900 rounded-sm border border-zinc-200 flex shrink-0 items-center justify-center text-white font-bold text-xl overflow-hidden relative cursor-pointer ">
+                <div className="bg-white border border-zinc-200 p-6 rounded-none flex flex-col space-y-4">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex shrink-0 items-center justify-center overflow-hidden">
                       {currentUser?.avatar_url ? (
                         <img
                           src={currentUser.avatar_url}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
                         />
                       ) : (
-                        currentUser?.display_name?.[0]?.toUpperCase() || "U"
+                        <UserIcon className="w-5 h-5 text-zinc-400 stroke-[1]" />
                       )}
                     </div>
                     <div className="flex-1">
                       <textarea
-                        id="composer-textarea"
-                        className="w-full bg-transparent outline-none text-foreground resize-none min-h-[56px] text-xl font-bold tracking-tighter placeholder:text-muted-foreground placeholder:font-normal mt-1.5"
-                        placeholder=""
+                        className="w-full bg-transparent outline-none text-black resize-none min-h-[48px] text-sm font-medium placeholder:text-zinc-400"
+                        placeholder="Chia sẻ kiến thức của bạn..."
                         value={content}
                         rows={
                           isQuoteMode
@@ -1138,57 +1094,48 @@ export default function Feed() {
                             : Math.max(1 + content.split("\n").length, 2)
                         }
                         onChange={handleContentChange}
-                      ></textarea>
+                      />
 
-                      <div className="relative">
-                        {documentSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 z-50 bg-white border border-zinc-200 mt-2 overflow-hidden w-full max-w-md animate-in slide-in-from-top-2 rounded-sm">
-                            <div className="px-6 py-4 bg-white border-b border-zinc-100">
-                              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] flex items-center gap-2">
-                                <BookText className="w-3.5 h-3.5" /> Gợi ý tài
-                                liệu
-                              </span>
-                            </div>
-                            <div className="max-h-[300px] overflow-y-auto">
-                              {documentSuggestions.map(
-                                (doc: any, i: number) => (
-                                  <div
-                                    key={i}
-                                    className="px-6 py-4 cursor-pointer border-b border-zinc-50 last:border-0 flex justify-between items-center group "
-                                    onClick={() => selectAttachedDocument(doc)}
-                                  >
-                                    <div className="flex-1 min-w-0 pr-4">
-                                      <p className="text-[12px] font-bold text-black uppercase tracking-widest truncate transition-transform">
-                                        {doc.title}
-                                      </p>
-                                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tighter mt-1">
-                                        {doc.author_name ||
-                                          doc.author ||
-                                          "Tác giả ẩn danh"}
-                                      </p>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-zinc-200 transition-colors" />
-                                  </div>
-                                ),
-                              )}
-                            </div>
+                      {documentSuggestions.length > 0 && (
+                        <div className="bg-white border border-zinc-200 mt-2 max-h-48 overflow-y-auto rounded-none">
+                          <div className="px-4 py-2 border-b border-zinc-100 text-xs font-semibold text-zinc-500 bg-zinc-50">
+                            Gợi ý tài liệu
                           </div>
-                        )}
-                      </div>
+                          {documentSuggestions.map((doc: any, i: number) => (
+                            <div
+                              key={i}
+                              className="px-4 py-3 cursor-pointer border-b border-zinc-50 hover:bg-zinc-50 flex justify-between items-center"
+                              onClick={() => selectAttachedDocument(doc)}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-xs font-medium text-black">
+                                  {doc.title}
+                                </span>
+                                <span className="text-[10px] text-zinc-500">
+                                  {doc.author_name ||
+                                    doc.author ||
+                                    "Tác giả ẩn danh"}
+                                </span>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-zinc-400" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {attachedDocumentId && (
-                        <div className="mt-6 p-6 bg-white border border-zinc-200 rounded-sm flex items-center justify-between group animate-in fade-in ">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-14 bg-white border border-zinc-100 flex items-center justify-center shrink-0">
-                              <BookText className="w-5 h-5 text-zinc-200" />
+                        <div className="mt-4 p-4 border border-zinc-200 bg-zinc-50 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-10 bg-white border border-zinc-200 flex items-center justify-center">
+                              <BookText className="w-4 h-4 text-zinc-400" />
                             </div>
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-medium text-zinc-500">
                                 Đã đính kèm
-                              </p>
-                              <p className="text-[12px] font-bold text-black uppercase tracking-widest">
+                              </span>
+                              <span className="text-xs font-semibold text-black">
                                 {attachedDocumentTitle}
-                              </p>
+                              </span>
                             </div>
                           </div>
                           <button
@@ -1196,7 +1143,7 @@ export default function Feed() {
                               setAttachedDocumentId("");
                               setAttachedDocumentTitle("");
                             }}
-                            className="p-3 text-zinc-300 transition-colors"
+                            className="p-1 hover:text-black text-zinc-400 transition-colors"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -1204,16 +1151,20 @@ export default function Feed() {
                       )}
 
                       {mediaUrls.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2 mt-6 overflow-hidden border border-border rounded-sm">
+                        <div
+                          className={`grid gap-2 mt-4 ${
+                            mediaUrls.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                          }`}
+                        >
                           {mediaUrls.map((url, i) => (
                             <div
                               key={i}
-                              className={`relative w-full aspect-square ${mediaUrls.length === 1 ? "col-span-2 aspect-video" : ""}`}
+                              className="relative w-full border border-zinc-200 bg-zinc-50"
                             >
                               {url.match(/\.(mp4|webm)$/i) ? (
                                 <video
                                   src={`${API_URL}${url}`}
-                                  className="object-cover w-full h-full"
+                                  className="w-full max-h-48 object-cover"
                                   autoPlay
                                   muted
                                   loop
@@ -1221,111 +1172,107 @@ export default function Feed() {
                               ) : (
                                 <img
                                   src={`${API_URL}${url}`}
-                                  alt="Preview"
-                                  className="object-cover w-full h-full"
+                                  className="w-full max-h-48 object-cover grayscale mix-blend-multiply"
                                 />
                               )}
                               <button
                                 onClick={() =>
                                   setMediaUrls(
-                                    mediaUrls.filter((_, idx) => idx !== i),
+                                    mediaUrls.filter((_, idx) => idx !== i)
                                   )
                                 }
-                                className="absolute top-3 right-3 bg-black/60 text-white rounded-none w-10 h-10 flex items-center justify-center backblur-sm transition-colors"
+                                className="absolute top-2 right-2 bg-white border border-zinc-200 p-1 text-black hover:bg-zinc-100 transition-colors"
                               >
-                                <X className="w-6 h-6" />
+                                <X className="w-4 h-4" />
                               </button>
                             </div>
                           ))}
                         </div>
                       )}
+
+                      {showExtras && (
+                        <div className="mt-4 p-4 border border-zinc-200 bg-zinc-50 space-y-3">
+                          <h4 className="text-xs font-medium text-black flex items-center gap-2">
+                            <BarChart2 className="w-4 h-4" /> Tạo bình chọn
+                          </h4>
+                          <Input
+                            value={pollText1}
+                            onChange={(e) => setPollText1(e.target.value)}
+                            placeholder="Lựa chọn 1"
+                            className="h-10 bg-white border-zinc-200 text-xs font-medium rounded-none focus-visible:ring-black"
+                          />
+                          <Input
+                            value={pollText2}
+                            onChange={(e) => setPollText2(e.target.value)}
+                            placeholder="Lựa chọn 2"
+                            className="h-10 bg-white border-zinc-200 text-xs font-medium rounded-none focus-visible:ring-black"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {showExtras && (
-                    <div className="mt-8 p-6 bg-white space-y-4 border border-zinc-100 rounded-sm">
-                      <div className="space-y-3">
-                        <h4 className="text-[10px] font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
-                          <BarChart2 className="w-4 h-4" /> Tạo bình chọn
-                        </h4>
-                        <Input
-                          value={pollText1}
-                          onChange={(e) => setPollText1(e.target.value)}
-                          placeholder=""
-                          className="h-12 bg-white text-xs font-bold border-zinc-200 rounded-sm focus-visible:ring-black"
+                  <div className="pt-4 border-t border-zinc-200 flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 transition-colors">
+                        <ImageIcon className="w-4 h-4" />
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*,video/*"
+                          multiple
+                          onChange={overrideFileUpload}
                         />
-                        <Input
-                          value={pollText2}
-                          onChange={(e) => setPollText2(e.target.value)}
-                          placeholder=""
-                          className="h-12 bg-white text-xs font-bold border-zinc-200 rounded-sm focus-visible:ring-black"
-                        />
-                      </div>
+                      </label>
+                      <button
+                        onClick={() => setShowExtras(!showExtras)}
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                          showExtras
+                            ? "bg-black border-black text-white"
+                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                        }`}
+                      >
+                        <BarChart2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setIsQuoteMode(!isQuoteMode)}
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                          isQuoteMode
+                            ? "bg-black border-black text-white"
+                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                        }`}
+                      >
+                        <Quote className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
 
-                  <div className="mt-8 pt-6 border-t border-zinc-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <label
-                          className="cursor-pointer h-12 w-12 border border-zinc-100 rounded-sm flex items-center justify-center text-zinc-400 "
-                          title="Đính kèm Ảnh/Video"
-                        >
-                          <ImageIcon className="w-5 h-5" />
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,video/*"
-                            multiple
-                            onChange={overrideFileUpload}
-                          />
-                        </label>
-                        <button
-                          onClick={() => setShowExtras(!showExtras)}
-                          className={`h-12 w-12 border rounded-sm flex items-center justify-center ${showExtras ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-100"}`}
-                          title="Thêm bình chọn"
-                        >
-                          <BarChart2 className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => setIsQuoteMode(!isQuoteMode)}
-                          className={`h-12 w-12 border rounded-sm flex items-center justify-center ${isQuoteMode ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-100"}`}
-                          title="Chế độ Trích dẫn"
-                        >
-                          <Quote className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <select
-                          id="post-privacy"
-                          className="h-12 px-6 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest outline-none cursor-pointer rounded-sm"
-                        >
-                          <option value="public">Công khai</option>
-                          <option value="following">Người theo dõi</option>
-                          <option value="private">Chỉ mình tôi</option>
-                        </select>
-                        <button
-                          onClick={createPost}
-                          disabled={!content.trim() && mediaUrls.length === 0}
-                          className="h-12 px-10 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] disabled:opacity-30 disabled:pointer-events-none active:scale-95 rounded-sm"
-                        >
-                          Đăng bài
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <select
+                        id="post-privacy"
+                        className="h-10 px-3 bg-white border border-zinc-200 text-xs font-medium outline-none cursor-pointer"
+                      >
+                        <option value="public">Công khai</option>
+                        <option value="following">Người theo dõi</option>
+                        <option value="private">Chỉ mình tôi</option>
+                      </select>
+                      <button
+                        onClick={createPost}
+                        disabled={!content.trim() && mediaUrls.length === 0}
+                        className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 transition-opacity"
+                      >
+                        Đăng bài
+                      </button>
                     </div>
                   </div>
                 </div>
               )}
 
               {currentUser && (
-                <div className="space-y-6">
-                  <div className="bg-white border border-zinc-200 text-xs py-5 px-8 flex items-center justify-between rounded-sm">
-                    <div className="flex items-center gap-4">
-                      <Sparkles className="w-5 h-5 text-zinc-400" />
-                      <span className="font-bold tracking-[0.2em] uppercase text-black">
-                        Phân tích bảng tin với AI
-                      </span>
+                <div className="bg-white border border-zinc-200 p-6 rounded-none flex flex-col space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-black">
+                      <Sparkles className="w-4 h-4 text-zinc-500" />
+                      Phân tích bảng tin với AI
                     </div>
                     <button
                       onClick={async () => {
@@ -1345,80 +1292,93 @@ export default function Feed() {
                         }
                       }}
                       disabled={isSummarizing}
-                      className="h-10 px-8 border border-black text-black font-bold uppercase text-[10px] tracking-widest disabled:opacity-50 rounded-sm"
+                      className="px-4 py-2 border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
                     >
                       {isSummarizing ? "Đang xử lý" : "Bắt đầu tóm tắt"}
                     </button>
                   </div>
                   {aiSummary && (
-                    <div className="bg-white p-8 border border-zinc-200 border-t-0 animate-in fade-in slide-in-from-top-4 rounded-sm">
-                      <p className="text-lg leading-relaxed text-black italic font-medium tracking-tight">
-                        "{aiSummary}"
-                      </p>
+                    <div className="pt-4 border-t border-zinc-100 text-sm text-black italic font-medium leading-relaxed">
+                      "{aiSummary}"
                     </div>
                   )}
                 </div>
               )}
 
-              <div className="flex flex-col gap-10">
+              <div className="flex flex-col gap-8">
                 {loading ? (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="h-60 bg-white border border-zinc-100 animate-pulse rounded-sm"
+                        className="h-48 bg-zinc-50 border border-zinc-200 animate-pulse rounded-none"
                       />
                     ))}
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="text-center py-32 border border-dashed border-zinc-100 bg-white rounded-sm">
-                    <MessageCircle className="w-16 h-16 text-zinc-100 mx-auto mb-10 stroke-[1]" />
-                    <h3 className="text-2xl font-bold tracking-tighter text-black uppercase">
+                  <div className="text-center py-20 border border-zinc-200 bg-white">
+                    <MessageCircle className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-black">
                       Chưa có nội dung nào
                     </h3>
-                    <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest mt-4">
+                    <p className="text-xs font-medium text-zinc-500 mt-2">
                       Hãy là người đầu tiên chia sẻ tri thức hôm nay
                     </p>
                   </div>
                 ) : (
                   posts.map((post) => (
-                    <div
+                    <article
                       key={post.id}
-                      className="bg-white border border-zinc-200 p-10 rounded-sm group"
+                      className="border border-zinc-200 bg-white p-6 space-y-4"
                     >
-                      <div className="flex items-center gap-6 mb-8">
-                        <div className="w-14 h-14 bg-white rounded-sm flex shrink-0 items-center justify-center text-zinc-300 font-bold border border-zinc-100 overflow-hidden relative">
-                          {post.user?.avatar_url ? (
-                            <img
-                              src={post.user.avatar_url}
-                              className="w-full h-full object-cover grayscale "
-                            />
-                          ) : (
-                            <UserIcon className="w-6 h-6 stroke-[1]" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-black text-lg tracking-tight uppercase transition-transform">
-                            {post.user?.username || "Người dùng ẩn danh"}
-                          </h4>
-                          <div className="flex items-center gap-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest pt-1">
-                            <span>
-                              {new Date(post.created_at).toLocaleString(
-                                "vi-VN",
-                              )}
-                            </span>
-                            {post.is_pinned && (
-                              <span className="flex items-center gap-1.5 text-black">
-                                <Pin className="w-3 h-3 fill-black" /> Đã ghim
+                      <div className="flex flex-row justify-between items-start">
+                        <div className="flex gap-3 items-center">
+                          <div className="w-10 h-10 rounded-full border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0">
+                            {post.user?.avatar_url ? (
+                              <img
+                                src={post.user.avatar_url}
+                                className="w-full h-full object-cover grayscale mix-blend-multiply"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <UserIcon className="w-5 h-5 text-zinc-400 stroke-[1]" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-sm text-black cursor-pointer hover:underline">
+                                {post.user?.username ||
+                                  post.user?.display_name ||
+                                  "Ẩn danh"}
                               </span>
+                              {post.user?.role === "admin" && (
+                                <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">
+                                  Admin
+                                </span>
+                              )}
+                              {post.user?.role === "author" && (
+                                <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">
+                                  Tác giả
+                                </span>
+                              )}
+                              <span className="text-zinc-400 text-xs">•</span>
+                              <span className="text-xs font-medium text-zinc-500">
+                                {getTimeElapsed(post.created_at)}
+                              </span>
+                            </div>
+                            {post.is_pinned && (
+                              <div className="flex items-center gap-1 text-[10px] font-medium text-black mt-0.5">
+                                <Pin className="w-3 h-3 fill-black" /> Đã ghim
+                              </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 opacity-0 transition-opacity">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => translatePost(post.id, post.content)}
-                            className="p-3 rounded-sm text-zinc-300 "
+                            className="p-2 text-zinc-400 hover:text-black transition-colors"
                           >
                             <Sparkles className="w-4 h-4" />
                           </button>
@@ -1428,15 +1388,19 @@ export default function Feed() {
                             <>
                               <button
                                 onClick={() => togglePinPost(post.id)}
-                                className="p-3 rounded-sm text-zinc-300 "
+                                className="p-2 text-zinc-400 hover:text-black transition-colors"
                               >
                                 <Pin
-                                  className={`w-4 h-4 ${post.is_pinned ? "fill-black text-black" : ""}`}
+                                  className={`w-4 h-4 ${
+                                    post.is_pinned
+                                      ? "fill-black text-black"
+                                      : ""
+                                  }`}
                                 />
                               </button>
                               <button
                                 onClick={() => setDeletePostConfirm(post.id)}
-                                className="p-3 rounded-sm text-zinc-300 "
+                                className="p-2 text-zinc-400 hover:text-black transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1445,13 +1409,18 @@ export default function Feed() {
                             <>
                               <button
                                 onClick={() => hidePost(post.id)}
-                                className="p-3 rounded-sm text-zinc-300 "
+                                className="p-2 text-zinc-400 hover:text-black transition-colors"
                               >
                                 <EyeOff className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => setReportModal({ postId: post.id, reason: "" })}
-                                className="p-3 rounded-sm text-zinc-300 "
+                                onClick={() =>
+                                  setReportModal({
+                                    postId: post.id,
+                                    reason: "",
+                                  })
+                                }
+                                className="p-2 text-zinc-400 hover:text-black transition-colors"
                               >
                                 <Flag className="w-4 h-4" />
                               </button>
@@ -1460,124 +1429,197 @@ export default function Feed() {
                         </div>
                       </div>
 
-                      <div className="space-y-6">
-                        <p className="text-lg leading-relaxed text-black font-medium tracking-tight whitespace-pre-wrap">
-                          {renderContentWithTags(post.content)}
-                        </p>
+                      <div className="text-sm font-medium text-black leading-relaxed whitespace-pre-wrap">
+                        {renderContentWithTags(post.content)}
+                      </div>
 
-                        {post.media_urls && post.media_urls.length > 0 && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-zinc-100 rounded-sm overflow-hidden">
-                            {post.media_urls.map((url: string, i: number) => (
+                      {post.media_urls && post.media_urls.length > 0 && (
+                        <div
+                          className={`grid gap-2 mt-4 ${
+                            post.media_urls.length > 1
+                              ? "grid-cols-2"
+                              : "grid-cols-1"
+                          }`}
+                        >
+                          {post.media_urls.map(
+                            (url: string, i: number) => (
                               <div
                                 key={i}
-                                className={`relative overflow-hidden bg-white ${post.media_urls.length === 1 ? "md:col-span-2" : ""}`}
+                                className="relative w-full border border-zinc-200 bg-zinc-50 overflow-hidden"
                               >
                                 {url.match(/\.(mp4|webm)$/i) ? (
                                   <video
                                     src={`${API_URL}${url}`}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-auto max-h-96 object-cover"
                                     controls
                                   />
                                 ) : (
                                   <img
                                     src={`${API_URL}${url}`}
-                                    alt="Feed"
-                                    className="w-full h-full object-cover grayscale cursor-pointer"
+                                    className="w-full h-auto max-h-96 object-cover grayscale mix-blend-multiply"
                                   />
                                 )}
                               </div>
-                            ))}
-                          </div>
-                        )}
+                            )
+                          )}
+                        </div>
+                      )}
 
-                        {post.attached_document_id && (
-                          <Link
-                            href={`/documents/${post.attached_document_id}`}
-                            className="flex items-center justify-between p-6 bg-white border border-transparent rounded-sm"
-                          >
-                            <div className="flex items-center gap-6">
-                              <div className="w-12 h-16 bg-white border border-zinc-100 rounded-sm flex items-center justify-center shrink-0">
-                                <BookText className="w-6 h-6 text-zinc-200" />
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                                  Tài liệu đính kèm
-                                </p>
-                                <h5 className="text-base font-bold text-black tracking-tight uppercase">
-                                  {post.attached_document_title ||
-                                    "Xem tài liệu"}
-                                </h5>
-                              </div>
+                      {post.attached_document_id && (
+                        <Link
+                          href={`/documents/${post.attached_document_id}`}
+                          className="mt-4 flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-14 bg-white border border-zinc-200 flex items-center justify-center shrink-0">
+                              <BookText className="w-5 h-5 text-zinc-400" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-zinc-300" />
-                          </Link>
-                        )}
-                      </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] font-medium text-zinc-500">
+                                Tài liệu đính kèm
+                              </span>
+                              <span className="text-sm font-semibold text-black line-clamp-1">
+                                {post.attached_document_title || "Xem tài liệu"}
+                              </span>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-zinc-400" />
+                        </Link>
+                      )}
 
-                      <div className="mt-10 pt-8 border-t border-zinc-50 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      {post.poll_data && (
+                        <div className="mt-4 space-y-2 border border-zinc-200 p-4">
+                          <div className="text-sm font-semibold text-black mb-2">
+                            {post.poll_data.question || "Bình chọn"}
+                          </div>
+                          {post.poll_data.options.map(
+                            (opt: any, idx: number) => {
+                              const totalVotes = Object.keys(
+                                post.poll_data.voters || {}
+                              ).length;
+                              const myVote = (post.poll_data.voters || {})[
+                                currentUser?._id || ""
+                              ];
+                              const hasVoted = myVote !== undefined;
+                              const optsVotes = Object.values(
+                                post.poll_data.voters || {}
+                              ).filter((v) => v === idx).length;
+                              const percent =
+                                totalVotes > 0
+                                  ? Math.round((optsVotes / totalVotes) * 100)
+                                  : 0;
+
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() =>
+                                    !hasVoted &&
+                                    submitPollVote(post.id, idx.toString())
+                                  }
+                                  className="relative w-full border border-zinc-200 bg-white text-left overflow-hidden h-10"
+                                >
+                                  <div
+                                    className="absolute inset-y-0 left-0 bg-zinc-100 transition-all duration-300"
+                                    style={{ width: hasVoted ? `${percent}%` : "0%" }}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-between px-3 z-10 text-xs font-medium text-black">
+                                    <span>
+                                      {typeof opt === "string" ? opt : opt.text}
+                                    </span>
+                                    {hasVoted && <span>{percent}%</span>}
+                                  </div>
+                                </button>
+                              );
+                            }
+                          )}
+                        </div>
+                      )}
+
+                      <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="flex items-center gap-6">
                           <button
                             onClick={(e) => toggleLike(post.id, "like", e)}
-                            className={`h-12 px-6 flex items-center gap-3 border rounded-sm font-bold text-[11px] uppercase tracking-widest ${post.likes?.includes(currentUser?._id || "") ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-100"}`}
+                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${
+                              post.likes?.includes(currentUser?._id || "")
+                                ? "text-black"
+                                : "text-zinc-500 hover:text-black"
+                            }`}
                           >
                             <Heart
-                              className={`w-4 h-4 ${post.likes?.includes(currentUser?._id || "") ? "fill-white" : ""}`}
+                              className={`w-4 h-4 ${
+                                post.likes?.includes(currentUser?._id || "")
+                                  ? "fill-black text-black"
+                                  : ""
+                              }`}
                             />
                             {post.likes?.length || 0}
                           </button>
                           <button
                             onClick={() =>
                               setExpandedComments(
-                                expandedComments === post.id ? null : post.id,
+                                expandedComments === post.id ? null : post.id
                               )
                             }
-                            className={`h-12 px-6 flex items-center gap-3 border border-zinc-100 bg-white text-zinc-400 rounded-sm font-bold text-[11px] uppercase tracking-widest`}
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
                           >
                             <MessageCircle className="w-4 h-4" />
                             {(post.comments || []).length}
                           </button>
+                          <button
+                            onClick={() => repostPost(post.id)}
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                          </button>
                         </div>
-
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-6">
                           <button
                             onClick={() => toggleSave(post.id)}
-                            className={`h-12 w-12 flex items-center justify-center border rounded-sm ${post.saved ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-100"}`}
+                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${
+                              post.saved
+                                ? "text-black"
+                                : "text-zinc-500 hover:text-black"
+                            }`}
                           >
                             <Bookmark
-                              className={`w-4 h-4 ${post.saved ? "fill-white" : ""}`}
+                              className={`w-4 h-4 ${
+                                post.saved ? "fill-black text-black" : ""
+                              }`}
                             />
                           </button>
                           <button
-                            onClick={() => repostPost(post.id)}
-                            className="h-12 w-12 flex items-center justify-center border border-zinc-100 bg-white text-zinc-400 rounded-sm"
-                            title="Chia sẻ lại"
+                            onClick={() => {}}
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
                           >
-                            <RotateCw className="w-4 h-4" />
+                            <Share2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
 
                       {expandedComments === post.id && (
-                        <div className="mt-6 bg-white p-6 border border-zinc-100 rounded-sm animate-in slide-in-from-top-4 ">
-                          <div className="max-h-80 overflow-y-auto pr-4 space-y-6 mb-6">
+                        <div className="mt-4 pt-4 border-t border-zinc-100">
+                          <div className="max-h-64 overflow-y-auto space-y-4 mb-4">
                             {post.comments?.length > 0 ? (
                               post.comments.map((c: any, i: number) => (
                                 <div
                                   key={i}
-                                  className={`text-sm ${c.parent_id ? "ml-10 relative pl-6 border-l border-zinc-200" : ""}`}
+                                  className={`text-sm ${
+                                    c.parent_id
+                                      ? "ml-8 relative pl-4 border-l border-zinc-200"
+                                      : ""
+                                  }`}
                                 >
-                                  <div className="flex justify-between w-full group">
+                                  <div className="flex justify-between items-start group">
                                     <div className="space-y-1">
-                                      <span className="font-bold text-black uppercase tracking-widest text-[10px]">
+                                      <span className="font-semibold text-black text-xs">
                                         {c.user.display_name || "Người dùng"}
-                                        :{" "}
                                       </span>
-                                      <p className="text-zinc-500 font-medium leading-relaxed">
+                                      <p className="text-zinc-600 font-medium text-xs leading-relaxed">
                                         {c.content || c.text}
                                       </p>
                                     </div>
                                     {currentUser && (
-                                      <span
+                                      <button
                                         onClick={() => {
                                           setReplyToContext({
                                             postId: post.id,
@@ -1588,44 +1630,44 @@ export default function Feed() {
                                           });
                                           setCommentText("");
                                         }}
-                                        className="text-black text-[10px] font-bold uppercase tracking-widest opacity-0 cursor-pointer ml-4"
+                                        className="text-[10px] font-semibold text-zinc-400 hover:text-black transition-colors opacity-0 group-hover:opacity-100 shrink-0 ml-4"
                                       >
                                         Trả lời
-                                      </span>
+                                      </button>
                                     )}
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest italic text-center py-4">
+                              <div className="text-xs font-medium text-zinc-400 italic py-2">
                                 Chưa có bình luận
                               </div>
                             )}
                           </div>
 
                           {currentUser ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                               {replyToContext &&
                                 replyToContext.postId === post.id && (
-                                  <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex justify-between bg-white border border-zinc-100 p-3 rounded-sm">
+                                  <div className="text-xs font-medium text-zinc-500 flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded-none">
                                     <span>
                                       Đang trả lời{" "}
                                       <b className="text-black">
                                         {replyToContext.userName}
                                       </b>
                                     </span>
-                                    <span
-                                      className="cursor-pointer "
+                                    <button
+                                      className="hover:text-black transition-colors"
                                       onClick={() => setReplyToContext(null)}
                                     >
                                       Hủy bỏ
-                                    </span>
+                                    </button>
                                   </div>
                                 )}
-                              <div className="flex gap-4 items-center">
+                              <div className="flex gap-2 items-center">
                                 <Input
-                                  className="h-12 bg-white border-zinc-100 text-xs font-bold focus-visible:ring-black rounded-sm"
-                                  placeholder=""
+                                  className="h-10 bg-white border-zinc-200 text-xs font-medium focus-visible:ring-black rounded-none"
+                                  placeholder="Viết bình luận..."
                                   value={commentText}
                                   onChange={(e) =>
                                     setCommentText(e.target.value)
@@ -1637,119 +1679,108 @@ export default function Feed() {
                                 />
                                 <Button
                                   onClick={() => submitComment(post.id)}
-                                  className="h-12 w-12 bg-black text-white rounded-sm shrink-0"
+                                  className="h-10 w-10 bg-black border border-black text-white hover:bg-zinc-800 transition-colors rounded-none shrink-0"
                                 >
                                   <Send className="w-4 h-4" />
                                 </Button>
                               </div>
                             </div>
                           ) : (
-                            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] text-center py-4 bg-white border border-zinc-100 rounded-sm">
+                            <div className="text-xs font-medium text-zinc-500 text-center py-3 bg-zinc-50 border border-zinc-200 rounded-none">
                               Đăng nhập để bình luận
                             </div>
                           )}
                         </div>
                       )}
-                    </div>
+                    </article>
                   ))
                 )}
-              </div>
 
-              {!loading && hasMore && (
-                <div className="flex justify-center pt-10">
-                  <button
-                    onClick={() => fetchFeed()}
-                    disabled={loading}
-                    className="h-16 px-16 bg-white border border-zinc-100 text-[11px] font-bold uppercase tracking-[0.2em] disabled:opacity-30 rounded-sm"
-                  >
-                    {loading ? "Đang tải" : "Xem thêm bài viết"}
-                  </button>
-                </div>
-              )}
+                {!loading && hasMore && (
+                  <div className="flex justify-center pt-4">
+                    <button
+                      onClick={() => fetchFeed()}
+                      disabled={loading}
+                      className="px-8 py-3 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                    >
+                      {loading ? "Đang tải" : "Xem thêm bài viết"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </main>
         </div>
       </div>
 
       {currentUser && showStoryModal && (
-        <div className="fixed inset-0 z-[300] bg-background/80 backblur-sm flex items-center justify-center animate-in fade-in-0 ">
-          <div className="bg-card w-full h-[100dvh] md:h-[85vh] max-w-sm md: md:border border-border flex flex-col relative overflow-hidden">
-            <div className="absolute z-10 top-0 left-0 right-0 p-3 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent text-white">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center">
+          <div className="w-full h-full max-w-sm mx-auto border-x border-zinc-200 bg-zinc-50 flex flex-col relative overflow-hidden">
+            <div className="absolute z-10 top-0 left-0 right-0 p-4 flex justify-between items-center bg-white border-b border-zinc-200">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowStoryModal(false)}
-                  className="p-2 backblur-md bg-black/20 rounded-none transition-colors"
+                  className="p-1.5 hover:bg-zinc-100 transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 text-black" />
                 </button>
                 <button
                   onClick={() => {
                     setShowStoryArchive(!showStoryArchive);
                     if (!showStoryArchive) fetchArchivedStories();
                   }}
-                  className={`p-2 backblur-md rounded-none transition-colors ${showStoryArchive ? "bg-white/30" : "bg-black/20"}`}
-                  title="Kho lưu trữ tin của bạn"
+                  className={`p-1.5 transition-colors ${
+                    showStoryArchive ? "bg-zinc-200" : "hover:bg-zinc-100"
+                  }`}
+                  title="Kho lưu trữ tin"
                 >
-                  <Archive className="w-5 h-5" />
+                  <Archive className="w-5 h-5 text-black" />
                 </button>
               </div>
               <div className="flex gap-2 items-center">
                 <select
                   value={storyFontStyle}
                   onChange={(e) => setStoryFontStyle(e.target.value)}
-                  className="bg-black/20 text-white text-xs px-3 py-1.5 rounded-none backblur-md outline-none cursor-pointer "
+                  className="bg-zinc-100 text-black text-xs px-2 py-1 outline-none border border-zinc-200"
                 >
-                  <option value="sans" className="text-black">
-                    Sans
-                  </option>
-                  <option value="mono" className="text-black">
-                    Mono
-                  </option>
+                  <option value="sans">Sans</option>
+                  <option value="mono">Mono</option>
                 </select>
                 <select
                   value={storyPrivacy}
                   onChange={(e) => setStoryPrivacy(e.target.value)}
-                  className="bg-black/20 text-white text-xs px-3 py-1.5 rounded-none backblur-md outline-none cursor-pointer "
+                  className="bg-zinc-100 text-black text-xs px-2 py-1 outline-none border border-zinc-200"
                 >
-                  <option value="public" className="text-black">
-                    Công khai
-                  </option>
-                  <option value="friends" className="text-black">
-                    Bạn bè
-                  </option>
-                  <option value="close_friends" className="text-black">
-                    Bạn thân
-                  </option>
+                  <option value="public">Công khai</option>
+                  <option value="friends">Bạn bè</option>
+                  <option value="close_friends">Bạn thân</option>
                 </select>
                 <input
                   type="color"
                   value={storyBgColor}
                   onChange={(e) => setStoryBgColor(e.target.value)}
-                  className="w-8 h-8 rounded-none cursor-pointer bg-transparent border-0 p-0"
+                  className="w-6 h-6 p-0 border-0 cursor-pointer"
                   title="Màu nền"
                 />
                 <input
                   type="color"
                   value={storyTextColor}
                   onChange={(e) => setStoryTextColor(e.target.value)}
-                  className="w-8 h-8 rounded-none cursor-pointer bg-transparent border-0 p-0"
+                  className="w-6 h-6 p-0 border-0 cursor-pointer"
                   title="Màu chữ"
                 />
               </div>
             </div>
 
             {showStoryArchive && (
-              <div className="absolute z-20 top-16 left-0 right-0 bottom-0 bg-card/95 backblur-md overflow-y-auto p-4">
-                <h3 className="text-sm font-bold text-foreground mb-4 border-b border-border pb-3">
+              <div className="absolute z-20 top-[60px] left-0 right-0 bottom-0 bg-white overflow-y-auto p-4 border-t border-zinc-200">
+                <h3 className="text-sm font-semibold text-black mb-4 border-b border-zinc-200 pb-2">
                   Kho lưu trữ tin của bạn
                 </h3>
                 {archivedStories.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Archive
-                      className="w-10 h-10 text-muted-foreground mb-3"
-                      strokeWidth={1}
-                    />
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Archive className="w-8 h-8 text-zinc-300 mb-2" />
+                    <p className="text-xs font-medium text-zinc-500">
                       Chưa có tin nào được lưu trữ.
                     </p>
                   </div>
@@ -1758,31 +1789,30 @@ export default function Feed() {
                     {archivedStories.map((s, i) => (
                       <div
                         key={i}
-                        className="aspect-[9/16] overflow-hidden relative border border-border cursor-pointer group"
+                        className="aspect-[9/16] overflow-hidden relative border border-zinc-200 cursor-pointer"
                         style={{
                           backgroundColor:
-                            s.bg_color || s.background_color || "#18181b",
+                            s.bg_color || s.background_color || "#f4f4f5",
                         }}
                       >
                         {s.media_url ? (
                           <img
                             src={s.media_url}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover grayscale mix-blend-multiply"
                             alt="Story"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center p-2">
-                            <p className="text-white text-[12px] font-semibold text-center line-clamp-4 break-words">
+                            <p className="text-black text-[10px] font-semibold text-center line-clamp-4 break-words">
                               {s.text_content}
                             </p>
                           </div>
                         )}
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
-                          <span className="text-white text-[13px] font-medium">
+                        <div className="absolute bottom-0 left-0 right-0 bg-white/90 border-t border-zinc-200 px-1 py-0.5">
+                          <span className="text-black text-[10px] font-semibold">
                             {new Date(s.created_at).toLocaleDateString("vi-VN")}
                           </span>
                         </div>
-                        <div className="absolute inset-0 bg-black/0 transition-colors" />
                       </div>
                     ))}
                   </div>
@@ -1791,7 +1821,7 @@ export default function Feed() {
             )}
 
             <div
-              className="flex-1 flex flex-col justify-center items-center p-6 transition-colors relative"
+              className="flex-1 flex flex-col justify-center items-center p-6 relative"
               style={{ backgroundColor: storyBgColor }}
             >
               {storyMediaUrl && (
@@ -1799,15 +1829,14 @@ export default function Feed() {
                   <img
                     src={storyMediaUrl}
                     alt="Story Media"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover grayscale mix-blend-multiply opacity-50"
                   />
-                  <div className="absolute inset-0 bg-black/30" />
                 </div>
               )}
 
               <textarea
                 className="w-full bg-transparent border-none outline-none text-center resize-none text-2xl font-bold placeholder:opacity-50 z-10"
-                placeholder=""
+                placeholder="Nhập nội dung tin..."
                 value={storyText}
                 onChange={(e) => setStoryText(e.target.value)}
                 autoFocus
@@ -1819,17 +1848,17 @@ export default function Feed() {
                       ? "Courier New, monospace"
                       : "inherit",
                 }}
-              ></textarea>
+              />
 
               {storyLinkUrl && (
-                <div className="mt-4 px-4 py-2 bg-white/20 backblur-md rounded-none border border-white/20 flex gap-2 items-center max-w-[80%] z-10 ">
-                  <Globe className="w-4 h-4 text-white" />
-                  <span className="text-white text-sm truncate font-medium">
+                <div className="mt-4 px-3 py-1.5 bg-white border border-zinc-200 flex gap-2 items-center z-10 max-w-[80%]">
+                  <Globe className="w-3 h-3 text-black" />
+                  <span className="text-xs font-semibold text-black truncate">
                     {storyLinkUrl}
                   </span>
                   <button
                     onClick={() => setStoryLinkUrl("")}
-                    className="text-white/70 ml-2"
+                    className="text-zinc-400 hover:text-black ml-1"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1837,37 +1866,37 @@ export default function Feed() {
               )}
 
               {storyAddPoll && (
-                <div className="mt-6 w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-3">
+                <div className="mt-4 w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-3">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-white text-xs font-bold tracking-wider">
-                      Tạo Khảo Sát
+                    <span className="text-black text-xs font-semibold">
+                      Tạo khảo sát
                     </span>
                     <button
                       onClick={() => setStoryAddPoll(false)}
-                      className="text-white/70 "
+                      className="text-zinc-400 hover:text-black"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
                   <input
                     type="text"
-                    placeholder=""
+                    placeholder="Câu hỏi"
                     value={storyPollQuestion}
                     onChange={(e) => setStoryPollQuestion(e.target.value)}
-                    className="w-full bg-white/10 text-white text-sm border-b border-white/30 outline-none px-2 py-1 placeholder:text-white/50 font-semibold"
+                    className="w-full bg-zinc-50 border border-zinc-200 text-black text-xs outline-none px-2 py-1.5 font-medium"
                   />
                   {storyPollOptions.map((opt, idx) => (
                     <input
                       key={idx}
                       type="text"
-                      placeholder=""
+                      placeholder={`Lựa chọn ${idx + 1}`}
                       value={opt}
                       onChange={(e) => {
                         const newOpts = [...storyPollOptions];
                         newOpts[idx] = e.target.value;
                         setStoryPollOptions(newOpts);
                       }}
-                      className="w-full bg-white/10 text-white text-sm border border-white/20 outline-none px-3 py-2 placeholder:text-white/50 focus:bg-white/20 font-medium text-center"
+                      className="w-full bg-white border border-zinc-200 text-black text-xs outline-none px-2 py-1.5 text-center font-medium"
                     />
                   ))}
                   {storyPollOptions.length < 4 && (
@@ -1875,7 +1904,7 @@ export default function Feed() {
                       onClick={() =>
                         setStoryPollOptions([...storyPollOptions, ""])
                       }
-                      className="text-white/70 text-xs font-bold py-2 flex items-center justify-center gap-2 tracking-widest"
+                      className="text-zinc-500 hover:text-black text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
                     >
                       <Plus className="w-3 h-3" />
                       Thêm lựa chọn
@@ -1885,45 +1914,49 @@ export default function Feed() {
               )}
 
               {storyAddQuiz && (
-                <div className="mt-6 w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-3">
+                <div className="mt-4 w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-3">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-white text-xs font-bold tracking-wider">
-                      Tạo Trắc Nghiệm
+                    <span className="text-black text-xs font-semibold">
+                      Tạo trắc nghiệm
                     </span>
                     <button
                       onClick={() => setStoryAddQuiz(false)}
-                      className="text-white/70 "
+                      className="text-zinc-400 hover:text-black"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
                   <input
                     type="text"
-                    placeholder=""
+                    placeholder="Câu hỏi"
                     value={storyQuizQuestion}
                     onChange={(e) => setStoryQuizQuestion(e.target.value)}
-                    className="w-full bg-white/10 text-white text-sm border-b border-white/30 outline-none px-2 py-1 placeholder:text-white/50 font-semibold"
+                    className="w-full bg-zinc-50 border border-zinc-200 text-black text-xs outline-none px-2 py-1.5 font-medium"
                   />
                   {storyQuizOptions.map((opt, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <button
                         onClick={() => setStoryQuizCorrectIdx(idx)}
-                        className={`w-6 h-6 flex items-center justify-center rounded-none border ${storyQuizCorrectIdx === idx ? "bg-black border-black text-white" : "bg-white/10 border-white/30"}`}
+                        className={`w-5 h-5 flex shrink-0 items-center justify-center border ${
+                          storyQuizCorrectIdx === idx
+                            ? "bg-black border-black text-white"
+                            : "bg-zinc-50 border-zinc-200"
+                        }`}
                       >
                         {storyQuizCorrectIdx === idx && (
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-3 h-3" />
                         )}
                       </button>
                       <input
                         type="text"
-                        placeholder=""
+                        placeholder={`Lựa chọn ${idx + 1}`}
                         value={opt}
                         onChange={(e) => {
                           const newOpts = [...storyQuizOptions];
                           newOpts[idx] = e.target.value;
                           setStoryQuizOptions(newOpts);
                         }}
-                        className="w-full bg-white/10 text-white text-sm border border-white/20 outline-none px-3 py-2 placeholder:text-white/50 focus:bg-white/20 font-medium text-center"
+                        className="w-full bg-white border border-zinc-200 text-black text-xs outline-none px-2 py-1.5 text-center font-medium"
                       />
                     </div>
                   ))}
@@ -1932,7 +1965,7 @@ export default function Feed() {
                       onClick={() =>
                         setStoryQuizOptions([...storyQuizOptions, ""])
                       }
-                      className="text-white/70 text-xs font-bold py-2 flex items-center justify-center gap-2 tracking-widest"
+                      className="text-zinc-500 hover:text-black text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
                     >
                       <Plus className="w-3 h-3" />
                       Thêm lựa chọn
@@ -1942,37 +1975,29 @@ export default function Feed() {
               )}
             </div>
 
-            <div className="bg-card w-full border-t border-border p-3 flex flex-col gap-2.5 z-10">
+            <div className="bg-white w-full border-t border-zinc-200 p-4 flex flex-col gap-3 z-10">
               {showLinkInput && (
-                <div className="flex items-center gap-2 animate-in slide-in-from-bottom-2">
-                  <div className="flex-1 relative flex items-center">
-                    <LinkIcon className="w-4 h-4 text-muted-foreground absolute left-3" />
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 relative flex items-center border border-zinc-200">
+                    <LinkIcon className="w-4 h-4 text-zinc-400 absolute left-2" />
                     <Input
-                      placeholder=""
-                      className="pl-9 h-9 w-full bg-muted/50 border-border text-sm rounded-none"
+                      placeholder="Nhập liên kết..."
+                      className="pl-8 h-8 w-full bg-zinc-50 border-none text-xs rounded-none"
                       value={storyLinkUrl}
                       onChange={(e) => setStoryLinkUrl(e.target.value)}
                       autoFocus
                     />
-                    {storyLinkUrl && (
-                      <button
-                        onClick={() => setStoryLinkUrl("")}
-                        className="absolute right-3 text-muted-foreground "
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
 
               {showMentionInput && (
-                <div className="flex items-center gap-2 animate-in slide-in-from-bottom-2">
-                  <div className="flex-1 relative flex items-center">
-                    <AtSign className="w-4 h-4 text-muted-foreground absolute left-3" />
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 relative flex items-center border border-zinc-200">
+                    <AtSign className="w-4 h-4 text-zinc-400 absolute left-2" />
                     <Input
-                      placeholder=""
-                      className="pl-9 h-9 w-full bg-muted/50 border-border text-sm rounded-none"
+                      placeholder="Nhắc đến người dùng..."
+                      className="pl-8 h-8 w-full bg-zinc-50 border-none text-xs rounded-none"
                       value={storyMentionsInput}
                       onChange={(e) => setStoryMentionsInput(e.target.value)}
                       autoFocus
@@ -1981,33 +2006,66 @@ export default function Feed() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
-                <label
-                  className="cursor-pointer h-10 w-10 flex items-center justify-center bg-muted/50 rounded-none transition-colors border border-border shrink-0"
-                  title="Ảnh / Video"
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label
+                    className="cursor-pointer h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    title="Ảnh / Video"
+                  >
+                    {isStoryUploading ? (
+                      <div className="w-3 h-3 border-2 border-black border-t-transparent animate-spin" />
+                    ) : (
+                      <ImageIcon className="w-4 h-4 text-black" />
+                    )}
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleStoryImageUpload}
+                    />
+                  </label>
+                  <button
+                    onClick={() => setShowLinkInput(!showLinkInput)}
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                  >
+                    <LinkIcon className="w-4 h-4 text-black" />
+                  </button>
+                  <button
+                    onClick={() => setShowMentionInput(!showMentionInput)}
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                  >
+                    <AtSign className="w-4 h-4 text-black" />
+                  </button>
+                  <button
+                    onClick={() => setStoryAddPoll(!storyAddPoll)}
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                  >
+                    <BarChart2 className="w-4 h-4 text-black" />
+                  </button>
+                  <button
+                    onClick={() => setStoryAddQuiz(!storyAddQuiz)}
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                  >
+                    <HelpCircle className="w-4 h-4 text-black" />
+                  </button>
+                </div>
+                <button
+                  onClick={createStory}
+                  className="px-4 h-8 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors"
                 >
-                  {isStoryUploading ? (
-                    <div className="w-4 h-4 rounded-none border-2 border-foreground border-t-transparent animate-spin" />
-                  ) : (
-                    <ImageIcon className="w-5 h-5 text-foreground" />
-                  )}
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleStoryImageUpload}
-                  />
-                </label>
+                  Đăng tin
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
       {viewingStoryMode &&
         activeStoryIndex >= 0 &&
         stories[activeStoryIndex] && (
-          <div className="fixed inset-0 z-[200] bg-black/95 backblur-sm flex justify-center items-center animate-in fade-in-0 text-white">
-            <div className="absolute top-4 right-4 z-[210] flex gap-4 hidden md:flex">
+          <div className="fixed inset-0 z-[200] bg-white flex justify-center items-center">
+            <div className="absolute top-4 right-4 z-[210] hidden md:flex gap-3">
               {(stories[activeStoryIndex].user_id ===
                 (currentUser?._id || "") ||
                 stories[activeStoryIndex].author_id ===
@@ -2016,13 +2074,13 @@ export default function Feed() {
                   onClick={() =>
                     deleteStory(
                       stories[activeStoryIndex].id ||
-                        stories[activeStoryIndex]._id,
+                        stories[activeStoryIndex]._id
                     )
                   }
-                  className="text-white p-2 bg-white/10 rounded-none transition-colors backblur-md"
+                  className="text-black p-2 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 transition-colors"
                   title="Xóa tin này"
                 >
-                  <Trash2 className="w-6 h-6" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               )}
               <button
@@ -2030,17 +2088,17 @@ export default function Feed() {
                   setViewingStoryMode(false);
                   setStoryProgress(0);
                 }}
-                className="text-white p-2 bg-white/10 rounded-none transition-colors backblur-md"
+                className="text-black p-2 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 transition-colors"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div
-              className="flex-1 flex flex-col justify-between items-center relative overflow-hidden w-full max-w-sm mx-auto h-[100dvh] md:h-[85vh] md:w-[400px] group md: md:border border-border/50"
+              className="flex-1 flex flex-col justify-between items-center relative overflow-hidden w-full max-w-sm mx-auto h-[100dvh] md:h-[85vh] md:w-[400px] border border-zinc-200"
               style={{
                 backgroundColor:
-                  stories[activeStoryIndex].background_color || "#18181b",
+                  stories[activeStoryIndex].background_color || "#f4f4f5",
               }}
             >
               <div className="absolute top-4 right-4 z-[210] flex gap-2 md:hidden">
@@ -2052,13 +2110,12 @@ export default function Feed() {
                     onClick={() =>
                       deleteStory(
                         stories[activeStoryIndex].id ||
-                          stories[activeStoryIndex]._id,
+                          stories[activeStoryIndex]._id
                       )
                     }
-                    className="text-white p-1 bg-black/20 rounded-none transition-colors backblur-md"
-                    title="Xóa tin này"
+                    className="text-black p-1.5 bg-white border border-zinc-200"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
                 <button
@@ -2066,27 +2123,27 @@ export default function Feed() {
                     setViewingStoryMode(false);
                     setStoryProgress(0);
                   }}
-                  className="text-white p-1 bg-black/20 rounded-none transition-colors backblur-md"
+                  className="text-black p-1.5 bg-white border border-zinc-200"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="absolute top-0 left-0 right-0 px-2 pt-2 flex gap-1 z-[205] w-full bg-gradient-to-b from-black/50 to-transparent pb-4">
+              <div className="absolute top-0 left-0 right-0 px-2 pt-2 flex gap-1 z-[205] w-full bg-white/50 border-b border-zinc-200 pb-2">
                 {stories.map((s, idx) => (
                   <div
                     key={s.id}
-                    className="flex-1 h-[3px] bg-white/30 rounded-none overflow-hidden backblur-md"
+                    className="flex-1 h-[2px] bg-zinc-300 overflow-hidden"
                   >
                     <div
-                      className="h-full bg-white ease-linear "
+                      className="h-full bg-black ease-linear"
                       style={{
                         width:
                           idx < activeStoryIndex
                             ? "100%"
                             : idx === activeStoryIndex
-                              ? `${storyProgress}%`
-                              : "0%",
+                            ? `${storyProgress}%`
+                            : "0%",
                       }}
                     />
                   </div>
@@ -2097,210 +2154,17 @@ export default function Feed() {
                 <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center">
                   <img
                     src={stories[activeStoryIndex].media_url}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover grayscale mix-blend-multiply opacity-50"
                   />
-                  <div className="absolute inset-0 bg-black/30" />
-                  <div className="w-full px-6 flex-1 flex flex-col gap-6 justify-center items-center overflow-hidden z-10">
-                    {stories[activeStoryIndex].text_content && (
-                      <h2
-                        className="text-2xl font-bold text-center max-w-full leading-snug break-words mb-4"
-                        style={{
-                          color:
-                            stories[activeStoryIndex].text_color || "#ffffff",
-                          fontFamily:
-                            stories[activeStoryIndex].font_style === "mono"
-                              ? "Courier New, monospace"
-                              : "inherit",
-                        }}
-                      >
-                        {stories[activeStoryIndex].text_content}
-                      </h2>
-                    )}
-                    {stories[activeStoryIndex].link_url && (
-                      <a
-                        href={stories[activeStoryIndex].link_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backblur-md rounded-none text-white font-semibold border border-white/20 max-w-[80%]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Globe className="w-4 h-4 shrink-0" />
-                        <span className="truncate text-sm">
-                          {stories[activeStoryIndex].link_url}
-                        </span>
-                      </a>
-                    )}
-                    {stories[activeStoryIndex].poll_data ? (
-                      <div
-                        className="w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-2 pointer-events-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <h4 className="text-white text-sm font-bold text-center mb-2">
-                          {stories[activeStoryIndex].poll_data.question}
-                        </h4>
-                        {stories[activeStoryIndex].poll_data.options.map(
-                          (opt: string, idx: number) => {
-                            const totalVotes = Object.keys(
-                              stories[activeStoryIndex].poll_data.voters || {},
-                            ).length;
-                            const myVote = (stories[activeStoryIndex].poll_data
-                              .voters || {})[currentUser?._id || ""];
-                            const hasVoted = myVote !== undefined;
-                            const optsVotes = Object.values(
-                              stories[activeStoryIndex].poll_data.voters || {},
-                            ).filter((v) => v === idx).length;
-                            const percent =
-                              totalVotes > 0
-                                ? Math.round((optsVotes / totalVotes) * 100)
-                                : 0;
-
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() =>
-                                  !hasVoted &&
-                                  votePoll(
-                                    stories[activeStoryIndex].id ||
-                                      stories[activeStoryIndex]._id,
-                                    idx,
-                                  )
-                                }
-                                className={`relative w-full text-white text-sm border overflow-hidden font-medium ${myVote === idx ? "border-primary bg-primary/20" : "border-white/20 bg-white/10"} ${hasVoted ? "cursor-default" : " cursor-pointer"} `}
-                              >
-                                <div
-                                  className="absolute top-0 bottom-0 left-0 bg-white/20 "
-                                  style={{
-                                    width: hasVoted ? `${percent}%` : "0%",
-                                  }}
-                                />
-                                <div className="relative px-3 py-2.5 flex justify-between items-center z-10">
-                                  <span className="truncate pr-2">{opt}</span>
-                                  {hasVoted && (
-                                    <span className="font-bold text-xs">
-                                      {percent}%
-                                    </span>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          },
-                        )}
-                        <div className="text-white/50 text-[12px] text-center mt-1 font-bold tracking-widest">
-                          {
-                            Object.keys(
-                              stories[activeStoryIndex].poll_data.voters || {},
-                            ).length
-                          }{" "}
-                          votes
-                        </div>
-                      </div>
-                    ) : stories[activeStoryIndex].quiz_data ? (
-                      <div
-                        className="w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-2 pointer-events-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="text-center font-bold text-xs tracking-widest text-primary/80">
-                          Trắc Nghiệm
-                        </div>
-                        <h4 className="text-white text-sm font-bold text-center mb-2">
-                          {stories[activeStoryIndex].quiz_data.question}
-                        </h4>
-                        {stories[activeStoryIndex].quiz_data.options.map(
-                          (opt: string, idx: number) => {
-                            const myAnswer = (stories[activeStoryIndex]
-                              .quiz_data.answers || {})[currentUser?._id || ""];
-                            const hasAnswered = myAnswer !== undefined;
-                            const isCorrect =
-                              idx ===
-                              stories[activeStoryIndex].quiz_data.correct_idx;
-
-                            let buttonClass =
-                              "border-white/20 bg-white/10 cursor-pointer";
-                            if (hasAnswered) {
-                              buttonClass = isCorrect
-                                ? "border-black bg-black text-white cursor-default"
-                                : myAnswer === idx
-                                  ? "border-zinc-300 bg-zinc-200 text-zinc-400 cursor-default"
-                                  : "border-white/20 bg-black/20 opacity-50 cursor-default";
-                            }
-
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() =>
-                                  !hasAnswered &&
-                                  answerQuiz(
-                                    stories[activeStoryIndex].id ||
-                                      stories[activeStoryIndex]._id,
-                                    idx,
-                                  )
-                                }
-                                className={`relative w-full text-white text-sm border overflow-hidden font-medium ${buttonClass}`}
-                              >
-                                <div className="relative px-3 py-2.5 flex justify-between items-center z-10">
-                                  <span className="truncate pr-2">{opt}</span>
-                                  {hasAnswered && isCorrect && (
-                                    <CheckCircle className="w-4 h-4 text-white" />
-                                  )}
-                                  {hasAnswered &&
-                                    !isCorrect &&
-                                    myAnswer === idx && (
-                                      <XCircle className="w-4 h-4 text-zinc-400" />
-                                    )}
-                                </div>
-                              </button>
-                            );
-                          },
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               )}
 
-              <div className="absolute top-6 left-4 flex gap-2.5 items-center z-[210] p-1.5 pr-4 max-w-[80%]">
-                <div className="w-10 h-10 rounded-none flex justify-center items-center overflow-hidden shrink-0 bg-secondary relative">
-                  {stories[activeStoryIndex].user?.avatar_url ? (
-                    <img
-                      src={stories[activeStoryIndex].user.avatar_url}
-                      className="w-full h-full object-cover rounded-none"
-                    />
-                  ) : (
-                    <span className="text-foreground font-bold text-sm bg-muted/50 w-full h-full flex justify-center items-center rounded-none backblur-md">
-                      {stories[
-                        activeStoryIndex
-                      ].user?.name?.[0]?.toUpperCase() || "A"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-col justify-center">
-                  <span className="text-sm font-semibold tracking-tight text-white ">
-                    {stories[activeStoryIndex].user?.name || "Người dùng"}
-                    {stories[activeStoryIndex].mentions &&
-                      stories[activeStoryIndex].mentions.length > 0 && (
-                        <span className="text-xs font-normal opacity-90 ml-1">
-                          cùng với {stories[activeStoryIndex].mentions.length}{" "}
-                          người khác
-                        </span>
-                      )}
-                  </span>
-                  <span className="text-[12px] font-medium opacity-80 text-white ">
-                    {new Date(
-                      stories[activeStoryIndex].created_at,
-                    ).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              {!stories[activeStoryIndex].media_url && (
-                <div className="w-full px-6 flex-1 flex flex-col gap-6 justify-center items-center overflow-hidden z-10">
+              <div className="w-full px-6 flex-1 flex flex-col gap-6 justify-center items-center overflow-hidden z-10 pointer-events-none">
+                {stories[activeStoryIndex].text_content && (
                   <h2
-                    className="text-2xl font-bold text-center max-w-full leading-snug break-words"
+                    className="text-xl font-semibold text-center max-w-full leading-snug break-words mb-4"
                     style={{
-                      color: stories[activeStoryIndex].text_color || "#ffffff",
+                      color: stories[activeStoryIndex].text_color || "#000000",
                       fontFamily:
                         stories[activeStoryIndex].font_style === "mono"
                           ? "Courier New, monospace"
@@ -2309,146 +2173,171 @@ export default function Feed() {
                   >
                     {stories[activeStoryIndex].text_content}
                   </h2>
-                  {stories[activeStoryIndex].link_url && (
-                    <a
-                      href={stories[activeStoryIndex].link_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-5 py-2.5 bg-white/20 backblur-md rounded-none text-white font-semibold border border-white/20 max-w-[80%]"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Globe className="w-4 h-4 shrink-0" />
-                      <span className="truncate text-sm">
-                        {stories[activeStoryIndex].link_url}
-                      </span>
-                    </a>
+                )}
+
+                {stories[activeStoryIndex].link_url && (
+                  <a
+                    href={stories[activeStoryIndex].link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 text-black font-medium max-w-[80%] pointer-events-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Globe className="w-4 h-4 shrink-0" />
+                    <span className="truncate text-xs">
+                      {stories[activeStoryIndex].link_url}
+                    </span>
+                  </a>
+                )}
+
+                {stories[activeStoryIndex].poll_data ? (
+                  <div
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h4 className="text-black text-xs font-semibold text-center mb-2">
+                      {stories[activeStoryIndex].poll_data.question}
+                    </h4>
+                    {stories[activeStoryIndex].poll_data.options.map(
+                      (opt: string, idx: number) => {
+                        const totalVotes = Object.keys(
+                          stories[activeStoryIndex].poll_data.voters || {}
+                        ).length;
+                        const myVote = (stories[activeStoryIndex].poll_data
+                          .voters || {})[currentUser?._id || ""];
+                        const hasVoted = myVote !== undefined;
+                        const optsVotes = Object.values(
+                          stories[activeStoryIndex].poll_data.voters || {}
+                        ).filter((v) => v === idx).length;
+                        const percent =
+                          totalVotes > 0
+                            ? Math.round((optsVotes / totalVotes) * 100)
+                            : 0;
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() =>
+                              !hasVoted &&
+                              votePoll(
+                                stories[activeStoryIndex].id ||
+                                  stories[activeStoryIndex]._id,
+                                idx
+                              )
+                            }
+                            className="relative w-full text-black text-[10px] border border-zinc-200 bg-zinc-50 overflow-hidden font-medium h-8 flex items-center"
+                          >
+                            <div
+                              className="absolute top-0 bottom-0 left-0 bg-zinc-200 transition-all duration-300"
+                              style={{ width: hasVoted ? `${percent}%` : "0%" }}
+                            />
+                            <div className="relative w-full px-2 flex justify-between items-center z-10">
+                              <span className="truncate pr-2">{opt}</span>
+                              {hasVoted && (
+                                <span className="font-semibold">{percent}%</span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      }
+                    )}
+                    <div className="text-zinc-500 text-[10px] text-center mt-1 font-medium">
+                      {
+                        Object.keys(
+                          stories[activeStoryIndex].poll_data.voters || {}
+                        ).length
+                      }{" "}
+                      phiếu
+                    </div>
+                  </div>
+                ) : stories[activeStoryIndex].quiz_data ? (
+                  <div
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="text-center font-bold text-[10px] uppercase text-zinc-500 mb-1">
+                      Trắc nghiệm
+                    </div>
+                    <h4 className="text-black text-xs font-semibold text-center mb-2">
+                      {stories[activeStoryIndex].quiz_data.question}
+                    </h4>
+                    {stories[activeStoryIndex].quiz_data.options.map(
+                      (opt: string, idx: number) => {
+                        const myAnswer = (stories[activeStoryIndex].quiz_data
+                          .answers || {})[currentUser?._id || ""];
+                        const hasAnswered = myAnswer !== undefined;
+                        const isCorrect =
+                          idx ===
+                          stories[activeStoryIndex].quiz_data.correct_idx;
+
+                        let buttonClass = "border-zinc-200 bg-zinc-50";
+                        if (hasAnswered) {
+                          buttonClass = isCorrect
+                            ? "border-black bg-black text-white"
+                            : myAnswer === idx
+                            ? "border-zinc-300 bg-zinc-200 text-zinc-500"
+                            : "border-zinc-200 bg-zinc-50 opacity-50";
+                        }
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() =>
+                              !hasAnswered &&
+                              answerQuiz(
+                                stories[activeStoryIndex].id ||
+                                  stories[activeStoryIndex]._id,
+                                idx
+                              )
+                            }
+                            className={`relative w-full text-[10px] border font-medium h-8 flex items-center ${buttonClass}`}
+                          >
+                            <div className="relative w-full px-2 flex justify-between items-center z-10">
+                              <span className="truncate pr-2">{opt}</span>
+                              {hasAnswered && isCorrect && (
+                                <CheckCircle className="w-3 h-3 text-white" />
+                              )}
+                              {hasAnswered && !isCorrect && myAnswer === idx && (
+                                <XCircle className="w-3 h-3 text-zinc-500" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="absolute top-10 left-4 flex gap-3 items-center z-[210]">
+                <div className="w-10 h-10 border border-zinc-200 flex justify-center items-center overflow-hidden shrink-0 bg-white">
+                  {stories[activeStoryIndex].user?.avatar_url ? (
+                    <img
+                      src={stories[activeStoryIndex].user.avatar_url}
+                      className="w-full h-full object-cover grayscale mix-blend-multiply"
+                    />
+                  ) : (
+                    <span className="text-black font-bold text-sm">
+                      {stories[
+                        activeStoryIndex
+                      ].user?.name?.[0]?.toUpperCase() || "A"}
+                    </span>
                   )}
-                  {stories[activeStoryIndex].poll_data ? (
-                    <div
-                      className="w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-2 pointer-events-auto"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <h4 className="text-white text-sm font-bold text-center mb-2">
-                        {stories[activeStoryIndex].poll_data.question}
-                      </h4>
-                      {stories[activeStoryIndex].poll_data.options.map(
-                        (opt: string, idx: number) => {
-                          const totalVotes = Object.keys(
-                            stories[activeStoryIndex].poll_data.voters || {},
-                          ).length;
-                          const myVote = (stories[activeStoryIndex].poll_data
-                            .voters || {})[currentUser?._id || ""];
-                          const hasVoted = myVote !== undefined;
-                          const optsVotes = Object.values(
-                            stories[activeStoryIndex].poll_data.voters || {},
-                          ).filter((v) => v === idx).length;
-                          const percent =
-                            totalVotes > 0
-                              ? Math.round((optsVotes / totalVotes) * 100)
-                              : 0;
-
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() =>
-                                !hasVoted &&
-                                votePoll(
-                                  stories[activeStoryIndex].id ||
-                                    stories[activeStoryIndex]._id,
-                                  idx,
-                                )
-                              }
-                              className={`relative w-full text-white text-sm border overflow-hidden font-medium ${myVote === idx ? "border-primary bg-primary/20" : "border-white/20 bg-white/10"} ${hasVoted ? "cursor-default" : " cursor-pointer"} `}
-                            >
-                              <div
-                                className="absolute top-0 bottom-0 left-0 bg-white/20 "
-                                style={{
-                                  width: hasVoted ? `${percent}%` : "0%",
-                                }}
-                              />
-                              <div className="relative px-3 py-2.5 flex justify-between items-center z-10">
-                                <span className="truncate pr-2">{opt}</span>
-                                {hasVoted && (
-                                  <span className="font-bold text-xs">
-                                    {percent}%
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        },
-                      )}
-                      <div className="text-white/50 text-[12px] text-center mt-1 font-bold tracking-widest">
-                        {
-                          Object.keys(
-                            stories[activeStoryIndex].poll_data.voters || {},
-                          ).length
-                        }{" "}
-                        votes
-                      </div>
-                    </div>
-                  ) : stories[activeStoryIndex].quiz_data ? (
-                    <div
-                      className="w-full max-w-[280px] bg-black/40 backblur-md border border-white/20 p-4 z-10 flex flex-col gap-2 pointer-events-auto"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="text-center font-bold text-xs tracking-widest text-primary/80">
-                        Trắc Nghiệm
-                      </div>
-                      <h4 className="text-white text-sm font-bold text-center mb-2">
-                        {stories[activeStoryIndex].quiz_data.question}
-                      </h4>
-                      {stories[activeStoryIndex].quiz_data.options.map(
-                        (opt: string, idx: number) => {
-                          const myAnswer = (stories[activeStoryIndex].quiz_data
-                            .answers || {})[currentUser?._id || ""];
-                          const hasAnswered = myAnswer !== undefined;
-                          const isCorrect =
-                            idx ===
-                            stories[activeStoryIndex].quiz_data.correct_idx;
-
-                          let buttonClass =
-                            "border-white/20 bg-white/10 cursor-pointer";
-                          if (hasAnswered) {
-                            buttonClass = isCorrect
-                              ? "border-black bg-black text-white cursor-default"
-                              : myAnswer === idx
-                                ? "border-zinc-300 bg-zinc-200 text-zinc-400 cursor-default"
-                                : "border-white/20 bg-black/20 opacity-50 cursor-default";
-                          }
-
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() =>
-                                !hasAnswered &&
-                                answerQuiz(
-                                  stories[activeStoryIndex].id ||
-                                    stories[activeStoryIndex]._id,
-                                  idx,
-                                )
-                              }
-                              className={`relative w-full text-white text-sm border overflow-hidden font-medium ${buttonClass}`}
-                            >
-                              <div className="relative px-3 py-2.5 flex justify-between items-center z-10">
-                                <span className="truncate pr-2">{opt}</span>
-                                {hasAnswered && isCorrect && (
-                                  <CheckCircle className="w-4 h-4 text-white" />
-                                )}
-                                {hasAnswered &&
-                                  !isCorrect &&
-                                  myAnswer === idx && (
-                                    <XCircle className="w-4 h-4 text-zinc-400" />
-                                  )}
-                              </div>
-                            </button>
-                          );
-                        },
-                      )}
-                    </div>
-                  ) : null}
                 </div>
-              )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-black bg-white/80 px-1 py-0.5">
+                    {stories[activeStoryIndex].user?.name || "Người dùng"}
+                  </span>
+                  <span className="text-[10px] font-medium text-zinc-600 bg-white/80 px-1 py-0.5 w-max mt-0.5">
+                    {new Date(
+                      stories[activeStoryIndex].created_at
+                    ).toLocaleTimeString("vi-VN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
 
               <div
                 className="absolute top-0 bottom-0 left-0 w-1/4 z-[200] cursor-pointer"
@@ -2468,10 +2357,10 @@ export default function Feed() {
               <div className="absolute bottom-4 left-0 right-0 w-full px-4 z-[205] flex justify-between items-center gap-3">
                 {stories[activeStoryIndex].user._id ===
                   (currentUser?._id || "") ||
-                stories[activeStoryIndex].user._id ===
+                stories[activeStoryIndex].author_id ===
                   (currentUser?._id || "") ? (
                   <div
-                    className="bg-black/40 px-4 py-2.5 text-sm text-white border border-white/20 w-full flex justify-between items-center cursor-pointer transition-colors"
+                    className="bg-white px-3 py-2 text-xs font-medium text-black border border-zinc-200 w-full flex justify-between items-center cursor-pointer hover:bg-zinc-50 transition-colors"
                     onClick={() => {
                       const storyId =
                         stories[activeStoryIndex].id ||
@@ -2480,20 +2369,20 @@ export default function Feed() {
                       if (!showViewerList) fetchStoryViewers(storyId);
                     }}
                   >
-                    <span className="flex items-center gap-2 font-medium">
-                      <Eye className="w-4 h-4" />
+                    <span className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-zinc-500" />
                       {stories[activeStoryIndex]?.viewer_count || 0} lượt xem
                     </span>
                     <div className="flex -space-x-1.5">
                       {storyViewers.slice(0, 3).map((v: any, i: number) => (
                         <div
                           key={i}
-                          className="w-6 h-6 rounded-none bg-white/20 border border-white/40 overflow-hidden flex items-center justify-center text-[12px] font-bold"
+                          className="w-6 h-6 bg-zinc-100 border border-zinc-200 overflow-hidden flex items-center justify-center text-[10px] font-bold text-black"
                         >
                           {v.avatar_url ? (
                             <img
                               src={v.avatar_url}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover grayscale mix-blend-multiply"
                             />
                           ) : (
                             v.full_name?.[0]?.toUpperCase() || "?"
@@ -2507,15 +2396,15 @@ export default function Feed() {
                     <div className="flex-1 relative flex items-center">
                       <input
                         type="text"
-                        placeholder=""
-                        className="w-full bg-black/30 border border-white/30 px-4 py-2.5 pr-12 text-sm text-white placeholder-white/70 outline-none focus:bg-black/50 focus:border-white/50 "
+                        placeholder="Trả lời tin..."
+                        className="w-full bg-white border border-zinc-200 px-3 py-2 text-xs text-black outline-none focus:border-black transition-colors"
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter")
                             submitReplyStory(
                               stories[activeStoryIndex].id ||
-                                stories[activeStoryIndex]._id,
+                                stories[activeStoryIndex]._id
                             );
                         }}
                       />
@@ -2524,11 +2413,11 @@ export default function Feed() {
                           onClick={() =>
                             submitReplyStory(
                               stories[activeStoryIndex].id ||
-                                stories[activeStoryIndex]._id,
+                                stories[activeStoryIndex]._id
                             )
                           }
                           disabled={isReplying}
-                          className="absolute right-2 p-1.5 text-white transition-colors"
+                          className="absolute right-2 p-1 text-black"
                         >
                           <Send className="w-4 h-4" />
                         </button>
@@ -2538,12 +2427,12 @@ export default function Feed() {
                       onClick={() =>
                         reactToStory(
                           stories[activeStoryIndex].id ||
-                            stories[activeStoryIndex]._id,
+                            stories[activeStoryIndex]._id
                         )
                       }
-                      className="text-white active:scale-95 transition-transform bg-white/10 p-2.5 "
+                      className="text-black bg-white border border-zinc-200 p-2 hover:bg-zinc-50 transition-colors shrink-0"
                     >
-                      <Heart className="w-5 h-5" />
+                      <Heart className="w-4 h-4" />
                     </button>
                   </>
                 )}
@@ -2552,57 +2441,59 @@ export default function Feed() {
               {showViewerList &&
                 (stories[activeStoryIndex].user._id ===
                   (currentUser?._id || "") ||
-                  stories[activeStoryIndex].user._id ===
+                  stories[activeStoryIndex].author_id ===
                     (currentUser?._id || "")) && (
-                  <div className="absolute bottom-20 left-4 right-4 z-[210] bg-black/80 border border-white/20 p-4 animate-in slide-in-from-bottom-4 max-h-64 overflow-y-auto">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-white text-xs font-bold tracking-widest">
+                  <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-sm">
+                    <div className="flex items-center justify-between mb-3 border-b border-zinc-100 pb-2">
+                      <span className="text-black text-xs font-semibold">
                         Người đã xem
                       </span>
                       <button
                         onClick={() => setShowViewerList(false)}
-                        className="text-white/50 "
+                        className="text-zinc-400 hover:text-black"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                     {isFetchingViewers ? (
-                      <div className="text-white/50 text-xs text-center py-4">
+                      <div className="text-zinc-500 text-xs text-center py-4">
                         Đang tải
                       </div>
                     ) : storyViewers.length === 0 ? (
-                      <div className="text-white/50 text-xs text-center py-4">
+                      <div className="text-zinc-500 text-xs text-center py-4">
                         Chưa có ai xem tin này.
                       </div>
                     ) : (
-                      storyViewers.map((v: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-3 py-2 border-b border-white/10 last:border-0"
-                        >
-                          <div className="w-8 h-8 bg-white/20 border border-white/30 flex items-center justify-center text-sm font-bold text-white overflow-hidden">
-                            {v.avatar_url ? (
-                              <img
-                                src={v.avatar_url}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              v.full_name?.[0]?.toUpperCase() || "?"
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-white text-xs font-bold">
-                              {v.full_name || "Ẩn danh"}
-                            </p>
-                            <p className="text-white/50 text-[12px]">
-                              {new Date(v.viewed_at).toLocaleTimeString(
-                                "vi-VN",
-                                { hour: "2-digit", minute: "2-digit" },
+                      <div className="space-y-3 mt-2">
+                        {storyViewers.map((v: any, i: number) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-3"
+                          >
+                            <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center text-[10px] font-bold text-black overflow-hidden shrink-0">
+                              {v.avatar_url ? (
+                                <img
+                                  src={v.avatar_url}
+                                  className="w-full h-full object-cover grayscale mix-blend-multiply"
+                                />
+                              ) : (
+                                v.full_name?.[0]?.toUpperCase() || "?"
                               )}
-                            </p>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-black text-xs font-semibold">
+                                {v.full_name || "Ẩn danh"}
+                              </span>
+                              <span className="text-zinc-500 text-[10px] font-medium">
+                                {new Date(v.viewed_at).toLocaleTimeString(
+                                  "vi-VN",
+                                  { hour: "2-digit", minute: "2-digit" }
+                                )}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -2613,52 +2504,57 @@ export default function Feed() {
       <Modal
         isOpen={!!translationModal}
         onClose={() => setTranslationModal(null)}
-        className="max-w-lg"
+        className="max-w-md rounded-none border border-zinc-200 bg-white"
       >
-        <ModalHeader>
-          <ModalTitle>Bản dịch tự động</ModalTitle>
+        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+          <ModalTitle className="text-sm font-semibold text-black">
+            Bản dịch tự động
+          </ModalTitle>
         </ModalHeader>
-        <ModalContent>
-          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap font-medium">
+        <ModalContent className="p-6">
+          <p className="text-sm text-black leading-relaxed font-medium whitespace-pre-wrap">
             {translationModal?.text}
           </p>
         </ModalContent>
-        <ModalFooter className="flex justify-end">
+        <ModalFooter className="border-t border-zinc-100 p-4 bg-zinc-50 flex justify-end">
           <button
             onClick={() => setTranslationModal(null)}
-            className="h-12 px-8 text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-black transition-colors"
+            className="px-6 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors"
           >
             Đóng
           </button>
         </ModalFooter>
       </Modal>
+
       <Modal
         isOpen={!!deleteStoryConfirm}
         onClose={() => !isProcessing && setDeleteStoryConfirm(null)}
-        className="max-w-md"
+        className="max-w-sm rounded-none border border-zinc-200 bg-white"
       >
-        <ModalHeader>
-          <ModalTitle>Xác nhận xóa tin</ModalTitle>
+        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+          <ModalTitle className="text-sm font-semibold text-black">
+            Xác nhận xóa tin
+          </ModalTitle>
         </ModalHeader>
-        <ModalContent>
-          <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+        <ModalContent className="p-6">
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Bạn có chắc chắn muốn xóa tin này không? Hành động này không thể hoàn tác.
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-4">
+        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
           <button
             onClick={() => setDeleteStoryConfirm(null)}
             disabled={isProcessing}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={deleteStory}
             disabled={isProcessing}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
           >
-            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Xác nhận xóa"}
+            {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận xóa"}
           </button>
         </ModalFooter>
       </Modal>
@@ -2666,30 +2562,32 @@ export default function Feed() {
       <Modal
         isOpen={!!deletePostConfirm}
         onClose={() => !isProcessing && setDeletePostConfirm(null)}
-        className="max-w-md"
+        className="max-w-sm rounded-none border border-zinc-200 bg-white"
       >
-        <ModalHeader>
-          <ModalTitle>Xác nhận xóa bài viết</ModalTitle>
+        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+          <ModalTitle className="text-sm font-semibold text-black">
+            Xác nhận xóa bài viết
+          </ModalTitle>
         </ModalHeader>
-        <ModalContent>
-          <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+        <ModalContent className="p-6">
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Bạn có chắc chắn muốn xóa bài viết này không? Nội dung sẽ bị gỡ bỏ vĩnh viễn khỏi bảng tin.
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-4">
+        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
           <button
             onClick={() => setDeletePostConfirm(null)}
             disabled={isProcessing}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={deletePost}
             disabled={isProcessing}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
           >
-            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Xác nhận xóa"}
+            {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận xóa"}
           </button>
         </ModalFooter>
       </Modal>
@@ -2697,40 +2595,48 @@ export default function Feed() {
       <Modal
         isOpen={!!reportModal}
         onClose={() => !isProcessing && setReportModal(null)}
-        className="max-w-xl"
+        className="max-w-md rounded-none border border-zinc-200 bg-white"
       >
-        <ModalHeader>
-          <ModalTitle>Báo cáo bài viết</ModalTitle>
+        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+          <ModalTitle className="text-sm font-semibold text-black">
+            Báo cáo bài viết
+          </ModalTitle>
         </ModalHeader>
-        <ModalContent className="space-y-6">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+        <ModalContent className="p-6 space-y-4">
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Vui lòng cung cấp lý do báo cáo để đội ngũ quản trị viên DocLib xem xét và xử lý kịp thời.
           </p>
-          <div className="space-y-3">
-            <label className="text-[9px] font-bold text-black uppercase tracking-widest">Lý do báo cáo</label>
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Lý do báo cáo
+            </label>
             <textarea
               value={reportModal?.reason || ""}
-              onChange={(e) => setReportModal(prev => prev ? { ...prev, reason: e.target.value } : null)}
-              placeholder=""
+              onChange={(e) =>
+                setReportModal((prev) =>
+                  prev ? { ...prev, reason: e.target.value } : null
+                )
+              }
+              placeholder="Nhập chi tiết..."
               autoFocus
-              className="w-full min-h-[120px] p-6 bg-white border border-zinc-100 text-sm font-medium focus:border-black outline-none rounded-sm resize-none"
+              className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none transition-colors"
             />
           </div>
         </ModalContent>
-        <ModalFooter className="flex gap-4">
+        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
           <button
             onClick={() => setReportModal(null)}
             disabled={isProcessing}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={reportPost}
             disabled={isProcessing || !reportModal?.reason.trim()}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
           >
-            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Gửi báo cáo"}
+            {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi báo cáo"}
           </button>
         </ModalFooter>
       </Modal>

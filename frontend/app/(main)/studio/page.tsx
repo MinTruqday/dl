@@ -7,6 +7,7 @@ import { requestPayoutDetailedAPI } from "@/services/monetization.service";
 import { API_URL } from "@/services/auth.service";
 import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI } from "@/services/wallet.service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/ToastContext";
 import {
   FileText,
   Settings,
@@ -29,7 +30,6 @@ import {
   Brain,
 } from "lucide-react";
 import Editor from "@/components/editor/Editor";
-import { Notification } from "@/components/Notification";
 
 type StudioDocument = {
   _id: string;
@@ -49,6 +49,7 @@ type EditorMode = "edit" | "preview" | "raw";
 function StudioContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const rawDocId = searchParams.get("document");
   const docIdFromUrl = rawDocId && rawDocId !== "undefined" ? rawDocId : "";
 
@@ -61,7 +62,6 @@ function StudioContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [isIngesting, setIsIngesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState("Sẵn sàng");
-  const [notification, setNotification] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
   const [stats, setStats] = useState<any>(null);
   const [revenue, setRevenue] = useState<any>(null);
@@ -109,7 +109,7 @@ function StudioContent() {
         }
       }
     } catch {
-      setNotification({ type: "error", text: "Lỗi tải danh sách tài liệu." });
+      showToast("Lỗi tải danh sách tài liệu.", "error");
     } finally {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -192,11 +192,11 @@ function StudioContent() {
   const handleRestoreDocument = async (docId: string) => {
     try {
       await restoreDocumentAPI(docId);
-      setNotification({ type: "success", text: "Đã khôi phục tài liệu thành công." });
+      showToast("Đã khôi phục tài liệu thành công.", "success");
       fetchTrash();
       fetchDocuments();
     } catch (e: any) {
-      setNotification({ type: "error", text: e.message || "Lỗi khôi phục tài liệu." });
+      showToast(e.message || "Lỗi khôi phục tài liệu.", "error");
     }
   };
 
@@ -209,16 +209,16 @@ function StudioContent() {
     try {
       if (confirmAction.type === "restore_version") {
         await restoreVersionAPI(confirmAction.id);
-        setNotification({ type: "success", text: "Đã khôi phục phiên bản thành công." });
+        showToast("Đã khôi phục phiên bản thành công.", "success");
         loadDraft();
       } else if (confirmAction.type === "delete_doc") {
         await softDeleteDocumentAPI(confirmAction.id);
-        setNotification({ type: "success", text: "Đã chuyển tài liệu vào thùng rác." });
+        showToast("Đã chuyển tài liệu vào thùng rác.", "success");
         if (selectedDocumentId === confirmAction.id) setSelectedDocumentId("");
         fetchDocuments();
       }
     } catch (e: any) {
-      setNotification({ type: "error", text: e.message || "Thao tác thất bại." });
+      showToast(e.message || "Thao tác thất bại.", "error");
     } finally {
       setConfirmAction(null);
     }
@@ -230,9 +230,9 @@ function StudioContent() {
     setStatusMsg("Đang đồng bộ AI");
     try {
       await ingestDocumentAPI(selectedDocumentId);
-      setNotification({ type: "success", text: "AI đã được cập nhật tri thức mới." });
+      showToast("AI đã được cập nhật tri thức mới.", "success");
     } catch (e: any) {
-      setNotification({ type: "error", text: e.message || "Đồng bộ AI thất bại." });
+      showToast(e.message || "Đồng bộ AI thất bại.", "error");
     } finally {
       setIsIngesting(false);
       setStatusMsg("Sẵn sàng");
@@ -245,10 +245,10 @@ function StudioContent() {
     setStatusMsg("Đang tạo ảnh bìa AI");
     try {
       await generateAICoverAPI(selectedDocumentId);
-      setNotification({ type: "success", text: "Ảnh bìa AI đã được khởi tạo và cập nhật." });
+      showToast("Ảnh bìa AI đã được khởi tạo và cập nhật.", "success");
       fetchDocuments();
     } catch (e: any) {
-      setNotification({ type: "error", text: e.message || "Tạo ảnh bìa thất bại." });
+      showToast(e.message || "Tạo ảnh bìa thất bại.", "error");
     } finally {
       setGeneratingCover(false);
       setStatusMsg("Sẵn sàng");
@@ -261,9 +261,9 @@ function StudioContent() {
     setStatusMsg("Đang lưu");
     try {
       await saveDocumentDraftAPI(selectedDocumentId, content, "html");
-      setNotification({ type: "success", text: "Đã lưu bản nháp thành công." });
+      showToast("Đã lưu bản nháp thành công.", "success");
     } catch {
-      setNotification({ type: "error", text: "Không thể lưu bản nháp." });
+      showToast("Không thể lưu bản nháp.", "error");
     } finally {
       setIsSaving(false);
       setStatusMsg("Sẵn sàng");
@@ -276,10 +276,10 @@ function StudioContent() {
     try {
       await compileDocumentAPI(selectedDocumentId);
       await publishDocumentAPI(selectedDocumentId);
-      setNotification({ type: "success", text: "Tài liệu đã được công bố thành công." });
+      showToast("Tài liệu đã được công bố thành công.", "success");
       fetchDocuments();
     } catch {
-      setNotification({ type: "error", text: "Xuất bản thất bại." });
+      showToast("Xuất bản thất bại.", "error");
     } finally {
       setStatusMsg("Sẵn sàng");
     }
@@ -309,7 +309,7 @@ function StudioContent() {
 
     try {
       await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
-      setNotification({ type: "success", text: "Đã thêm chương mới." });
+      showToast("Đã thêm chương mới.", "success");
       setNewChapterTitle("");
       setShowChapterModal(false);
       fetchDocuments();
@@ -320,22 +320,22 @@ function StudioContent() {
 
   const handlePayout = async () => {
     if (payoutAmount <= 0) {
-      setNotification({ type: "error", text: "Số tiền không hợp lệ." });
+      showToast("Số tiền không hợp lệ.", "error");
       return;
     }
     if (!bankInfo.bank_name || !bankInfo.account_number || !bankInfo.account_name) {
-      setNotification({ type: "error", text: "Vui lòng nhập đủ thông tin ngân hàng." });
+      showToast("Vui lòng nhập đủ thông tin ngân hàng.", "error");
       return;
     }
 
     setRequestingPayout(true);
     try {
       await requestPayoutDetailedAPI(payoutAmount, bankInfo);
-      setNotification({ type: "success", text: "Yêu cầu rút tiền đã được gửi." });
+      showToast("Yêu cầu rút tiền đã được gửi.", "success");
       setShowPayoutModal(false);
       fetchStatsData();
     } catch (e: any) {
-      setNotification({ type: "error", text: e.message || "Yêu cầu rút tiền thất bại." });
+      showToast(e.message || "Yêu cầu rút tiền thất bại.", "error");
     } finally {
       setRequestingPayout(false);
     }
@@ -351,23 +351,19 @@ function StudioContent() {
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-white selection:bg-black selection:text-white relative font-sans">
-      {notification && (
-        <div className="fixed top-24 right-8 z-[200] w-80 animate-in slide-in-from-right-4 duration-300">
-          <Notification type={notification.type} message={notification.text} />
-        </div>
-      )}
+
 
       {confirmAction && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmAction(null)} />
-          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 rounded-sm">
+          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 rounded-none">
             <h3 className="text-sm font-bold tracking-tight uppercase">Xác nhận thao tác</h3>
             <p className="text-xs text-zinc-500 leading-relaxed font-medium italic">"{confirmAction.text}"</p>
             <div className="flex gap-4">
-              <button onClick={() => setConfirmAction(null)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-sm">
+              <button onClick={() => setConfirmAction(null)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-none">
                 Bỏ qua
               </button>
-              <button onClick={executeConfirm} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm">
+              <button onClick={executeConfirm} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-none">
                 Xác nhận
               </button>
             </div>
@@ -378,20 +374,20 @@ function StudioContent() {
       {showChapterModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowChapterModal(false)} />
-          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 rounded-sm">
+          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-10 space-y-8 rounded-none">
             <h3 className="text-sm font-bold tracking-tight uppercase">Thêm chương mới</h3>
             <input
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
               placeholder="Nhập tiêu đề chương"
-              className="w-full h-14 border border-zinc-100 px-5 font-bold text-xs focus:outline-none focus:border-black transition-all rounded-sm"
+              className="w-full h-14 border border-zinc-100 px-5 font-bold text-xs focus:outline-none focus:border-black transition-all rounded-none"
               autoFocus
             />
             <div className="flex gap-4">
-              <button onClick={() => setShowChapterModal(false)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-sm">
+              <button onClick={() => setShowChapterModal(false)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-none">
                 Hủy
               </button>
-              <button onClick={addChapter} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm">
+              <button onClick={addChapter} className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-none">
                 Lưu chương
               </button>
             </div>
@@ -402,7 +398,7 @@ function StudioContent() {
       {showPayoutModal && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowPayoutModal(false)} />
-          <div className="bg-white w-full max-w-md relative border border-zinc-200 p-10 space-y-8 rounded-sm">
+          <div className="bg-white w-full max-w-md relative border border-zinc-200 p-10 space-y-8 rounded-none">
             <h3 className="text-sm font-bold tracking-tight uppercase">Yêu cầu rút tiền</h3>
             <div className="space-y-4">
                <div className="space-y-2">
@@ -411,7 +407,7 @@ function StudioContent() {
                    type="number"
                    value={payoutAmount}
                    onChange={(e) => setPayoutAmount(parseInt(e.target.value) || 0)}
-                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-sm outline-none focus:border-black transition-all"
+                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-none outline-none focus:border-black transition-all"
                  />
                </div>
                <div className="space-y-2">
@@ -419,7 +415,7 @@ function StudioContent() {
                  <input
                    value={bankInfo.bank_name}
                    onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
-                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-sm outline-none focus:border-black transition-all"
+                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-none outline-none focus:border-black transition-all"
                  />
                </div>
                <div className="space-y-2">
@@ -427,7 +423,7 @@ function StudioContent() {
                  <input
                    value={bankInfo.account_number}
                    onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
-                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-sm outline-none focus:border-black transition-all"
+                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-none outline-none focus:border-black transition-all"
                  />
                </div>
                <div className="space-y-2">
@@ -435,18 +431,18 @@ function StudioContent() {
                  <input
                    value={bankInfo.account_name}
                    onChange={(e) => setBankInfo({ ...bankInfo, account_name: e.target.value })}
-                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-sm outline-none focus:border-black transition-all"
+                   className="w-full h-12 border border-zinc-100 px-4 text-sm font-bold rounded-none outline-none focus:border-black transition-all"
                  />
                </div>
             </div>
             <div className="flex gap-4 pt-4">
-              <button onClick={() => setShowPayoutModal(false)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-sm">
+              <button onClick={() => setShowPayoutModal(false)} className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest border border-zinc-100 hover:bg-zinc-50 transition-all rounded-none">
                 Hủy
               </button>
               <button 
                 onClick={handlePayout} 
                 disabled={requestingPayout}
-                className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm flex items-center justify-center gap-2"
+                className="flex-1 h-12 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-none flex items-center justify-center gap-2"
               >
                 {requestingPayout ? <Loader2 className="w-4 h-4 animate-spin" /> : "Gửi yêu cầu"}
               </button>
@@ -461,7 +457,7 @@ function StudioContent() {
       >
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4">
-             <div className="w-8 h-8 bg-black flex items-center justify-center rounded-sm">
+             <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
                 <FileText className="w-4 h-4 text-white" />
              </div>
              <span className="text-sm font-bold tracking-tighter truncate max-w-[200px]">
@@ -478,7 +474,7 @@ function StudioContent() {
             <button
               onClick={handleSave}
               disabled={!selectedDocumentId || isSaving}
-              className="h-10 px-6 border border-zinc-200 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all disabled:opacity-50 flex items-center gap-2 rounded-sm"
+              className="h-10 px-6 border border-zinc-200 text-[10px] font-bold uppercase tracking-widest hover:border-black transition-all disabled:opacity-50 flex items-center gap-2 rounded-none"
             >
               {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Lưu bản nháp
@@ -486,7 +482,7 @@ function StudioContent() {
             <button
               onClick={handlePublish}
               disabled={!selectedDocumentId}
-              className="h-10 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-50 active:scale-95 rounded-sm"
+              className="h-10 px-8 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all disabled:opacity-50 active:scale-95 rounded-none"
             >
               Công bố tác phẩm
             </button>
@@ -510,13 +506,13 @@ function StudioContent() {
             <button
               key={item.mode}
               onClick={() => setViewMode(item.mode as ViewMode)}
-              className={`p-3 transition-all relative group rounded-sm ${
+              className={`p-3 transition-all relative group rounded-none ${
                 viewMode === item.mode ? "bg-black text-white" : "text-zinc-300 hover:text-black"
               }`}
               title={item.label}
             >
               <item.icon className="w-5 h-5" />
-              <div className="absolute left-full ml-4 px-3 py-1.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 rounded-sm">
+              <div className="absolute left-full ml-4 px-3 py-1.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 rounded-none">
                 {item.label}
               </div>
             </button>
@@ -538,7 +534,7 @@ function StudioContent() {
                   </div>
                   <div className="space-y-2">
                     {!selectedDocument?.chapters || selectedDocument.chapters.length === 0 ? (
-                      <div className="py-10 text-center border border-dashed border-zinc-100 flex flex-col items-center gap-3 rounded-sm">
+                      <div className="py-10 text-center border border-dashed border-zinc-100 flex flex-col items-center gap-3 rounded-none">
                          <Plus className="w-5 h-5 text-zinc-100" />
                          <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Chưa có chương</p>
                       </div>
@@ -546,7 +542,7 @@ function StudioContent() {
                       selectedDocument.chapters.map((ch: any, idx: number) => (
                         <div
                           key={ch.id || idx}
-                          className="group flex items-center gap-4 p-4 border border-zinc-100 bg-white hover:border-black cursor-pointer transition-all duration-300 rounded-sm"
+                          className="group flex items-center gap-4 p-4 border border-zinc-100 bg-white hover:border-black cursor-pointer transition-all duration-300 rounded-none"
                         >
                           <span className="text-[10px] font-bold text-zinc-200 group-hover:text-black w-4 transition-colors">
                             {idx + 1}
@@ -555,8 +551,8 @@ function StudioContent() {
                             {ch.title}
                           </span>
                           <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-1 hover:bg-zinc-50 rounded-sm"><ArrowUp className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-1 hover:bg-zinc-50 rounded-sm"><ArrowDown className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-1 hover:bg-zinc-50 rounded-none"><ArrowUp className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-1 hover:bg-zinc-50 rounded-none"><ArrowDown className="w-2.5 h-2.5 text-zinc-300 hover:text-black" /></button>
                           </div>
                         </div>
                       ))
@@ -571,11 +567,11 @@ function StudioContent() {
                         <button
                           key={doc._id}
                           onClick={() => setSelectedDocumentId(doc._id)}
-                          className="w-full text-left p-5 border border-zinc-50 hover:border-black transition-all duration-300 bg-white group rounded-sm"
+                          className="w-full text-left p-5 border border-zinc-50 hover:border-black transition-all duration-300 bg-white group rounded-none"
                         >
                            <p className="text-[11px] font-bold text-zinc-400 group-hover:text-black truncate mb-2 transition-colors">{doc.title}</p>
                            <div className="flex items-center gap-3">
-                             <div className={`w-1 h-1 rounded-sm ${doc.status === 'published' ? 'bg-black' : 'bg-zinc-200'}`} />
+                             <div className={`w-1 h-1 rounded-none ${doc.status === 'published' ? 'bg-black' : 'bg-zinc-200'}`} />
                              <span className="text-[9px] font-bold text-zinc-200 uppercase tracking-widest">{doc.status === 'published' ? 'XUẤT BẢN' : 'BẢN NHÁP'}</span>
                            </div>
                         </button>
@@ -592,7 +588,7 @@ function StudioContent() {
                     <button
                       key={doc._id}
                       onClick={() => setSelectedDocumentId(doc._id)}
-                      className={`w-full text-left p-5 border transition-all duration-300 flex flex-col gap-2 rounded-sm ${
+                      className={`w-full text-left p-5 border transition-all duration-300 flex flex-col gap-2 rounded-none ${
                         selectedDocumentId === doc._id ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-50 hover:border-black hover:text-black"
                       }`}
                     >
@@ -628,11 +624,11 @@ function StudioContent() {
                       {editorMode === "edit" ? (
                         <Editor initialContent={content} onSave={(val) => setContent(val)} />
                       ) : editorMode === "preview" ? (
-                        <div className="bg-white p-20 border border-zinc-100 rounded-sm">
+                        <div className="bg-white p-20 border border-zinc-100 rounded-none">
                           <div className="prose prose-zinc max-w-none font-sans text-lg leading-relaxed text-zinc-800" dangerouslySetInnerHTML={{ __html: content }} />
                         </div>
                       ) : (
-                        <pre className="p-16 bg-zinc-900 text-zinc-500 text-[11px] font-mono leading-relaxed overflow-auto min-h-[100vh] rounded-sm">
+                        <pre className="p-16 bg-zinc-900 text-zinc-500 text-[11px] font-mono leading-relaxed overflow-auto min-h-[100vh] rounded-none">
                           {content || "Nội dung hiện đang trống"}
                         </pre>
                       )}
@@ -650,7 +646,7 @@ function StudioContent() {
                       { label: "Mạng lưới độc giả", val: stats?.followers_count || 0, icon: Database, unit: "Độc giả" },
                       { label: "Doanh thu khả dụng", val: revenue?.available_balance || 0, icon: Wallet, unit: "dl" },
                     ].map((s, i) => (
-                      <div key={i} className="bg-white p-12 border border-zinc-100 group hover:border-black transition-all duration-300 rounded-sm">
+                      <div key={i} className="bg-white p-12 border border-zinc-100 group hover:border-black transition-all duration-300 rounded-none">
                         <s.icon className="w-6 h-6 text-zinc-100 group-hover:text-black transition-colors mb-10" />
                         <h4 className="text-4xl font-bold tracking-tighter mb-2">{s.val.toLocaleString()} <span className="text-sm text-zinc-200">{s.unit}</span></h4>
                         <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">{s.label}</p>
@@ -658,12 +654,12 @@ function StudioContent() {
                     ))}
                   </div>
 
-                  <div className="bg-white border border-zinc-100 rounded-sm">
+                  <div className="bg-white border border-zinc-100 rounded-none">
                     <div className="p-10 border-b border-zinc-100 flex justify-between items-center">
                       <h3 className="text-[11px] font-bold text-black uppercase tracking-widest">Chi tiết tác phẩm</h3>
                       <button 
                         onClick={() => setShowPayoutModal(true)}
-                        className="h-10 px-6 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-sm flex items-center gap-2"
+                        className="h-10 px-6 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all rounded-none flex items-center gap-2"
                       >
                         <Banknote className="w-3.5 h-3.5" /> Rút tiền doanh thu
                       </button>
@@ -687,7 +683,7 @@ function StudioContent() {
                                 <div className="flex items-center gap-2">
                                   <span className="font-bold">{doc.rating.toFixed(1)}</span>
                                   <div className="flex gap-0.5">
-                                    {[1, 2, 3, 4, 5].map(star => <div key={star} className={`w-1.5 h-1.5 rounded-sm ${star <= doc.rating ? 'bg-black' : 'bg-zinc-100'}`} />)}
+                                    {[1, 2, 3, 4, 5].map(star => <div key={star} className={`w-1.5 h-1.5 rounded-none ${star <= doc.rating ? 'bg-black' : 'bg-zinc-100'}`} />)}
                                   </div>
                                 </div>
                               </td>
@@ -704,7 +700,7 @@ function StudioContent() {
 
            {viewMode === "config" && (
              <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
-                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-16 space-y-12 rounded-sm">
+                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-16 space-y-12 rounded-none">
                   <div className="space-y-6">
                     <h2 className="text-2xl font-bold tracking-tight">Trí tuệ nhân tạo</h2>
                     <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic">
@@ -713,7 +709,7 @@ function StudioContent() {
                     <button
                       onClick={handleIngestAI}
                       disabled={isIngesting || !selectedDocumentId}
-                      className="h-14 bg-black text-white px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-3 active:scale-[0.98] rounded-sm"
+                      className="h-14 bg-black text-white px-10 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all flex items-center gap-3 active:scale-[0.98] rounded-none"
                     >
                       {isIngesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-zinc-400" />}
                       Kích hoạt đồng bộ tri thức AI
@@ -732,15 +728,15 @@ function StudioContent() {
                       <button
                         onClick={handleGenerateAICover}
                         disabled={generatingCover || !selectedDocumentId}
-                        className="h-12 border border-black text-black px-8 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-all flex items-center gap-3 active:scale-[0.98] rounded-sm"
+                        className="h-12 border border-black text-black px-8 text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-50 transition-all flex items-center gap-3 active:scale-[0.98] rounded-none"
                       >
                         {generatingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         {selectedDocument?.cover_url ? "Tái tạo ảnh bìa" : "Tạo ảnh bìa AI"}
                       </button>
                     </div>
 
-                    <div className="relative group max-w-[280px] mx-auto lg:mx-0 rounded-sm overflow-hidden">
-                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-100 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300 rounded-sm">
+                    <div className="relative group max-w-[280px] mx-auto lg:mx-0 rounded-none overflow-hidden">
+                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-100 relative overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-300 rounded-none">
                           {selectedDocument?.cover_url ? (
                             <img
                               src={selectedDocument.cover_url.startsWith("http") ? selectedDocument.cover_url : `${API_URL}/storage/${selectedDocument.cover_url}`}
@@ -749,7 +745,7 @@ function StudioContent() {
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center gap-4">
-                              <div className="w-12 h-12 bg-white flex items-center justify-center border border-zinc-100 rounded-sm">
+                              <div className="w-12 h-12 bg-white flex items-center justify-center border border-zinc-100 rounded-none">
                                  <Sparkles className="w-6 h-6 text-zinc-200" />
                               </div>
                               <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">Chưa có ảnh bìa</p>
@@ -759,7 +755,7 @@ function StudioContent() {
                        </div>
                        
                        {selectedDocument?.cover_url && (
-                         <div className="absolute -bottom-2 -right-2 bg-white border border-zinc-100 p-3 rounded-sm animate-in slide-in-from-top-2 duration-300">
+                         <div className="absolute -bottom-2 -right-2 bg-white border border-zinc-100 p-3 rounded-none animate-in slide-in-from-top-2 duration-300">
                             <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Ảnh được tạo bởi AI</p>
                          </div>
                        )}
@@ -777,7 +773,7 @@ function StudioContent() {
            {viewMode === "versions" && (
              <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
                 <div className="max-w-3xl mx-auto space-y-10">
-                   <div className="bg-white border border-zinc-100 p-10 rounded-sm flex items-center justify-between">
+                   <div className="bg-white border border-zinc-100 p-10 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
                         <h2 className="text-2xl font-bold tracking-tight uppercase">Lịch sử phiên bản</h2>
                         <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Khôi phục tri thức tại các điểm thời gian</p>
@@ -789,15 +785,15 @@ function StudioContent() {
                       {loadingVersions ? (
                         <div className="py-24 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-zinc-100" /></div>
                       ) : versions.length === 0 ? (
-                        <div className="bg-white border border-dashed border-zinc-100 p-20 text-center rounded-sm">
+                        <div className="bg-white border border-dashed border-zinc-100 p-20 text-center rounded-none">
                            <Clock className="w-12 h-12 text-zinc-50 mx-auto mb-6" />
                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Chưa có phiên bản nào được lưu</p>
                         </div>
                       ) : (
                         versions.map((v) => (
-                          <div key={v.id} className="bg-white border border-zinc-100 p-8 flex items-center justify-between group hover:border-black transition-all duration-300 rounded-sm">
+                          <div key={v.id} className="bg-white border border-zinc-100 p-8 flex items-center justify-between group hover:border-black transition-all duration-300 rounded-none">
                              <div className="flex items-center gap-6">
-                                <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm">
+                                <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-none">
                                    <Clock className="w-5 h-5 text-zinc-200" />
                                 </div>
                                 <div className="space-y-1">
@@ -807,7 +803,7 @@ function StudioContent() {
                              </div>
                              <button 
                                onClick={() => handleRestoreVersion(v.id)}
-                               className="h-10 px-6 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all rounded-sm"
+                               className="h-10 px-6 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all rounded-none"
                              >
                                 Khôi phục
                              </button>
@@ -822,7 +818,7 @@ function StudioContent() {
            {viewMode === "trash" && (
              <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
                 <div className="max-w-3xl mx-auto space-y-10">
-                   <div className="bg-white border border-zinc-100 p-10 rounded-sm flex items-center justify-between">
+                   <div className="bg-white border border-zinc-100 p-10 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
                         <h2 className="text-2xl font-bold tracking-tight uppercase">Thùng rác tri thức</h2>
                         <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Tài liệu đã tạm thời bị gỡ bỏ</p>
@@ -834,15 +830,15 @@ function StudioContent() {
                       {loadingTrash ? (
                         <div className="py-24 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-zinc-100" /></div>
                       ) : trash.length === 0 ? (
-                        <div className="bg-white border border-dashed border-zinc-100 p-20 text-center rounded-sm">
+                        <div className="bg-white border border-dashed border-zinc-100 p-20 text-center rounded-none">
                            <X className="w-12 h-12 text-zinc-50 mx-auto mb-6" />
                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Thùng rác trống</p>
                         </div>
                       ) : (
                         trash.map((doc) => (
-                          <div key={doc._id} className="bg-white border border-zinc-100 p-8 flex items-center justify-between group hover:border-black transition-all duration-300 rounded-sm">
+                          <div key={doc._id} className="bg-white border border-zinc-100 p-8 flex items-center justify-between group hover:border-black transition-all duration-300 rounded-none">
                              <div className="flex items-center gap-6">
-                                <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-sm">
+                                <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center rounded-none">
                                    <FileText className="w-5 h-5 text-zinc-200" />
                                 </div>
                                 <div className="space-y-1">
@@ -852,7 +848,7 @@ function StudioContent() {
                              </div>
                              <button 
                                onClick={() => handleRestoreDocument(doc._id)}
-                               className="h-10 px-6 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all rounded-sm flex items-center gap-2"
+                               className="h-10 px-6 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all rounded-none flex items-center gap-2"
                              >
                                 <RotateCcw className="w-3 h-3" /> Khôi phục
                              </button>
@@ -866,7 +862,7 @@ function StudioContent() {
 
            {viewMode === "sentiment" && (
              <div className="h-full overflow-y-auto p-16 animate-in fade-in duration-300 no-scrollbar">
-                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-20 text-center space-y-10 rounded-sm">
+                <div className="max-w-3xl mx-auto bg-white border border-zinc-100 p-20 text-center space-y-10 rounded-none">
                    <Brain className="w-16 h-16 text-zinc-100 mx-auto stroke-[1]" />
                    <div className="space-y-4">
                       <h2 className="text-3xl font-bold tracking-tighter uppercase">Phân tích cảm quan AI</h2>
@@ -874,7 +870,7 @@ function StudioContent() {
                         AI sẽ đọc và phân tích tông giọng, cảm xúc và phản hồi của độc giả để giúp bạn tối ưu hóa nội dung.
                       </p>
                    </div>
-                   <div className="py-20 border border-dashed border-zinc-100 rounded-sm">
+                   <div className="py-20 border border-dashed border-zinc-100 rounded-none">
                       <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">Tính năng đang được hiệu chuẩn</p>
                    </div>
                 </div>

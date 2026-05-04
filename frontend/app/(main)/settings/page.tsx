@@ -220,18 +220,20 @@ export default function SettingsPage() {
   const CustomSwitch = ({
     active,
     onToggle,
-    color = "black",
   }: {
     active: boolean;
     onToggle: () => void;
-    color?: string;
   }) => (
     <button
       onClick={onToggle}
-      className={`w-14 h-8 relative shrink-0 rounded-sm border ${active ? (color === "red" ? "bg-red-600 border-red-600" : "bg-black border-black") : "bg-zinc-100 border-zinc-200"}`}
+      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 transition-colors ${
+        active ? "bg-black border-black" : "bg-zinc-100"
+      }`}
     >
       <div
-        className={`absolute top-1 w-6 h-6 bg-white rounded-sm ${active ? "left-7" : "left-1"}`}
+        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 transition-all ${
+          active ? "left-5 border-black" : "left-0"
+        }`}
       />
     </button>
   );
@@ -239,7 +241,7 @@ export default function SettingsPage() {
   if (authLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center bg-white">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -297,104 +299,95 @@ export default function SettingsPage() {
   ].filter((s) => !user || s.roles.includes(user.role));
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <header
-        className="mb-12 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+      <div
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-            Cài đặt
-          </h1>
-          <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            Tùy chọn & Kiểm soát hệ thống{" "}
-            <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-black">Cài đặt</h1>
+          <p className="text-zinc-500 text-sm font-medium">
+            Tùy chọn và kiểm soát hệ thống
           </p>
         </div>
-      </header>
+      </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside
-          className="lg:col-span-4 space-y-8 delay-75"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="space-y-6">
-            <div className="text-[11px] font-bold text-black uppercase tracking-[0.3em] px-1 flex items-center gap-2">
-              <Settings className="w-4 h-4 text-zinc-300" /> Tùy chỉnh cá nhân
-            </div>
-            <nav className="flex flex-col gap-2">
+      <div
+        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
+      >
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="border border-zinc-200 bg-white">
+            <nav className="flex flex-col">
               {sections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center justify-between px-8 py-5 text-[11px] font-bold uppercase tracking-widest rounded-sm border ${
+                  className={`flex items-center gap-3 px-6 py-4 text-xs font-semibold uppercase tracking-widest border-b border-zinc-200 last:border-b-0 transition-colors ${
                     activeSection === section.id
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-zinc-400 border-zinc-100 "
+                      ? "bg-black text-white"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black"
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <section.icon className="w-4.5 h-4.5" /> {section.label}
-                  </div>
-                  <ChevronRight
-                    className={`w-3.5 h-3.5 transition-transform ${activeSection === section.id ? "rotate-90" : ""}`}
-                  />
+                  <section.icon className="w-4 h-4" /> {section.label}
                 </button>
               ))}
             </nav>
           </div>
 
-          <div className="p-10 border border-zinc-100 bg-white space-y-6 rounded-sm">
-            <div className="text-[10px] font-bold text-black uppercase tracking-widest text-center">
+          <div className="p-6 border border-zinc-200 bg-white space-y-4">
+            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
               Định danh hiện tại
             </div>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 bg-black flex items-center justify-center text-white text-[11px] font-bold uppercase italic rounded-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-black flex items-center justify-center text-white text-xs font-bold uppercase rounded-none shrink-0">
                 {user?.role?.slice(0, 3)}
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs font-bold text-black uppercase tracking-tighter">
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-black uppercase truncate">
                   {user?.role}
                 </span>
-                <span className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest italic">
-                  Xác minh danh tính
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest truncate">
+                  {user?.email || "Chưa định danh"}
                 </span>
               </div>
             </div>
           </div>
         </aside>
 
-        <main
-          className="lg:col-span-8 delay-150"
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="bg-white border border-zinc-100 p-10 lg:p-16 min-h-[600px] animate-in fade-in slide-in-from-bottom-4 rounded-sm">
-            {activeSection === "appearance" && (
-              <div className="space-y-12">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+        <main className="lg:col-span-9 space-y-6">
+          {activeSection === "appearance" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Hiển thị & Kiểu chữ
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Tùy biến không gian tiếp nhận tri thức
                   </p>
                 </div>
 
-                <div className="space-y-12">
-                  <div className="space-y-6 text-center">
-                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">
+                <div className="mb-8 p-6 border border-zinc-200 bg-zinc-50">
+                  <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-4">
+                    Bản xem trước
+                  </div>
+                  <div
+                    className="bg-white border border-zinc-200 p-6 text-black transition-all"
+                    style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+                  >
+                    Kiến trúc thông tin (Information Architecture) là nền tảng cốt
+                    lõi của mọi hệ thống tương tác số. Việc cấu trúc dữ liệu minh
+                    bạch giúp giảm thiểu tải lượng nhận thức cho người dùng.
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Hệ phông chữ ưu tiên
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
                       {[
                         "Inter",
                         "Roboto",
@@ -405,10 +398,10 @@ export default function SettingsPage() {
                         <button
                           key={font}
                           onClick={() => setFontFamily(font)}
-                          className={`h-16 border text-[11px] font-bold uppercase tracking-widest flex items-center justify-center rounded-sm ${
+                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center transition-colors rounded-none truncate ${
                             fontFamily === font
                               ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-300 border-zinc-100 "
+                              : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
                           }`}
                           style={{ fontFamily: font }}
                         >
@@ -418,20 +411,20 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-10">
-                    <div className="space-y-4 text-center">
-                      <label className="text-[11px] font-bold text-black uppercase tracking-widest">
-                        Cỡ chữ văn bản (px)
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                        Cỡ chữ (px)
                       </label>
                       <input
                         type="number"
                         value={fontSize}
                         onChange={(e) => setFontSize(parseInt(e.target.value))}
-                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white/20 text-center text-lg font-bold tracking-tight outline-none rounded-sm"
+                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none"
                       />
                     </div>
-                    <div className="space-y-4 text-center">
-                      <label className="text-[11px] font-bold text-black uppercase tracking-widest">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                         Độ giãn dòng
                       </label>
                       <input
@@ -441,144 +434,51 @@ export default function SettingsPage() {
                         onChange={(e) =>
                           setLineHeight(parseFloat(e.target.value))
                         }
-                        className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white/20 text-center text-lg font-bold tracking-tight outline-none rounded-sm"
+                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-12 border-t border-zinc-50 flex justify-center">
+                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
                   <button
                     onClick={handleSaveTypography}
                     disabled={loading}
-                    className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm active:scale-[0.98] flex items-center gap-4 disabled:opacity-50"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
                   >
                     {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Save className="w-5 h-5" />
-                    )}
+                      <Save className="w-4 h-4" />
+                    )}{" "}
                     Lưu tùy chỉnh
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeSection === "apply_author" && (
-              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 ">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
-                    Đăng ký Tác giả
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
-                    Tham gia đội ngũ sáng tạo nội dung tri thức
-                  </p>
-                </div>
-
-                {user?.author_status === "pending" ? (
-                  <div className="py-24 text-center space-y-8 border border-dashed border-zinc-200 bg-white/10 rounded-sm">
-                    <Clock className="w-16 h-16 text-zinc-100 mx-auto stroke-[1]" />
-                    <div className="space-y-3">
-                      <h4 className="text-2xl font-bold tracking-tight">
-                        Hồ sơ đang được xem xét
-                      </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                        Hệ thống đã ghi nhận đơn ứng tuyển của bạn. Vui lòng chờ
-                        phản hồi từ đội ngũ Kiểm duyệt DocLib.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-10">
-                    <div className="p-10 border border-zinc-100 bg-white/20 space-y-8 rounded-sm">
-                      <div className="flex items-center justify-center gap-4 text-black border-b border-zinc-50 pb-6">
-                        <Award className="w-6 h-6" />
-                        <h4 className="text-[11px] font-bold uppercase tracking-[0.2em]">
-                          Đặc quyền của Tác giả DocLib
-                        </h4>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-8">
-                        {[
-                          "Xuất bản tài liệu không giới hạn",
-                          "Xây dựng cộng đồng độc giả riêng",
-                          "Nhận nhuận bút & đóng góp tài chính",
-                          "Huy hiệu Tác giả xác minh",
-                        ].map((item, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <Sparkles className="w-3.5 h-3.5 text-black shrink-0" />
-                            <span className="text-[12px] font-medium text-zinc-500 leading-tight">
-                              {item}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-8">
-                      <div className="space-y-4 text-center">
-                        <label className="text-[11px] font-bold text-black uppercase tracking-widest">
-                          Động lực & Chuyên môn sáng tác
-                        </label>
-                        <textarea
-                          value={motivation}
-                          onChange={(e) => setMotivation(e.target.value)}
-                          className="w-full min-h-[200px] p-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-medium outline-none leading-relaxed rounded-sm"
-                          placeholder=""
-                        />
-                      </div>
-                      <div className="space-y-4 text-center">
-                        <label className="text-[11px] font-bold text-black uppercase tracking-widest">
-                          Portfolio / Sản phẩm tham chiếu (URL)
-                        </label>
-                        <input
-                          type="text"
-                          value={portfolio}
-                          onChange={(e) => setPortfolio(e.target.value)}
-                          className="w-full h-16 px-8 border border-zinc-100 focus:border-black bg-white text-[13px] font-bold outline-none text-center rounded-sm"
-                          placeholder=""
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-8 border-t border-zinc-50">
-                      <button
-                        onClick={handleApplyAuthor}
-                        disabled={loading}
-                        className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm active:scale-[0.98] flex items-center justify-center gap-4 disabled:opacity-50"
-                      >
-                        {loading ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <UserPlus className="w-5 h-5" />
-                        )}
-                        Gửi đơn ứng tuyển xác thực
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeSection === "privacy" && (
-              <div className="space-y-12">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+          {activeSection === "privacy" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Quyền riêng tư
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Thiết lập khả năng hiển thị cá nhân
                   </p>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white/10 group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Chế độ đọc ẩn danh
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">
-                        Không hiển thị lịch sử đọc và tương tác của bạn trên
-                        luồng cộng đồng.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Không hiển thị lịch sử đọc và tương tác của bạn trên luồng
+                        cộng đồng.
                       </p>
                     </div>
                     <CustomSwitch
@@ -587,14 +487,14 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white/10 group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Thư viện nội bộ
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">
-                        Giới hạn quyền truy cập bộ sưu tập tri thức cá nhân đối
-                        với người dùng khác.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Giới hạn quyền truy cập bộ sưu tập tri thức cá nhân đối với
+                        người dùng khác.
                       </p>
                     </div>
                     <CustomSwitch
@@ -604,43 +504,44 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="pt-12 border-t border-zinc-50 flex justify-center">
+                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
                   <button
                     onClick={handleSavePrivacy}
                     disabled={loading}
-                    className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm active:scale-[0.98] flex items-center gap-4"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
                   >
                     {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Shield className="w-5 h-5" />
-                    )}
+                      <Shield className="w-4 h-4" />
+                    )}{" "}
                     Cập nhật quyền
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeSection === "author" && (
-              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 ">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+          {activeSection === "author" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Cấu hình Tác giả
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Quản lý hiệu suất sáng tác
                   </p>
                 </div>
 
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Tự động sao lưu bản thảo
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm italic leading-relaxed">
-                        Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30 giây
-                        trong quá trình soạn thảo.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30 giây.
                       </p>
                     </div>
                     <CustomSwitch
@@ -654,8 +555,8 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="space-y-4 text-center">
-                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Trạng thái xuất bản mặc định
                     </label>
                     <div className="grid grid-cols-2 gap-4">
@@ -668,10 +569,10 @@ export default function SettingsPage() {
                             });
                             if (success) setDefaultVisibility(mode);
                           }}
-                          className={`h-16 border text-[11px] font-bold uppercase tracking-widest rounded-sm ${
+                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none transition-colors ${
                             defaultVisibility === mode
                               ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-300 border-zinc-100 "
+                              : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100 hover:text-black"
                           }`}
                         >
                           {mode === "public" ? "Công khai" : "Riêng tư"}
@@ -680,20 +581,19 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4 text-center">
-                    <label className="text-[11px] font-bold text-black uppercase tracking-widest">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
                       Thông tin thanh toán thụ hưởng
                     </label>
                     <textarea
                       value={payoutInfo}
                       onChange={(e) => setPayoutInfo(e.target.value)}
-                      placeholder=""
-                      className="w-full min-h-[140px] p-8 border border-zinc-100 focus:border-black bg-white/10 text-[13px] font-medium outline-none leading-relaxed text-center rounded-sm"
+                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none transition-colors rounded-none"
                     />
                   </div>
                 </div>
 
-                <div className="pt-12 border-t border-zinc-50 flex justify-center">
+                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
                   <button
                     onClick={async () => {
                       setLoading(true);
@@ -701,34 +601,36 @@ export default function SettingsPage() {
                       setLoading(false);
                       showToast("Đã lưu thông tin thụ hưởng", "success");
                     }}
-                    className="h-16 px-20 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] rounded-sm flex items-center gap-4"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors"
                   >
-                    <Save className="w-5 h-5" /> Lưu cấu hình
+                    <Save className="w-4 h-4" /> Lưu cấu hình
                   </button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeSection === "moderator" && (
-              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 ">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+          {activeSection === "moderator" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Kiểm duyệt viên
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Cấu hình hiệu suất giám sát
                   </p>
                 </div>
 
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Thông báo vi phạm thời gian thực
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">
-                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng
-                        đồng mới.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng đồng
+                        mới.
                       </p>
                     </div>
                     <CustomSwitch
@@ -748,12 +650,12 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-10 border border-zinc-100 bg-white group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Tự động làm mới hàng chờ duyệt
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm italic leading-relaxed">
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
                         Cập nhật danh sách bản thảo chờ phê duyệt mỗi 60 giây.
                       </p>
                     </div>
@@ -775,160 +677,326 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeSection === "admin" && (
-              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 ">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+          {activeSection === "admin" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Quản trị viên
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Kiểm soát vận hành toàn cầu DocLib
                   </p>
                 </div>
 
-                <div className="grid gap-6">
-                  <div className="p-10 border border-zinc-100 bg-white flex items-center justify-between group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight text-red-600">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-red-600">
                         Chế độ bảo trì hệ thống
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed italic">
-                        Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để
-                        nâng cấp kỹ thuật.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để nâng
+                        cấp kỹ thuật.
                       </p>
                     </div>
                     <CustomSwitch
                       active={maintenanceMode}
-                      onToggle={() => setConfirmModal({ type: "maintenance", value: !maintenanceMode })}
-                      color="red"
+                      onToggle={() =>
+                        setConfirmModal({
+                          type: "maintenance",
+                          value: !maintenanceMode,
+                        })
+                      }
                     />
                   </div>
 
-                  <div className="p-10 border border-zinc-100 bg-white flex items-center justify-between group rounded-sm">
-                    <div className="space-y-2">
-                      <h4 className="text-lg font-bold tracking-tight">
+                  <div className="flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-none">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-semibold text-black">
                         Đăng ký tài khoản mới
                       </h4>
-                      <p className="text-[12px] font-medium text-zinc-400 max-w-sm leading-relaxed">
-                        Cho phép hoặc chặn quyền đăng ký tài khoản cho người
-                        dùng mới.
+                      <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
+                        Cho phép hoặc chặn quyền đăng ký tài khoản cho người dùng
+                        mới.
                       </p>
                     </div>
                     <CustomSwitch
                       active={registrationEnabled}
-                      onToggle={() => setConfirmModal({ type: "registration", value: !registrationEnabled })}
+                      onToggle={() =>
+                        setConfirmModal({
+                          type: "registration",
+                          value: !registrationEnabled,
+                        })
+                      }
                     />
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {activeSection === "notifications" && (
-              <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-8 animate-in fade-in ">
-                <div className="w-20 h-20 bg-white border border-zinc-100 flex items-center justify-center rounded-sm">
-                  <Bell className="w-10 h-10 text-zinc-100 stroke-[1]" />
-                </div>
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold tracking-tighter">
-                    Trung tâm thông báo
+          {activeSection === "apply_author" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
+                    Đăng ký Tác giả
                   </h3>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest max-w-[280px] mx-auto leading-relaxed">
-                    Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản
-                    của bạn
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Tham gia đội ngũ sáng tạo nội dung tri thức
                   </p>
                 </div>
-              </div>
-            )}
 
-            {activeSection === "account" && (
-              <div className="space-y-12 animate-in fade-in ">
-                <div className="space-y-3">
-                  <h2 className="text-4xl font-bold tracking-tighter">
+                {user?.author_status === "pending" ? (
+                  <div className="py-16 text-center space-y-4 border border-dashed border-zinc-200 bg-zinc-50 rounded-none">
+                    <Clock className="w-8 h-8 text-zinc-400 mx-auto" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-black">
+                        Hồ sơ đang được xem xét
+                      </h4>
+                      <p className="text-xs font-medium text-zinc-500 mt-1 max-w-xs mx-auto">
+                        Hệ thống đã ghi nhận đơn ứng tuyển của bạn. Vui lòng chờ
+                        phản hồi từ đội ngũ Kiểm duyệt DocLib.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="p-6 border border-zinc-200 bg-zinc-50 space-y-4 rounded-none">
+                      <div className="flex items-center gap-2 text-black border-b border-zinc-200 pb-3">
+                        <Award className="w-4 h-4" />
+                        <h4 className="text-[10px] font-semibold uppercase tracking-widest">
+                          Đặc quyền của Tác giả DocLib
+                        </h4>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {[
+                          "Xuất bản tài liệu không giới hạn",
+                          "Xây dựng cộng đồng độc giả riêng",
+                          "Nhận nhuận bút & đóng góp tài chính",
+                          "Huy hiệu Tác giả xác minh",
+                        ].map((item, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-black shrink-0 mt-0.5" />
+                            <span className="text-xs font-medium text-zinc-600">
+                              {item}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                          Động lực & Chuyên môn sáng tác
+                        </label>
+                        <textarea
+                          value={motivation}
+                          onChange={(e) => setMotivation(e.target.value)}
+                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none transition-colors rounded-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                          Portfolio / Sản phẩm tham chiếu (URL)
+                        </label>
+                        <input
+                          type="text"
+                          value={portfolio}
+                          onChange={(e) => setPortfolio(e.target.value)}
+                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none transition-colors rounded-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-6 mt-6 border-t border-zinc-200">
+                      <button
+                        onClick={handleApplyAuthor}
+                        disabled={loading}
+                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-none flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <UserPlus className="w-4 h-4" />
+                        )}
+                        Gửi đơn ứng tuyển xác thực
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeSection === "notifications" && (
+            <div className="border border-zinc-200 bg-white flex flex-col items-center justify-center min-h-[400px] text-center p-8 animate-in fade-in slide-in-from-bottom-4">
+              <Bell className="w-6 h-6 text-zinc-400 mb-4" />
+              <h3 className="text-sm font-semibold text-black mb-1">
+                Trung tâm thông báo
+              </h3>
+              <p className="text-xs font-medium text-zinc-500 max-w-xs leading-relaxed">
+                Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của bạn.
+              </p>
+            </div>
+          )}
+
+          {activeSection === "account" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+              <div className="border border-zinc-200 bg-white p-8">
+                <div className="border-b border-zinc-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-black">
                     Định danh & Bảo mật
-                  </h2>
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic text-center">
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
                     Quản lý lớp phòng thủ tài khoản
                   </p>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="p-10 border border-zinc-100 flex items-center justify-between rounded-sm group">
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
+                <div className="space-y-4">
+                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-none bg-zinc-50">
+                    <div>
+                      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
                         Trạng thái xác thực
                       </span>
-                      <div className="text-base font-bold flex items-center gap-3">
-                        <ShieldAlert className="w-5 h-5 text-black" /> Tài khoản
-                        đã định danh cấp cao
+                      <div className="text-xs font-semibold text-black flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4" /> Tài khoản đã định
+                        danh cấp cao
                       </div>
                     </div>
-                    <button className="h-14 px-10 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest rounded-sm">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-100 transition-colors rounded-none">
                       Đổi mật khẩu
                     </button>
                   </div>
 
-                  <div className="p-10 border border-zinc-100 flex items-center justify-between rounded-sm group">
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
+                  <div className="p-4 border border-zinc-200 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-none bg-zinc-50">
+                    <div>
+                      <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest block mb-1">
                         Địa chỉ Email liên kết
                       </span>
-                      <div className="text-base font-bold tracking-tight">
+                      <div className="text-xs font-semibold text-black">
                         {user?.email || "Chưa định danh"}
                       </div>
                     </div>
-                    <button className="h-14 px-10 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest rounded-sm">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-100 transition-colors rounded-none">
                       Cập nhật Email
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-20 border-t border-zinc-50 flex items-center justify-center gap-4">
-                  <AlertCircle className="w-5 h-5 text-zinc-100 shrink-0" />
-                  <p className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest leading-relaxed italic text-center">
+                <div className="mt-6 flex items-start gap-3 bg-zinc-50 p-4 border border-zinc-200">
+                  <AlertCircle className="w-4 h-4 text-black shrink-0 mt-0.5" />
+                  <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest leading-relaxed">
                     DocLib yêu cầu xác thực hai lớp cho mọi thay đổi quan trọng
-                    liên quan đến bảo mật và tài chính
+                    liên quan đến bảo mật và tài chính.
                   </p>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="border border-red-200 bg-red-50/20 p-8">
+                <div className="border-b border-red-200 pb-4 mb-6">
+                  <h3 className="text-sm font-semibold text-red-600">
+                    Vùng nguy hiểm (Danger Zone)
+                  </h3>
+                  <p className="text-xs text-red-500/80 mt-1">
+                    Các hành động không thể hoàn tác liên quan đến dữ liệu và
+                    tài khoản
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-xs font-semibold text-black">
+                        Tải xuống dữ liệu (GDPR)
+                      </h4>
+                      <p className="text-[10px] text-zinc-500 mt-1">
+                        Yêu cầu trích xuất toàn bộ dữ liệu cá nhân của bạn.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        showToast("Đã gửi yêu cầu trích xuất dữ liệu", "success")
+                      }
+                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors rounded-none"
+                    >
+                      Yêu cầu trích xuất
+                    </button>
+                  </div>
+                  <div className="h-px bg-zinc-200 w-full" />
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-xs font-semibold text-black">
+                        Xóa tài khoản vĩnh viễn
+                      </h4>
+                      <p className="text-[10px] text-zinc-500 mt-1">
+                        Xóa hoàn toàn tài khoản và mọi dữ liệu liên kết. Không
+                        thể khôi phục.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => showToast("Chức năng đang bảo trì", "error")}
+                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none"
+                    >
+                      Xóa tài khoản
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !loading && setConfirmModal(null)}
-        className="max-w-md"
+        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
       >
-        <ModalHeader>
-          <ModalTitle>Xác nhận thay đổi</ModalTitle>
+        <ModalHeader className="border-b border-zinc-200 p-6">
+          <ModalTitle className="text-sm font-semibold text-black">
+            Xác nhận thay đổi
+          </ModalTitle>
         </ModalHeader>
-        <ModalContent>
-          <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-            {confirmModal?.type === "maintenance" ? 
-              `Bạn có chắc chắn muốn ${confirmModal.value ? "kích hoạt" : "tắt"} chế độ bảo trì? Hành động này sẽ ảnh hưởng đến tất cả người dùng.` :
-              `Bạn có chắc chắn muốn ${confirmModal.value ? "mở lại" : "đóng"} cổng đăng ký tài khoản mới?`}
+        <ModalContent className="p-6">
+          <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+            {confirmModal?.type === "maintenance"
+              ? `Bạn có chắc chắn muốn ${
+                  confirmModal?.value ? "kích hoạt" : "tắt"
+                } chế độ bảo trì? Hành động này sẽ ảnh hưởng đến tất cả người dùng.`
+              : `Bạn có chắc chắn muốn ${
+                  confirmModal?.value ? "mở lại" : "đóng"
+                } cổng đăng ký tài khoản mới?`}
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-4">
+        <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={() => {
-              if (confirmModal?.type === "maintenance") handleToggleMaintenance();
-              else if (confirmModal?.type === "registration") handleToggleRegistration();
+              if (confirmModal?.type === "maintenance")
+                handleToggleMaintenance();
+              else if (confirmModal?.type === "registration")
+                handleToggleRegistration();
             }}
             disabled={loading}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center justify-center disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Xác nhận thay đổi"}
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              "Xác nhận thay đổi"
+            )}
           </button>
         </ModalFooter>
       </Modal>

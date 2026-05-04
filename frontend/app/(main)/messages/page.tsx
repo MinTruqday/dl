@@ -24,15 +24,12 @@ import {
   ArrowLeft,
   Search,
   Plus,
-  X,
-  MessageCircle,
   UserPlus,
-  Sparkles,
-  Zap,
   MoreVertical,
   ChevronRight,
   ShieldCheck,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -157,7 +154,7 @@ export default function MessagesPage() {
   if (authLoading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -165,347 +162,295 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
-        className="max-w-xl"
+        className="max-w-xl rounded-none border border-zinc-200 bg-white p-0"
       >
-        <ModalHeader>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-black flex items-center justify-center rounded-sm">
-              <UserPlus className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <ModalTitle>Bắt đầu hội thoại mới</ModalTitle>
-              <ModalDescription>Tìm kiếm tri thức trong mạng lưới DocLib</ModalDescription>
-            </div>
-          </div>
+        <ModalHeader className="p-6 border-b border-zinc-200">
+          <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
+            <UserPlus className="w-4 h-4" /> Bắt đầu hội thoại mới
+          </ModalTitle>
+          <ModalDescription className="text-xs text-zinc-500 font-medium mt-1">
+            Tìm kiếm người dùng qua tên hoặc ID để kết nối
+          </ModalDescription>
         </ModalHeader>
 
-        <ModalContent>
-          <div className="space-y-10">
-            <div className="relative group">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-200 group-focus-within:text-black transition-colors" />
-              <input
-                value={searchQuery}
-                onChange={(e) => handleSearchUsers(e.target.value)}
-                placeholder=""
-                className="w-full h-16 pl-16 pr-6 font-bold text-sm bg-white border border-zinc-100 focus:border-black outline-none rounded-sm transition-colors"
-              />
-            </div>
-            
-            <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-              {searching ? (
-                <div className="py-20 flex flex-col items-center gap-6">
-                  <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
-                  <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                    Đang tra cứu dữ liệu
-                  </span>
-                </div>
-              ) : searchResults.length > 0 ? (
-                searchResults.map((u) => (
-                  <div
-                    key={u._id || u.id}
-                    onClick={() => startNewChat(u)}
-                    className="flex items-center justify-between p-6 border border-zinc-50 hover:border-zinc-200 cursor-pointer rounded-sm transition-all group"
-                  >
-                    <div className="flex items-center gap-6">
-                      <div className="w-16 h-16 border border-zinc-100 flex items-center justify-center overflow-hidden bg-white rounded-sm">
-                        {u.avatar_url ? (
-                          <img
-                            src={u.avatar_url}
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
-                            alt=""
-                          />
-                        ) : (
-                          <User className="w-6 h-6 text-zinc-200" />
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-bold text-black tracking-tight">
-                          {u.display_name || u.full_name || u.username}
-                        </p>
-                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2">
-                          ID: <span className="text-zinc-500">{u.slug || u.username}</span>
-                        </p>
-                      </div>
+        <ModalContent className="p-6 space-y-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              value={searchQuery}
+              onChange={(e) => handleSearchUsers(e.target.value)}
+              placeholder="Nhập tên người dùng..."
+              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+            />
+          </div>
+
+          <div className="max-h-[300px] overflow-y-auto space-y-2">
+            {searching ? (
+              <div className="py-12 flex flex-col items-center gap-4">
+                <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                <span className="text-xs font-medium text-zinc-500">Đang tìm kiếm</span>
+              </div>
+            ) : searchResults.length > 0 ? (
+              searchResults.map((u) => (
+                <div
+                  key={u._id || u.id}
+                  onClick={() => startNewChat(u)}
+                  className="flex items-center justify-between p-3 border border-zinc-200 hover:bg-zinc-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center overflow-hidden bg-white shrink-0">
+                      {u.avatar_url ? (
+                        <img
+                          src={u.avatar_url}
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          alt=""
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-zinc-400 stroke-[1]" />
+                      )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-zinc-100 group-hover:text-black group-hover:translate-x-1 transition-all" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-black">
+                        {u.display_name || u.full_name || u.username}
+                      </span>
+                      <span className="text-[10px] font-medium text-zinc-500">
+                        ID: {u.slug || u.username}
+                      </span>
+                    </div>
                   </div>
-                ))
-              ) : searchQuery.length >= 2 ? (
-                <div className="text-center py-20 bg-white border border-dashed border-zinc-100 rounded-sm">
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest italic">
-                    Hệ thống không tìm thấy kết quả phù hợp
-                  </p>
+                  <ChevronRight className="w-4 h-4 text-zinc-400" />
                 </div>
-              ) : (
-                <div className="text-center py-20 opacity-30">
-                  <Zap className="w-12 h-12 mx-auto text-zinc-100 mb-6" />
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-[0.2em]">
-                    Khởi tạo tìm kiếm tri thức
-                  </p>
-                </div>
-              )}
-            </div>
+              ))
+            ) : searchQuery.length >= 2 ? (
+              <div className="text-center py-12 border border-dashed border-zinc-200 bg-zinc-50">
+                <p className="text-xs font-medium text-zinc-500">Không tìm thấy kết quả</p>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="w-8 h-8 mx-auto text-zinc-200 mb-3" />
+                <p className="text-xs font-medium text-zinc-400">Khởi tạo tìm kiếm để bắt đầu</p>
+              </div>
+            )}
           </div>
         </ModalContent>
       </Modal>
 
-      <header
-        className="mb-12 border-b border-zinc-100 pb-10 flex flex-col md:flex-row md:items-end justify-between gap-8 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+      <div
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-            Trò chuyện
-          </h1>
-          <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-            Secure Communication Node{" "}
-            <ShieldCheck className="w-3.5 h-3.5 text-zinc-100" />
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold text-black">Trò chuyện</h1>
+          <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
+            Hệ thống giao tiếp nội bộ <ShieldCheck className="w-4 h-4" />
           </p>
         </div>
         <button
           onClick={() => setShowNewChatModal(true)}
-          className="h-14 px-10 bg-black text-white text-[11px] font-bold uppercase tracking-[0.2em] flex items-center gap-4 active:scale-[0.98] rounded-sm"
+          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors rounded-none"
         >
           <Plus className="w-4 h-4" /> Bắt đầu kết nối
         </button>
-      </header>
+      </div>
 
       <div
-        className="max-w-[1440px] h-[75vh] min-h-[600px] border border-zinc-100 bg-white flex overflow-hidden rounded-sm"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+        className="border border-zinc-200 bg-white flex h-[calc(100vh-200px)] min-h-[500px] transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
       >
         <div
-          className={`w-full md:w-[400px] border-r border-zinc-100 flex flex-col ${selectedConv ? "hidden md:flex" : "flex"}`}
+          className={`w-full md:w-[320px] lg:w-[380px] border-r border-zinc-200 flex flex-col shrink-0 ${
+            selectedConv ? "hidden md:flex" : "flex"
+          }`}
         >
-          <div className="p-8 border-b border-zinc-50 bg-white">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-black uppercase tracking-widest">
-                Hộp thư cá nhân
-              </span>
-              <Sparkles className="w-3.5 h-3.5 text-zinc-200" />
-            </div>
+          <div className="p-4 border-b border-zinc-200 bg-zinc-50 flex items-center justify-between shrink-0">
+            <span className="text-xs font-semibold text-black">Hộp thư</span>
           </div>
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="flex-1 overflow-y-auto">
             {loadingConv ? (
-              <div className="p-20 flex flex-col items-center gap-6">
-                <Loader2 className="w-8 h-8 animate-spin text-zinc-100" />
-                <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
-                  Đang đồng bộ
-                </span>
+              <div className="p-12 flex flex-col items-center gap-4">
+                <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                <span className="text-xs font-medium text-zinc-500">Đang đồng bộ</span>
               </div>
             ) : conversations.length > 0 ? (
               conversations.map((conv) => (
                 <div
                   key={conv.other_user_id}
                   onClick={() => selectConversation(conv)}
-                  className={`p-8 border-b border-zinc-50 cursor-pointer group ${
+                  className={`p-4 border-b border-zinc-200 cursor-pointer flex items-center gap-4 hover:bg-zinc-50 transition-colors ${
                     selectedConv?.other_user_id === conv.other_user_id
-                      ? "bg-white border-l-4 border-l-black"
-                      : ""
+                      ? "bg-zinc-50 border-l-[3px] border-l-black pl-[13px]"
+                      : "pl-4"
                   }`}
                 >
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 border border-zinc-100 flex items-center justify-center overflow-hidden shrink-0 bg-white rounded-sm">
-                      {conv.other_user?.avatar_url ? (
-                        <img
-                          src={conv.other_user.avatar_url}
-                          alt=""
-                          className="w-full h-full object-cover grayscale "
-                        />
-                      ) : (
-                        <User className="w-6 h-6 text-zinc-100" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-bold text-black text-sm tracking-tight truncate  ">
-                          {conv.other_user?.display_name ||
-                            conv.other_user?.username}
-                        </h4>
-                        <span className="text-[9px] text-zinc-300 font-bold uppercase tracking-widest">
-                          {conv.last_message?.created_at
-                            ? new Date(
-                                conv.last_message.created_at,
-                              ).toLocaleTimeString("vi-VN", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : ""}
-                        </span>
-                      </div>
-                      <p
-                        className={`text-[11px] truncate leading-relaxed ${
-                          conv.unread_count > 0
-                            ? "text-black font-bold"
-                            : "text-zinc-400"
+                  <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden">
+                    {conv.other_user?.avatar_url ? (
+                      <img
+                        src={conv.other_user.avatar_url}
+                        alt=""
+                        className="w-full h-full object-cover grayscale mix-blend-multiply"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-zinc-400 stroke-[1]" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-center mb-1">
+                      <span
+                        className={`text-sm text-black truncate ${
+                          conv.unread_count > 0 ? "font-semibold" : "font-medium"
                         }`}
                       >
-                        {conv.last_message?.content ||
-                          "Khởi tạo hội thoại kết nối"}
-                      </p>
+                        {conv.other_user?.display_name || conv.other_user?.username}
+                      </span>
+                      <span
+                        className={`text-[10px] shrink-0 ${
+                          conv.unread_count > 0 ? "text-black font-semibold" : "text-zinc-500 font-medium"
+                        }`}
+                      >
+                        {conv.last_message?.created_at
+                          ? new Date(conv.last_message.created_at).toLocaleTimeString("vi-VN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                      </span>
                     </div>
-                    {conv.unread_count > 0 && (
-                      <div className="w-2.5 h-2.5 bg-black rounded-full shrink-0"></div>
-                    )}
+                    <div className="flex items-center justify-between gap-2">
+                      <p
+                        className={`text-xs truncate ${
+                          conv.unread_count > 0 ? "text-black font-semibold" : "text-zinc-500 font-medium"
+                        }`}
+                      >
+                        {conv.last_message?.content || "Chưa có tin nhắn"}
+                      </p>
+                      {conv.unread_count > 0 && (
+                        <div className="w-2 h-2 bg-black shrink-0 rounded-none"></div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="py-40 flex flex-col items-center justify-center opacity-20 space-y-8">
-                <MessageSquare className="w-16 h-16 text-black stroke-[1]" />
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em]">
-                  Hệ thống ghi nhận rỗng
-                </p>
+              <div className="py-24 flex flex-col items-center justify-center opacity-50 space-y-4">
+                <MessageSquare className="w-10 h-10 text-black stroke-[1]" />
+                <p className="text-xs font-medium text-black">Hệ thống ghi nhận rỗng</p>
               </div>
             )}
           </div>
         </div>
 
-        <div
-          className={`flex-1 flex flex-col ${!selectedConv ? "hidden md:flex" : "flex"}`}
-        >
+        <div className={`flex-1 flex flex-col ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
             <>
-              <div className="p-8 border-b border-zinc-100 flex items-center justify-between bg-white z-10">
-                <div className="flex items-center gap-6">
+              <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
                   <button
                     onClick={() => setSelectedConv(null)}
-                    className="md:hidden w-10 h-10 border border-zinc-100 flex items-center justify-center "
+                    className="md:hidden p-2 text-zinc-500 hover:text-black transition-colors"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div className="w-14 h-14 border border-zinc-100 overflow-hidden bg-white rounded-sm">
+                  <div className="w-10 h-10 border border-zinc-200 overflow-hidden bg-white flex items-center justify-center">
                     {selectedConv.other_user?.avatar_url ? (
                       <img
                         src={selectedConv.other_user.avatar_url}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover grayscale mix-blend-multiply"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-100">
-                        <User className="w-6 h-6" />
-                      </div>
+                      <User className="w-5 h-5 text-zinc-400 stroke-[1]" />
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="font-bold text-xl tracking-tighter text-black">
-                      {selectedConv.other_user?.display_name ||
-                        selectedConv.other_user?.username}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></div>
-                      <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
-                        Bảo mật định danh mức cao
-                      </p>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-black">
+                      {selectedConv.other_user?.display_name || selectedConv.other_user?.username}
+                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+                      <span className="text-[10px] text-zinc-500 font-medium">Bảo mật hai chiều</span>
                     </div>
                   </div>
                 </div>
-                <button className="w-12 h-12 flex items-center justify-center border border-zinc-100 rounded-sm">
-                  <MoreVertical className="w-5 h-5 text-zinc-300 " />
+                <button className="p-2 text-zinc-400 hover:text-black transition-colors">
+                  <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-12 space-y-10 bg-white/20 scroll-smooth scrollbar-hide">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-zinc-50/50">
                 {loadingMsgs ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-6">
-                    <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
-                    <span className="text-[10px] font-bold text-zinc-200 uppercase tracking-widest">
-                      Đang tải lịch sử
-                    </span>
+                  <div className="flex h-full flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                    <span className="text-xs font-medium text-zinc-500">Đang tải lịch sử</span>
                   </div>
                 ) : (
-                  messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex ${
-                        msg.sender_id === user.id
-                          ? "justify-end"
-                          : "justify-start"
-                      } animate-in fade-in slide-in-from-bottom-4 `}
-                    >
+                  messages.map((msg, i) => {
+                    const isSender = msg.sender_id === user.id;
+                    return (
                       <div
-                        className={`max-w-[70%] p-8 text-sm leading-relaxed border selection:bg-black selection:text-white rounded-sm ${
-                          msg.sender_id === user.id
-                            ? "bg-black text-white border-black"
-                            : "bg-white text-black font-medium border-zinc-100"
-                        }`}
+                        key={i}
+                        className={`flex flex-col ${isSender ? "items-end" : "items-start"}`}
                       >
-                        {msg.content}
                         <div
-                          className={`text-[9px] font-bold mt-6 opacity-30 flex items-center gap-2 ${
-                            msg.sender_id === user.id
-                              ? "justify-end"
-                              : "justify-start"
+                          className={`max-w-[75%] px-4 py-3 text-sm leading-relaxed rounded-none ${
+                            isSender
+                              ? "bg-black text-white"
+                              : "bg-white text-black border border-zinc-200"
                           }`}
                         >
-                          <Clock className="w-3 h-3" />
-                          {new Date(msg.created_at).toLocaleTimeString(
-                            "vi-VN",
-                            {
+                          {msg.content}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5 px-1">
+                          <span className="text-[10px] font-medium text-zinc-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(msg.created_at).toLocaleTimeString("vi-VN", {
                               hour: "2-digit",
                               minute: "2-digit",
-                            },
-                          )}
-                          {msg.sender_id === user.id && (
-                            <CheckCircle2 className="w-3 h-3 text-white/40" />
-                          )}
+                            })}
+                          </span>
+                          {isSender && <CheckCircle2 className="w-3 h-3 text-zinc-400" />}
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-10 border-t border-zinc-100 bg-white">
-                <div className="flex gap-6">
+              <div className="p-4 border-t border-zinc-200 bg-white shrink-0">
+                <div className="flex gap-4">
                   <input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    placeholder=""
-                    className="flex-1 h-16 px-8 bg-white border border-zinc-100 text-sm font-bold focus:outline-none focus:border-black rounded-sm placeholder:text-zinc-200"
+                    placeholder="Nhập nội dung..."
+                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"
                   />
                   <button
                     onClick={handleSend}
                     disabled={sending || !newMessage.trim()}
-                    className="bg-black text-white h-16 px-10 flex items-center justify-center gap-4 active:scale-[0.98] disabled:opacity-30 rounded-sm"
+                    className="h-12 px-6 bg-black text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-zinc-800 transition-colors rounded-none shrink-0"
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-widest hidden sm:inline">
-                      Gửi đi
-                    </span>
+                    <span className="text-xs font-medium hidden sm:inline">Gửi</span>
                     {sending ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Send className="w-5 h-5" />
+                      <Send className="w-4 h-4" />
                     )}
                   </button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-zinc-100 bg-white/5 opacity-50">
-              <div className="w-32 h-32 bg-white border border-zinc-100 flex items-center justify-center mb-10 rounded-sm">
-                <MessageCircle className="w-14 h-14 stroke-[0.5]" />
+            <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 bg-zinc-50/50">
+              <div className="w-16 h-16 border border-zinc-200 flex items-center justify-center mb-4 bg-white">
+                <MessageSquare className="w-6 h-6 stroke-[1.5]" />
               </div>
-              <div className="text-center space-y-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em]">
-                  Hệ thống truyền tin DocLib
-                </p>
-                <p className="text-[10px] font-bold uppercase tracking-widest italic">
-                  Chọn một thực thể để bắt đầu hội thoại bảo mật
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-black">Hệ thống truyền tin</p>
+              <p className="text-xs font-medium text-zinc-500 mt-1">Chọn một hội thoại để bắt đầu</p>
             </div>
           )}
         </div>
@@ -513,21 +458,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
-const Clock = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-);

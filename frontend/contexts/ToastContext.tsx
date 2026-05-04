@@ -35,46 +35,33 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      <div
-        style={{
-          position: "fixed",
-          top: "80px",
-          right: "30px",
-          zIndex: 9999,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "16px",
-          pointerEvents: "none",
-          fontFamily: "sans-serif",
-        }}
-      >
-        {toasts.map((t) => (
-          <div
-            key={t.id}
-            style={{ borderLeft: "6px solid black" }}
-            className={`
- bg-white p-4 flex items-center gap-10 animate-in slide-in-from-right-8 fade-in pointer-events-auto whitespace-nowrap min-w-max shadow-none
- ${
-   t.type === "error"
-     ? "text-red-600 font-bold"
-     : t.type === "success"
-       ? "text-green-600 font-bold"
-       : "text-black"
- }
- `}
-          >
-            <div className="text-base leading-none tracking-tight">
-              {t.message}
-            </div>
-            <button
-              onClick={() => removeToast(t.id)}
-              className="opacity-20 p-1 -mr-1 flex items-center justify-center"
+      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-md w-full sm:w-[400px] font-sans pointer-events-none">
+        {toasts.map((t) => {
+          let typeStyles = "text-black";
+          if (t.type === "error") typeStyles = "text-red-600 font-bold";
+          if (t.type === "success") typeStyles = "text-green-600";
+
+          return (
+            <div
+              key={t.id}
+              className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto ${typeStyles}`}
             >
-              <X size={18} />
-            </button>
-          </div>
-        ))}
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  <p className="leading-relaxed font-bold tracking-tight">
+                    {t.message}
+                  </p>
+                </div>
+                <button
+                  onClick={() => removeToast(t.id)}
+                  className="opacity-40 transition-opacity p-1 -mt-1 -mr-1 hover:opacity-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
       {children}
     </ToastContext.Provider>
