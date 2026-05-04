@@ -36,7 +36,6 @@ import {
   uploadMediaAPI,
 } from "@/services/social.service";
 import { getDocumentsAPI } from "@/services/document.service";
-import { getWalletBalanceAPI } from "@/services/wallet.service";
 import { translateTextAPI, getAIFeedSummaryAPI } from "@/services/ai.service";
 import { API_URL } from "@/services/auth.service";
 import {
@@ -83,6 +82,7 @@ import {
   ArrowUpRight,
   ChevronRight,
   RotateCw,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -336,7 +336,6 @@ export default function Feed() {
   const { user: currentUser } = useAuth();
   const { showToast } = useToast();
   const [itemType, setItemType] = useState<string>("");
-  const [walletBalance, setWalletBalance] = useState<number>(0);
 
   useEffect(() => {
     fetchFeed(true);
@@ -351,7 +350,6 @@ export default function Feed() {
     }
     if (currentUser && currentUser._id) {
       fetchSuggestions();
-      fetchWallet();
     }
   }, [currentUser?._id || "", showStoryArchive]);
 
@@ -659,15 +657,6 @@ export default function Feed() {
     }
   };
 
-  const fetchWallet = async () => {
-    try {
-      const json = await getWalletBalanceAPI();
-      setWalletBalance(json.data?.balance || json.balance || 0);
-    } catch (e) {
-      console.error("API error:", e);
-    }
-  };
-
   const overrideFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     setIsUploading(true);
@@ -776,23 +765,6 @@ export default function Feed() {
       setExpandedComments(postId);
     } catch (e) {
       showToast("Không thể gửi bình luận lúc này, vui lòng thử lại.", "error");
-    }
-  };
-
-  const handleVote = async (postId: string, amount: number) => {
-    try {
-      const data = await votePostAPI(postId, amount);
-      showToast(
-        data.message || `Đã gửi tặng ${amount} C thành công`,
-        "success",
-      );
-      fetchWallet();
-      fetchFeed(true);
-    } catch (e: any) {
-      showToast(
-        e.message || "Bạn không đủ số dư để thực hiện, xin nạp thêm.",
-        "error",
-      );
     }
   };
 
