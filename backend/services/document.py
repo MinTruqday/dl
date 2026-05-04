@@ -329,6 +329,26 @@ class DocumentService:
         return {"message": "Tạo Series thành công.", "series_id": series_id}
 
     @staticmethod
+    async def get_my_series(current_user) -> list:
+        db = db_client.mongodb.get_default_database()
+        series_docs = await db["series"].find({"author_id": str(current_user.id)}).sort("created_at", -1).to_list(length=100)
+        return [serialize_document(s) for s in series_docs]
+
+    @staticmethod
+    async def get_series_by_id(series_id: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        series = await db["series"].find_one({"_id": series_id})
+        if not series:
+            raise HTTPException(status_code=404, detail="Không tìm thấy chuỗi tài liệu.")
+            
+        series = serialize_document(series)
+        if series.get("document_ids"):
+            docs = await db["documents"].find({"_id": {"$in": series["document_ids"]}}).to_list(length=100)
+            series["documents"] = [serialize_document(d) for d in docs]
+            
+        return series
+
+    @staticmethod
     async def notify_purchase(document_id: str, buyer_id: str):
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id})

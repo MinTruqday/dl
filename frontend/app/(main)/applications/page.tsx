@@ -26,6 +26,7 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function AuthorApplicationsPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const [applications, setApplications] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

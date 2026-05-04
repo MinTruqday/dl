@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export default function CreateDocumentPage() {
   const router = useRouter();
   const { user } = useAuth() as any;
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [publisherName, setPublisherName] = useState("");

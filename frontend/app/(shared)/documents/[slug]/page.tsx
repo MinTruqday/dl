@@ -39,6 +39,7 @@ export default function DocumentDetailsPage() {
   const slug = params?.slug as string;
   const router = useRouter();
   const { user } = useAuth() as any;
+  const { showToast } = useToast();
 
   const [docData, setDocData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

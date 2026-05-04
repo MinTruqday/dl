@@ -124,7 +124,12 @@ export default function Menu({
       >
         <div className="flex-1 overflow-y-auto py-2 scroll-smooth flex flex-col pb-20 no-scrollbar">
           <NavLink icon={Search} label="Khám phá" href="/" />
-          <NavLink icon={FileText} label="Bảng tin" href="/feed" />
+          <NavLink
+            icon={FileText}
+            label="Bảng tin"
+            href="/feed"
+            roles={["reader", "author", "admin"]}
+          />
           <NavLink icon={Trophy} label="Vinh danh" href="/leaderboard" />
           <NavLink
             icon={MessageSquare}
@@ -132,7 +137,6 @@ export default function Menu({
             href="/messages"
             requireAuth
           />
-          <NavLink icon={History} href="/history" label="Lịch sử" requireAuth />
           <NavLink
             icon={Library}
             href="/library"
@@ -140,12 +144,6 @@ export default function Menu({
             requireAuth
           />
           <NavLink icon={User} href="/profile" label="Hồ sơ" requireAuth />
-          <NavLink
-            icon={Bookmark}
-            href="/collection"
-            label="Bộ sưu tập"
-            requireAuth
-          />
           <NavLink icon={Wallet} href="/wallet" label="Ví" requireAuth />
 
           <NavLink

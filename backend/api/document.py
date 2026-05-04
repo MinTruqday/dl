@@ -88,6 +88,20 @@ class DocumentPasswordRequest(BaseModel):
     password: str
 
 
+@router.get("/series/me", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.get_my_series(current_user),
+        message="Lấy danh sách chuỗi tài liệu thành công."
+    )
+
+@router.get("/series/{series_id}", response_model=APIResponse[Any])
+async def get_series_by_id(series_id: str):
+    return APIResponse(
+        data=await DocumentService.get_series_by_id(series_id),
+        message="Lấy chi tiết chuỗi tài liệu thành công."
+    )
+
 @router.post("/series", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(

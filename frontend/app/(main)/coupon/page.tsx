@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/Modal";
 
 export default function AuthorCouponsPage() {
+  const { showToast } = useToast();
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);

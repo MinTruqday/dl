@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/Modal";
 
 export default function AuthorAssetsPage() {
+  const { showToast } = useToast();
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

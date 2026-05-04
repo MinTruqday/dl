@@ -26,6 +26,7 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function StudioPayoutsPage() {
   const { user, isLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const router = useRouter();
   const [revenue, setRevenue] = useState<any>(null);
   const [balance, setBalance] = useState<any>(null);

@@ -28,10 +28,11 @@ import {
   UserPlus,
   BookOpen,
 } from "lucide-react";
-import Link from "next/link";
+import { useToast } from "@/contexts/ToastContext";
 import { Notification as Toast } from "@/components/Notification";
 
 export default function NotificationsPage() {
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);

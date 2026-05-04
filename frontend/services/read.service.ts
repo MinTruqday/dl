@@ -310,7 +310,7 @@ export async function exportHighlightsMarkdownAPI(documentId: string) {
 export async function getMySeriesAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/author/series`, {
+  const res = await fetch(`${API_URL}/documents/series/me`, {
     headers: { Authorization: "Bearer " + token },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách chuỗi tri thức.");
@@ -324,7 +324,7 @@ export async function createSeriesAPI(data: {
 }) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/author/series`, {
+  const res = await fetch(`${API_URL}/documents/series`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -338,7 +338,7 @@ export async function createSeriesAPI(data: {
 
 export async function getSeriesByIdAPI(seriesId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/series/${seriesId}`, {
+  const res = await fetch(`${API_URL}/documents/series/${seriesId}`, {
     headers: token ? { Authorization: "Bearer " + token } : {},
   });
   if (!res.ok) throw new Error("Không thể tải chi tiết chuỗi tri thức.");

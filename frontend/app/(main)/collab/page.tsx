@@ -23,6 +23,7 @@ import { useToast } from "@/contexts/ToastContext";
 
 export default function StudioCollabPage() {
   const { user, isLoading } = useAuth() as any;
+  const { showToast } = useToast();
   const router = useRouter();
   const [documents, setDocuments] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);

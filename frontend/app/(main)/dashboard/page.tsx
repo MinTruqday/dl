@@ -83,6 +83,7 @@ type EditorMode = "edit" | "preview" | "raw";
 function StudioContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const rawDocId = searchParams.get("document");
   const docIdFromUrl = rawDocId && rawDocId !== "undefined" ? rawDocId : "";
 

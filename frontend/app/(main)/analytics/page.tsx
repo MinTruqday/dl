@@ -17,6 +17,7 @@ import { getDocumentSentimentAPI } from "@/services/ai.service";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function AuthorAnalyticsPage() {
+  const { showToast } = useToast();
   const [documents, setDocuments] = useState<any[]>([]);
   const [revenue, setRevenue] = useState<any>(null);
   const [sentiment, setSentiment] = useState<any>(null);

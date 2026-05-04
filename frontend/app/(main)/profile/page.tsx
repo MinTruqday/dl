@@ -33,6 +33,7 @@ import Link from "next/link";
 
 export default function ProfilePage() {
   const { user, isLoading, logoutState } = useAuth() as any;
+  const { showToast } = useToast();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");

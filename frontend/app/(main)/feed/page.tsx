@@ -908,28 +908,6 @@ export default function Feed() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <aside className="lg:col-span-3 space-y-10 order-2 lg:order-1">
-            {currentUser && (
-              <div className="bg-card border border-border p-8 text-center rounded-sm">
-                <h3 className="text-[10px] font-bold text-muted-foreground tracking-[0.2em] uppercase mb-4">
-                  Số dư ví
-                </h3>
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <span className="text-3xl font-bold tracking-tighter">
-                    {walletBalance.toLocaleString("vi-VN")}
-                  </span>
-                  <Coins className="w-5 h-5 text-zinc-400" />
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full text-[10px] font-bold uppercase tracking-widest rounded-none h-14 border-zinc-200 "
-                  onClick={() => (window.location.href = "/wallet")}
-                >
-                  Quản lý ví
-                </Button>
-              </div>
-            )}
-
             <div className="bg-card border border-border p-8 rounded-sm">
               <h3 className="text-[10px] font-bold text-foreground tracking-[0.2em] uppercase mb-6 border-b border-border pb-4 flex items-center gap-2">
                 <Trophy className="w-4 h-4" /> Bảng vinh danh Tác giả
@@ -1092,28 +1070,30 @@ export default function Feed() {
 
           <main className="lg:col-span-9 space-y-12 order-1 lg:order-2">
             <div className="flex gap-4 overflow-x-auto pb-10 pt-2 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 border-b border-zinc-100">
-              <div
-                onClick={() => setShowStoryModal(true)}
-                className="relative w-32 h-48 rounded-sm overflow-hidden cursor-pointer shrink-0 group bg-white border border-zinc-200 flex flex-col "
-              >
-                <div className="flex-1 bg-zinc-200 relative overflow-hidden ">
-                  {currentUser?.avatar_url ? (
-                    <img
-                      src={currentUser.avatar_url}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Plus className="w-8 h-8 text-zinc-400" />
-                    </div>
-                  )}
+              {currentUser && (
+                <div
+                  onClick={() => setShowStoryModal(true)}
+                  className="relative w-32 h-48 rounded-sm overflow-hidden cursor-pointer shrink-0 group bg-white border border-zinc-200 flex flex-col "
+                >
+                  <div className="flex-1 bg-zinc-200 relative overflow-hidden ">
+                    {currentUser?.avatar_url ? (
+                      <img
+                        src={currentUser.avatar_url}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Plus className="w-8 h-8 text-zinc-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3 bg-white text-center">
+                    <span className="text-[10px] font-bold tracking-widest uppercase text-black">
+                      Tạo tin
+                    </span>
+                  </div>
                 </div>
-                <div className="p-3 bg-white text-center">
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-black">
-                    Tạo tin
-                  </span>
-                </div>
-              </div>
+              )}
 
               {stories.map((story, idx) => (
                 <div
@@ -1366,45 +1346,47 @@ export default function Feed() {
                 </div>
               )}
 
-              <div className="space-y-6">
-                <div className="bg-white border border-zinc-200 text-xs py-5 px-8 flex items-center justify-between rounded-sm">
-                  <div className="flex items-center gap-4">
-                    <Sparkles className="w-5 h-5 text-zinc-400" />
-                    <span className="font-bold tracking-[0.2em] uppercase text-black">
-                      Phân tích bảng tin với AI
-                    </span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (isSummarizing) return;
-                      setIsSummarizing(true);
-                      showToast("Đang phân tích bảng tin", "info");
-                      try {
-                        const json = await getAIFeedSummaryAPI();
-                        if (json.data?.summary) {
-                          setAiSummary(json.data.summary);
-                          showToast("Đã xong", "success");
+              {currentUser && (
+                <div className="space-y-6">
+                  <div className="bg-white border border-zinc-200 text-xs py-5 px-8 flex items-center justify-between rounded-sm">
+                    <div className="flex items-center gap-4">
+                      <Sparkles className="w-5 h-5 text-zinc-400" />
+                      <span className="font-bold tracking-[0.2em] uppercase text-black">
+                        Phân tích bảng tin với AI
+                      </span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (isSummarizing) return;
+                        setIsSummarizing(true);
+                        showToast("Đang phân tích bảng tin", "info");
+                        try {
+                          const json = await getAIFeedSummaryAPI();
+                          if (json.data?.summary) {
+                            setAiSummary(json.data.summary);
+                            showToast("Đã xong", "success");
+                          }
+                        } catch (e) {
+                          showToast("Lỗi", "error");
+                        } finally {
+                          setIsSummarizing(false);
                         }
-                      } catch (e) {
-                        showToast("Lỗi", "error");
-                      } finally {
-                        setIsSummarizing(false);
-                      }
-                    }}
-                    disabled={isSummarizing}
-                    className="h-10 px-8 border border-black text-black font-bold uppercase text-[10px] tracking-widest disabled:opacity-50 rounded-sm"
-                  >
-                    {isSummarizing ? "Đang xử lý" : "Bắt đầu tóm tắt"}
-                  </button>
-                </div>
-                {aiSummary && (
-                  <div className="bg-white p-8 border border-zinc-200 border-t-0 animate-in fade-in slide-in-from-top-4 rounded-sm">
-                    <p className="text-lg leading-relaxed text-black italic font-medium tracking-tight">
-                      "{aiSummary}"
-                    </p>
+                      }}
+                      disabled={isSummarizing}
+                      className="h-10 px-8 border border-black text-black font-bold uppercase text-[10px] tracking-widest disabled:opacity-50 rounded-sm"
+                    >
+                      {isSummarizing ? "Đang xử lý" : "Bắt đầu tóm tắt"}
+                    </button>
                   </div>
-                )}
-              </div>
+                  {aiSummary && (
+                    <div className="bg-white p-8 border border-zinc-200 border-t-0 animate-in fade-in slide-in-from-top-4 rounded-sm">
+                      <p className="text-lg leading-relaxed text-black italic font-medium tracking-tight">
+                        "{aiSummary}"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex flex-col gap-10">
                 {loading ? (
