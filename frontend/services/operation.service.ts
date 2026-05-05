@@ -4,7 +4,7 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
   const res = await fetch(
-    `${API_URL}/admin/applications/authors/?status=${status}`,
+    `${API_URL}/operation/applications/authors/?status=${status}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -21,7 +21,7 @@ export async function reviewAuthorApplicationAPI(
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
   const res = await fetch(
-    `${API_URL}/admin/applications/authors/${applicationId}/review/`,
+    `${API_URL}/operation/applications/authors/${applicationId}/review/`,
     {
       method: "PUT",
       headers: {
@@ -38,7 +38,7 @@ export async function reviewAuthorApplicationAPI(
 export async function getAdminConfigAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/config/`, {
+  const res = await fetch(`${API_URL}/operation/config/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải cấu hình hệ thống.");
@@ -48,7 +48,7 @@ export async function getAdminConfigAPI() {
 export async function updateAdminConfigAPI(config: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/config/`, {
+  const res = await fetch(`${API_URL}/operation/config/`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ export async function updateAdminConfigAPI(config: any) {
 export async function getSystemHealthAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/sys-health/`, {
+  const res = await fetch(`${API_URL}/operation/sys-health/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể kiểm tra sức khỏe hệ thống.");
@@ -73,7 +73,7 @@ export async function getSystemHealthAPI() {
 export async function getMaintenanceModeAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/maintenance/`, {
+  const res = await fetch(`${API_URL}/operation/maintenance/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải trạng thái bảo trì.");
@@ -86,7 +86,7 @@ export async function toggleMaintenanceModeAPI(
 ) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/maintenance/`, {
+  const res = await fetch(`${API_URL}/operation/maintenance/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,7 +101,7 @@ export async function toggleMaintenanceModeAPI(
 export async function triggerBackupAPI(action: string = "dump") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/backup/`, {
+  const res = await fetch(`${API_URL}/operation/backup/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -120,7 +120,7 @@ export async function triggerCollectionAPI(
   target_class: string,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/admin/collector/trigger/`, {
+  const res = await fetch(`${API_URL}/collector/trigger/`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -134,7 +134,7 @@ export async function triggerCollectionAPI(
 
 export async function getCollectorStatsAPI() {
   const token = getToken();
-  const res = await fetch(`${API_URL}/admin/collector/stats/`, {
+  const res = await fetch(`${API_URL}/operation/collector/stats/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải trạng thái thu thập.");
@@ -144,7 +144,7 @@ export async function getCollectorStatsAPI() {
 export async function getPayoutsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/payouts/`, {
+  const res = await fetch(`${API_URL}/payouts/queue/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách thanh toán.");
@@ -154,7 +154,7 @@ export async function getPayoutsAPI() {
 export async function reviewPayoutAPI(payoutId: string, status: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/payouts/${payoutId}/review/`, {
+  const res = await fetch(`${API_URL}/payouts/${payoutId}/verify/`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -169,7 +169,7 @@ export async function reviewPayoutAPI(payoutId: string, status: string) {
 export async function getBannersAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/banners/`, {
+  const res = await fetch(`${API_URL}/banners/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách banner.");
@@ -179,7 +179,7 @@ export async function getBannersAPI() {
 export async function deleteBannerAPI(id: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/banners/${id}/`, {
+  const res = await fetch(`${API_URL}/banners/${id}/`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -190,7 +190,7 @@ export async function deleteBannerAPI(id: string) {
 export async function getAdminReportsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/admin/reports/`, {
+  const res = await fetch(`${API_URL}/reports/queue/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách báo cáo.");

@@ -23,7 +23,7 @@ import {
   getAdminConfigAPI,
   toggleMaintenanceModeAPI,
   updateAdminConfigAPI,
-} from "@/services/administration.service";
+} from "@/services/operation.service";
 import {
   Settings,
   Type,

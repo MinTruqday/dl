@@ -4,26 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getReportsAPI as getAdminReportsAPI,
   resolveReportAPI,
-} from "@/services/moderation.service";
-import {
-  AlertTriangle,
-  Loader2,
-  RefreshCcw,
-  ShieldCheck,
-  Eye,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  User,
-  MessageSquare,
-  Filter,
-  Zap,
-  MoreVertical,
-  ShieldAlert,
-  Search,
-  ArrowRight,
-  UserX,
-} from "lucide-react";
+} from "@/services/report.service";
+import { Loader2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -33,12 +15,12 @@ export default function ReportsManagementPage() {
   const [reports, setReports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-  const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmModal, setConfirmModal] = useState<{
+    reportId: string;
+    action: string;
+  } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
@@ -50,9 +32,8 @@ export default function ReportsManagementPage() {
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
-      requestAnimationFrame(() => setVisible(true));
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     if (
@@ -63,18 +44,23 @@ export default function ReportsManagementPage() {
     }
   }, [user, authLoading, fetchData]);
 
-  const handleResolve = async (reportId: string, action: string) => {
+  const confirmResolve = async () => {
+    if (!confirmModal) return;
+    setIsProcessing(true);
     try {
-      await resolveReportAPI(reportId, action);
+      await resolveReportAPI(confirmModal.reportId, confirmModal.action);
       showToast(
-        action === "RESOLVED"
+        confirmModal.action === "RESOLVED"
           ? "Đã xử lý vi phạm thành công."
           : "Đã bỏ qua báo cáo.",
         "success",
       );
+      setConfirmModal(null);
       fetchData();
     } catch (err: any) {
       showToast(err.message || "Lỗi xử lý báo cáo.", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -87,174 +73,167 @@ export default function ReportsManagementPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center bg-white">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-12 border-b border-zinc-100 pb-10 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
-      >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-4">
-            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-              Vi phạm & Báo cáo
-            </h1>
-            <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Quản trị an toàn & Compliance DocLib{" "}
-              <ShieldAlert className="w-3.5 h-3.5 text-zinc-100" />
-            </p>
+    <div className="min-h-screen bg-white font-sans text-black">
+      <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
+        <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-semibold text-black">Vi phạm & Báo cáo</h1>
+            <p className="text-sm text-zinc-500 mt-1">Quản trị an toàn và tuân thủ DocLib</p>
           </div>
-
           <div className="flex items-center gap-4">
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="h-14 px-8 border border-zinc-100 text-black text-[11px] font-bold uppercase active:scale-[0.98] flex items-center gap-4 rounded-sm"
+              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
             >
-              {isRefreshing ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RefreshCcw className="w-5 h-5" />
-              )}
-              Đồng bộ
+              {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
-            <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
-              Trung tâm an toàn DocLib
+          </div>
+        </header>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+          <div className="flex border-b border-zinc-200 w-full md:w-auto">
+            <div className="pb-3 px-4 text-sm font-medium border-b-2 border-black text-black whitespace-nowrap">
+              Hàng đợi báo cáo
+            </div>
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm báo cáo"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+            />
+          </div>
+        </div>
+
+        <div className="border border-zinc-200 bg-white overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="border-b border-zinc-200 bg-zinc-50">
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Đối tượng</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Nội dung báo cáo</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Người báo cáo</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Trạng thái</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Ngày gửi</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReports.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-24 text-center">
+                    <p className="text-sm font-medium text-zinc-500">Hệ thống hiện tại không có báo cáo vi phạm</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredReports.map((report: any) => (
+                  <tr key={report.id} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                    <td className="py-4 px-6 align-top">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold text-black uppercase tracking-widest">
+                          {report.target_type || "Nội dung"}
+                        </span>
+                        <span className="text-xs text-zinc-500 font-mono truncate max-w-[150px]">
+                          {report.target_id}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 align-top max-w-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-semibold text-black">{report.reason}</span>
+                        <p className="text-xs text-zinc-600 line-clamp-2">
+                          "{report.description || "Không có mô tả chi tiết kèm theo."}"
+                        </p>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 align-top">
+                      <span className="text-sm font-medium text-black">
+                        {report.reporter_name || "Ẩn danh"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 align-top whitespace-nowrap">
+                      {report.status === "RESOLVED" || report.status === "DISMISSED" ? (
+                        <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
+                          {report.status === "RESOLVED" ? "Đã xử lý" : "Đã bỏ qua"}
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-black border border-black px-2 py-1 uppercase tracking-widest">
+                          Đang chờ
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6 align-top whitespace-nowrap">
+                      <span className="text-xs font-medium text-zinc-500">
+                        {report.created_at ? new Date(report.created_at).toLocaleDateString("vi-VN") : "--"}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 align-top text-right">
+                      {report.status !== "RESOLVED" && report.status !== "DISMISSED" && (
+                        <div className="flex justify-end gap-4">
+                          <button
+                            onClick={() => setConfirmModal({ reportId: report.id, action: "DISMISSED" })}
+                            className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                          >
+                            Bỏ qua
+                          </button>
+                          <button
+                            onClick={() => setConfirmModal({ reportId: report.id, action: "RESOLVED" })}
+                            className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                          >
+                            Xử lý
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/80 backdrop-blur-sm p-4">
+          <div className="bg-white border border-zinc-200 w-full max-w-md p-6 shadow-none">
+            <h3 className="text-lg font-semibold text-black mb-2">
+              {confirmModal.action === "RESOLVED" ? "Xác nhận xử lý vi phạm" : "Xác nhận bỏ qua báo cáo"}
+            </h3>
+            <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
+              {confirmModal.action === "RESOLVED"
+                ? "Bạn có chắc chắn muốn xử lý vi phạm đối với nội dung này? Các hành động liên quan sẽ được thực thi ngay lập tức."
+                : "Bạn quyết định bỏ qua báo cáo này và đánh dấu là không hợp lệ?"}
+            </p>
+            <div className="flex items-center justify-end gap-4 mt-6">
+              <button
+                onClick={() => !isProcessing && setConfirmModal(null)}
+                disabled={isProcessing}
+                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmResolve}
+                disabled={isProcessing}
+                className="px-4 py-2 bg-black text-white text-sm font-medium border border-black hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />} Xác nhận
+              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      <div
-        className=" delay-75 space-y-10"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
-      >
-        <div className="relative group">
-          <div className="absolute left-6 top-1/2 -translate-y-1/2">
-            <Search className="w-5 h-5 text-zinc-200 group-focus-within:text-black transition-colors" />
-          </div>
-          <input
-            type="text"
-            placeholder=""
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-16 pl-16 pr-8 bg-white border border-zinc-100 focus:border-black outline-none font-bold text-lg tracking-tight placeholder:text-zinc-100 rounded-sm"
-          />
-        </div>
-
-        <div className="bg-white border border-zinc-100 rounded-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-white border-b border-zinc-100 text-zinc-300 text-[9px] font-bold uppercase tracking-[0.2em]">
-                  <th className="px-10 py-6">Đối tượng vi phạm</th>
-                  <th className="px-10 py-6">Nội dung & Lý do</th>
-                  <th className="px-10 py-6">Người gửi báo cáo</th>
-                  <th className="px-10 py-6 text-right">Xử lý</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-50">
-                {filteredReports.map((report: any) => (
-                  <tr key={report.id} className=" group">
-                    <td className="px-10 py-10">
-                      <div className="flex items-center gap-8">
-                        <div className="w-14 h-14 bg-white flex items-center justify-center border border-zinc-100 rounded-sm">
-                          <UserX className="w-6 h-6 text-zinc-100  " />
-                        </div>
-                        <div className="flex flex-col gap-2 min-w-0">
-                          <span className="font-bold text-black uppercase tracking-widest text-[10px] flex items-center gap-2">
-                            {report.target_type || "Nội dung"}{" "}
-                            <ChevronRight className="w-3 h-3 text-zinc-100" />
-                          </span>
-                          <span className="text-[10px] font-bold text-zinc-200 truncate max-w-[150px] tracking-tight italic">
-                            ID: {report.target_id}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-10 py-10">
-                      <div className="space-y-3 max-w-lg">
-                        <span className="inline-block px-3 py-1 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded-sm border border-black">
-                          {report.reason}
-                        </span>
-                        <p className="text-[12px] text-zinc-500 font-medium italic line-clamp-2 leading-relaxed">
-                          "
-                          {report.description ||
-                            "Không có mô tả chi tiết kèm theo."}
-                          "
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-10 py-10">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 border border-zinc-100 flex items-center justify-center text-[11px] font-bold text-zinc-300 rounded-sm ">
-                          {report.reporter_name?.[0] || "R"}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[11px] font-bold text-black tracking-tight">
-                            {report.reporter_name || "Ẩn danh"}
-                          </span>
-                          <div className="flex items-center gap-2 text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                            <Clock className="w-3 h-3" />{" "}
-                            {new Date(report.created_at).toLocaleDateString(
-                              "vi-VN",
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-10 py-10 text-right">
-                      <div className="flex justify-end gap-3">
-                        <button
-                          onClick={() => handleResolve(report.id, "DISMISSED")}
-                          className="h-11 px-8 border border-zinc-100 text-[9px] font-bold uppercase tracking-widest text-zinc-300 rounded-sm"
-                        >
-                          Bỏ qua
-                        </button>
-                        <button
-                          onClick={() => handleResolve(report.id, "RESOLVED")}
-                          className="h-11 px-10 bg-black text-white text-[9px] font-bold uppercase tracking-[0.2em] active:scale-[0.98] rounded-sm"
-                        >
-                          Xử lý vi phạm
-                        </button>
-                        <button className="h-11 w-11 border border-zinc-100 flex items-center justify-center text-zinc-100 rounded-sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredReports.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-48 text-center border-dashed border-2 border-zinc-50 rounded-sm"
-                    >
-                      <div className="flex flex-col items-center gap-6">
-                        <ShieldCheck className="w-16 h-16 text-zinc-50 stroke-[1]" />
-                        <p className="text-[11px] font-bold text-zinc-200 uppercase tracking-[0.2em]">
-                          Hệ thống hiện tại không có báo cáo vi phạm
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

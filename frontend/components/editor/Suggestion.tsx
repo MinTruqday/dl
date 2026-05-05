@@ -3,11 +3,18 @@ import tippy, { Instance } from "tippy.js";
 import { SuggestionList } from "./SuggestionList";
 import { getLatexSnippetsAPI } from "@/services/editor.service";
 
+let cachedSnippets: any[] = [];
+
 export const suggestionRenderer = {
   items: async ({ query }: { query: string }) => {
     try {
-      const snippets = await getLatexSnippetsAPI();
-      return snippets
+      if (cachedSnippets.length === 0) {
+        console.log("Fetching LaTeX snippets");
+        cachedSnippets = await getLatexSnippetsAPI();
+        console.log(`Loaded ${cachedSnippets.length} snippets.`);
+      }
+      
+      const filtered = cachedSnippets
         .filter(
           (item: any) =>
             item.label.toLowerCase().includes(query.toLowerCase()) ||
@@ -15,6 +22,9 @@ export const suggestionRenderer = {
               item.detail.toLowerCase().includes(query.toLowerCase())),
         )
         .slice(0, 15);
+        
+      console.log(`Autocomplete query: "${query}", found ${filtered.length} items`);
+      return filtered;
     } catch (error) {
       console.error("Failed to fetch LaTeX snippets:", error);
       return [];
@@ -22,17 +32,19 @@ export const suggestionRenderer = {
   },
 
   render: () => {
-    let component: ReactRenderer;
-    let popup: Instance[];
+    let component: any;
+    let popup: any;
 
     return {
       onStart: (props: any) => {
+        console.log("Suggestion started", props);
         component = new ReactRenderer(SuggestionList, {
           props,
           editor: props.editor,
         });
 
         if (!props.clientRect) {
+          console.warn("No clientRect provided for suggestion");
           return;
         }
 
@@ -47,28 +59,36 @@ export const suggestionRenderer = {
         });
       },
 
-      onUpdate: (props: any) => {
+      onUpdate(props: any) {
         component.updateProps(props);
 
         if (!props.clientRect) {
           return;
         }
 
-        popup[0].setProps({
-          getReferenceClientRect: props.clientRect,
-        });
+        if (popup && popup[0]) {
+          popup[0].setProps({
+            getReferenceClientRect: props.clientRect,
+          });
+        }
       },
 
-      onKeyDown: (props: any) => {
+      onKeyDown(props: any) {
         if (props.event.key === "Escape") {
-          popup[0].hide();
+          if (popup && popup[0]) {
+            popup[0].hide();
+          }
           return true;
         }
-        return (component.ref as any)?.onKeyDown(props);
+
+        return component.ref?.onKeyDown(props);
       },
 
-      onExit: () => {
-        popup[0].destroy();
+      onExit() {
+        console.log("Suggestion exited");
+        if (popup && popup[0]) {
+          popup[0].destroy();
+        }
         component.destroy();
       },
     };

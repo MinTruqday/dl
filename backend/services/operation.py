@@ -5,7 +5,7 @@ import uuid
 from loguru import logger
 from models.user import RoleEnum
 
-class AdministrationService:
+class OperationService:
     @staticmethod
     async def get_all_users(limit: int = 50, offset: int = 0) -> list:
         db = db_client.mongodb.get_default_database()

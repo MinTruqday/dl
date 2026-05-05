@@ -327,7 +327,7 @@ export default function ProfilePage() {
                 type="number"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="Nhập số tiền..."
+                placeholder="Nhập số tiền"
                 className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
               />
               <button
@@ -385,7 +385,7 @@ export default function ProfilePage() {
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Nhập thông tin giới thiệu ngắn gọn..."
+                  placeholder="Nhập thông tin giới thiệu ngắn gọn"
                   className="w-full min-h-[160px] bg-white border border-zinc-200 p-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none resize-none placeholder:text-zinc-400"
                 />
               </div>
@@ -417,7 +417,7 @@ export default function ProfilePage() {
                     <input
                       value={motivation}
                       onChange={(e) => setMotivation(e.target.value)}
-                      placeholder="Lý do ứng tuyển..."
+                      placeholder="Lý do ứng tuyển"
                       className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
                     />
                     <button
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                       disabled={isApplying}
                       className="h-10 px-6 border border-black bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 rounded-none shrink-0"
                     >
-                      {isApplying ? "Đang gửi..." : "Gửi yêu cầu"}
+                      {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                     </button>
                   </div>
                 </div>

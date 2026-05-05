@@ -54,29 +54,29 @@ export const SuggestionList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden w-80 animate-in fade-in slide-in-from-top-2 ">
+    <div className="bg-white border border-black rounded-none overflow-hidden w-80 animate-in fade-in slide-in-from-top-2">
       {props.items.length ? (
-        <div className="py-1">
+        <div className="py-0">
           {props.items.map((item: any, index: number) => (
             <button
-              className={`w-full text-left px-3 py-1.5 text-sm flex flex-col gap-0.5 transition-colors ${
+              className={`w-full text-left px-3 py-2 text-sm flex flex-col gap-0.5 border-b border-zinc-100 last:border-b-0 transition-colors ${
                 index === selectedIndex
-                  ? "bg-gray-100 text-black"
-                  : "text-gray-600"
+                  ? "bg-black text-white"
+                  : "text-zinc-600 hover:bg-zinc-50"
               }`}
               key={index}
               onClick={() => selectItem(index)}
             >
               <div className="flex justify-between items-center w-full">
-                <span className="font-mono font-medium text-black">
+                <span className={`font-mono font-medium ${index === selectedIndex ? "text-white" : "text-black"}`}>
                   {item.label}
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+                <span className={`text-[10px] uppercase tracking-wider font-bold ${index === selectedIndex ? "text-zinc-400" : "text-zinc-400"}`}>
                   {item.type || "Lệnh"}
                 </span>
               </div>
               {item.detail && (
-                <span className="text-xs text-gray-400 truncate w-full">
+                <span className={`text-xs truncate w-full ${index === selectedIndex ? "text-zinc-400" : "text-zinc-500"}`}>
                   {item.detail}
                 </span>
               )}
@@ -84,7 +84,7 @@ export const SuggestionList = forwardRef((props: any, ref) => {
           ))}
         </div>
       ) : (
-        <div className="text-sm p-4 text-gray-400 text-center">
+        <div className="text-sm p-4 text-zinc-500 text-center font-medium bg-zinc-50">
           Không tìm thấy lệnh phù hợp
         </div>
       )}

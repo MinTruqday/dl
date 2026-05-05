@@ -26,7 +26,7 @@ export async function compilePreviewAPI(
 
 export async function getSynonymsAPI(word: string, context: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/api/inference/synonyms`, {
+  const res = await fetch(`${API_URL}/inference/synonyms`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

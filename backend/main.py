@@ -43,8 +43,10 @@ from api.collector import router as collector_router
 from api.library import router as library_router
 from api.feedback import router as feedback_router
 from api.ai import router as ai_router
-from api.administration import router as administration_router
-from api.moderation import router as moderation_router
+from api.operation import router as operation_router
+from api.draft import router as draft_router
+from api.report import router as report_router
+from api.log import router as log_router
 from api.telemetry import router as telemetry_router
 from api.banner import router as banner_router
 from api.user import router as user_router
@@ -147,11 +149,13 @@ app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
 app.include_router(collector_router)
-app.include_router(administration_router, prefix="/admin", tags=["Administration"])
-app.include_router(payout_router, prefix="/admin", tags=["Payout"])
-app.include_router(banner_router, prefix="/admin", tags=["Banner"])
-app.include_router(moderation_router)
-app.include_router(telemetry_router)
+app.include_router(payout_router, tags=["payout"])
+app.include_router(operation_router, prefix="/operation", tags=["operation"])
+app.include_router(draft_router, tags=["draft"])
+app.include_router(report_router, tags=["reports"])
+app.include_router(log_router, tags=["logs"])
+app.include_router(telemetry_router, prefix="/telemetry", tags=["telemetry"])
+app.include_router(banner_router, tags=["banner"])
 app.include_router(user_router)
 app.include_router(discovery_router)
 app.include_router(passkey_router)

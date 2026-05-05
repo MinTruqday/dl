@@ -263,7 +263,7 @@ export default function WalletPage() {
                 type="text"
                 value={voucherCode}
                 onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                placeholder="Nhập mã..."
+                placeholder="Nhập mã"
                 className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium text-center focus:outline-none focus:border-black transition-colors rounded-none"
               />
               <button

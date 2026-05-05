@@ -1086,7 +1086,7 @@ export default function Feed() {
                     <div className="flex-1">
                       <textarea
                         className="w-full bg-transparent outline-none text-black resize-none min-h-[48px] text-sm font-medium placeholder:text-zinc-400"
-                        placeholder="Chia sẻ kiến thức của bạn..."
+                        placeholder="Chia sẻ kiến thức của bạn"
                         value={content}
                         rows={
                           isQuoteMode
@@ -1667,7 +1667,7 @@ export default function Feed() {
                               <div className="flex gap-2 items-center">
                                 <Input
                                   className="h-10 bg-white border-zinc-200 text-xs font-medium focus-visible:ring-black rounded-none"
-                                  placeholder="Viết bình luận..."
+                                  placeholder="Viết bình luận"
                                   value={commentText}
                                   onChange={(e) =>
                                     setCommentText(e.target.value)
@@ -1836,7 +1836,7 @@ export default function Feed() {
 
               <textarea
                 className="w-full bg-transparent border-none outline-none text-center resize-none text-2xl font-bold placeholder:opacity-50 z-10"
-                placeholder="Nhập nội dung tin..."
+                placeholder="Nhập nội dung tin"
                 value={storyText}
                 onChange={(e) => setStoryText(e.target.value)}
                 autoFocus
@@ -1981,7 +1981,7 @@ export default function Feed() {
                   <div className="flex-1 relative flex items-center border border-zinc-200">
                     <LinkIcon className="w-4 h-4 text-zinc-400 absolute left-2" />
                     <Input
-                      placeholder="Nhập liên kết..."
+                      placeholder="Nhập liên kết"
                       className="pl-8 h-8 w-full bg-zinc-50 border-none text-xs rounded-none"
                       value={storyLinkUrl}
                       onChange={(e) => setStoryLinkUrl(e.target.value)}
@@ -1996,7 +1996,7 @@ export default function Feed() {
                   <div className="flex-1 relative flex items-center border border-zinc-200">
                     <AtSign className="w-4 h-4 text-zinc-400 absolute left-2" />
                     <Input
-                      placeholder="Nhắc đến người dùng..."
+                      placeholder="Nhắc đến người dùng"
                       className="pl-8 h-8 w-full bg-zinc-50 border-none text-xs rounded-none"
                       value={storyMentionsInput}
                       onChange={(e) => setStoryMentionsInput(e.target.value)}
@@ -2192,7 +2192,7 @@ export default function Feed() {
 
                 {stories[activeStoryIndex].poll_data ? (
                   <div
-                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-sm"
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-none"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <h4 className="text-black text-xs font-semibold text-center mb-2">
@@ -2252,7 +2252,7 @@ export default function Feed() {
                   </div>
                 ) : stories[activeStoryIndex].quiz_data ? (
                   <div
-                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-sm"
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-none"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="text-center font-bold text-[10px] uppercase text-zinc-500 mb-1">
@@ -2396,7 +2396,7 @@ export default function Feed() {
                     <div className="flex-1 relative flex items-center">
                       <input
                         type="text"
-                        placeholder="Trả lời tin..."
+                        placeholder="Trả lời tin"
                         className="w-full bg-white border border-zinc-200 px-3 py-2 text-xs text-black outline-none focus:border-black transition-colors"
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
@@ -2443,7 +2443,7 @@ export default function Feed() {
                   (currentUser?._id || "") ||
                   stories[activeStoryIndex].author_id ===
                     (currentUser?._id || "")) && (
-                  <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-sm">
+                  <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-none">
                     <div className="flex items-center justify-between mb-3 border-b border-zinc-100 pb-2">
                       <span className="text-black text-xs font-semibold">
                         Người đã xem
@@ -2617,7 +2617,7 @@ export default function Feed() {
                   prev ? { ...prev, reason: e.target.value } : null
                 )
               }
-              placeholder="Nhập chi tiết..."
+              placeholder="Nhập chi tiết"
               autoFocus
               className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none transition-colors"
             />

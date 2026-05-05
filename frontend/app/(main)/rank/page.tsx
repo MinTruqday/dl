@@ -78,9 +78,9 @@ export default function LeaderboardPage() {
       <div className="mb-8 border-b border-zinc-200 pb-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-black">Bảng xếp hạng</h1>
-            <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
-              Tôn vinh giá trị tri thức <Sparkles className="w-4 h-4" />
+            <h1 className="text-3xl font-semibold text-black">Xếp hạng</h1>
+            <p className="text-zinc-500 text-sm font-medium">
+              Tôn vinh giá trị tri thức
             </p>
           </div>
         </div>
@@ -89,9 +89,8 @@ export default function LeaderboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <aside className="lg:col-span-3 space-y-8 order-2 lg:order-1 hidden lg:block">
           <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2 flex items-center gap-2">
-              <Trophy className="w-4 h-4" /> Danh mục xếp hạng
-            </h3>
+            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2">
+               Danh mục xếp hạng</h3>
             <nav className="flex flex-col">
               {[
                 { id: "views", label: "Tài liệu xem nhiều nhất", icon: TrendingUp },
@@ -120,24 +119,14 @@ export default function LeaderboardPage() {
             <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2 flex items-center gap-2">
               Hệ thống dữ liệu
             </h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
-                  <Clock className="w-4 h-4 text-zinc-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-medium text-zinc-500">Cập nhật lần cuối</span>
-                  <span className="text-xs font-semibold text-black">Vừa xong</span>
-                </div>
+            <div className="space-y-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cập nhật lần cuối</span>
+                <span className="text-xs font-semibold text-black">Vừa xong</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
-                  <Calendar className="w-4 h-4 text-zinc-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-medium text-zinc-500">Chu kỳ thống kê</span>
-                  <span className="text-xs font-semibold text-black">Thời gian thực</span>
-                </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Chu kỳ thống kê</span>
+                <span className="text-xs font-semibold text-black">Thời gian thực</span>
               </div>
             </div>
           </div>

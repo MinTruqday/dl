@@ -6,7 +6,9 @@ import Mathematics from "@tiptap/extension-mathematics";
 import React, { useState, useEffect, useCallback } from "react";
 import { Extension } from "./Extension";
 import { AutoComplete } from "./AutoComplete";
+import { FontSize } from "./FontSize";
 import "katex/dist/katex.min.css";
+import "tippy.js/dist/tippy.css";
 import {
   Code,
   FileText,
@@ -38,6 +40,7 @@ import {
   Minus,
   Video,
   Sparkles,
+  ListOrdered,
 } from "lucide-react";
 import {
   Modal,
@@ -125,12 +128,13 @@ export default function Editor({
       Placeholder.configure({
         placeholder: "Bắt đầu soạn thảo nội dung hoặc gõ \\ để chèn mã LaTeX",
       }),
+      FontSize,
     ],
     content: initialContent || "",
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[500px] border border-zinc-200 p-8 bg-white font-sans",
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl max-w-none focus:outline-none min-h-[calc(100vh-250px)] border border-zinc-200 p-4 md:p-10 bg-white font-sans",
       },
     },
     onUpdate: ({ editor }) => {
@@ -218,7 +222,6 @@ export default function Editor({
         showToast("Không tìm thấy từ đồng nghĩa phù hợp", "info");
       }
     } catch (err: any) {
-      console.error("Lỗi lấy gợi ý từ đồng nghĩa:", err);
       showToast(err.message || "Không thể lấy gợi ý lúc này", "error");
     }
   };
@@ -228,7 +231,7 @@ export default function Editor({
   }
 
   return (
-    <div className="flex flex-col w-full h-[85vh] mx-auto bg-white border border-zinc-200 animate-in fade-in relative font-sans">
+    <div className="flex flex-col w-full h-[85vh] mx-auto bg-white border border-zinc-200 relative font-sans">
       <div className="flex justify-between items-center bg-white border-b border-zinc-200 p-3">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
@@ -372,6 +375,34 @@ export default function Editor({
           </div>
 
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  editor.chain().focus().setFontSize(e.target.value).run();
+                } else {
+                  editor.chain().focus().unsetFontSize().run();
+                }
+              }}
+              className="text-xs border-none bg-transparent text-zinc-600 focus:outline-none cursor-pointer h-8 px-1"
+              title="Kích thước chữ"
+              value={editor.getAttributes('textStyle').fontSize || ''}
+            >
+              <option value="">Cỡ chữ</option>
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="18px">18px</option>
+              <option value="20px">20px</option>
+              <option value="24px">24px</option>
+              <option value="30px">30px</option>
+            </select>
+            <input
+              type="color"
+              onInput={(e: any) => editor.chain().focus().setColor(e.target.value).run()}
+              value={editor.getAttributes('textStyle').color || '#000000'}
+              className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer"
+              title="Màu chữ"
+            />
             <button
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -387,6 +418,38 @@ export default function Editor({
               className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 2 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
             >
               H2
+            </button>
+            <button
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 3 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
+            >
+              H3
+            </button>
+            <button
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 4 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 4 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
+            >
+              H4
+            </button>
+            <button
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 5 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 5 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
+            >
+              H5
+            </button>
+            <button
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 6 }).run()
+              }
+              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 6 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
+            >
+              H6
             </button>
             <button
               onClick={() => editor.chain().focus().toggleTaskList().run()}
@@ -413,26 +476,35 @@ export default function Editor({
               <List className="w-4 h-4" />
             </button>
             <button
-              onClick={() => {
-                const headings =
-                  editor
-                    .getJSON()
-                    .content?.filter((n: any) => n.type === "heading") || [];
-                let tocHtml =
-                  "<div class='toc-container bg-white p-6 border border-zinc-200 mb-8'><h2 class='text-sm font-bold mb-4'>Mục lục</h2><ul class='space-y-2'>";
-                headings.forEach((h: any) => {
-                  const text =
-                    h.content?.map((c: any) => c.text || "").join("") || "";
-                  const level = h.attrs.level;
-                  tocHtml += `<li class='text-xs ${level === 1 ? "font-bold" : "ml-4"} cursor-pointer'>${text}</li>`;
-                });
-                tocHtml += "</ul></div>";
-                editor.chain().focus().insertContent(tocHtml).run();
-              }}
-              className="p-2 bg-white text-zinc-600 "
-              title="Tạo mục lục"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={`p-2 ${editor.isActive("orderedList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
+              title="Danh sách số"
             >
-              <List className="w-4 h-4 text-zinc-400" />
+              <ListOrdered className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                const url = window.prompt("Nhập đường dẫn hình ảnh:");
+                if (url) {
+                  editor.chain().focus().setImage({ src: url }).run();
+                }
+              }}
+              className="p-2 bg-white text-zinc-600"
+              title="Chèn hình ảnh"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                const url = window.prompt("Nhập đường dẫn Youtube:");
+                if (url) {
+                  editor.chain().focus().setYoutubeVideo({ src: url }).run();
+                }
+              }}
+              className="p-2 bg-white text-zinc-600"
+              title="Chèn Video Youtube"
+            >
+              <Video className="w-4 h-4" />
             </button>
           </div>
 
@@ -526,7 +598,7 @@ export default function Editor({
             isPreview ? "w-1/2 border-r border-zinc-200" : "w-full"
           } flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-100`}
         >
-          <div className="w-full max-w-4xl bg-white border border-zinc-200 min-h-[800px] animate-in fade-in ">
+          <div className="w-full bg-white border border-zinc-200 min-h-[800px] animate-in fade-in">
             <EditorContent editor={editor} className="h-full" />
           </div>
         </div>
@@ -584,7 +656,7 @@ export default function Editor({
         </ModalHeader>
         <ModalContent className="space-y-6">
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-            Nhập địa chỉ URL bạn muốn liên kết đến phần văn bản đang chọn.
+            Nhập địa chỉ URL bạn muốn liên kết đến phần văn bản đang chọn
           </p>
           <div className="space-y-3">
             <label className="text-[9px] font-bold text-black uppercase tracking-widest">Địa chỉ URL</label>

@@ -1,22 +1,17 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState, useEffect } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { forgotPasswordAPI } from "@/services/auth.service";
 import { useToast } from "@/contexts/ToastContext";
+import { Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
     e.preventDefault();
 
     if (!email || !email.includes("@")) {
@@ -44,38 +39,26 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navigation />
-      <div
-        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(16px)",
-        }}
-      >
-        <h2 className="text-center text-4xl font-bold tracking-tight text-black">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-16">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-black">
           Quên mật khẩu
         </h2>
-        <p className="mt-3 text-center text-base text-zinc-500">
+        <p className="mt-2 text-center text-sm text-zinc-500">
           Nhập email để gửi yêu cầu đặt lại mật khẩu
         </p>
       </div>
 
-      <div
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md delay-150"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(16px)",
-        }}
-      >
-        <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-none">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="email"
-                className="block text-base font-bold text-black"
+                className="block text-sm font-medium text-black"
               >
                 Địa chỉ email
               </label>
-              <div className="mt-1">
+              <div className="mt-2">
                 <input
                   id="email"
                   name="email"
@@ -85,7 +68,7 @@ export default function ForgotPasswordPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setEmail(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base placeholder-zinc-400"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
                 />
               </div>
             </div>
@@ -93,22 +76,23 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-3 px-4 text-base font-bold text-white bg-black disabled:opacity-50 active:scale-95 rounded-sm"
+              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 hover:bg-zinc-800 rounded-none transition-colors"
             >
-              {loading ? "Đang gửi" : "Gửi yêu cầu khôi phục"}
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading ? "Đang xử lý" : "Gửi yêu cầu khôi phục"}
             </button>
           </form>
 
-          <div className="mt-4 text-sm text-center flex flex-col gap-2">
+          <div className="mt-8 text-sm text-center flex flex-col gap-3">
             <a
               href="/verify-code"
-              className="text-black font-bold text-[12px] active:scale-95 inline-block transition-transform"
+              className="text-black font-medium hover:underline transition-all"
             >
               Đã có mã xác thực? Xác thực ngay
             </a>
             <a
               href="/login"
-              className="text-zinc-400 font-medium text-[12px] active:scale-95 inline-block transition-transform"
+              className="text-zinc-500 font-medium hover:text-black hover:underline transition-all"
             >
               Quay lại đăng nhập
             </a>

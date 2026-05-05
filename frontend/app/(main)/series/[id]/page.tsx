@@ -203,7 +203,7 @@ export default function SeriesDetailPage() {
               Hãy kết nối những thực thể giá trị để hoàn thiện chuỗi tri thức này
             </p>
             <Link href="/documents">
-              <button className="h-16 px-12 bg-black text-white text-[10px] font-bold tracking-[0.3em] uppercase rounded-sm active:scale-95 transition-transform shadow-sm">
+              <button className="h-16 px-12 bg-black text-white text-[10px] font-bold tracking-[0.3em] uppercase rounded-sm active:scale-95 transition-transform shadow-none">
                 Khám phá ngay
               </button>
             </Link>

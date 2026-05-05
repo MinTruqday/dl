@@ -580,7 +580,7 @@ export default function DocumentsPage() {
               </h3>
               <input 
                 type="text"
-                placeholder="Nhập từ khóa..."
+                placeholder="Nhập từ khóa"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"

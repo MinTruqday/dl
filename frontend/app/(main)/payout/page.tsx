@@ -15,10 +15,8 @@ import {
   Clock,
   Loader2,
   Banknote,
-  ArrowUpRight,
   History,
   Info,
-  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -32,12 +30,8 @@ export default function StudioPayoutsPage() {
   const [balance, setBalance] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [payoutAmount, setPayoutAmount] = useState("");
+  const [bankInfo, setBankInfo] = useState("");
   const [requesting, setRequesting] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
-  const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -46,16 +40,15 @@ export default function StudioPayoutsPage() {
       const [revData, balData, histData] = await Promise.all([
         getAuthorRevenueAPI(),
         getWalletBalanceAPI(),
-        getWalletHistoryAPI(0, 50),
+        (getWalletHistoryAPI as any)(0, 50),
       ]);
-      setRevenue(revData.data || revData);
-      setBalance(balData.data || balData);
-      setHistory(histData.data || histData || []);
+      setRevenue(revData?.data || revData || {});
+      setBalance(balData?.data || balData || {});
+      setHistory(histData?.data || histData || []);
     } catch (err: any) {
       console.error("Lỗi tải dữ liệu tài chính:", err);
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => setVisible(true));
     }
   }, []);
 
@@ -70,11 +63,16 @@ export default function StudioPayoutsPage() {
       showToast("Số tiền tối thiểu để rút là 50.000 dl.", "error");
       return;
     }
+    if (!bankInfo.trim()) {
+      showToast("Vui lòng nhập thông tin ngân hàng.", "error");
+      return;
+    }
     setRequesting(true);
     try {
-      await requestPayoutAPI(amount);
+      await requestPayoutAPI(amount, bankInfo);
       showToast("Yêu cầu rút tiền đã được gửi thành công.", "success");
       setPayoutAmount("");
+      setBankInfo("");
       loadData();
     } catch (e: any) {
       showToast(e.message || "Yêu cầu rút tiền thất bại.", "error");
@@ -85,197 +83,187 @@ export default function StudioPayoutsPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-zinc-100" />
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-12 border-b border-zinc-100 pb-10 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
-      >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tighter leading-none text-black">
-              Doanh thu
-            </h1>
-            <p className="text-zinc-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
-              Quản trị tài chính & Thu nhập{" "}
-              <Sparkles className="w-3.5 h-3.5 text-zinc-100" />
-            </p>
+    <div className="min-h-screen bg-white font-sans text-black">
+      <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
+        <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-semibold text-black">Doanh thu</h1>
+            <p className="text-sm text-zinc-500 mt-1">Quản trị tài chính & Thu nhập</p>
           </div>
-          <div className="hidden md:flex items-center gap-3 px-6 py-3 bg-white border border-zinc-100 text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-sm">
-            <Banknote className="w-4 h-4" /> Hệ thống thanh toán DocLib
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 border border-zinc-200 text-xs font-medium text-zinc-500 bg-white">
+            <Banknote className="w-3.5 h-3.5" /> Hệ thống thanh toán
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="p-6 border border-black bg-black text-white flex flex-col justify-between h-32">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Số dư hiện tại</p>
+              <Wallet className="w-4 h-4 opacity-50" />
+            </div>
+            <div className="flex items-baseline gap-1 mt-auto">
+              <span className="text-3xl font-bold tracking-tight">{balance?.balance?.toLocaleString() || 0}</span>
+              <span className="text-sm opacity-50">dl</span>
+            </div>
+          </div>
+          <div className="p-6 border border-zinc-200 bg-white text-black flex flex-col justify-between h-32">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Tổng thu nhập</p>
+              <TrendingUp className="w-4 h-4 text-zinc-300" />
+            </div>
+            <div className="flex items-baseline gap-1 mt-auto">
+              <span className="text-3xl font-bold tracking-tight">{revenue?.total_revenue?.toLocaleString() || 0}</span>
+              <span className="text-sm text-zinc-400">dl</span>
+            </div>
+          </div>
+          <div className="p-6 border border-zinc-200 bg-white text-black flex flex-col justify-between h-32">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Đang chờ duyệt</p>
+              <Clock className="w-4 h-4 text-zinc-300" />
+            </div>
+            <div className="flex items-baseline gap-1 mt-auto">
+              <span className="text-3xl font-bold tracking-tight">{revenue?.pending_payout?.toLocaleString() || 0}</span>
+              <span className="text-sm text-zinc-400">dl</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <div
-          className="lg:col-span-9 space-y-12 "
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                label: "Số dư hiện tại",
-                val: balance?.balance || 0,
-                icon: Wallet,
-                color: "bg-black text-white",
-              },
-              {
-                label: "Tổng thu nhập",
-                val: revenue?.total_revenue || 0,
-                icon: TrendingUp,
-                color: "bg-white text-black border-zinc-100",
-              },
-              {
-                label: "Đang chờ duyệt",
-                val: revenue?.pending_payout || 0,
-                icon: Clock,
-                color: "bg-white text-black border-zinc-100",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className={`p-10 border group rounded-sm ${item.color}`}
-              >
-                <item.icon className="w-5 h-5 mb-8 opacity-50" />
-                <h3 className="text-4xl font-bold tracking-tighter mb-2 transition-transform ">
-                  {item.val.toLocaleString()}{" "}
-                  <span className="text-sm opacity-30">dl</span>
-                </h3>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50">
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 text-[11px] font-bold text-black uppercase tracking-widest px-1">
-              <History className="w-4 h-4 text-zinc-300" /> Nhật ký giao dịch
-            </div>
-            <div className="grid gap-4">
-              {history.length > 0 ? (
-                history.map((tx, idx) => (
-                  <div
-                    key={idx}
-                    className="group flex items-center justify-between p-8 border border-zinc-100 bg-white rounded-sm"
-                  >
-                    <div className="flex items-center gap-8">
-                      <div className="w-12 h-12 border border-zinc-100 flex items-center justify-center font-bold text-[13px] text-zinc-300 rounded-sm">
-                        {idx + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-base font-bold text-black transition-transform tracking-tight">
-                          {tx.note || tx.description || tx.type}
-                        </p>
-                        <p className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                          {tx.created_at
-                            ? new Date(tx.created_at).toLocaleDateString(
-                                "vi-VN",
-                              )
-                            : "Thời gian không xác định"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div
-                        className={`text-xl font-bold tracking-tighter mb-1 ${tx.amount >= 0 ? "text-black" : "text-zinc-400"}`}
-                      >
-                        {tx.amount >= 0 ? "+" : ""}
-                        {tx.amount?.toLocaleString()}{" "}
-                        <span className="text-[10px] text-zinc-200 uppercase">
-                          dl
-                        </span>
-                      </div>
-                      <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest">
-                        Giao dịch hệ thống
-                      </div>
-                    </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-8">
+            <div>
+              <h2 className="text-sm font-semibold text-black mb-6 flex items-center gap-2">
+                <History className="w-4 h-4" /> Nhật ký giao dịch
+              </h2>
+              <div className="border border-zinc-200 bg-white">
+                {history.length > 0 ? (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-200 bg-zinc-50">
+                        <th className="py-3 px-4 text-xs font-semibold text-zinc-600">Thời gian</th>
+                        <th className="py-3 px-4 text-xs font-semibold text-zinc-600">Mô tả / Ngân hàng</th>
+                        <th className="py-3 px-4 text-xs font-semibold text-zinc-600 text-right">Số lượng</th>
+                        <th className="py-3 px-4 text-xs font-semibold text-zinc-600 text-right">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {history.map((tx, idx) => {
+                        const status = (tx.status || "COMPLETED").toUpperCase();
+                        return (
+                          <tr key={idx} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                            <td className="py-4 px-4 align-top">
+                              <span className="text-[11px] font-medium text-zinc-500 whitespace-nowrap">
+                                {tx.created_at ? new Date(tx.created_at).toLocaleDateString("vi-VN") : "--"}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 align-top">
+                              <p className="text-sm font-medium text-black max-w-[200px] truncate">
+                                {tx.note || tx.description || tx.type}
+                              </p>
+                              <span className="text-[10px] text-zinc-400 font-mono mt-1 block">
+                                ID: {tx.id || tx._id || `TX-${idx}`}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 align-top text-right whitespace-nowrap">
+                              <span className={`text-sm font-semibold ${tx.amount >= 0 ? "text-black" : "text-zinc-500"}`}>
+                                {tx.amount >= 0 ? "+" : ""}{tx.amount?.toLocaleString()} dl
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 align-top text-right">
+                              <span className={`inline-block text-[10px] font-semibold border px-2 py-1 uppercase ${
+                                status === "PENDING" ? "border-black text-black" : 
+                                status === "REJECTED" ? "border-zinc-200 text-zinc-400" :
+                                "border-zinc-200 text-zinc-500"
+                              }`}>
+                                {status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="py-24 flex flex-col items-center justify-center bg-white">
+                    <History className="w-8 h-8 text-zinc-300 mb-4" />
+                    <p className="text-sm font-medium text-black">Không có dữ liệu giao dịch</p>
                   </div>
-                ))
-              ) : (
-                <div className="py-48 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-white/20 rounded-sm">
-                  <History className="w-16 h-16 text-zinc-100 mb-8 stroke-[1]" />
-                  <p className="text-[11px] font-bold text-zinc-300 uppercase tracking-widest">
-                    Không có dữ liệu giao dịch
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <aside
-          className="lg:col-span-3 space-y-10 "
-          style={{
-            opacity: visible ? 1 : 0,
-            transform: visible ? "translateY(0)" : "translateY(10px)",
-          }}
-        >
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 text-[11px] font-bold text-black uppercase tracking-widest px-1">
-              <ArrowDownToLine className="w-4 h-4 text-zinc-300" /> Rút tiền
-            </div>
-            <div className="p-10 border border-zinc-100 bg-white space-y-8 rounded-sm">
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  Số tiền (dl)
+          <aside className="space-y-6">
+            <h2 className="text-sm font-semibold text-black flex items-center gap-2">
+              <ArrowDownToLine className="w-4 h-4" /> Rút tiền
+            </h2>
+            <div className="border border-zinc-200 bg-white p-6 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-black">
+                  Số tiền rút (dl)
                 </label>
                 <input
                   type="number"
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
-                  className="w-full h-16 border border-zinc-100 px-6 font-bold text-lg focus:outline-none focus:border-black rounded-sm placeholder:text-zinc-100"
-                  placeholder=""
+                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+                  placeholder="Tối thiểu 50.000"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-black">
+                  Thông tin ngân hàng
+                </label>
+                <input
+                  type="text"
+                  value={bankInfo}
+                  onChange={(e) => setBankInfo(e.target.value)}
+                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+                  placeholder="VD: VCB - 123456789 - NGUYEN VAN A"
                 />
               </div>
               <button
                 onClick={handlePayout}
-                disabled={requesting || !payoutAmount}
-                className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-4 active:scale-[0.98] rounded-sm disabled:opacity-50"
+                disabled={requesting || !payoutAmount || !bankInfo}
+                className="w-full py-3 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50 hover:bg-zinc-800 rounded-none border border-black"
               >
                 {requesting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <ArrowDownToLine className="w-5 h-5" />
+                  <ArrowDownToLine className="w-4 h-4" />
                 )}
-                Gửi yêu cầu
+                Yêu cầu rút tiền
               </button>
             </div>
-          </div>
 
-          <div className="p-10 border border-zinc-100 bg-white/20 space-y-8 rounded-sm">
-            <div className="flex items-center gap-3 text-[10px] font-bold text-black uppercase tracking-widest">
-              <Info className="w-3.5 h-3.5 text-zinc-300" /> Quy định thanh toán
+            <div className="border border-zinc-200 bg-zinc-50 p-6 space-y-4">
+              <h3 className="text-xs font-semibold text-black flex items-center gap-2">
+                <Info className="w-3.5 h-3.5" /> Quy định thanh toán
+              </h3>
+              <div className="space-y-3">
+                {[
+                  "Tối thiểu 50.000 dl cho mỗi lần rút.",
+                  "Phí hệ thống 2% sẽ được áp dụng.",
+                  "Giao dịch được xử lý trong vòng 48h làm việc.",
+                  "Vui lòng điền chính xác thông tin ngân hàng."
+                ].map((rule, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <ChevronRight className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
+                    <span className="text-[11px] font-medium text-zinc-500 leading-relaxed">
+                      {rule}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-6">
-              {[
-                "Tối thiểu 50.000 dl",
-                "Phí hệ thống 2%",
-                "Xử lý trong 48h làm việc",
-              ].map((rule, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <ChevronRight className="w-3.5 h-3.5 text-zinc-200 mt-0.5" />
-                  <span className="text-[11px] font-bold text-zinc-400 leading-relaxed uppercase tracking-tight">
-                    {rule}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
+          </aside>
+        </div>
       </div>
     </div>
   );

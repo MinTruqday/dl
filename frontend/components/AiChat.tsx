@@ -114,7 +114,7 @@ export default function AiChat() {
   const handleAttach = () => {
     if (!usePro) {
       showToast(
-        "Vui lòng bật Chế độ chuyên nghiệp để phân tích tài liệu đính kèm",
+        "Vui lòng bật Chế độ chuyên sâu để phân tích tài liệu đính kèm",
         "info",
       );
       return;
@@ -155,7 +155,7 @@ export default function AiChat() {
     if (!userMessage || isSending) return;
 
     if (usePro && (user?.wallet_balance || 0) < 10) {
-      showToast("Số dư không đủ để sử dụng Chế độ chuyên nghiệp", "error");
+      showToast("Số dư không đủ để sử dụng Chế độ chuyên sâu", "error");
       return;
     }
 
@@ -346,7 +346,7 @@ export default function AiChat() {
     <div className="font-sans">
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-90 rounded-sm ${isOpen ? "bg-black text-white " : "bg-white text-black "}`}
+        className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-none ${isOpen ? "bg-black text-white" : "bg-white text-black"}`}
       >
         {isOpen ? (
           <X className="w-6 h-6" />
@@ -357,35 +357,32 @@ export default function AiChat() {
 
       {isOpen && (
         <div
-          className={`fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[850px]" : "w-[450px]"} h-[700px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in rounded-md shadow-none`}
+          className={`fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none shadow-none`}
         >
-          <div className="px-5 py-5 border-b border-zinc-100 flex items-center justify-between shrink-0 bg-white">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black flex items-center justify-center border border-black rounded-sm">
-                <Zap className="w-5 h-5 text-white" />
+          <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
+                <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-black tracking-tight">
-                  DocLib AI
+                <h3 className="text-base font-medium text-black">
+                  Thiết bị nghiên cứu
                 </h3>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 bg-zinc-400 rounded-sm animate-pulse" />
-                  <p className="text-[11px] text-zinc-400 font-bold uppercase tracking-tight">
-                    Trợ lý tri thức
-                  </p>
-                </div>
+                <p className="text-sm text-zinc-500 mt-0.5">
+                  Trợ lý tri thức
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setView(view === "chat" ? "history" : "chat")}
-                className={`p-1.5 transition-colors rounded-sm ${view === "history" ? "bg-black text-white" : "text-zinc-400"}`}
+                className={`p-2 transition-colors rounded-none ${view === "history" ? "bg-black text-white" : "text-zinc-500 hover:text-black"}`}
               >
                 <HistoryIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1.5 text-zinc-400 transition-colors rounded-sm"
+                className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
               >
                 {isExpanded ? (
                   <Minimize2 className="w-4 h-4" />
@@ -395,37 +392,37 @@ export default function AiChat() {
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 text-zinc-400 transition-colors rounded-sm"
+                className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 min-h-0 bg-white/20 scrollbar-thin scrollbar-thumb-zinc-200"
+            className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white no-scrollbar"
           >
             {view === "history" ? (
-              <div className="space-y-4 animate-in fade-in ">
+              <div className="p-6 space-y-4 animate-in fade-in max-w-3xl mx-auto w-full">
                 <button
                   onClick={() => setView("chat")}
-                  className="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4"
+                  className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-black mb-6 transition-colors"
                 >
-                  <ChevronLeft className="w-3 h-3" /> Quay lại trò chuyện
+                  <ChevronLeft className="w-4 h-4" /> Quay lại trò chuyện
                 </button>
                 {sessions.length === 0 ? (
-                  <div className="py-20 text-center opacity-30">
-                    <HistoryIcon className="w-10 h-10 mx-auto mb-4 stroke-[1]" />
-                    <p className="text-[10px] font-bold uppercase tracking-widest">
-                      Chưa có dấu ấn tri thức nào
+                  <div className="py-20 text-center">
+                    <HistoryIcon className="w-8 h-8 mx-auto mb-4 text-zinc-300" />
+                    <p className="text-sm text-zinc-500">
+                      Chưa có phiên nghiên cứu nào
                     </p>
                   </div>
                 ) : (
                   sessions.map((s) => (
                     <div
                       key={s._id}
-                      className={`p-6 border rounded-sm bg-white cursor-pointer group relative ${currentSessionId === s._id ? "border-black" : "border-zinc-100"}`}
+                      className={`p-5 border bg-white cursor-pointer group relative rounded-none transition-colors ${currentSessionId === s._id ? "border-black" : "border-zinc-200 hover:border-black"}`}
                     >
                       <div
                         onClick={() => {
@@ -440,10 +437,10 @@ export default function AiChat() {
                           setView("chat");
                         }}
                       >
-                        <p className="text-[11px] font-bold text-black uppercase tracking-tight pr-8">
+                        <p className="text-sm font-medium text-black pr-8 truncate">
                           {s.title}
                         </p>
-                        <p className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-widest">
+                        <p className="text-sm text-zinc-500 mt-2">
                           {new Date(s.updated_at).toLocaleDateString("vi-VN")}
                         </p>
                       </div>
@@ -470,52 +467,56 @@ export default function AiChat() {
                             console.error("Delete session error", err);
                           }
                         }}
-                        className="absolute top-4 right-4 p-1.5 text-zinc-300 opacity-0 rounded-sm"
+                        className="absolute top-5 right-5 p-1 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-black transition-all rounded-none"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))
                 )}
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-                <div className="w-16 h-16 bg-white border border-zinc-200 flex items-center justify-center mb-6 rounded-sm">
-                  <Cpu className="w-8 h-8 text-black" />
+              <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+                <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center mb-6 rounded-none">
+                  <Cpu className="w-5 h-5 text-black" />
                 </div>
-                <p className="text-sm font-bold text-black tracking-tight">
+                <p className="text-lg font-medium text-black">
                   Xin chào, {user.full_name}
                 </p>
-                <p className="text-[12px] text-zinc-400 mt-3 leading-relaxed max-w-[240px] font-medium">
-                  Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm kiến thức
-                  hoặc giải đáp các thắc mắc chuyên sâu
+                <p className="text-sm text-zinc-500 mt-3 leading-relaxed max-w-sm">
+                  Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm kiến thức hoặc giải đáp các thắc mắc chuyên sâu.
                 </p>
               </div>
             ) : (
-              messages.map((msg, idx) => {
+              <div className="flex flex-col w-full">
+              {messages.map((msg, idx) => {
                 const isTyping =
                   msg.role === "assistant" && !msg.content && isSending;
                 return (
                   <div
                     key={idx}
-                    className={`max-w-[98%] text-sm leading-relaxed animate-in fade-in flex flex-col ${msg.role === "user" ? "self-end items-end" : "self-start items-start"}`}
+                    className="w-full border-b border-zinc-200 p-6 flex justify-center animate-in fade-in bg-white"
                   >
-                    <div
-                      className={`border relative group rounded-sm ${isTyping ? "px-4 py-3 bg-white border-zinc-100 inline-flex items-center" : msg.role === "user" ? "px-5 py-4 bg-black text-white border-black" : "px-5 py-4 bg-white border-zinc-100 text-black w-full"}`}
-                    >
+                    <div className="w-full max-w-3xl flex gap-6 relative">
+                      <div className="w-32 shrink-0 pt-1">
+                        <span className="text-sm font-medium text-zinc-500">
+                          {msg.role === "user" ? "Nghiên cứu viên" : "Trợ lý tri thức"}
+                        </span>
+                      </div>
+                      <div className={`flex-1 min-w-0 relative ${msg.role === "user" ? "text-black font-medium" : "text-black"}`}>
                       {msg.role === "user" && !isSending && (
                         <button
                           onClick={() => setEditingMessageId(msg.id || null)}
-                          className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 p-2 text-zinc-300 rounded-sm"
+                          className="absolute -left-12 top-0 p-2 text-zinc-300 hover:text-black transition-colors rounded-none"
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
                       )}
                       {editingMessageId && editingMessageId === msg.id ? (
-                        <div className="flex flex-col gap-3 py-1">
+                        <div className="flex flex-col gap-3">
                           <textarea
                             defaultValue={msg.content}
-                            className="w-full bg-zinc-900 text-white p-3 text-[13px] border border-zinc-700 focus:outline-none min-h-[80px] rounded-sm"
+                            className="w-full bg-zinc-50 text-black p-4 text-sm border border-zinc-200 focus:outline-none focus:border-black min-h-[120px] rounded-none transition-colors"
                             onKeyDown={(e: any) =>
                               e.key === "Enter" &&
                               !e.shiftKey &&
@@ -523,12 +524,12 @@ export default function AiChat() {
                               handleSubmit(undefined, e.target.value))
                             }
                           />
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-3">
                             <button
                               onClick={() => setEditingMessageId(null)}
-                              className="text-[10px] font-bold uppercase px-3 py-1.5 text-zinc-400 transition-colors rounded-sm"
+                              className="text-sm font-medium px-4 py-2 border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black"
                             >
-                              Hủy
+                              Hủy bỏ
                             </button>
                             <button
                               onClick={(ev) => {
@@ -538,7 +539,7 @@ export default function AiChat() {
                                   ) as HTMLTextAreaElement;
                                 handleSubmit(undefined, ta.value);
                               }}
-                              className="text-[10px] font-bold uppercase px-3 py-1.5 bg-white text-black rounded-sm"
+                              className="text-sm font-medium px-4 py-2 bg-black text-white hover:bg-zinc-800 transition-colors rounded-none"
                             >
                               Gửi lại
                             </button>
@@ -549,43 +550,33 @@ export default function AiChat() {
                           {msg.role === "assistant" &&
                             msg.thoughts &&
                             msg.thoughts.length > 0 && (
-                              <details className="mb-4 border-b border-zinc-100 pb-4 cursor-pointer group/thoughts">
-                                <summary className="flex items-center gap-2 text-[11px] font-bold text-zinc-400 group-hover/thoughts:text-black transition-colors list-none">
-                                  <Cpu className="w-3.5 h-3.5" />
-                                  <span>Quá trình xử lý tri thức</span>
+                              <details className="mb-6 border border-zinc-200 rounded-none group/thoughts bg-zinc-50">
+                                <summary className="flex items-center gap-3 p-4 cursor-pointer text-sm font-medium text-zinc-500 group-hover/thoughts:text-black transition-colors list-none">
+                                  <Cpu className="w-4 h-4" />
+                                  <span>Quá trình phân tích tri thức</span>
                                 </summary>
-                                <div className="mt-4 flex flex-col gap-3 pl-2 border-l border-zinc-100 ml-1.5">
+                                <div className="p-4 pt-0 flex flex-col gap-3">
+                                  <div className="h-px w-full bg-zinc-200 mb-2" />
                                   {msg.thoughts.map((t, idx2) => (
                                     <div
                                       key={idx2}
-                                      className="text-[12px] text-zinc-500 flex items-center gap-3"
+                                      className="text-sm text-zinc-600 flex items-center gap-3"
                                     >
-                                      <div className="w-1 h-1 bg-zinc-300 shrink-0 rounded-sm" />
-                                      <span className="font-medium">{t}</span>
+                                      <div className="w-1.5 h-1.5 bg-zinc-300 shrink-0 rounded-none" />
+                                      <span>{t}</span>
                                     </div>
                                   ))}
                                 </div>
                               </details>
                             )}
                           <div
-                            className={`w-full prose prose-sm max-w-none ${msg.role === "user" ? "prose-invert" : "prose-zinc"}`}
+                            className="w-full prose prose-zinc max-w-none text-sm leading-relaxed"
                           >
                             {msg.role === "assistant" &&
                             !msg.content &&
                             isSending ? (
-                              <div className="flex items-center gap-1.5 py-2">
-                                <div
-                                  className="w-2 h-2 bg-zinc-300 rounded-sm animate-bounce"
-                                  style={{ animationDelay: "0ms" }}
-                                />
-                                <div
-                                  className="w-2 h-2 bg-zinc-300 rounded-sm animate-bounce"
-                                  style={{ animationDelay: "150ms" }}
-                                />
-                                <div
-                                  className="w-2 h-2 bg-zinc-300 rounded-sm animate-bounce"
-                                  style={{ animationDelay: "300ms" }}
-                                />
+                              <div className="flex items-center gap-2 py-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
                               </div>
                             ) : (
                               <ReactMarkdown
@@ -593,7 +584,7 @@ export default function AiChat() {
                                 rehypePlugins={[rehypeKatex, rehypeHighlight]}
                                 components={{
                                   p: ({ children }) => (
-                                    <p className="mb-4 last:mb-0 font-medium leading-relaxed">
+                                    <p className="mb-4 last:mb-0">
                                       {children}
                                     </p>
                                   ),
@@ -614,9 +605,9 @@ export default function AiChat() {
                                     if (!inline && match) {
                                       const lang = match[1];
                                       return (
-                                        <div className="my-3 bg-zinc-900 border border-zinc-800 overflow-x-auto rounded-sm">
-                                          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
-                                            <span className="text-[10px] font-bold text-zinc-500 uppercase">
+                                        <div className="my-6 bg-black border border-black rounded-none overflow-hidden">
+                                          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-black">
+                                            <span className="text-xs font-medium text-zinc-400">
                                               {lang}
                                             </span>
                                             <button
@@ -629,13 +620,13 @@ export default function AiChat() {
                                                   "info",
                                                 );
                                               }}
-                                              className="text-[10px] font-bold text-zinc-500 transition-colors uppercase rounded-sm"
+                                              className="text-xs font-medium text-zinc-400 hover:text-white transition-colors rounded-none"
                                             >
                                               Sao chép
                                             </button>
                                           </div>
                                           <pre className="p-4 overflow-x-auto">
-                                            <code className="text-[13px] font-mono text-zinc-300">
+                                            <code className="text-sm font-mono text-zinc-300">
                                               {content}
                                             </code>
                                           </pre>
@@ -644,7 +635,7 @@ export default function AiChat() {
                                     }
                                     return (
                                       <code
-                                        className={`${className} bg-zinc-100 px-1 py-0.5 text-black font-mono text-[13px] rounded-sm`}
+                                        className={`${className} bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 text-black font-mono text-sm rounded-none`}
                                         {...props}
                                       >
                                         {children}
@@ -652,19 +643,19 @@ export default function AiChat() {
                                     );
                                   },
                                   table: ({ children }) => (
-                                    <div className="overflow-x-auto my-4 border border-zinc-100 rounded-sm">
+                                    <div className="overflow-x-auto my-6 border border-zinc-200 rounded-none">
                                       <table className="min-w-full divide-y divide-zinc-200">
                                         {children}
                                       </table>
                                     </div>
                                   ),
                                   th: ({ children }) => (
-                                    <th className="px-3 py-2 bg-white text-left text-[11px] font-bold text-black uppercase tracking-wider">
+                                    <th className="px-4 py-3 bg-zinc-50 text-left text-sm font-medium text-black border-b border-zinc-200">
                                       {children}
                                     </th>
                                   ),
                                   td: ({ children }) => (
-                                    <td className="px-3 py-2 whitespace-nowrap text-zinc-600 border-t border-zinc-100">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
                                       {children}
                                     </td>
                                   ),
@@ -676,148 +667,152 @@ export default function AiChat() {
                           </div>
                         </>
                       )}
+                      </div>
                     </div>
                   </div>
                 );
-              })
+              })}
+              </div>
             )}
           </div>
 
-          <div className="p-5 bg-white border-t border-zinc-100 shrink-0 relative">
-            {(selectedFile || selectedImage) && (
-              <div className="flex gap-3 mb-4 overflow-x-auto pb-1 scrollbar-none">
-                {selectedImage && (
-                  <div className="relative group shrink-0">
-                    <img
-                      src={selectedImage.data}
-                      alt=""
-                      className="h-14 w-14 object-cover border border-zinc-200 rounded-sm"
-                    />
-                    <button
-                      onClick={() => setSelectedImage(null)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white flex items-center justify-center transition-colors rounded-sm"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                {selectedFile && (
-                  <div className="relative group shrink-0 h-14 px-4 bg-white border border-zinc-200 flex items-center gap-3 rounded-sm">
-                    <FileText className="w-4 h-4 text-black shrink-0" />
-                    <span className="text-[12px] font-bold text-zinc-600 truncate max-w-[120px]">
-                      {selectedFile.name}
-                    </span>
-                    <button
-                      onClick={() => setSelectedFile(null)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white flex items-center justify-center transition-colors rounded-sm"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {showAttachments && (
-              <div className="absolute bottom-full left-4 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-sm">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.epub,.mobi,.zip,.csv"
-                  onChange={(e) => handleFileUpload(e, "file")}
-                />
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleFileUpload(e, "image")}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex flex-col items-center gap-2 p-4 min-w-[80px] rounded-sm"
-                >
-                  <div className="w-12 h-12 border border-zinc-200 flex items-center justify-center rounded-sm">
-                    <FileText className="w-6 h-6 text-black" />
-                  </div>
-                  <span className="text-[11px] font-bold text-black">
-                    Tài liệu
-                  </span>
-                </button>
-                <button
-                  onClick={() => imageInputRef.current?.click()}
-                  className="flex flex-col items-center gap-2 p-4 min-w-[80px] rounded-sm"
-                >
-                  <div className="w-12 h-12 border border-zinc-200 flex items-center justify-center rounded-sm">
-                    <ImageIcon className="w-6 h-6 text-black" />
-                  </div>
-                  <span className="text-[11px] font-bold text-black">
-                    Hình ảnh
-                  </span>
-                </button>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between mb-4 px-1">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={usePro}
-                    onChange={handleTogglePro}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after: peer-checked:after:translate-x-full peer-checked:bg-black rounded-sm"></div>
-                </div>
-                <span className="text-[11px] font-bold text-zinc-400 transition-colors">
-                  Chế độ chuyên nghiệp
-                </span>
-              </label>
-              {usePro && (
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-zinc-100 rounded-sm">
-                  <span className="text-[11px] font-bold text-black">
-                    10 dl
-                  </span>
-                  <Coins className="w-3 h-3 text-black" />
+          <div className="p-6 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
+            <div className="w-full max-w-3xl relative">
+              {(selectedFile || selectedImage) && (
+                <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
+                  {selectedImage && (
+                    <div className="relative group shrink-0">
+                      <img
+                        src={selectedImage.data}
+                        alt=""
+                        className="h-16 w-16 object-cover border border-zinc-200 rounded-none"
+                      />
+                      <button
+                        onClick={() => setSelectedImage(null)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center transition-colors rounded-none"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                  {selectedFile && (
+                    <div className="relative group shrink-0 h-16 px-4 bg-white border border-zinc-200 flex items-center gap-3 rounded-none">
+                      <FileText className="w-5 h-5 text-black shrink-0" />
+                      <span className="text-sm font-medium text-black truncate max-w-[150px]">
+                        {selectedFile.name}
+                      </span>
+                      <button
+                        onClick={() => setSelectedFile(null)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center transition-colors rounded-none"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
 
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <div className="flex-1 h-14 bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black focus-within:bg-white rounded-sm">
-                <button
-                  type="button"
-                  onClick={handleAttach}
-                  className="text-zinc-400 transition-colors shrink-0 rounded-sm"
-                >
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder=""
-                  disabled={isSending}
-                  className="flex-1 h-full text-sm bg-transparent outline-none font-medium"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={
-                  isSending ||
-                  !input.trim() ||
-                  (usePro && (user?.wallet_balance || 0) < 10)
-                }
-                className="w-14 h-14 bg-black text-white flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 rounded-sm"
-              >
-                {isSending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
+              {showAttachments && (
+                <div className="absolute bottom-full left-0 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-none shadow-none">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.epub,.mobi,.zip,.csv"
+                    onChange={(e) => handleFileUpload(e, "file")}
+                  />
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, "image")}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-200"
+                  >
+                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
+                      <FileText className="w-5 h-5 text-black" />
+                    </div>
+                    <span className="text-sm font-medium text-black">
+                      Tài liệu
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-200"
+                  >
+                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
+                      <ImageIcon className="w-5 h-5 text-black" />
+                    </div>
+                    <span className="text-sm font-medium text-black">
+                      Hình ảnh
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between mb-4">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={usePro}
+                      onChange={handleTogglePro}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after: peer-checked:after:translate-x-5 peer-checked:bg-black rounded-none transition-all"></div>
+                  </div>
+                  <span className="text-sm font-medium text-zinc-500 transition-colors group-hover:text-black">
+                    Chế độ chuyên sâu
+                  </span>
+                </label>
+                {usePro && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 border border-zinc-200 rounded-none">
+                    <span className="text-sm font-medium text-black">
+                      10 dl
+                    </span>
+                    <Coins className="w-4 h-4 text-black" />
+                  </div>
                 )}
-              </button>
-            </form>
+              </div>
+
+              <form onSubmit={handleSubmit} className="flex gap-3">
+                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black rounded-none transition-colors">
+                  <button
+                    type="button"
+                    onClick={handleAttach}
+                    className="text-zinc-400 hover:text-black transition-colors shrink-0 rounded-none p-1"
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder=""
+                    disabled={isSending}
+                    className="flex-1 h-full py-4 text-sm bg-transparent outline-none font-medium text-black placeholder:text-zinc-400"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={
+                    isSending ||
+                    !input.trim() ||
+                    (usePro && (user?.wallet_balance || 0) < 10)
+                  }
+                  className="w-14 shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none"
+                >
+                  {isSending ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

@@ -48,7 +48,7 @@ export default function Workspace({ children }: AppShellProps) {
     : true;
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white animate-in fade-in ">
+    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
       <Navigation onToggleSidebar={toggleSidebar} />
 
       <Menu
@@ -59,7 +59,7 @@ export default function Workspace({ children }: AppShellProps) {
       />
 
       <main
-        className="relative"
+        className="relative transition-all duration-200"
         style={{
           paddingTop: "var(--navbar-height)",
           marginLeft: !mounted

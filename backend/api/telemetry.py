@@ -4,7 +4,6 @@ from api.dependency import require_role, get_current_user
 from models.user import UserInDB, RoleEnum
 from core.response import APIResponse
 from services.telemetry import TelemetryService
-from services.administration import AdministrationService
 
 router = APIRouter(prefix="/telemetry")
 

@@ -6,10 +6,12 @@ import { useEffect } from "react";
 
 const protectedRoutes: Record<string, string[]> = {
   "/studio": ["author", "admin"],
-  "/administration": ["admin"],
+  "/operation": ["admin"],
   "/profile": ["reader", "author", "admin"],
   "/wallet": ["reader", "author", "admin"],
-  "/moderation": ["moderator", "admin"],
+  "/draft": ["moderator", "admin"],
+  "/logs": ["moderator", "admin"],
+  "/collector": ["admin"],
   "/create": ["author", "admin"],
   "/analytics": ["author", "admin"],
   "/assets": ["author", "admin"],

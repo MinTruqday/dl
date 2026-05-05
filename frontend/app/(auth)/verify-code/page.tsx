@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState, useEffect } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { verifyCodeAPI } from "@/services/auth.service";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,14 +11,9 @@ export default function VerifyCodePage() {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
-  const [visible, setVisible] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
-
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -47,49 +42,36 @@ export default function VerifyCodePage() {
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <Navigation />
-      <div
-        className="sm:mx-auto sm:w-full sm:max-w-md mt-16 animate-in fade-in"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(16px)",
-        }}
-      >
-        <h2 className="text-center text-4xl font-bold tracking-tight text-black">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-16">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-black">
           Xác thực mã
         </h2>
-        <p className="mt-3 text-center text-base text-zinc-500">
+        <p className="mt-2 text-center text-sm text-zinc-500">
           Mã xác thực đã được gửi tới {email}
         </p>
       </div>
 
-      <div
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md delay-150 animate-in slide-in-from-bottom-4"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(16px)",
-        }}
-      >
-        <div className="bg-white py-8 px-4 sm:px-10 border border-zinc-200 rounded-sm">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-none">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label
                 htmlFor="token"
-                className="block text-base font-bold text-black"
+                className="block text-sm font-medium text-black"
               >
                 Mã xác thực
               </label>
-              <div className="mt-1">
+              <div className="mt-2">
                 <input
                   id="token"
                   name="token"
                   type="text"
-                  placeholder=""
                   required
                   value={token}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setToken(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-center text-2xl tracking-widest font-bold "
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-center text-2xl tracking-[0.25em] font-medium text-black transition-colors uppercase"
                 />
               </div>
             </div>
@@ -97,17 +79,17 @@ export default function VerifyCodePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 py-3 px-4 text-base font-bold text-white bg-black disabled:bg-zinc-400 active:scale-95 rounded-sm"
+              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 hover:bg-zinc-800 rounded-none transition-colors"
             >
-              {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? "Đang xử lý" : "Tiếp tục"}
             </button>
           </form>
 
-          <div className="mt-4 text-sm text-center">
+          <div className="mt-8 text-sm text-center">
             <button
               onClick={() => router.back()}
-              className="text-zinc-400 font-medium transition-colors"
+              className="text-zinc-500 font-medium hover:text-black hover:underline transition-all"
             >
               Quay lại
             </button>

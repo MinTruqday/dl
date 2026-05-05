@@ -6,13 +6,10 @@ import {
   Search,
   FileText,
   Library,
-  Bookmark,
   Trophy,
   User,
   Wallet,
-  History,
   Settings,
-  ShieldCheck,
   PenTool,
   Shield,
   UserCheck,
@@ -23,6 +20,9 @@ import {
   Clock,
   CheckCircle2,
   MessageSquare,
+  Database,
+  LayoutDashboard,
+  Files,
 } from "lucide-react";
 
 export default function Menu({
@@ -72,32 +72,33 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`
- flex items-center text-[13px] font-bold tracking-tight
- ease-in-out group relative w-full h-14 shrink-0
- ${isOpen ? "px-6 gap-4" : "px-0 justify-center"}
- ${active ? "bg-black text-white" : "text-zinc-500 "}
- active:scale-95
- `}
+        className={`flex items-center text-[13px] tracking-tight transition-colors group relative w-full h-12 shrink-0 rounded-none ${
+          isOpen ? "px-6 gap-4" : "px-0 justify-center"
+        } ${
+          active
+            ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
+            : "font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 border-l-2 border-transparent"
+        }`}
       >
         <div className="flex items-center justify-center shrink-0 w-6">
           <Icon
             className={`w-[18px] h-[18px] ${
-              active ? "text-white" : "text-zinc-400  "
+              active
+                ? "text-black"
+                : "text-zinc-400 group-hover:text-black transition-colors"
             }`}
           />
         </div>
         <span
-          className={`
- whitespace-nowrap overflow-hidden ease-in-out font-sans
- ${isOpen ? "opacity-100 max-w-[180px] translate-x-0" : "opacity-0 max-w-0 -translate-x-4"}
- `}
+          className={`whitespace-nowrap overflow-hidden transition-all duration-200 font-sans ${
+            isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
+          }`}
         >
           {label}
         </span>
 
         {!isOpen && !isMobileOverlay && (
-          <span className="absolute left-full ml-2 px-3 py-2 bg-black text-white text-[13px] font-bold whitespace-nowrap opacity-0 pointer-events-none z-50 transform translate-x-2 border border-white/20 rounded-sm">
+          <span className="absolute left-full ml-2 px-3 py-1.5 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 border border-black rounded-none transition-opacity">
             {label}
           </span>
         )}
@@ -109,28 +110,28 @@ export default function Menu({
     <>
       {isMobileOverlay && isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 md:hidden animate-in fade-in "
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
           onClick={onMobileClose}
         />
       )}
 
       <aside
         className={`
- fixed left-0 top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))]
- bg-white border-r border-zinc-100 ease-in-out z-40
- flex flex-col overflow-hidden font-sans
- ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
- `}
+          fixed left-0 top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))]
+          bg-white border-r border-zinc-200 transition-all duration-200 z-40
+          flex flex-col overflow-hidden font-sans
+          ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
+        `}
       >
-        <div className="flex-1 overflow-y-auto py-2 scroll-smooth flex flex-col pb-20 no-scrollbar">
+        <div className="flex-1 overflow-y-auto py-4 scroll-smooth flex flex-col pb-20 no-scrollbar">
           <NavLink icon={Search} label="Khám phá" href="/" />
           <NavLink
-            icon={FileText}
+            icon={LayoutDashboard}
             label="Bảng tin"
             href="/feed"
             roles={["reader", "author", "admin"]}
           />
-          <NavLink icon={Trophy} label="Vinh danh" href="/leaderboard" />
+          <NavLink icon={Trophy} label="Xếp hạng" href="/rank" />
           <NavLink
             icon={MessageSquare}
             label="Tin nhắn"
@@ -146,6 +147,11 @@ export default function Menu({
           <NavLink icon={User} href="/profile" label="Hồ sơ" requireAuth />
           <NavLink icon={Wallet} href="/wallet" label="Ví" requireAuth />
 
+          <div className="mt-4 mb-2 px-6">
+            <span className={`text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isOpen && "hidden"}`}>Tác giả & Quản lý</span>
+            {!isOpen && <div className="h-px w-6 mx-auto bg-zinc-200" />}
+          </div>
+          
           <NavLink
             href="/create"
             label="Sáng tác"
@@ -180,21 +186,32 @@ export default function Menu({
           <NavLink
             href="/documents"
             label="Kho tài liệu"
-            icon={FileText}
+            icon={Files}
             roles={["admin", "author"]}
           />
 
+          <div className="mt-4 mb-2 px-6">
+            <span className={`text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isOpen && "hidden"}`}>Quản trị</span>
+            {!isOpen && <div className="h-px w-6 mx-auto bg-zinc-200" />}
+          </div>
+
           <NavLink
-            href="/moderation/documents"
+            href="/draft"
             label="Duyệt bản thảo"
             icon={CheckCircle2}
             roles={["moderator", "admin"]}
           />
           <NavLink
-            href="/moderation/logs"
-            label="Nhật ký kiểm duyệt"
+            href="/logs"
+            label="Nhật ký hệ thống"
             icon={Clock}
             roles={["moderator", "admin"]}
+          />
+          <NavLink
+            href="/collector"
+            label="Thu thập dữ liệu"
+            icon={Database}
+            roles={["admin"]}
           />
 
           <NavLink
@@ -216,18 +233,20 @@ export default function Menu({
             roles={["admin", "moderator"]}
           />
           <NavLink
-            href="/administration"
+            href="/operation"
             label="Quản trị hệ thống"
             icon={Shield}
             roles={["admin"]}
           />
 
-          <NavLink
-            href="/settings"
-            label="Cài đặt"
-            icon={Settings}
-            requireAuth
-          />
+          <div className="mt-auto pt-4 border-t border-zinc-200">
+            <NavLink
+              href="/settings"
+              label="Cài đặt"
+              icon={Settings}
+              requireAuth
+            />
+          </div>
         </div>
       </aside>
     </>

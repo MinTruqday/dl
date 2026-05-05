@@ -183,7 +183,7 @@ export default function MessagesPage() {
             <input
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
-              placeholder="Nhập tên người dùng..."
+              placeholder="Nhập tên người dùng"
               className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none"
             />
           </div>
@@ -426,7 +426,7 @@ export default function MessagesPage() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    placeholder="Nhập nội dung..."
+                    placeholder="Nhập nội dung"
                     className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"
                   />
                   <button
