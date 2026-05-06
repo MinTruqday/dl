@@ -1,5 +1,4 @@
 import { ReactRenderer } from "@tiptap/react";
-import tippy, { Instance } from "tippy.js";
 import { SuggestionList } from "./SuggestionList";
 import { getLatexSnippetsAPI } from "@/services/editor.service";
 
@@ -9,11 +8,9 @@ export const suggestionRenderer = {
   items: async ({ query }: { query: string }) => {
     try {
       if (cachedSnippets.length === 0) {
-        console.log("Fetching LaTeX snippets");
         cachedSnippets = await getLatexSnippetsAPI();
-        console.log(`Loaded ${cachedSnippets.length} snippets.`);
       }
-      
+
       const filtered = cachedSnippets
         .filter(
           (item: any) =>
@@ -22,8 +19,7 @@ export const suggestionRenderer = {
               item.detail.toLowerCase().includes(query.toLowerCase())),
         )
         .slice(0, 15);
-        
-      console.log(`Autocomplete query: "${query}", found ${filtered.length} items`);
+
       return filtered;
     } catch (error) {
       console.error("Failed to fetch LaTeX snippets:", error);
@@ -33,50 +29,47 @@ export const suggestionRenderer = {
 
   render: () => {
     let component: any;
-    let popup: any;
+    let wrapper: HTMLDivElement | null = null;
 
     return {
       onStart: (props: any) => {
-        console.log("Suggestion started", props);
         component = new ReactRenderer(SuggestionList, {
           props,
           editor: props.editor,
         });
 
-        if (!props.clientRect) {
-          console.warn("No clientRect provided for suggestion");
-          return;
-        }
+        wrapper = document.createElement("div");
+        wrapper.style.position = "fixed";
+        wrapper.style.zIndex = "99999";
+        wrapper.style.pointerEvents = "auto";
+        document.body.appendChild(wrapper);
+        wrapper.appendChild(component.element);
 
-        popup = tippy("body", {
-          getReferenceClientRect: props.clientRect,
-          appendTo: () => document.body,
-          content: component.element,
-          showOnCreate: true,
-          interactive: true,
-          trigger: "manual",
-          placement: "bottom-start",
-        });
+        if (props.clientRect) {
+          const rect = props.clientRect();
+          if (rect) {
+            wrapper.style.left = `${rect.left}px`;
+            wrapper.style.top = `${rect.bottom + 4}px`;
+          }
+        }
       },
 
       onUpdate(props: any) {
         component.updateProps(props);
 
-        if (!props.clientRect) {
-          return;
-        }
-
-        if (popup && popup[0]) {
-          popup[0].setProps({
-            getReferenceClientRect: props.clientRect,
-          });
+        if (props.clientRect && wrapper) {
+          const rect = props.clientRect();
+          if (rect) {
+            wrapper.style.left = `${rect.left}px`;
+            wrapper.style.top = `${rect.bottom + 4}px`;
+          }
         }
       },
 
       onKeyDown(props: any) {
         if (props.event.key === "Escape") {
-          if (popup && popup[0]) {
-            popup[0].hide();
+          if (wrapper) {
+            wrapper.style.display = "none";
           }
           return true;
         }
@@ -85,9 +78,9 @@ export const suggestionRenderer = {
       },
 
       onExit() {
-        console.log("Suggestion exited");
-        if (popup && popup[0]) {
-          popup[0].destroy();
+        if (wrapper) {
+          wrapper.remove();
+          wrapper = null;
         }
         component.destroy();
       },

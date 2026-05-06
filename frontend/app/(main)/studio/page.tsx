@@ -637,8 +637,8 @@ function StudioContent() {
                       ))}
                    </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 lg:p-4 no-scrollbar bg-zinc-50/30">
-                   <div className="w-full animate-in fade-in duration-300">
+                <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
+                   <div className="w-full h-full animate-in fade-in duration-300">
                       {editorMode === "edit" ? (
                         <Editor initialContent={content} onSave={(val) => setContent(val)} />
                       ) : editorMode === "preview" ? (

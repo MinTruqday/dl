@@ -8,7 +8,6 @@ import { Extension } from "./Extension";
 import { AutoComplete } from "./AutoComplete";
 import { FontSize } from "./FontSize";
 import "katex/dist/katex.min.css";
-import "tippy.js/dist/tippy.css";
 import {
   Code,
   FileText,
@@ -134,7 +133,7 @@ export default function Editor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl max-w-none focus:outline-none min-h-[calc(100vh-250px)] border border-zinc-200 p-4 md:p-10 bg-white font-sans",
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl max-w-none focus:outline-none min-h-[calc(100vh-200px)] p-6 md:p-10 bg-white font-sans",
       },
     },
     onUpdate: ({ editor }) => {
@@ -231,7 +230,7 @@ export default function Editor({
   }
 
   return (
-    <div className="flex flex-col w-full h-[85vh] mx-auto bg-white border border-zinc-200 relative font-sans">
+    <div className="flex flex-col w-full h-full mx-auto bg-white relative font-sans">
       <div className="flex justify-between items-center bg-white border-b border-zinc-200 p-3">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="flex gap-1 border-r pr-2 border-zinc-100">
@@ -510,15 +509,6 @@ export default function Editor({
 
           <div className="flex gap-2 ml-2">
             <button
-              onClick={() =>
-                editor.chain().focus().setLatexBlock({ text: "" }).run()
-              }
-              className="px-4 py-1.5 bg-black text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
-            >
-              <Code className="w-4 h-4" />
-              Mã LaTeX
-            </button>
-            <button
               onClick={handleSynonyms}
               className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
             >
@@ -546,59 +536,22 @@ export default function Editor({
                   showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
                 }
               }}
-              className="px-4 py-1.5 bg-zinc-900 text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+              className="px-4 py-1.5 bg-black text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
             >
               <CheckSquare className="w-4 h-4 text-zinc-400" />
               Kiểm tra ngữ pháp AI
             </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          {isPreview ? (
-            <button
-              onClick={() => setIsPreview(false)}
-              className="px-4 py-1.5 bg-zinc-100 text-black border border-zinc-200 text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Soạn thảo
-            </button>
-          ) : (
-            <button
-              onClick={handleCompile}
-              disabled={isCompiling}
-              className="px-4 py-1.5 bg-black text-white disabled:bg-zinc-100 disabled:text-zinc-400 text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
-            >
-              {isCompiling ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Đang xử lý
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4" /> Bản xem trước
-                </>
-              )}
-            </button>
-          )}
-          <button
-            onClick={() => {
-              onSave?.(editor.getHTML());
-              showToast("Đã lưu tài liệu thành công", "success");
-            }}
-            className="px-4 py-1.5 bg-black text-white text-xs font-bold flex items-center gap-2 active:scale-[0.98]"
-          >
-            <Save className="w-4 h-4" />
-            Lưu
-          </button>
-        </div>
       </div>
 
-      <div className="flex-1 w-full flex overflow-hidden relative bg-white/10">
+      <div className="flex-1 w-full flex overflow-hidden relative bg-white">
         <div
           className={`h-full overflow-y-auto ease-in-out ${
             isPreview ? "w-1/2 border-r border-zinc-200" : "w-full"
-          } flex justify-center p-8 scrollbar-thin scrollbar-thumb-zinc-100`}
+          } scrollbar-thin scrollbar-thumb-zinc-100`}
         >
-          <div className="w-full bg-white border border-zinc-200 min-h-[800px] animate-in fade-in">
+          <div className="w-full bg-white min-h-full animate-in fade-in">
             <EditorContent editor={editor} className="h-full" />
           </div>
         </div>
@@ -666,7 +619,7 @@ export default function Editor({
               onChange={(e) => setLinkModal({ ...linkModal, url: e.target.value })}
               placeholder="https://example.com"
               autoFocus
-              className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold outline-none focus:border-black rounded-sm"
+              className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold outline-none focus:border-black rounded-none"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (linkModal.url) {
@@ -683,7 +636,7 @@ export default function Editor({
         <ModalFooter className="flex gap-4">
           <button
             onClick={() => setLinkModal({ ...linkModal, isOpen: false })}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all"
+            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-none transition-all"
           >
             Hủy bỏ
           </button>
@@ -696,7 +649,7 @@ export default function Editor({
               }
               setLinkModal({ ...linkModal, isOpen: false });
             }}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-sm transition-all flex items-center justify-center"
+            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-none transition-all flex items-center justify-center"
           >
             Xác nhận
           </button>

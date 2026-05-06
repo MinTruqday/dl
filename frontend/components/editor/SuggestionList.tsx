@@ -54,38 +54,39 @@ export const SuggestionList = forwardRef((props: any, ref) => {
   }));
 
   return (
-    <div className="bg-white border border-black rounded-none overflow-hidden w-80 animate-in fade-in slide-in-from-top-2">
+    <div className="bg-white border border-zinc-200 rounded-none overflow-hidden w-64 animate-in fade-in slide-in-from-top-2">
       {props.items.length ? (
-        <div className="py-0">
+        <div className="py-0 flex flex-col">
           {props.items.map((item: any, index: number) => (
             <button
-              className={`w-full text-left px-3 py-2 text-sm flex flex-col gap-0.5 border-b border-zinc-100 last:border-b-0 transition-colors ${
-                index === selectedIndex
-                  ? "bg-black text-white"
-                  : "text-zinc-600 hover:bg-zinc-50"
-              }`}
               key={index}
               onClick={() => selectItem(index)}
+              className={`w-full text-left px-3 py-2 border-b border-zinc-100 last:border-b-0 transition-colors duration-150 ${
+                index === selectedIndex
+                  ? "bg-zinc-100"
+                  : "bg-white hover:bg-zinc-50"
+              }`}
             >
-              <div className="flex justify-between items-center w-full">
-                <span className={`font-mono font-medium ${index === selectedIndex ? "text-white" : "text-black"}`}>
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="font-mono text-xs font-bold text-black tracking-tight">
                   {item.label}
                 </span>
-                <span className={`text-[10px] uppercase tracking-wider font-bold ${index === selectedIndex ? "text-zinc-400" : "text-zinc-400"}`}>
-                  {item.type || "Lệnh"}
-                </span>
+                {item.detail && (
+                  <span
+                    className={`text-[10px] font-medium truncate ${
+                      index === selectedIndex ? "text-zinc-600" : "text-zinc-400"
+                    }`}
+                  >
+                    {item.detail}
+                  </span>
+                )}
               </div>
-              {item.detail && (
-                <span className={`text-xs truncate w-full ${index === selectedIndex ? "text-zinc-400" : "text-zinc-500"}`}>
-                  {item.detail}
-                </span>
-              )}
             </button>
           ))}
         </div>
       ) : (
-        <div className="text-sm p-4 text-zinc-500 text-center font-medium bg-zinc-50">
-          Không tìm thấy lệnh phù hợp
+        <div className="text-xs p-4 text-zinc-500 text-center font-medium bg-zinc-50">
+          Không tìm thấy lệnh
         </div>
       )}
     </div>
