@@ -87,11 +87,12 @@ export default function LeaderboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-8 order-2 lg:order-1 hidden lg:block">
+        <aside className="lg:col-span-3 space-y-12 order-2 lg:order-1 hidden lg:block">
           <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2">
-               Danh mục xếp hạng</h3>
-            <nav className="flex flex-col">
+            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+              Danh mục xếp hạng
+            </div>
+            <nav className="flex flex-col gap-1">
               {[
                 { id: "views", label: "Tài liệu xem nhiều nhất", icon: TrendingUp },
                 { id: "rating", label: "Tài liệu đánh giá cao", icon: Star },
@@ -100,15 +101,13 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium border-l-[2px] transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
                     activeTab === tab.id
-                      ? "border-black bg-zinc-50 text-black"
-                      : "border-transparent text-zinc-500 hover:text-black hover:bg-zinc-50"
+                      ? "bg-zinc-100 text-black border-zinc-300"
+                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <tab.icon className="w-4 h-4" /> {tab.label}
-                  </div>
+                  {tab.label}
                   {activeTab === tab.id && <ChevronRight className="w-4 h-4" />}
                 </button>
               ))}

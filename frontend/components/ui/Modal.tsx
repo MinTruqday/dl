@@ -41,16 +41,16 @@ export function Modal({
     <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-sm bg-black/40">
       <div
         className={cn(
-          "bg-white w-full max-w-lg border border-zinc-100 animate-in zoom-in-95 duration-300 rounded-sm relative p-12 md:p-16",
+          "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95 duration-300 rounded-none relative p-0",
           className
         )}
       >
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-8 right-8 p-2 text-zinc-300 hover:text-black transition-colors active:scale-90"
+            className="absolute top-6 right-6 text-zinc-400 hover:text-black transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-4 h-4" />
           </button>
         )}
         {children}
@@ -67,7 +67,7 @@ export function ModalHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-10", className)}>
+    <div className={cn("border-b border-zinc-200 p-6 mb-0", className)}>
       {children}
     </div>
   );
@@ -81,7 +81,7 @@ export function ModalTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn("text-2xl font-bold tracking-tight text-black", className)}>
+    <h3 className={cn("text-sm font-semibold text-black pr-8", className)}>
       {children}
     </h3>
   );
@@ -108,7 +108,7 @@ export function ModalContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("space-y-8", className)}>{children}</div>;
+  return <div className={cn("p-6 space-y-4", className)}>{children}</div>;
 }
 
 export function ModalFooter({
@@ -119,7 +119,7 @@ export function ModalFooter({
   className?: string;
 }) {
   return (
-    <div className={cn("mt-12 text-center space-y-4", className)}>
+    <div className={cn("flex gap-3 border-t border-zinc-200 p-6 bg-zinc-50 mt-0 space-y-0", className)}>
       {children}
     </div>
   );

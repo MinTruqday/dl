@@ -9,6 +9,13 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useRouter } from "next/navigation";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 export default function CollectorPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -224,32 +231,32 @@ export default function CollectorPage() {
         </div>
       </div>
 
-      {confirmModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/80 backdrop-blur-sm p-4">
-          <div className="bg-white border border-zinc-200 w-full max-w-md p-6 shadow-none">
-            <h3 className="text-lg font-semibold text-black mb-2">Kích hoạt thu thập</h3>
-            <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
-              Tiến trình thu thập dữ liệu từ nguồn bên ngoài sẽ được khởi tạo. Bạn có chắc chắn?
-            </p>
-            <div className="flex items-center justify-end gap-4 mt-6">
-              <button
-                onClick={() => !isProcessing && setConfirmModal(false)}
-                disabled={isProcessing}
-                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleTriggerCollection}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-black text-white text-sm font-medium border border-black hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />} Xác nhận
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={confirmModal} onClose={() => !isProcessing && setConfirmModal(false)} className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>Kích hoạt thu thập</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+            Tiến trình thu thập dữ liệu từ nguồn bên ngoài sẽ được khởi tạo. Bạn có chắc chắn?
+          </p>
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={() => !isProcessing && setConfirmModal(false)}
+            disabled={isProcessing}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={handleTriggerCollection}
+            disabled={isProcessing}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác nhận
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

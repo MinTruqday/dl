@@ -49,8 +49,12 @@ const nodeDescriptions: Record<string, string> = {
   chat: "Đang trò chuyện trực tiếp",
 };
 
-export default function AiChat() {
-  const [isOpen, setIsOpen] = useState(false);
+interface AiChatProps {
+  standalone?: boolean;
+}
+
+export default function AiChat({ standalone = false }: AiChatProps) {
+  const [isOpen, setIsOpen] = useState(standalone);
   const [isExpanded, setIsExpanded] = useState(false);
   const [view, setView] = useState<"chat" | "history">("chat");
   const [usePro, setUsePro] = useState(false);
@@ -154,8 +158,8 @@ export default function AiChat() {
     const userMessage = retryText || input.trim();
     if (!userMessage || isSending) return;
 
-    if (usePro && (user?.wallet_balance || 0) < 10) {
-      showToast("Số dư không đủ để sử dụng Chế độ chuyên sâu", "error");
+    if (usePro && (user?.wallet_balance || 0) < 20) {
+      showToast("Cần tối thiểu 20 dl để duy trì Chế độ chuyên nghiệp", "error");
       return;
     }
 
@@ -344,20 +348,26 @@ export default function AiChat() {
 
   return (
     <div className="font-sans">
-      <button
-        onClick={() => setIsOpen((v) => !v)}
-        className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-none ${isOpen ? "bg-black text-white" : "bg-white text-black"}`}
-      >
-        {isOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
-        )}
-      </button>
+      {!standalone && (
+        <button
+          onClick={() => setIsOpen((v) => !v)}
+          className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-none ${isOpen ? "bg-black text-white" : "bg-white text-black"}`}
+        >
+          {isOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <MessageCircle className="w-6 h-6" />
+          )}
+        </button>
+      )}
 
       {isOpen && (
         <div
-          className={`fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none shadow-none`}
+          className={
+            standalone
+              ? "w-full h-full bg-white border-zinc-200 flex flex-col overflow-hidden animate-in fade-in"
+              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none shadow-none`
+          }
         >
           <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-4">
@@ -373,30 +383,42 @@ export default function AiChat() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setView(view === "chat" ? "history" : "chat")}
-                className={`p-2 transition-colors rounded-none ${view === "history" ? "bg-black text-white" : "text-zinc-500 hover:text-black"}`}
-              >
-                <HistoryIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
-              >
-                {isExpanded ? (
-                  <Minimize2 className="w-4 h-4" />
-                ) : (
-                  <Maximize2 className="w-4 h-4" />
-                )}
-              </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+            {!standalone && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setView(view === "chat" ? "history" : "chat")}
+                  className={`p-2 transition-colors rounded-none ${view === "history" ? "bg-black text-white" : "text-zinc-500 hover:text-black"}`}
+                >
+                  <HistoryIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
+                >
+                  {isExpanded ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            {standalone && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setView(view === "chat" ? "history" : "chat")}
+                  className={`px-4 py-2 text-xs font-bold transition-all border ${view === "history" ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 hover:bg-zinc-50"}`}
+                >
+                  {view === "history" ? "Quay lại" : "Lịch sử nghiên cứu"}
+                </button>
+              </div>
+            )}
           </div>
 
           <div
@@ -405,12 +427,6 @@ export default function AiChat() {
           >
             {view === "history" ? (
               <div className="p-6 space-y-4 animate-in fade-in max-w-3xl mx-auto w-full">
-                <button
-                  onClick={() => setView("chat")}
-                  className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-black mb-6 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" /> Quay lại trò chuyện
-                </button>
                 {sessions.length === 0 ? (
                   <div className="py-20 text-center">
                     <HistoryIcon className="w-8 h-8 mx-auto mb-4 text-zinc-300" />
@@ -488,185 +504,169 @@ export default function AiChat() {
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col w-full">
+              <div className="flex flex-col w-full p-6 gap-8">
               {messages.map((msg, idx) => {
                 const isTyping =
                   msg.role === "assistant" && !msg.content && isSending;
-                return (
-                  <div
-                    key={idx}
-                    className="w-full border-b border-zinc-200 p-6 flex justify-center animate-in fade-in bg-white"
-                  >
-                    <div className="w-full max-w-3xl flex gap-6 relative">
-                      <div className="w-32 shrink-0 pt-1">
-                        <span className="text-sm font-medium text-zinc-500">
-                          {msg.role === "user" ? "Nghiên cứu viên" : "Trợ lý tri thức"}
-                        </span>
-                      </div>
-                      <div className={`flex-1 min-w-0 relative ${msg.role === "user" ? "text-black font-medium" : "text-black"}`}>
-                      {msg.role === "user" && !isSending && (
-                        <button
-                          onClick={() => setEditingMessageId(msg.id || null)}
-                          className="absolute -left-12 top-0 p-2 text-zinc-300 hover:text-black transition-colors rounded-none"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      {editingMessageId && editingMessageId === msg.id ? (
-                        <div className="flex flex-col gap-3">
-                          <textarea
-                            defaultValue={msg.content}
-                            className="w-full bg-zinc-50 text-black p-4 text-sm border border-zinc-200 focus:outline-none focus:border-black min-h-[120px] rounded-none transition-colors"
-                            onKeyDown={(e: any) =>
-                              e.key === "Enter" &&
-                              !e.shiftKey &&
-                              (e.preventDefault(),
-                              handleSubmit(undefined, e.target.value))
-                            }
-                          />
-                          <div className="flex justify-end gap-3">
-                            <button
-                              onClick={() => setEditingMessageId(null)}
-                              className="text-sm font-medium px-4 py-2 border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black"
-                            >
-                              Hủy bỏ
-                            </button>
-                            <button
-                              onClick={(ev) => {
-                                const ta =
-                                  ev.currentTarget.parentElement?.parentElement?.querySelector(
-                                    "textarea",
-                                  ) as HTMLTextAreaElement;
-                                handleSubmit(undefined, ta.value);
-                              }}
-                              className="text-sm font-medium px-4 py-2 bg-black text-white hover:bg-zinc-800 transition-colors rounded-none"
-                            >
-                              Gửi lại
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {msg.role === "assistant" &&
-                            msg.thoughts &&
-                            msg.thoughts.length > 0 && (
-                              <details className="mb-6 border border-zinc-200 rounded-none group/thoughts bg-zinc-50">
-                                <summary className="flex items-center gap-3 p-4 cursor-pointer text-sm font-medium text-zinc-500 group-hover/thoughts:text-black transition-colors list-none">
-                                  <Cpu className="w-4 h-4" />
-                                  <span>Quá trình phân tích tri thức</span>
-                                </summary>
-                                <div className="p-4 pt-0 flex flex-col gap-3">
-                                  <div className="h-px w-full bg-zinc-200 mb-2" />
-                                  {msg.thoughts.map((t, idx2) => (
-                                    <div
-                                      key={idx2}
-                                      className="text-sm text-zinc-600 flex items-center gap-3"
-                                    >
-                                      <div className="w-1.5 h-1.5 bg-zinc-300 shrink-0 rounded-none" />
-                                      <span>{t}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </details>
-                            )}
-                          <div
-                            className="w-full prose prose-zinc max-w-none text-sm leading-relaxed"
+                
+                if (msg.role === "user") {
+                  return (
+                    <div key={idx} className="flex flex-col items-end w-full animate-in fade-in">
+                      <div className="w-full flex justify-end items-center gap-1">
+                        {!isSending && editingMessageId !== msg.id && (
+                          <button
+                            onClick={() => setEditingMessageId(msg.id || null)}
+                            className="p-1 text-zinc-300 hover:text-black transition-colors rounded-none"
                           >
-                            {msg.role === "assistant" &&
-                            !msg.content &&
-                            isSending ? (
-                              <div className="flex items-center gap-2 py-2">
-                                <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <div className="max-w-[85%]">
+                          {editingMessageId && editingMessageId === msg.id ? (
+                            <div className="w-full min-w-[300px] md:min-w-[450px] bg-white border border-zinc-200 p-4 shadow-none">
+                              <textarea
+                                 defaultValue={msg.content}
+                                className="w-full bg-zinc-50 text-black p-3 text-sm border border-zinc-200 focus:outline-none focus:border-black min-h-[100px] rounded-none transition-colors"
+                                onKeyDown={(e: any) =>
+                                  e.key === "Enter" &&
+                                  !e.shiftKey &&
+                                  (e.preventDefault(),
+                                  handleSubmit(undefined, e.target.value))
+                                }
+                              />
+                              <div className="flex justify-end gap-3 mt-3">
+                                <button
+                                  onClick={() => setEditingMessageId(null)}
+                                  className="text-xs font-bold uppercase tracking-widest px-4 py-2 border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black"
+                                >
+                                  Hủy bỏ
+                                </button>
+                                <button
+                                  onClick={(ev) => {
+                                    const ta =
+                                      ev.currentTarget.parentElement?.parentElement?.querySelector(
+                                        "textarea",
+                                      ) as HTMLTextAreaElement;
+                                    handleSubmit(undefined, ta.value);
+                                  }}
+                                  className="text-xs font-bold uppercase tracking-widest px-4 py-2 bg-black text-white hover:bg-zinc-800 transition-colors rounded-none"
+                                >
+                                  Gửi lại
+                                </button>
                               </div>
-                            ) : (
-                              <ReactMarkdown
-                                remarkPlugins={[remarkGfm, remarkMath]}
-                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                components={{
-                                  p: ({ children }) => (
-                                    <p className="mb-4 last:mb-0">
-                                      {children}
-                                    </p>
-                                  ),
-                                  code({
-                                    node,
-                                    inline,
-                                    className,
-                                    children,
-                                    ...props
-                                  }: any) {
-                                    const match = /language-(\w+)/.exec(
-                                      className || "",
-                                    );
-                                    const content = String(children).replace(
-                                      /\n$/,
-                                      "",
-                                    );
-                                    if (!inline && match) {
-                                      const lang = match[1];
-                                      return (
-                                        <div className="my-6 bg-black border border-black rounded-none overflow-hidden">
-                                          <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-black">
-                                            <span className="text-xs font-medium text-zinc-400">
-                                              {lang}
-                                            </span>
-                                            <button
-                                              onClick={() => {
-                                                navigator.clipboard.writeText(
-                                                  content,
-                                                );
-                                                showToast(
-                                                  "Đã sao chép",
-                                                  "info",
-                                                );
-                                              }}
-                                              className="text-xs font-medium text-zinc-400 hover:text-white transition-colors rounded-none"
-                                            >
-                                              Sao chép
-                                            </button>
-                                          </div>
-                                          <pre className="p-4 overflow-x-auto">
-                                            <code className="text-sm font-mono text-zinc-300">
-                                              {content}
-                                            </code>
-                                          </pre>
-                                        </div>
-                                      );
-                                    }
-                                    return (
-                                      <code
-                                        className={`${className} bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 text-black font-mono text-sm rounded-none`}
-                                        {...props}
-                                      >
-                                        {children}
-                                      </code>
-                                    );
-                                  },
-                                  table: ({ children }) => (
-                                    <div className="overflow-x-auto my-6 border border-zinc-200 rounded-none">
-                                      <table className="min-w-full divide-y divide-zinc-200">
-                                        {children}
-                                      </table>
-                                    </div>
-                                  ),
-                                  th: ({ children }) => (
-                                    <th className="px-4 py-3 bg-zinc-50 text-left text-sm font-medium text-black border-b border-zinc-200">
-                                      {children}
-                                    </th>
-                                  ),
-                                  td: ({ children }) => (
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
-                                      {children}
-                                    </td>
-                                  ),
-                                }}
+                            </div>
+                          ) : (
+                            <div className="bg-zinc-100 border border-zinc-200 px-5 py-4 rounded-none">
+                              <p className="text-sm font-medium text-black whitespace-pre-wrap leading-relaxed">
+                                {msg.content}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={idx} className="flex flex-col items-start w-full animate-in fade-in">
+                    <div className="w-full max-w-[95%]">
+                      {msg.thoughts && msg.thoughts.length > 0 && (
+                        <details className="mb-4 border border-zinc-200 rounded-none group/thoughts bg-zinc-50/50">
+                          <summary className="flex items-center gap-3 p-3 cursor-pointer text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/thoughts:text-black transition-colors list-none">
+                            <Cpu className="w-3.5 h-3.5" />
+                            <span>Quá trình phân tích tri thức</span>
+                          </summary>
+                          <div className="p-3 pt-0 flex flex-col gap-2">
+                            <div className="h-px w-full bg-zinc-200 mb-1" />
+                            {msg.thoughts.map((t, idx2) => (
+                              <div
+                                key={idx2}
+                                className="text-sm text-zinc-600 flex items-center gap-3"
                               >
-                                {msg.content || ""}
-                              </ReactMarkdown>
-                            )}
+                                <div className="w-1.5 h-1.5 bg-zinc-300 shrink-0 rounded-none" />
+                                <span>{t}</span>
+                              </div>
+                            ))}
                           </div>
-                        </>
+                        </details>
                       )}
+                      
+                      <div className="w-full prose prose-zinc max-w-none text-sm leading-relaxed">
+                        {isTyping ? (
+                          <div className="flex items-center gap-2 py-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                          </div>
+                        ) : (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                            components={{
+                              p: ({ children }) => (
+                                <p className="mb-4 last:mb-0">
+                                  {children}
+                                </p>
+                              ),
+                              code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-(\w+)/.exec(className || "");
+                                const content = String(children).replace(/\n$/, "");
+                                if (!inline && match) {
+                                  const lang = match[1];
+                                  return (
+                                    <div className="my-5 bg-black border border-black rounded-none overflow-hidden">
+                                      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-black">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                          {lang}
+                                        </span>
+                                        <button
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(content);
+                                            showToast("Đã sao chép", "info");
+                                          }}
+                                          className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors rounded-none"
+                                        >
+                                          Sao chép
+                                        </button>
+                                      </div>
+                                      <pre className="p-4 overflow-x-auto m-0">
+                                        <code className="text-[13px] font-mono text-zinc-300 leading-relaxed">
+                                          {content}
+                                        </code>
+                                      </pre>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <code
+                                    className={`${className} bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 text-black font-mono text-[13px] rounded-none`}
+                                    {...props}
+                                  >
+                                    {children}
+                                  </code>
+                                );
+                              },
+                              table: ({ children }) => (
+                                <div className="overflow-x-auto my-5 border border-zinc-200 rounded-none">
+                                  <table className="min-w-full divide-y divide-zinc-200">
+                                    {children}
+                                  </table>
+                                </div>
+                              ),
+                              th: ({ children }) => (
+                                <th className="px-4 py-3 bg-zinc-50 text-left text-xs font-bold uppercase tracking-widest text-black border-b border-zinc-200">
+                                  {children}
+                                </th>
+                              ),
+                              td: ({ children }) => (
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
+                                  {children}
+                                </td>
+                              ),
+                            }}
+                          >
+                            {msg.content || ""}
+                          </ReactMarkdown>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -676,7 +676,7 @@ export default function AiChat() {
             )}
           </div>
 
-          <div className="p-6 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
+          <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
             <div className="w-full max-w-3xl relative">
               {(selectedFile || selectedImage) && (
                 <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
@@ -753,8 +753,8 @@ export default function AiChat() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between mb-4">
-                <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <label className="flex items-center gap-2 cursor-pointer group">
                   <div className="relative inline-flex items-center">
                     <input
                       type="checkbox"
@@ -762,18 +762,18 @@ export default function AiChat() {
                       onChange={handleTogglePro}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after: peer-checked:after:translate-x-5 peer-checked:bg-black rounded-none transition-all"></div>
+                    <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after: peer-checked:after:translate-x-4 peer-checked:bg-black rounded-none transition-all"></div>
                   </div>
-                  <span className="text-sm font-medium text-zinc-500 transition-colors group-hover:text-black">
-                    Chế độ chuyên sâu
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-black">
+                    Chuyên sâu
                   </span>
                 </label>
                 {usePro && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 border border-zinc-200 rounded-none">
-                    <span className="text-sm font-medium text-black">
-                      10 dl
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-none">
+                    <span className="text-xs font-bold">
+                      20 dl/tháng
                     </span>
-                    <Coins className="w-4 h-4 text-black" />
+                    <Coins className="w-3 h-3 text-black" />
                   </div>
                 )}
               </div>
@@ -801,7 +801,7 @@ export default function AiChat() {
                   disabled={
                     isSending ||
                     !input.trim() ||
-                    (usePro && (user?.wallet_balance || 0) < 10)
+                    (usePro && (user?.wallet_balance || 0) < 20)
                   }
                   className="w-14 shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none"
                 >

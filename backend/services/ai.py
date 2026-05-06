@@ -51,6 +51,8 @@ class AIService:
                         prompt = f"Fix all grammar and spelling mistakes in the following text. Only return the corrected text: {req.text}"
                     elif req.action == "summarize":
                         prompt = f"Provide a clean, concise summary of the following text: {req.text}"
+                    elif req.action == "enhance_social":
+                        prompt = f"As a professional social media manager, polish the following content to be more engaging and editorial (Swiss-Brutalist style: direct, minimal, bold). Also suggest 3-5 relevant hashtags. Only return the polished text and hashtags. Text: {req.text}"
                     else:
                         raise HTTPException(status_code=400, detail="Hành động không hợp lệ.")
 

@@ -156,14 +156,14 @@ export default function WalletPage() {
       <Modal
         isOpen={showTopupModal}
         onClose={() => setShowTopupModal(false)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-md"
       >
-        <ModalHeader className="border-b border-zinc-200 p-6">
-          <ModalTitle className="text-sm font-semibold text-black">Nạp tài nguyên (VNĐ)</ModalTitle>
-          <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>
+        <ModalHeader>
+          <ModalTitle>Nạp tài nguyên (VNĐ)</ModalTitle>
+          <ModalDescription>Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>
         </ModalHeader>
 
-        <ModalContent className="p-6 space-y-6">
+        <ModalContent>
           <div className="grid grid-cols-2 gap-3">
             {[50000, 100000, 200000, 500000].map((amt) => (
               <button
@@ -199,7 +199,7 @@ export default function WalletPage() {
           </div>
         </ModalContent>
 
-        <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
+        <ModalFooter>
           <button
             onClick={() => setShowTopupModal(false)}
             disabled={topupLoading}

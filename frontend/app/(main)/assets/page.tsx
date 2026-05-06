@@ -17,6 +17,13 @@ import {
   Search,
 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 export default function AuthorAssetsPage() {
   const { showToast } = useToast();
@@ -285,30 +292,30 @@ export default function AuthorAssetsPage() {
         </div>
       </div>
 
-      {deleteId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/80 backdrop-blur-sm p-4">
-          <div className="bg-white border border-zinc-200 w-full max-w-md p-6 shadow-none">
-            <h3 className="text-lg font-semibold text-black mb-2">Xác nhận xóa tài nguyên</h3>
-            <p className="text-sm text-zinc-500 mb-6 leading-relaxed">
-              Bạn có chắc chắn muốn xóa tài nguyên này vĩnh viễn? Hành động này không thể hoàn tác.
-            </p>
-            <div className="flex items-center justify-end gap-4 mt-6">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-black text-white text-sm font-medium border border-black hover:bg-zinc-800 transition-colors"
-              >
-                Xác nhận xóa
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>Xác nhận xóa tài nguyên</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+            Bạn có chắc chắn muốn xóa tài nguyên này vĩnh viễn? Hành động này không thể hoàn tác.
+          </p>
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={() => setDeleteId(null)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={handleDelete}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center"
+          >
+            Xác nhận xóa
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

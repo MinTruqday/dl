@@ -8,6 +8,13 @@ import {
 import { Loader2, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
+import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
 
 export default function AuthorApplicationsPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -246,39 +253,43 @@ export default function AuthorApplicationsPage() {
         </div>
       </div>
 
-      {reviewModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white/80 backdrop-blur-sm p-4">
-          <div className="bg-white border border-zinc-200 w-full max-w-md p-6 shadow-none">
-            <h3 className="text-lg font-semibold text-black mb-2">
-              {reviewModal.status === "APPROVED" ? "Phê duyệt hồ sơ" : "Từ chối hồ sơ"}
-            </h3>
-            <p className="text-sm text-zinc-500 mb-6">
+      <Modal isOpen={!!reviewModal} onClose={() => setReviewModal(null)} className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>
+            {reviewModal?.status === "APPROVED" ? "Phê duyệt hồ sơ" : "Từ chối hồ sơ"}
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="space-y-4">
+            <p className="text-xs font-medium text-zinc-500 leading-relaxed">
               Vui lòng nhập lý do (sẽ được lưu lại và thông báo tới người dùng).
             </p>
-            <textarea
-              className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black resize-none mb-6 rounded-none bg-white placeholder:text-zinc-400 transition-colors"
-              rows={4}
-              value={reasonText}
-              onChange={(e) => setReasonText(e.target.value)}
-              placeholder="Nhập nội dung chi tiết"
-            />
-            <div className="flex items-center justify-end gap-4">
-              <button
-                onClick={() => setReviewModal(null)}
-                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-black transition-colors"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={confirmReview}
-                className="px-4 py-2 bg-black text-white text-sm font-medium border border-black hover:bg-zinc-800 transition-colors"
-              >
-                Xác nhận
-              </button>
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Nội dung chi tiết</label>
+              <textarea
+                className="w-full min-h-[120px] border border-zinc-200 p-3 text-xs font-medium text-black focus:outline-none focus:border-black resize-none bg-zinc-50 placeholder:text-zinc-400 transition-colors"
+                value={reasonText}
+                onChange={(e) => setReasonText(e.target.value)}
+                placeholder="Nhập nội dung..."
+              />
             </div>
           </div>
-        </div>
-      )}
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={() => setReviewModal(null)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={confirmReview}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center"
+          >
+            Xác nhận
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

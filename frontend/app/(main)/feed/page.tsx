@@ -154,6 +154,15 @@ export default function Feed() {
     reason: string;
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [giftModal, setGiftModal] = useState<{
+    postId: string;
+    authorId: string;
+    amount: number;
+  } | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isQuoteMode, setIsQuoteMode] = useState(false);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem("doclib_feed_draft");
@@ -324,10 +333,50 @@ export default function Feed() {
   const [storyQuizOptions, setStoryQuizOptions] = useState(["", ""]);
   const [storyQuizCorrectIdx, setStoryQuizCorrectIdx] = useState(0);
 
-  const [storyMentionsInput, setStoryMentionsInput] = useState("");
+  const [storyTextPos, setStoryTextPos] = useState({ x: 0, y: 0 });
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [storyStickers, setStoryStickers] = useState<any[]>([]);
+  const [showEmojiMenu, setShowEmojiMenu] = useState(false);
 
-  const [replyMessage, setReplyMessage] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
+  const [isDraggingSticker, setIsDraggingSticker] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent, type: 'text' | 'sticker', id?: number) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    if (type === 'text') {
+      setIsDraggingText(true);
+      setDragStart({ x: clientX - storyTextPos.x, y: clientY - storyTextPos.y });
+    } else if (id !== undefined) {
+      setIsDraggingSticker(id);
+      const sticker = storyStickers.find(s => s.id === id);
+      setDragStart({ x: clientX - sticker.x, y: clientY - sticker.y });
+    }
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+    if (isDraggingText) {
+      setStoryTextPos({ x: clientX - dragStart.x, y: clientY - dragStart.y });
+    } else if (isDraggingSticker !== null) {
+      setStoryStickers(prev => prev.map(s => 
+        s.id === isDraggingSticker ? { ...s, x: clientX - dragStart.x, y: clientY - dragStart.y } : s
+      ));
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDraggingText(false);
+    setIsDraggingSticker(null);
+  };
+
+  const addSticker = (content: string, type: 'emoji' | 'icon' = 'emoji') => {
+    setStoryStickers([...storyStickers, { id: Date.now(), content, type, x: 0, y: 0 }]);
+    setShowEmojiMenu(false);
+  };
 
   const handleStoryImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -457,6 +506,21 @@ export default function Feed() {
     });
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop >=
+          document.documentElement.offsetHeight - 500 &&
+        !loading &&
+        hasMore
+      ) {
+        fetchFeed();
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, hasMore, page]);
+
   const recordView = async (postId: string) => {
     try {
       await recordPostViewAPI(postId);
@@ -465,8 +529,7 @@ export default function Feed() {
     }
   };
 
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+
 
   const fetchFeed = async (reset = false) => {
     try {
@@ -485,12 +548,6 @@ export default function Feed() {
       else setHasMore(true);
       if (!reset) setPage((p) => p + 1);
       else setPage(1);
-
-      const tagJson = await getTrendingTagsAPI();
-      setTrendingTags(tagJson.data || tagJson);
-
-      const booksJson = await getSuggestedDocumentsAPI();
-      setDocumentSuggestions(booksJson.data || booksJson);
     } catch (error) {
       if (reset)
         showToast(
@@ -499,6 +556,63 @@ export default function Feed() {
         );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const enhanceContent = async () => {
+    if (!content.trim() || isEnhancing) return;
+    setIsEnhancing(true);
+    showToast("Đang tối ưu nội dung bằng AI", "info");
+    try {
+      const data = await translateTextAPI(content, "enhance_social");
+      if (data.result) {
+        setContent(data.result);
+        showToast("Đã tối ưu nội dung!", "success");
+      }
+    } catch (e: any) {
+      showToast(e.message || "Lỗi khi tối ưu nội dung", "error");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleGiftDL = async () => {
+    if (!giftModal || isProcessing) return;
+    if (giftModal.amount <= 0) {
+      showToast("Số lượng dl không hợp lệ", "error");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const response = await fetch(`${API_URL}/wallet/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("doclib_token")}`,
+        },
+        body: JSON.stringify({
+          item_id: giftModal.postId,
+          item_type: "status_update",
+          amount: giftModal.amount,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || "Đã tặng quà thành công!", "success");
+        setGiftModal(null);
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#000000", "#ffffff", "#71717a"],
+        });
+      } else {
+        showToast(data.detail || "Lỗi khi tặng quà", "error");
+      }
+    } catch (e) {
+      showToast("Lỗi kết nối máy chủ", "error");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -692,7 +806,6 @@ export default function Feed() {
   const [quoteBg, setQuoteBg] = useState(
     "bg-gray-100 dark:bg-gray-800 from-gray-200 to-gray-200"
   );
-  const [isQuoteMode, setIsQuoteMode] = useState(false);
 
   const createPost = async () => {
     if (!content.trim() && mediaUrls.length === 0)
@@ -1256,6 +1369,18 @@ export default function Feed() {
                         <option value="private">Chỉ mình tôi</option>
                       </select>
                       <button
+                        onClick={enhanceContent}
+                        disabled={!content.trim() || isEnhancing}
+                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {isEnhancing ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="w-3 h-3" />
+                        )}
+                        Tối ưu AI
+                      </button>
+                      <button
                         onClick={createPost}
                         disabled={!content.trim() && mediaUrls.length === 0}
                         className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 transition-opacity"
@@ -1538,6 +1663,13 @@ export default function Feed() {
                       <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
                         <div className="flex items-center gap-6">
                           <button
+                            onClick={() => setGiftModal({ postId: post.id, authorId: post.user?._id || post.author_id, amount: 10 })}
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                          >
+                            <Coins className="w-4 h-4" />
+                            Tặng quà
+                          </button>
+                          <button
                             onClick={(e) => toggleLike(post.id, "like", e)}
                             className={`flex items-center gap-2 text-xs font-medium transition-colors ${
                               post.likes?.includes(currentUser?._id || "")
@@ -1714,34 +1846,14 @@ export default function Feed() {
       </div>
 
       {currentUser && showStoryModal && (
-        <div className="fixed inset-0 z-[300] bg-white flex items-center justify-center">
-          <div className="w-full h-full max-w-sm mx-auto border-x border-zinc-200 bg-zinc-50 flex flex-col relative overflow-hidden">
-            <div className="absolute z-10 top-0 left-0 right-0 p-4 flex justify-between items-center bg-white border-b border-zinc-200">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowStoryModal(false)}
-                  className="p-1.5 hover:bg-zinc-100 transition-colors"
-                >
-                  <X className="w-5 h-5 text-black" />
-                </button>
-                <button
-                  onClick={() => {
-                    setShowStoryArchive(!showStoryArchive);
-                    if (!showStoryArchive) fetchArchivedStories();
-                  }}
-                  className={`p-1.5 transition-colors ${
-                    showStoryArchive ? "bg-zinc-200" : "hover:bg-zinc-100"
-                  }`}
-                  title="Kho lưu trữ tin"
-                >
-                  <Archive className="w-5 h-5 text-black" />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center backdrop-blur-sm p-4">
+          <div className="w-full h-[85vh] max-h-[800px] max-w-sm mx-auto border border-zinc-200 bg-zinc-50 flex flex-col relative overflow-hidden shadow-2xl">
+            <div className="absolute z-10 top-0 left-0 right-0 p-3 flex justify-between items-center bg-white border-b border-zinc-200">
               <div className="flex gap-2 items-center">
                 <select
                   value={storyFontStyle}
                   onChange={(e) => setStoryFontStyle(e.target.value)}
-                  className="bg-zinc-100 text-black text-xs px-2 py-1 outline-none border border-zinc-200"
+                  className="bg-zinc-100 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-1 outline-none border border-zinc-200"
                 >
                   <option value="sans">Sans</option>
                   <option value="mono">Mono</option>
@@ -1749,7 +1861,7 @@ export default function Feed() {
                 <select
                   value={storyPrivacy}
                   onChange={(e) => setStoryPrivacy(e.target.value)}
-                  className="bg-zinc-100 text-black text-xs px-2 py-1 outline-none border border-zinc-200"
+                  className="bg-zinc-100 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-1 outline-none border border-zinc-200"
                 >
                   <option value="public">Công khai</option>
                   <option value="friends">Bạn bè</option>
@@ -1759,16 +1871,36 @@ export default function Feed() {
                   type="color"
                   value={storyBgColor}
                   onChange={(e) => setStoryBgColor(e.target.value)}
-                  className="w-6 h-6 p-0 border-0 cursor-pointer"
+                  className="w-5 h-5 p-0 border border-zinc-200 cursor-pointer"
                   title="Màu nền"
                 />
                 <input
                   type="color"
                   value={storyTextColor}
                   onChange={(e) => setStoryTextColor(e.target.value)}
-                  className="w-6 h-6 p-0 border-0 cursor-pointer"
+                  className="w-5 h-5 p-0 border border-zinc-200 cursor-pointer"
                   title="Màu chữ"
                 />
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setShowStoryArchive(!showStoryArchive);
+                    if (!showStoryArchive) fetchArchivedStories();
+                  }}
+                  className={`p-1.5 transition-colors ${
+                    showStoryArchive ? "bg-zinc-100" : "hover:bg-zinc-50"
+                  }`}
+                  title="Kho lưu trữ tin"
+                >
+                  <Archive className="w-4 h-4 text-black" />
+                </button>
+                <button
+                  onClick={() => setShowStoryModal(false)}
+                  className="p-1.5 hover:bg-zinc-50 transition-colors"
+                >
+                  <X className="w-4 h-4 text-black" />
+                </button>
               </div>
             </div>
 
@@ -1821,8 +1953,12 @@ export default function Feed() {
             )}
 
             <div
-              className="flex-1 flex flex-col justify-center items-center p-6 relative"
+              className="flex-1 flex flex-col justify-center items-center p-6 relative select-none overflow-hidden"
               style={{ backgroundColor: storyBgColor }}
+              onMouseMove={handleDragMove}
+              onTouchMove={handleDragMove}
+              onMouseUp={handleDragEnd}
+              onTouchEnd={handleDragEnd}
             >
               {storyMediaUrl && (
                 <div className="absolute inset-0 w-full h-full">
@@ -1834,21 +1970,44 @@ export default function Feed() {
                 </div>
               )}
 
-              <textarea
-                className="w-full bg-transparent border-none outline-none text-center resize-none text-2xl font-bold placeholder:opacity-50 z-10"
-                placeholder="Nhập nội dung tin"
-                value={storyText}
-                onChange={(e) => setStoryText(e.target.value)}
-                autoFocus
-                rows={5}
-                style={{
-                  color: storyTextColor,
-                  fontFamily:
-                    storyFontStyle === "mono"
-                      ? "Courier New, monospace"
-                      : "inherit",
-                }}
-              />
+                <div
+                  className="z-10 cursor-move transition-transform active:scale-95"
+                  style={{ transform: `translate(${storyTextPos.x}px, ${storyTextPos.y}px)` }}
+                  onMouseDown={(e) => handleDragStart(e, 'text')}
+                  onTouchStart={(e) => handleDragStart(e, 'text')}
+                >
+                  <textarea
+                    className="bg-transparent border-none outline-none text-center resize-none text-2xl font-bold placeholder:opacity-50 p-0 overflow-hidden"
+                    placeholder="Nhập nội dung tin"
+                    value={storyText}
+                    onChange={(e) => {
+                      setStoryText(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = e.target.scrollHeight + "px";
+                    }}
+                    autoFocus
+                    rows={1}
+                    style={{
+                      color: storyTextColor,
+                      fontFamily:
+                        storyFontStyle === "mono"
+                          ? "Courier New, monospace"
+                          : "inherit",
+                    }}
+                  />
+                </div>
+
+                {storyStickers.map((sticker) => (
+                  <div
+                    key={sticker.id}
+                    className="absolute z-20 text-5xl cursor-move select-none transition-transform active:scale-110"
+                    style={{ transform: `translate(${sticker.x}px, ${sticker.y}px)` }}
+                    onMouseDown={(e) => handleDragStart(e, 'sticker', sticker.id)}
+                    onTouchStart={(e) => handleDragStart(e, 'sticker', sticker.id)}
+                  >
+                    {sticker.content}
+                  </div>
+                ))}
 
               {storyLinkUrl && (
                 <div className="mt-4 px-3 py-1.5 bg-white border border-zinc-200 flex gap-2 items-center z-10 max-w-[80%]">
@@ -2024,6 +2183,28 @@ export default function Feed() {
                       onChange={handleStoryImageUpload}
                     />
                   </label>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowEmojiMenu(!showEmojiMenu)}
+                      className={`h-8 w-8 flex items-center justify-center transition-colors border border-zinc-200 shrink-0 ${showEmojiMenu ? 'bg-black text-white' : 'bg-zinc-50 hover:bg-zinc-100 text-black'}`}
+                      title="Thêm emoji"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
+                    {showEmojiMenu && (
+                      <div className="absolute bottom-full left-0 mb-2 p-2 bg-white border border-zinc-200 shadow-2xl grid grid-cols-5 gap-1 z-[400] animate-in fade-in slide-in-from-bottom-2 w-[200px]">
+                        {["🔥", "⭐", "❤️", "😂", "🚀", "✨", "🙌", "💯", "👏", "🎉", "💡", "📍", "👋", "🥳", "🤔"].map(e => (
+                          <button
+                            key={e}
+                            onClick={() => addSticker(e)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 text-xl"
+                          >
+                            {e}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setShowLinkInput(!showLinkInput)}
                     className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
@@ -2129,19 +2310,19 @@ export default function Feed() {
                 </button>
               </div>
 
-              <div className="absolute top-0 left-0 right-0 px-2 pt-2 flex gap-1 z-[205] w-full bg-white/50 border-b border-zinc-200 pb-2">
-                {stories.map((s, idx) => (
+              <div className="absolute top-0 left-0 right-0 h-1 z-[220] flex gap-1 p-1">
+                {stories.map((_, i) => (
                   <div
-                    key={s.id}
-                    className="flex-1 h-[2px] bg-zinc-300 overflow-hidden"
+                    key={i}
+                    className="flex-1 h-full bg-black/10 overflow-hidden"
                   >
                     <div
-                      className="h-full bg-black ease-linear"
+                      className="h-full bg-black transition-all duration-100 ease-linear"
                       style={{
                         width:
-                          idx < activeStoryIndex
+                          i < activeStoryIndex
                             ? "100%"
-                            : idx === activeStoryIndex
+                            : i === activeStoryIndex
                             ? `${storyProgress}%`
                             : "0%",
                       }}
@@ -2150,42 +2331,45 @@ export default function Feed() {
                 ))}
               </div>
 
-              {stories[activeStoryIndex].media_url && (
-                <div className="absolute inset-0 w-full h-full flex flex-col justify-center items-center">
-                  <img
-                    src={stories[activeStoryIndex].media_url}
-                    className="absolute inset-0 w-full h-full object-cover grayscale mix-blend-multiply opacity-50"
-                  />
-                </div>
-              )}
-
-              <div className="w-full px-6 flex-1 flex flex-col gap-6 justify-center items-center overflow-hidden z-10 pointer-events-none">
-                {stories[activeStoryIndex].text_content && (
-                  <h2
-                    className="text-xl font-semibold text-center max-w-full leading-snug break-words mb-4"
-                    style={{
-                      color: stories[activeStoryIndex].text_color || "#000000",
-                      fontFamily:
-                        stories[activeStoryIndex].font_style === "mono"
-                          ? "Courier New, monospace"
-                          : "inherit",
-                    }}
-                  >
-                    {stories[activeStoryIndex].text_content}
-                  </h2>
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none p-8"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  if (x < rect.width / 3) handleStoryPrev();
+                  else handleStoryNext();
+                }}
+              >
+                {stories[activeStoryIndex].media_url && (
+                  <div className="absolute inset-0 w-full h-full">
+                    <img
+                      src={stories[activeStoryIndex].media_url}
+                      className="w-full h-full object-cover grayscale mix-blend-multiply opacity-50"
+                    />
+                  </div>
                 )}
+                <p
+                  className="text-black text-2xl font-bold text-center break-words w-full z-10 pointer-events-auto"
+                  style={{
+                    fontFamily:
+                      stories[activeStoryIndex].font_style === "mono"
+                        ? "Courier New, monospace"
+                        : "inherit",
+                  }}
+                >
+                  {stories[activeStoryIndex].text_content}
+                </p>
 
                 {stories[activeStoryIndex].link_url && (
                   <a
                     href={stories[activeStoryIndex].link_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 text-black font-medium max-w-[80%] pointer-events-auto"
-                    onClick={(e) => e.stopPropagation()}
+                    className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-white border border-zinc-200 flex gap-2 items-center z-10 pointer-events-auto hover:bg-zinc-50 transition-colors"
                   >
-                    <Globe className="w-4 h-4 shrink-0" />
-                    <span className="truncate text-xs">
-                      {stories[activeStoryIndex].link_url}
+                    <Globe className="w-4 h-4 text-black" />
+                    <span className="text-xs font-semibold text-black">
+                      Xem liên kết
                     </span>
                   </a>
                 )}
@@ -2195,24 +2379,25 @@ export default function Feed() {
                     className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-none"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <div className="text-center font-bold text-[10px] uppercase text-zinc-500 mb-1">
+                      Khảo sát
+                    </div>
                     <h4 className="text-black text-xs font-semibold text-center mb-2">
                       {stories[activeStoryIndex].poll_data.question}
                     </h4>
                     {stories[activeStoryIndex].poll_data.options.map(
                       (opt: string, idx: number) => {
-                        const totalVotes = Object.keys(
-                          stories[activeStoryIndex].poll_data.voters || {}
+                        const voters =
+                          stories[activeStoryIndex].poll_data.voters || {};
+                        const totalVotes = Object.keys(voters).length;
+                        const votesForThis = Object.values(voters).filter(
+                          (v) => v === idx
                         ).length;
-                        const myVote = (stories[activeStoryIndex].poll_data
-                          .voters || {})[currentUser?._id || ""];
-                        const hasVoted = myVote !== undefined;
-                        const optsVotes = Object.values(
-                          stories[activeStoryIndex].poll_data.voters || {}
-                        ).filter((v) => v === idx).length;
                         const percent =
                           totalVotes > 0
-                            ? Math.round((optsVotes / totalVotes) * 100)
+                            ? Math.round((votesForThis / totalVotes) * 100)
                             : 0;
+                        const hasVoted = voters[currentUser?._id || ""] !== undefined;
 
                         return (
                           <button
@@ -2242,12 +2427,7 @@ export default function Feed() {
                       }
                     )}
                     <div className="text-zinc-500 text-[10px] text-center mt-1 font-medium">
-                      {
-                        Object.keys(
-                          stories[activeStoryIndex].poll_data.voters || {}
-                        ).length
-                      }{" "}
-                      phiếu
+                      {Object.keys(stories[activeStoryIndex].poll_data.voters || {}).length} phiếu
                     </div>
                   </div>
                 ) : stories[activeStoryIndex].quiz_data ? (
@@ -2317,18 +2497,17 @@ export default function Feed() {
                       className="w-full h-full object-cover grayscale mix-blend-multiply"
                     />
                   ) : (
-                    <span className="text-black font-bold text-sm">
-                      {stories[
-                        activeStoryIndex
-                      ].user?.name?.[0]?.toUpperCase() || "A"}
-                    </span>
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-black text-xs font-bold">
+                      {stories[activeStoryIndex].user?.display_name?.[0]?.toUpperCase() ||
+                        "A"}
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-black bg-white/80 px-1 py-0.5">
-                    {stories[activeStoryIndex].user?.name || "Người dùng"}
+                  <span className="text-black text-xs font-bold truncate">
+                    {stories[activeStoryIndex].user?.display_name}
                   </span>
-                  <span className="text-[10px] font-medium text-zinc-600 bg-white/80 px-1 py-0.5 w-max mt-0.5">
+                  <span className="text-zinc-500 text-[10px] font-medium">
                     {new Date(
                       stories[activeStoryIndex].created_at
                     ).toLocaleTimeString("vi-VN", {
@@ -2339,65 +2518,28 @@ export default function Feed() {
                 </div>
               </div>
 
-              <div
-                className="absolute top-0 bottom-0 left-0 w-1/4 z-[200] cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStoryPrev();
-                }}
-              />
-              <div
-                className="absolute top-0 bottom-0 right-0 w-1/4 z-[200] cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStoryNext();
-                }}
-              />
-
-              <div className="absolute bottom-4 left-0 right-0 w-full px-4 z-[205] flex justify-between items-center gap-3">
-                {stories[activeStoryIndex].user._id ===
-                  (currentUser?._id || "") ||
-                stories[activeStoryIndex].author_id ===
-                  (currentUser?._id || "") ? (
-                  <div
-                    className="bg-white px-3 py-2 text-xs font-medium text-black border border-zinc-200 w-full flex justify-between items-center cursor-pointer hover:bg-zinc-50 transition-colors"
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 border-t border-zinc-200 z-[210] flex gap-2 items-center">
+                {stories[activeStoryIndex].user?._id ===
+                (currentUser?._id || "") ? (
+                  <button
                     onClick={() => {
-                      const storyId =
+                      fetchStoryViewers(
                         stories[activeStoryIndex].id ||
-                        stories[activeStoryIndex]._id;
-                      setShowViewerList(!showViewerList);
-                      if (!showViewerList) fetchStoryViewers(storyId);
+                          stories[activeStoryIndex]._id
+                      );
+                      setShowViewerList(true);
                     }}
+                    className="flex-1 py-2 text-black text-xs font-semibold flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors border border-zinc-200"
                   >
-                    <span className="flex items-center gap-2">
-                      <Eye className="w-4 h-4 text-zinc-500" />
-                      {stories[activeStoryIndex]?.viewer_count || 0} lượt xem
-                    </span>
-                    <div className="flex -space-x-1.5">
-                      {storyViewers.slice(0, 3).map((v: any, i: number) => (
-                        <div
-                          key={i}
-                          className="w-6 h-6 bg-zinc-100 border border-zinc-200 overflow-hidden flex items-center justify-center text-[10px] font-bold text-black"
-                        >
-                          {v.avatar_url ? (
-                            <img
-                              src={v.avatar_url}
-                              className="w-full h-full object-cover grayscale mix-blend-multiply"
-                            />
-                          ) : (
-                            v.full_name?.[0]?.toUpperCase() || "?"
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                    <Eye className="w-4 h-4" />
+                    {stories[activeStoryIndex].viewer_count || 0} người xem
+                  </button>
                 ) : (
                   <>
-                    <div className="flex-1 relative flex items-center">
+                    <div className="flex-1 relative flex items-center border border-zinc-200 bg-white">
                       <input
-                        type="text"
-                        placeholder="Trả lời tin"
-                        className="w-full bg-white border border-zinc-200 px-3 py-2 text-xs text-black outline-none focus:border-black transition-colors"
+                        placeholder="Gửi tin nhắn..."
+                        className="h-9 w-full bg-transparent border-none text-xs font-medium pr-10 focus-visible:ring-0 rounded-none px-3 outline-none"
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
                         onKeyDown={(e) => {
@@ -2438,65 +2580,58 @@ export default function Feed() {
                 )}
               </div>
 
-              {showViewerList &&
-                (stories[activeStoryIndex].user._id ===
-                  (currentUser?._id || "") ||
-                  stories[activeStoryIndex].author_id ===
-                    (currentUser?._id || "")) && (
-                  <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-none">
-                    <div className="flex items-center justify-between mb-3 border-b border-zinc-100 pb-2">
-                      <span className="text-black text-xs font-semibold">
-                        Người đã xem
-                      </span>
-                      <button
-                        onClick={() => setShowViewerList(false)}
-                        className="text-zinc-400 hover:text-black"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {isFetchingViewers ? (
-                      <div className="text-zinc-500 text-xs text-center py-4">
-                        Đang tải
-                      </div>
-                    ) : storyViewers.length === 0 ? (
-                      <div className="text-zinc-500 text-xs text-center py-4">
-                        Chưa có ai xem tin này.
-                      </div>
-                    ) : (
-                      <div className="space-y-3 mt-2">
-                        {storyViewers.map((v: any, i: number) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-3"
-                          >
-                            <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center text-[10px] font-bold text-black overflow-hidden shrink-0">
-                              {v.avatar_url ? (
-                                <img
-                                  src={v.avatar_url}
-                                  className="w-full h-full object-cover grayscale mix-blend-multiply"
-                                />
-                              ) : (
-                                v.full_name?.[0]?.toUpperCase() || "?"
-                              )}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-black text-xs font-semibold">
-                                {v.full_name || "Ẩn danh"}
-                              </span>
-                              <span className="text-zinc-500 text-[10px] font-medium">
-                                {new Date(v.viewed_at).toLocaleTimeString(
-                                  "vi-VN",
-                                  { hour: "2-digit", minute: "2-digit" }
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              {showViewerList && (
+                <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-none">
+                  <div className="flex items-center justify-between mb-3 border-b border-zinc-100 pb-2">
+                    <span className="text-black text-xs font-semibold">
+                      Người đã xem
+                    </span>
+                    <button
+                      onClick={() => setShowViewerList(false)}
+                      className="text-zinc-400 hover:text-black"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
+                  {isFetchingViewers ? (
+                    <div className="text-zinc-500 text-xs text-center py-4">
+                      Đang tải
+                    </div>
+                  ) : storyViewers.length === 0 ? (
+                    <div className="text-zinc-500 text-xs text-center py-4">
+                      Chưa có ai xem tin này.
+                    </div>
+                  ) : (
+                    <div className="space-y-3 mt-2">
+                      {storyViewers.map((v: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center text-[10px] font-bold text-black overflow-hidden shrink-0">
+                            {v.avatar_url ? (
+                              <img
+                                src={v.avatar_url}
+                                className="w-full h-full object-cover grayscale mix-blend-multiply"
+                              />
+                            ) : (
+                              v.full_name?.[0]?.toUpperCase() || "?"
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-black text-xs font-semibold">
+                              {v.full_name || "Ẩn danh"}
+                            </span>
+                            <span className="text-zinc-500 text-[10px] font-medium">
+                              {new Date(v.viewed_at).toLocaleTimeString(
+                                "vi-VN",
+                                { hour: "2-digit", minute: "2-digit" }
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2504,19 +2639,19 @@ export default function Feed() {
       <Modal
         isOpen={!!translationModal}
         onClose={() => setTranslationModal(null)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white"
+        className="max-w-md"
       >
-        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+        <ModalHeader>
           <ModalTitle className="text-sm font-semibold text-black">
             Bản dịch tự động
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <p className="text-sm text-black leading-relaxed font-medium whitespace-pre-wrap">
             {translationModal?.text}
           </p>
         </ModalContent>
-        <ModalFooter className="border-t border-zinc-100 p-4 bg-zinc-50 flex justify-end">
+        <ModalFooter>
           <button
             onClick={() => setTranslationModal(null)}
             className="px-6 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors"
@@ -2529,19 +2664,19 @@ export default function Feed() {
       <Modal
         isOpen={!!deleteStoryConfirm}
         onClose={() => !isProcessing && setDeleteStoryConfirm(null)}
-        className="max-w-sm rounded-none border border-zinc-200 bg-white"
+        className="max-w-sm"
       >
-        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+        <ModalHeader>
           <ModalTitle className="text-sm font-semibold text-black">
             Xác nhận xóa tin
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Bạn có chắc chắn muốn xóa tin này không? Hành động này không thể hoàn tác.
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
+        <ModalFooter>
           <button
             onClick={() => setDeleteStoryConfirm(null)}
             disabled={isProcessing}
@@ -2562,19 +2697,19 @@ export default function Feed() {
       <Modal
         isOpen={!!deletePostConfirm}
         onClose={() => !isProcessing && setDeletePostConfirm(null)}
-        className="max-w-sm rounded-none border border-zinc-200 bg-white"
+        className="max-w-sm"
       >
-        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+        <ModalHeader>
           <ModalTitle className="text-sm font-semibold text-black">
             Xác nhận xóa bài viết
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Bạn có chắc chắn muốn xóa bài viết này không? Nội dung sẽ bị gỡ bỏ vĩnh viễn khỏi bảng tin.
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
+        <ModalFooter>
           <button
             onClick={() => setDeletePostConfirm(null)}
             disabled={isProcessing}
@@ -2595,14 +2730,14 @@ export default function Feed() {
       <Modal
         isOpen={!!reportModal}
         onClose={() => !isProcessing && setReportModal(null)}
-        className="max-w-md rounded-none border border-zinc-200 bg-white"
+        className="max-w-md"
       >
-        <ModalHeader className="border-b border-zinc-100 p-6 pb-4">
+        <ModalHeader>
           <ModalTitle className="text-sm font-semibold text-black">
             Báo cáo bài viết
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-4">
+        <ModalContent>
           <p className="text-xs text-zinc-500 font-medium leading-relaxed">
             Vui lòng cung cấp lý do báo cáo để đội ngũ quản trị viên DocLib xem xét và xử lý kịp thời.
           </p>
@@ -2623,7 +2758,7 @@ export default function Feed() {
             />
           </div>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-100 p-4 bg-zinc-50">
+        <ModalFooter>
           <button
             onClick={() => setReportModal(null)}
             disabled={isProcessing}
@@ -2637,6 +2772,64 @@ export default function Feed() {
             className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi báo cáo"}
+          </button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal
+        isOpen={!!giftModal}
+        onClose={() => !isProcessing && setGiftModal(null)}
+        className="max-w-sm"
+      >
+        <ModalHeader>
+          <ModalTitle className="text-sm font-semibold text-black">
+            Tặng quà DL cho tác giả
+          </ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-xs text-zinc-500 font-medium mb-6">
+            Chọn số lượng DL bạn muốn tặng để ủng hộ tác giả. Bạn sẽ nhận được 10% hoàn trả nếu tặng từ 50 DL trở lên!
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            {[10, 20, 50, 100, 200, 500].map((amt) => (
+              <button
+                key={amt}
+                onClick={() => setGiftModal(prev => prev ? { ...prev, amount: amt } : null)}
+                className={`py-3 border text-xs font-bold transition-all ${
+                  giftModal?.amount === amt
+                    ? "bg-black border-black text-white"
+                    : "bg-white border-zinc-200 text-black hover:bg-zinc-50"
+                }`}
+              >
+                {amt} DL
+              </button>
+            ))}
+          </div>
+          <div className="mt-4">
+             <label className="text-[10px] font-semibold text-black uppercase tracking-widest mb-1 block">Hoặc nhập số khác</label>
+             <input
+               type="number"
+               className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:border-black outline-none bg-zinc-50 transition-colors"
+               value={giftModal?.amount || ""}
+               onChange={(e) => setGiftModal(prev => prev ? { ...prev, amount: parseInt(e.target.value) || 0 } : null)}
+             />
+          </div>
+        </ModalContent>
+        <ModalFooter>
+          <button
+            onClick={() => setGiftModal(null)}
+            disabled={isProcessing}
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            onClick={handleGiftDL}
+            disabled={isProcessing || !giftModal?.amount}
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2"
+          >
+            {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
+            Xác nhận tặng
           </button>
         </ModalFooter>
       </Modal>

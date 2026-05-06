@@ -35,7 +35,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastContext.Provider value={{ showToast }}>
-      <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3 max-w-md w-full sm:w-[400px] font-sans pointer-events-none">
+      {children}
+      <div className="fixed top-6 right-6 z-[99999] flex flex-col gap-3 max-w-md w-full sm:w-[400px] font-sans pointer-events-none">
         {toasts.map((t) => {
           let typeStyles = "text-black";
           if (t.type === "error") typeStyles = "text-red-600 font-bold";
@@ -63,7 +64,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           );
         })}
       </div>
-      {children}
     </ToastContext.Provider>
   );
 }

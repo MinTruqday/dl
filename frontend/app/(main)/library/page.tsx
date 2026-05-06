@@ -32,6 +32,7 @@ import {
   ChevronRight,
   User as UserIcon,
   Search,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -657,17 +658,17 @@ export default function LibraryPage() {
         </aside>
       </div>
 
-      <Modal isOpen={isClearModalOpen} onClose={() => !isClearing && setIsClearModalOpen(false)} className="max-w-sm rounded-none border border-zinc-200 bg-white p-0">
-        <ModalHeader className="border-b border-zinc-200 p-6">
-          <ModalTitle className="text-sm font-semibold text-black">Xóa toàn bộ lịch sử</ModalTitle>
+      <Modal isOpen={isClearModalOpen} onClose={() => !isClearing && setIsClearModalOpen(false)} className="max-w-sm">
+        <ModalHeader>
+          <ModalTitle>Xóa toàn bộ lịch sử</ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6">
+        <ModalContent>
           <p className="text-xs font-medium text-zinc-500 leading-relaxed">
             Bạn có chắc chắn muốn xóa toàn bộ lịch sử đọc sách? Hành động này sẽ xóa vĩnh viễn dữ liệu về tiến trình đọc của bạn.
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
-          <button onClick={() => setIsClearModalOpen(false)} disabled={isClearing} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50">
+        <ModalFooter>
+          <button onClick={() => setIsClearModalOpen(false)} disabled={isClearing} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center">
             Hủy bỏ
           </button>
           <button onClick={handleClearHistory} disabled={isClearing} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center">
@@ -676,15 +677,15 @@ export default function LibraryPage() {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={isCreateModalOpen} onClose={() => !isCreating && setIsCreateModalOpen(false)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
-        <ModalHeader className="border-b border-zinc-200 p-6">
-          <ModalTitle className="text-sm font-semibold text-black">
+      <Modal isOpen={isCreateModalOpen} onClose={() => !isCreating && setIsCreateModalOpen(false)}>
+        <ModalHeader>
+          <ModalTitle>
             {createType === "folder" ? "Tạo thư mục lưu trữ" : createType === "list" ? "Tạo danh sách đọc" : "Khởi tạo chuỗi tri thức"}
           </ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-4">
+        <ModalContent>
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên gọi</label>
+            <label className="block text-[10px] font-semibold text-black uppercase tracking-widest leading-tight">Tên gọi</label>
             <input
               type="text"
               value={createType === "folder" ? newFolderName : createListForm.name}
@@ -695,7 +696,7 @@ export default function LibraryPage() {
           </div>
           {createType !== "folder" && (
             <div className="space-y-2">
-              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Mô tả tóm lược</label>
+              <label className="block text-[10px] font-semibold text-black uppercase tracking-widest leading-tight">Mô tả tóm lược</label>
               <textarea
                 value={createListForm.description}
                 onChange={(e) => setCreateListForm({ ...createListForm, description: e.target.value })}
@@ -705,8 +706,8 @@ export default function LibraryPage() {
             </div>
           )}
         </ModalContent>
-        <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
-          <button onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50">
+        <ModalFooter>
+          <button onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center">
             Hủy bỏ
           </button>
           <button onClick={handleCreate} disabled={isCreating} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center">

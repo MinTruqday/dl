@@ -9,6 +9,13 @@ import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransa
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import {
+  Modal,
+  ModalHeader,
+  ModalTitle,
+  ModalContent,
+  ModalFooter,
+} from "@/components/ui/Modal";
+import {
   FileText,
   Settings,
   BarChart3,
@@ -361,103 +368,103 @@ function StudioContent() {
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-white selection:bg-black selection:text-white relative font-sans">
-      {confirmAction && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmAction(null)} />
-          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-6 space-y-6 rounded-none shadow-none">
-            <h3 className="text-lg font-medium text-black">Xác nhận thao tác</h3>
-            <p className="text-sm text-zinc-600 leading-relaxed">{confirmAction.text}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmAction(null)} className="flex-1 h-10 text-sm font-medium border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black">
-                Bỏ qua
-              </button>
-              <button onClick={executeConfirm} className="flex-1 h-10 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors rounded-none">
-                Xác nhận
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} className="max-w-sm">
+        <ModalHeader>
+          <ModalTitle>Xác nhận thao tác</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <p className="text-xs font-medium text-zinc-500 leading-relaxed">{confirmAction?.text}</p>
+        </ModalContent>
+        <ModalFooter>
+          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+            Bỏ qua
+          </button>
+          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center">
+            Xác nhận
+          </button>
+        </ModalFooter>
+      </Modal>
 
-      {showChapterModal && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowChapterModal(false)} />
-          <div className="bg-white w-full max-w-sm relative border border-zinc-200 p-6 space-y-6 rounded-none shadow-none">
-            <h3 className="text-lg font-medium text-black">Thêm chương mới</h3>
+      <Modal isOpen={showChapterModal} onClose={() => setShowChapterModal(false)} className="max-w-sm">
+        <ModalHeader>
+          <ModalTitle>Thêm chương mới</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="space-y-2">
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề chương</label>
             <input
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
-              placeholder="Nhập tiêu đề chương"
-              className="w-full h-10 border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400 text-black"
+              placeholder="Nhập tiêu đề"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
               autoFocus
             />
-            <div className="flex gap-3">
-              <button onClick={() => setShowChapterModal(false)} className="flex-1 h-10 text-sm font-medium border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black">
-                Hủy
-              </button>
-              <button onClick={addChapter} className="flex-1 h-10 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors rounded-none">
-                Lưu chương
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        </ModalContent>
+        <ModalFooter>
+          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+            Hủy
+          </button>
+          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center">
+            Lưu chương
+          </button>
+        </ModalFooter>
+      </Modal>
 
-      {showPayoutModal && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowPayoutModal(false)} />
-          <div className="bg-white w-full max-w-md relative border border-zinc-200 p-6 space-y-6 rounded-none shadow-none">
-            <h3 className="text-lg font-medium text-black">Yêu cầu rút tiền</h3>
-            <div className="space-y-4">
-               <div className="space-y-1.5">
-                 <label className="text-xs font-medium text-zinc-500">Số tiền rút (dl)</label>
-                 <input
-                   type="number"
-                   value={payoutAmount}
-                   onChange={(e) => setPayoutAmount(parseInt(e.target.value) || 0)}
-                   className="w-full h-10 border border-zinc-200 px-3 text-sm font-medium rounded-none outline-none focus:border-black transition-colors text-black"
-                 />
-               </div>
-               <div className="space-y-1.5">
-                 <label className="text-xs font-medium text-zinc-500">Tên ngân hàng</label>
-                 <input
-                   value={bankInfo.bank_name}
-                   onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
-                   className="w-full h-10 border border-zinc-200 px-3 text-sm font-medium rounded-none outline-none focus:border-black transition-colors text-black"
-                 />
-               </div>
-               <div className="space-y-1.5">
-                 <label className="text-xs font-medium text-zinc-500">Số tài khoản</label>
-                 <input
-                   value={bankInfo.account_number}
-                   onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
-                   className="w-full h-10 border border-zinc-200 px-3 text-sm font-medium rounded-none outline-none focus:border-black transition-colors text-black"
-                 />
-               </div>
-               <div className="space-y-1.5">
-                 <label className="text-xs font-medium text-zinc-500">Tên chủ tài khoản</label>
-                 <input
-                   value={bankInfo.account_name}
-                   onChange={(e) => setBankInfo({ ...bankInfo, account_name: e.target.value })}
-                   className="w-full h-10 border border-zinc-200 px-3 text-sm font-medium rounded-none outline-none focus:border-black transition-colors text-black"
-                 />
-               </div>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button onClick={() => setShowPayoutModal(false)} className="flex-1 h-10 text-sm font-medium border border-zinc-200 hover:bg-zinc-50 transition-colors rounded-none text-black">
-                Hủy
-              </button>
-              <button 
-                onClick={handlePayout} 
-                disabled={requestingPayout}
-                className="flex-1 h-10 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center justify-center gap-2"
-              >
-                {requestingPayout ? <Loader2 className="w-4 h-4 animate-spin" /> : "Gửi yêu cầu"}
-              </button>
-            </div>
+      <Modal isOpen={showPayoutModal} onClose={() => setShowPayoutModal(false)} className="max-w-md">
+        <ModalHeader>
+          <ModalTitle>Yêu cầu rút tiền</ModalTitle>
+        </ModalHeader>
+        <ModalContent>
+          <div className="space-y-4">
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền rút (dl)</label>
+               <input
+                 type="number"
+                 value={payoutAmount}
+                 onChange={(e) => setPayoutAmount(parseInt(e.target.value) || 0)}
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+               />
+             </div>
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên ngân hàng</label>
+               <input
+                 value={bankInfo.bank_name}
+                 onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+               />
+             </div>
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tài khoản</label>
+               <input
+                 value={bankInfo.account_number}
+                 onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+               />
+             </div>
+             <div className="space-y-1.5">
+               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên chủ tài khoản</label>
+               <input
+                 value={bankInfo.account_name}
+                 onChange={(e) => setBankInfo({ ...bankInfo, account_name: e.target.value })}
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+               />
+             </div>
           </div>
-        </div>
-      )}
+        </ModalContent>
+        <ModalFooter>
+          <button onClick={() => setShowPayoutModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+            Hủy
+          </button>
+          <button 
+            onClick={handlePayout} 
+            disabled={requestingPayout}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2"
+          >
+            {requestingPayout ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       <div 
         className="h-14 border-b border-zinc-200 px-6 flex items-center justify-between bg-white shrink-0 z-30 transition-all duration-300"
@@ -527,20 +534,20 @@ function StudioContent() {
           ))}
         </nav>
 
-        <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left duration-300">
+        <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left duration-300 p-6 space-y-12 overflow-y-auto no-scrollbar">
            {viewMode === "edit" ? (
              <>
-               <div className="p-6 border-b border-zinc-200 bg-white">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-sm font-medium text-black">Cấu trúc nội dung</h3>
+               <div className="space-y-4">
+                  <div className="flex justify-between items-end border-b border-zinc-200 pb-2">
+                    <div className="text-sm font-semibold text-black">Cấu trúc nội dung</div>
                     <button
                       onClick={() => setShowChapterModal(true)}
-                      className="text-sm font-medium text-zinc-500 hover:text-black flex items-center gap-1 transition-colors"
+                      className="text-xs font-medium text-zinc-500 hover:text-black flex items-center gap-1 transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Thêm chương
+                      <Plus className="w-3 h-3" /> Thêm
                     </button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="flex flex-col gap-1">
                     {!selectedDocument?.chapters || selectedDocument.chapters.length === 0 ? (
                       <div className="py-8 text-center border border-zinc-200 flex flex-col items-center gap-2 rounded-none bg-zinc-50">
                          <Plus className="w-4 h-4 text-zinc-400" />
@@ -550,15 +557,13 @@ function StudioContent() {
                       selectedDocument.chapters.map((ch: any, idx: number) => (
                         <div
                           key={ch.id || idx}
-                          className="group flex items-center gap-2 p-2 border border-zinc-200 bg-white hover:border-black cursor-pointer transition-colors rounded-none"
+                          className="group flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white hover:bg-zinc-50 hover:border-zinc-200 cursor-pointer transition-colors rounded-none"
                         >
-                          <span className="text-xs font-medium text-zinc-400 group-hover:text-black w-4 transition-colors">
-                            {idx + 1}
-                          </span>
-                          <span className="text-sm font-medium truncate flex-1 text-zinc-700 group-hover:text-black transition-colors">
-                            {ch.title}
-                          </span>
-                          <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-medium text-zinc-400 w-4">{idx + 1}</span>
+                            <span className="text-sm truncate text-zinc-700 group-hover:text-black">{ch.title}</span>
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                             <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 hover:bg-zinc-100 rounded-none"><ArrowUp className="w-3 h-3 text-zinc-400 hover:text-black" /></button>
                             <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-0.5 hover:bg-zinc-100 rounded-none"><ArrowDown className="w-3 h-3 text-zinc-400 hover:text-black" /></button>
                           </div>
@@ -567,44 +572,49 @@ function StudioContent() {
                     )}
                   </div>
                </div>
-               <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-medium text-zinc-500">Tác phẩm khác</h3>
-                    <div className="space-y-2">
-                      {documents.filter(d => d._id !== selectedDocumentId).map((doc) => (
-                        <button
-                          key={doc._id}
-                          onClick={() => setSelectedDocumentId(doc._id)}
-                          className="w-full text-left p-4 border border-zinc-200 hover:border-black transition-colors bg-white group rounded-none flex flex-col gap-1"
-                        >
-                           <p className="text-sm font-medium text-zinc-700 group-hover:text-black truncate transition-colors">{doc.title}</p>
-                           <div className="flex items-center gap-2">
-                             <div className={`w-1.5 h-1.5 rounded-none ${doc.status === 'published' ? 'bg-black' : 'bg-zinc-300'}`} />
-                             <span className="text-xs font-medium text-zinc-500">{doc.status === 'published' ? 'Xuất bản' : 'Bản nháp'}</span>
-                           </div>
-                        </button>
-                      ))}
-                    </div>
+
+               <div className="space-y-4">
+                  <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+                    Tác phẩm khác
                   </div>
+                  <nav className="flex flex-col gap-1">
+                    {documents.filter(d => d._id !== selectedDocumentId).map((doc) => (
+                      <button
+                        key={doc._id}
+                        onClick={() => setSelectedDocumentId(doc._id)}
+                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 hover:bg-zinc-50 hover:border-zinc-200 transition-colors duration-150 rounded-none"
+                      >
+                        <span className="truncate">{doc.title}</span>
+                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100" />
+                      </button>
+                    ))}
+                  </nav>
                </div>
              </>
            ) : (
-             <div className="p-6">
-                <h3 className="text-sm font-medium text-black mb-4">Danh sách tác phẩm</h3>
-                <div className="space-y-2">
+             <div className="space-y-4">
+                <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+                  Danh sách tác phẩm
+                </div>
+                <nav className="flex flex-col gap-1">
                   {documents.map((doc) => (
                     <button
                       key={doc._id}
-                      onClick={() => setSelectedDocumentId(doc._id)}
-                      className={`w-full text-left p-4 border transition-colors flex flex-col gap-1 rounded-none ${
-                        selectedDocumentId === doc._id ? "bg-black text-white border-black" : "bg-white text-zinc-700 border-zinc-200 hover:border-black hover:text-black"
+                      onClick={() => {
+                        setSelectedDocumentId(doc._id);
+                        setViewMode("edit");
+                      }}
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                        selectedDocumentId === doc._id 
+                          ? "bg-zinc-100 text-black border-zinc-300" 
+                          : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
                       }`}
                     >
-                      <span className="text-sm font-medium truncate">{doc.title}</span>
-                      <span className={`text-xs font-medium ${selectedDocumentId === doc._id ? "text-zinc-300" : "text-zinc-500"}`}>{doc.status === 'published' ? 'Xuất bản' : 'Bản nháp'}</span>
+                      <span className="truncate">{doc.title}</span>
+                      {selectedDocumentId === doc._id && <ChevronRight className="w-4 h-4" />}
                     </button>
                   ))}
-                </div>
+                </nav>
              </div>
            )}
         </aside>

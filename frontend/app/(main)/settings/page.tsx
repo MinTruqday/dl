@@ -316,20 +316,24 @@ export default function SettingsPage() {
         className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
         style={{ opacity: visible ? 1 : 0 }}
       >
-        <aside className="lg:col-span-3 space-y-6">
-          <div className="border border-zinc-200 bg-white">
-            <nav className="flex flex-col">
+        <aside className="lg:col-span-3 space-y-12">
+          <div className="space-y-4">
+            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+              Cài đặt
+            </div>
+            <nav className="flex flex-col gap-1">
               {sections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center gap-3 px-6 py-4 text-xs font-semibold uppercase tracking-widest border-b border-zinc-200 last:border-b-0 transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
                     activeSection === section.id
-                      ? "bg-black text-white"
-                      : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black"
+                      ? "bg-zinc-100 text-black border-zinc-300"
+                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
                   }`}
                 >
-                  <section.icon className="w-4 h-4" /> {section.label}
+                  {section.label}
+                  {activeSection === section.id && <ChevronRight className="w-4 h-4" />}
                 </button>
               ))}
             </nav>

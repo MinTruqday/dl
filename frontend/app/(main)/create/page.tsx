@@ -8,6 +8,7 @@ import {
 } from "@/services/document.service";
 import { API_URL } from "@/services/auth.service";
 import {
+  ChevronRight,
   BookOpen,
   Loader2,
   Sparkles,
@@ -136,28 +137,29 @@ export default function CreateDocumentPage() {
         className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
         style={{ opacity: visible ? 1 : 0 }}
       >
-        <aside className="lg:col-span-3 space-y-6">
-          <div className="border border-zinc-200 bg-white">
-            <nav className="flex flex-col">
+        <aside className="lg:col-span-3 space-y-12">
+          <div className="space-y-4">
+            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+              Sáng tác
+            </div>
+            <nav className="flex flex-col gap-1">
               {[
-                { id: "step1", label: "Thông tin sơ bộ", icon: Info },
-                { id: "step2", label: "Kho lưu trữ nháp", icon: FolderOpen },
-                { id: "step3", label: "Trí tuệ nhân tạo", icon: ShieldCheck },
+                { id: "step1", label: "Thông tin sơ bộ" },
+                { id: "step2", label: "Kho lưu trữ nháp" },
+                { id: "step3", label: "Trí tuệ nhân tạo" },
               ].map((step) => (
                 <button
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
-                  className={`flex items-center justify-between px-6 py-4 text-xs font-semibold uppercase tracking-widest border-b border-zinc-200 last:border-b-0 transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
                     activeStep === step.id
-                      ? "bg-black text-white"
-                      : "bg-white text-zinc-500 hover:bg-zinc-50 hover:text-black"
+                      ? "bg-zinc-100 text-black border-zinc-300"
+                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <step.icon className="w-4 h-4" /> {step.label}
-                  </div>
+                  {step.label}
                   {activeStep === step.id && (
-                    <ArrowRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4" />
                   )}
                 </button>
               ))}

@@ -210,10 +210,10 @@ export default function RegisterPage() {
       <Modal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        className="max-w-2xl rounded-none border border-zinc-200 shadow-none"
+        className="max-w-2xl"
       >
-        <ModalHeader className="border-b border-zinc-200 px-6 py-4">
-          <ModalTitle className="text-lg font-medium text-black">Điều khoản và quy định</ModalTitle>
+        <ModalHeader>
+          <ModalTitle>Điều khoản và quy định</ModalTitle>
         </ModalHeader>
         <ModalContent className="max-h-[60vh] overflow-y-auto p-6 text-sm text-zinc-600 leading-relaxed space-y-6">
           <section>
@@ -256,7 +256,7 @@ export default function RegisterPage() {
             </p>
           </section>
         </ModalContent>
-        <ModalFooter className="flex justify-end p-6 border-t border-zinc-200">
+        <ModalFooter>
           <button
             onClick={() => {
               setAgreedToTerms(true);
