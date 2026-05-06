@@ -1,81 +1,10 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Mathematics from "@tiptap/extension-mathematics";
-import React, { useState, useEffect, useCallback } from "react";
-import { Extension } from "./Extension";
-import { AutoComplete } from "./AutoComplete";
-import { FontSize } from "./FontSize";
-import "katex/dist/katex.min.css";
-import {
-  Code,
-  FileText,
-  Download,
-  Bold,
-  Italic,
-  Play,
-  Save,
-  ChevronLeft,
-  Loader2,
-  List,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Underline as UnderlineIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  Highlighter,
-  CheckSquare,
-  Subscript as SubscriptIcon,
-  Superscript as SuperscriptIcon,
-  Undo,
-  Redo,
-  Strikethrough,
-  Quote,
-  Code as CodeIcon,
-  SquareTerminal,
-  Minus,
-  Video,
-  Sparkles,
-  ListOrdered,
-} from "lucide-react";
-import {
-  Modal,
-  ModalHeader,
-  ModalTitle,
-  ModalContent,
-  ModalFooter,
-} from "@/components/ui/Modal";
-import {
-  compilePreviewAPI,
-  getSynonymsAPI,
-  grammarCheckAPI,
-} from "@/services/editor.service";
+import React, { useEffect, useRef, useState } from "react";
+import EditorJS, { OutputData } from "@editorjs/editorjs";
 import { useToast } from "@/contexts/ToastContext";
-
-import Placeholder from "@tiptap/extension-placeholder";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import Focus from "@tiptap/extension-focus";
-import CharacterCount from "@tiptap/extension-character-count";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Highlight from "@tiptap/extension-highlight";
-import Typography from "@tiptap/extension-typography";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import TextStyle from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
-import Dropcursor from "@tiptap/extension-dropcursor";
-import Youtube from "@tiptap/extension-youtube";
+import { compilePreviewAPI, grammarCheckAPI, getSynonymsAPI } from "@/services/editor.service";
+import { Sparkles, CheckSquare, FileText, Download, Loader2 } from "lucide-react";
 
 export default function Editor({
   initialContent,
@@ -84,577 +13,389 @@ export default function Editor({
   initialContent?: string;
   onSave?: (data: string) => void;
 }) {
+  const editorRef = useRef<EditorJS | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isCompiling, setIsCompiling] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const { showToast } = useToast();
-  const [linkModal, setLinkModal] = useState({ isOpen: false, url: "" });
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        history: { depth: 100 },
-        dropCursor: false,
-      }),
-      Mathematics,
-      Extension,
-      AutoComplete,
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Focus.configure({ className: "has-focus", mode: "all" }),
-      CharacterCount.configure({ limit: 100000 }),
-      Image.configure({ inline: true, allowBase64: true }),
-      Link.configure({ openOnClick: false, autolink: true }),
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Highlight.configure({ multicolor: true }),
-      Typography,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      TextStyle,
-      Color,
-      Subscript,
-      Superscript,
-      Dropcursor.configure({ color: "#000000", width: 2 }),
-      Youtube.configure({
-        inline: false,
-        width: 840,
-        height: 472.5,
-        controls: true,
-      }),
-      Placeholder.configure({
-        placeholder: "Bắt đầu soạn thảo nội dung hoặc gõ \\ để chèn mã LaTeX",
-      }),
-      FontSize,
-    ],
-    content: initialContent || "",
-    editorProps: {
-      attributes: {
-        class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl max-w-none focus:outline-none min-h-[calc(100vh-200px)] p-6 md:p-10 bg-white font-sans",
-      },
-    },
-    onUpdate: ({ editor }) => {
-      onSave?.(editor.getHTML());
-    },
-    immediatelyRender: false,
-  });
 
   useEffect(() => {
-    if (
-      editor &&
-      initialContent !== undefined &&
-      editor.getHTML() !== initialContent
-    ) {
-      editor.commands.setContent(initialContent);
-    }
-  }, [initialContent, editor]);
+    if (editorRef.current === null) {
+      const Header = require("@editorjs/header");
+      const List = require("@editorjs/list");
+      const NestedList = require("@editorjs/nested-list");
+      const Checklist = require("@editorjs/checklist");
+      const NestedChecklist = require("@calumk/editorjs-nested-checklist");
+      const Quote = require("@editorjs/quote");
+      const CychannQuote = require("@cychann/editorjs-quote");
+      const Warning = require("@editorjs/warning");
+      const Marker = require("@editorjs/marker");
+      const CodeTool = require("@editorjs/code");
+      const CodeMirror = require("editorjs-codemirror");
+      const CodeCup = require("@calumk/editorjs-codecup");
+      const Delimiter = require("@editorjs/delimiter");
+      const CoolbytesDelimiter = require("@coolbytes/editorjs-delimiter");
+      const InlineCode = require("@editorjs/inline-code");
+      const LinkTool = require("@editorjs/link");
+      const Embed = require("@editorjs/embed");
+      const Table = require("@editorjs/table");
+      const EditorjsTable = require("editorjs-table");
+      const SimpleImage = require("@editorjs/simple-image");
+      const Attaches = require("@editorjs/attaches");
+      const RawTool = require("@editorjs/raw");
+      const Paragraph = require("@editorjs/paragraph");
+      const LineBreakableParagraph = require("@calumk/editorjs-paragraph-linebreakable");
+      const Alert = require("editorjs-alert");
+      const ColorPicker = require("editorjs-color-picker");
+      const TextStyle = require("@skchawala/editorjs-text-style");
+      const Underline = require("@editorjs/underline");
+      const Tooltip = require("editorjs-tooltip");
+      const Strikethrough = require("@sotaproject/strikethrough");
+      const Button = require("editorjs-button");
+      const Undo = require("editorjs-undo");
+      const DragDrop = require("editorjs-drag-drop");
+      const ToggleBlock = require("editorjs-toggle-block");
+      const TitleEditorjs = require("title-editorjs");
+      const InlineImage = require("editorjs-inline-image");
+      const Video = require("@weekwood/editorjs-video");
+      const Latex = require("editorjs-latex");
+      const Mermaid = require("editorjs-mermaid");
+      const Gallery = require("editorjs-gallery");
+      const TelegramPost = require("editorjs-telegram-post");
+      const AudioPlayer = require("editorjs-audio-player");
+      const HTMLAudio = require("@furison-tech/editorjs-audio");
+      const GroupImage = require("@cychann/editorjs-group-image");
+      const ImageCrop = require("editorjs-image-crop-resize");
+      const Chart = require("editorjs-chart");
+      const ChartJs = require("editorjs-chartjs");
+      const AceCode = require("ace-code-editorjs");
+      const RxpmCode = require("@rxpm/editor-js-code");
+      const Layout = require("editorjs-layout");
+      const Columns = require("@calumk/editorjs-columns");
+      const Collapsible = require("editorjs-collapsible-block");
+      const LinkAutocomplete = require("@editorjs/link-autocomplete");
+      const Hyperlink = require("editorjs-hyperlink");
+      const InlineSpoiler = require("editorjs-inline-spoiler-tool");
+      const InlineTool = require("editorjs-inline-tool");
+      const Inline = require("editorjs-inline");
+      const InlineTemplate = require("editorjs-inline-template");
+      const Style = require("editorjs-style");
+      const ChangeCase = require("editorjs-change-case");
+      const TextColor = require("editorjs-text-color-plugin");
+      const Annotation = require("editorjs-annotation");
+      const Comment = require("editorjs-comment");
+      const InlineHotkey = require("editorjs-inline-hotkey");
+      const TextVariantTune = require("@editorjs/text-variant-tune");
+      const AnchorTune = require("editorjs-anchor");
+      const NoticeTune = require("editorjs-notice");
+      const IndentTune = require("editorjs-indent-tune");
+      const CoolbytesAnchor = require("@coolbytes/editorjs-anchor");
+      const AlignmentTune = require("editor-js-alignment-tune");
 
-  useEffect(() => {
-    if (!editor) return;
-    const interval = setInterval(() => {
-      onSave?.(editor.getHTML());
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [editor, onSave]);
-
-  const estimatedReadTime =
-    Math.ceil((editor?.storage.characterCount.words() || 0) / 200) || 1;
-
-  const handleCompile = async () => {
-    if (!editor) return;
-    setIsCompiling(true);
-    try {
-      const json = editor.getJSON();
-      let latexContent = "";
-
-      json.content?.forEach((node: any) => {
-        if (node.type === "latexBlock") {
-          latexContent += node.attrs.text + "\n\n";
-        } else if (node.type === "paragraph") {
-          const text =
-            node.content?.map((c: any) => c.text || "").join("") || "";
-          latexContent += text + "\n\n";
+      let data: OutputData | undefined;
+      if (initialContent) {
+        try {
+          data = JSON.parse(initialContent);
+        } catch (e) {
+          data = {
+            time: new Date().getTime(),
+            blocks: [
+              {
+                type: "raw",
+                data: {
+                  html: initialContent
+                }
+              }
+            ],
+            version: "2.29.1"
+          };
         }
-      });
-
-      if (!latexContent.trim()) {
-        latexContent = editor.getText();
       }
 
+      const editor = new EditorJS({
+        holder: "editorjs",
+        tools: {
+          textVariant: TextVariantTune,
+          anchorTune: AnchorTune,
+          noticeTune: NoticeTune,
+          indentTune: IndentTune,
+          coolbytesAnchor: CoolbytesAnchor,
+          alignmentTune: AlignmentTune,
+          
+          paragraph: {
+            class: Paragraph,
+            inlineToolbar: true,
+            tunes: ["alignmentTune", "textVariant", "indentTune"]
+          },
+          lineBreakableParagraph: LineBreakableParagraph,
+          header: {
+            class: Header,
+            inlineToolbar: true,
+            tunes: ["alignmentTune", "anchorTune"]
+          },
+          title: TitleEditorjs,
+          
+          list: {
+            class: List,
+            inlineToolbar: true,
+            tunes: ["alignmentTune"]
+          },
+          nestedList: NestedList,
+          checklist: {
+            class: Checklist,
+            inlineToolbar: true
+          },
+          nestedChecklist: NestedChecklist,
+          
+          quote: {
+            class: Quote,
+            inlineToolbar: true
+          },
+          cychannQuote: CychannQuote,
+          warning: Warning,
+          
+          delimiter: Delimiter,
+          coolbytesDelimiter: CoolbytesDelimiter,
+          
+          marker: Marker,
+          
+          code: CodeTool,
+          codeMirror: CodeMirror,
+          codeCup: CodeCup,
+          aceCode: AceCode,
+          rxpmCode: RxpmCode,
+          
+          inlineCode: InlineCode,
+          linkTool: LinkTool,
+          linkAutocomplete: LinkAutocomplete,
+          hyperlink: Hyperlink,
+          
+          embed: Embed,
+          table: Table,
+          editorjsTable: EditorjsTable,
+          chart: Chart,
+          chartJs: ChartJs,
+          
+          image: SimpleImage,
+          inlineImage: InlineImage,
+          gallery: Gallery,
+          groupImage: GroupImage,
+          imageCrop: ImageCrop,
+          video: Video,
+          
+          attaches: Attaches,
+          audioPlayer: AudioPlayer,
+          htmlAudio: HTMLAudio,
+          mermaid: Mermaid,
+          latex: Latex,
+          telegramPost: TelegramPost,
+          
+          raw: RawTool,
+          alert: Alert,
+          colorPicker: ColorPicker,
+          textStyle: TextStyle,
+          underline: Underline,
+          tooltip: Tooltip,
+          strikethrough: Strikethrough,
+          button: Button,
+          
+          toggleBlock: ToggleBlock,
+          layout: Layout,
+          columns: Columns,
+          collapsible: Collapsible,
+          
+          inlineSpoiler: InlineSpoiler,
+          inlineTool: InlineTool,
+          inline: Inline,
+          inlineTemplate: InlineTemplate,
+          style: Style,
+          changeCase: ChangeCase,
+          textColor: TextColor,
+          annotation: Annotation,
+          comment: Comment,
+          inlineHotkey: InlineHotkey
+        },
+        data,
+        placeholder: "Bắt đầu soạn thảo nội dung",
+        onChange: async () => {
+          try {
+            const content = await editor.save();
+            onSave?.(JSON.stringify(content));
+          } catch (e) {
+            showToast("Lưu nội dung thất bại", "error");
+          }
+        },
+        onReady: () => {
+          try {
+            new Undo({ editor });
+            new DragDrop(editor);
+          } catch (e) {
+            showToast("Khởi tạo công cụ phụ trợ thất bại", "error");
+          }
+        }
+      });
+      editorRef.current = editor;
+    }
+
+    return () => {
+      if (editorRef.current && editorRef.current.destroy) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (initialContent && editorRef.current) {
+      editorRef.current.isReady.then(() => {
+        try {
+          const data = JSON.parse(initialContent);
+          editorRef.current?.render(data);
+        } catch(e) {}
+      });
+    }
+  }, [initialContent]);
+
+  const handleCompile = async () => {
+    if (!editorRef.current) return;
+    setIsCompiling(true);
+    try {
+      const data = await editorRef.current.save();
+      let latexContent = "";
+      data.blocks.forEach((block: any) => {
+        if (block.type === "paragraph" || block.type === "header") {
+          latexContent += block.data.text + "\n\n";
+        }
+      });
+      
       const blob = await compilePreviewAPI(latexContent, true);
       const url = URL.createObjectURL(blob);
       setPreviewPdfUrl(`${url}#view=FitH&toolbar=0`);
       setIsPreview(true);
     } catch (error) {
-      console.error("Lỗi biên dịch bản xem trước:", error);
       showToast("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau", "error");
     } finally {
       setIsCompiling(false);
     }
   };
 
-  const handleSynonyms = async () => {
-    if (!editor) return;
-    const { from, to } = editor.state.selection;
-    const word = editor.state.doc.textBetween(from, to, " ");
-    if (!word || word.length > 50) {
-      showToast("Vui lòng chọn một từ để tìm từ đồng nghĩa", "info");
-      return;
-    }
-
+  const handleGrammarCheck = async () => {
+    if (!editorRef.current) return;
     try {
-      const data = await getSynonymsAPI(
-        word,
-        editor
-          .getText()
-          .substring(
-            Math.max(0, from - 100),
-            Math.min(editor.getText().length, to + 100),
-          ),
-      );
-      if (data.synonyms && data.synonyms.length > 0) {
-        showToast(`Gợi ý cho "${word}": ${data.synonyms.join(", ")}`, "info");
+      const data = await editorRef.current.save();
+      let text = "";
+      data.blocks.forEach((b: any) => {
+        if (b.data && b.data.text) text += b.data.text + " ";
+      });
+      if (!text || text.length < 50) {
+        showToast("Vui lòng viết thêm nội dung tối thiểu 50 từ để kiểm tra ngữ pháp", "info");
+        return;
+      }
+      showToast("Đang phân tích ngữ pháp bằng trí tuệ nhân tạo", "info");
+      const res = await grammarCheckAPI(text);
+      showToast(`Kết quả: ${res.message} - Điểm: ${res.score}/100`, "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi kết nối máy chủ", "error");
+    }
+  };
+
+  const handleSynonyms = async () => {
+    if (!editorRef.current) return;
+    setIsSuggesting(true);
+    try {
+      const data = await editorRef.current.save();
+      let text = "";
+      data.blocks.forEach((b: any) => {
+        if (b.data && b.data.text) text += b.data.text + " ";
+      });
+      
+      if (!text || text.length < 10) {
+        showToast("Vui lòng nhập thêm văn bản để hệ thống gợi ý từ đồng nghĩa", "info");
+        setIsSuggesting(false);
+        return;
+      }
+
+      const words = text.split(" ").filter((w: string) => w.trim().length > 0);
+      const targetWord = words[words.length - 1];
+
+      const res = await getSynonymsAPI(targetWord, text);
+      if (res.synonyms && res.synonyms.length > 0) {
+        showToast(`Gợi ý cho ${targetWord}: ${res.synonyms.join(", ")}`, "info");
       } else {
         showToast("Không tìm thấy từ đồng nghĩa phù hợp", "info");
       }
     } catch (err: any) {
       showToast(err.message || "Không thể lấy gợi ý lúc này", "error");
+    } finally {
+      setIsSuggesting(false);
     }
   };
-
-  if (!editor) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col w-full h-full mx-auto bg-white relative font-sans">
       <div className="flex justify-between items-center bg-white border-b border-zinc-200 p-3">
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <button
-              onClick={() => editor.chain().focus().undo().run()}
-              disabled={!editor.can().undo()}
-              className="p-2 bg-white text-zinc-600 disabled:opacity-30 "
-              title="Hoàn tác"
-            >
-              <Undo className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().redo().run()}
-              disabled={!editor.can().redo()}
-              className="p-2 bg-white text-zinc-600 disabled:opacity-30 "
-              title="Làm lại"
-            >
-              <Redo className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <button
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={`p-2 ${editor.isActive("bold") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="In đậm"
-            >
-              <Bold className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={`p-2 ${editor.isActive("italic") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="In nghiêng"
-            >
-              <Italic className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-              className={`p-2 ${editor.isActive("underline") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Gạch chân"
-            >
-              <UnderlineIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={`p-2 ${editor.isActive("strike") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Gạch ngang"
-            >
-              <Strikethrough className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleHighlight().run()}
-              className={`p-2 ${editor.isActive("highlight") ? "bg-zinc-200 text-black" : "bg-white text-zinc-600 "}`}
-              title="Tô sáng"
-            >
-              <Highlighter className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <button
-              onClick={() => editor.chain().focus().toggleCode().run()}
-              className={`p-2 ${editor.isActive("code") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Mã nội dòng"
-            >
-              <CodeIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              className={`p-2 ${editor.isActive("codeBlock") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Khối mã"
-            >
-              <SquareTerminal className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              className={`p-2 ${editor.isActive("blockquote") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Trích dẫn"
-            >
-              <Quote className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="p-2 bg-white text-zinc-600 "
-              title="Đường phân cách"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <button
-              onClick={() => editor.chain().focus().toggleSubscript().run()}
-              className={`p-2 ${editor.isActive("subscript") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Chỉ số dưới"
-            >
-              <SubscriptIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleSuperscript().run()}
-              className={`p-2 ${editor.isActive("superscript") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Chỉ số trên"
-            >
-              <SuperscriptIcon className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <button
-              onClick={() => editor.chain().focus().setTextAlign("left").run()}
-              className={`p-2 ${editor.isActive({ textAlign: "left" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Căn trái"
-            >
-              <AlignLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().setTextAlign("center").run()
-              }
-              className={`p-2 ${editor.isActive({ textAlign: "center" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Căn giữa"
-            >
-              <AlignCenter className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().setTextAlign("right").run()}
-              className={`p-2 ${editor.isActive({ textAlign: "right" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Căn phải"
-            >
-              <AlignRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().setTextAlign("justify").run()
-              }
-              className={`p-2 ${editor.isActive({ textAlign: "justify" }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Căn đều"
-            >
-              <AlignJustify className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-1 border-r pr-2 border-zinc-100">
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  editor.chain().focus().setFontSize(e.target.value).run();
-                } else {
-                  editor.chain().focus().unsetFontSize().run();
-                }
-              }}
-              className="text-xs border-none bg-transparent text-zinc-600 focus:outline-none cursor-pointer h-8 px-1"
-              title="Kích thước chữ"
-              value={editor.getAttributes('textStyle').fontSize || ''}
-            >
-              <option value="">Cỡ chữ</option>
-              <option value="12px">12px</option>
-              <option value="14px">14px</option>
-              <option value="16px">16px</option>
-              <option value="18px">18px</option>
-              <option value="20px">20px</option>
-              <option value="24px">24px</option>
-              <option value="30px">30px</option>
-            </select>
-            <input
-              type="color"
-              onInput={(e: any) => editor.chain().focus().setColor(e.target.value).run()}
-              value={editor.getAttributes('textStyle').color || '#000000'}
-              className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer"
-              title="Màu chữ"
-            />
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 1 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 1 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H1
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 2 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 2 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H2
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 3 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 3 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H3
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 4 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 4 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H4
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 5 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 5 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H5
-            </button>
-            <button
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 6 }).run()
-              }
-              className={`w-8 h-8 shrink-0 font-bold text-xs ${editor.isActive("heading", { level: 6 }) ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-            >
-              H6
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleTaskList().run()}
-              className={`p-2 ${editor.isActive("taskList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Danh sách công việc"
-            >
-              <CheckSquare className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                const previousUrl = editor.getAttributes("link").href;
-                setLinkModal({ isOpen: true, url: previousUrl || "" });
-              }}
-              className={`p-2 ${editor.isActive("link") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Chèn liên kết"
-            >
-              <LinkIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={`p-2 ${editor.isActive("bulletList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Danh sách"
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              className={`p-2 ${editor.isActive("orderedList") ? "bg-black text-white" : "bg-white text-zinc-600 "}`}
-              title="Danh sách số"
-            >
-              <ListOrdered className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                const url = window.prompt("Nhập đường dẫn hình ảnh:");
-                if (url) {
-                  editor.chain().focus().setImage({ src: url }).run();
-                }
-              }}
-              className="p-2 bg-white text-zinc-600"
-              title="Chèn hình ảnh"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                const url = window.prompt("Nhập đường dẫn Youtube:");
-                if (url) {
-                  editor.chain().focus().setYoutubeVideo({ src: url }).run();
-                }
-              }}
-              className="p-2 bg-white text-zinc-600"
-              title="Chèn Video Youtube"
-            >
-              <Video className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex gap-2 ml-2">
-            <button
-              onClick={handleSynonyms}
-              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
-            >
-              <Sparkles className="w-4 h-4" />
-              Gợi ý từ ngữ
-            </button>
-            <button
-              onClick={async () => {
-                const text = editor.getText();
-                if (!text || text.length < 50) {
-                  showToast(
-                    "Vui lòng viết thêm nội dung (tối thiểu 50 từ) để kiểm tra ngữ pháp",
-                    "info",
-                  );
-                  return;
-                }
-                showToast("Đang phân tích ngữ pháp bằng AI", "info");
-                try {
-                  const data = await grammarCheckAPI(text);
-                  showToast(
-                    `Kết quả AI: ${data.message} (Điểm: ${data.score}/100)`,
-                    "success",
-                  );
-                } catch (err: any) {
-                  showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
-                }
-              }}
-              className="px-4 py-1.5 bg-black text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
-            >
-              <CheckSquare className="w-4 h-4 text-zinc-400" />
-              Kiểm tra ngữ pháp AI
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-black uppercase tracking-widest px-2">Khu vực soạn thảo</span>
+        </div>
+        <div className="flex gap-2 ml-2">
+          <button
+            onClick={handleSynonyms}
+            disabled={isSuggesting}
+            className="px-4 py-1.5 border border-zinc-200 text-black hover:bg-zinc-50 flex gap-2 items-center text-xs font-bold transition-colors rounded-none disabled:opacity-50"
+          >
+            {isSuggesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Gợi ý từ ngữ
+          </button>
+          <button
+            onClick={handleGrammarCheck}
+            className="px-4 py-1.5 bg-black text-white hover:bg-zinc-800 flex gap-2 items-center text-xs font-bold transition-colors rounded-none"
+          >
+            <CheckSquare className="w-4 h-4 text-zinc-400" />
+            Kiểm tra ngữ pháp
+          </button>
+          <button
+            onClick={handleCompile}
+            disabled={isCompiling}
+            className="px-4 py-1.5 bg-black text-white hover:bg-zinc-800 flex gap-2 items-center text-xs font-bold transition-colors rounded-none disabled:opacity-50"
+          >
+            {isCompiling ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 text-zinc-400" />}
+            Bản xem trước
+          </button>
         </div>
       </div>
 
       <div className="flex-1 w-full flex overflow-hidden relative bg-white">
-        <div
-          className={`h-full overflow-y-auto ease-in-out ${
-            isPreview ? "w-1/2 border-r border-zinc-200" : "w-full"
-          } scrollbar-thin scrollbar-thumb-zinc-100`}
-        >
-          <div className="w-full bg-white min-h-full animate-in fade-in">
-            <EditorContent editor={editor} className="h-full" />
+        <div className={`h-full overflow-y-auto ease-in-out ${isPreview ? "w-1/2 border-r border-zinc-200" : "w-full"} scrollbar-thin scrollbar-thumb-zinc-100`}>
+          <div className="w-full max-w-4xl mx-auto min-h-full animate-in fade-in p-10">
+            <div id="editorjs" className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none font-sans text-black" />
           </div>
         </div>
 
         {isPreview && previewPdfUrl && (
-          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative animate-in slide-in-from-right-8 fade-in ">
+          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative animate-in slide-in-from-right-8 fade-in duration-300">
             <div className="px-4 py-3 bg-black text-white text-xs flex justify-between items-center z-10">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-zinc-800">
+                <div className="p-1.5 bg-zinc-800 rounded-none">
                   <FileText className="w-4 h-4 text-white" />
                 </div>
                 <span className="font-bold tracking-tight flex flex-col">
                   Bản in PDF
-                  <span className="text-[11px] text-zinc-400 font-medium">
-                    Đã hoàn thành biên dịch
-                  </span>
+                  <span className="text-[11px] text-zinc-400 font-medium">Đã hoàn thành biên dịch</span>
                 </span>
               </div>
               <div className="flex gap-2">
-                <a
-                  href={previewPdfUrl}
-                  download="doclib-preview.pdf"
-                  className="p-1.5 transition-colors text-zinc-300 "
-                  title="Tải xuống"
-                >
+                <a href={previewPdfUrl} download="doclib-preview.pdf" className="p-1.5 transition-colors text-zinc-300 hover:text-white" title="Tải xuống">
                   <Download className="w-4 h-4" />
                 </a>
               </div>
             </div>
-
             <div className="flex-1 bg-zinc-100 overflow-hidden relative p-4 lg:p-8 flex justify-center items-start">
-              <iframe
-                src={previewPdfUrl}
-                className="w-full max-w-[850px] aspect-[1/1.414] bg-white border border-zinc-200 transition-transform"
-                style={{ minHeight: "100%" }}
-              />
+              <iframe src={previewPdfUrl} className="w-full max-w-[850px] aspect-[1/1.414] bg-white border border-zinc-200 transition-transform rounded-none" style={{ minHeight: "100%" }} />
             </div>
           </div>
         )}
       </div>
-
-      <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1.5 border border-zinc-200 text-[11px] font-bold text-zinc-400 pointer-events-none flex gap-4">
-        <span>{editor.storage.characterCount.words()} từ</span>
-        <span>{editor.storage.characterCount.characters()} ký tự</span>
-        <span>Khoảng {estimatedReadTime} phút đọc</span>
-      </div>
-
-      <Modal
-        isOpen={linkModal.isOpen}
-        onClose={() => setLinkModal({ ...linkModal, isOpen: false })}
-        className="max-w-md"
-      >
-        <ModalHeader>
-          <ModalTitle>Chèn liên kết</ModalTitle>
-        </ModalHeader>
-        <ModalContent className="space-y-6">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-            Nhập địa chỉ URL bạn muốn liên kết đến phần văn bản đang chọn
-          </p>
-          <div className="space-y-3">
-            <label className="text-[9px] font-bold text-black uppercase tracking-widest">Địa chỉ URL</label>
-            <input
-              type="text"
-              value={linkModal.url}
-              onChange={(e) => setLinkModal({ ...linkModal, url: e.target.value })}
-              placeholder="https://example.com"
-              autoFocus
-              className="w-full h-14 bg-white border border-zinc-100 px-6 text-sm font-bold outline-none focus:border-black rounded-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (linkModal.url) {
-                    editor.chain().focus().setLink({ href: linkModal.url }).run();
-                  } else {
-                    editor.chain().focus().unsetLink().run();
-                  }
-                  setLinkModal({ ...linkModal, isOpen: false });
-                }
-              }}
-            />
-          </div>
-        </ModalContent>
-        <ModalFooter className="flex gap-4">
-          <button
-            onClick={() => setLinkModal({ ...linkModal, isOpen: false })}
-            className="flex-1 h-14 border border-zinc-100 text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-none transition-all"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            onClick={() => {
-              if (linkModal.url) {
-                editor.chain().focus().setLink({ href: linkModal.url }).run();
-              } else {
-                editor.chain().focus().unsetLink().run();
-              }
-              setLinkModal({ ...linkModal, isOpen: false });
-            }}
-            className="flex-1 h-14 bg-black text-white text-[10px] font-bold uppercase tracking-widest active:scale-95 rounded-none transition-all flex items-center justify-center"
-          >
-            Xác nhận
-          </button>
-        </ModalFooter>
-      </Modal>
     </div>
   );
 }

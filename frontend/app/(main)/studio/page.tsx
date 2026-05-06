@@ -37,6 +37,9 @@ import {
   Brain,
 } from "lucide-react";
 import Editor from "@/components/editor/Editor";
+import edjsHTML from "editorjs-html";
+
+const edjsParser = edjsHTML();
 
 type StudioDocument = {
   _id: string;
@@ -643,7 +646,19 @@ function StudioContent() {
                         <Editor initialContent={content} onSave={(val) => setContent(val)} />
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 border border-zinc-200 rounded-none">
-                          <div className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" dangerouslySetInnerHTML={{ __html: content }} />
+                          <div 
+                            className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" 
+                            dangerouslySetInnerHTML={{ 
+                              __html: (() => {
+                                try {
+                                  const data = JSON.parse(content);
+                                  return edjsParser.parse(data).join("");
+                                } catch (e) {
+                                  return content;
+                                }
+                              })()
+                            }} 
+                          />
                         </div>
                       ) : (
                         <pre className="p-8 bg-zinc-50 border border-zinc-200 text-black text-sm font-mono leading-relaxed overflow-auto min-h-[100vh] rounded-none">
