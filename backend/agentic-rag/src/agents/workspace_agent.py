@@ -28,7 +28,7 @@ def get_my_documents() -> str:
             return res
         return "Không thể lấy danh sách tài liệu"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error listing documents: {e}")
         return "Lỗi kết nối tới thư viện tài liệu"
 
 def get_trash_documents() -> str:
@@ -49,7 +49,7 @@ def get_trash_documents() -> str:
             return res
         return "Không thể truy cập thùng rác"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error getting trash: {e}")
         return "Lỗi hệ thống khi truy cập thùng rác"
 
 def delete_document(document_id: str) -> str:
@@ -64,7 +64,7 @@ def delete_document(document_id: str) -> str:
             return f"Đã chuyển tài liệu {document_id} vào thùng rác thành công"
         return "Xóa tài liệu thất bại"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error deleting document: {e}")
         return "Lỗi kết nối khi xóa tài liệu"
 
 def restore_document(document_id: str) -> str:
@@ -79,7 +79,7 @@ def restore_document(document_id: str) -> str:
             return f"Đã khôi phục tài liệu {document_id} thành công"
         return "Khôi phục tài liệu thất bại"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error restoring document: {e}")
         return "Lỗi hệ thống khi khôi phục tài liệu"
 
 def get_document_analytics(document_id: str) -> str:
@@ -101,7 +101,7 @@ def get_document_analytics(document_id: str) -> str:
             return res
         return "Không thể lấy dữ liệu thống kê"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error getting analytics: {e}")
         return "Lỗi kết nối hệ thống phân tích"
 
 tools = [

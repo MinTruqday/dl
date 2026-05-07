@@ -11,7 +11,7 @@ INTERNAL_API_URL = settings.INTERNAL_API_URL
 auth_token_var = contextvars.ContextVar("auth_token", default=None)
 
 def get_user_balance(user_id: str) -> str:
-logger.info("Log message sanitized"))
+    logger.info(f"get_user_balance requested for user_id: {user_id}")
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
@@ -28,11 +28,11 @@ logger.info("Log message sanitized"))
             return "Lỗi xác thực: Phiên đăng nhập đã hết hạn"
         return f"Lỗi hệ thống: Không thể truy xuất số dư (Mã lỗi: {response.status_code})"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error calling balance API: {e}")
         return "Hệ thống hiện không thể kết nối tới cơ sở dữ liệu"
 
 def get_transaction_history(user_id: str) -> str:
-logger.info("Log message sanitized"))
+    logger.info(f"get_transaction_history requested for user_id: {user_id}")
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
@@ -55,11 +55,11 @@ logger.info("Log message sanitized"))
             return f"Lịch sử 5 giao dịch gần nhất:\n{history_text}"
         return f"Lỗi hệ thống: Không thể tải lịch sử giao dịch (Mã lỗi: {response.status_code})"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error calling history API: {e}")
         return "Hệ thống gặp sự cố trong quá trình truy vấn dữ liệu giao dịch"
 
 def redeem_voucher(code: str) -> str:
-logger.info("Log message sanitized"))
+    logger.info(f"Voucher redemption requested")
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
@@ -81,7 +81,7 @@ logger.info("Log message sanitized"))
         detail = data.get("detail", "Mã voucher không hợp lệ hoặc đã sử dụng")
         return f"Lỗi đổi voucher: {detail}"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error calling redeem API: {e}")
         return "Hệ thống nạp thẻ hiện đang bảo trì"
 
 def get_revenue_report() -> str:
@@ -100,7 +100,7 @@ def get_revenue_report() -> str:
             return f"Báo cáo tài chính:\n- Tổng doanh thu: {total} dl\n- Đang chờ thanh toán: {pending} dl"
         return "Không thể truy xuất dữ liệu doanh thu"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error calling revenue API: {e}")
         return "Lỗi kết nối hệ thống tài chính"
 
 def send_virtual_tip(target_user_id: str, amount: int) -> str:
@@ -121,7 +121,7 @@ def send_virtual_tip(target_user_id: str, amount: int) -> str:
         data = response.json()
         return f"Lỗi giao dịch: {data.get('detail', 'Số dư không đủ hoặc người dùng không tồn tại')}"
     except Exception as e:
-logger.info("Log message sanitized"))
+        logger.error(f"Error calling tip API: {e}")
         return "Giao dịch thất bại do lỗi hệ thống"
 
 tools = [
