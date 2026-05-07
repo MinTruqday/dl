@@ -1,346 +1,112 @@
-import { API_URL, getToken } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export const saveReadingProgressAPI = async (
-  documentId: string,
-  scrollPercent: number,
-) => {
-  const token = getToken();
-  if (!token) return null;
-  const res = await fetch(`${API_URL}/read/progress`, {
+export async function updateTypographyAPI(data: {
+  font_family: string;
+  font_size?: number;
+  line_height?: number;
+  letter_spacing?: number;
+}) {
+  const res = await fetch(`${API_URL}/doc/trinh-bay`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Cập nhật hiển thị thất bại");
+  return result;
+}
+
+export async function getReadingHistoryAPI(skip: number = 0, limit: number = 20) {
+  const res = await fetch(`${API_URL}/doc/lich-su?skip=${skip}&limit=${limit}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử đọc");
+  return data;
+}
+
+export async function updateReadingProgressAPI(data: {
+  document_id: string;
+  progress_percentage: number;
+  current_chapter_slug?: string;
+}) {
+  const res = await fetch(`${API_URL}/doc/tien-do`, {
     method: "POST",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      document_id: documentId,
-      progress_percentage: scrollPercent,
-    }),
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
-  if (!res.ok) return null;
-  return await res.json();
-};
-
-export const getOldReadingHistoryAPI = async () => {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/history`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  });
-  if (!res.ok)
-    throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
-  return await res.json();
-};
-
-export const getRecommendationsAPI = async () => {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/discovery/recommendations/ai`, {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  });
-  if (!res.ok)
-    throw new Error("Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.");
-  return await res.json();
-};
-
-export async function getBookmarksAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/profile/bookmarks`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) return null;
-  return await res.json();
-}
-
-export async function toggleBookmarkAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/profile/bookmarks/${documentId}`, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + token },
-  });
-  return res.ok;
-}
-
-export async function togglePinDocumentAPI(documentId: string, isPinned: boolean) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/read/pins/${documentId}`, {
-    method: isPinned ? "DELETE" : "POST",
-    headers: { Authorization: "Bearer " + token },
-  });
-  return res.ok;
-}
-
-export async function updateReadingProgressAPI(
-  documentId: string,
-  progress: number,
-  currentChapterSlug?: string,
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/read/progress`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify({
-      document_id: documentId,
-      progress_percentage: progress,
-      current_chapter_slug: currentChapterSlug,
-    }),
-  });
-  return res.ok;
-}
-
-export async function getReadingHistoryAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/history`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải lịch sử đọc tài liệu.");
-  return await res.json();
-}
-
-export async function clearReadingHistoryAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/history`, {
-    method: "DELETE",
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Xóa lịch sử thất bại.");
-  return await res.json();
-}
-
-export async function deleteReadingHistoryItemAPI(documentId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/history/${documentId}`, {
-    method: "DELETE",
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Xóa mục lịch sử thất bại.");
-  return await res.json();
-}
-
-export async function getBookmarkFoldersAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/library/bookmarks/folders`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải danh sách thư mục.");
-  return await res.json();
-}
-
-export async function createBookmarkFolderAPI(name: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/library/bookmarks/folders`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) throw new Error("Không thể tạo thư mục mới.");
-  return await res.json();
-}
-
-export async function getPinnedDocumentsAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/pins`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error("Không thể tải danh sách ghim.");
-  return await res.json();
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Cập nhật tiến độ thất bại");
+  return result;
 }
 
 export async function getContinueReadingAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/continuations`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const res = await fetch(`${API_URL}/doc/dang-doc`, {
+    headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách đang đọc.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách đang đọc");
+  return data;
 }
 
-export async function getReadingListsAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/library/lists`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải danh sách bộ sưu tập.");
-  return await res.json();
-}
-
-export async function createReadingListAPI(data: {
-  name: string;
-  description?: string;
-  is_public?: boolean;
+export async function setReadingGoalAPI(data: {
+  target_documents?: number;
+  target_pages?: number;
+  period?: string;
 }) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/library/lists`, {
+  const res = await fetch(`${API_URL}/doc/muc-tieu`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Không thể tạo bộ sưu tập mới.");
-  return await res.json();
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Thiết lập mục tiêu thất bại");
+  return result;
 }
 
-export async function getReadingListByIdAPI(listId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/library/lists/${listId}`, {
-    headers: { Authorization: "Bearer " + token },
+export async function getReadingGoalAPI() {
+  const res = await fetch(`${API_URL}/doc/muc-tieu`, {
+    headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải chi tiết bộ sưu tập.");
-  return await res.json();
-}
-export async function getLibraryAPI() {
-  const token = getToken();
-  if (!token) return [];
-  const res = await fetch(`${API_URL}/library/me`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) return [];
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin mục tiêu");
+  return data;
 }
 
-export async function addToLibraryAPI(
-  documentId: string,
-  status: string = "reading",
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/library/me`, {
+export async function getPinnedDocumentsAPI() {
+  const res = await fetch(`${API_URL}/doc/ghim`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách ghim");
+  return data;
+}
+
+export async function pinDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/doc/ghim/${documentId}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify({ document_id: documentId, status }),
+    headers: getAuthHeaders(),
   });
-  return res.ok;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Ghim tài liệu thất bại");
+  return data;
 }
 
-export async function removeFromLibraryAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/library/me`, {
+export async function unpinDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/doc/ghim/${documentId}`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify({ document_id: documentId }),
+    headers: getAuthHeaders(),
   });
-  return res.ok;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Bỏ ghim tài liệu thất bại");
+  return data;
 }
 
-export const createHighlightAPI = async (
-  documentId: string,
-  text: string,
-  color: string,
-  note?: string,
-) => {
-  const token = getToken();
-  const res = await fetch(
-    `${API_URL}/read/documents/${documentId}/highlights`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text, color, note }),
-    },
-  );
-  return await res.json();
-};
-
-export const getHighlightsAPI = async (documentId: string) => {
-  const token = getToken();
-  const res = await fetch(
-    `${API_URL}/read/documents/${documentId}/highlights`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  const json = await res.json();
-  return json.data || json;
-};
-
-export async function deleteHighlightAPI(highlightId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/read/highlights/${highlightId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
+export async function searchInDocumentAPI(documentId: string, query: string) {
+  const res = await fetch(`${API_URL}/doc/tai-lieu/${documentId}/tim-kiem?q=${encodeURIComponent(query)}`, {
+    headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Xóa điểm nhấn thất bại.");
-  return await res.json();
-}
-
-export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(
-    `${API_URL}/read/documents/${documentId}/highlights/export`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  if (!res.ok) throw new Error("Xuất dữ liệu điểm nhấn thất bại.");
-  return await res.json();
-}
-
-export async function getMySeriesAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/documents/series/me`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải danh sách chuỗi nội dung.");
-  return await res.json();
-}
-
-export async function createSeriesAPI(data: {
-  title: string;
-  description: string;
-  document_ids?: string[];
-}) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/documents/series`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Không thể tạo chuỗi nội dung mới.");
-  return await res.json();
-}
-
-export async function getSeriesByIdAPI(seriesId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/documents/series/${seriesId}`, {
-    headers: token ? { Authorization: "Bearer " + token } : {},
-  });
-  if (!res.ok) throw new Error("Không thể tải chi tiết chuỗi nội dung.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tìm kiếm trong tài liệu thất bại");
+  return data;
 }

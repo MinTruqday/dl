@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
-import { resetPasswordAPI } from "@/services/auth.service";
+import { resetPasswordAPI } from "@/services/authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
 import { Loader2 } from "lucide-react";

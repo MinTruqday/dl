@@ -1,7 +1,7 @@
 "use client";
 
 import { streamAiChatAPI } from "@/services/ai.service";
-import { getToken, API_URL } from "@/services/auth.service";
+import { getToken, API_URL } from "@/services/authentication.service";
 import { useState, useEffect, useRef } from "react";
 import {
   MessageCircle,

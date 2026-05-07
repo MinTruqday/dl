@@ -1,116 +1,101 @@
-import { API_URL, getAuthHeaders, getToken } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export const getWalletBalanceAPI = async () => {
-  const res = await fetch(`${API_URL}/wallet/balance`, {
+export async function getWalletBalanceAPI() {
+  const res = await fetch(`${API_URL}/vi-tien/so-du`, {
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải số dư ví.");
-  return await res.json();
-};
-
-export const depositDLAPI = async (amountVnd: number) => {
-  const res = await fetch(`${API_URL}/payment/deposit`, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ amount_vnd: amountVnd }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || "Không thể khởi tạo giao dịch nạp tiền.");
-  }
-  return await res.json();
-};
-
-export const redeemVoucherAPI = async (code: string) => {
-  const res = await fetch(`${API_URL}/wallet/vouchers/redemptions`, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ code }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(
-      err.message || err.detail || "Không thể kích hoạt mã quà tặng.",
-    );
-  }
-  return await res.json();
-};
-
-export const purchaseChapterAPI = async (
-  documentId: string,
-  chapterId: string,
-) => {
-  const res = await fetch(
-    `${API_URL}/wallet/purchases/documents/${documentId}/chapters/${chapterId}`,
-    {
-      method: "POST",
-      headers: getAuthHeaders(),
-    },
-  );
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message || "Không thể thực hiện giao dịch mua chương.");
-  }
-  return await res.json();
-};
-
-export async function getWalletHistoryAPI() {
-  const res = await fetch(`${API_URL}/wallet/history`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Không thể tải lịch sử giao dịch.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải số dư ví");
+  return data;
 }
 
-export async function voteItemAPI(
-  itemId: string,
-  itemType: string,
-  amount: number,
-) {
-  const res = await fetch(`${API_URL}/wallet/votes`, {
+export async function getWalletHistoryAPI() {
+  const res = await fetch(`${API_URL}/vi-tien/lich-su`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử giao dịch");
+  return data;
+}
+
+export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
+  const res = await fetch(`${API_URL}/vi-tien/lich-su/chi-tiet?skip=${skip}&limit=${limit}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử chi tiết");
+  return data;
+}
+
+export async function redeemVoucherAPI(code: string) {
+  const res = await fetch(`${API_URL}/vi-tien/ma-qua-tang/doi-ma`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể đổi mã quà tặng");
+  return data;
+}
+
+export async function voteItemAPI(itemId: string, itemType: string, amount: number) {
+  const res = await fetch(`${API_URL}/vi-tien/binh-chon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ item_id: itemId, item_type: itemType, amount }),
   });
-  if (!res.ok) throw new Error("Bình chọn/Tặng thưởng thất bại.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Bình chọn thất bại");
+  return data;
+}
+
+export async function unlockPostAPI(postId: string) {
+  const res = await fetch(`${API_URL}/vi-tien/mo-khoa`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ post_id: postId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Mở khóa bài viết thất bại");
+  return data;
+}
+
+export async function virtualTipAPI(targetUserId: string, amount: number) {
+  const res = await fetch(`${API_URL}/vi-tien/tien-ung-ho/${targetUserId}`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gửi tiền ủng hộ thất bại");
+  return data;
 }
 
 export async function getAuthorStatsAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/wallet/revenue`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải thông số phân tích.");
-  return await res.json();
-}
-
-export async function requestPayoutAPI(amount: number, bankInfo: any = {}) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/payouts/`, {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ amount, bank_info: bankInfo }),
-  });
-  if (!res.ok) throw new Error("Yêu cầu tất toán thất bại.");
-  return await res.json();
-}
-
-export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
-  const res = await fetch(`${API_URL}/wallet/history/detailed?skip=${skip}&limit=${limit}`, {
+  const res = await fetch(`${API_URL}/vi-tien/doanh-thu`, {
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải lịch sử chi tiết.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải số liệu doanh thu");
+  return data;
+}
+
+export async function purchaseDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/vi-tien/giao-dich-mua/tai-lieu/${documentId}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Mua tài liệu thất bại");
+  return data;
+}
+
+export async function purchaseChapterAPI(documentId: string, chapterId: string) {
+  const res = await fetch(`${API_URL}/vi-tien/giao-dich-mua/tai-lieu/${documentId}/chuong/${chapterId}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Mua chương thất bại");
+  return data;
 }

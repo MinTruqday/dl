@@ -15,7 +15,7 @@ import {
   getMySeriesAPI,
   createSeriesAPI,
 } from "@/services/read.service";
-import { API_URL } from "@/services/auth.service";
+import { API_URL } from "@/services/authentication.service";
 import {
   LayoutGrid,
   List as ListIcon,

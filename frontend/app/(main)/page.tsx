@@ -1,12 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import {
-  getDocumentsAPI,
-  getTagsCategoriesAPI,
-  getTrendingDocumentsAPI,
-  getAIRecommendationsAPI,
-} from "@/services/document.service";
-import { semanticSearchAPI } from "@/services/search.service";
+import { getDocumentsAPI } from "@/services/document.service";
+import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, semanticSearchAPI } from "@/services/discovery.service";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";

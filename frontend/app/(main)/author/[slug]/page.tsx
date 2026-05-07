@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getUserProfileAPI, followUserAPI } from "@/services/social.service";
 import { getDocumentsAPI } from "@/services/document.service";
-import { API_URL } from "@/services/auth.service";
+import { API_URL } from "@/services/authentication.service";
 
 export default function AuthorProfilePage() {
   const params = useParams();

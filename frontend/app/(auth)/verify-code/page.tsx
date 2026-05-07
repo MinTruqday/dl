@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useState } from "react";
 import Navigation from "@/components/Navigation";
-import { verifyCodeAPI } from "@/services/auth.service";
+import { verifyCodeAPI } from "@/services/authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
 import { Loader2 } from "lucide-react";

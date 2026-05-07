@@ -5,7 +5,7 @@ import { ShieldCheck, Fingerprint, Loader2 } from "lucide-react";
 import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
-} from "@/services/auth.service";
+} from "@/services/authentication.service";
 import { useToast } from "@/contexts/ToastContext";
 import {
   Modal,

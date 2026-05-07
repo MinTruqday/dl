@@ -1,15 +1,16 @@
-import { API_URL, getAuthHeaders } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function getReportsAPI() {
-  const res = await fetch(`${API_URL}/reports/queue`, {
+export async function getReportsAPI(status: string = "pending", skip: number = 0, limit: number = 30) {
+  const res = await fetch(`${API_URL}/bao-cao/hang-doi?status=${status}&skip=${skip}&limit=${limit}`, {
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách báo cáo.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách báo cáo");
+  return data;
 }
 
 export async function resolveReportAPI(reportId: string, action: string) {
-  const res = await fetch(`${API_URL}/reports/${reportId}/resolve`, {
+  const res = await fetch(`${API_URL}/bao-cao/${reportId}/giai-quyet`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -17,27 +18,7 @@ export async function resolveReportAPI(reportId: string, action: string) {
     },
     body: JSON.stringify({ action }),
   });
-  if (!res.ok) throw new Error("Xử lý báo cáo thất bại.");
-  return await res.json();
-}
-
-export async function submitReportAPI(payload: {
-  item_id: string;
-  item_type: string;
-  reason: string;
-  description?: string;
-}) {
-  const res = await fetch(`${API_URL}/feedback/report`, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.detail || "Giao thức gửi báo cáo vi phạm thất bại");
-  }
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xử lý báo cáo thất bại");
+  return data;
 }

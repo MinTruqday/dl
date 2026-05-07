@@ -12,8 +12,8 @@ import {
   Award,
 } from "lucide-react";
 import { getMyDocumentsAPI } from "@/services/document.service";
-import { getRevenueAPI } from "@/services/monetization.service";
-import { getDocumentSentimentAPI } from "@/services/ai.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
+import { analyzeSentimentAPI as getDocumentSentimentAPI } from "@/services/inference.service";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function AuthorAnalyticsPage() {

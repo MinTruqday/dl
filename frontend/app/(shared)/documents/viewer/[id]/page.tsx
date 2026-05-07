@@ -3,7 +3,7 @@
 import { useToast } from "@/contexts/ToastContext";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getToken, API_URL } from "@/services/auth.service";
+import { getToken, API_URL } from "@/services/authentication.service";
 import { queryRagAPI, translateTextAPI } from "@/services/ai.service";
 import {
   createHighlightAPI,

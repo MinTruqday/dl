@@ -17,7 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { getSeriesByIdAPI } from "@/services/read.service";
-import { API_URL } from "@/services/auth.service";
+import { API_URL } from "@/services/authentication.service";
 import Link from "next/link";
 
 export default function SeriesDetailPage() {

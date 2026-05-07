@@ -295,4 +295,16 @@ class MonetizationService:
             {"$set": {"status": "CANCELLED", "updated_at": datetime.utcnow(), "cancelled_at": datetime.utcnow()}}
         )
         logger.info(f"Subscription {subscription_id} cancelled by user {current_user.id}")
-        return {"message": "Đã hủy gói hội viên."}
+    @staticmethod
+    async def check_and_expire_subscriptions():
+        db = db_client.mongodb.get_default_database()
+        now = datetime.utcnow()
+        
+        result = await db["subscriptions"].update_many(
+            {"status": "ACTIVE", "end_date": {"$lt": now}},
+            {"$set": {"status": "EXPIRED", "updated_at": now}}
+        )
+        
+        if result.modified_count > 0:
+            logger.info(f"Monetization Worker: Expired {result.modified_count} subscriptions")
+        return result.modified_count

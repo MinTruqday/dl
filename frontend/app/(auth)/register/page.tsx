@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/services/auth.service";
+import { register } from "@/services/authentication.service";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";

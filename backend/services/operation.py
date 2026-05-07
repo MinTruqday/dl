@@ -201,4 +201,82 @@ class OperationService:
             "created_at": datetime.utcnow()
         })
         logger.info(f"Administration: Policy proposal {proposal_id} submitted by {current_moderator.id}")
-        return {"message": "Đề xuất chính sách đã được ghi nhận."}
+    @staticmethod
+    async def get_payout_requests(status: str = "PENDING", limit: int = 50) -> list:
+        db = db_client.mongodb.get_default_database()
+        apps = await db["payout_requests"].find({"status": status}).sort("created_at", -1).limit(limit).to_list(length=limit)
+        
+        result = []
+        for a in apps:
+            user = await db["users"].find_one({"_id": a["user_id"]}, {"full_name": 1, "email": 1, "bank_info": 1})
+            result.append({
+                "id": str(a["_id"]),
+                "user_id": a["user_id"],
+                "user_name": user.get("full_name") if user else "Unknown",
+                "user_email": user.get("email") if user else "",
+                "amount": a.get("amount"),
+                "status": a.get("status"),
+                "created_at": a["created_at"].isoformat() if isinstance(a.get("created_at"), datetime) else a.get("created_at"),
+                "bank_info": user.get("bank_info") if user else {}
+            })
+        return result
+
+    @staticmethod
+    async def approve_payout(payout_id: str, admin_id: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        payout = await db["payout_requests"].find_one({"_id": payout_id, "status": "PENDING"})
+        if not payout:
+            raise HTTPException(status_code=404, detail="Yêu cầu rút tiền không tồn tại hoặc đã được xử lý.")
+            
+        await db["payout_requests"].update_one(
+            {"_id": payout_id},
+            {"$set": {"status": "COMPLETED", "processed_by": admin_id, "processed_at": datetime.utcnow()}}
+        )
+        logger.info(f"Administration: Payout {payout_id} approved by {admin_id}")
+        return {"message": "Đã phê duyệt yêu cầu rút tiền."}
+
+    @staticmethod
+    async def reject_payout(payout_id: str, reason: str, admin_id: str) -> dict:
+        db = db_client.mongodb.get_default_database()
+        payout = await db["payout_requests"].find_one({"_id": payout_id, "status": "PENDING"})
+        if not payout:
+            raise HTTPException(status_code=404, detail="Yêu cầu rút tiền không tồn tại")
+            
+        session = await db_client.mongodb.start_session()
+        try:
+            async with session.start_transaction():
+                await db["users"].update_one(
+                    {"_id": payout["user_id"]},
+                    {"$inc": {"wallet_balance": payout["amount"]}},
+                    session=session
+                )
+                
+                await db["payout_requests"].update_one(
+                    {"_id": payout_id},
+                    {"$set": {
+                        "status": "REJECTED", 
+                        "rejection_reason": reason, 
+                        "processed_by": admin_id, 
+                        "processed_at": datetime.utcnow()
+                    }},
+                    session=session
+                )
+                
+                from models.wallet import Transaction, TransactionType
+                tx = Transaction(
+                    user_id=payout["user_id"],
+                    type=TransactionType.REFUND,
+                    amount=payout["amount"],
+                    note=f"Hoàn trả yêu cầu rút tiền bị từ chối: {reason}"
+                )
+                await db["transactions"].insert_one(tx.model_dump(by_alias=True), session=session)
+                
+                await session.commit_transaction()
+                logger.info(f"Administration: Payout {payout_id} rejected by {admin_id}. Reason: {reason}")
+                return {"message": "Đã từ chối yêu cầu rút tiền và hoàn trả số dư"}
+        except Exception as e:
+            await session.abort_transaction()
+            logger.error(f"Reject payout failed: {e}")
+            raise HTTPException(status_code=500, detail="Xử lý từ chối thất bại")
+        finally:
+            await session.end_session()

@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { API_URL, getToken } from "@/services/auth.service";
+import { API_URL, getToken } from "@/services/authentication.service";
 import {
   getNotificationsAPI,
   markNotificationReadAPI,

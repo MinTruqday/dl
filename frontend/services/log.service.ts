@@ -1,9 +1,10 @@
-import { API_URL, getAuthHeaders } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getModeratorActivityAPI() {
-  const res = await fetch(`${API_URL}/logs/moderator`, {
+  const res = await fetch(`${API_URL}/nhat-ky/kiem-duyet-vien`, {
     headers: getAuthHeaders(),
   });
+  const data = await res.json();
   if (!res.ok) return { data: [] };
-  return await res.json();
+  return data;
 }

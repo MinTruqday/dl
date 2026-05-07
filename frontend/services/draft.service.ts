@@ -1,11 +1,12 @@
-import { API_URL, getAuthHeaders } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getApprovalQueueAPI() {
-  const res = await fetch(`${API_URL}/drafts/queue`, {
+  const res = await fetch(`${API_URL}/ban-nhap/queue`, {
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách phê duyệt.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách phê duyệt");
+  return data;
 }
 
 export async function moderateDocumentAPI(
@@ -14,7 +15,7 @@ export async function moderateDocumentAPI(
   reason: string = "",
 ) {
   const res = await fetch(
-    `${API_URL}/drafts/${documentId}/moderate`,
+    `${API_URL}/ban-nhap/${documentId}/kiem-duyet`,
     {
       method: "POST",
       headers: {
@@ -24,9 +25,9 @@ export async function moderateDocumentAPI(
       body: JSON.stringify({ action, reason }),
     },
   );
+  const data = await res.json();
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || "Thao tác kiểm duyệt thất bại.");
+    throw new Error(data.detail || "Thao tác kiểm duyệt thất bại");
   }
-  return await res.json();
+  return data;
 }

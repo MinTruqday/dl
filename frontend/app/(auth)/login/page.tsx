@@ -9,7 +9,7 @@ import {
   passkeyLoginBeginAPI,
   passkeyLoginFinishAPI,
   getGoogleLoginUrlAPI,
-} from "@/services/auth.service";
+} from "@/services/authentication.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import Passkey from "@/components/Passkey";

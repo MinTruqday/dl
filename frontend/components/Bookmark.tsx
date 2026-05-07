@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getToken } from "@/services/auth.service";
+import { getToken } from "@/services/authentication.service";
 import {
   getLibraryAPI,
   addToLibraryAPI,

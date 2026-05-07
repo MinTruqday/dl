@@ -1,65 +1,31 @@
-import { API_URL, getToken } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function getCollaborationInvitesAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/coauthor/invites`, {
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể tải danh sách lời mời cộng tác.");
-  return await res.json();
-}
-
-export async function inviteCollaboratorAPI(
-  documentId: string,
-  email: string,
-  role: string,
-) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/documents/${documentId}/coauthors`, {
+export async function inviteCollaboratorAPI(documentId: string, email: string, role: string = "editor") {
+  const res = await fetch(`${API_URL}/cong-tac/moi`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify({ email, role }),
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId, email, role }),
   });
-  const json = await res.json();
-  if (!res.ok)
-    throw new Error(
-      json.message || json.detail || "Không thể gửi lời mời cộng tác.",
-    );
-  return json;
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gửi lời mời cộng tác thất bại");
+  return data;
 }
 
-export async function respondToInviteAPI(inviteId: string, status: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(
-    `${API_URL}/coauthor/respond/${inviteId}?status=${status}`,
-    {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token },
-    },
-  );
-  if (!res.ok) throw new Error("Không thể phản hồi lời mời cộng tác.");
-  return await res.json();
+export async function getCollaboratorsAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách người cộng tác");
+  return data;
 }
 
-export const inviteCoauthorAPI = async (
-  documentId: string,
-  targetUserId: string,
-) => {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(
-    `${API_URL}/coauthor/invite/${documentId}?target_user_id=${targetUserId}`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
-  if (!res.ok) throw new Error("Không thể gửi lời mời đồng tác giả.");
-  return await res.json();
-};
+export async function removeCollaboratorAPI(collaborationId: string) {
+  const res = await fetch(`${API_URL}/cong-tac/${collaborationId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa người cộng tác thất bại");
+  return data;
+}

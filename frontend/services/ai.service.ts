@@ -1,92 +1,87 @@
-import { API_URL, getAuthHeaders } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function translateTextAPI(
-  text: string,
-  target_lang: string = "vi",
-) {
-  const res = await fetch(`${API_URL}/inference/translate`, {
+export async function processTextAPI(text: string, action: string, context: string = "", targetLang: string = "Vietnamese") {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/van-ban`, {
     method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, target_lang }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, action, context, target_lang: targetLang }),
   });
-  if (!res.ok) throw new Error("Dịch thuật thất bại.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xử lý văn bản bằng AI thất bại");
+  return data;
 }
 
-export async function getAIFeedSummaryAPI() {
-  const res = await fetch(`${API_URL}/social/ai/feed-summary`, {
+export async function semanticSearchAIAPI(query: string) {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tim-kiem?q=${encodeURIComponent(query)}`, {
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tóm tắt bảng tin.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tìm kiếm ngữ nghĩa thất bại");
+  return data;
 }
 
-export async function ingestDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/ai/ingest/${documentId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Đồng bộ AI thất bại.");
-  return await res.json();
-}
-
-export async function generateAICoverAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/ai/generate-cover/${documentId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Tạo ảnh bìa AI thất bại.");
-  return await res.json();
-}
-
-export async function getDocumentSentimentAPI(documentId: string) {
-  const res = await fetch(
-    `${API_URL}/documents/${documentId}/analytics/sentiment`,
-    {
-      headers: getAuthHeaders(),
-    },
-  );
-  if (!res.ok) throw new Error("Không thể phân tích cảm quan tài liệu.");
-  return await res.json();
-}
-
-export async function queryRagAPI(
-  documentId: string,
-  query: string,
-  usePro: boolean = false,
-) {
-  const res = await fetch(`${API_URL}/ai/query`, {
+export async function generateFlashcardAPI(documentId: string, text: string, context: string = "") {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tai-lieu/${documentId}/the-ghi-nho`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, query, use_pro: usePro }),
+    body: JSON.stringify({ text, context }),
   });
-  if (!res.ok)
-    throw new Error(
-      "Cố vấn AI đang bận xử lý dữ liệu khác, vui lòng thử lại sau.",
-    );
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tạo flashcard thất bại");
+  return data;
 }
 
-export async function streamAiChatAPI(payload: {
-  query: string;
-  usePro: boolean;
-  session_id?: string | null;
-  conversation_history?: any[];
-  user_id?: string;
-  image_data?: string | null;
-  file_data?: string | null;
-}) {
-  return fetch(`${API_URL}/ai/stream`, {
+export async function reviewFlashcardAPI(cardId: string, quality: number) {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/the-ghi-nho/on-tap`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: payload.query,
-      use_pro: payload.usePro,
-      session_id: payload.session_id,
-      conversation_history: payload.conversation_history,
-      user_id: payload.user_id,
-      image_data: payload.image_data,
-      file_data: payload.file_data,
-    }),
+    body: JSON.stringify({ card_id: cardId, quality }),
   });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Ghi nhận ôn tập thất bại");
+  return data;
+}
+
+export async function getAiSessionsAPI(documentId?: string) {
+  const url = documentId 
+    ? `${API_URL}/tri-tue-nhan-tao/lich-su?document_id=${documentId}`
+    : `${API_URL}/tri-tue-nhan-tao/lich-su`;
+  const res = await fetch(url, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử hội thoại");
+  return data;
+}
+
+export async function createAiSessionAPI(documentId: string, firstQuery: string = "") {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Khởi tạo hội thoại mới thất bại");
+  return data;
+}
+
+export async function updateAiSessionTitleAPI(sessionId: string, title: string) {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su/${sessionId}/tieu-de`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Cập nhật tiêu đề thất bại");
+  return data;
+}
+
+export async function deleteAiSessionAPI(sessionId: string) {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su/${sessionId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa hội thoại thất bại");
+  return data;
 }

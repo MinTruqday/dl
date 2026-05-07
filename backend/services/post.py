@@ -66,8 +66,11 @@ class PostService:
         if post["user_id"] != str(current_user.id) and current_user.role != "ADMIN":
             raise HTTPException(status_code=403, detail="Bạn không có quyền xóa bài viết này.")
         
-        await db["status_updates"].delete_one({"_id": post_id})
-        logger.info(f"Post {post_id} deleted by user {current_user.id}")
+        await db["status_updates"].update_one(
+            {"_id": post_id},
+            {"$set": {"is_deleted": True, "deleted_at": datetime.utcnow()}}
+        )
+        logger.info(f"Post {post_id} soft-deleted by user {current_user.id}")
         return {"message": "Đã xóa bài viết thành công."}
 
     @staticmethod
@@ -141,26 +144,47 @@ class PostService:
     @staticmethod
     async def get_saved_posts(current_user: UserInDB, skip: int = 0, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
-        saved = await db["saved_posts"].find(
-            {"user_id": str(current_user.id)}
-        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
-        post_ids = [s["post_id"] for s in saved]
-        if not post_ids:
-            return []
-        posts = await db["status_updates"].find({"_id": {"$in": post_ids}}).to_list(length=limit)
-        users_col = db["users"]
+        
+        pipeline = [
+            {"$match": {"user_id": str(current_user.id)}},
+            {"$sort": {"created_at": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "status_updates",
+                    "localField": "post_id",
+                    "foreignField": "_id",
+                    "as": "post"
+                }
+            },
+            {"$unwind": "$post"},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "post.user_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        
+        results = await db["saved_posts"].aggregate(pipeline).to_list(length=limit)
+        
         result = []
-        for p in posts:
-            user_doc = await users_col.find_one({"_id": p["user_id"]})
+        for doc in results:
+            p = doc["post"]
+            author = doc.get("author", {})
             result.append({
                 "id": str(p["_id"]),
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
                 "created_at": p.get("created_at", datetime.utcnow()).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
                 "user": {
-                    "id": str(user_doc["_id"]) if user_doc else p["user_id"],
-                    "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
-                    "avatar_url": user_doc.get("avatar_url") if user_doc else None,
+                    "id": str(author.get("_id")) if author else p["user_id"],
+                    "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
+                    "avatar_url": author.get("avatar_url") if author else None,
                 },
             })
         return result
@@ -241,14 +265,31 @@ class PostService:
     @staticmethod
     async def get_posts_by_hashtag(tag: str, skip: int, limit: int, current_user: Optional[UserInDB]) -> list:
         db = db_client.mongodb.get_default_database()
-        query = {"tags": tag.lower(), "is_shadowbanned": {"$ne": True}}
+        query = {"tags": tag.lower(), "is_shadowbanned": {"$ne": True}, "is_deleted": {"$ne": True}}
         if current_user:
             query["is_hidden_by"] = {"$ne": str(current_user.id)}
-        posts = await db["status_updates"].find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
-        users_col = db["users"]
+            
+        pipeline = [
+            {"$match": query},
+            {"$sort": {"created_at": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        
+        posts = await db["status_updates"].aggregate(pipeline).to_list(length=limit)
+        
         result = []
         for p in posts:
-            user_doc = await users_col.find_one({"_id": p["user_id"]})
+            author = p.get("author", {})
             result.append({
                 "id": str(p["_id"]),
                 "content": p.get("content", ""),
@@ -256,9 +297,9 @@ class PostService:
                 "tags": p.get("tags", []),
                 "created_at": p.get("created_at", datetime.utcnow()).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
                 "user": {
-                    "id": str(user_doc["_id"]) if user_doc else p["user_id"],
-                    "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
-                    "avatar_url": user_doc.get("avatar_url") if user_doc else None,
+                    "id": str(author.get("_id")) if author else p["user_id"],
+                    "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
+                    "avatar_url": author.get("avatar_url") if author else None,
                 },
             })
         return result

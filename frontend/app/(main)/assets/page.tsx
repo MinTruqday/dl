@@ -9,7 +9,7 @@ import {
 import {
   uploadDocumentFile,
   getFileDownloadUrl,
-} from "@/services/storage.service";
+} from "@/services/asset.service";
 import {
   Loader2,
   Image as ImageIcon,

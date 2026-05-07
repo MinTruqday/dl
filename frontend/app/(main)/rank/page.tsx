@@ -13,7 +13,7 @@ import {
   Clock,
   Calendar,
 } from "lucide-react";
-import { API_URL } from "@/services/auth.service";
+import { API_URL } from "@/services/authentication.service";
 import { getSocialRankingAPI } from "@/services/social.service";
 
 interface LeaderboardDocument {

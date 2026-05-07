@@ -2,10 +2,16 @@
 
 import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { compileDocumentAPI, getDocumentDraftAPI, getDocumentsAPI, publishDocumentAPI, saveDocumentDraftAPI, updateDocumentAPI } from "@/services/document.service";
-import { requestPayoutDetailedAPI } from "@/services/monetization.service";
-import { API_URL } from "@/services/auth.service";
-import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI } from "@/services/wallet.service";
+import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI } from "@/services/document.service";
+import { compileDocumentAPI } from "@/services/compilation.service";
+import { publishDocumentAPI } from "@/services/publication.service";
+import { getDocumentVersionsAPI, restoreVersionAPI } from "@/services/version.service";
+import { ingestDocumentAPI } from "@/services/rag.service";
+import { generateAICoverAPI } from "@/services/inference.service";
+import { requestPayoutAPI } from "@/services/payout.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
+import { API_URL } from "@/services/authentication.service";
+import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/services/wallet.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -356,7 +362,7 @@ function StudioContent() {
 
     setRequestingPayout(true);
     try {
-      await requestPayoutDetailedAPI(payoutAmount, bankInfo);
+      await requestPayoutAPI(payoutAmount, bankInfo);
       showToast("Yêu cầu rút tiền đã được gửi", "success");
       setShowPayoutModal(false);
       fetchStatsData();

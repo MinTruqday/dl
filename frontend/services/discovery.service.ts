@@ -1,0 +1,45 @@
+import { API_URL, getAuthHeaders } from "./authentication.service";
+
+export const getTrendingDocumentsAPI = async (limit: number = 5) => {
+  const res = await fetch(`${API_URL}/kham-pha/xu-huong?limit=${limit}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tài liệu xu hướng");
+  return data;
+};
+
+export const getTagsCategoriesAPI = async () => {
+  const res = await fetch(`${API_URL}/kham-pha/the-va-danh-muc`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thẻ và danh mục");
+  return data;
+};
+
+export const semanticSearchAPI = async (query: string, limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/tim-kiem-ngu-nghia?query=${encodeURIComponent(query)}&limit=${limit}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tìm kiếm ngữ nghĩa thất bại");
+  return data;
+};
+
+export const getAIRecommendationsAPI = async (limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/goi-y/ai?limit=${limit}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải gợi ý tài liệu từ AI");
+  return data;
+};
+
+export const getFeaturedAuthorsAPI = async (limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/tac-gia-noi-bat?limit=${limit}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tác giả nổi bật");
+  return data;
+};
+
+export const getTrendingTagsAPI = async (limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/hashtag-xu-huong?limit=${limit}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách hashtag xu hướng");
+  return data;
+};

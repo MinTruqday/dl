@@ -35,10 +35,15 @@ class FeedService:
     async def get_social_feed(tab: str, item_type: Optional[str], skip: int, limit: int, current_user: Optional[UserInDB]) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         updates_col = db["status_updates"]
-        users_col = db["users"]
-        query = {"is_hidden_by": {"$ne": str(current_user.id) if current_user else "none"}, "is_shadowbanned": {"$ne": True}}
+        
+        query = {
+            "is_hidden_by": {"$ne": str(current_user.id) if current_user else "none"}, 
+            "is_shadowbanned": {"$ne": True},
+            "is_deleted": {"$ne": True}
+        }
         if item_type:
             query["item_type"] = item_type
+            
         if tab == "following" and current_user:
             follows_col = db["follows"]
             following_cursor = await follows_col.find({"follower_id": str(current_user.id)}).to_list(length=None)
@@ -56,13 +61,31 @@ class FeedService:
                 ]
             else:
                 query["privacy"] = "public"
+
+        pipeline = [
+            {"$match": query},
+            {"$sort": {"created_at": -1}},
+            {"$skip": skip},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user_details"
+                }
+            },
+            {"$unwind": {"path": "$user_details", "preserveNullAndEmptyArrays": True}}
+        ]
         
-        cursor = await updates_col.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        cursor = updates_col.aggregate(pipeline)
+        results = await cursor.to_list(length=limit)
+        
         feed = []
-        for doc in cursor:
-            user_doc = await users_col.find_one({"_id": doc["user_id"]})
+        for doc in results:
+            user_doc = doc.get("user_details", {})
             user_info = {
-                "id": str(user_doc["_id"]) if user_doc else doc["user_id"],
+                "id": str(user_doc.get("_id")) if user_doc else doc["user_id"],
                 "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
                 "avatar_url": user_doc.get("avatar_url") if user_doc else None,
                 "role": user_doc.get("role", "READER") if user_doc else "READER"

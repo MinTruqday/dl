@@ -1,53 +1,115 @@
-import { API_URL, getToken } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function getLatexSnippetsAPI() {
-  const res = await fetch(`${API_URL}/editor/latex`);
-  if (!res.ok) throw new Error("Không thể tải danh sách snippets LaTeX.");
-  const json = await res.json();
-  return json.data?.snippets || [];
+export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(content),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Phân tích đạo văn thất bại");
+  return data;
 }
 
-export async function compilePreviewAPI(
-  content: string,
-  is_fragment: boolean = true,
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/latex/compile-preview`, {
+export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/dong-bo-thao-tac`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({ content, is_fragment }),
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Không thể hiển thị bản xem trước.");
-  return await res.blob();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Đồng bộ thao tác thất bại");
+  return data;
 }
 
-export async function getSynonymsAPI(word: string, context: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/inference/synonyms`, {
+export async function addInlineSuggestionAPI(documentId: string, payload: any) {
+  const res = await fetch(`${API_URL}/soan-thao/tai-lieu/${documentId}/goi-y`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ word, context }),
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Không tìm thấy từ đồng nghĩa phù hợp.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Thêm gợi ý nội dòng thất bại");
+  return data;
 }
 
-export async function grammarCheckAPI(text: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/inference/grammar-check`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ text }),
+export async function resolveSuggestionAPI(suggestionId: string, action: string) {
+  const res = await fetch(`${API_URL}/soan-thao/goi-y/${suggestionId}/giai-quyet`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
   });
-  if (!res.ok) throw new Error("Lỗi kết nối máy chủ AI.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xử lý gợi ý thất bại");
+  return data;
+}
+
+export async function syncPomodoroSessionAPI(payload: any) {
+  const res = await fetch(`${API_URL}/soan-thao/pomodoro`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Đồng bộ phiên Pomodoro thất bại");
+  return data;
+}
+
+export async function autoSaveDraftAPI(documentId: string, content: any) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/tu-dong-luu`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(content),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tự động lưu bản nháp thất bại");
+  return data;
+}
+
+export async function submitForReviewAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/gui-duyet`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gửi duyệt tài liệu thất bại");
+  return data;
+}
+
+export async function globalFindReplaceAPI(documentId: string, search: string, replace: string, matchCase: boolean = false) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/thay-the-toan-cuc`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ search, replace, match_case: matchCase }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Thay thế toàn cục thất bại");
+  return data;
+}
+
+export async function addChapterAPI(documentId: string, data: {
+  title: string;
+  content: string;
+  is_premium?: boolean;
+  price_dl?: number;
+}) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/chuong`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Thêm chương mới thất bại");
+  return result;
+}
+
+export async function updateCoverAPI(documentId: string, coverUrl: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/anh-bia`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ cover_url: coverUrl }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Cập nhật ảnh bìa thất bại");
+  return data;
 }

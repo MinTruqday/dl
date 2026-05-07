@@ -1,48 +1,19 @@
-import { API_URL, getToken } from "./auth.service";
+import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function getAuthorCouponsAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/coupons`, {
-    headers: { Authorization: "Bearer " + token },
+export async function validateCouponAPI(code: string, amount: number) {
+  const res = await fetch(`${API_URL}/ma-giam-gia/kiem-tra?code=${encodeURIComponent(code)}&amount=${amount}`, {
+    headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách mã giảm giá.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Mã giảm giá không hợp lệ");
+  return data;
 }
 
-export async function createAuthorCouponAPI(data: any) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/coupons`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify(data),
+export async function getMyCouponsAPI() {
+  const res = await fetch(`${API_URL}/ma-giam-gia/ca-nhan`, {
+    headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Không thể tạo mã giảm giá mới.");
-  return await res.json();
-}
-
-export async function toggleCouponStatusAPI(couponId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/coupons/${couponId}/toggle`, {
-    method: "PATCH",
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể cập nhật trạng thái mã giảm giá.");
-  return await res.json();
-}
-
-export async function deleteCouponAPI(couponId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/coupons/${couponId}`, {
-    method: "DELETE",
-    headers: { Authorization: "Bearer " + token },
-  });
-  if (!res.ok) throw new Error("Không thể xóa mã giảm giá.");
-  return await res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách mã giảm giá");
+  return data;
 }

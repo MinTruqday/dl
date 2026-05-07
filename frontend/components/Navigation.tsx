@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { semanticSearchAPI } from "@/services/search.service";
+import { semanticSearchAPI } from "@/services/discovery.service";
 import { useRouter } from "next/navigation";
 import {
   Bell,

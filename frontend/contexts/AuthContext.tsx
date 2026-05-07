@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getUserMe, getToken, removeToken } from "@/services/auth.service";
+import { getUserMe, getToken, removeToken } from "@/services/authentication.service";
 import { useRouter, usePathname } from "next/navigation";
 
 interface User {

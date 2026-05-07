@@ -7,6 +7,7 @@ from core.database import init_db, close_db, db_client
 from core.config import settings
 from core.storage import initialize_bucket
 from core.worker import start_workers
+from services.cron import start_cron_service
 from prometheus_fastapi_instrumentator import Instrumentator
 from loguru import logger
 import asyncio
@@ -102,7 +103,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={
             "data": None, 
-            "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", 
+            "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau", 
             "status": 500
         }
     )
@@ -122,6 +123,7 @@ async def startup_event():
     await init_db()
     asyncio.create_task(initialize_bucket())
     asyncio.create_task(start_workers())
+    start_cron_service()
     instrumentator.expose(app)
 
 @app.on_event("shutdown")

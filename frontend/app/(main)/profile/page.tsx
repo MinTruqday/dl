@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { API_URL } from "@/services/auth.service";
+import { API_URL } from "@/services/authentication.service";
 import { updateProfileAPI } from "@/services/settings.service";
 import { depositDLAPI, getDetailedHistoryAPI } from "@/services/wallet.service";
 import { applyAuthorAPI } from "@/services/settings.service";
-import { uploadMediaAPI } from "@/services/storage.service";
+import { uploadMediaAPI } from "@/services/asset.service";
 import { getBookmarksAPI } from "@/services/read.service";
 import {
   User,

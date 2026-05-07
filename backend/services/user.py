@@ -69,7 +69,7 @@ class UserService:
         if db_client.redis:
             await db_client.redis.publish(f"user_notifications:{user_id}", json.dumps({"title": "Cảnh báo hệ thống", "body": f"Bạn nhận được cảnh báo: {reason}"}))
         
-        logger.info(f"Moderation: User {user_id} warned by {current_moderator.id}")
+        logger.info(f"User {user_id} warned by {current_moderator.id}")
         return {"message": "Đã gửi cảnh báo thành công."}
 
     @staticmethod

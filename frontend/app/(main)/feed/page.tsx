@@ -6,6 +6,23 @@ import Link from "next/link";
 import {
   getFeedAPI,
   toggleReactionAPI,
+  getTrendingTagsAPI,
+  getSuggestedDocumentsAPI,
+  createPostAPI,
+  deletePostAPI,
+  repostPostAPI,
+  savePostAPI,
+  togglePinPostAPI as pinPostAPI,
+  reportPostAPI,
+  hidePostAPI,
+  toggleFollowUserAPI as followUserAPI,
+  votePollAPI as submitPollVoteAPI,
+  recordPostViewAPI,
+  uploadMediaAPI,
+  getFriendSuggestionsAPI as getIntersectionFriendsAPI,
+  getAIFeedSummaryAPI,
+} from "@/services/social.service";
+import {
   getStoriesAPI,
   createStoryAPI,
   viewStoryAPI,
@@ -15,29 +32,14 @@ import {
   answerStoryQuizAPI,
   replyStoryAPI,
   getArchivedStoriesAPI,
-  getSocialRankingAPI,
-  getReaderRankingAPI,
-  getIntersectionFriendsAPI,
-  getTrendingTagsAPI,
-  getSuggestedDocumentsAPI,
-  createPostAPI,
-  updatePostAPI,
-  deletePostAPI,
-  repostPostAPI,
-  savePostAPI,
-  pinPostAPI,
-  reportPostAPI,
-  hidePostAPI,
-  followUserAPI,
-  votePostAPI,
-  submitPollVoteAPI,
-  createCommentAPI,
-  recordPostViewAPI,
-  uploadMediaAPI,
-} from "@/services/social.service";
+  deleteStoryAPI,
+} from "@/services/story.service";
+import { getSocialRankingAPI, getReaderRankingAPI } from "@/services/rank.service";
+import { createCommentAPI } from "@/services/comment.service";
 import { getDocumentsAPI } from "@/services/document.service";
-import { translateTextAPI, getAIFeedSummaryAPI } from "@/services/ai.service";
-import { API_URL } from "@/services/auth.service";
+import { translateTextAPI } from "@/services/inference.service";
+import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, voteItemAPI } from "@/services/wallet.service";
+import { API_URL } from "@/services/authentication.service";
 import {
   Heart,
   MessageCircle,
@@ -584,28 +586,11 @@ export default function Feed() {
     }
     setIsProcessing(true);
     try {
-      const response = await fetch(`${API_URL}/wallet/vote`, {
-        method: "POST",
-        headers: {
-         "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("doclib_token")}`,
-        },
-        body: JSON.stringify({
-          item_id: giftModal.postId,
-          item_type: "status_update",
-          amount: giftModal.amount,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        showToast(data.message || "Đã tặng quà thành công!", "success");
-        setGiftModal(null);
-
-      } else {
-        showToast(data.detail || "Lỗi khi tặng quà", "error");
-      }
-    } catch (e) {
-      showToast("Lỗi kết nối máy chủ", "error");
+      const data = await voteItemAPI(giftModal.postId, "status_update", giftModal.amount);
+      showToast(data.message || "Đã tặng quà thành công!", "success");
+      setGiftModal(null);
+    } catch (e: any) {
+      showToast(e.message || "Lỗi khi tặng quà", "error");
     } finally {
       setIsProcessing(false);
     }
