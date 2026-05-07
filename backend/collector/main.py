@@ -5,6 +5,7 @@ from src.core.mq import mq_client
 from src.pipelines.anna_archive_collector import AnnaArchiveCollector
 from src.pipelines.nxbgd_collector import NXBGDCCollector
 from src.pipelines.nxbst_collector import NXBSTCollector
+from src.pipelines.ctan_collector import CTANCollector
 from src.pipelines.format_converter import run_format_converter
 
 async def main():
@@ -31,6 +32,8 @@ async def main():
         source = payload.get("source", "AnnaArchive")
         if source == "NXBST":
             await NXBSTCollector.run_list_collector()
+        elif source == "CTAN":
+            await CTANCollector.run_list_collector()
         else:
             await AnnaArchiveCollector.run_list_collector(payload.get("url", ""), payload.get("index_type", ""))
 
@@ -38,13 +41,22 @@ async def main():
         source = payload.get("source", "AnnaArchive")
         if source == "NXBST":
             await NXBSTCollector.run_detail_collector(payload["url"])
+        elif source == "CTAN":
+            await CTANCollector.run_detail_collector(payload["url"])
         else:
             await AnnaArchiveCollector.run_detail_collector(payload["url"])
+
+    async def route_download_processor(payload):
+        source = payload.get("source", "AnnaArchive")
+        if source == "CTAN":
+            await CTANCollector.run_download_processor(payload)
+        else:
+            await AnnaArchiveCollector.run_download_processor(payload)
 
     await queue_list.consume(lambda m: process_msg(m, route_list_collector))
     await queue_detail.consume(lambda m: process_msg(m, route_detail_collector))
     
-    await queue_download.consume(lambda m: process_msg(m, AnnaArchiveCollector.run_download_processor))
+    await queue_download.consume(lambda m: process_msg(m, route_download_processor))
     await queue_format.consume(lambda m: process_msg(m, run_format_converter))
 
     await queue_nxbgd.consume(lambda m: process_msg(m, lambda p: NXBGDCCollector(p.get("target_class", "10")).execute()))

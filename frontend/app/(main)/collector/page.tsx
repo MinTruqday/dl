@@ -121,13 +121,14 @@ export default function CollectorPage() {
                   onChange={(e) => setCollectionForm({ ...collectionForm, source: e.target.value })}
                   className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white appearance-none"
                 >
-                  <option value="AnnaArchive">Anna Archive</option>
-                  <option value="NXBST">NXB Sự Thật</option>
-                  <option value="NXBGDC">NXB Giáo Dục</option>
+                  <option value="AnnaArchive">Anna's Archive</option>
+                  <option value="NXBST">Nhà xuất bản Chính trị quốc gia Sự thật</option>
+                  <option value="NXBGDC">Nhà xuất bản Giáo dục Việt Nam</option>
+                  <option value="CTAN">CTAN - Comprehensive TeX Archive Network</option>
                 </select>
               </div>
 
-              {collectionForm.source === "AnnaArchive" && (
+              {(collectionForm.source === "AnnaArchive" || collectionForm.source === "CTAN") && (
                 <>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-black">Loại chỉ mục</label>
@@ -140,15 +141,29 @@ export default function CollectorPage() {
                       <option value="detail">Chi tiết (Detail)</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-black">URL mục tiêu</label>
-                    <input
-                      type="text"
-                      value={collectionForm.url}
-                      onChange={(e) => setCollectionForm({ ...collectionForm, url: e.target.value })}
-                      className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white"
-                    />
-                  </div>
+                  {collectionForm.index_type === "detail" && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-black">URL mục tiêu</label>
+                      <input
+                        type="text"
+                        value={collectionForm.url}
+                        onChange={(e) => setCollectionForm({ ...collectionForm, url: e.target.value })}
+                        placeholder="https://www.ctan.org/pkg/..."
+                        className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white"
+                      />
+                    </div>
+                  )}
+                  {collectionForm.source === "AnnaArchive" && collectionForm.index_type === "list" && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-black">Từ khóa tìm kiếm</label>
+                      <input
+                        type="text"
+                        value={collectionForm.url}
+                        onChange={(e) => setCollectionForm({ ...collectionForm, url: e.target.value })}
+                        className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white"
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
@@ -216,6 +231,7 @@ export default function CollectorPage() {
                   { name: "Anna Archive", type: "Thư viện mở" },
                   { name: "NXB Sự Thật", type: "Chính trị - Pháp luật" },
                   { name: "NXB Giáo Dục", type: "Sách giáo khoa" },
+                  { name: "CTAN", type: "LaTeX Packages" },
                 ].map((source, i, arr) => (
                   <div key={i} className={`p-4 flex items-center justify-between ${i !== arr.length - 1 ? 'border-b border-zinc-200' : ''}`}>
                     <div className="flex flex-col gap-1">

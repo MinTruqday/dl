@@ -29,6 +29,10 @@ class CollectorService:
         elif source == "NXBGDC":
             queue_name = "nxbgd_queue"
             payload["target_class"] = target_class or "10"
+        elif source == "CTAN":
+            queue_name = "collect_list_queue" if index_type == "list" else "collect_detail_queue"
+            payload["url"] = url
+            payload["index_type"] = index_type
         else:
             raise HTTPException(status_code=400, detail=f"Nguồn thu thập '{source}' không được hỗ trợ.")
 
@@ -45,6 +49,6 @@ class CollectorService:
         total_collected = await db["documents"].count_documents({"author_id": {"$regex": ".*collector.*"}})
         return {
             "total_documents_collected": total_collected,
-            "active_sources": ["AnnaArchive", "NXBST", "NXBGDC"],
+            "active_sources": ["AnnaArchive", "NXBST", "NXBGDC", "CTAN"],
             "status": "operational"
         }

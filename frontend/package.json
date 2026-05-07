@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "npm install",
     "dev": "next dev",
+    "prebuild": "npm install",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -67,6 +69,7 @@
     "editorjs-gallery": "latest",
     "editorjs-html": "latest",
     "editorjs-hyperlink": "latest",
+    "cropperjs": "^1.6.1",
     "editorjs-image-crop-resize": "latest",
     "editorjs-indent-tune": "latest",
     "editorjs-inline": "latest",

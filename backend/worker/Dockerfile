@@ -17,9 +17,14 @@ FROM python:3.12-slim
 
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    texlive-xetex \
-    texlive-fonts-recommended \
-    texlive-latex-extra \
+    curl ca-certificates fontconfig \
+    && ARCH=$(uname -m) && \
+    if [ "$ARCH" = "aarch64" ]; then \
+        URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-aarch64-unknown-linux-musl.tar.gz"; \
+    else \
+        URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-unknown-linux-gnu.tar.gz"; \
+    fi && \
+    curl -fsSL "$URL" | tar -xz -C /usr/local/bin/ tectonic \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONUNBUFFERED=1 \

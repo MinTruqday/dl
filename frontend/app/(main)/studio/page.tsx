@@ -36,7 +36,8 @@ import {
   Banknote,
   Brain,
 } from "lucide-react";
-import Editor from "@/components/editor/Editor";
+import dynamic from "next/dynamic";
+const Editor = dynamic(() => import("@/components/editor/Editor"), { ssr: false });
 import edjsHTML from "editorjs-html";
 
 const edjsParser = edjsHTML();
@@ -87,6 +88,7 @@ function StudioContent() {
   const [bankInfo, setBankInfo] = useState({ bank_name: "", account_number: "", account_name: "" });
   const [requestingPayout, setRequestingPayout] = useState(false);
 
+  const [selectedChapterIndex, setSelectedChapterIndex] = useState<number | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; text: string } | null>(null);
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
@@ -97,6 +99,13 @@ function StudioContent() {
     () => documents.find((b) => b._id === selectedDocumentId) || null,
     [documents, selectedDocumentId]
   );
+
+  const currentChapterContent = useMemo(() => {
+    if (selectedChapterIndex !== null && selectedDocument?.chapters?.[selectedChapterIndex]) {
+      return selectedDocument.chapters[selectedChapterIndex].content || "";
+    }
+    return content;
+  }, [selectedChapterIndex, selectedDocument, content]);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
@@ -560,11 +569,16 @@ function StudioContent() {
                       selectedDocument.chapters.map((ch: any, idx: number) => (
                         <div
                           key={ch.id || idx}
-                          className="group flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white hover:bg-zinc-50 hover:border-zinc-200 cursor-pointer transition-colors rounded-none"
+                          onClick={() => setSelectedChapterIndex(idx)}
+                          className={`group flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer transition-colors rounded-none ${
+                            selectedChapterIndex === idx 
+                              ? "bg-black text-white border-black" 
+                              : "bg-white text-zinc-700 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                          }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs font-medium text-zinc-400 w-4">{idx + 1}</span>
-                            <span className="text-sm truncate text-zinc-700 group-hover:text-black">{ch.title}</span>
+                            <span className={`text-xs font-medium w-4 ${selectedChapterIndex === idx ? "text-zinc-400" : "text-zinc-400"}`}>{idx + 1}</span>
+                            <span className="text-sm truncate group-hover:text-black">{ch.title}</span>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                             <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 hover:bg-zinc-100 rounded-none"><ArrowUp className="w-3 h-3 text-zinc-400 hover:text-black" /></button>
@@ -643,7 +657,15 @@ function StudioContent() {
                 <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
                    <div className="w-full h-full animate-in fade-in duration-300">
                       {editorMode === "edit" ? (
-                        <Editor initialContent={content} onSave={(val) => setContent(val)} />
+                        <Editor initialContent={currentChapterContent} onSave={(val) => {
+                          if (selectedChapterIndex !== null && selectedDocument) {
+                            const newChapters = [...(selectedDocument.chapters || [])];
+                            newChapters[selectedChapterIndex].content = val;
+                            // Update local state or trigger API save if needed
+                          } else {
+                            setContent(val);
+                          }
+                        }} />
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 border border-zinc-200 rounded-none">
                           <div 
@@ -652,7 +674,8 @@ function StudioContent() {
                               __html: (() => {
                                 try {
                                   const data = JSON.parse(content);
-                                  return edjsParser.parse(data).join("");
+                                  if (data.blocks) return edjsParser.parse(data).join("");
+                                  return content;
                                 } catch (e) {
                                   return content;
                                 }
