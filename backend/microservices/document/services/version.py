@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from bson import ObjectId
 import datetime

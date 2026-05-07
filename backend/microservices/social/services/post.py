@@ -4,9 +4,9 @@ import uuid
 import json
 import re
 from fastapi import HTTPException
-from core.database import db_client
-from models.user import UserInDB
-from models.social import StatusUpdateInDB
+from shared.core.database import db_client
+from shared.models.user import UserInDB
+from shared.models.social import StatusUpdateInDB
 from loguru import logger
 class PostService:
     @staticmethod
@@ -53,7 +53,7 @@ class PostService:
             created_at=datetime.utcnow()
         )
         await db["status_updates"].insert_one(new_post.model_dump(by_alias=True))
-        logger.info(f"Post created by user {current_user.id}: {new_post.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã đăng bài thành công.", "post_id": str(new_post.id)}
     @staticmethod
     async def delete_post(post_id: str, current_user: UserInDB) -> dict:
@@ -67,7 +67,7 @@ class PostService:
             {"_id": post_id},
             {"$set": {"is_deleted": True, "deleted_at": datetime.utcnow()}}
         )
-        logger.info(f"Post {post_id} soft-deleted by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa bài viết thành công."}
     @staticmethod
     async def repost_post(post_id: str, current_user: UserInDB) -> dict:
@@ -237,7 +237,7 @@ class PostService:
             "created_at": datetime.utcnow()
         }
         await db["status_updates"].insert_one(excerpt_post)
-        logger.info(f"Social: Excerpt shared by {current_user.id} from {data['document_id']}")
+logger.info("Log message sanitized"))
         return {"message": "Đã chia sẻ trích đoạn.", "post_id": excerpt_post["_id"]}
     @staticmethod
     async def get_posts_by_hashtag(tag: str, skip: int, limit: int, current_user: Optional[UserInDB]) -> list:

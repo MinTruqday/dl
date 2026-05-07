@@ -1,8 +1,8 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, Body
 from api.dependency import get_current_user
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from services.highlight import HighlightService, ReadingPreferenceService
 from pydantic import BaseModel
 router = APIRouter(prefix="/doc-tai-lieu")

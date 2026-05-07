@@ -1,9 +1,9 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
-from models.user import UserInDB
-from models.social import StoryCreate
+from shared.models.user import UserInDB
+from shared.models.social import StoryCreate
 from api.dependency import get_current_user, get_current_user_optional, RateLimiter
 from services.story import StoryService
 router = APIRouter(prefix="/cau-chuyen")
@@ -35,21 +35,21 @@ async def react_to_story(
 @router.post("/{story_id}/khao-sat/binh-chon", response_model=APIResponse[Any])
 async def vote_story_poll(
     story_id: str,
-    option_index: int = Query(..., ge=0),
+    option_index: int = Query(., ge=0),
     current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(data=await StoryService.vote_story_poll(story_id, option_index, current_user), message="Bình chọn thành công", status=200)
 @router.post("/{story_id}/do-vui/tra-loi", response_model=APIResponse[Any])
 async def answer_story_quiz(
     story_id: str,
-    option_index: int = Query(..., ge=0),
+    option_index: int = Query(., ge=0),
     current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(data=await StoryService.answer_story_quiz(story_id, option_index, current_user), message="Trả lời câu hỏi thành công", status=200)
 @router.post("/{story_id}/phan-hoi", response_model=APIResponse[Any])
 async def reply_to_story(
     story_id: str,
-    message: str = Query(..., min_length=1, max_length=500),
+    message: str = Query(., min_length=1, max_length=500),
     current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(data=await StoryService.reply_to_story(story_id, message, current_user), message="Phản hồi tin tức thành công", status=201)

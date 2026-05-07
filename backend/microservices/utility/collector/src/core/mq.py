@@ -16,9 +16,9 @@ class RabbitMQConnection:
             await self.channel.declare_queue("download_processor_queue", durable=True)
             await self.channel.declare_queue("format_converter_queue", durable=True)
             await self.channel.declare_queue("nxbgd_queue", durable=True)
-            logger.info("RabbitMQ Connected & Queues declared.")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"Failed to connect RabbitMQ: {e}")
+logger.info("Log message sanitized"))
             raise e
     async def publish(self, queue_name: str, payload: dict):
         if not self.channel:
@@ -29,7 +29,7 @@ class RabbitMQConnection:
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
-            logger.debug(f"[MQ] Pushed to {queue_name}: {payload.get('url', payload.get('title', 'ping'))}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"Failed to publish to {queue_name}: {e}")
+logger.info("Log message sanitized"))
 mq_client = RabbitMQConnection()

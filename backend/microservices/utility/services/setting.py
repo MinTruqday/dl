@@ -1,5 +1,5 @@
 from datetime import datetime
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 class SettingService:
     @staticmethod
@@ -28,5 +28,5 @@ class SettingService:
             {"_id": str(current_user.id)},
             {"$set": {"settings": settings_data, "updated_at": datetime.utcnow()}}
         )
-        logger.info(f"Settings updated for user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã lưu cài đặt."}

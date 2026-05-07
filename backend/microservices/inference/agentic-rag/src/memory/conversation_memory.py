@@ -54,7 +54,7 @@ class ConversationMemory:
             new_summary = response.content.strip()
             mem["summary"] = new_summary
             mem["recent_messages"] = mem["recent_messages"][-keep_count:]
-            logger.info(f"Summarized session {session_id} memory to save context window.")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"Error summarizing memory for session {session_id}: {e}")
+logger.info("Log message sanitized"))
 conversation_memory = ConversationMemory()

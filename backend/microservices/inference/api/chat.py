@@ -1,9 +1,9 @@
 from typing import Any, List
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from models.user import UserInDB
-from models.chat import MessageCreate, MessageResponse, ConversationResponse
+from shared.models.user import UserInDB
+from shared.models.chat import MessageCreate, MessageResponse, ConversationResponse
 from services.chat import ChatService
 router = APIRouter(prefix="/tro-chuyen")
 @router.post("/tin-nhan", response_model=APIResponse[Any])

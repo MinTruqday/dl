@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
@@ -16,7 +16,7 @@ class ReviewService:
             }}, 
             upsert=True
         )
-        logger.info(f"Feedback: Document {document_id} rated {rating_data.rating} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"status": "success"}
     @staticmethod
     async def rate_chapter(document_id: str, data, current_user) -> dict:
@@ -28,7 +28,7 @@ class ReviewService:
             {"$set": {"rating": data.rating, "updated_at": datetime.utcnow()}},
             upsert=True,
         )
-        logger.info(f"Feedback: Chapter {data.chapter_slug} rated {data.rating} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã ghi nhận đánh giá chương của bạn."}
     @staticmethod
     async def report_typo(document_id: str, data, current_user) -> dict:
@@ -44,7 +44,7 @@ class ReviewService:
             "created_at": datetime.utcnow(),
         }
         await db["typo_reports"].insert_one(report)
-        logger.info(f"Feedback: Typo report submitted for {document_id} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi báo cáo lỗi chính tả thành công."}
     @staticmethod
     async def get_typo_reports(document_id: str, current_user) -> list:
@@ -81,5 +81,5 @@ class ReviewService:
             "created_at": datetime.utcnow()
         }
         await db["reports"].insert_one(report)
-        logger.info(f"Feedback: Content report submitted by {current_user.id} for {data.item_type} {data.item_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi báo cáo nội dung thành công."}

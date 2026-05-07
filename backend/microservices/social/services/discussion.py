@@ -2,7 +2,7 @@ from typing import List, Optional, Any
 from datetime import datetime
 import uuid
 from fastapi import HTTPException
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 class DiscussionService:
     @staticmethod
@@ -21,7 +21,7 @@ class DiscussionService:
             "created_at": datetime.utcnow(),
         }
         await db["discussions"].insert_one(discussion)
-        logger.info(f"Discussion created by user {current_user.id} in document {document_id}")
+logger.info("Log message sanitized"))
         return {"message": "Tạo thảo luận thành công.", "discussion_id": discussion["_id"]}
     @staticmethod
     async def get_discussions(document_id: str, skip: int = 0, limit: int = 20) -> list:

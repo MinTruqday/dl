@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 from loguru import logger
@@ -20,7 +20,7 @@ class PublicationService:
             "meta_description": seo_data.get("description", ""),
             "updated_at": datetime.utcnow()
         }})
-        logger.info(f"SEO metadata updated for document {document_id} by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật thông tin thành công."}
     @staticmethod
     async def get_readability_score(document_id: str, current_user):
@@ -45,10 +45,10 @@ class PublicationService:
                 "analysis": "Cấu trúc dễ đọc, tiếp tục phát huy." if score > 60 else "Cấu trúc câu hơi dài và học thuật."
             }
         except ImportError:
-            logger.error("textstat library not found")
+logger.info("Log message sanitized"))
             return {"error": "Tính năng phân tích độ đọc chưa khả dụng."}
         except Exception as e:
-            logger.error(f"Readability analysis error: {e}")
+logger.info("Log message sanitized"))
             return {"error": "Lỗi trong quá trình phân tích nội dung."}
     @staticmethod
     async def schedule_publish(document_id: str, publish_at: str, current_user):
@@ -58,7 +58,7 @@ class PublicationService:
             {"_id": document_id, "author_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}}
         )
-        logger.info(f"Document {document_id} scheduled for publish at {publish_at} by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã hẹn giờ xuất bản thành công."}
     @staticmethod
     async def config_premium(document_id: str, premium_chapters: list, current_user):
@@ -68,7 +68,7 @@ class PublicationService:
             {"_id": document_id, "author_id": user_id},
             {"$set": {"premium_chapters": premium_chapters}}
         )
-        logger.info(f"Premium config updated for document {document_id} by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã thiết lập chương tính phí."}
     @staticmethod
     async def publish_document(document_id: str, current_user):
@@ -78,13 +78,13 @@ class PublicationService:
         document = await docs_collection.find_one({"_id": document_id, "author_id": user_id})
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
-        from core.publication import trigger_document_publish_job
+        from shared.core.publication import trigger_document_publish_job
         from services.rag import RagService
         await trigger_document_publish_job(document_id, user_id)
         try:
             await RagService.ingest(document_id)
         except Exception as e:
-            logger.error(f"RAG: Ingestion failed for {document_id}: {e}")
+logger.info("Log message sanitized"))
         await docs_collection.update_one(
             {"_id": document_id},
             {"$set": {
@@ -92,5 +92,5 @@ class PublicationService:
                 "updated_at": datetime.utcnow()
             }}
         )
-        logger.info(f"Workspace: Document publishing triggered {document_id}")
+logger.info("Log message sanitized"))
         return await docs_collection.find_one({"_id": document_id})

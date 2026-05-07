@@ -8,7 +8,7 @@ class AggregatorAgent:
         pass
     async def process_query(self, query: str, user_id: str, document_id: Optional[str] = None, 
                           conversation_id: Optional[str] = None, use_web: bool = False, use_smart: bool = False) -> Dict:
-        logger.info(f"Initiating multi-agent orchestration for query: {query[:50]}")
+logger.info("Log message sanitized"))
         try:
             initial_state = {
                 "question": query,
@@ -26,7 +26,7 @@ class AggregatorAgent:
             elapsed = time.time() - start_time
             answer = final_state.get("final_answer", "DocLib không nhận được phản hồi từ hệ thống")
             route = final_state.get("route", "unknown")
-            logger.info(f"Query processed successfully in {elapsed:.2f}s via {route.upper()} route")
+logger.info("Log message sanitized"))
             return {
                 "answer": answer,
                 "quality_score": final_state.get("quality_score", 100) if route == "rag" else 85,
@@ -35,7 +35,7 @@ class AggregatorAgent:
                 "elapsed_seconds": elapsed
             }
         except Exception as e:
-            logger.error(f"LangGraph orchestration error: {str(e)}")
+logger.info("Log message sanitized"))
             return {
                 "answer": "Hệ thống hiện đang gặp sự cố kỹ thuật trong quá trình xử lý, rất mong bạn vui lòng thử lại sau",
                 "quality_score": 0,

@@ -3,7 +3,7 @@ import uuid
 import shutil
 import asyncio
 from fastapi import HTTPException
-from core.storage import generate_presigned_url
+from shared.core.storage import generate_presigned_url
 from loguru import logger
 UPLOAD_DIR = "public/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -21,12 +21,12 @@ class UploadService:
                     shutil.copyfileobj(file.file, file_object)
                 return True
             except Exception as e:
-                logger.error(f"Sync image save error: {e}")
+logger.info("Log message sanitized"))
                 return False
         success = await asyncio.to_thread(save_sync)
         if not success:
             raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang lưu trữ hình ảnh.")
-        logger.info(f"Image uploaded: {filename}")
+logger.info("Log message sanitized"))
         return {"url": f"/uploads/{filename}", "filename": filename}
     @staticmethod
     async def upload_document(file):
@@ -42,12 +42,12 @@ class UploadService:
                     shutil.copyfileobj(file.file, file_object)
                 return True
             except Exception as e:
-                logger.error(f"Sync document save error: {e}")
+logger.info("Log message sanitized"))
                 return False
         success = await asyncio.to_thread(save_sync)
         if not success:
             raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang lưu trữ tài liệu.")
-        logger.info(f"Document uploaded: {filename}")
+logger.info("Log message sanitized"))
         return {"url": f"/uploads/{filename}", "filename": filename, "extension": ext}
     @staticmethod
     async def get_presigned_url(file_path: str):

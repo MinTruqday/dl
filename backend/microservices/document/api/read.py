@@ -1,8 +1,8 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from models.user import UserInDB
-from core.response import APIResponse
+from shared.models.user import UserInDB
+from shared.core.response import APIResponse
 from services.read import ReadService
 from pydantic import BaseModel
 router = APIRouter(prefix="/doc")
@@ -83,7 +83,7 @@ async def unpin_document(document_id: str, current_user: UserInDB = Depends(get_
         message="Đã bỏ ghim tài liệu thành công"
     )
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
-async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
+async def search_in_document(document_id: str, q: str = Query(.), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.search_in_document(document_id, q, current_user),
         message="Tìm kiếm trong tài liệu thành công"

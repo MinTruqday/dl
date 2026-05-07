@@ -1,4 +1,4 @@
-from core.config import settings
+from shared.core.config import settings
 import hmac
 import hashlib
 import json
@@ -6,8 +6,8 @@ import httpx
 import os
 from datetime import datetime
 from fastapi import HTTPException, Response
-from core.database import db_client
-from models.wallet import Transaction, TransactionType
+from shared.core.database import db_client
+from shared.models.wallet import Transaction, TransactionType
 from loguru import logger
 class GatewayService:
     @staticmethod
@@ -73,15 +73,15 @@ class GatewayService:
                 })
                 return {"payUrl": res_data.get("payUrl")}
             else:
-                logger.error(f"Failed to create MoMo transaction: {res_data}")
+logger.info("Log message sanitized"))
                 raise HTTPException(status_code=400, detail=res_data.get("message", "Lỗi từ cổng MoMo"))
         except Exception as e:
-            logger.error(f"MoMo connection error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Không thể kết nối với hệ thống thanh toán MoMo. Vui lòng thử lại sau.")
     @staticmethod
     async def momo_ipn(request):
         data = await request.json()
-        logger.info(f"Received MoMo IPN: {data}")
+logger.info("Log message sanitized"))
         partner_code = getattr(settings, "MOMO_PARTNER_CODE", None)
         access_key = getattr(settings, "MOMO_ACCESS_KEY", None)
         secret_key = getattr(settings, "MOMO_SECRET_KEY", None)
@@ -106,7 +106,7 @@ class GatewayService:
             hashlib.sha256
         ).hexdigest()
         if my_signature != data.get("signature"):
-            logger.error("MoMo IPN signature mismatch detected")
+logger.info("Log message sanitized"))
             return Response(content="Invalid Signature", status_code=400)
         if data.get("resultCode") == 0:
             await GatewayService.process_success_order(data.get("orderId"))
@@ -119,7 +119,7 @@ class GatewayService:
         transactions = db["transactions"]
         order = await orders.find_one({"order_id": order_id, "status": "pending"})
         if not order:
-            logger.warning(f"Order {order_id} not found or already processed")
+logger.info("Log message sanitized"))
             return
         dl_to_add = order.get("dl", 0)
         user_id = order["user_id"]
@@ -133,7 +133,7 @@ class GatewayService:
                 )
                 if result.modified_count != 1:
                     await session.abort_transaction()
-                    logger.warning(f"Order {order_id} status update failed (already processed?)")
+logger.info("Log message sanitized"))
                     return
                 await users.update_one(
                     {"_id": user_id},
@@ -156,10 +156,10 @@ class GatewayService:
                             "body": f"Tài khoản vừa được cộng thêm {dl_to_add} dl."
                         })
                     )
-                logger.info(f"Added {dl_to_add} dl to user {user_id} (Order {order_id}) (atomic)")
+logger.info("Log message sanitized"))
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Order processing failed for {order_id}: {e}")
+logger.info("Log message sanitized"))
             raise
         finally:
             await session.end_session()

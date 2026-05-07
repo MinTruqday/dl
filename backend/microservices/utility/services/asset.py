@@ -1,9 +1,9 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
 from loguru import logger
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from typing import Any
 class AssetService:
     @staticmethod
@@ -37,7 +37,7 @@ class AssetService:
             "created_at": datetime.utcnow(),
         }
         await db["assets"].insert_one(asset)
-        logger.info(f"Workspace: Author {current_user.id} uploaded asset {data['filename']}")
+logger.info("Log message sanitized"))
         return {"message": "Tải lên tài nguyên thành công.", "asset": asset}
     @staticmethod
     async def delete_asset(asset_id: str, current_user) -> dict:
@@ -45,7 +45,7 @@ class AssetService:
         res = await db["assets"].delete_one({"_id": asset_id, "author_id": str(current_user.id)})
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Tài nguyên không tồn tại.")
-        logger.info(f"Workspace: Asset {asset_id} deleted by author {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa tài nguyên thành công."}
     @staticmethod
     async def upload_media(file, current_user: UserInDB):
@@ -62,7 +62,7 @@ class AssetService:
         file_location = os.path.join(upload_dir, filename)
         with open(file_location, "wb+") as f:
             shutil.copyfileobj(file.file, f)
-        logger.info(f"Media uploaded by user {current_user.id}: {filename}")
+logger.info("Log message sanitized"))
         await AssetService.upload_asset({
             "filename": filename,
             "type": "image" if ext != "mp4" else "video",

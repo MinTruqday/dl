@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 from loguru import logger
@@ -22,7 +22,7 @@ class ProfileService:
             {"_id": str(current_user.id)},
             {"$set": update_fields}
         )
-        logger.info(f"Profile updated for user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật hồ sơ cá nhân."}
     @staticmethod
     async def get_user_profile(current_user) -> dict:
@@ -88,5 +88,5 @@ class ProfileService:
             raise HTTPException(status_code=400, detail="Không có thông tin nào để cập nhật.")
         update_fields["updated_at"] = datetime.utcnow()
         await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
-        logger.info(f"Profile: Brand page updated for author {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Cập nhật trang tác giả cá nhân thành công."}

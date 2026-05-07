@@ -1,8 +1,8 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
-from models.user import UserInDB, RoleEnum
-from core.response import APIResponse
+from shared.models.user import UserInDB, RoleEnum
+from shared.core.response import APIResponse
 from services.document import DocumentService
 from pydantic import BaseModel
 router = APIRouter(prefix="/ban-nhap")

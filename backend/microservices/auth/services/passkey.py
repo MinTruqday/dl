@@ -1,4 +1,4 @@
-from core.config import settings
+from shared.core.config import settings
 import base64
 from webauthn import (
     generate_registration_options,
@@ -16,8 +16,8 @@ from webauthn.helpers.structs import (
 )
 from webauthn.helpers.exceptions import InvalidRegistrationResponse, InvalidAuthenticationResponse
 from fastapi import HTTPException
-from core.database import db_client
-from models.user import UserInDB
+from shared.core.database import db_client
+from shared.models.user import UserInDB
 from datetime import datetime
 import os
 import uuid

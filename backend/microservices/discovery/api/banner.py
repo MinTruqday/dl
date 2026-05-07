@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import require_role
-from models.user import RoleEnum
-from core.response import APIResponse
+from shared.models.user import RoleEnum
+from shared.core.response import APIResponse
 from services.banner import BannerService
 from pydantic import BaseModel
 router = APIRouter(prefix="/anh-quang-cao")

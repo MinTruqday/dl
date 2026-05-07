@@ -22,7 +22,7 @@ USER_AGENTS = [
 class AnnaArchiveCollector:
     @staticmethod
     async def run_list_collector(search_query: str, index_type: str = ""):
-        logger.info(f"Starting search on Anna's Archive: {search_query} (Index: {index_type})")
+logger.info("Log message sanitized"))
         encoded = urllib.parse.quote(search_query)
         if index_type == "journals":
             search_url = f"https://annas-archive.gl/search?index=journals&q={encoded}"
@@ -37,7 +37,7 @@ class AnnaArchiveCollector:
                 await page.goto(search_url, timeout=60000, wait_until='domcontentloaded')
                 content = await page.content()
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Search page blocked, trying FlareSolverr to bypass...")
+logger.info("Log message sanitized"))
                     FLARESOLVERR_URL = "http://flaresolverr:8191/v1"
                     async with aiohttp.ClientSession() as session:
                         async with session.post(FLARESOLVERR_URL, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
@@ -50,10 +50,10 @@ class AnnaArchiveCollector:
                 try:
                     await page.wait_for_selector(list_selector, timeout=30000)
                 except Exception as e:
-                    logger.error(f"Error waiting for md5 links in Anna Archive: {e}")
+logger.info("Log message sanitized"))
                 html_content = await page.content()
                 if "DDoS-Guard" in html_content:
-                    logger.error("Still blocked by Cloudflare")
+logger.info("Log message sanitized"))
                 document_nodes = await page.query_selector_all(list_selector)
                 if document_nodes:
                     document_urls = set()
@@ -62,20 +62,20 @@ class AnnaArchiveCollector:
                         if href:
                             full_url = "https://annas-archive.gl" + href if href.startswith("/") else href
                             document_urls.add(full_url)
-                    logger.info(f"Found {len(document_urls)} md5 links")
+logger.info("Log message sanitized"))
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
                             await mq_client.publish("collect_detail_queue", {"url": url})
                             await dedup.mark_collected("anna_url", url)
                 else:
-                    logger.warning("MD5 list container not found")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.error(f"[Anna List CCollector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
-        logger.info("Using FlareSolverr to fetch clearance cookies and userAgent...")
+logger.info("Log message sanitized"))
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post("http://flaresolverr:8191/v1", json={"cmd": "request.get", "url": url, "maxTimeout": 60000}) as resp:
@@ -97,11 +97,11 @@ class AnnaArchiveCollector:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception as e:
-            logger.error(f"FlareSolverr API error: {e}")
+logger.info("Log message sanitized"))
         return await browser.new_context(user_agent=random.choice(USER_AGENTS))
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Detail Collector] Anna: {document_url}")
+logger.info("Log message sanitized"))
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'])
             context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
@@ -111,7 +111,7 @@ class AnnaArchiveCollector:
                 await page.goto(document_url, timeout=60000)
                 content = await page.content()
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Detail page blocked, applying FlareSolverr clearance cookies...")
+logger.info("Log message sanitized"))
                     await page.close()
                     await context.close()
                     context = await AnnaArchiveCollector.get_flare_cleared_context(browser, document_url, logger)
@@ -125,7 +125,7 @@ class AnnaArchiveCollector:
                 payload["title"] = raw_title
                 author_el = await page.query_selector('div.italic')
                 payload["author"] = await author_el.inner_text() if author_el else "Unknown Author"
-                logger.info(f"Extracted Title: {payload['title']}, Author: {payload['author']}")
+logger.info("Log message sanitized"))
                 cover_el = await page.query_selector('img[src*="covers/"]') or await page.query_selector('img[src*="isbn"]') or await page.query_selector('div > img')
                 if cover_el:
                     cover_src = await cover_el.get_attribute("src")
@@ -136,11 +136,11 @@ class AnnaArchiveCollector:
                 if slow_link_el:
                     slow_href = await slow_link_el.get_attribute("href")
                     slow_url = "https://annas-archive.gl" + slow_href if slow_href.startswith("/") else slow_href
-                    logger.info(f"Navigating to download page: {slow_url}")
+logger.info("Log message sanitized"))
                     await page.goto(slow_url, timeout=60000)
                     content = await page.content()
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Download page blocked, applying FlareSolverr clearance cookies...")
+logger.info("Log message sanitized"))
                         await page.close()
                         await context.close()
                         context = await AnnaArchiveCollector.get_flare_cleared_context(browser, slow_url, logger)
@@ -150,7 +150,7 @@ class AnnaArchiveCollector:
                     try:
                         download_link = None
                         xpath_selector = "xpath=/html/body/main/div/p[3]/a"
-                        logger.info("Playwright natively polling for JS countdown to finish...")
+logger.info("Log message sanitized"))
                         for _ in range(60):
                             try:
                                 link_el = await page.query_selector(xpath_selector)
@@ -160,11 +160,11 @@ class AnnaArchiveCollector:
                                         download_link = href
                                         break
                             except Exception as parse_err:
-                                logger.warning(f"Error parsing download link: {parse_err}")
+logger.info("Log message sanitized"))
                             await page.wait_for_timeout(5000)
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info(f"Successfully extracted completed download link: {download_link}")
+logger.info("Log message sanitized"))
                             ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'epub'
                             if len(ext) > 4 or "/" in ext: ext = 'epub'
                             slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
@@ -172,13 +172,13 @@ class AnnaArchiveCollector:
                             payload["content_format"] = ext
                             await mq_client.publish("download_processor_queue", payload)
                         else:
-                            logger.warning(f"Timeout waiting for JS Countdown link natively: {slow_url}")
+logger.info("Log message sanitized"))
                     except Exception as e:
-                        logger.error(f"Failed to wait for download link: {e}")
+logger.info("Log message sanitized"))
                 else:
-                    logger.warning(f"Slow download button not found on detail page: {document_url}")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.error(f"[Anna Detail CCollector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()
     @staticmethod
@@ -186,9 +186,9 @@ class AnnaArchiveCollector:
         url = payload.get("download_link")
         title = payload.get("title", "document")
         if not url:
-            logger.error(f"[Download Processor] Invalid payload URL: {title}")
+logger.info("Log message sanitized"))
             return
-        logger.info(f"[Download Processor] Processing physical download: {title}")
+logger.info("Log message sanitized"))
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "epub")
         filename = payload.get("filename") or f"{slug}.{ext}"
@@ -205,14 +205,14 @@ class AnnaArchiveCollector:
                                 if not chunk:
                                     break
                                 f.write(chunk)
-                        logger.info(f"[Anna Stream] Copied to ./documents/anna_archive/{filename}")
+logger.info("Log message sanitized"))
                         minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
                     else:
-                        logger.error(f"[Anna Download Error] Cannot get. Code: {resp.status} - {url}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"[Aiohttp Stream Error]: {e}")
+logger.info("Log message sanitized"))
         if minio_url:
-            logger.info(f"[Success] Document saved to MinIO: {minio_url}")
+logger.info("Log message sanitized"))
             document_metadata = {
                 "title": title,
                 "slug": slug,

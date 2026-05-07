@@ -41,10 +41,10 @@ class MinioStorage:
                         data_len,
                         content_type="application/epub+zip" if file_name.endswith('.epub') else "application/pdf"
                     )
-                    logger.info(f"[MinIO] Uploaded {file_name} directly to object store.")
+logger.info("Log message sanitized"))
                     return f"http://{self.endpoint}/{self.bucket}/{file_name}"
         except Exception as e:
-            logger.error(f"[MinIO Transfer Failed]: {e}")
+logger.info("Log message sanitized"))
             return None
     async def upload_local_file(self, object_name: str, file_path: str) -> str:
         try:
@@ -57,9 +57,9 @@ class MinioStorage:
                     size,
                     content_type="application/pdf"
                 )
-                logger.info(f"[MinIO] Successfully updated version {object_name}")
+logger.info("Log message sanitized"))
                 return f"http://{self.endpoint}/{self.bucket}/{object_name}"
         except Exception as e:
-            logger.error(f"[MinIO Transfer Failed]: {e}")
+logger.info("Log message sanitized"))
             return ""
 storage = MinioStorage()

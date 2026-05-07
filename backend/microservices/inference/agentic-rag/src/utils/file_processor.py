@@ -12,13 +12,13 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
             tmp.write(file_bytes)
             tmp_path = tmp.name
-        logger.info(f"Extracting text from uploaded file: {filename} ({ext})")
+logger.info("Log message sanitized"))
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content
         os.remove(tmp_path)
-        logger.info(f"Extracted {len(full_text)} characters from upload.")
+logger.info("Log message sanitized"))
         return full_text
     except Exception as e:
-        logger.error(f"Failed to extract text from upload: {e}")
+logger.info("Log message sanitized"))
         return ""

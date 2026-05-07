@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user
-from models.user import UserInDB
-from core.response import APIResponse
+from shared.models.user import UserInDB
+from shared.core.response import APIResponse
 from services.review import ReviewService
 from pydantic import BaseModel
 router = APIRouter(prefix="/phan-hoi")

@@ -1,8 +1,8 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from services.wallet import WalletService
 from services.transaction import TransactionService
 from pydantic import BaseModel

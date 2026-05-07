@@ -10,7 +10,7 @@ class FeedbackRequest(BaseModel):
     session_id: str
     message_id: str
     user_id: Optional[str] = "guest"
-    vote_type: str = Field(..., description="Must be 'upvote', 'downvote', or 'hallucination_report'")
+    vote_type: str = Field(., description="Must be 'upvote', 'downvote', or 'hallucination_report'")
     comment: Optional[str] = ""
 @router.post("/feedback")
 async def submit_feedback(req: FeedbackRequest):
@@ -27,8 +27,8 @@ async def submit_feedback(req: FeedbackRequest):
         }
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
-        logger.info(f"Feedback: Saved for message {req.message_id}")
+logger.info("Log message sanitized"))
         return {"status": "success", "message": "Cảm ơn bạn đã đóng góp ý kiến để cải thiện AI."}
     except Exception as e:
-        logger.error(f"Feedback: Error saving: {e}")
+logger.info("Log message sanitized"))
         return {"status": "error", "message": "Không thể lưu ý kiến lúc này."}

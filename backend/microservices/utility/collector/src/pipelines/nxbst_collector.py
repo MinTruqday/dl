@@ -55,16 +55,16 @@ class NXBSTStreamState:
                         save_path = os.path.join(self.temp_dir, filename)
                         with open(save_path, 'wb') as f:
                             f.write(body)
-                        logger.info(f"[NXBSTStream] Captured {filename}: {url[-50:]}")
+logger.info("Log message sanitized"))
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.error(f"[NXBSTStreamState] Inner exception: {e}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"[NXBSTStreamState] Outer exception: {e}")
+logger.info("Log message sanitized"))
     async def process_viewer(self, page):
         try:
-            logger.info("Initializing viewer processing loop")
+logger.info("Log message sanitized"))
             consecutive_fails = 0
             previous_count = self.page_counter
             while True:
@@ -76,13 +76,13 @@ class NXBSTStreamState:
                     previous_count = self.page_counter
                 else:
                     consecutive_fails += 1
-                    logger.warning(f"No new pages captured, retry {consecutive_fails}/6")
+logger.info("Log message sanitized"))
                     await asyncio.sleep(2)
                 if consecutive_fails > 6:
-                    logger.info("End of document detected or network Stream stopped.")
+logger.info("Log message sanitized"))
                     break
         except Exception as e:
-            logger.error(f"Viewer loop error: {e}")
+logger.info("Log message sanitized"))
     async def compile_and_upload(self, title: str, author: str):
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         final_pdf_name = f"{slug}_{uuid4().hex[:6]}.pdf"
@@ -103,12 +103,12 @@ class NXBSTStreamState:
                         files_by_page["unknown"] = []
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
         if not files_by_page:
-            logger.warning(f"Skipping PDF {title}: No pages collected.")
+logger.info("Log message sanitized"))
             return
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info(f"[NXBSTPDF] Compiling {len(sorted_pages)} pages with tile matrix 1/2/3/4 '{final_pdf_name}'")
+logger.info("Log message sanitized"))
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
                 try:
@@ -133,17 +133,17 @@ class NXBSTStreamState:
                         for t in tiles_dict.values():
                             images.append(Image.open(t).convert("RGB"))
                 except Exception as e:
-                    logger.warning(f"Failed to merge tiles for page {p}: {e}")
+logger.info("Log message sanitized"))
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
                     try:
                         images.append(Image.open(f).convert("RGB"))
                     except Exception as e:
-                        logger.error(f"Failed to load unknown tile: {e}")
+logger.info("Log message sanitized"))
             if images:
                 images[0].save(pdf_path, save_all=True, append_images=images[1:])
-                logger.info(f"[NXBSTPDF SUCCESS] Created: {pdf_path}")
-            logger.info(f"[NXBSTStorage] Uploading {final_pdf_name} to MinIO")
+logger.info("Log message sanitized"))
+logger.info("Log message sanitized"))
             minio_url = await storage.upload_local_file(f"documents/nxbst/{final_pdf_name}", pdf_path)
             if minio_url:
                 document_metadata = {
@@ -167,7 +167,7 @@ class NXBSTStreamState:
             if os.path.exists(pdf_path):
                 os.remove(pdf_path)
         except Exception as e:
-            logger.error(f"[NXBSTPDF Compile Error]: {e}")
+logger.info("Log message sanitized"))
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -175,7 +175,7 @@ class NXBSTCollector:
     @staticmethod
     async def run_list_collector():
         start_url = "https://stbook.vn/"
-        logger.info(f"Starting List Collection on NXBST {start_url}")
+logger.info("Log message sanitized"))
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=True,
@@ -200,14 +200,14 @@ class NXBSTCollector:
                     href = await node.get_attribute("href")
                     if href and ('/category/' in href or '/chuyen-muc/' in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
-                logger.info(f"Successfully extracted {len(category_urls)} category URLs including Kho tài liệu")
+logger.info("Log message sanitized"))
                 for cat_url in category_urls:
-                    logger.info(f"Scanning Category: {cat_url}")
+logger.info("Log message sanitized"))
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
                     current_page = 1
                     while True:
-                        logger.info(f"Scanning Page {current_page} of current category")
+logger.info("Log message sanitized"))
                         document_nodes_xpath = 'xpath=//*[@id="main"]//a[contains(@href, "store_detail") or contains(@href, "/sach/")]'
                         document_nodes = await page.query_selector_all(document_nodes_xpath)
                         found_documents = 0
@@ -219,7 +219,7 @@ class NXBSTCollector:
                                 if not await dedup.is_collected("nxbst_url", full_url):
                                     await mq_client.publish("collect_detail_queue", {"url": full_url, "source": "NXBST"})
                                     await dedup.mark_collected("nxbst_url", full_url)
-                        logger.info(f"Pushed {found_documents} documents to MQ from page {current_page}.")
+logger.info("Log message sanitized"))
                         next_page_idx = current_page + 1
                         pagination_btn_xpath = f'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'
                         try:
@@ -233,12 +233,12 @@ class NXBSTCollector:
                         except Exception:
                             break
             except Exception as e:
-                logger.error(f"[NXBSTList Collector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Detail Collector] NXBST {document_url}")
+logger.info("Log message sanitized"))
         state_manager = NXBSTStreamState()
         async with async_playwright() as p:
             browser = await p.chromium.launch(
@@ -265,17 +265,17 @@ class NXBSTCollector:
                 author_xpath = 'xpath=//*[@id="detail"]/div[2]/div/div[1]/a'
                 author_el = await page.query_selector(author_xpath)
                 raw_author = await author_el.inner_text() if author_el else "Unknown Author"
-                logger.info(f"Targeting document {raw_title} | Author: {raw_author}")
+logger.info("Log message sanitized"))
                 read_btn_xpath = 'xpath=//*[@id="whatchNow"]'
                 read_btn = await page.query_selector(read_btn_xpath)
                 if read_btn:
-                    logger.info("Found watch/read button. Preparing to capture")
+logger.info("Log message sanitized"))
                     os.makedirs("/app/documents/nxbst_temp", exist_ok=True)
                     state_manager.temp_dir = f"/app/documents/nxbst_temp/{safe_title}"
                     os.makedirs(state_manager.temp_dir, exist_ok=True)
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
-                    logger.info("Initializing background network Stream capture")
+logger.info("Log message sanitized"))
                     state_manager.is_capturing = True
                     await read_btn.click()
                     await asyncio.sleep(5)
@@ -283,8 +283,8 @@ class NXBSTCollector:
                     state_manager.is_capturing = False
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Read/Watch Now button not found.")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.error(f"[NXBSTDetail Collector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()

@@ -1,5 +1,5 @@
 from typing import List, Any
-from core.config import settings
+from shared.core.config import settings
 import datetime
 from datetime import datetime as dt
 import os
@@ -9,8 +9,8 @@ import json
 import zipfile
 from bson import ObjectId
 from fastapi import HTTPException, status
-from core.database import db_client
-from models.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
+from shared.core.database import db_client
+from shared.models.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
 from loguru import logger
 from services.notification import NotificationService
 def serialize_document(document):
@@ -82,7 +82,7 @@ class DocumentService:
             doc_dict["publisher_name"] = current_user.full_name
         doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info(f"Workspace: Document created {doc_doc.id} by author {current_user.id}")
+logger.info("Log message sanitized"))
         return doc_doc
     @staticmethod
     async def get_my_documents(current_user, skip: int = 0, limit: int = 50) -> list:
@@ -120,7 +120,7 @@ class DocumentService:
             }}
         )
         await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), current_user.full_name)
-        logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
+logger.info("Log message sanitized"))
         return await docs_collection.find_one({"_id": document_id})
     @staticmethod
     async def list_documents(limit: int, offset: int, q: str, sort_by: str, category: str = None, tag: str = None):
@@ -174,7 +174,7 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-        logger.info(f"Workspace: Document {document_id} moved to trash by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã chuyển tài liệu vào thùng rác."}
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
@@ -185,7 +185,7 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong thùng rác.")
-        logger.info(f"Workspace: Document {document_id} restored by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã khôi phục tài liệu thành công."}
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -214,7 +214,7 @@ class DocumentService:
             {"_id": document_id},
             {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.datetime.utcnow()}}
         )
-        logger.info(f"Workspace: Password protection enabled for {document_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã thiết lập mật khẩu bảo vệ tài liệu."}
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
@@ -228,7 +228,7 @@ class DocumentService:
         if str(target_user["_id"]) in document.get("coauthors", []):
             return {"message": "Người này đã là đồng tác giả."}
         await db["documents"].update_one({"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}})
-        logger.info(f"Workspace: Coauthor {target_user['_id']} invited to {document_id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã thêm {target_user['full_name']} làm đồng tác giả."}
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
@@ -275,7 +275,7 @@ class DocumentService:
             html_content += html_body + "</body></html>"
             zf.writestr("OEBPS/content.xhtml", html_content)
         mem_zip.seek(0)
-        logger.info(f"Workspace: EPUB exported for {document_id}")
+logger.info("Log message sanitized"))
         return mem_zip.read()
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
@@ -333,7 +333,7 @@ class DocumentService:
             "reason": reason, 
             "timestamp": dt.utcnow()
         })
-        logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã {status.lower()} tài liệu thành công."}
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:
@@ -347,5 +347,5 @@ class DocumentService:
                 "resolved_at": dt.utcnow()
             }}
         )
-        logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã giải quyết tranh chấp bản quyền thành công."}

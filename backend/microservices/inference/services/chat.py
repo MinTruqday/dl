@@ -1,6 +1,6 @@
-from core.database import db_client
-from models.chat import MessageInDB, MessageCreate
-from models.user import UserInDB
+from shared.core.database import db_client
+from shared.models.chat import MessageInDB, MessageCreate
+from shared.models.user import UserInDB
 from datetime import datetime
 from typing import List
 class ChatService:

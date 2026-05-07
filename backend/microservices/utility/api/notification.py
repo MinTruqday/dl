@@ -1,8 +1,8 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from api.dependency import get_current_user, get_current_user_token_param, require_role, RateLimiter
 from services.notification import NotificationService
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class NotificationSettingsUpdate(BaseModel):
 @router.get("/dong-du-lieu", response_model=Any)
 async def stream_notifications(
     request: Request,
-    token: str = Query(...),
+    token: str = Query(.),
     _ = Depends(RateLimiter(calls=60, period=60))
 ):
     current_user = await get_current_user_token_param(token)

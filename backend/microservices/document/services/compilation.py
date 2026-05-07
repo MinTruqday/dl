@@ -27,7 +27,7 @@ class CompilationService:
                     raise HTTPException(status_code=408, detail="Quá thời gian xử lý biên dịch LaTeX (Timeout).")
                 if process.returncode != 0:
                     err_msg = stderr.decode()
-                    logger.error(f"Tectonic error: {err_msg}")
+logger.info("Log message sanitized"))
                     raise HTTPException(status_code=422, detail={"error": "Lỗi định dạng LaTeX, không thể biên dịch.", "logs": err_msg})
                 pdf_path = os.path.join(tmpdir, "main.pdf")
                 if not os.path.exists(pdf_path):
@@ -38,5 +38,5 @@ class CompilationService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Compilation error: {str(e)}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình biên dịch tài liệu.")

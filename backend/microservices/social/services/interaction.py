@@ -3,9 +3,9 @@ from datetime import datetime
 import uuid
 import json
 from fastapi import HTTPException
-from core.database import db_client
-from models.user import UserInDB
-from models.social import FollowInDB
+from shared.core.database import db_client
+from shared.models.user import UserInDB
+from shared.models.social import FollowInDB
 from loguru import logger
 class InteractionService:
     @staticmethod
@@ -16,7 +16,7 @@ class InteractionService:
         existing = await db["follows"].find_one({"follower_id": str(current_user.id), "following_id": target_user_id})
         if existing:
             await db["follows"].delete_one({"_id": existing["_id"]})
-            logger.info(f"User {current_user.id} unfollowed user {target_user_id}")
+logger.info("Log message sanitized"))
             return {"message": "Đã bỏ theo dõi thành công."}
         else:
             await db["follows"].insert_one(FollowInDB(follower_id=str(current_user.id), following_id=target_user_id).model_dump(by_alias=True))
@@ -46,7 +46,7 @@ class InteractionService:
                     "link": "/profile"
                 })
             )
-            logger.info(f"User {current_user.id} followed user {target_user_id}")
+logger.info("Log message sanitized"))
             return {"message": "Đã theo dõi thành công."}
     @staticmethod
     async def react_to_post(post_id: str, reaction_type: str, current_user: UserInDB) -> dict:
@@ -97,7 +97,7 @@ class InteractionService:
             "created_at": datetime.utcnow()
         }
         await db["reports"].insert_one(report)
-        logger.info(f"Report submitted by user {current_user.id} for target {post_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi báo cáo vi phạm."}
     @staticmethod
     async def mute_user(target_user_id: str, current_user: UserInDB) -> dict:
@@ -138,7 +138,7 @@ class InteractionService:
             {"follower_id": user_id_str, "following_id": target_user_id},
             {"follower_id": target_user_id, "following_id": user_id_str},
         ]})
-        logger.info(f"User {user_id_str} blocked user {target_user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã chặn người dùng này thành công.", "blocked": True}
     @staticmethod
     async def unblock_user(target_user_id: str, current_user: UserInDB) -> dict:

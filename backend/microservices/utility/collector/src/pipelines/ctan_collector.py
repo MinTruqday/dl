@@ -24,7 +24,7 @@ USER_AGENTS = [
 class CTANCollector:
     @staticmethod
     async def run_list_collector():
-        logger.info("Starting CTAN Alphabetical List Collector")
+logger.info("Log message sanitized"))
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
             context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
@@ -33,14 +33,14 @@ class CTANCollector:
             try:
                 for letter in string.ascii_uppercase:
                     search_url = f"https://www.ctan.org/pkg/:{letter}"
-                    logger.info(f"Scanning CTAN Category: {letter} -> {search_url}")
+logger.info("Log message sanitized"))
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
                     list_xpath = 'xpath=/html/body/div[2]/main/div[1]/a'
                     try:
                         await page.wait_for_selector('xpath=/html/body/div[2]/main/div[1]', timeout=15000)
                     except Exception as e:
-                        logger.warning(f"Timeout or empty container for letter {letter}: {e}")
+logger.info("Log message sanitized"))
                         continue
                     book_nodes = await page.query_selector_all(list_xpath)
                     book_urls = set()
@@ -49,18 +49,18 @@ class CTANCollector:
                         if href:
                             full_url = "https://www.ctan.org" + href if href.startswith("/") else href
                             book_urls.add(full_url)
-                    logger.info(f"Found {len(book_urls)} packages for letter {letter}")
+logger.info("Log message sanitized"))
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
                             await mq_client.publish("collect_detail_queue", {"url": url, "source": "CTAN"})
                             await dedup.mark_collected("ctan_url", url)
             except Exception as e:
-                logger.error(f"[CTAN List Collector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info(f"[Detail Collector] CTAN: {book_url}")
+logger.info("Log message sanitized"))
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
             context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
@@ -93,17 +93,17 @@ class CTANCollector:
                     if download_link:
                         full_download_url = "https://www.ctan.org" + download_link if download_link.startswith("/") else download_link
                         payload["download_link"] = full_download_url
-                        logger.info(f"Successfully extracted completed download link: {full_download_url}")
+logger.info("Log message sanitized"))
                         slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
                         payload["filename"] = f"{slug}.zip"
                         payload["content_format"] = "zip"
                         await mq_client.publish("download_processor_queue", {**payload, "source": "CTAN"})
                     else:
-                        logger.warning(f"Download link attribute empty on detail page: {book_url}")
+logger.info("Log message sanitized"))
                 else:
-                    logger.warning(f"Download button not found at specified XPath on detail page: {book_url}")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.error(f"[CTAN Detail Collector Error]: {e}")
+logger.info("Log message sanitized"))
             finally:
                 await browser.close()
     @staticmethod
@@ -111,9 +111,9 @@ class CTANCollector:
         url = payload.get("download_link")
         title = payload.get("title", "package")
         if not url:
-            logger.error(f"[Download Processor] Invalid payload URL: {title}")
+logger.info("Log message sanitized"))
             return
-        logger.info(f"[Download Processor] Processing physical download and extraction: {title}")
+logger.info("Log message sanitized"))
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
         os.makedirs("/app/books/ctan/zips", exist_ok=True)
@@ -131,21 +131,21 @@ class CTANCollector:
                                 if not chunk:
                                     break
                                 f.write(chunk)
-                        logger.info(f"[CTAN Stream] Downloaded to {target_zip_local}")
+logger.info("Log message sanitized"))
                         minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
-                        logger.info(f"Extracting ZIP archive to {extracted_folder_path}...")
+logger.info("Log message sanitized"))
                         os.makedirs(extracted_folder_path, exist_ok=True)
                         with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                             zip_ref.extractall(extracted_folder_path)
-                        logger.info(f"Successfully extracted {filename}.")
+logger.info("Log message sanitized"))
                     else:
-                        logger.error(f"[CTAN Download Error] Cannot get. Code: {resp.status} - {url}")
+logger.info("Log message sanitized"))
                         return
         except Exception as e:
-            logger.error(f"[Aiohttp/Extraction Error]: {e}")
+logger.info("Log message sanitized"))
             return
         if minio_url_book:
-            logger.info(f"[Success] Package saved to MinIO: {minio_url_book}")
+logger.info("Log message sanitized"))
             book_document = {
                 "title": title,
                 "slug": slug,

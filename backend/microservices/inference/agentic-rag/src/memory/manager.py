@@ -10,9 +10,9 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
             self._redis.ping()
-            logger.info("Memory Manager connected to Redis")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.warning(f"Redis unavailable for memory: {e}")
+logger.info("Log message sanitized"))
             self._redis = None
         self._short_term_ttl = 3600 * 2
         self._long_term_ttl = 86400 * 30
@@ -25,7 +25,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Short-term memory read failed: {e}")
+logger.info("Log message sanitized"))
         return []
     async def save_short_term(self, conversation_id: str, entry: Dict):
         if not self._redis:
@@ -39,7 +39,7 @@ class MemoryManager:
                 history = history[-max_turns:]
             self._redis.setex(key, self._short_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Short-term memory save failed: {e}")
+logger.info("Log message sanitized"))
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
             return
@@ -52,7 +52,7 @@ class MemoryManager:
                 history = history[-200:]
             self._redis.setex(key, self._long_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Long-term memory save failed: {e}")
+logger.info("Log message sanitized"))
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
             return []
@@ -62,7 +62,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Long-term memory read failed: {e}")
+logger.info("Log message sanitized"))
         return []
     async def get_user_preferences(self, user_id: str) -> Dict:
         history = await self.get_long_term(user_id)

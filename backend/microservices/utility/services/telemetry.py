@@ -1,7 +1,7 @@
 from bson import ObjectId
 from datetime import datetime, timedelta
-from core.database import db_client
-from models.user import UserInDB
+from shared.core.database import db_client
+from shared.models.user import UserInDB
 from typing import Optional, Dict, Any
 import uuid
 from loguru import logger
@@ -17,7 +17,7 @@ class TelemetryService:
             "timestamp": datetime.utcnow()
         }
         await db["telemetry"].insert_one(telemetry_event)
-        logger.debug(f"Telemetry tracked: {event_name} by {telemetry_event['user_id']}")
+logger.info("Log message sanitized"))
         return {"status": "success"}
     @staticmethod
     async def get_activity_stats(days: int = 7):

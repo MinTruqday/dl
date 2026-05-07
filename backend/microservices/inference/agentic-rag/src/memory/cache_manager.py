@@ -21,7 +21,7 @@ class SemanticCache:
             self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
             self.emb_dim = self.encoder.get_sentence_embedding_dimension()
         except Exception as e:
-            logger.error(f"Failed to load sentence transformer: {e}")
+logger.info("Log message sanitized"))
             self.encoder = None
         self._init_collection()
     def _init_collection(self):
@@ -34,9 +34,9 @@ class SemanticCache:
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(size=self.emb_dim, distance=Distance.COSINE),
                 )
-                logger.info(f"Created semantic cache collection: {self.collection_name}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"Error initializing cache collection: {e}")
+logger.info("Log message sanitized"))
     def get_cache(self, prompt: str) -> str:
         if not self.encoder:
             return None
@@ -48,10 +48,10 @@ class SemanticCache:
                 limit=1
             )
             if search_result and search_result[0].score >= self.threshold:
-                logger.info(f"Semantic Cache HIT (Score: {search_result[0].score:.4f})")
+logger.info("Log message sanitized"))
                 return search_result[0].payload.get("response")
         except Exception as e:
-            logger.warning(f"Cache retrieval error: {e}")
+logger.info("Log message sanitized"))
         return None
     def set_cache(self, prompt: str, response: str):
         if not self.encoder:
@@ -72,7 +72,7 @@ class SemanticCache:
                     )
                 ]
             )
-            logger.debug("Added response to semantic cache.")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.warning(f"Cache insertion error: {e}")
+logger.info("Log message sanitized"))
 semantic_cache = SemanticCache()

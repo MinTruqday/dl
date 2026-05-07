@@ -8,7 +8,7 @@ class ReasoningAgent:
     def __init__(self):
         self._model = os.environ.get("LLAMA_MODEL")
         self._hf_token = os.environ.get("HF_TOKEN")
-        logger.info(f"Reasoning Agent initialized with model: {self._model}")
+logger.info("Log message sanitized"))
     async def evaluate_quality(self, query: str, answer: str, context_docs: List[Dict]) -> Dict:
         context_str = self._build_context(context_docs[:3])
         eval_prompt = f"""Hãy đánh giá chất lượng của cặp Câu hỏi và Câu trả lời sau. CHỈ trả về một khối JSON hợp lệ.
@@ -41,7 +41,7 @@ Chỉ trả về định dạng JSON:"""
                 result_text = result_text.strip()
             return json.loads(result_text)
         except Exception as e:
-            logger.error(f"Evaluation error: {e}")
+logger.info("Log message sanitized"))
             return {"overall": 0.5, "should_retry": False, "feedback": f"Lỗi đánh giá: {str(e)}"}
     def _build_context(self, docs: List[Dict]) -> str:
         if not docs:

@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from models.user import UserInDB
-from core.response import APIResponse
+from shared.models.user import UserInDB
+from shared.core.response import APIResponse
 from services.ai import AIService
 from pydantic import BaseModel
 router = APIRouter(prefix="/tri-tue-nhan-tao")
@@ -18,7 +18,7 @@ class FlashcardReviewRequest(BaseModel):
     card_id: str
     quality: int
 @router.get("/tim-kiem", response_model=APIResponse[Any])
-async def semantic_search(q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
+async def semantic_search(q: str = Query(.), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await AIService.semantic_search(q, current_user),
         message="Tìm kiếm ngữ nghĩa hoàn tất"

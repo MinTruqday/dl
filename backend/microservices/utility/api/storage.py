@@ -1,13 +1,13 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.storage import StorageService
 router = APIRouter(prefix="/luu-trư")
 @router.post("/", response_model=APIResponse[Any])
 async def upload_asset_to_minio(
-    file: UploadFile = File(...),
+    file: UploadFile = File(.),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ):
     return APIResponse(data=await StorageService.upload_asset(file, current_user), message="Tải tập tin lên kho lưu trữ thành công.", status=201)

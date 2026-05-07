@@ -1,9 +1,9 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from api.dependency import get_current_user
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from services.gateway import GatewayService
 router = APIRouter(prefix="/cong-thanh-toan")
 class TopupRequest(BaseModel):

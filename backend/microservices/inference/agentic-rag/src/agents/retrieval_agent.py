@@ -18,7 +18,7 @@ class RetrievalAgent:
     def __init__(self):
         self.llm = _llm
     async def multi_query_retrieve(self, question: str, document_id: Optional[str] = None, k: int = 5) -> List[Dict]:
-        logger.info(f"Multi-query retrieval for: {question}")
+logger.info("Log message sanitized"))
         prompt = PromptTemplate(
             template="""Bạn là một trợ lý AI có nhiệm vụ tối ưu hóa việc tìm kiếm tài liệu. 
             Hãy tạo ra 3 phiên bản khác nhau của câu hỏi dưới đây để giúp tìm kiếm vector hiệu quả hơn.
@@ -32,7 +32,7 @@ class RetrievalAgent:
             queries = [q.strip() for q in queries_text.split("\n") if q.strip()]
             queries.append(question)
         except Exception as e:
-            logger.error(f"Multi-query generation error: {e}")
+logger.info("Log message sanitized"))
             queries = [question]
         all_docs = []
         for q in queries:
@@ -46,7 +46,7 @@ class RetrievalAgent:
                 seen_texts.add(d["text"])
         return unique_docs[:k]
     async def retrieve(self, query: str, document_id: Optional[str] = None, k: int = 5) -> List[Dict]:
-        logger.info(f"Retrieving for: {query} (document_id: {document_id})")
+logger.info("Log message sanitized"))
         from src.ingestion.embedder import embedding_service
         query_vector = embedding_service.embed_query(query)
         docs = vector_store.query(

@@ -9,16 +9,16 @@ class DocLibDatabase:
     async def insert_document(self, document_data: dict):
         try:
             res = await self.db.documents.insert_one(document_data)
-            logger.success(f"[DB] Inserted document ID: {res.inserted_id}")
+logger.info("Log message sanitized"))
             return str(res.inserted_id)
         except Exception as e:
-            logger.error(f"[DB Error] {e}")
+logger.info("Log message sanitized"))
             return None
     async def update_document(self, document_id: str, update_data: dict):
         try:
             from bson import ObjectId
             await self.db.documents.update_one({"_id": ObjectId(document_id)}, {"$set": update_data})
-            logger.success(f"[DB] Updated document ID: {document_id}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"[DB Update Error] {e}")
+logger.info("Log message sanitized"))
 db_client = DocLibDatabase()

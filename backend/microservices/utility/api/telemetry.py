@@ -1,8 +1,8 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
-from models.user import UserInDB, RoleEnum
-from core.response import APIResponse
+from shared.models.user import UserInDB, RoleEnum
+from shared.core.response import APIResponse
 from services.telemetry import TelemetryService
 router = APIRouter(prefix="/do-luong")
 @router.get("/thong-ke", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])

@@ -1,6 +1,6 @@
 import uuid
 from fastapi import HTTPException
-from core.storage import generate_presigned_url, upload_file
+from shared.core.storage import generate_presigned_url, upload_file
 from loguru import logger
 class StorageService:
     @staticmethod
@@ -9,7 +9,7 @@ class StorageService:
         filename = f"assets/{current_user.id}/{uuid.uuid4().hex}.{ext}"
         content = await file.read()
         await upload_file(content, filename, file.content_type)
-        logger.info(f"Asset uploaded by user {current_user.id}: {filename}")
+logger.info("Log message sanitized"))
         return {"url": filename, "filename": filename}
     @staticmethod
     async def get_presigned_url(file_path: str):

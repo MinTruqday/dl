@@ -1,8 +1,8 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from services.operation import OperationService
 from services.payout import PayoutService
 from services.user import UserService

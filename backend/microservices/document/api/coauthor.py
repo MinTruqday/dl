@@ -1,7 +1,7 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from api.dependency import get_current_user
 from services.coauthor import CoauthorService
 router = APIRouter(prefix="/dong-tac-gia")

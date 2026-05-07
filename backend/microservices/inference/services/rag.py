@@ -3,7 +3,7 @@ import os
 import uuid
 from typing import Dict, Any, List, Optional
 from loguru import logger
-from core.config import settings
+from shared.core.config import settings
 class RagService:
     @staticmethod
     async def proxy_rag_chat(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Dict[str, Any]:
@@ -28,13 +28,13 @@ class RagService:
                     await RagService.add_message(session_id, "assistant", result.get("answer", ""), str(current_user.id))
                 return result
             else:
-                logger.error(f"RAG Service error: {response.status_code} - {response.text}")
+logger.info("Log message sanitized"))
                 return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": response.status_code}
         except httpx.ReadError:
-            logger.error("RAG chat exception: ReadError - Service closed connection unexpectedly.")
+logger.info("Log message sanitized"))
             return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": 503}
         except Exception as e:
-            logger.error(f"RAG chat exception: {type(e).__name__} - {str(e)}")
+logger.info("Log message sanitized"))
             return {"answer": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", "status": 500}
     @staticmethod
     async def proxy_rag_stream(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Any:
@@ -59,7 +59,7 @@ class RagService:
                 async with httpx.AsyncClient() as client:
                     async with client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
                         if response.status_code != 200:
-                            logger.error(f"RAG Stream error: {response.status_code}")
+logger.info("Log message sanitized"))
                             yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
                             return
                         async for chunk in response.aiter_bytes():
@@ -74,12 +74,12 @@ class RagService:
                                             if "chunk" in parsed:
                                                 full_response += parsed["chunk"]
                                     except Exception as parse_error:
-                                        logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
+logger.info("Log message sanitized"))
                             yield chunk
                 if session_id and current_user and full_response:
                     await RagService.add_message(session_id, "assistant", full_response, str(current_user.id))
             except Exception as e:
-                logger.error(f"RAG stream exception: {str(e)}")
+logger.info("Log message sanitized"))
                 yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
         return StreamingResponse(stream_generator(), media_type="text/event-stream")
     @staticmethod
@@ -93,14 +93,14 @@ class RagService:
             if response.status_code == 200:
                 return response.json()
             else:
-                logger.error(f"RAG Ingest error: {response.status_code} - {response.text}")
+logger.info("Log message sanitized"))
                 return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}
         except Exception as e:
-            logger.error(f"RAG ingest exception: {e}")
+logger.info("Log message sanitized"))
             return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}
     @staticmethod
     async def create_session(user_id: str, document_id: Optional[str] = None, first_query: str = "") -> dict:
-        from core.database import db_client
+        from shared.core.database import db_client
         from datetime import datetime
         db = db_client.mongodb.get_default_database()
         title = first_query[:40] if first_query else "Cuộc hội thoại mới"
@@ -117,7 +117,7 @@ class RagService:
         return session
     @staticmethod
     async def get_user_sessions(user_id: str, document_id: Optional[str] = None) -> List[dict]:
-        from core.database import db_client
+        from shared.core.database import db_client
         db = db_client.mongodb.get_default_database()
         query = {"user_id": user_id}
         if document_id: query["document_id"] = document_id
@@ -125,7 +125,7 @@ class RagService:
         return await cursor.to_list(length=50)
     @staticmethod
     async def add_message(session_id: str, role: str, content: str, user_id: str) -> bool:
-        from core.database import db_client
+        from shared.core.database import db_client
         from datetime import datetime
         db = db_client.mongodb.get_default_database()
         message = {"id": str(uuid.uuid4()), "role": role, "content": content, "created_at": datetime.utcnow()}
@@ -136,13 +136,13 @@ class RagService:
         return result.modified_count > 0
     @staticmethod
     async def delete_session(session_id: str, user_id: str) -> bool:
-        from core.database import db_client
+        from shared.core.database import db_client
         db = db_client.mongodb.get_default_database()
         result = await db["ai_sessions"].delete_one({"_id": session_id, "user_id": user_id})
         return result.deleted_count > 0
     @staticmethod
     async def update_title(session_id: str, title: str, user_id: str) -> bool:
-        from core.database import db_client
+        from shared.core.database import db_client
         from datetime import datetime
         db = db_client.mongodb.get_default_database()
         result = await db["ai_sessions"].update_one(

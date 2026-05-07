@@ -1,5 +1,5 @@
 from datetime import datetime
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 class PrivacyService:
     @staticmethod
@@ -16,7 +16,7 @@ class PrivacyService:
             "reactions_given": len(reactions),
             "raw_comments": [{"document_id": c.get("document_id"), "content": c.get("content")} for c in comments]
         }
-        logger.info(f"Data takeout requested by user {user_id}")
+logger.info("Log message sanitized"))
         return takeout_payload
     @staticmethod
     async def right_to_be_forgotten(current_user):
@@ -34,11 +34,11 @@ class PrivacyService:
         if db_client.redis:
             await db_client.redis.delete(f"active_session:{user_id}")
         await db["users"].delete_one({"_id": str(current_user.id)})
-        logger.info(f"User {user_id} requested to be forgotten (GDPR)")
+logger.info("Log message sanitized"))
         return {"status": "success", "message": "Tài khoản của bạn đã được xóa hoàn toàn khỏi hệ thống theo yêu cầu."}
     @staticmethod
     async def request_data_export(current_user):
-        logger.info(f"Data export request recorded for user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã ghi nhận yêu cầu trích xuất dữ liệu. Sẽ gửi qua email trong vòng 24 giờ."}
     @staticmethod
     async def generate_gdpr_takeout(current_user):
@@ -49,5 +49,5 @@ class PrivacyService:
             "documents": await db["documents"].find({"author_id": user_id}).to_list(100),
             "comments": await db["comments"].find({"user_id": user_id}).to_list(500)
         }
-        logger.info(f"GDPR takeout prepared for user {user_id}")
+logger.info("Log message sanitized"))
         return {"status": "success", "data": full_data}

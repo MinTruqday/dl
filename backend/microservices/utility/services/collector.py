@@ -1,6 +1,6 @@
 from typing import Any, Optional, List
-from core.database import db_client
-from core.publication import publish_event
+from shared.core.database import db_client
+from shared.core.publication import publish_event
 from fastapi import HTTPException
 from loguru import logger
 import uuid
@@ -35,7 +35,7 @@ class CollectorService:
         success = await publish_event(queue_name, payload)
         if not success:
             raise HTTPException(status_code=500, detail="Không thể gửi lệnh thu thập vào hàng đợi xử lý.")
-        logger.info(f"Collection job {payload['job_id']} triggered for source {source}")
+logger.info("Log message sanitized"))
         return {"status": "success", "job_id": payload["job_id"], "message": f"Đã kích hoạt tiến trình thu thập dữ liệu từ {source}."}
     @staticmethod
     async def get_collector_stats():

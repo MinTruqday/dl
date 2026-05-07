@@ -1,7 +1,7 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
 from services.editor import EditorService, manager
 from typing import List, Optional
@@ -24,7 +24,7 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.error(f"WebSocket error in {document_id}: {e}")
+logger.info("Log message sanitized"))
         manager.disconnect(websocket, document_id)
 @router.websocket("/o-cam-crdt/{document_id}")
 async def editor_crdt_websocket(websocket: WebSocket, document_id: str):
@@ -36,7 +36,7 @@ async def editor_crdt_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.error(f"CRDT WebSocket error in {document_id}: {e}")
+logger.info("Log message sanitized"))
         manager.disconnect(websocket, document_id)
 @router.post("/{document_id}/kiem-tra-dao-van", response_model=APIResponse[Any])
 async def analyze_internal_plagiarism(

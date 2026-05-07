@@ -2,9 +2,9 @@ from typing import List, Optional, Any
 from datetime import datetime
 import httpx
 from fastapi import HTTPException
-from core.database import db_client
-from models.user import UserInDB
-from core.config import settings
+from shared.core.database import db_client
+from shared.models.user import UserInDB
+from shared.core.config import settings
 from loguru import logger
 class FeedService:
     @staticmethod
@@ -24,7 +24,7 @@ class FeedService:
                     data = resp.json()
                     return data.get("summary", "Không thể tạo tóm tắt vào lúc này.")
         except Exception as e:
-            logger.error(f"Lỗi tóm tắt AI: {str(e)}")
+logger.info("Log message sanitized"))
         return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
     @staticmethod
     async def get_social_feed(tab: str, item_type: Optional[str], skip: int, limit: int, current_user: Optional[UserInDB]) -> List[dict]:

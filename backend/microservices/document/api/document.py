@@ -1,12 +1,12 @@
 from typing import Any, List, Optional
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from api.dependency import get_current_user_optional, get_current_user, require_role
 from fastapi import APIRouter, Depends, Response, Query, status
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
 from services.chapter import ChapterService
-from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate
+from shared.models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate
 from pydantic import BaseModel
 router = APIRouter(prefix="/tai-lieu")
 @router.post("/", response_model=APIResponse[DocumentResponse])

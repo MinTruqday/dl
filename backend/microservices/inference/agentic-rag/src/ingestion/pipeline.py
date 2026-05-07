@@ -25,7 +25,7 @@ class IngestionPipeline:
         author = document.get("author", "Unknown")
         if not file_url:
             raise ValueError(f"Document {document_id} has no file_url")
-        logger.info(f"Ingesting: {title} by {author}")
+logger.info("Log message sanitized"))
         metadata = {
             "document_id": document_id,
             "title": title,
@@ -46,18 +46,18 @@ class IngestionPipeline:
                 _hf = HuggingFaceEndpoint(repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
                 llm_summary = _hf
                 prompt = PromptTemplate(
-                    template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: ...\nTác giả: ...\nNăm xuất bản/Bối cảnh: ...\nTóm tắt nội dung chính: ...\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
+                    template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: .\nTác giả: .\nNăm xuất bản/Bối cảnh: .\nTóm tắt nội dung chính: .\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
                     input_variables=["text"]
                 )
                 global_summary_text = llm_summary.invoke(prompt.format(text=first_pages)).strip()
-                logger.info(f"Generated Global Summary Chunk for {title}")
+logger.info("Log message sanitized"))
                 return {
                     "id": f"{document_id}_global_summary",
                     "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nTài liệu: {title}\nTác giả: {author}\n{global_summary_text}",
                     "metadata": {**metadata, "chunk_id": "summary_001", "chunk_type": "summary", "chunk_index": -1, "extraction_method": extract_method}
                 }
             except Exception as e:
-                logger.warning(f"Failed to generate Global Summary Chunk: {e}")
+logger.info("Log message sanitized"))
                 return None
         if ade_chunks:
             extraction_method = "ade"
@@ -79,9 +79,9 @@ class IngestionPipeline:
                     "text": ac["text"],
                     "metadata": chunk_meta,
                 })
-            logger.info(f"ADE extraction: {len(chunks)} chunks")
+logger.info("Log message sanitized"))
         else:
-            logger.info("ADE unavailable or failed, using local extraction")
+logger.info("Log message sanitized"))
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
                 raise ValueError(f"Extracted text too short for document {document_id}")
@@ -118,7 +118,7 @@ class IngestionPipeline:
             "extraction_method": extraction_method,
             "status": "indexed"
         }
-        logger.info(f"Ingestion complete: {result}")
+logger.info("Log message sanitized"))
         return result
     async def _extract_text(self, file_url: str) -> str:
         file_bytes = await self._download_file(file_url)
@@ -142,7 +142,7 @@ class IngestionPipeline:
             else:
                 bucket = self._bucket
                 object_key = url
-            logger.info(f"Downloading: bucket={bucket}, key={object_key}")
+logger.info("Log message sanitized"))
             import boto3
             s3 = boto3.client(
                 "s3",
@@ -153,10 +153,10 @@ class IngestionPipeline:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info(f"Downloaded {len(data)} bytes from MinIO")
+logger.info("Log message sanitized"))
             return data
         except Exception as e:
-            logger.error(f"Download error: {e}")
+logger.info("Log message sanitized"))
             return None
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
         try:
@@ -167,17 +167,17 @@ class IngestionPipeline:
             with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
                 tmp.write(data)
                 tmp_path = tmp.name
-            logger.info(f"Starting MarkItDown extraction for {ext} file")
+logger.info("Log message sanitized"))
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
             os.remove(tmp_path)
-            logger.info(f"MarkItDown extracted {len(full_text)} chars")
+logger.info("Log message sanitized"))
             return full_text
         except ImportError:
-            logger.error("Missing markitdown.")
+logger.info("Log message sanitized"))
             return ""
         except Exception as e:
-            logger.error(f"MarkItDown extraction error: {e}")
+logger.info("Log message sanitized"))
             return ""
 ingestion_pipeline = IngestionPipeline()

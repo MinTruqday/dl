@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import json
@@ -35,9 +35,9 @@ class NotificationService:
                     }
                 await asyncio.sleep(0.5)
         except asyncio.CancelledError:
-            logger.info(f"SSE notification stream cancelled for user {user_id}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"SSE generator error for user {user_id}: {e}")
+logger.info("Log message sanitized"))
             yield {
                 "event": "error",
                 "data": json.dumps({"detail": "Mất kết nối với máy chủ thông báo."})
@@ -87,7 +87,7 @@ class NotificationService:
         })
         if db_client.redis:
             await db_client.redis.publish("global_notifications", json.dumps({"title": title, "body": body}))
-        logger.info(f"Push notification sent by admin {current_user.id}: {title}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã gửi thông báo đẩy: {title}."}
     @staticmethod
     async def subscribe_newsletter(email: str) -> dict:
@@ -101,7 +101,7 @@ class NotificationService:
             "subscribed_at": datetime.utcnow(),
             "is_active": True,
         })
-        logger.info(f"Newsletter subscription: {email}")
+logger.info("Log message sanitized"))
         return {"message": "Đăng ký nhận bản tin thành công."}
     @staticmethod
     async def unsubscribe_newsletter(email: str) -> dict:
@@ -165,7 +165,7 @@ class NotificationService:
                 )
         if notifications:
             await db["notifications"].insert_many(notifications)
-        logger.info(f"Document update notification sent for document {document_id} to {len(user_ids)} users.")
+logger.info("Log message sanitized"))
     @staticmethod
     async def get_notification_settings(current_user) -> dict:
         db = db_client.mongodb.get_default_database()
@@ -200,7 +200,7 @@ class NotificationService:
             }},
             upsert=True,
         )
-        logger.info(f"Notification settings updated for user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật tùy chỉnh thông báo thành công."}
     @staticmethod
     async def mark_all_read(current_user) -> dict:
@@ -229,4 +229,4 @@ class NotificationService:
                 f"user_notifications:{author_id}",
                 json.dumps({"title": notification["title"], "body": notification["body"]})
             )
-        logger.info(f"Notification: Purchase notification sent to author {author_id}")
+logger.info("Log message sanitized"))

@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from services.user import UserService
 from pydantic import BaseModel
 router = APIRouter(prefix="/nguoi-dung")

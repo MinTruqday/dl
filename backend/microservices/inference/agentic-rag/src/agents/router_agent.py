@@ -35,7 +35,7 @@ router_llm = ChatHuggingFace(llm=_hf_endpoint)
 class RouteDecision(BaseModel):
     destination: Literal["rag", "billing", "workspace", "chat"] = Field(description="Luồng AI mà câu hỏi cần được gửi đến")
 def route_query(state: RouterState):
-    logger.info(f"Routing query: {state['question'][:50]}")
+logger.info("Log message sanitized"))
     question = state["question"]
     prompt = PromptTemplate(
         template="""Bạn là router chuyên gia của hệ thống DocLib. Bạn phân tích ý định câu hỏi và chuyển hướng đến đúng luồng xử lý.
@@ -53,7 +53,7 @@ def route_query(state: RouterState):
         response = router_llm.invoke(prompt.format(question=question))
         decision = response.content.strip().lower()
     except Exception as e:
-        logger.error(f"Router LLM error: {e}")
+logger.info("Log message sanitized"))
         decision = "rag"
     route = "rag" 
     if "workspace" in decision:
@@ -66,7 +66,7 @@ def route_query(state: RouterState):
         route = "billing"
     elif "rag" in decision:
         route = "rag"
-    logger.info(f"Routing decision: {route.upper()}")
+logger.info("Log message sanitized"))
     return {"route": route, "question": question}
 async def rag_node(state: RouterState):
     initial_rag_state = {
@@ -94,7 +94,7 @@ async def billing_node(state: RouterState):
         response = await billing_agent_app.ainvoke({"messages": messages})
         answer = response["messages"][-1].content
     except Exception as e:
-        logger.error(f"Billing agent error: {e}")
+logger.info("Log message sanitized"))
         answer = "Hệ thống tài chính hiện đang bảo trì, vui lòng quay lại sau"
     return {"final_answer": answer, "route": "billing"}
 async def workspace_node(state: RouterState):
@@ -105,7 +105,7 @@ async def workspace_node(state: RouterState):
         response = await workspace_agent_app.ainvoke({"messages": messages})
         answer = response["messages"][-1].content
     except Exception as e:
-        logger.error(f"Workspace agent error: {e}")
+logger.info("Log message sanitized"))
         answer = "Hệ thống quản lý thư viện hiện đang gặp sự cố"
     return {"final_answer": answer, "route": "workspace"}
 async def multi_node(state: RouterState):
@@ -133,7 +133,7 @@ async def multi_node(state: RouterState):
         rag_result = await rag_agent_app.ainvoke(initial_rag_state)
         answer = rag_result.get("generation", "Tôi không tìm thấy dữ liệu phù hợp trong tài liệu")
     except Exception as e:
-        logger.error(f"RAG execution error in multi-node: {e}")
+logger.info("Log message sanitized"))
         answer = "Gặp sự cố khi tổng hợp thông tin từ các nguồn dữ liệu"
     return {"final_answer": answer, "route": "multi"}
 async def chat_node(state: RouterState):
@@ -148,7 +148,7 @@ async def chat_node(state: RouterState):
         response = await tagged_llm.ainvoke(prompt.format(question=state["question"]))
         answer = response.content.strip()
     except Exception as e:
-        logger.error(f"Chat LLM error: {e}")
+logger.info("Log message sanitized"))
         answer = "Chào bạn! DocLib rất vui được hỗ trợ bạn"
     return {"final_answer": answer, "route": "chat"}
 def decide_route(state: RouterState):

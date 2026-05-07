@@ -3,7 +3,7 @@ from datetime import datetime
 from loguru import logger
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from bson import ObjectId
-from core.database import db_client
+from shared.core.database import db_client
 import os
 import json
 class ConnectionManager:
@@ -14,13 +14,13 @@ class ConnectionManager:
         if room_id not in self.active_connections:
             self.active_connections[room_id] = []
         self.active_connections[room_id].append(websocket)
-        logger.info(f"Client joined room {room_id}. Total: {len(self.active_connections[room_id])}")
+logger.info("Log message sanitized"))
     def disconnect(self, websocket: WebSocket, room_id: str):
         if room_id in self.active_connections and websocket in self.active_connections[room_id]:
             self.active_connections[room_id].remove(websocket)
             if not self.active_connections[room_id]:
                 del self.active_connections[room_id]
-            logger.info(f"Client left room {room_id}")
+logger.info("Log message sanitized"))
     async def broadcast(self, message: bytes, room_id: str, sender: WebSocket):
         if room_id in self.active_connections:
             dead_connections = []
@@ -29,7 +29,7 @@ class ConnectionManager:
                     try:
                         await connection.send_bytes(message)
                     except Exception as e:
-                        logger.error(f"Error broadcasting to client in {room_id}: {e}")
+logger.info("Log message sanitized"))
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)
@@ -51,7 +51,7 @@ class EditorService:
                 }
             return {"duplication_score": 0.0, "status": "clean"}
         except Exception as e:
-            logger.error(f"Plagiarism check error: {e}")
+logger.info("Log message sanitized"))
             return {"duplication_score": 0.0, "status": "clean", "error": str(e)}
     @staticmethod
     async def sync_keystroke_buffer(document_id: str, payload: dict, current_user):
@@ -66,7 +66,7 @@ class EditorService:
                 )
             return {"status": "synced_redis", "timestamp": payload.get("timestamp")}
         except Exception as e:
-            logger.error(f"Error syncing keystrokes: {e}")
+logger.info("Log message sanitized"))
             return {"status": "sync_failed", "error": str(e)}
     @staticmethod
     async def get_latex():
@@ -87,7 +87,7 @@ class EditorService:
             "status": "pending",
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Inline suggestion added for document {document_id} by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã thêm gợi ý chỉnh sửa thành công."}
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user):
@@ -100,7 +100,7 @@ class EditorService:
             "status": payload.get("action", "rejected"),
             "resolved_at": datetime.utcnow()
         }})
-        logger.info(f"Suggestion {suggestion_id} resolved by user {user_id}")
+logger.info("Log message sanitized"))
         action_map = {"accepted": "chấp nhận", "rejected": "từ chối"}
         action_vn = action_map.get(payload.get('action'), payload.get('action'))
         return {"message": f"Đã {action_vn} gợi ý thành công."}
@@ -115,7 +115,7 @@ class EditorService:
             "words_written": payload.get("words_written"),
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Pomodoro session recorded for user {user_id}")
+logger.info("Log message sanitized"))
         return {"status": "recorded"}
     @staticmethod
     async def auto_save_draft(document_id: str, content: dict, current_user):
@@ -134,7 +134,7 @@ class EditorService:
             {"_id": document_id, "author_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}}
         )
-        logger.info(f"Document {document_id} submitted for review by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Tài liệu đã được gửi và đang chờ kiểm duyệt."}
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user):
@@ -155,7 +155,7 @@ class EditorService:
             try:
                 new_content = json.loads(new_content_str)
             except Exception as e:
-                logger.error(f"Regex JSON load failed for globally replacing content: {e}")
+logger.info("Log message sanitized"))
                 new_content = None
         update_data = {
             "title": new_title,
@@ -172,7 +172,7 @@ class EditorService:
             "details": f"Replaced '{search_term}' with '{replace_term}'",
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Global find/replace executed for document {document_id} by user {user_id}")
+logger.info("Log message sanitized"))
         return {"message": "Thay thế nội dung toàn cục thành công.", "affected_fields": ["title", "description", "content"]}
     @staticmethod
     async def check_grammar(document_id: str, chapter_id: str, current_user) -> dict:
@@ -195,5 +195,5 @@ class EditorService:
         data = await AIService.generate_cover(doc.get("title", ""), doc.get("description", ""), style)
         if data.get("cover_url"):
             await db["documents"].update_one({"_id": document_id}, {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.utcnow()}})
-            logger.info(f"Workspace: Cover generated for {document_id}")
+logger.info("Log message sanitized"))
         return data

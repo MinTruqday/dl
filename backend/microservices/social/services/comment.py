@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from datetime import datetime
 import uuid
 from loguru import logger
@@ -14,7 +14,7 @@ class CommentService:
             "count": result.deleted_count, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Moderation: {result.deleted_count} comments deleted for user {user_id} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã xóa {result.deleted_count} bình luận thành công."}
     @staticmethod
     async def remove_violating_comment(comment_id: str, reason: str, current_moderator) -> dict:
@@ -23,5 +23,5 @@ class CommentService:
             {"_id": comment_id}, 
             {"$set": {"is_removed": True, "removal_reason": reason, "removed_at": datetime.utcnow()}}
         )
-        logger.info(f"Moderation: Comment {comment_id} removed by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gỡ bỏ bình luận vi phạm."}

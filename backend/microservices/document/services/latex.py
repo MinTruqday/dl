@@ -9,7 +9,7 @@ import io
 from fastapi import HTTPException
 from loguru import logger
 from datetime import datetime
-from core.database import db_client
+from shared.core.database import db_client
 class LatexService:
     @staticmethod
     async def clean_temp_files(current_user):
@@ -25,8 +25,8 @@ class LatexService:
                     total_bytes_freed += size
                     files_deleted += 1
                 except Exception as e:
-                    logger.warning(f"Failed to clean LaTeX temp file {file_path}: {e}")
-        logger.info(f"Cleanup performed by user {current_user.id}. Files deleted: {files_deleted}, Bytes freed: {total_bytes_freed}")
+logger.info("Log message sanitized"))
+logger.info("Log message sanitized"))
         return {"status": "success", "message": f"Đã dọn dẹp {files_deleted} tệp rác.", "bytes_freed": total_bytes_freed}
     @staticmethod
     async def compile_latex_preview(request, current_user):
@@ -77,18 +77,18 @@ class LatexService:
                 raise HTTPException(status_code=400, detail={"error": "Không thể biên dịch LaTeX.", "logs": log_content[-2048:], "parsed_errors": parsed_errors})
             with open(pdf_path, "rb") as f:
                 pdf_bytes = f.read()
-            logger.info(f"LaTeX preview compiled for user {current_user.id}")
+logger.info("Log message sanitized"))
             return pdf_bytes
         except asyncio.TimeoutError:
             try:
                 process.kill()
             except Exception as e:
-                logger.error(f"Failed to kill LaTeX process: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=504, detail="Quá thời gian xử lý công thức LaTeX.")
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"LaTeX compilation error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi trong quá trình biên dịch LaTeX.")
         finally:
             for ext in [".tex", ".pdf", ".aux", ".log", ".out"]:
@@ -97,7 +97,7 @@ class LatexService:
                     try:
                         os.remove(path)
                     except Exception as e:
-                        logger.warning(f"Failed to remove temp file {path}: {e}")
+logger.info("Log message sanitized"))
     @staticmethod
     async def format_latex(request):
         latex_code = request.content
@@ -114,7 +114,7 @@ class LatexService:
                     indent_level += 1
             return {"formatted_content": "\n".join(formatted)}
         except Exception as e:
-            logger.error(f"LaTeX format error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang định dạng mã LaTeX.")
     @staticmethod
     async def export_latex(request, current_user):
@@ -137,10 +137,10 @@ class LatexService:
                 raise HTTPException(status_code=500, detail="Máy chủ không thể tạo tập tin xuất bản theo yêu cầu.")
             with open(out_path, "rb") as f:
                 file_bytes = f.read()
-            logger.info(f"LaTeX exported to {request.format} by user {current_user.id}")
+logger.info("Log message sanitized"))
             return file_bytes
         except Exception as e:
-            logger.error(f"LaTeX export error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình xuất bản tập tin.")
         finally:
             for p in [tex_path, out_path]:
@@ -148,7 +148,7 @@ class LatexService:
                     try:
                         os.remove(p)
                     except Exception as e:
-                        logger.warning(f"Failed to remove temp file {p}: {e}")
+logger.info("Log message sanitized"))
     @staticmethod
     async def export_project_zip(request):
         zip_buffer = io.BytesIO()

@@ -1,8 +1,8 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
 from fastapi.responses import StreamingResponse
-from models.user import UserInDB
+from shared.models.user import UserInDB
 from api.dependency import get_current_user, RateLimiter
 from services.profile import ProfileService
 from services.setting import SettingService

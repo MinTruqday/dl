@@ -1,13 +1,13 @@
-from core.config import settings
+from shared.core.config import settings
 from datetime import datetime, timedelta
 import secrets
 import uuid
 import os
 from fastapi import HTTPException, status
-from core.database import db_client
-from core.security import get_password_hash, verify_password, create_access_token
-from models.user import UserCreate, UserInDB
-from services.email import EmailService
+from shared.core.database import db_client
+from shared.core.security import get_password_hash, verify_password, create_access_token
+from shared.models.user import UserCreate, UserInDB
+from shared.services.email import EmailService
 from loguru import logger
 class AuthenticationService:
     @staticmethod
@@ -15,7 +15,7 @@ class AuthenticationService:
         google_client_id = getattr(settings, "GOOGLE_CLIENT_ID", None)
         redirect_uri = getattr(settings, "GOOGLE_REDIRECT_URI", None)
         if not google_client_id or not redirect_uri:
-            logger.error("GOOGLE_CLIENT_ID or GOOGLE_REDIRECT_URI is not set")
+logger.info("Log message sanitized"))
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                 detail="Dịch vụ đăng nhập Google chưa được thiết lập. Vui lòng liên hệ quản trị viên."
@@ -53,7 +53,7 @@ class AuthenticationService:
             "ip": client_ip, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"New user registered: {user_in.email} from {client_ip}")
+logger.info("Log message sanitized"))
         return user_doc
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str):
@@ -74,7 +74,7 @@ class AuthenticationService:
                 "ip": client_ip, 
                 "timestamp": datetime.utcnow()
             })
-            logger.warning(f"Login failed: Incorrect password for - {username} from {client_ip}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=401, detail="Mật khẩu bạn nhập không chính xác.")
         if not user_doc.get("is_active", True):
             raise HTTPException(status_code=403, detail="Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên.")
@@ -84,7 +84,7 @@ class AuthenticationService:
             await db_client.redis.sadd(f"user_sessions:{user_id_str}", session_id)
             await db_client.redis.setex(f"session_meta:{session_id}", 604800, client_ip)
         access_token = create_access_token(data={"sub": user_doc["email"], "sid": session_id})
-        logger.info(f"User logged in: {username} from {client_ip}")
+logger.info("Log message sanitized"))
         return {
             "access_token": access_token, 
             "token_type": "bearer",
@@ -102,7 +102,7 @@ class AuthenticationService:
         for sid in sessions:
             await db_client.redis.delete(f"session_meta:{sid}")
         await db_client.redis.delete(f"user_sessions:{user_id_str}")
-        logger.info(f"All sessions revoked for user {user_id_str}")
+logger.info("Log message sanitized"))
         return {"message": "Bạn đã đăng xuất khỏi tất cả các thiết bị thành công."}
     @staticmethod
     async def forgot_password(email: str, client_ip: str):
@@ -127,7 +127,7 @@ class AuthenticationService:
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception as e:
-                logger.error(f"Failed to send reset email to {email}: {e}")
+logger.info("Log message sanitized"))
         return {"status": "ok", "message": "Yêu cầu đã được ghi nhận. Nếu Email tồn tại trên hệ thống, mã xác thực sẽ được gửi tới bạn trong giây lát."}
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str):
@@ -146,7 +146,7 @@ class AuthenticationService:
             "ip": client_ip, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Password reset success for: {token_doc['email']} from {client_ip}")
+logger.info("Log message sanitized"))
         return {"status": "ok", "message": "Mật khẩu của bạn đã được thay đổi thành công."}
     @staticmethod
     async def verify_reset_code(token: str, client_ip: str):
@@ -195,7 +195,7 @@ class AuthenticationService:
             token_resp = await client.post("https://oauth2.googleapis.com/token", data={"code": code, "client_id": google_client_id, "client_secret": google_client_secret, "redirect_uri": redirect_uri, "grant_type": "authorization_code"})
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.error(f"Google OAuth failed: {token_data}")
+logger.info("Log message sanitized"))
                 raise HTTPException(status_code=400, detail="Quá trình xác thực với Google thất bại. Vui lòng thử lại.")
             user_resp = await client.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
@@ -213,5 +213,5 @@ class AuthenticationService:
             user_id = str(uuid.uuid4())
             user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": RoleEnum.READER, "is_active": True, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
             await users_col.insert_one(user_doc)
-            logger.info(f"New user created via Google login: {email}")
+logger.info("Log message sanitized"))
         return await AuthenticationService.issue_token_for_user(user_doc, client_ip)

@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
@@ -24,7 +24,7 @@ class HighlightService:
             "created_at": datetime.utcnow(),
         }
         await db["highlights"].insert_one(highlight)
-        logger.info(f"Highlight created by user {current_user.id} in document {document_id}")
+logger.info("Log message sanitized"))
         return highlight
     @staticmethod
     async def get_highlights(document_id: str, current_user) -> list:
@@ -63,7 +63,7 @@ class HighlightService:
         )
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Ghi chú không tồn tại.")
-        logger.info(f"Highlight {highlight_id} deleted by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa ghi chú."}
     @staticmethod
     async def get_all_notes(current_user, skip: int = 0, limit: int = 50) -> list:
@@ -146,5 +146,5 @@ class ReadingPreferenceService:
             {"$set": update_data},
             upsert=True,
         )
-        logger.info(f"Reading preferences updated for user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật tùy chỉnh đọc."}

@@ -1,10 +1,10 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 import uuid
 from loguru import logger
-from models.wallet import Transaction, TransactionType
-from models.user import UserInDB
+from shared.models.wallet import Transaction, TransactionType
+from shared.models.user import UserInDB
 class MonetizationService:
     @staticmethod
     async def create_subscription_plan(plan_data: dict, current_user: UserInDB):
@@ -19,7 +19,7 @@ class MonetizationService:
             "created_at": datetime.utcnow()
         }
         await db["subscription_plans"].insert_one(plan_doc)
-        logger.info(f"Monetization: Author {current_user.id} created subscription plan {plan_doc['name']}")
+logger.info("Log message sanitized"))
         return plan_doc
     @staticmethod
     async def subscribe_to_author(plan_id: str, current_user: UserInDB):
@@ -81,13 +81,13 @@ class MonetizationService:
                 )
                 await db["transactions"].insert_many([tx_buyer.model_dump(by_alias=True), tx_seller.model_dump(by_alias=True)], session=session)
                 await session.commit_transaction()
-                logger.info(f"Monetization: User {current_user.id} subscribed to author {author_id} plan {plan_id}")
+logger.info("Log message sanitized"))
                 return {"message": "Đăng ký hội viên thành công.", "end_date": subscription["end_date"].isoformat()}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Subscription failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -134,13 +134,13 @@ class MonetizationService:
                 )
                 await db["transactions"].insert_many([tx_sender.model_dump(by_alias=True), tx_receiver.model_dump(by_alias=True)], session=session)
                 await session.commit_transaction()
-                logger.info(f"Monetization: User {current_user.id} tipped {amount} dl to author {author_id}")
+logger.info("Log message sanitized"))
                 return {"message": f"Bạn đã gửi {amount} dl ủng hộ tác giả thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Tip failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -156,7 +156,7 @@ class MonetizationService:
             "updated_at": datetime.utcnow(),
         }
         await db["documents"].update_one({"_id": document_id}, {"$set": update})
-        logger.info(f"Monetization: Pricing updated for {document_id} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật giá bán thành công."}
     @staticmethod
     async def set_flash_sale(document_id: str, data: dict, current_user) -> dict:
@@ -177,7 +177,7 @@ class MonetizationService:
                 "updated_at": datetime.utcnow()
             }}
         )
-        logger.info(f"Monetization: Flash sale set for {document_id} until {expires_at}")
+logger.info("Log message sanitized"))
         return {"message": f"Thiết lập Flash Sale thành công ({flash_sale_price} dl)."}
     @staticmethod
     async def get_author_revenue_analytics(current_user) -> dict:
@@ -231,7 +231,7 @@ class MonetizationService:
             {"_id": subscription_id, "user_id": str(current_user.id)},
             {"$set": {"status": "PAUSED", "updated_at": datetime.utcnow()}}
         )
-        logger.info(f"Subscription {subscription_id} paused by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã tạm dừng gói hội viên."}
     @staticmethod
     async def resume_subscription(subscription_id: str, current_user: UserInDB):
@@ -245,7 +245,7 @@ class MonetizationService:
             {"_id": subscription_id, "user_id": str(current_user.id)},
             {"$set": {"status": "ACTIVE", "updated_at": datetime.utcnow()}}
         )
-        logger.info(f"Subscription {subscription_id} resumed by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã tiếp tục gói hội viên."}
     @staticmethod
     async def cancel_subscription(subscription_id: str, current_user: UserInDB):
@@ -259,7 +259,7 @@ class MonetizationService:
             {"_id": subscription_id, "user_id": str(current_user.id)},
             {"$set": {"status": "CANCELLED", "updated_at": datetime.utcnow(), "cancelled_at": datetime.utcnow()}}
         )
-        logger.info(f"Subscription {subscription_id} cancelled by user {current_user.id}")
+logger.info("Log message sanitized"))
     @staticmethod
     async def check_and_expire_subscriptions():
         db = db_client.mongodb.get_default_database()
@@ -269,5 +269,5 @@ class MonetizationService:
             {"$set": {"status": "EXPIRED", "updated_at": now}}
         )
         if result.modified_count > 0:
-            logger.info(f"Monetization Worker: Expired {result.modified_count} subscriptions")
+logger.info("Log message sanitized"))
         return result.modified_count

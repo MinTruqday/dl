@@ -1,7 +1,7 @@
 import uuid
 import datetime
 from fastapi import HTTPException
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 from utils.metric import calculate_flesch_kincaid, calculate_vocabulary_richness
 def serialize_document(document):
@@ -35,7 +35,7 @@ class ChapterService:
             "created_at": datetime.datetime.utcnow()
         }
         await docs_col.update_one({"_id": document_id}, {"$push": {"chapters": new_chapter}})
-        logger.info(f"Workspace: Chapter added to {document_id}")
+logger.info("Log message sanitized"))
         return serialize_document(await docs_col.find_one({"_id": document_id}))
     @staticmethod
     async def set_free_preview(document_id: str, chapter_ids: list, current_user) -> dict:
@@ -47,7 +47,7 @@ class ChapterService:
         for ch in chapters:
             ch["is_premium"] = ch["id"] not in chapter_ids
         await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.utcnow()}})
-        logger.info(f"Monetization: Free preview configured for {document_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã thiết lập chương đọc thử thành công."}
     @staticmethod
     async def get_document_dropoff(document_id: str, current_user) -> dict:

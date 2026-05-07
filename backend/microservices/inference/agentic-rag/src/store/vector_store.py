@@ -16,13 +16,13 @@ class VectorStore:
             exists = any(c.name == self.collection_name for c in collections)
             if not exists:
                 from src.ingestion.embedder import embedding_service
-                logger.info(f"Creating collection: {self.collection_name}")
+logger.info("Log message sanitized"))
                 self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(size=embedding_service._dimensions, distance=Distance.COSINE)
                 )
         except Exception as e:
-            logger.error(f"Error ensuring collection: {e}")
+logger.info("Log message sanitized"))
     def upsert(self, ids: List[str], embeddings: List[List[float]], documents: List[str], metadatas: List[Dict]):
         points = []
         for i in range(len(ids)):
@@ -38,7 +38,7 @@ class VectorStore:
             collection_name=self.collection_name,
             points=points
         )
-        logger.info(f"Upserted {len(ids)} points to vector store.")
+logger.info("Log message sanitized"))
     def query(self, query_vector: List[float], document_id: Optional[str] = None, limit: int = 5) -> List[Dict]:
         query_filter = None
         if document_id:
@@ -77,5 +77,5 @@ class VectorStore:
                 ]
             )
         )
-        logger.info(f"Deleted points for document_id: {document_id}")
+logger.info("Log message sanitized"))
 vector_store = VectorStore()

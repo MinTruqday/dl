@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
@@ -17,7 +17,7 @@ class LibraryService:
             "created_at": datetime.utcnow()
         }
         await db["reading_lists"].insert_one(new_list)
-        logger.info(f"Library: Reading list created {new_list['_id']} by {current_user.id}")
+logger.info("Log message sanitized"))
         return new_list
     @staticmethod
     async def get_my_reading_lists(current_user):
@@ -67,7 +67,7 @@ class LibraryService:
             "created_at": datetime.utcnow(),
         }
         await db["bookmark_folders"].insert_one(folder)
-        logger.info(f"Library: Bookmark folder created {folder['_id']} by {current_user.id}")
+logger.info("Log message sanitized"))
         return folder
     @staticmethod
     async def get_bookmark_folders(current_user) -> list:

@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from datetime import datetime
 import uuid
 from loguru import logger
@@ -21,11 +21,11 @@ class BannerService:
             "created_at": datetime.utcnow()
         }
         await db["banners"].insert_one(banner)
-        logger.info(f"Administration: Banner '{banner['title']}' created")
+logger.info("Log message sanitized"))
         return banner
     @staticmethod
     async def delete_banner(banner_id: str) -> dict:
         db = db_client.mongodb.get_default_database()
         await db["banners"].delete_one({"_id": banner_id})
-        logger.info(f"Administration: Banner {banner_id} deleted")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa banner thành công."}

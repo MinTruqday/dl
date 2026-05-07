@@ -1,9 +1,9 @@
 from typing import Any
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends, status
 from typing import List, Optional, Any
-from models.user import UserInDB
-from models.comment import CommentCreate, CommentResponse
+from shared.models.user import UserInDB
+from shared.models.comment import CommentCreate, CommentResponse
 from api.dependency import get_current_user, require_permissions, RateLimiter
 from services.comment import CommentService
 from pydantic import BaseModel

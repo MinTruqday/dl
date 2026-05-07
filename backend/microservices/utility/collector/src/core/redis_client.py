@@ -11,5 +11,5 @@ class RedisDeduplicator:
     async def mark_collected(self, key_type: str, value: str):
         redis_key = f"Collector:dedup:{key_type}"
         await self.r.sadd(redis_key, value)
-        logger.debug(f"[Redis] Marked {value} as collected in {redis_key}")
+logger.info("Log message sanitized"))
 dedup = RedisDeduplicator()

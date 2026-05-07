@@ -1,9 +1,9 @@
 from datetime import datetime
 import uuid
 from fastapi import HTTPException
-from core.database import db_client
-from models.user import AuthorStatusEnum, KYCStatusEnum
-from core.storage import upload_file
+from shared.core.database import db_client
+from shared.models.user import AuthorStatusEnum, KYCStatusEnum
+from shared.core.storage import upload_file
 from loguru import logger
 class IdentityService:
     @staticmethod
@@ -32,7 +32,7 @@ class IdentityService:
                 "tos_accepted_at": datetime.utcnow()
             }}
         )
-        logger.info(f"Author application submitted by user {user_id}")
+logger.info("Log message sanitized"))
         return {"status": "success", "message": "Đã gửi đơn đăng ký tác giả."}
     @staticmethod
     async def upload_kyc(file, current_user):
@@ -58,7 +58,7 @@ class IdentityService:
             {"_id": user_id},
             {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
-        logger.info(f"KYC document uploaded by user {user_id}")
+logger.info("Log message sanitized"))
         return {"status": "success", "message": "Đã tải lên tài liệu KYC."}
     @staticmethod
     async def get_author_public_profile(slug: str) -> dict:

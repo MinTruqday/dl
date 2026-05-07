@@ -1,5 +1,5 @@
-from core.config import settings
-from core.database import db_client
+from shared.core.config import settings
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 import uuid
@@ -23,7 +23,7 @@ class AIService:
                     return resp.json()
                 raise HTTPException(status_code=resp.status_code, detail="Dịch vụ AI phản hồi không chính xác.")
         except Exception as e:
-            logger.error(f"AI: Semantic Search Error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi kết nối đến hệ thống trí tuệ nhân tạo.")
     @staticmethod
     async def process_text(req):
@@ -60,7 +60,7 @@ class AIService:
                     res.raise_for_status()
                     return {"status": "success", "result": res.json().get("result", "")}
         except Exception as e:
-            logger.error(f"AI: Text processing error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Lỗi khi xử lý văn bản với AI.")
     @staticmethod
     async def generate_flashcard(document_id: str, text: str, context: str, current_user):
@@ -85,7 +85,7 @@ class AIService:
                     return data
                 raise HTTPException(status_code=resp.status_code, detail="AI không thể tạo thẻ ghi nhớ.")
         except Exception as e:
-            logger.error(f"AI: Flashcard Generation Error: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ AI.")
     @staticmethod
     async def review_flashcard(card_id: str, quality: int, current_user):
@@ -111,7 +111,7 @@ class AIService:
             {"_id": card_id},
             {"$set": {"repetitions": rep, "easiness_factor": ef, "interval": interval, "next_review": next_review}}
         )
-        logger.info(f"AI: Flashcard {card_id} reviewed by {current_user.id} (Quality: {quality})")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật lịch ôn tập.", "next_review": next_review.isoformat()}
     @staticmethod
     async def check_grammar(text: str) -> dict:
@@ -124,7 +124,7 @@ class AIService:
                 if resp.status_code == 200: 
                     return resp.json()
         except Exception as e:
-            logger.warning(f"AI: Grammar check failed: {e}")
+logger.info("Log message sanitized"))
         return {"score": 100, "message": "Kiểm tra ngữ pháp hiện không khả dụng."}
     @staticmethod
     async def generate_cover(title: str, description: str, style: str) -> dict:
@@ -137,7 +137,7 @@ class AIService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.warning(f"AI: Cover generation failed: {e}")
+logger.info("Log message sanitized"))
         return {"message": "Dịch vụ tạo ảnh bìa hiện chưa khả dụng."}
     @staticmethod
     async def generate_code(prompt: str, language: str = "python") -> dict:
@@ -150,5 +150,5 @@ class AIService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f"AI: Code generation failed: {e}")
+logger.info("Log message sanitized"))
         return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}

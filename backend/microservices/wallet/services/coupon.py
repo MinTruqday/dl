@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
@@ -23,7 +23,7 @@ class CouponService:
         if existing:
             raise HTTPException(status_code=400, detail="Mã giảm giá này đã tồn tại trên hệ thống.")
         await db["coupons"].insert_one(coupon)
-        logger.info(f"Identity: Author {current_user.id} created coupon {coupon['code']}")
+logger.info("Log message sanitized"))
         return {"message": "Tạo mã giảm giá thành công.", "coupon_id": coupon["_id"]}
     @staticmethod
     async def get_my_coupons(current_user) -> list:
@@ -52,7 +52,7 @@ class CouponService:
             raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
         new_status = not coupon.get("is_active", True)
         await db["coupons"].update_one({"_id": coupon_id}, {"$set": {"is_active": new_status}})
-        logger.info(f"Monetization: Coupon {coupon_id} toggled to {new_status}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật trạng thái mã giảm giá.", "is_active": new_status}
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user) -> dict:
@@ -60,5 +60,5 @@ class CouponService:
         res = await db["coupons"].delete_one({"_id": coupon_id, "author_id": str(current_user.id)})
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
-        logger.info(f"Monetization: Coupon {coupon_id} deleted by author {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa mã giảm giá thành công."}

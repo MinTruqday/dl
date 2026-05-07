@@ -4,8 +4,8 @@ import json
 import uuid
 from typing import Optional, List
 from fastapi import HTTPException, status
-from core.database import db_client
-from models.wallet import Transaction, TransactionType
+from shared.core.database import db_client
+from shared.models.wallet import Transaction, TransactionType
 from loguru import logger
 class TransactionService:
     @staticmethod
@@ -72,13 +72,13 @@ class TransactionService:
                 msg = f"Đã gửi tặng dl thành công."
                 if cashback > 0:
                     msg += f" Bạn đã nhận được mức hoàn lại {cashback} dl."
-                logger.info(f"User {current_user.id} voted {req.amount} dl for post {req.item_id} (atomic)")
+logger.info("Log message sanitized"))
                 return {"message": msg}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Vote item transaction failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -133,13 +133,13 @@ class TransactionService:
                     tx_receiver.model_dump(by_alias=True)
                 ], session=session)
                 await session.commit_transaction()
-                logger.info(f"User {current_user.id} unlocked post {req.post_id} (atomic)")
+logger.info("Log message sanitized"))
                 return {"message": "Mở khóa bài viết thành công.", "success": True}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Unlock post failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -179,13 +179,13 @@ class TransactionService:
                     tx_receiver.model_dump(by_alias=True)
                 ], session=session)
                 await session.commit_transaction()
-                logger.info(f"User {current_user.id} tipped {amount} dl to user {target_user_id} (atomic)")
+logger.info("Log message sanitized"))
                 return {"message": "Đã thực hiện ủng hộ thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Virtual tip failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -259,13 +259,13 @@ class TransactionService:
                         author_id, 
                         current_user.full_name or "Một độc giả"
                     )
-                logger.info(f"Document {document_id} purchased by user {current_user.id} for {price} dl (atomic)")
+logger.info("Log message sanitized"))
                 return {"message": "Mua tài liệu thành công.", "status": "purchased"}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Document purchase transaction failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -331,13 +331,13 @@ class TransactionService:
                         author_id, 
                         current_user.full_name or "Một độc giả"
                     )
-                logger.info(f"Chapter {chapter_id} purchase by user {current_user.id} (atomic)")
+logger.info("Log message sanitized"))
                 return {"message": "Mua chương thành công.", "status": "purchased"}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Chapter purchase failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -370,7 +370,7 @@ class TransactionService:
                 return {"message": "Hoàn tiền thành công.", "refunded_amount": price}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Refund failed: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hoàn tiền thất bại.")
         finally:
             await session.end_session()

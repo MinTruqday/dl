@@ -50,9 +50,9 @@ class NXBGDCollector:
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.warning(f"Failed to capture NXBGD response body: {e}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.warning(f"Error handling NXBGD response: {e}")
+logger.info("Log message sanitized"))
     async def init_browser(self):
         self.p = await async_playwright().start()
         self.browser = await self.p.chromium.launch(
@@ -93,21 +93,21 @@ class NXBGDCollector:
             if f.startswith("nxbgd_page_") and (f.endswith(".jpg") or f.endswith(".png"))
         ])
         if not image_files:
-            logger.warning(f"Skipping PDF {title}: No pages collected.")
+logger.info("Log message sanitized"))
             return
         try:
-            logger.info(f"[NXBGD PDF] Compiling {len(image_files)} pages into '{final_pdf_name}'")
+logger.info("Log message sanitized"))
             images = []
             for f in image_files:
                 try:
                     img = Image.open(f).convert("RGB")
                     images.append(img)
                 except Exception as e:
-                    logger.error(f"Failed to open image {f}: {e}")
+logger.info("Log message sanitized"))
             if images:
                 images[0].save(pdf_path, save_all=True, append_images=images[1:])
-                logger.info(f"[NXBGD PDF SUCCESS] Created: {pdf_path}")
-            logger.info(f"[NXBGD Storage] Uploading {final_pdf_name} to MinIO...")
+logger.info("Log message sanitized"))
+logger.info("Log message sanitized"))
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
             if minio_url:
                 document_metadata = {
@@ -129,18 +129,18 @@ class NXBGDCollector:
                 if doc_id:
                     await mq_client.publish("format_converter_queue", {"document_id": doc_id, "file_url": minio_url, "filename": final_pdf_name})
         except Exception as e:
-            logger.error(f"[NXBGD PDF Compile Error]: {e}")
+logger.info("Log message sanitized"))
         finally:
-            logger.info(f"[NXBGD Cleanup] Removing temporary folder: {self.temp_dir}")
+logger.info("Log message sanitized"))
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.warning(f"Failed to clean up temp dir {self.temp_dir}: {e}")
+logger.info("Log message sanitized"))
     async def execute(self):
         await self.init_browser()
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade=-1"
         try:
-            logger.info(f"Visiting root URL OLM: {url}")
+logger.info("Log message sanitized"))
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
             has_next = True
@@ -151,10 +151,10 @@ class NXBGDCollector:
                     href = await b.get_attribute("href")
                     if href and href not in document_urls:
                         document_urls.append(href)
-                logger.info(f"Found {len(document_urls)} documents on current page for Grade -1")
+logger.info("Log message sanitized"))
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
-                    logger.info(f"Checking document detail: {full_doc_url}")
+logger.info("Log message sanitized"))
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
                         await asyncio.sleep(4)
@@ -166,12 +166,12 @@ class NXBGDCollector:
                             res_name = res_name.strip()
                             full_title = res_name
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f"Skipping {full_title}, already in Redis Queue.")
+logger.info("Log message sanitized"))
                                 continue
                             await dedup.mark_collected("taphuan_book", full_title)
                             viewer_url = await doc_link.get_attribute("href")
                             if viewer_url.startswith("/"): viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
-                            logger.info(f"-> Processing Resource: {full_title} at {viewer_url}")
+logger.info("Log message sanitized"))
                             self.temp_dir = f"/app/documents/nxbgd/temp/{safe_title}"
                             os.makedirs(self.temp_dir, exist_ok=True)
                             self.captured_hashes = set()
@@ -190,33 +190,33 @@ class NXBGDCollector:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.warning(f"Navigation error in viewer: {e}")
+logger.info("Log message sanitized"))
                                 await asyncio.sleep(2) 
                             self.is_capturing = False
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.error(f"Error checking document detail: {e}")
+logger.info("Log message sanitized"))
                 try:
                     await self.page.goto(url, timeout=60000)
                     await asyncio.sleep(5)
                     next_btn = await self.page.query_selector("button.p-paginator-next")
                     if next_btn and not await next_btn.is_disabled() and "p-disabled" not in (await next_btn.get_attribute("class") or ""):
-                        logger.info(">>> Moving to Next Page >>>")
+logger.info("Log message sanitized"))
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Reached end of pagination or next button not found.")
+logger.info("Log message sanitized"))
                 except Exception as e:
-                    logger.error(f"Pagination error: {e}")
+logger.info("Log message sanitized"))
                     has_next = False
                 break
         except Exception as e:
-            logger.error(f"NXBGD Error: {e}")
+logger.info("Log message sanitized"))
         finally:
             await self.close()
 async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Starting NXBGD Collection OLM queue for Grade -1...")
+logger.info("Log message sanitized"))
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

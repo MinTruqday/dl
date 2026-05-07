@@ -1,5 +1,5 @@
 import asyncio
-from core.config import settings
+from shared.core.config import settings
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -23,7 +23,7 @@ Lưu ý: Mã này chỉ có hiệu lực trong vòng 10 phút. Nếu bạn khôn
 Trân trọng,
 Đội ngũ DocLib."""
         if not all([smtp_host, smtp_port, smtp_user, smtp_pass, sender_email, sender_name]):
-            logger.error(f"Email service not configured. Cannot send to {email}")
+logger.info("Log message sanitized"))
             raise Exception("Email service configuration incomplete")
         def send_sync():
             try:
@@ -39,7 +39,7 @@ Trân trọng,
                 server.quit()
                 return True
             except Exception as e:
-                logger.error(f"Error in sync SMTP send: {e}")
+logger.info("Log message sanitized"))
                 raise
         success = await asyncio.to_thread(send_sync)
-        logger.info(f"Password reset email sent successfully to {email}")
+logger.info("Log message sanitized"))

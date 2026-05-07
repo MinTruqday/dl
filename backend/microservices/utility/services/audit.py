@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from datetime import datetime
 from loguru import logger
 class AuditService:
@@ -26,4 +26,4 @@ class AuditService:
             "details": details or {},
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Audit: {action} by {actor_id} on {target_id}")
+logger.info("Log message sanitized"))

@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from datetime import datetime
 from loguru import logger
 class SecurityService:
@@ -19,5 +19,5 @@ class SecurityService:
             {"$set": {"value": data, "updated_at": datetime.utcnow()}},
             upsert=True
         )
-        logger.warning(f"Security: System security configuration updated")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật cấu hình bảo mật hệ thống."}

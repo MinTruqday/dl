@@ -1,8 +1,8 @@
 from datetime import datetime
 import json
 from fastapi import HTTPException, status
-from core.database import db_client
-from models.wallet import Transaction, TransactionType
+from shared.core.database import db_client
+from shared.models.wallet import Transaction, TransactionType
 from loguru import logger
 class WalletService:
     @staticmethod
@@ -13,7 +13,7 @@ class WalletService:
     @staticmethod
     async def redeem_voucher(req, current_user):
         if not db_client.redis:
-            logger.error("Redis client not available for voucher redemption")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Dịch vụ nạp thẻ hiện đang bảo trì, vui lòng thử lại sau.")
         lock_key = f"lock:voucher:{req.code}"
         is_locked = await db_client.redis.set(lock_key, "locked", nx=True, ex=10)
@@ -56,7 +56,7 @@ class WalletService:
                     f"user_notifications:{current_user.id}", 
                     json.dumps({"title": "Nạp dl thành công", "body": f"Tài khoản vừa được cộng thêm {bonus_dl} dl."})
                 )
-            logger.info(f"User {current_user.id} redeemed voucher {req.code} for {bonus_dl} dl")
+logger.info("Log message sanitized"))
             return {"message": "Đổi voucher thành công", "bonus_dl": bonus_dl, "status": "success"}
         finally:
             await db_client.redis.delete(lock_key)

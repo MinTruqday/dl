@@ -22,17 +22,17 @@ class MemoryAgent:
                     }
                 }
                 self.memory = Memory()
-                logger.info("Mem0 initialized successfully for long-term usermemory.")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.error(f"Failed to initialize Mem0: {e}")
+logger.info("Log message sanitized"))
     def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
             return
         try:
             self.memory.add(messages, user_id=user_id)
-            logger.info(f"Added memory to Mem0 for user{user_id}")
+logger.info("Log message sanitized"))
         except Exception as e:
-            logger.error(f"Mem0 add_memory error: {e}")
+logger.info("Log message sanitized"))
     def get_context(self, query: str, user_id: str) -> str:
         if not self.memory or not user_id or user_id == "guess_user":
             return ""
@@ -48,6 +48,6 @@ class MemoryAgent:
                 context += f"- {m}\n"
             return context
         except Exception as e:
-            logger.error(f"Mem0 get_context error: {e}")
+logger.info("Log message sanitized"))
             return ""
 memory_agent = MemoryAgent()

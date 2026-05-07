@@ -1,9 +1,9 @@
 from typing import List, Dict, Any
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 from loguru import logger
-from models.user import RoleEnum
+from shared.models.user import RoleEnum
 import uuid
 import json
 from datetime import datetime, timedelta
@@ -29,7 +29,7 @@ class UserService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"User service: Role for user {user_id} updated to {role}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã cập nhật vai trò người dùng thành {role}."}
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool) -> Dict[str, str]:
@@ -37,7 +37,7 @@ class UserService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"User service: User {user_id} status updated to {is_active}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản."}
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_moderator) -> dict:
@@ -62,7 +62,7 @@ class UserService:
         })
         if db_client.redis:
             await db_client.redis.publish(f"user_notifications:{user_id}", json.dumps({"title": "Cảnh báo hệ thống", "body": f"Bạn nhận được cảnh báo: {reason}"}))
-        logger.info(f"User {user_id} warned by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi cảnh báo thành công."}
     @staticmethod
     async def lock_user(user_id: str, reason: str, duration_hours: int, current_moderator) -> dict:
@@ -80,7 +80,7 @@ class UserService:
             "duration": duration_hours, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Moderation: User {user_id} locked for {duration_hours}h by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã khóa tài khoản {duration_hours} giờ."}
     @staticmethod
     async def shadowban_user(user_id: str, is_banned: bool, current_moderator) -> dict:
@@ -93,7 +93,7 @@ class UserService:
             "target_user_id": user_id, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Moderation: User {user_id} {action.lower()} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã cập nhật trạng thái hạn chế người dùng thành công."}
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_moderator) -> dict:
@@ -108,7 +108,7 @@ class UserService:
             "target_user_id": user_id, 
             "timestamp": datetime.utcnow()
         })
-        logger.info(f"Moderation: KYC for {user_id} set to {status} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": f"Cập nhật KYC thành công."}
     @staticmethod
     async def get_moderator_notes(user_id: str) -> list:
@@ -130,7 +130,7 @@ class UserService:
             "note": note,
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Moderation: Note added for user {user_id} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã thêm ghi chú điều hành."}
     @staticmethod
     async def get_report_queue(status_filter: str = "pending", skip: int = 0, limit: int = 30) -> list:
@@ -163,7 +163,7 @@ class UserService:
                 "resolved_at": datetime.utcnow()
             }}
         )
-        logger.info(f"Moderation: Report {report_id} resolved with action '{action}' by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xử lý báo cáo thành công."}
     @staticmethod
     async def get_moderator_activity_log(moderator_id: str) -> list:

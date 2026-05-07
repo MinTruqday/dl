@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
@@ -38,7 +38,7 @@ class CollaborationService:
             "created_at": datetime.utcnow()
         }
         await db["collaboration_invites"].insert_one(invite)
-        logger.info(f"Workspace: User {current_user.id} invited {invitee_id} to collaborate on {document_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi lời mời cộng tác thành công.", "invite_id": invite["_id"]}
     @staticmethod
     async def get_my_collaboration_invites(current_user) -> list:
@@ -68,5 +68,5 @@ class CollaborationService:
                 {"_id": invite["document_id"]},
                 {"$push": {"coauthors": str(current_user.id)}, "$set": {"updated_at": datetime.utcnow()}}
             )
-        logger.info(f"Workspace: User {current_user.id} {status} collaboration invite {invite_id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã { 'chấp nhận' if status == 'ACCEPTED' else 'từ chối' } lời mời cộng tác."}

@@ -1,4 +1,4 @@
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 from datetime import datetime
 from fastapi import HTTPException
@@ -9,7 +9,7 @@ class CoauthorService:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
-            logger.warning(f"User {current_user.id} unauthorized coauthor invitation attempt for document {document_id}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=403, detail="Bạn không có quyền mời đồng tác giả cho tài liệu này.")
         await db["notifications"].insert_one({
             "_id": str(uuid.uuid4()),
@@ -21,7 +21,7 @@ class CoauthorService:
             "read": False,
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Coauthor invitation sent from {current_user.id} to {target_user_id} for document {document_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi lời mời đồng tác giả thành công."}
     @staticmethod
     async def get_invites(current_user) -> list:

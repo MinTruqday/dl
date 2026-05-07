@@ -4,9 +4,9 @@ import uuid
 from typing import Optional
 from fastapi import HTTPException
 from bson import ObjectId
-from core.database import db_client
-from models.user import UserInDB
-from models.social import StoryCreate, StoryInDB
+from shared.core.database import db_client
+from shared.models.user import UserInDB
+from shared.models.social import StoryCreate, StoryInDB
 from loguru import logger
 class StoryService:
     @staticmethod
@@ -31,7 +31,7 @@ class StoryService:
             expires_at=datetime.utcnow() + timedelta(hours=24),
         )
         await db["stories"].insert_one(story.model_dump(by_alias=True))
-        logger.info(f"Story created by user {current_user.id}: {story.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã đăng tin thành công.", "story_id": str(story.id)}
     @staticmethod
     async def list_stories(current_user: Optional[UserInDB]) -> dict:
@@ -120,7 +120,7 @@ class StoryService:
                         "link": "/feed"
                     })
                 )
-        logger.info(f"Story {story_id} viewed by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"status": "ok"}
     @staticmethod
     async def get_story_viewers(story_id: str, current_user: UserInDB) -> dict:
@@ -150,7 +150,7 @@ class StoryService:
             {"_id": story_id},
             {"$inc": {f"reactions.{reaction_type}": 1}}
         )
-        logger.info(f"Story {story_id} reacted with {reaction_type} by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"status": "ok", "reaction": reaction_type}
     @staticmethod
     async def vote_story_poll(story_id: str, option_index: int, current_user: UserInDB) -> dict:
@@ -174,7 +174,7 @@ class StoryService:
                 "$set": {f"poll_data.voters.{str(current_user.id)}": option_index}
             }
         )
-        logger.info(f"Story poll {story_id} voted by user {current_user.id} on option {option_index}")
+logger.info("Log message sanitized"))
         return {"status": "ok", "voted_index": option_index}
     @staticmethod
     async def answer_story_quiz(story_id: str, option_index: int, current_user: UserInDB) -> dict:
@@ -194,7 +194,7 @@ class StoryService:
             {"_id": story_id},
             {"$set": {f"quiz_data.answers.{str(current_user.id)}": {"option": option_index, "is_correct": is_correct}}}
         )
-        logger.info(f"Story quiz {story_id} answered by user {current_user.id}: correct={is_correct}")
+logger.info("Log message sanitized"))
         return {"status": "ok", "is_correct": is_correct, "correct_index": correct_idx}
     @staticmethod
     async def reply_to_story(story_id: str, message: str, current_user: UserInDB) -> dict:
@@ -220,7 +220,7 @@ class StoryService:
                 "link": "/feed"
             })
         )
-        logger.info(f"Story {story_id} replied by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã gửi phản hồi."}
     @staticmethod
     async def archive_story(story_id: str, current_user: UserInDB) -> dict:
@@ -231,7 +231,7 @@ class StoryService:
         if story["user_id"] != str(current_user.id):
             raise HTTPException(status_code=403, detail="Bạn không có quyền lưu trữ tin này.")
         await db["stories"].update_one({"_id": story_id}, {"$set": {"is_archived": True}})
-        logger.info(f"Story {story_id} archived by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã lưu trữ tin."}
     @staticmethod
     async def get_archived_stories(current_user: UserInDB) -> dict:
@@ -261,7 +261,7 @@ class StoryService:
         if story["user_id"] != str(current_user.id):
             raise HTTPException(status_code=403, detail="Bạn không có quyền xóa tin này.")
         await db["stories"].delete_one({"_id": story_id})
-        logger.info(f"Story {story_id} deleted by user {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã xóa tin."}
     @staticmethod
     async def get_story_moderation_queue(skip: int = 0, limit: int = 20) -> list:

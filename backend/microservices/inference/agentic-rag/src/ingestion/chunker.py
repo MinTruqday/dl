@@ -9,7 +9,7 @@ except ImportError:
     HAS_CHONKIE = False
 class AdvancedSemanticChunker:
     def __init__(self):
-        logger.info("Initializing Chonkie Chunkers")
+logger.info("Log message sanitized"))
         self.chunker = None
         self.type = "fallback"
         if HAS_CHONKIE:
@@ -21,19 +21,19 @@ class AdvancedSemanticChunker:
                     similarity_threshold=0.5
                 )
                 self.type = "chonkie_semantic"
-                logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
+logger.info("Log message sanitized"))
             except Exception as e:
-                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back to TokenChunker.")
+logger.info("Log message sanitized"))
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
                     self.type = "chonkie_token"
-                    logger.info("Loaded Chonkie TokenChunker")
+logger.info("Log message sanitized"))
                 except Exception as e2:
-                    logger.error(f"Chonkie TokenChunker failed: {e2}")
+logger.info("Log message sanitized"))
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
-        logger.info(f"Chunking text of length {len(text)}")
+logger.info("Log message sanitized"))
         if not self.chunker:
-            logger.warning("Using fallback Langchain CharSplit due to Chonkie initialization error")
+logger.info("Log message sanitized"))
             return self._fallback_chunking(text, metadata)
         try:
             chonkie_chunks = self.chunker.chunk(text)
@@ -55,10 +55,10 @@ class AdvancedSemanticChunker:
                     "text": chunk_text,
                     "metadata": chunk_meta
                 })
-            logger.info(f"Chonkie chunking complete. Total chunks: {len(chunks)} ({self.type})")
+logger.info("Log message sanitized"))
             return chunks
         except Exception as e:
-            logger.error(f"Error running Chonkie: {e}. Using fallback.")
+logger.info("Log message sanitized"))
             return self._fallback_chunking(text, metadata)
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
         from langchain.text_splitter import RecursiveCharacterTextSplitter

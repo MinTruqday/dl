@@ -15,7 +15,7 @@ async def main():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error(f"Error processing message: {e}\nPayload: {message.body.decode()}")
+logger.info("Log message sanitized"))
     await mq_client.channel.set_qos(prefetch_count=5)
     queue_list = await mq_client.channel.get_queue("collect_list_queue")
     queue_detail = await mq_client.channel.get_queue("collect_detail_queue")
@@ -50,7 +50,7 @@ async def main():
     await queue_download.consume(lambda m: process_msg(m, route_download_processor))
     await queue_format.consume(lambda m: process_msg(m, run_format_converter))
     await queue_nxbgd.consume(lambda m: process_msg(m, lambda p: NXBGDCCollector(p.get("target_class", "10")).execute()))
-    logger.info("DocLib Collector 0.1a initialized - Listening to collector events from RabbitMQ")
+logger.info("Log message sanitized"))
     await asyncio.Future()
 if __name__ == "__main__":
     asyncio.run(main())

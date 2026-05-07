@@ -1,7 +1,7 @@
 import io
 import asyncio
 from fastapi import HTTPException
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 try:
     from reportlab.pdfgen import canvas
@@ -10,7 +10,7 @@ try:
     from reportlab.lib.utils import simpleSplit
     import PyPDF2
 except ImportError as e:
-    logger.error(f"Missing PDF export library: {e}")
+logger.info("Log message sanitized"))
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -71,10 +71,10 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error(f"Sync PDF generation error: {e}")
+logger.info("Log message sanitized"))
                 return None
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
             raise HTTPException(status_code=500, detail="Lỗi trong quá trình tạo tệp PDF có dấu mờ.")
-        logger.info(f"Document {document_id} exported to watermarked PDF for user {user_id}")
+logger.info("Log message sanitized"))
         return pdf_data

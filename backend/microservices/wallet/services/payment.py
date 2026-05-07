@@ -1,8 +1,8 @@
-from core.config import settings
+from shared.core.config import settings
 import os
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
-from models.wallet import Transaction, PurchaseRecord, TransactionType
+from shared.models.wallet import Transaction, PurchaseRecord, TransactionType
 from loguru import logger
 class PaymentService:
     @staticmethod
@@ -83,13 +83,13 @@ class PaymentService:
                 record = PurchaseRecord(user_id=user_id, item_id=req.chapter_id, price_paid=price)
                 await purchases.insert_one(record.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Chapter {req.chapter_id} purchased by user {user_id} (atomic)")
+logger.info("Log message sanitized"))
                 return {"status": "unlocked", "message": "Giao dịch thành công. Chương đã được mở khóa."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Purchase transaction failed for user {user_id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Giao dịch thất bại. Vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -110,7 +110,7 @@ class PaymentService:
         transaction_id = str(result.inserted_id)
         gateway_url = getattr(settings, "PAYMENT_GATEWAY_URL")
         payment_url = f"{gateway_url}/checkout?tx={transaction_id}&amount={amount_vnd}"
-        logger.info(f"Fiat deposit initiated by user {user_id}: {amount_vnd} VND")
+logger.info("Log message sanitized"))
         return {
             "status": "pending_payment",
             "payment_url": payment_url,

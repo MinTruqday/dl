@@ -1,9 +1,9 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
 from loguru import logger
-from models.wallet import Transaction, TransactionType
+from shared.models.wallet import Transaction, TransactionType
 ALLOWED_PAYOUT_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
 ALLOWED_PAYOUT_ACTIONS = {"approve", "reject"}
 class PayoutService:
@@ -47,13 +47,13 @@ class PayoutService:
                 )
                 await db["transactions"].insert_one(transaction.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Payout requested by user {current_user.id} for {amount} dl")
+logger.info("Log message sanitized"))
                 return {"message": "Yêu cầu rút tiền đã được gửi thành công.", "payout_id": payout_id}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Payout request failed for user {current_user.id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -118,13 +118,13 @@ class PayoutService:
                     "timestamp": datetime.utcnow()
                 }, session=session)
                 await session.commit_transaction()
-                logger.info(f"Audit: Payout {payout_id} {status} by moderator {current_moderator.id}")
+logger.info("Log message sanitized"))
                 return {"message": f"Đã {status.lower()} yêu cầu rút tiền thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Verify payout failed for {payout_id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -158,13 +158,13 @@ class PayoutService:
                 )
                 await db["transactions"].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Payout {payout_id} cancelled by user {current_user.id}")
+logger.info("Log message sanitized"))
                 return {"message": "Đã hủy yêu cầu rút tiền thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Cancel payout failed for {payout_id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()

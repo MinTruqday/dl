@@ -1,7 +1,7 @@
 import uuid
 import datetime
 from fastapi import HTTPException
-from core.database import db_client
+from shared.core.database import db_client
 from loguru import logger
 def serialize_document(document):
     if not document:
@@ -30,7 +30,7 @@ class SeriesService:
                 {"_id": {"$in": series["document_ids"]}, "author_id": str(current_user.id)},
                 {"$set": {"series_id": series_id}}
             )
-        logger.info(f"Workspace: Series created {series_id} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Tạo Series thành công.", "series_id": series_id}
     @staticmethod
     async def get_my_series(current_user) -> list:
@@ -66,7 +66,7 @@ class SeriesService:
             {"_id": series_id},
             {"$set": update_fields}
         )
-        logger.info(f"Series {series_id} updated by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Cập nhật chuỗi thành công.", "series_id": series_id}
     @staticmethod
     async def delete_series(series_id: str, current_user) -> dict:
@@ -85,11 +85,11 @@ class SeriesService:
                         session=session
                     )
                 await session.commit_transaction()
-                logger.info(f"Series {series_id} deleted by {current_user.id}")
+logger.info("Log message sanitized"))
                 return {"message": "Xóa chuỗi thành công."}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Delete series failed for {series_id}: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -109,7 +109,7 @@ class SeriesService:
             {"_id": series_id},
             {"$set": {"document_ids": document_ids, "updated_at": datetime.datetime.utcnow()}}
         )
-        logger.info(f"Series {series_id} documents reordered by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Sắp xếp lại thứ tự thành công."}
     @staticmethod
     async def link_series(document_id: str, series_id: str, current_user) -> dict:
@@ -122,5 +122,5 @@ class SeriesService:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
         await db["series"].update_one({"_id": series_id}, {"$addToSet": {"document_ids": document_id}})
         await db["documents"].update_one({"_id": document_id}, {"$set": {"series_id": series_id}})
-        logger.info(f"Workspace: Document {document_id} linked to series {series_id} by {current_user.id}")
+logger.info("Log message sanitized"))
         return {"message": "Liên kết chuỗi tài liệu thành công."}

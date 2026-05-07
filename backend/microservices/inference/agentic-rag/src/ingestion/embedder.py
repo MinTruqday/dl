@@ -11,16 +11,16 @@ class EmbeddingService:
         self._model_name = settings.EMBEDDING_MODEL
         self._dimensions = settings.EMBEDDING_DIMENSIONS
         self._batch_size = settings.EMBEDDING_BATCH_SIZE
-        logger.info(f"Loading local embedding model: {self._model_name}")
+logger.info("Log message sanitized"))
         self._model = SentenceTransformer(self._model_name)
-        logger.info(f"Local embedding model loaded successfully. Dim={self._dimensions}")
+logger.info("Log message sanitized"))
         redis_url = settings.REDIS_URI
         try:
             self._cache = redis.from_url(redis_url, decode_responses=False)
             self._cache.ping()
         except Exception:
             self._cache = None
-            logger.warning("Redis unavailable for embedding cache")
+logger.info("Log message sanitized"))
     def _cache_key(self, text: str) -> str:
         return f"emb:local:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()[:24]}"
     def embed_single(self, text: str) -> List[float]:
@@ -67,6 +67,6 @@ class EmbeddingService:
                             86400 * 7,
                             json.dumps(emb_list)
                         )
-            logger.info(f"Locally embedded {len(uncached_texts)} new texts (cached: {len(texts) - len(uncached_texts)})")
+logger.info("Log message sanitized"))
         return all_embeddings
 embedding_service = EmbeddingService()

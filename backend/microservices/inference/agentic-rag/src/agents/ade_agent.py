@@ -14,7 +14,7 @@ class ADEAgent:
         self._minio_secret = settings.MINIO_SECRET_KEY
         self._minio_region = settings.MINIO_REGION
         self._ade_model = settings.ADE_MODEL
-        logger.info("ADE Agent initialized with LandingAI ADE")
+logger.info("Log message sanitized"))
     async def _get_client(self):
         from landingai_ade import AsyncLandingAIADE, DefaultAioHttpClient
         return AsyncLandingAIADE(
@@ -59,17 +59,17 @@ class ADEAgent:
                 "chunks": chunks,
                 "chunk_count": len(chunks),
             }
-            logger.info(f"LandingAI ADE parsed: {len(chunks)} chunks")
+logger.info("Log message sanitized"))
             return output
         except Exception as e:
-            logger.error(f"LandingAI ADE parse error: {e}")
+logger.info("Log message sanitized"))
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
     async def get_ade_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning(f"LandingAI ADE failed: {parse_result['error']}")
+logger.info("Log message sanitized"))
             return []
         chunks = parse_result.get("chunks", [])
         ingestion_chunks = []
@@ -82,7 +82,7 @@ class ADEAgent:
                 "chunk_type": chunk.get("chunk_type", "text"),
                 "index": i,
             })
-        logger.info(f"LandingAI ADE produced {len(ingestion_chunks)} chunks for ingestion")
+logger.info("Log message sanitized"))
         return ingestion_chunks
     async def get_markdown(self, file_url: str) -> str:
         parse_result = await self.parse_document(file_url)
@@ -112,9 +112,9 @@ class ADEAgent:
                 ext = ".epub"
             elif object_key.endswith(".docx"):
                 ext = ".docx"
-            logger.info(f"Downloaded {len(data)} bytes from MinIO for ADE")
+logger.info("Log message sanitized"))
             return data, ext
         except Exception as e:
-            logger.error(f"MinIO download failed: {e}")
+logger.info("Log message sanitized"))
             return None, ""
 ade_agent = ADEAgent()

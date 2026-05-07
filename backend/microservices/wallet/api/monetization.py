@@ -1,8 +1,8 @@
 from typing import Any, List, Optional
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user, require_role
-from models.user import UserInDB, RoleEnum
+from shared.models.user import UserInDB, RoleEnum
 from services.monetization import MonetizationService
 from pydantic import BaseModel
 router = APIRouter(prefix="/kiem-tien")

@@ -39,7 +39,7 @@ async def generate_text(req: GenerationRequest):
         result = await llm.ainvoke(req.prompt)
         return {"result": result}
     except Exception as e:
-        logger.error(f"Inference: Generation error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi tạo văn bản bằng AI.")
 @router.post("/translate")
 async def translate_text(req: TranslationRequest):
@@ -49,7 +49,7 @@ async def translate_text(req: TranslationRequest):
         result = await llm.ainvoke(prompt)
         return {"translation": result.strip()}
     except Exception as e:
-        logger.error(f"Inference: Translation error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi dịch thuật văn bản.")
 @router.post("/analyze-sentiment")
 async def analyze_sentiment(req: SentimentRequest):
@@ -62,7 +62,7 @@ async def analyze_sentiment(req: SentimentRequest):
             results.append({"text": text, "sentiment": res.strip()})
         return {"analysis": results}
     except Exception as e:
-        logger.error(f"Inference: Sentiment error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi phân tích cảm xúc.")
 @router.post("/generate-cover")
 async def generate_cover(req: CoverRequest):
@@ -83,10 +83,10 @@ async def generate_cover(req: CoverRequest):
                 base64_image = base64.b64encode(image_bytes).decode("utf-8")
                 return {"cover_url": f"data:image/jpeg;base64,{base64_image}", "message": "Đã tạo ảnh bìa bằng mô hình FLUX thành công."}
             else:
-                logger.error(f"Inference: Image generation failed: {resp.status_code} - {resp.text}")
+logger.info("Log message sanitized"))
                 return {"cover_url": "https://placehold.co/600x400?text=Error+Generating+Cover", "message": "Gặp sự cố khi gọi mô hình FLUX."}
     except Exception as e:
-        logger.error(f"Inference: Cover generation error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo ảnh bìa.")
 @router.post("/generate-code")
 async def generate_code(req: CodeRequest):
@@ -96,7 +96,7 @@ async def generate_code(req: CodeRequest):
         result = await llm.ainvoke(prompt)
         return {"code": result.strip()}
     except Exception as e:
-        logger.error(f"Inference: Code generation error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi tạo mã nguồn bằng AI.")
 @router.post("/grammar-check")
 async def grammar_check(req: GrammarRequest):
@@ -106,7 +106,7 @@ async def grammar_check(req: GrammarRequest):
         result = await llm.ainvoke(prompt)
         return {"corrected_text": result.strip()}
     except Exception as e:
-        logger.error(f"Inference: Grammar check error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi kiểm tra ngữ pháp.")
 @router.post("/synonyms")
 async def get_synonyms(req: GrammarRequest):
@@ -116,5 +116,5 @@ async def get_synonyms(req: GrammarRequest):
         result = await llm.ainvoke(prompt)
         return {"synonyms": result.strip().split(", ")}
     except Exception as e:
-        logger.error(f"Inference: Synonyms error: {e}")
+logger.info("Log message sanitized"))
         raise HTTPException(status_code=500, detail="Lỗi khi tìm từ đồng nghĩa.")

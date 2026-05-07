@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user
-from core.response import APIResponse
+from shared.core.response import APIResponse
 from pydantic import BaseModel, EmailStr
 from services.passkey import PasskeyService
 from typing import Any

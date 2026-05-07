@@ -1,9 +1,9 @@
-from core.database import db_client
+from shared.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime
 import uuid
 from loguru import logger
-from models.user import RoleEnum
+from shared.models.user import RoleEnum
 class OperationService:
     @staticmethod
     async def get_all_users(limit: int = 50, offset: int = 0) -> list:
@@ -26,7 +26,7 @@ class OperationService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"Administration: Role for user {user_id} updated to {role}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã cập nhật vai trò người dùng thành {role}."}
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool) -> dict:
@@ -34,7 +34,7 @@ class OperationService:
         res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        logger.info(f"Administration: User {user_id} status updated to {is_active}")
+logger.info("Log message sanitized"))
         return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản."}
     @staticmethod
     async def get_author_applications(status: str = "PENDING") -> list:
@@ -55,7 +55,7 @@ class OperationService:
         )
         if status == "APPROVED":
             await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.AUTHOR}})
-        logger.info(f"Administration: Author application {application_id} {status} by {reviewer_id}")
+logger.info("Log message sanitized"))
         return {"message": f"Đã {status.lower()} đơn ứng tuyển thành công."}
     @staticmethod
     async def toggle_maintenance_mode(enabled: bool, message: str = "") -> dict:
@@ -65,11 +65,11 @@ class OperationService:
             {"$set": {"enabled": enabled, "message": message, "updated_at": datetime.utcnow()}}, 
             upsert=True
         )
-        logger.warning(f"Administration: Maintenance mode {'enabled' if enabled else 'disabled'} by admin")
+logger.info("Log message sanitized"))
         return {"message": f"Chế độ bảo trì đã được {'bật' if enabled else 'tắt'}."}
     @staticmethod
     async def trigger_backup(action: str = "FULL") -> dict:
-        logger.info(f"Administration: Backup action '{action}' triggered")
+logger.info("Log message sanitized"))
         return {"message": "Yêu cầu sao lưu dữ liệu đã được gửi đến hàng chờ."}
     @staticmethod
     async def create_api_key(name: str, provider: str = "DEFAULT", key_value: str = "") -> dict:
@@ -83,7 +83,7 @@ class OperationService:
             "key_value": key_value,
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Administration: API Key '{name}' for '{provider}' created")
+logger.info("Log message sanitized"))
         return {"message": "Đã lưu API Key thành công.", "key": key_value}
     @staticmethod
     async def create_marketing_campaign(data: dict) -> dict:
@@ -97,7 +97,7 @@ class OperationService:
             "created_at": datetime.utcnow()
         }
         await db["marketing_campaigns"].insert_one(campaign)
-        logger.info(f"Administration: Campaign '{campaign['title']}' created")
+logger.info("Log message sanitized"))
         return {"message": "Đã tạo chiến dịch marketing thành công."}
     @staticmethod
     async def get_system_health() -> dict:
@@ -153,7 +153,7 @@ class OperationService:
             "assigned_to": str(current_moderator.id), 
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Administration: Bug report {report_id} handled by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã tiếp nhận báo cáo lỗi thành công."}
     @staticmethod
     async def assign_task(data: dict, current_moderator) -> dict:
@@ -166,7 +166,7 @@ class OperationService:
             "created_at": datetime.utcnow()
         }
         await db["moderator_tasks"].insert_one(task)
-        logger.info(f"Administration: Task assigned to {data['moderator_id']} by {current_moderator.id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã phân công nhiệm vụ điều hành."}
     @staticmethod
     async def submit_policy_proposal(data: dict, current_moderator) -> dict:
@@ -180,7 +180,7 @@ class OperationService:
             "status": "pending", 
             "created_at": datetime.utcnow()
         })
-        logger.info(f"Administration: Policy proposal {proposal_id} submitted by {current_moderator.id}")
+logger.info("Log message sanitized"))
     @staticmethod
     async def get_payout_requests(status: str = "PENDING", limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
@@ -209,7 +209,7 @@ class OperationService:
             {"_id": payout_id},
             {"$set": {"status": "COMPLETED", "processed_by": admin_id, "processed_at": datetime.utcnow()}}
         )
-        logger.info(f"Administration: Payout {payout_id} approved by {admin_id}")
+logger.info("Log message sanitized"))
         return {"message": "Đã phê duyệt yêu cầu rút tiền."}
     @staticmethod
     async def reject_payout(payout_id: str, reason: str, admin_id: str) -> dict:
@@ -235,7 +235,7 @@ class OperationService:
                     }},
                     session=session
                 )
-                from models.wallet import Transaction, TransactionType
+                from shared.models.wallet import Transaction, TransactionType
                 tx = Transaction(
                     user_id=payout["user_id"],
                     type=TransactionType.REFUND,
@@ -244,11 +244,11 @@ class OperationService:
                 )
                 await db["transactions"].insert_one(tx.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Administration: Payout {payout_id} rejected by {admin_id}. Reason: {reason}")
+logger.info("Log message sanitized"))
                 return {"message": "Đã từ chối yêu cầu rút tiền và hoàn trả số dư"}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Reject payout failed: {e}")
+logger.info("Log message sanitized"))
             raise HTTPException(status_code=500, detail="Xử lý từ chối thất bại")
         finally:
             await session.end_session()
