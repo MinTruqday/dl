@@ -80,3 +80,31 @@ class PublisherService:
         )
         logger.info(f"Premium config updated for document {document_id} by user {user_id}")
         return {"message": "Đã thiết lập chương tính phí."}
+
+    @staticmethod
+    async def publish_document(document_id: str, current_user):
+        db = db_client.mongodb.get_default_database()
+        docs_collection = db["documents"]
+        user_id = str(current_user.id)
+        document = await docs_collection.find_one({"_id": document_id, "author_id": user_id})
+        if not document:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
+            
+        from core.publisher import trigger_document_publish_job
+        from services.rag import RagService
+        
+        await trigger_document_publish_job(document_id, user_id)
+        try:
+            await RagService.ingest(document_id)
+        except Exception as e:
+            logger.error(f"RAG: Ingestion failed for {document_id}: {e}")
+            
+        await docs_collection.update_one(
+            {"_id": document_id},
+            {"$set": {
+                "status": "processing_publish",
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        logger.info(f"Workspace: Document publishing triggered {document_id}")
+        return await docs_collection.find_one({"_id": document_id})

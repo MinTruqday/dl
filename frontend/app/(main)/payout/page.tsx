@@ -46,7 +46,7 @@ export default function StudioPayoutsPage() {
       setBalance(balData?.data || balData || {});
       setHistory(histData?.data || histData || []);
     } catch (err: any) {
-      console.error("Lỗi tải dữ liệu tài chính:", err);
+      showToast("Lỗi tải dữ liệu tài chính", "error");
     } finally {
       setLoading(false);
     }
@@ -156,7 +156,7 @@ export default function StudioPayoutsPage() {
                       {history.map((tx, idx) => {
                         const status = (tx.status || "COMPLETED").toUpperCase();
                         return (
-                          <tr key={idx} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                          <tr key={idx} className="border-b border-zinc-200 last:border-0">
                             <td className="py-4 px-4 align-top">
                               <span className="text-[11px] font-medium text-zinc-500 whitespace-nowrap">
                                 {tx.created_at ? new Date(tx.created_at).toLocaleDateString("vi-VN") : "--"}
@@ -212,7 +212,7 @@ export default function StudioPayoutsPage() {
                   type="number"
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
-                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
                   placeholder="Tối thiểu 50.000"
                 />
               </div>
@@ -224,14 +224,14 @@ export default function StudioPayoutsPage() {
                   type="text"
                   value={bankInfo}
                   onChange={(e) => setBankInfo(e.target.value)}
-                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
                   placeholder="VD: VCB - 123456789 - NGUYEN VAN A"
                 />
               </div>
               <button
                 onClick={handlePayout}
                 disabled={requesting || !payoutAmount || !bankInfo}
-                className="w-full py-3 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors disabled:opacity-50 hover:bg-zinc-800 rounded-none border border-black"
+                className="w-full py-3 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 rounded-none border border-black"
               >
                 {requesting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

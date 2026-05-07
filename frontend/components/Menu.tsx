@@ -77,7 +77,7 @@ export default function Menu({
         } ${
           active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
-            : "font-medium text-zinc-500 hover:text-black hover:bg-zinc-50 border-l-2 border-transparent"
+            : "font-medium text-zinc-500 border-l-2 border-transparent"
         }`}
       >
         <div className="flex items-center justify-center shrink-0 w-6">
@@ -85,7 +85,7 @@ export default function Menu({
             className={`w-[18px] h-[18px] ${
               active
                 ? "text-black"
-                : "text-zinc-400 group-hover:text-black transition-colors"
+                : "text-zinc-400 transition-colors"
             }`}
           />
         </div>
@@ -97,11 +97,7 @@ export default function Menu({
           {label}
         </span>
 
-        {!isOpen && !isMobileOverlay && (
-          <span className="absolute left-full ml-2 px-3 py-1.5 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-50 border border-black rounded-none transition-opacity">
-            {label}
-          </span>
-        )}
+
       </Link>
     );
   };

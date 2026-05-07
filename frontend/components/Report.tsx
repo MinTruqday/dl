@@ -47,10 +47,7 @@ export default function Report({
       showToast("Báo cáo đã được gửi tới hội đồng điều hành", "success");
       setTimeout(onClose, 2000);
     } catch (err: any) {
-      showToast(
-        err.message || "Giao thức kết nối hệ thống điều hành thất bại",
-        "error",
-      );
+      showToast(err.message || "Gửi báo cáo thất bại", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -66,7 +63,7 @@ export default function Report({
           <div>
             <ModalTitle>Báo cáo vi phạm</ModalTitle>
             <ModalDescription>
-              Duy trì tiêu chuẩn tri thức của hệ thống
+              Duy trì tiêu chuẩn nội dung của hệ thống
             </ModalDescription>
           </div>
         </div>
@@ -75,7 +72,7 @@ export default function Report({
       <ModalContent>
         <div className="space-y-3">
           <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-            Lý do chính yếu
+            Lý do chính
           </label>
           <input
             type="text"

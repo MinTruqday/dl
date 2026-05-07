@@ -72,7 +72,7 @@ export default function RegisterPage() {
           Đã có tài khoản?{" "}
           <a
             href="/login"
-            className="font-medium text-black hover:underline transition-all"
+            className="font-medium text-black underline"
           >
             Đăng nhập ngay
           </a>
@@ -84,20 +84,20 @@ export default function RegisterPage() {
           <form className="space-y-6" onSubmit={handleRegister}>
             <div>
               <label
-                htmlFor="display_name"
+                htmlFor="full_name"
                 className="block text-sm font-medium text-black"
               >
                 Tên hiển thị
               </label>
               <div className="mt-2">
                 <input
-                  id="display_name"
-                  name="display_name"
+                  id="full_name"
+                  name="full_name"
                   type="text"
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function RegisterPage() {
                   required
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  className="flex-1 min-w-0 block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="flex-1 min-w-0 block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -161,7 +161,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowTermsModal(true)}
-                    className="text-black font-medium hover:underline transition-all"
+                    className="text-black font-medium underline"
                   >
                     Điều khoản và quy định
                   </button>{" "}
@@ -197,7 +197,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black rounded-none disabled:bg-zinc-200 disabled:text-zinc-500 hover:bg-zinc-800 transition-colors"
+                className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black rounded-none disabled:bg-zinc-200 disabled:text-zinc-500"
               >
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {loading ? "Đang xử lý" : "Đăng ký"}
@@ -262,7 +262,7 @@ export default function RegisterPage() {
               setAgreedToTerms(true);
               setShowTermsModal(false);
             }}
-            className="px-6 h-10 bg-black text-white text-sm font-medium rounded-none hover:bg-zinc-800 transition-colors"
+            className="px-6 h-10 bg-black text-white text-sm font-medium rounded-none"
           >
             Tôi đã hiểu và đồng ý
           </button>

@@ -98,7 +98,7 @@ export default function ReportsManagementPage() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
@@ -119,7 +119,7 @@ export default function ReportsManagementPage() {
               placeholder="Tìm kiếm báo cáo"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function ReportsManagementPage() {
                 </tr>
               ) : (
                 filteredReports.map((report: any) => (
-                  <tr key={report.id} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                  <tr key={report.id} className="border-b border-zinc-200 last:border-0">
                     <td className="py-4 px-6 align-top">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-black uppercase tracking-widest">
@@ -190,13 +190,13 @@ export default function ReportsManagementPage() {
                         <div className="flex justify-end gap-4">
                           <button
                             onClick={() => setConfirmModal({ reportId: report.id, action: "DISMISSED" })}
-                            className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                            className="text-xs font-bold text-zinc-500 uppercase tracking-wider"
                           >
                             Bỏ qua
                           </button>
                           <button
                             onClick={() => setConfirmModal({ reportId: report.id, action: "RESOLVED" })}
-                            className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                            className="text-xs font-bold text-black uppercase tracking-wider border border-black px-2 py-1"
                           >
                             Xử lý
                           </button>
@@ -228,14 +228,14 @@ export default function ReportsManagementPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-none"
           >
             Hủy
           </button>
           <button
             onClick={confirmResolve}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-none"
           >
             {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác nhận
           </button>

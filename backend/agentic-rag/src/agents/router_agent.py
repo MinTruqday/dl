@@ -47,7 +47,7 @@ def route_query(state: RouterState):
         template="""Bạn là router chuyên gia của hệ thống DocLib. Bạn phân tích ý định câu hỏi và chuyển hướng đến đúng luồng xử lý.
         
         Quy tắc định tuyến:
-        - "rag": Câu hỏi liên quan đến nội dung tài liệu, kiến thức tìm kiếm, giải thích đoạn văn, tóm tắt nội dung.
+        - "rag": Câu hỏi liên quan đến nội dung tài liệu, nội dung tìm kiếm, giải thích đoạn văn, tóm tắt nội dung.
         - "billing": Câu hỏi liên quan đến tài khoản, thanh toán, ví người dùng, số dư dl, nạp tiền, doanh thu.
         - "workspace": Câu hỏi liên quan đến quản lý thư viện, xóa tài liệu, khôi phục thùng rác, xem thống kê độc giả, quản lý file cá nhân.
         - "multi": Câu hỏi yêu cầu thông tin tổng hợp từ nhiều nguồn (ví dụ: vừa hỏi số dư vừa hỏi tài liệu).

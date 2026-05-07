@@ -217,3 +217,64 @@ class ModerationService:
         })
         logger.info(f"Administration: Policy proposal {proposal_id} submitted by {current_moderator.id}")
         return {"message": "Đề xuất chính sách đã được ghi nhận."}
+
+    @staticmethod
+    async def get_approval_queue(skip: int = 0, limit: int = 30) -> list:
+        db = db_client.mongodb.get_default_database()
+        documents = await db["documents"].find({"status": "processing_publish"}).sort("updated_at", 1).skip(skip).limit(limit).to_list(length=limit)
+        return [{
+            "id": str(b["_id"]),
+            "title": b.get("title", ""),
+            "author_id": b.get("author_id"),
+            "submitted_at": b.get("updated_at", datetime.utcnow()).isoformat() if isinstance(b.get("updated_at"), datetime) else ""
+        } for b in documents]
+
+    @staticmethod
+    async def moderate_document(document_id: str, action: str, reason: str, current_moderator) -> dict:
+        db = db_client.mongodb.get_default_database()
+        status = "PUBLISHED" if action == "approve" else "REJECTED"
+        await db["documents"].update_one(
+            {"_id": document_id},
+            {"$set": {"status": status, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": datetime.utcnow()}}
+        )
+        await db["audit_logs"].insert_one({
+            "action": f"DOCUMENT_{status}", 
+            "actor_id": str(current_moderator.id), 
+            "document_id": document_id, 
+            "reason": reason, 
+            "timestamp": datetime.utcnow()
+        })
+        logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
+        return {"message": f"Đã {status.lower()} tài liệu thành công."}
+
+    @staticmethod
+    async def get_story_moderation_queue(skip: int = 0, limit: int = 20) -> list:
+        db = db_client.mongodb.get_default_database()
+        stories = await db["stories"].find(
+            {"moderation_status": "pending"}
+        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        result = []
+        for s in stories:
+            user = await db["users"].find_one({"_id": s.get("user_id")}, {"full_name": 1})
+            result.append({
+                "id": str(s["_id"]),
+                "user_name": user.get("full_name", "Ẩn danh") if user else "Ẩn danh",
+                "content": s.get("text_content", "")[:200],
+                "media_url": s.get("media_url"),
+                "created_at": s["created_at"].isoformat() if isinstance(s.get("created_at"), datetime) else s.get("created_at"),
+            })
+        return result
+
+    @staticmethod
+    async def moderate_story(story_id: str, action: str, current_moderator) -> dict:
+        db = db_client.mongodb.get_default_database()
+        if action not in ["approve", "reject"]:
+            raise HTTPException(status_code=400, detail="Hành động không hợp lệ.")
+        new_status = "approved" if action == "approve" else "rejected"
+        result = await db["stories"].update_one(
+            {"_id": story_id},
+            {"$set": {"moderation_status": new_status, "moderated_by": str(current_moderator.id), "moderated_at": datetime.utcnow()}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Story không tồn tại.")
+        return {"message": f"Đã {('duyệt' if action == 'approve' else 'từ chối')} Story."}

@@ -32,7 +32,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
       const res = await getDocumentReviewsAPI(documentId);
       setReviews(Array.isArray(res.data) ? res.data : []);
     } catch (err: any) {
-      showToast("Không thể kết nối mạng lưới đánh giá", "error");
+      showToast("Không thể kết nối hệ thống đánh giá", "error");
     } finally {
       setLoading(false);
     }
@@ -45,13 +45,13 @@ export default function Review({ documentId }: ReviewSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      showToast("Vui lòng đăng nhập để gửi nhận xét tri thức", "error");
+      showToast("Vui lòng đăng nhập để gửi nhận xét", "error");
       return;
     }
-    setSubmitting(true);
+      setSubmitting(true);
     try {
       await createDocumentReviewAPI(documentId, rating, comment);
-      showToast("Đã đăng nhận xét tri thức thành công", "success");
+      showToast("Đã đăng nhận xét thành công", "success");
       setComment("");
       setRating(5);
       loadReviews();
@@ -83,7 +83,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
         >
           <div className="space-y-6 text-center md:text-left">
             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">
-              Xếp hạng tri thức của bạn
+              Xếp hạng của bạn
             </label>
             <div className="flex gap-4 justify-center md:justify-start">
               {[1, 2, 3, 4, 5].map((s) => (
@@ -133,8 +133,8 @@ export default function Review({ documentId }: ReviewSectionProps) {
         </form>
       ) : (
         <div className="py-20 border border-dashed border-zinc-100 bg-white/20 text-center rounded-sm">
-          <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-            Đăng nhập để tham gia mạng lưới đánh giá tri thức
+            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+              Đăng nhập để gửi đánh giá
           </p>
         </div>
       )}
@@ -197,7 +197,7 @@ export default function Review({ documentId }: ReviewSectionProps) {
           <div className="py-32 text-center border border-zinc-50 bg-white/10 rounded-sm">
             <Star className="w-12 h-12 text-zinc-50 mx-auto mb-6 stroke-[1]" />
             <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-[0.3em]">
-              Thực thể này chưa có nhận xét tri thức
+              Thực thể này chưa có nhận xét
             </p>
           </div>
         )}

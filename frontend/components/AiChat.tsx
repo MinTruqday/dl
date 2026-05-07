@@ -35,7 +35,7 @@ const nodeDescriptions: Record<string, string> = {
   contextualize_question: "Đang phân tích bối cảnh hội thoại",
   route_question: "Đang xác định ý định yêu cầu",
   route_query: "Đang định tuyến tới chuyên gia",
-  retrieve_db: "Đang truy xuất kho tri thức nội bộ",
+  retrieve_db: "Đang truy xuất kho nội dung nội bộ",
   retrieve_internet: "Đang tìm kiếm thông tin trên internet",
   grade_documents: "Đang thẩm định độ tin cậy của dữ liệu",
   transform_query: "Đang tinh chỉnh chiến lược tìm kiếm",
@@ -379,7 +379,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   Thiết bị nghiên cứu
                 </h3>
                 <p className="text-sm text-zinc-500 mt-0.5">
-                  Trợ lý tri thức
+                  Trợ lý AI
                 </p>
               </div>
             </div>
@@ -500,7 +500,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   Xin chào, {user.full_name}
                 </p>
                 <p className="text-sm text-zinc-500 mt-3 leading-relaxed max-w-sm">
-                  Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm kiến thức hoặc giải đáp các thắc mắc chuyên sâu.
+                  Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm thông tin hoặc giải đáp các thắc mắc chuyên sâu.
                 </p>
               </div>
             ) : (
@@ -575,7 +575,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                         <details className="mb-4 border border-zinc-200 rounded-none group/thoughts bg-zinc-50/50">
                           <summary className="flex items-center gap-3 p-3 cursor-pointer text-xs font-bold uppercase tracking-widest text-zinc-500 group-hover/thoughts:text-black transition-colors list-none">
                             <Cpu className="w-3.5 h-3.5" />
-                            <span>Quá trình phân tích tri thức</span>
+                            <span>Quá trình phân tích dữ liệu AI</span>
                           </summary>
                           <div className="p-3 pt-0 flex flex-col gap-2">
                             <div className="h-px w-full bg-zinc-200 mb-1" />

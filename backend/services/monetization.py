@@ -40,36 +40,68 @@ class MonetizationService:
         if not user or user.get("wallet_balance", 0) < price:
             raise HTTPException(status_code=400, detail=f"Số dư tài khoản không đủ để thực hiện đăng ký (Cần {price} dl).")
 
-        await db["users"].update_one({"_id": str(current_user.id)}, {"$inc": {"wallet_balance": -price}})
-        await db["users"].update_one({"_id": author_id}, {"$inc": {"wallet_balance": price}})
-        
-        subscription = {
-            "_id": str(uuid.uuid4()),
+        existing_subscription = await db["subscriptions"].find_one({
             "user_id": str(current_user.id),
-            "author_id": author_id,
             "plan_id": plan_id,
-            "start_date": datetime.utcnow(),
-            "end_date": datetime.utcnow() + timedelta(days=30),
-            "status": "ACTIVE"
-        }
-        await db["subscriptions"].insert_one(subscription)
-        
-        tx_buyer = Transaction(
-            user_id=str(current_user.id),
-            type=TransactionType.SUBSCRIPTION,
-            amount=-price,
-            note=f"Đăng ký hội viên: {plan['name']} (Tác giả ID: {author_id})"
-        )
-        tx_seller = Transaction(
-            user_id=author_id,
-            type=TransactionType.RECEIVE,
-            amount=price,
-            note=f"Hội viên mới đăng ký: {plan['name']} (User ID: {current_user.id})"
-        )
-        await db["transactions"].insert_many([tx_buyer.model_dump(by_alias=True), tx_seller.model_dump(by_alias=True)])
-        
-        logger.info(f"Monetization: User {current_user.id} subscribed to author {author_id} plan {plan_id}")
-        return {"message": "Đăng ký hội viên thành công.", "end_date": subscription["end_date"]}
+            "status": {"$in": ["ACTIVE", "PAUSED"]}
+        })
+        if existing_subscription:
+            raise HTTPException(status_code=400, detail="Bạn đã đăng ký gói hội viên này.")
+
+        session = await db_client.mongodb.start_session()
+        try:
+            async with session.start_transaction():
+                deduct_result = await db["users"].update_one(
+                    {"_id": str(current_user.id), "wallet_balance": {"$gte": price}},
+                    {"$inc": {"wallet_balance": -price}},
+                    session=session
+                )
+                if deduct_result.modified_count == 0:
+                    await session.abort_transaction()
+                    raise HTTPException(status_code=400, detail=f"Số dư tài khoản không đủ để thực hiện đăng ký (Cần {price} dl).")
+
+                await db["users"].update_one(
+                    {"_id": author_id},
+                    {"$inc": {"wallet_balance": price}},
+                    session=session
+                )
+
+                subscription = {
+                    "_id": str(uuid.uuid4()),
+                    "user_id": str(current_user.id),
+                    "author_id": author_id,
+                    "plan_id": plan_id,
+                    "start_date": datetime.utcnow(),
+                    "end_date": datetime.utcnow() + timedelta(days=30),
+                    "status": "ACTIVE"
+                }
+                await db["subscriptions"].insert_one(subscription, session=session)
+
+                tx_buyer = Transaction(
+                    user_id=str(current_user.id),
+                    type=TransactionType.SUBSCRIPTION,
+                    amount=-price,
+                    note=f"Đăng ký hội viên: {plan['name']} (Tác giả ID: {author_id})"
+                )
+                tx_seller = Transaction(
+                    user_id=author_id,
+                    type=TransactionType.RECEIVE,
+                    amount=price,
+                    note=f"Hội viên mới đăng ký: {plan['name']} (User ID: {current_user.id})"
+                )
+                await db["transactions"].insert_many([tx_buyer.model_dump(by_alias=True), tx_seller.model_dump(by_alias=True)], session=session)
+
+                await session.commit_transaction()
+                logger.info(f"Monetization: User {current_user.id} subscribed to author {author_id} plan {plan_id}")
+                return {"message": "Đăng ký hội viên thành công.", "end_date": subscription["end_date"].isoformat()}
+        except HTTPException:
+            raise
+        except Exception as e:
+            await session.abort_transaction()
+            logger.error(f"Subscription failed for user {current_user.id}: {e}")
+            raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
+        finally:
+            await session.end_session()
 
     @staticmethod
     async def get_author_plans(author_id: str):
@@ -86,26 +118,50 @@ class MonetizationService:
         user = await db["users"].find_one({"_id": str(current_user.id)})
         if not user or user.get("wallet_balance", 0) < amount:
             raise HTTPException(status_code=400, detail=f"Số dư không đủ để thực hiện ủng hộ (Cần {amount} dl).")
-            
-        await db["users"].update_one({"_id": str(current_user.id)}, {"$inc": {"wallet_balance": -amount}})
-        await db["users"].update_one({"_id": author_id}, {"$inc": {"wallet_balance": amount}})
-        
-        tx_sender = Transaction(
-            user_id=str(current_user.id),
-            type=TransactionType.TIP,
-            amount=-amount,
-            note=f"Ủng hộ tác giả: {message}"
-        )
-        tx_receiver = Transaction(
-            user_id=author_id,
-            type=TransactionType.RECEIVE,
-            amount=amount,
-            note=f"Nhận ủng hộ từ người dùng: {message}"
-        )
-        await db["transactions"].insert_many([tx_sender.model_dump(by_alias=True), tx_receiver.model_dump(by_alias=True)])
-        
-        logger.info(f"Monetization: User {current_user.id} tipped {amount} dl to author {author_id}")
-        return {"message": f"Bạn đã gửi {amount} dl ủng hộ tác giả thành công."}
+
+        session = await db_client.mongodb.start_session()
+        try:
+            async with session.start_transaction():
+                deduct_result = await db["users"].update_one(
+                    {"_id": str(current_user.id), "wallet_balance": {"$gte": amount}},
+                    {"$inc": {"wallet_balance": -amount}},
+                    session=session
+                )
+                if deduct_result.modified_count == 0:
+                    await session.abort_transaction()
+                    raise HTTPException(status_code=400, detail=f"Số dư không đủ để thực hiện ủng hộ (Cần {amount} dl).")
+
+                await db["users"].update_one(
+                    {"_id": author_id},
+                    {"$inc": {"wallet_balance": amount}},
+                    session=session
+                )
+
+                tx_sender = Transaction(
+                    user_id=str(current_user.id),
+                    type=TransactionType.TIP,
+                    amount=-amount,
+                    note=f"Ủng hộ tác giả: {message}"
+                )
+                tx_receiver = Transaction(
+                    user_id=author_id,
+                    type=TransactionType.RECEIVE,
+                    amount=amount,
+                    note=f"Nhận ủng hộ từ người dùng: {message}"
+                )
+                await db["transactions"].insert_many([tx_sender.model_dump(by_alias=True), tx_receiver.model_dump(by_alias=True)], session=session)
+
+                await session.commit_transaction()
+                logger.info(f"Monetization: User {current_user.id} tipped {amount} dl to author {author_id}")
+                return {"message": f"Bạn đã gửi {amount} dl ủng hộ tác giả thành công."}
+        except HTTPException:
+            raise
+        except Exception as e:
+            await session.abort_transaction()
+            logger.error(f"Tip failed for user {current_user.id}: {e}")
+            raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
+        finally:
+            await session.end_session()
 
     @staticmethod
     async def set_document_pricing(document_id: str, data: dict, current_user) -> dict:
@@ -167,6 +223,76 @@ class MonetizationService:
         return {
             "total_revenue": stats.get("total_revenue", 0),
             "transaction_count": stats.get("transaction_count", 0),
-            "currency": "DL",
+            "currency": "dl",
             "timestamp": datetime.utcnow()
         }
+
+    @staticmethod
+    async def get_my_subscriptions(current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        subscriptions = await db["subscriptions"].find({"user_id": str(current_user.id)}).sort("created_at", -1).to_list(length=100)
+        plan_ids = [subscription.get("plan_id") for subscription in subscriptions if subscription.get("plan_id")]
+        plans = await db["subscription_plans"].find({"_id": {"$in": plan_ids}}).to_list(length=len(plan_ids) or 1)
+        plan_map = {plan["_id"]: plan for plan in plans}
+
+        result = []
+        for subscription in subscriptions:
+            plan = plan_map.get(subscription.get("plan_id"), {})
+            result.append({
+                "id": str(subscription["_id"]),
+                "plan_id": subscription.get("plan_id"),
+                "plan_name": plan.get("name", "Gói hội viên"),
+                "author_id": subscription.get("author_id"),
+                "status": subscription.get("status"),
+                "start_date": subscription.get("start_date").isoformat() if isinstance(subscription.get("start_date"), datetime) else subscription.get("start_date"),
+                "end_date": subscription.get("end_date").isoformat() if isinstance(subscription.get("end_date"), datetime) else subscription.get("end_date")
+            })
+        return result
+
+    @staticmethod
+    async def pause_subscription(subscription_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        subscription = await db["subscriptions"].find_one({"_id": subscription_id, "user_id": str(current_user.id)})
+        if not subscription:
+            raise HTTPException(status_code=404, detail="Không tìm thấy gói đăng ký.")
+        if subscription.get("status") != "ACTIVE":
+            raise HTTPException(status_code=400, detail="Chỉ có thể tạm dừng gói đang hoạt động.")
+
+        await db["subscriptions"].update_one(
+            {"_id": subscription_id, "user_id": str(current_user.id)},
+            {"$set": {"status": "PAUSED", "updated_at": datetime.utcnow()}}
+        )
+        logger.info(f"Subscription {subscription_id} paused by user {current_user.id}")
+        return {"message": "Đã tạm dừng gói hội viên."}
+
+    @staticmethod
+    async def resume_subscription(subscription_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        subscription = await db["subscriptions"].find_one({"_id": subscription_id, "user_id": str(current_user.id)})
+        if not subscription:
+            raise HTTPException(status_code=404, detail="Không tìm thấy gói đăng ký.")
+        if subscription.get("status") != "PAUSED":
+            raise HTTPException(status_code=400, detail="Chỉ có thể tiếp tục gói đang tạm dừng.")
+
+        await db["subscriptions"].update_one(
+            {"_id": subscription_id, "user_id": str(current_user.id)},
+            {"$set": {"status": "ACTIVE", "updated_at": datetime.utcnow()}}
+        )
+        logger.info(f"Subscription {subscription_id} resumed by user {current_user.id}")
+        return {"message": "Đã tiếp tục gói hội viên."}
+
+    @staticmethod
+    async def cancel_subscription(subscription_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        subscription = await db["subscriptions"].find_one({"_id": subscription_id, "user_id": str(current_user.id)})
+        if not subscription:
+            raise HTTPException(status_code=404, detail="Không tìm thấy gói đăng ký.")
+        if subscription.get("status") == "CANCELLED":
+            raise HTTPException(status_code=400, detail="Gói hội viên này đã được hủy.")
+
+        await db["subscriptions"].update_one(
+            {"_id": subscription_id, "user_id": str(current_user.id)},
+            {"$set": {"status": "CANCELLED", "updated_at": datetime.utcnow(), "cancelled_at": datetime.utcnow()}}
+        )
+        logger.info(f"Subscription {subscription_id} cancelled by user {current_user.id}")
+        return {"message": "Đã hủy gói hội viên."}

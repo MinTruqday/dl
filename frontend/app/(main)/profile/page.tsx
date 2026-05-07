@@ -133,7 +133,7 @@ export default function ProfilePage() {
         showToast("Giao thức thanh toán chưa được kích hoạt", "error");
       }
     } catch (e: any) {
-      showToast("Lỗi kết nối cổng thanh toán tri thức", "error");
+      showToast("Lỗi kết nối cổng thanh toán", "error");
     } finally {
       setIsDepositing(false);
     }
@@ -147,7 +147,7 @@ export default function ProfilePage() {
     setIsApplying(true);
     try {
       await applyAuthorAPI(motivation);
-      showToast("Đã gửi đơn ứng tuyển vào mạng lưới tác giả", "success");
+      showToast("Đã gửi đơn ứng tuyển tác giả", "success");
       setMotivation("");
     } catch (e: any) {
       showToast("Giao thức ứng tuyển thất bại", "error");
@@ -200,7 +200,7 @@ export default function ProfilePage() {
         </div>
         <button
           onClick={logoutState}
-          className="h-10 px-6 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center gap-2 hover:bg-zinc-50 transition-colors rounded-none"
+          className="h-10 px-6 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center gap-2 rounded-none"
         >
           <LogOut className="w-4 h-4" /> Đăng xuất
         </button>
@@ -214,7 +214,7 @@ export default function ProfilePage() {
           <div className="border border-zinc-200 bg-white p-6">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
+                <div className="w-32 h-32 rounded-none border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
@@ -225,7 +225,7 @@ export default function ProfilePage() {
                     <User className="w-10 h-10 text-zinc-400 stroke-[1]" />
                   )}
                 </div>
-                <label className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-black cursor-pointer rounded-full border border-zinc-200 transition-opacity">
+                <label className="absolute inset-0 bg-white/80 opacity-0 flex flex-col items-center justify-center text-black cursor-pointer rounded-none border border-zinc-200">
                   <Camera className="w-5 h-5 mb-1" />
                   <span className="text-[10px] font-semibold">Đổi ảnh</span>
                   <input
@@ -271,7 +271,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex flex-col items-center justify-center px-2">
                 <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
-                  Nguồn lực
+                  Số dư
                 </span>
                 <span className="text-sm font-semibold text-black">
                   {user.wallet_balance?.toLocaleString() || 0}
@@ -290,19 +290,19 @@ export default function ProfilePage() {
                 {
                   id: "bookmarks",
                   icon: Bookmark,
-                  label: "Bộ sưu tập tri thức",
+                  label: "Bộ sưu tập nội dung",
                 },
-                { id: "history", icon: History, label: "Nhật ký mạng lưới" },
+                { id: "history", icon: History, label: "Nhật ký hoạt động" },
               ].map((tab, idx) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium transition-colors ${
+                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium ${
                     idx !== 2 ? "border-b border-zinc-200" : ""
                   } ${
                     activeTab === tab.id
                       ? "bg-zinc-50 text-black font-semibold"
-                      : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                      : "text-zinc-500"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -319,7 +319,7 @@ export default function ProfilePage() {
           <div className="border border-zinc-200 bg-zinc-50 p-6 space-y-4">
             <div className="border-b border-zinc-200 pb-3">
               <span className="text-xs font-semibold text-black flex items-center gap-2">
-                <CreditCard className="w-4 h-4" /> Nạp nguồn lực (VNĐ)
+                <CreditCard className="w-4 h-4" /> Nạp tiền (VNĐ)
               </span>
             </div>
             <div className="space-y-3">
@@ -333,7 +333,7 @@ export default function ProfilePage() {
               <button
                 onClick={handleDeposit}
                 disabled={isDepositing}
-                className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
+                className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 disabled:opacity-50 rounded-none"
               >
                 {isDepositing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -380,7 +380,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-black uppercase tracking-widest flex items-center gap-2">
-                  <LinkIcon className="w-3 h-3" /> Tiểu sử tri thức (Bio)
+                  <LinkIcon className="w-3 h-3" /> Tiểu sử (Bio)
                 </label>
                 <textarea
                   value={bio}
@@ -394,7 +394,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
+                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-none"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -411,7 +411,7 @@ export default function ProfilePage() {
                     Nâng cấp tác giả
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">
-                    Tham gia mạng lưới tác giả để xuất bản tài liệu trên hệ thống.
+                    Tham gia cộng đồng tác giả để xuất bản tài liệu trên hệ thống.
                   </p>
                   <div className="flex items-start gap-4">
                     <input
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleApplyAuthor}
                       disabled={isApplying}
-                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 rounded-none shrink-0"
+                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-none shrink-0"
                     >
                       {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                     </button>
@@ -438,7 +438,7 @@ export default function ProfilePage() {
               <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
                 <div>
                   <h3 className="text-sm font-semibold text-black">
-                    Bộ sưu tập tri thức
+                    Bộ sưu tập nội dung
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium mt-1">
                     Tài liệu đã được lưu trữ vào không gian cá nhân
@@ -462,7 +462,7 @@ export default function ProfilePage() {
                     <Link
                       key={doc._id}
                       href={`/documents/${doc.slug || doc._id}`}
-                      className="border border-zinc-200 bg-white group hover:bg-zinc-50 transition-colors flex flex-col"
+                      className="border border-zinc-200 bg-white group flex flex-col"
                     >
                       <div className="aspect-[3/4] border-b border-zinc-200 bg-zinc-50 overflow-hidden relative shrink-0">
                         {doc.cover_url ? (
@@ -482,7 +482,7 @@ export default function ProfilePage() {
                         )}
                       </div>
                       <div className="p-3 flex-1 flex flex-col justify-between">
-                        <h4 className="text-xs font-semibold text-black line-clamp-2 group-hover:underline">
+                        <h4 className="text-xs font-semibold text-black line-clamp-2">
                           {doc.title}
                         </h4>
                         <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-medium mt-2">
@@ -510,10 +510,10 @@ export default function ProfilePage() {
               <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
                 <div>
                   <h3 className="text-sm font-semibold text-black">
-                    Nhật ký mạng lưới
+                    Nhật ký hoạt động
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium mt-1">
-                    Dòng tiền và giao dịch tri thức hệ thống
+                    Dòng tiền và giao dịch hệ thống
                   </p>
                 </div>
               </div>
@@ -522,7 +522,7 @@ export default function ProfilePage() {
                 <div className="py-12 flex flex-col items-center justify-center gap-4 border border-dashed border-zinc-200 bg-zinc-50">
                   <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
                   <span className="text-xs font-medium text-zinc-500">
-                    Đang tải dữ liệu mạng lưới
+                    Đang tải dữ liệu
                   </span>
                 </div>
               ) : historyList.length > 0 ? (
@@ -550,7 +550,7 @@ export default function ProfilePage() {
                           <p className="text-sm font-semibold text-black">
                             {tx.description ||
                               tx.type_display ||
-                              "Giao dịch tri thức"}
+                              "Giao dịch"}
                           </p>
                           <p className="text-[10px] font-medium text-zinc-500 mt-1">
                             {new Date(tx.created_at).toLocaleString("vi-VN")} •
@@ -565,7 +565,7 @@ export default function ProfilePage() {
                           }`}
                         >
                           {tx.amount > 0 ? "+" : ""}
-                          {tx.amount.toLocaleString()} DL
+                          {tx.amount.toLocaleString()} dl
                         </span>
                         <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
                           <div className="w-1.5 h-1.5 bg-black rounded-none"></div>

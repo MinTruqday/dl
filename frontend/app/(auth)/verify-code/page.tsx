@@ -71,7 +71,7 @@ export default function VerifyCodePage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setToken(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-center text-2xl tracking-[0.25em] font-medium text-black transition-colors uppercase"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-center text-2xl tracking-[0.25em] font-medium text-black uppercase"
                 />
               </div>
             </div>
@@ -79,7 +79,7 @@ export default function VerifyCodePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 hover:bg-zinc-800 rounded-none transition-colors"
+              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 rounded-none"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? "Đang xử lý" : "Tiếp tục"}
@@ -89,7 +89,7 @@ export default function VerifyCodePage() {
           <div className="mt-8 text-sm text-center">
             <button
               onClick={() => router.back()}
-              className="text-zinc-500 font-medium hover:text-black hover:underline transition-all"
+              className="text-zinc-500 font-medium underline"
             >
               Quay lại
             </button>

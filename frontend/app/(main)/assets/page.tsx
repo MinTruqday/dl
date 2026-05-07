@@ -41,11 +41,11 @@ export default function AuthorAssetsPage() {
       const data = await getAuthorAssetsAPI();
       setAssets(data.data || data || []);
     } catch (err: any) {
-      console.error("Lỗi tải tài nguyên:", err);
+      showToast("Không thể tải danh sách tài nguyên", "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchAssets();
@@ -154,7 +154,7 @@ export default function AuthorAssetsPage() {
             <button
               onClick={fetchAssets}
               disabled={loading || uploading}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               Đồng bộ dữ liệu
             </button>
@@ -165,8 +165,8 @@ export default function AuthorAssetsPage() {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`mb-8 border border-zinc-200 p-12 text-center transition-colors ${
-            isDragging ? "bg-zinc-50 border-black" : "bg-white hover:bg-zinc-50"
+          className={`mb-8 border border-zinc-200 p-12 text-center ${
+            isDragging ? "bg-zinc-50 border-black" : "bg-white"
           }`}
         >
           {uploading ? (
@@ -179,7 +179,7 @@ export default function AuthorAssetsPage() {
               <p className="text-sm font-medium text-zinc-600">Kéo thả tệp tin vào khu vực này, hoặc</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider hover:bg-zinc-800 transition-colors border border-black"
+                className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black"
               >
                 Tải lên tài nguyên
               </button>
@@ -201,7 +201,7 @@ export default function AuthorAssetsPage() {
               placeholder="Tìm kiếm tài nguyên"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
             />
           </div>
           <div className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
@@ -230,7 +230,7 @@ export default function AuthorAssetsPage() {
                 </tr>
               ) : (
                 filteredAssets.map((a: any) => (
-                  <tr key={a.id} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                  <tr key={a.id} className="border-b border-zinc-200 last:border-0">
                     <td className="py-4 px-6 align-middle">
                       <div className="w-8 h-8 bg-zinc-100 flex items-center justify-center rounded-none">
                         {a.type && a.type.includes("image") ? (
@@ -264,7 +264,7 @@ export default function AuthorAssetsPage() {
                       <div className="flex justify-end gap-4">
                         <button
                           onClick={() => handleCopyUrl(a.url)}
-                          className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                          className="text-xs font-semibold text-zinc-500"
                         >
                           Sao chép link
                         </button>
@@ -272,13 +272,13 @@ export default function AuthorAssetsPage() {
                           href={a.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                          className="text-xs font-semibold text-zinc-500"
                         >
                           Tải xuống
                         </a>
                         <button
                           onClick={() => setDeleteId(a.id)}
-                          className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                          className="text-xs font-semibold text-black underline underline-offset-4"
                         >
                           Xóa
                         </button>
@@ -304,13 +304,13 @@ export default function AuthorAssetsPage() {
         <ModalFooter>
           <button
             onClick={() => setDeleteId(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center"
           >
             Hủy
           </button>
           <button
             onClick={handleDelete}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center"
           >
             Xác nhận xóa
           </button>

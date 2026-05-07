@@ -25,7 +25,7 @@ export const depositDLAPI = async (amountVnd: number) => {
 };
 
 export const redeemVoucherAPI = async (code: string) => {
-  const res = await fetch(`${API_URL}/wallet/redeem-voucher`, {
+  const res = await fetch(`${API_URL}/wallet/vouchers/redemptions`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -47,7 +47,7 @@ export const purchaseChapterAPI = async (
   chapterId: string,
 ) => {
   const res = await fetch(
-    `${API_URL}/wallet/purchase/chapter/${documentId}/${chapterId}`,
+    `${API_URL}/wallet/purchases/documents/${documentId}/chapters/${chapterId}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -73,7 +73,7 @@ export async function voteItemAPI(
   itemType: string,
   amount: number,
 ) {
-  const res = await fetch(`${API_URL}/wallet/vote`, {
+  const res = await fetch(`${API_URL}/wallet/votes`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ item_id: itemId, item_type: itemType, amount }),
@@ -85,30 +85,30 @@ export async function voteItemAPI(
 export async function getAuthorStatsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/wallet/revenue/`, {
+  const res = await fetch(`${API_URL}/wallet/revenue`, {
     headers: { Authorization: "Bearer " + token },
   });
   if (!res.ok) throw new Error("Không thể tải thông số phân tích.");
   return await res.json();
 }
 
-export async function requestPayoutAPI(amount: number, note: string = "") {
+export async function requestPayoutAPI(amount: number, bankInfo: any = {}) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/wallet/payout/`, {
+  const res = await fetch(`${API_URL}/payouts/`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ amount, note }),
+    body: JSON.stringify({ amount, bank_info: bankInfo }),
   });
   if (!res.ok) throw new Error("Yêu cầu tất toán thất bại.");
   return await res.json();
 }
 
-export async function getDetailedHistoryAPI() {
-  const res = await fetch(`${API_URL}/wallet/history/`, {
+export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
+  const res = await fetch(`${API_URL}/wallet/history/detailed?skip=${skip}&limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) throw new Error("Không thể tải lịch sử chi tiết.");

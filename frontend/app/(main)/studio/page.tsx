@@ -54,7 +54,7 @@ type StudioDocument = {
   cover_url?: string;
 };
 
-type ViewMode = "edit" | "stats" | "config" | "versions" | "trash" | "sentiment";
+type ViewMode = "edit" | "stats" | "config" | "versions" | "trash";
 type EditorMode = "edit" | "preview" | "raw";
 
 function StudioContent() {
@@ -134,7 +134,7 @@ function StudioContent() {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  }, [docIdFromUrl, selectedDocumentId, user]);
+  }, [docIdFromUrl, selectedDocumentId, user, showToast]);
 
   const loadDraft = useCallback(async () => {
     if (!selectedDocumentId) return;
@@ -143,52 +143,49 @@ function StudioContent() {
       const draft = data.data || data;
       setContent(draft?.content || "");
       setStatusMsg("Đã tải xong");
-    } catch {
+    } catch (e: any) {
       setStatusMsg("Lỗi tải bản nháp");
+      showToast("Không thể tải bản thảo", "error");
     }
-  }, [selectedDocumentId]);
+  }, [selectedDocumentId, showToast]);
 
   const fetchStatsData = useCallback(async () => {
     try {
       const [sRes, rRes] = await Promise.all([
-
         getAuthorStatsAPI(),
-
         getRevenueAPI(),
       ]);
       setStats(sRes.data || sRes);
       setRevenue(rRes.data || rRes);
     } catch (err: any) {
-      console.error("Lỗi tải thông số:", err);
+      showToast("Không thể tải số liệu thống kê", "error");
     }
-  }, []);
+  }, [showToast]);
 
   const fetchVersions = useCallback(async () => {
     if (!selectedDocumentId) return;
     setLoadingVersions(true);
     try {
-
       const data = await getDocumentVersionsAPI(selectedDocumentId);
       setVersions(data || []);
     } catch (err: any) {
-      console.error("Lỗi tải phiên bản:", err);
+      showToast("Không thể tải danh sách phiên bản", "error");
     } finally {
       setLoadingVersions(false);
     }
-  }, [selectedDocumentId]);
+  }, [selectedDocumentId, showToast]);
 
   const fetchTrash = useCallback(async () => {
     setLoadingTrash(true);
     try {
-
       const data = await getTrashAPI();
       setTrash(data || []);
     } catch (err: any) {
-      console.error("Lỗi tải thùng rác:", err);
+      showToast("Không thể tải danh sách thùng rác", "error");
     } finally {
       setLoadingTrash(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchDocuments();
@@ -258,7 +255,7 @@ function StudioContent() {
     try {
 
       await ingestDocumentAPI(selectedDocumentId);
-      showToast("AI đã được cập nhật tri thức mới", "success");
+      showToast("AI đã cập nhật nội dung mới", "success");
     } catch (e: any) {
       showToast(e.message || "Đồng bộ AI thất bại", "error");
     } finally {
@@ -327,7 +324,7 @@ function StudioContent() {
       setStatusMsg("Đã thay đổi thứ tự");
       fetchDocuments();
     } catch (err: any) {
-      console.error("Lỗi thay đổi thứ tự chương:", err);
+      showToast("Không thể thay đổi thứ tự chương", "error");
     }
   };
 
@@ -343,7 +340,7 @@ function StudioContent() {
       setShowChapterModal(false);
       fetchDocuments();
     } catch (err: any) {
-      console.error("Lỗi thêm chương:", err);
+      showToast("Lỗi thêm chương mới", "error");
     }
   };
 
@@ -388,10 +385,10 @@ function StudioContent() {
           <p className="text-xs font-medium text-zinc-500 leading-relaxed">{confirmAction?.text}</p>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
             Bỏ qua
           </button>
-          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center">
+          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center">
             Xác nhận
           </button>
         </ModalFooter>
@@ -414,10 +411,10 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
             Hủy
           </button>
-          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center">
+          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center">
             Lưu chương
           </button>
         </ModalFooter>
@@ -465,13 +462,13 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowPayoutModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center">
+          <button onClick={() => setShowPayoutModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
             Hủy
           </button>
           <button 
             onClick={handlePayout} 
             disabled={requestingPayout}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center gap-2"
           >
             {requestingPayout ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
           </button>
@@ -501,7 +498,7 @@ function StudioContent() {
             <button
               onClick={handleSave}
               disabled={!selectedDocumentId || isSaving}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-black hover:text-black transition-colors disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
+              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Lưu bản nháp
@@ -509,7 +506,7 @@ function StudioContent() {
             <button
               onClick={handlePublish}
               disabled={!selectedDocumentId}
-              className="h-9 px-4 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 active:scale-95 rounded-none"
+              className="h-9 px-4 bg-black text-white text-sm font-medium transition-colors disabled:opacity-50 rounded-none"
             >
               Công bố tác phẩm
             </button>
@@ -525,7 +522,6 @@ function StudioContent() {
           {[
             { mode: "edit", icon: FileText, label: "Soạn thảo" },
             { mode: "stats", icon: BarChart3, label: "Số liệu" },
-            { mode: "sentiment", icon: Brain, label: "Phân tích AI" },
             { mode: "config", icon: Settings, label: "Cấu hình" },
             { mode: "versions", icon: Clock, label: "Lịch sử" },
             { mode: "trash", icon: Trash2, label: "Thùng rác" },
@@ -534,12 +530,12 @@ function StudioContent() {
               key={item.mode}
               onClick={() => setViewMode(item.mode as ViewMode)}
               className={`p-3 transition-colors relative group rounded-none flex items-center justify-center w-12 h-12 ${
-                viewMode === item.mode ? "bg-black text-white" : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                viewMode === item.mode ? "bg-black text-white" : "text-zinc-500"
               }`}
               title={item.label}
             >
               <item.icon className="w-5 h-5" />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all z-50 rounded-none">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none transition-all z-50 rounded-none">
                 {item.label}
               </div>
             </button>
@@ -549,44 +545,50 @@ function StudioContent() {
         <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left duration-300 p-6 space-y-12 overflow-y-auto no-scrollbar">
            {viewMode === "edit" ? (
              <>
-               <div className="space-y-4">
-                  <div className="flex justify-between items-end border-b border-zinc-200 pb-2">
-                    <div className="text-sm font-semibold text-black">Cấu trúc nội dung</div>
-                    <button
-                      onClick={() => setShowChapterModal(true)}
-                      className="text-xs font-medium text-zinc-500 hover:text-black flex items-center gap-1 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" /> Thêm
-                    </button>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {!selectedDocument?.chapters || selectedDocument.chapters.length === 0 ? (
-                      <div className="py-8 text-center border border-zinc-200 flex flex-col items-center gap-2 rounded-none bg-zinc-50">
-                         <Plus className="w-4 h-4 text-zinc-400" />
-                         <p className="text-xs font-medium text-zinc-500">Chưa có chương</p>
-                      </div>
-                    ) : (
-                      selectedDocument.chapters.map((ch: any, idx: number) => (
-                        <div
-                          key={ch.id || idx}
-                          onClick={() => setSelectedChapterIndex(idx)}
-                          className={`group flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer transition-colors rounded-none ${
-                            selectedChapterIndex === idx 
-                              ? "bg-black text-white border-black" 
-                              : "bg-white text-zinc-700 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
-                          }`}
+                <div className="space-y-4">
+                   <div className="flex justify-between items-end border-b border-zinc-200 pb-2">
+                     <div className="text-sm font-semibold text-black">Cấu trúc nội dung</div>
+                   </div>
+                   <div className="flex flex-col gap-1">
+                     {!selectedDocument?.chapters || selectedDocument.chapters.length === 0 ? (
+                       <button 
+                         onClick={() => setShowChapterModal(true)}
+                         className="py-8 text-center border border-zinc-200 flex flex-col items-center justify-center gap-2 rounded-none bg-zinc-50 transition-colors w-full group"
+                       >
+                          <Plus className="w-4 h-4 text-zinc-400 transition-colors" />
+                          <p className="text-xs font-medium text-zinc-500 transition-colors">Chưa có chương</p>
+                       </button>
+                     ) : (
+                       <>
+                        {selectedDocument.chapters.map((ch: any, idx: number) => (
+                          <div
+                            key={ch.id || idx}
+                            onClick={() => setSelectedChapterIndex(idx)}
+                            className={`group flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer transition-colors rounded-none ${
+                              selectedChapterIndex === idx 
+                                ? "bg-black text-white border-black" 
+                                : "bg-white text-zinc-700 border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`text-xs font-medium w-4 ${selectedChapterIndex === idx ? "text-zinc-400" : "text-zinc-400"}`}>{idx + 1}</span>
+                              <span className="text-sm truncate">{ch.title}</span>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 transition-all">
+                              <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 rounded-none"><ArrowUp className="w-3 h-3 text-zinc-400" /></button>
+                              <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-0.5 rounded-none"><ArrowDown className="w-3 h-3 text-zinc-400" /></button>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => setShowChapterModal(true)}
+                          className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400 transition-colors rounded-none"
                         >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`text-xs font-medium w-4 ${selectedChapterIndex === idx ? "text-zinc-400" : "text-zinc-400"}`}>{idx + 1}</span>
-                            <span className="text-sm truncate group-hover:text-black">{ch.title}</span>
-                          </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 hover:bg-zinc-100 rounded-none"><ArrowUp className="w-3 h-3 text-zinc-400 hover:text-black" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-0.5 hover:bg-zinc-100 rounded-none"><ArrowDown className="w-3 h-3 text-zinc-400 hover:text-black" /></button>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                          <Plus className="w-3.5 h-3.5 mr-2" />
+                          <span className="text-xs font-medium">Chương mới</span>
+                        </button>
+                      </>
+                     )}
                   </div>
                </div>
 
@@ -599,10 +601,10 @@ function StudioContent() {
                       <button
                         key={doc._id}
                         onClick={() => setSelectedDocumentId(doc._id)}
-                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 hover:bg-zinc-50 hover:border-zinc-200 transition-colors duration-150 rounded-none"
+                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 transition-colors duration-150 rounded-none"
                       >
                         <span className="truncate">{doc.title}</span>
-                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100" />
+                        <ChevronRight className="w-4 h-4 opacity-0" />
                       </button>
                     ))}
                   </nav>
@@ -624,7 +626,7 @@ function StudioContent() {
                       className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
                         selectedDocumentId === doc._id 
                           ? "bg-zinc-100 text-black border-zinc-300" 
-                          : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                          : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
                       <span className="truncate">{doc.title}</span>
@@ -646,7 +648,7 @@ function StudioContent() {
                           key={m}
                           onClick={() => setEditorMode(m)}
                           className={`h-full text-sm font-medium transition-colors border-b-2 flex items-center ${
-                            editorMode === m ? "border-black text-black" : "border-transparent text-zinc-500 hover:text-black"
+                            editorMode === m ? "border-black text-black" : "border-transparent text-zinc-500"
                           }`}
                         >
                           {m === "edit" ? "Biên tập" : m === "preview" ? "Trải nghiệm" : "Dữ liệu thô"}
@@ -661,7 +663,6 @@ function StudioContent() {
                           if (selectedChapterIndex !== null && selectedDocument) {
                             const newChapters = [...(selectedDocument.chapters || [])];
                             newChapters[selectedChapterIndex].content = val;
-                            // Update local state or trigger API save if needed
                           } else {
                             setContent(val);
                           }
@@ -699,7 +700,7 @@ function StudioContent() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
                       { label: "Tổng lượt xem", val: stats?.total_views || 0, icon: Eye },
-                      { label: "Mạng lưới độc giả", val: stats?.followers_count || 0, icon: Database },
+                      { label: "Người theo dõi", val: stats?.followers_count || 0, icon: Database },
                       { label: "Doanh thu (dl)", val: revenue?.available_balance || 0, icon: Wallet },
                     ].map((s, i) => (
                       <div key={i} className="bg-white p-6 border border-zinc-200 flex flex-col justify-between h-32 rounded-none">
@@ -713,16 +714,16 @@ function StudioContent() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                     <button className="p-6 border border-zinc-200 bg-white hover:border-black transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
-                       <Plus className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                     <button className="p-6 border border-zinc-200 bg-white transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
+                       <Plus className="w-5 h-5 text-zinc-400 transition-colors" />
                        <span className="text-sm font-medium text-zinc-700">Tạo tài liệu</span>
                      </button>
-                     <button className="p-6 border border-zinc-200 bg-white hover:border-black transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
-                       <Brain className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                     <button className="p-6 border border-zinc-200 bg-white transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
+                       <Brain className="w-5 h-5 text-zinc-400 transition-colors" />
                        <span className="text-sm font-medium text-zinc-700">Công cụ AI</span>
                      </button>
-                     <button className="p-6 border border-zinc-200 bg-white hover:border-black transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
-                       <Banknote className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                     <button className="p-6 border border-zinc-200 bg-white transition-colors rounded-none flex flex-col items-center justify-center gap-3 h-24 group">
+                       <Banknote className="w-5 h-5 text-zinc-400 transition-colors" />
                        <span className="text-sm font-medium text-zinc-700">Quản lý mã giảm giá</span>
                      </button>
                   </div>
@@ -732,7 +733,7 @@ function StudioContent() {
                       <h3 className="text-base font-medium text-black">Tác phẩm gần đây</h3>
                       <button 
                         onClick={() => setShowPayoutModal(true)}
-                        className="h-9 px-4 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center gap-2"
+                        className="h-9 px-4 bg-black text-white text-sm font-medium transition-colors rounded-none flex items-center gap-2"
                       >
                         <Banknote className="w-4 h-4" /> Rút tiền doanh thu
                       </button>
@@ -741,7 +742,7 @@ function StudioContent() {
                       <table className="w-full text-left text-sm">
                         <thead>
                           <tr className="border-b border-zinc-200 text-zinc-500 font-medium">
-                            <th className="px-6 py-4 font-medium">Tiêu đề tác phẩm</th>
+                            <th className="px-6 py-4 font-medium">Tiêu đề</th>
                             <th className="px-6 py-4 font-medium">Lượt tương tác</th>
                             <th className="px-6 py-4 font-medium">Xếp hạng</th>
                             <th className="px-6 py-4 font-medium text-right">Hành động</th>
@@ -749,7 +750,7 @@ function StudioContent() {
                         </thead>
                         <tbody className="divide-y divide-zinc-200">
                           {(stats?.documents || []).map((doc: any) => (
-                            <tr key={doc.id} className="hover:bg-zinc-50 transition-colors group cursor-pointer">
+                            <tr key={doc.id} className="transition-colors group cursor-pointer">
                               <td className="px-6 py-4 font-medium text-black">{doc.title}</td>
                               <td className="px-6 py-4 text-zinc-600">{doc.views.toLocaleString()}</td>
                               <td className="px-6 py-4">
@@ -757,7 +758,7 @@ function StudioContent() {
                                   <span className="text-zinc-600 font-medium">{doc.rating.toFixed(1)}</span>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 text-right"><ChevronRight className="w-4 h-4 ml-auto text-zinc-400 group-hover:text-black transition-colors" /></td>
+                              <td className="px-6 py-4 text-right"><ChevronRight className="w-4 h-4 ml-auto text-zinc-400 transition-colors" /></td>
                             </tr>
                           ))}
                         </tbody>
@@ -774,15 +775,15 @@ function StudioContent() {
                   <div className="space-y-4">
                     <h2 className="text-xl font-medium text-black">Trí tuệ nhân tạo</h2>
                     <p className="text-sm font-medium text-zinc-500 leading-relaxed">
-                      Đồng bộ tri thức của bạn với hệ thống RAG để cho phép AI thấu hiểu và hỗ trợ độc giả tốt hơn.
+                      Đồng bộ nội dung của bạn với hệ thống RAG để cho phép AI thấu hiểu và hỗ trợ độc giả tốt hơn.
                     </p>
                     <button
                       onClick={handleIngestAI}
                       disabled={isIngesting || !selectedDocumentId}
-                      className="h-10 bg-black text-white px-6 text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 w-fit"
+                      className="h-10 bg-black text-white px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 w-fit"
                     >
                       {isIngesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
-                      Kích hoạt đồng bộ tri thức AI
+                      Kích hoạt đồng bộ dữ liệu AI
                     </button>
                   </div>
                   <div className="h-px bg-zinc-200" />
@@ -798,7 +799,7 @@ function StudioContent() {
                       <button
                         onClick={handleGenerateAICover}
                         disabled={generatingCover || !selectedDocumentId}
-                        className="h-10 border border-zinc-200 text-black px-6 text-sm font-medium hover:border-black hover:bg-zinc-50 transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 whitespace-nowrap"
+                        className="h-10 border border-zinc-200 text-black px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 whitespace-nowrap"
                       >
                         {generatingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         {selectedDocument?.cover_url ? "Tái tạo ảnh bìa" : "Tạo ảnh bìa AI"}
@@ -806,12 +807,12 @@ function StudioContent() {
                     </div>
 
                     <div className="relative group max-w-[280px] rounded-none overflow-hidden">
-                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-200 relative overflow-hidden group-hover:border-black transition-colors rounded-none flex items-center justify-center">
+                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-200 relative overflow-hidden transition-colors rounded-none flex items-center justify-center">
                           {selectedDocument?.cover_url ? (
                             <img
                               src={selectedDocument.cover_url.startsWith("http") ? selectedDocument.cover_url : `${API_URL}/storage/${selectedDocument.cover_url}`}
                               alt={selectedDocument.title}
-                              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                              className="w-full h-full object-cover grayscale transition-all duration-500"
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-3">
@@ -843,7 +844,7 @@ function StudioContent() {
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
                         <h2 className="text-xl font-medium text-black">Lịch sử phiên bản</h2>
-                        <p className="text-sm font-medium text-zinc-500">Khôi phục tri thức tại các điểm thời gian</p>
+                        <p className="text-sm font-medium text-zinc-500">Khôi phục phiên bản tại các mốc thời gian</p>
                       </div>
                       <RotateCcw className="w-6 h-6 text-zinc-400" />
                    </div>
@@ -858,7 +859,7 @@ function StudioContent() {
                         </div>
                       ) : (
                         versions.map((v) => (
-                          <div key={v.id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between group hover:border-black transition-colors rounded-none">
+                          <div key={v.id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between transition-colors rounded-none">
                              <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center rounded-none border border-zinc-200">
                                    <Clock className="w-4 h-4 text-zinc-500" />
@@ -870,7 +871,7 @@ function StudioContent() {
                              </div>
                              <button 
                                onClick={() => handleRestoreVersion(v.id)}
-                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black hover:bg-black hover:text-white transition-colors rounded-none"
+                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none"
                              >
                                 Khôi phục
                              </button>
@@ -887,7 +888,7 @@ function StudioContent() {
                 <div className="max-w-3xl mx-auto space-y-8">
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
-                        <h2 className="text-xl font-medium text-black">Thùng rác tri thức</h2>
+                        <h2 className="text-xl font-medium text-black">Thùng rác nội dung</h2>
                         <p className="text-sm font-medium text-zinc-500">Tài liệu đã tạm thời bị gỡ bỏ</p>
                       </div>
                       <Trash2 className="w-6 h-6 text-zinc-400" />
@@ -903,7 +904,7 @@ function StudioContent() {
                         </div>
                       ) : (
                         trash.map((doc) => (
-                          <div key={doc._id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between group hover:border-black transition-colors rounded-none">
+                          <div key={doc._id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between transition-colors rounded-none">
                              <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center rounded-none border border-zinc-200">
                                    <FileText className="w-4 h-4 text-zinc-500" />
@@ -915,7 +916,7 @@ function StudioContent() {
                              </div>
                              <button 
                                onClick={() => handleRestoreDocument(doc._id)}
-                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black hover:bg-black hover:text-white transition-colors rounded-none flex items-center gap-2"
+                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none flex items-center gap-2"
                              >
                                 <RotateCcw className="w-4 h-4" /> Khôi phục
                              </button>
@@ -927,22 +928,7 @@ function StudioContent() {
              </div>
            )}
 
-           {viewMode === "sentiment" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
-                <div className="max-w-3xl mx-auto bg-white border border-zinc-200 p-16 text-center space-y-8 rounded-none">
-                   <Brain className="w-12 h-12 text-zinc-400 mx-auto" />
-                   <div className="space-y-3">
-                      <h2 className="text-2xl font-medium text-black">Phân tích cảm quan AI</h2>
-                      <p className="text-sm font-medium text-zinc-500 leading-relaxed max-w-md mx-auto">
-                        AI sẽ đọc và phân tích tông giọng, cảm xúc và phản hồi của độc giả để giúp bạn tối ưu hóa nội dung.
-                      </p>
-                   </div>
-                   <div className="py-12 border border-zinc-200 bg-zinc-50 rounded-none">
-                      <p className="text-sm font-medium text-zinc-500">Tính năng đang được hiệu chuẩn</p>
-                   </div>
-                </div>
-             </div>
-           )}
+
         </main>
       </div>
     </div>

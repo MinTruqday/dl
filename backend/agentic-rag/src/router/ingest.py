@@ -18,4 +18,4 @@ async def ingest_endpoint(req: IngestRequest):
 async def delete_document_endpoint(document_id: str):
     logger.info(f"Ingestion: Deleting vectors for {document_id}")
     vector_store.delete_by_document(document_id)
-    return {"status": "success", "message": f"Đã xóa tri thức của tài liệu {document_id} khỏi bộ nhớ AI."}
+    return {"status": "success", "message": f"Đã xóa dữ liệu của tài liệu {document_id} khỏi bộ nhớ AI."}

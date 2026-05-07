@@ -7,7 +7,6 @@ interface User {
   _id: string;
   email: string;
   full_name: string;
-  display_name: string;
   slug: string;
   role: string;
   avatar_url?: string;

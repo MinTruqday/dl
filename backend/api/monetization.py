@@ -41,6 +41,34 @@ async def subscribe(plan_id: str, current_user: UserInDB = Depends(get_current_u
         message="Đăng ký hội viên thành công."
     )
 
+@router.get("/subscriptions/me", response_model=APIResponse[Any])
+async def get_my_subscriptions(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await MonetizationService.get_my_subscriptions(current_user),
+        message="Lấy danh sách hội viên thành công."
+    )
+
+@router.post("/subscriptions/{subscription_id}/pause", response_model=APIResponse[Any])
+async def pause_subscription(subscription_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await MonetizationService.pause_subscription(subscription_id, current_user),
+        message="Tạm dừng hội viên thành công."
+    )
+
+@router.post("/subscriptions/{subscription_id}/resume", response_model=APIResponse[Any])
+async def resume_subscription(subscription_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await MonetizationService.resume_subscription(subscription_id, current_user),
+        message="Tiếp tục hội viên thành công."
+    )
+
+@router.post("/subscriptions/{subscription_id}/cancel", response_model=APIResponse[Any])
+async def cancel_subscription(subscription_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await MonetizationService.cancel_subscription(subscription_id, current_user),
+        message="Hủy hội viên thành công."
+    )
+
 @router.post("/tip", response_model=APIResponse[Any])
 async def tip(req: TipRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(

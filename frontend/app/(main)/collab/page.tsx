@@ -41,12 +41,11 @@ export default function StudioCollabPage() {
       setDocuments(docsData.data || docsData || []);
       setInvites(invitesData.data || invitesData || []);
     } catch (err: any) {
-      console.error("Lỗi tải dữ liệu cộng tác:", err);
+      showToast("Lỗi tải dữ liệu cộng tác", "error");
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => setVisible(true));
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     if (!isLoading && !user) router.push("/login");
@@ -91,7 +90,7 @@ export default function StudioCollabPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="flex h-[80vh] items-center justify-center">
+      <div className="flex h-[80vh] items-center justify-center bg-white">
         <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
       </div>
     );
@@ -99,22 +98,16 @@ export default function StudioCollabPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
+      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Cộng tác tri thức</h1>
+          <h1 className="text-3xl font-semibold text-black">Cộng tác nội dung</h1>
           <p className="text-zinc-500 text-sm font-medium">
             Quản trị cộng tác và phân quyền biên tập tài liệu
           </p>
         </div>
       </div>
 
-      <div
-        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
+      <div className="grid lg:grid-cols-12 gap-12">
         <aside className="lg:col-span-4 space-y-6">
           <div className="border border-zinc-200 bg-white p-6 space-y-6">
             <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 flex items-center gap-2">
@@ -163,20 +156,20 @@ export default function StudioCollabPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setRole("editor")}
-                    className={`py-2 text-xs font-medium border transition-colors rounded-none ${
+                    className={`py-2 text-xs font-medium border rounded-none ${
                       role === "editor"
                         ? "bg-black text-white border-black"
-                        : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                        : "bg-white text-zinc-500 border-zinc-200"
                     }`}
                   >
                     Biên tập viên
                   </button>
                   <button
                     onClick={() => setRole("viewer")}
-                    className={`py-2 text-xs font-medium border transition-colors rounded-none ${
+                    className={`py-2 text-xs font-medium border rounded-none ${
                       role === "viewer"
                         ? "bg-black text-white border-black"
-                        : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                        : "bg-white text-zinc-500 border-zinc-200"
                     }`}
                   >
                     Người xem
@@ -188,7 +181,7 @@ export default function StudioCollabPage() {
             <button
               onClick={handleInvite}
               disabled={actionLoading || !selectedDocumentId || !collaboratorEmail}
-              className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
+              className="w-full h-10 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 rounded-none border border-black"
             >
               {actionLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -246,13 +239,13 @@ export default function StudioCollabPage() {
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleRespond(invite._id, "REJECTED")}
-                          className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium hover:bg-zinc-50 transition-colors rounded-none"
+                          className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium rounded-none"
                         >
                           Từ chối
                         </button>
                         <button
                           onClick={() => handleRespond(invite._id, "ACCEPTED")}
-                          className="px-4 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center gap-2"
+                          className="px-4 py-2 bg-black border border-black text-white text-xs font-medium rounded-none flex items-center gap-2"
                         >
                           <Check className="w-3 h-3" /> Chấp nhận
                         </button>

@@ -40,12 +40,12 @@ export default function AuthorAnalyticsPage() {
       setDocuments(docData.data || docData || []);
       setRevenue(revData.data || revData);
     } catch (err: any) {
-      console.error("Lỗi tải dữ liệu phân tích:", err);
+      showToast("Lỗi tải dữ liệu phân tích", "error");
     } finally {
       setLoading(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchData();
@@ -131,7 +131,7 @@ export default function AuthorAnalyticsPage() {
         ].map((item, i) => (
           <div key={i} className="p-10 border border-zinc-100 bg-white group">
             <item.icon
-              className={`w-5 h-5 mb-8 transition-colors ${item.color}`}
+              className={`w-5 h-5 mb-8 ${item.color}`}
             />
             <h3 className="text-4xl font-bold text-black tracking-tighter mb-2">
               {typeof item.val === "number" && item.val > 1000
@@ -184,7 +184,7 @@ export default function AuthorAnalyticsPage() {
               <button
                 onClick={analyzeSentiment}
                 disabled={processing || !selectedDocumentId}
-                className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-4 active:scale-[0.98]"
+                className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-4"
               >
                 {processing ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

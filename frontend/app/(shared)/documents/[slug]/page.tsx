@@ -54,7 +54,7 @@ export default function DocumentDetailsPage() {
         setError("Không thể truy xuất dữ liệu tài liệu");
       }
     } catch (err: any) {
-      setError(err.message || "Mất kết nối với hệ thống lưu trữ tri thức");
+      setError(err.message || "Mất kết nối với hệ thống lưu trữ");
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ export default function DocumentDetailsPage() {
       const ok = await toggleBookmarkAPI(docData._id || docData.id);
       if (ok) {
         setIsBookmarked(!isBookmarked);
-        showToast(isBookmarked ? "Đã xóa khỏi thư viện" : "Đã lưu vào thư viện tri thức", "success");
+        showToast(isBookmarked ? "Đã xóa khỏi thư viện" : "Đã lưu vào thư viện", "success");
       }
     } catch (err: any) {
       showToast("Không thể cập nhật trạng thái lưu trữ", "error");
@@ -96,7 +96,7 @@ export default function DocumentDetailsPage() {
     try {
       const res = await purchaseDocumentAPI(docData._id || docData.id);
       if (res.status === 200 || res.status === "purchased") {
-        showToast("Giao dịch tri thức thành công", "success");
+        showToast("Giao dịch thành công", "success");
         setTimeout(() => window.location.reload(), 1500);
       } else {
         showToast(res.message || "Số dư không đủ để thực hiện giao dịch", "error");
@@ -117,7 +117,7 @@ export default function DocumentDetailsPage() {
       }).catch(() => showToast("Không thể thực hiện chia sẻ", "error"));
     } else {
       navigator.clipboard.writeText(window.location.href);
-      showToast("Đã sao chép liên kết tri thức", "success");
+      showToast("Đã sao chép liên kết", "success");
     }
   };
 
@@ -133,7 +133,7 @@ export default function DocumentDetailsPage() {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center gap-6 font-sans bg-white">
         <AlertCircle className="w-12 h-12 text-zinc-300" />
-        <p className="text-sm font-medium text-zinc-500">{error || "Thực thể tri thức không tồn tại"}</p>
+        <p className="text-sm font-medium text-zinc-500">{error || "Thực thể không tồn tại"}</p>
         <button onClick={() => router.back()} className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none hover:bg-zinc-800 transition-colors">
           Quay lại
         </button>
@@ -166,7 +166,7 @@ export default function DocumentDetailsPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-4">
                 <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded-none">
-                  {docData.category_name || "Tri thức"}
+                  {docData.category_name || "Nội dung"}
                 </span>
                 <div className="flex items-center gap-2 text-sm font-medium text-zinc-500">
                   <Star className="w-4 h-4 text-zinc-300 fill-zinc-300" />
@@ -192,7 +192,7 @@ export default function DocumentDetailsPage() {
                   <div className="flex flex-col items-start">
                     <span className="text-xs text-zinc-500">Tác giả</span>
                     <span className="font-medium text-black group-hover:underline">
-                      {docData.author?.display_name || docData.author?.username || "Cộng tác viên"}
+                      {docData.author?.full_name || docData.author?.username || "Cộng tác viên"}
                     </span>
                   </div>
                 </button>
@@ -350,7 +350,7 @@ export default function DocumentDetailsPage() {
                                 <div dangerouslySetInnerHTML={{ __html: contentToDisplay.replace(/\n/g, "<br/><br/>") }} />
                               ) : (
                                 <div className="space-y-6 text-center py-20">
-                                  <p className="text-lg font-medium text-black">Dữ liệu của thực thể tri thức đang được trích xuất.</p>
+                                  <p className="text-lg font-medium text-black">Dữ liệu đang được trích xuất.</p>
                                   <p className="text-zinc-500 text-sm">{docData.description || "Nội dung sẽ sớm được cập nhật."}</p>
                                 </div>
                               )}
@@ -365,7 +365,7 @@ export default function DocumentDetailsPage() {
                                 </div>
                                 <div className="space-y-2">
                                   <h3 className="text-xl font-bold text-black">Giới hạn xem trước</h3>
-                                  <p className="text-sm text-zinc-500 max-w-md mx-auto">Bạn đã đọc hết phần xem trước. Mở khóa để khám phá toàn bộ tri thức.</p>
+                                  <p className="text-sm text-zinc-500 max-w-md mx-auto">Bạn đã đọc hết phần xem trước. Mở khóa để khám phá toàn bộ nội dung.</p>
                                 </div>
                                 <button onClick={handlePurchase} className="h-12 px-8 bg-black text-white text-sm font-medium rounded-none hover:bg-zinc-800 transition-colors">Sở hữu tài liệu</button>
                               </div>

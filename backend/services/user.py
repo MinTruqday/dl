@@ -39,33 +39,3 @@ class UserService:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
         logger.info(f"User service: User {user_id} status updated to {is_active}")
         return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản."}
-
-    @staticmethod
-    async def warn_user(user_id: str, reason: str, moderator_id: str) -> Dict[str, Any]:
-        db = db_client.mongodb.get_default_database()
-        warn_data = {
-            "user_id": user_id,
-            "moderator_id": moderator_id,
-            "reason": reason,
-            "type": "warning",
-            "created_at": datetime.utcnow()
-        }
-        await db["moderation_logs"].insert_one(warn_data)
-        logger.info(f"User service: User {user_id} warned by {moderator_id}")
-        return {"message": "Đã gửi cảnh báo thành công."}
-
-    @staticmethod
-    async def lock_user(user_id: str, reason: str, duration_hours: int, moderator_id: str) -> Dict[str, Any]:
-        db = db_client.mongodb.get_default_database()
-        lock_data = {
-            "user_id": user_id,
-            "moderator_id": moderator_id,
-            "reason": reason,
-            "duration": duration_hours,
-            "type": "lock",
-            "created_at": datetime.utcnow()
-        }
-        await db["moderation_logs"].insert_one(lock_data)
-        await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": False, "lock_until": datetime.utcnow()}}) # Simplify for now
-        logger.info(f"User service: User {user_id} locked by {moderator_id}")
-        return {"message": "Khóa tài khoản thành công."}

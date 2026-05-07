@@ -72,7 +72,7 @@ export async function updateProfileAPI(data: any) {
 export async function applyAuthorAPI(data: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/profile/author-application`, {
+  const res = await fetch(`${API_URL}/profile/author-applications`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

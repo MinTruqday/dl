@@ -109,3 +109,44 @@ class LibraryService:
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Thư mục không tồn tại.")
         return {"message": "Đã xóa thư mục đánh dấu thành công."}
+
+    @staticmethod
+    async def get_bookmarks(current_user) -> list:
+        db = db_client.mongodb.get_default_database()
+        user = await db["users"].find_one({"_id": str(current_user.id)}, {"bookmarks": 1})
+        bookmark_ids = user.get("bookmarks", []) if user else []
+        if not bookmark_ids:
+            return []
+            
+        docs = await db["documents"].find(
+            {"_id": {"$in": bookmark_ids}}
+        ).to_list(length=100)
+        
+        return [{
+            "id": str(d["_id"]),
+            "title": d.get("title", ""),
+            "slug": d.get("slug", ""),
+            "cover_url": d.get("cover_url"),
+            "author_name": "Tác giả DocLib"
+        } for d in docs]
+
+    @staticmethod
+    async def toggle_bookmark(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        user = await db["users"].find_one({"_id": str(current_user.id)}, {"bookmarks": 1})
+        bookmarks = user.get("bookmarks", []) if user else []
+        
+        if document_id in bookmarks:
+            bookmarks.remove(document_id)
+            message = "Đã gỡ bỏ thực thể khỏi thư viện lưu trữ."
+            is_bookmarked = False
+        else:
+            bookmarks.append(document_id)
+            message = "Đã ghi nhận thực thể vào thư viện lưu trữ."
+            is_bookmarked = True
+            
+        await db["users"].update_one(
+            {"_id": str(current_user.id)},
+            {"$set": {"bookmarks": bookmarks, "updated_at": datetime.utcnow()}}
+        )
+        return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}

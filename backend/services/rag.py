@@ -85,7 +85,8 @@ class RagService:
                                             parsed = json_mod.loads(data)
                                             if "chunk" in parsed:
                                                 full_response += parsed["chunk"]
-                                    except: pass
+                                    except Exception as parse_error:
+                                        logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
                             yield chunk
 
                 if session_id and current_user and full_response:

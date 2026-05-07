@@ -131,12 +131,12 @@ export default function NotificationsPage() {
     <button
       type="button"
       onClick={onChange}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center border transition-colors focus:outline-none ${
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center border ${
         checked ? "bg-black border-black" : "bg-zinc-200 border-zinc-200"
       }`}
     >
       <span
-        className={`pointer-events-none inline-block h-3 w-3 transform bg-white transition-transform duration-200 ease-in-out mx-[2px] ${
+        className={`pointer-events-none inline-block h-3 w-3 transform bg-white mx-[2px] ${
           checked ? "translate-x-4" : "translate-x-0"
         }`}
       />
@@ -158,7 +158,7 @@ export default function NotificationsPage() {
           <button
             onClick={handleMarkAllRead}
             disabled={isProcessing || !notifications.some((n) => !n.is_read)}
-            className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+            className="text-sm font-medium text-zinc-500 disabled:opacity-50"
           >
             {isProcessing ? "Đang xử lý" : "Đánh dấu tất cả đã đọc"}
           </button>
@@ -169,20 +169,20 @@ export default function NotificationsPage() {
             <div className="flex border-b border-zinc-200 mb-6">
               <button
                 onClick={() => setActiveTab("all")}
-                className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`pb-3 px-4 text-sm font-medium border-b-2 ${
                   activeTab === "all"
                     ? "border-black text-black"
-                    : "border-transparent text-zinc-500 hover:text-black"
+                    : "border-transparent text-zinc-500"
                 }`}
               >
                 Tất cả
               </button>
               <button
                 onClick={() => setActiveTab("unread")}
-                className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`pb-3 px-4 text-sm font-medium border-b-2 ${
                   activeTab === "unread"
                     ? "border-black text-black"
-                    : "border-transparent text-zinc-500 hover:text-black"
+                    : "border-transparent text-zinc-500"
                 }`}
               >
                 Chưa đọc
@@ -198,7 +198,7 @@ export default function NotificationsPage() {
                 {filteredNotifications.map((n) => (
                   <div
                     key={n._id || n.id}
-                    className={`py-5 border-b border-zinc-200 flex gap-4 transition-colors hover:bg-zinc-50 ${
+                    className={`py-5 border-b border-zinc-200 flex gap-4 ${
                       n.is_read ? "" : "border-l-2 border-l-black pl-4 ml-[-2px]"
                     }`}
                   >
@@ -236,7 +236,7 @@ export default function NotificationsPage() {
                         {n.link && (
                           <Link
                             href={n.link}
-                            className="text-xs font-medium text-black hover:underline underline-offset-4 flex items-center gap-1"
+                            className="text-xs font-medium text-black underline-offset-4 flex items-center gap-1"
                           >
                             <ExternalLink className="w-3 h-3" /> Chi tiết
                           </Link>
@@ -244,7 +244,7 @@ export default function NotificationsPage() {
                         {!n.is_read && (
                           <button
                             onClick={() => handleMarkRead(n._id || n.id)}
-                            className="text-xs font-medium text-zinc-500 hover:text-black transition-colors flex items-center gap-1"
+                            className="text-xs font-medium text-zinc-500 flex items-center gap-1"
                           >
                             <Check className="w-3 h-3" /> Đánh dấu đã đọc
                           </button>

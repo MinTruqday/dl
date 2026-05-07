@@ -68,10 +68,10 @@ export async function toggleBookmarkAPI(documentId: string) {
   return res.ok;
 }
 
-export async function togglePinDocumentAPI(documentId: string) {
+export async function togglePinDocumentAPI(documentId: string, isPinned: boolean) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/profile/pin/${documentId}`, {
-    method: "POST",
+  const res = await fetch(`${API_URL}/read/pins/${documentId}`, {
+    method: isPinned ? "DELETE" : "POST",
     headers: { Authorization: "Bearer " + token },
   });
   return res.ok;
@@ -158,8 +158,8 @@ export async function createBookmarkFolderAPI(name: string) {
 export async function getPinnedDocumentsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/pinned`, {
-    headers: { Authorization: "Bearer " + token },
+  const res = await fetch(`${API_URL}/read/pins`, {
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách ghim.");
   return await res.json();
@@ -168,8 +168,8 @@ export async function getPinnedDocumentsAPI() {
 export async function getContinueReadingAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/read/continue`, {
-    headers: { Authorization: "Bearer " + token },
+  const res = await fetch(`${API_URL}/read/continuations`, {
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải danh sách đang đọc.");
   return await res.json();
@@ -313,7 +313,7 @@ export async function getMySeriesAPI() {
   const res = await fetch(`${API_URL}/documents/series/me`, {
     headers: { Authorization: "Bearer " + token },
   });
-  if (!res.ok) throw new Error("Không thể tải danh sách chuỗi tri thức.");
+  if (!res.ok) throw new Error("Không thể tải danh sách chuỗi nội dung.");
   return await res.json();
 }
 
@@ -332,7 +332,7 @@ export async function createSeriesAPI(data: {
     },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Không thể tạo chuỗi tri thức mới.");
+  if (!res.ok) throw new Error("Không thể tạo chuỗi nội dung mới.");
   return await res.json();
 }
 
@@ -341,6 +341,6 @@ export async function getSeriesByIdAPI(seriesId: string) {
   const res = await fetch(`${API_URL}/documents/series/${seriesId}`, {
     headers: token ? { Authorization: "Bearer " + token } : {},
   });
-  if (!res.ok) throw new Error("Không thể tải chi tiết chuỗi tri thức.");
+  if (!res.ok) throw new Error("Không thể tải chi tiết chuỗi nội dung.");
   return await res.json();
 }

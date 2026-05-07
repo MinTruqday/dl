@@ -5,8 +5,10 @@ import Workspace from "@/components/Workspace";
 import { getSocialRankingAPI } from "@/services/social.service";
 import { Search, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function AuthorsPage() {
+  const { showToast } = useToast();
   const [authors, setAuthors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,21 +21,15 @@ export default function AuthorsPage() {
       const data = await getSocialRankingAPI();
       setAuthors(data.data || data || []);
     } catch (err: any) {
-      console.error("Lỗi tải danh sách tác giả:", err);
+      showToast("Lỗi tải danh sách tác giả", "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchAuthors();
   }, [fetchAuthors]);
-
-  useEffect(() => {
-    if (!loading) {
-      requestAnimationFrame(() => setVisible(true));
-    }
-  }, [loading]);
 
   const filteredAuthors = authors.filter((a) => {
     if (!searchQuery) return true;
@@ -46,13 +42,7 @@ export default function AuthorsPage() {
 
   return (
     <Workspace>
-      <div
-        className="max-w-6xl mx-auto px-6 py-12 md:py-20 font-sans"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(12px)",
-        }}
-      >
+      <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 font-sans opacity-100">
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-6">
           <div className="inline-flex items-center px-4 py-1.5 bg-white border border-zinc-100 text-zinc-400 text-[10px] font-bold">
             Khám phá
@@ -65,7 +55,7 @@ export default function AuthorsPage() {
             liệu và thông tin mới nhất từ họ.
           </p>
           <div className="relative max-w-md mx-auto mt-10 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300 group-focus-within:text-black transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
             <input
               type="text"
               value={searchQuery}
@@ -81,7 +71,7 @@ export default function AuthorsPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="bg-white border border-zinc-100 rounded-none h-64 animate-pulse"
+                className="bg-white border border-zinc-100 rounded-none h-64"
               />
             ))}
           </div>
@@ -90,7 +80,7 @@ export default function AuthorsPage() {
             {filteredAuthors.map((author, idx) => (
               <div
                 key={author._id}
-                className="group relative bg-white border border-zinc-100 rounded-none p-8 flex flex-col items-center text-center cursor-pointer active:scale-[0.98]"
+                className="group relative bg-white border border-zinc-100 rounded-none p-8 flex flex-col items-center text-center cursor-pointer"
                 onClick={() =>
                   router.push(`/authors/${author.slug || author._id}`)
                 }
@@ -98,7 +88,7 @@ export default function AuthorsPage() {
                 <div className="absolute top-6 left-6 w-10 h-10 bg-white flex items-center justify-center border border-zinc-100 text-[10px] font-bold text-zinc-300 ">
                   #{idx + 1}
                 </div>
-                <div className="w-28 h-28 rounded-none bg-white border border-zinc-100 overflow-hidden mb-6 relative transition-transform grayscale  ">
+                <div className="w-28 h-28 rounded-none bg-white border border-zinc-100 overflow-hidden mb-6 relative grayscale">
                   {author.avatar_url ? (
                     <img
                       src={author.avatar_url}

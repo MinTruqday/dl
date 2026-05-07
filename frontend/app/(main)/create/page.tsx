@@ -56,14 +56,13 @@ export default function CreateDocumentPage() {
       const list = data.data || data || [];
       setDrafts(list.filter((d: any) => d.status === "draft"));
     } catch (err) {
-      console.error("Lỗi tải bản nháp:", err);
+      showToast("Không thể tải danh sách bản nháp", "error");
     } finally {
       setLoadingDrafts(false);
     }
   };
 
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
     if (user) {
       if (user.role === "admin") {
         setPublisherName("DocLib");
@@ -116,13 +115,10 @@ export default function CreateDocumentPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div 
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
+      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">
-            Khởi tạo tri thức
+            Khởi tạo nội dung
           </h1>
           <p className="text-zinc-500 text-sm font-medium">
             Khởi tạo & Thiết lập không gian soạn thảo
@@ -133,10 +129,7 @@ export default function CreateDocumentPage() {
         </div>
       </div>
 
-      <div 
-        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
+      <div className="grid lg:grid-cols-12 gap-12">
         <aside className="lg:col-span-3 space-y-12">
           <div className="space-y-4">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
@@ -151,10 +144,10 @@ export default function CreateDocumentPage() {
                 <button
                   key={step.id}
                   onClick={() => setActiveStep(step.id)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                     activeStep === step.id
                       ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                      : "bg-white text-zinc-500 border-transparent"
                   }`}
                 >
                   {step.label}
@@ -192,7 +185,7 @@ export default function CreateDocumentPage() {
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-sm font-semibold outline-none transition-colors rounded-none"
+                      className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-sm font-semibold outline-none rounded-none"
                     />
                   </div>
 
@@ -205,7 +198,7 @@ export default function CreateDocumentPage() {
                       type="text"
                       value={publisherName}
                       onChange={(e) => setPublisherName(e.target.value)}
-                      className={`w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      className={`w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
                     />
                     {user?.role === "admin" && (
                       <p className="text-[10px] font-medium text-zinc-500 mt-1">
@@ -221,7 +214,7 @@ export default function CreateDocumentPage() {
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full min-h-[120px] p-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none resize-none transition-colors rounded-none"
+                      className="w-full min-h-[120px] p-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none resize-none rounded-none"
                     />
                   </div>
 
@@ -248,10 +241,10 @@ export default function CreateDocumentPage() {
                           key={opt.id}
                           type="button"
                           onClick={() => setVisibility(opt.id)}
-                          className={`p-4 border text-left flex items-start gap-4 rounded-none transition-colors ${
+                          className={`p-4 border text-left flex items-start gap-4 rounded-none ${
                             visibility === opt.id
                               ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
+                              : "bg-white text-zinc-500 border-zinc-200"
                           }`}
                         >
                           <opt.icon className="w-5 h-5 shrink-0 mt-0.5" />
@@ -287,7 +280,7 @@ export default function CreateDocumentPage() {
                   <button
                     type="submit"
                     disabled={loading || !title.trim()}
-                    className="w-full md:w-auto h-10 px-6 bg-black text-white text-xs font-medium uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 rounded-none hover:bg-zinc-800 transition-colors"
+                    className="w-full md:w-auto h-10 px-6 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 rounded-none border border-black disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -306,7 +299,7 @@ export default function CreateDocumentPage() {
                   Lưu trữ bản nháp
                 </h3>
                 <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">
-                  Tiếp tục hành trình xây dựng tri thức của bạn
+                  Tiếp tục hành trình xây dựng nội dung của bạn
                 </p>
               </div>
 
@@ -331,11 +324,11 @@ export default function CreateDocumentPage() {
                           `/studio?document=${draft._id || draft.id}`,
                         )
                       }
-                      className="group flex items-center justify-between p-4 border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-black transition-colors text-left rounded-none"
+                      className="group flex items-center justify-between p-4 border border-zinc-200 bg-white text-left rounded-none"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none group-hover:bg-white transition-colors">
-                          <FileText className="w-4 h-4 text-zinc-400 group-hover:text-black" />
+                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none">
+                          <FileText className="w-4 h-4 text-zinc-400" />
                         </div>
                         <div className="space-y-1">
                           <h4 className="font-semibold text-sm text-black truncate max-w-sm">
@@ -349,7 +342,7 @@ export default function CreateDocumentPage() {
                           </p>
                         </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-black" />
+                      <ArrowRight className="w-4 h-4 text-zinc-400" />
                     </button>
                   ))}
                 </div>
@@ -360,7 +353,7 @@ export default function CreateDocumentPage() {
               <ShieldCheck className="w-10 h-10 text-zinc-400" />
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-black uppercase tracking-widest">
-                  Cấu hình tri thức AI
+                  Cấu hình AI
                 </h3>
                 <p className="text-xs font-medium text-zinc-500">
                   Tính năng đang được phát triển

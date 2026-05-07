@@ -184,7 +184,7 @@ export default function MessagesPage() {
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
               placeholder="Nhập tên người dùng"
-              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-none"
             />
           </div>
 
@@ -199,7 +199,7 @@ export default function MessagesPage() {
                 <div
                   key={u._id || u.id}
                   onClick={() => startNewChat(u)}
-                  className="flex items-center justify-between p-3 border border-zinc-200 hover:bg-zinc-50 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-3 border border-zinc-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center overflow-hidden bg-white shrink-0">
@@ -215,7 +215,7 @@ export default function MessagesPage() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-black">
-                        {u.display_name || u.full_name || u.username}
+                        {u.full_name || u.username}
                       </span>
                       <span className="text-[10px] font-medium text-zinc-500">
                         ID: {u.slug || u.username}
@@ -240,8 +240,7 @@ export default function MessagesPage() {
       </Modal>
 
       <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6"
       >
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">Trò chuyện</h1>
@@ -251,15 +250,14 @@ export default function MessagesPage() {
         </div>
         <button
           onClick={() => setShowNewChatModal(true)}
-          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors rounded-none"
+          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none"
         >
           <Plus className="w-4 h-4" /> Bắt đầu kết nối
         </button>
       </div>
 
       <div
-        className="border border-zinc-200 bg-white flex h-[calc(100vh-200px)] min-h-[500px] transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
+        className="border border-zinc-200 bg-white flex h-[calc(100vh-200px)] min-h-[500px]"
       >
         <div
           className={`w-full md:w-[320px] lg:w-[380px] border-r border-zinc-200 flex flex-col shrink-0 ${
@@ -280,7 +278,7 @@ export default function MessagesPage() {
                 <div
                   key={conv.other_user_id}
                   onClick={() => selectConversation(conv)}
-                  className={`p-4 border-b border-zinc-200 cursor-pointer flex items-center gap-4 hover:bg-zinc-50 transition-colors ${
+                  className={`p-4 border-b border-zinc-200 cursor-pointer flex items-center gap-4 ${
                     selectedConv?.other_user_id === conv.other_user_id
                       ? "bg-zinc-50 border-l-[3px] border-l-black pl-[13px]"
                       : "pl-4"
@@ -304,7 +302,7 @@ export default function MessagesPage() {
                           conv.unread_count > 0 ? "font-semibold" : "font-medium"
                         }`}
                       >
-                        {conv.other_user?.display_name || conv.other_user?.username}
+                        {conv.other_user?.full_name || conv.other_user?.username}
                       </span>
                       <span
                         className={`text-[10px] shrink-0 ${
@@ -350,7 +348,7 @@ export default function MessagesPage() {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setSelectedConv(null)}
-                    className="md:hidden p-2 text-zinc-500 hover:text-black transition-colors"
+                    className="md:hidden p-2 text-zinc-500"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
@@ -367,7 +365,7 @@ export default function MessagesPage() {
                   </div>
                   <div className="flex flex-col">
                     <span className="font-semibold text-sm text-black">
-                      {selectedConv.other_user?.display_name || selectedConv.other_user?.username}
+                      {selectedConv.other_user?.full_name || selectedConv.other_user?.username}
                     </span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
@@ -375,7 +373,7 @@ export default function MessagesPage() {
                     </div>
                   </div>
                 </div>
-                <button className="p-2 text-zinc-400 hover:text-black transition-colors">
+                <button className="p-2 text-zinc-400">
                   <MoreVertical className="w-5 h-5" />
                 </button>
               </div>
@@ -427,12 +425,12 @@ export default function MessagesPage() {
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     placeholder="Nhập nội dung"
-                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"
+                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-none placeholder:text-zinc-400"
                   />
                   <button
                     onClick={handleSend}
                     disabled={sending || !newMessage.trim()}
-                    className="h-12 px-6 bg-black text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-zinc-800 transition-colors rounded-none shrink-0"
+                    className="h-12 px-6 bg-black text-white flex items-center justify-center gap-2 disabled:opacity-50 rounded-none shrink-0"
                   >
                     <span className="text-xs font-medium hidden sm:inline">Gửi</span>
                     {sending ? (

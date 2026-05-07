@@ -112,7 +112,7 @@ export default function SearchResultsPage() {
         <aside className="lg:col-span-3 space-y-12">
           <div className="space-y-10">
             <div className="flex items-center justify-between border-b border-black pb-4">
-              <h3 className="text-xs font-bold">Bộ lọc tri thức</h3>
+              <h3 className="text-xs font-bold">Bộ lọc nội dung</h3>
               <Filter className="w-3.5 h-3.5" />
             </div>
 
@@ -292,7 +292,7 @@ export default function SearchResultsPage() {
                     )}
                     <div className="absolute top-2 right-2 px-2 py-1 bg-white border border-zinc-100 text-[8px] font-bold">
                       {document.price_dl > 0
-                        ? `${document.price_dl} DL`
+                        ? `${document.price_dl} dl`
                         : "Miễn phí"}
                     </div>
                   </div>
@@ -338,7 +338,7 @@ export default function SearchResultsPage() {
                   Không tìm thấy tài liệu nào
                 </h3>
                 <p className="text-[10px] font-bold text-zinc-400">
-                  Thử điều chỉnh bộ lọc hoặc sử dụng từ khóa tri thức khác
+                  Thử điều chỉnh bộ lọc hoặc sử dụng từ khóa khác
                 </p>
                 <button
                   onClick={() =>

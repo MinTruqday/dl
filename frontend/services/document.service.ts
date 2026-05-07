@@ -114,7 +114,7 @@ export async function getDocumentsAPI(
 
 export async function getDocumentBySlugAPI(slug: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/documents/slug/${slug}`, {
+  const res = await fetch(`${API_URL}/documents/s/${slug}`, {
     method: "GET",
     headers: token
       ? {
@@ -248,7 +248,7 @@ export async function restoreVersionAPI(versionId: string) {
 
 export async function getTrashAPI() {
   const token = getToken();
-  const res = await fetch(`${API_URL}/documents/me/trash`, {
+  const res = await fetch(`${API_URL}/documents/trash`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Không thể tải thùng rác.");
@@ -257,7 +257,7 @@ export async function getTrashAPI() {
 
 export async function restoreDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/documents/${documentId}/restore`, {
+  const res = await fetch(`${API_URL}/documents/${documentId}/restoration`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -328,10 +328,10 @@ export const toggleStarDocumentAPI = async (id: string) => {
 
 export const lockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/documents/${id}/password`, {
+  const res = await fetch(`${API_URL}/documents/${id}/protection`, {
     method: "POST",
-    body: password,
-    headers: { Authorization: "Bearer " + token, "Content-Type": "text/plain" },
+    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Thiết lập mật khẩu thất bại.");
@@ -382,7 +382,7 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
 export async function getAuditLogsAPI(id: string) {
   if (!id || id === "undefined") return [];
   const token = getToken();
-  const res = await fetch(`${API_URL}/documents/${id}/audit-logs/`, {
+  const res = await fetch(`${API_URL}/documents/${id}/audit-logs`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return [];
@@ -413,7 +413,7 @@ export async function getAcademicMetricsAPI(id: string) {
 
 export async function purchaseDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/wallet/purchase/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/wallet/purchases/documents/${documentId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

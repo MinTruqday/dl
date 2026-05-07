@@ -27,7 +27,7 @@ class ExportService:
         if not document:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại trên hệ thống.")
 
-        user_email = getattr(current_user, "email", "unknown")
+        user_email = current_user.email if hasattr(current_user, "email") and current_user.email else str(current_user.id)
         user_id = str(current_user.id)
         watermark_text = f"Bản quyền thuộc DocLib - Cấp riêng cho: {user_email} (ID: {user_id})"
 

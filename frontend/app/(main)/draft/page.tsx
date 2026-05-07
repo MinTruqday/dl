@@ -99,7 +99,7 @@ export default function DraftPage() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
@@ -127,7 +127,7 @@ export default function DraftPage() {
                         <h3 className="font-semibold text-lg text-black truncate">{doc.title}</h3>
                         <button
                           onClick={() => window.open(`/documents/viewer/${doc._id}`, "_blank")}
-                          className="text-xs font-medium text-zinc-500 hover:text-black whitespace-nowrap transition-colors"
+                          className="text-xs font-medium text-zinc-500 whitespace-nowrap"
                         >
                           Đọc nội dung ↗
                         </button>
@@ -145,13 +145,13 @@ export default function DraftPage() {
                   <div className="flex justify-end gap-4 mt-6 pt-6 border-t border-zinc-100">
                     <button
                       onClick={() => setConfirmModal({ type: "reject", data: doc })}
-                      className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                      className="text-xs font-semibold text-zinc-500"
                     >
                       Từ chối phát hành
                     </button>
                     <button
                       onClick={() => setConfirmModal({ type: "approve", data: doc })}
-                      className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                      className="text-xs font-semibold text-black"
                     >
                       Phê duyệt
                     </button>
@@ -181,14 +181,14 @@ export default function DraftPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center"
           >
             Hủy
           </button>
           <button
             onClick={() => reviewDocument(confirmModal?.data._id, confirmModal?.type === "approve" ? "PUBLISHED" : "REJECTED")}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác nhận
           </button>

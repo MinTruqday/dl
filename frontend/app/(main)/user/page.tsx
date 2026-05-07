@@ -110,11 +110,7 @@ export default function UsersManagementPage() {
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white bg-white min-h-screen">
       <div
-        className="mb-8 border-b border-zinc-200 pb-6 transition-all duration-500"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+        className="mb-8 border-b border-zinc-200 pb-6"
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
@@ -131,7 +127,7 @@ export default function UsersManagementPage() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="h-10 px-4 border border-zinc-200 text-black text-sm font-medium transition-colors hover:bg-zinc-50 flex items-center gap-2 rounded-none disabled:opacity-50"
+              className="h-10 px-4 border border-zinc-200 text-black text-sm font-medium flex items-center gap-2 rounded-none disabled:opacity-50"
             >
               {isRefreshing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -140,7 +136,7 @@ export default function UsersManagementPage() {
               )}
               Đồng bộ
             </button>
-            <button className="h-10 px-6 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2 rounded-none">
+            <button className="h-10 px-6 bg-black text-white text-sm font-medium flex items-center gap-2 rounded-none">
               <UserPlus className="w-4 h-4" />
               Thêm tài khoản
             </button>
@@ -149,22 +145,18 @@ export default function UsersManagementPage() {
       </div>
 
       <div
-        className="space-y-6 transition-all duration-500 delay-75"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(10px)",
-        }}
+        className="space-y-6"
       >
         <div className="relative group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-black transition-colors" />
+            <Search className="w-4 h-4 text-zinc-400" />
           </div>
           <input
             type="text"
             placeholder="Tìm kiếm email hoặc tên thành viên"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-12 pr-4 bg-white border border-zinc-200 focus:border-black outline-none text-sm text-black placeholder:text-zinc-400 rounded-none transition-colors"
+            className="w-full h-12 pl-12 pr-4 bg-white border border-zinc-200 focus:border-black outline-none text-sm text-black placeholder:text-zinc-400 rounded-none"
           />
         </div>
 
@@ -182,7 +174,7 @@ export default function UsersManagementPage() {
               </thead>
               <tbody className="divide-y divide-zinc-200">
                 {filteredUsers.map((u: any) => (
-                  <tr key={u.id} className="hover:bg-zinc-50 transition-colors group">
+                  <tr key={u.id} className="group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white flex items-center justify-center border border-zinc-200 text-zinc-500 font-medium rounded-none overflow-hidden shrink-0">
@@ -223,7 +215,7 @@ export default function UsersManagementPage() {
                           <option value="moderator">Điều hành viên</option>
                           <option value="admin">Quản trị viên</option>
                         </select>
-                        <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none transition-colors" />
+                        <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -244,16 +236,16 @@ export default function UsersManagementPage() {
                       <div className="flex justify-end items-center gap-3">
                         <button
                           onClick={() => setConfirmModal({ type: "status", user: u, value: !u.is_active })}
-                          className={`text-sm font-medium hover:underline ${
+                          className={`text-sm font-medium ${
                             u.is_active
-                              ? "text-zinc-500 hover:text-black"
+                              ? "text-zinc-500"
                               : "text-black"
                           }`}
                         >
                           {u.is_active ? "Khóa tài khoản" : "Kích hoạt lại"}
                         </button>
                         <span className="text-zinc-300">|</span>
-                        <button className="text-sm font-medium text-zinc-500 hover:text-black transition-colors hover:underline">
+                        <button className="text-sm font-medium text-zinc-500">
                           Cảnh báo
                         </button>
                       </div>
@@ -304,7 +296,7 @@ export default function UsersManagementPage() {
           <button
             onClick={() => setConfirmModal(null)}
             disabled={isUpdating}
-            className="flex-1 h-10 border border-zinc-200 text-sm font-medium text-black hover:bg-zinc-50 transition-colors rounded-none disabled:opacity-50"
+            className="flex-1 h-10 border border-zinc-200 text-sm font-medium text-black rounded-none disabled:opacity-50"
           >
             Hủy bỏ
           </button>
@@ -314,7 +306,7 @@ export default function UsersManagementPage() {
               else if (confirmModal?.type === "status") handleUpdateStatus();
             }}
             disabled={isUpdating}
-            className="flex-1 h-10 bg-black text-white text-sm font-medium hover:bg-zinc-800 transition-colors rounded-none disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 h-10 bg-black text-white text-sm font-medium rounded-none disabled:opacity-50 flex items-center justify-center"
           >
             {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận thay đổi"}
           </button>

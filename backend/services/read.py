@@ -30,7 +30,7 @@ class ReadService:
         for h in history:
             doc = await db["documents"].find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1, "cover_url": 1, "author_id": 1})
             if doc:
-                author_name = "Tri thức DocLib"
+                author_name = "Hệ thống DocLib"
                 author = await db["users"].find_one({"_id": doc.get("author_id")}, {"full_name": 1})
                 if author:
                     author_name = author.get("full_name") or author_name
@@ -115,36 +115,6 @@ class ReadService:
         }
 
     @staticmethod
-    async def set_pinned_documents(document_ids: list, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        if len(document_ids) > 3:
-            raise HTTPException(status_code=400, detail="Chỉ được ghim tối đa 3 tài liệu.")
-            
-        await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"$set": {"pinned_documents": document_ids[:3], "updated_at": datetime.utcnow()}}
-        )
-        return {"message": "Đã cập nhật danh sách ghim thành công."}
-
-    @staticmethod
-    async def get_pinned_documents(current_user) -> list:
-        db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": str(current_user.id)}, {"pinned_documents": 1})
-        pinned_ids = user.get("pinned_documents", []) if user else []
-        if not pinned_ids:
-            return []
-            
-        docs = await db["documents"].find(
-            {"_id": {"$in": pinned_ids}}
-        ).to_list(length=3)
-        return [{
-            "id": str(d["_id"]),
-            "title": d.get("title", ""),
-            "slug": d.get("slug", ""),
-            "cover_url": d.get("cover_url"),
-        } for d in docs]
-
-    @staticmethod
     async def search_in_document(document_id: str, query: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id}, {"content": 1, "title": 1, "chapters": 1})
@@ -165,42 +135,3 @@ class ReadService:
             results.append({"offset": idx, "snippet": snippet})
             search_from = idx + len(query)
         return {"total": len(results), "results": results, "query": query}
-
-    @staticmethod
-    async def get_bookmarks(current_user) -> list:
-        db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": str(current_user.id)}, {"bookmarks": 1})
-        bookmark_ids = user.get("bookmarks", []) if user else []
-        if not bookmark_ids:
-            return []
-            
-        docs = await db["documents"].find(
-            {"_id": {"": bookmark_ids}}
-        ).to_list(length=100)
-        
-        return [{
-            "id": str(d["_id"]),
-            "title": d.get("title", ""),
-            "slug": d.get("slug", ""),
-            "cover_url": d.get("cover_url"),
-            "author_name": "Tác giả DocLib"
-        } for d in docs]
-
-    @staticmethod
-    async def toggle_bookmark(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": str(current_user.id)}, {"bookmarks": 1})
-        bookmarks = user.get("bookmarks", []) if user else []
-        
-        if document_id in bookmarks:
-            bookmarks.remove(document_id)
-            message = "Đã gỡ bỏ thực thể khỏi thư viện lưu trữ."
-        else:
-            bookmarks.append(document_id)
-            message = "Đã ghi nhận thực thể vào thư viện lưu trữ."
-            
-        await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"": {"bookmarks": bookmarks, "updated_at": datetime.utcnow()}}
-        )
-        return {"status": "success", "message": message, "is_bookmarked": document_id in bookmarks}

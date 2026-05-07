@@ -10,11 +10,12 @@ class EmailService:
     @staticmethod
     async def send_reset_password_email(email: str, token: str):
         smtp_host = getattr(settings, "SMTP_HOST", None)
-        smtp_port = int(getattr(settings, "SMTP_PORT", 587))
+        smtp_port_raw = getattr(settings, "SMTP_PORT", None)
+        smtp_port = int(smtp_port_raw) if smtp_port_raw else None
         smtp_user = getattr(settings, "SMTP_USER", None)
         smtp_pass = getattr(settings, "SMTP_PASS", None)
         sender_email = getattr(settings, "SENDER_EMAIL", None)
-        sender_name = getattr(settings, "SENDER_NAME", "DocLib Support")
+        sender_name = getattr(settings, "SENDER_NAME", None)
 
         subject = "Mã xác thực khôi phục mật khẩu - DocLib"
         body = f"""Chào bạn,
@@ -24,12 +25,9 @@ Lưu ý: Mã này chỉ có hiệu lực trong vòng 10 phút. Nếu bạn khôn
 Trân trọng,
 Đội ngũ DocLib."""
 
-        if not all([smtp_host, smtp_user, smtp_pass]):
-            logger.warning(f"SMTP not configured. Writing email content to logs/emails.log for {email}")
-            os.makedirs("logs", exist_ok=True)
-            with open("logs/emails.log", "a", encoding="utf-8") as f:
-                f.write(f"--- {email} ---\nSubject: {subject}\nBody: {body}\n\n")
-            return
+        if not all([smtp_host, smtp_port, smtp_user, smtp_pass, sender_email, sender_name]):
+            logger.error(f"Email service not configured. Cannot send to {email}")
+            raise Exception("Email service configuration incomplete")
 
         def send_sync():
             try:
@@ -47,11 +45,8 @@ Trân trọng,
                 return True
             except Exception as e:
                 logger.error(f"Error in sync SMTP send: {e}")
-                return False
+                raise
 
         success = await asyncio.to_thread(send_sync)
-        if success:
-            logger.info(f"Password reset email sent successfully to {email}")
-        else:
-            logger.error(f"Failed to send email to {email}")
+        logger.info(f"Password reset email sent successfully to {email}")
 

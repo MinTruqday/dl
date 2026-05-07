@@ -116,8 +116,7 @@ Câu hỏi của người dùng: "{question}"
 
 Hãy đánh giá: Để trả lời câu hỏi này một cách chính xác nhất, bạn có cần tra cứu các tài liệu chuyên môn, dự án, quy trình hoặc dữ liệu bên ngoài không?
 
-- Nếu câu trả lời là có (câu hỏi về kiến thức, tài liệu, dữ liệu cụ thể): Trả về 'rag'
-- Nếu câu trả lời là không (giao tiếp chào hỏi, tâm sự, hoặc hỏi về bản thân AI): Trả về 'direct'
+        Nếu câu trả lời là có (câu hỏi về nội dung, tài liệu, dữ liệu cụ thể): Trả về 'rag'
 
 Chỉ trả về duy nhất một từ ('rag' hoặc 'direct'), không kèm theo bất kỳ dấu câu hay lời giải thích nào khác.""",
         input_variables=["question"]
@@ -156,7 +155,7 @@ async def retrieve_db(state: AgentState):
             template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
 
             Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
-            Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh tri thức khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
+            Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh nội dung khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
 
             Nhiệm vụ của bạn:
             - Nếu câu hỏi thuộc dạng tra cứu sự thật đơn giản (1 nhánh): Trả về đúng một từ "SIMPLE".

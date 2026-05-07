@@ -128,7 +128,7 @@ export default function OperationDashboard() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
@@ -171,8 +171,8 @@ export default function OperationDashboard() {
              <button
                 onClick={toggleMaintenance}
                 disabled={isProcessing}
-                className={`w-full py-2 text-xs font-bold uppercase tracking-widest transition-colors disabled:opacity-50 border border-transparent ${
-                  maintenanceMode ? "bg-black text-white hover:bg-zinc-800" : "bg-zinc-200 text-black hover:bg-zinc-300"
+                className={`w-full py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50 border border-transparent ${
+                  maintenanceMode ? "bg-black text-white" : "bg-zinc-200 text-black"
                 }`}
              >
                 {maintenanceMode ? "Đang bật bảo trì" : "Bật chế độ bảo trì"}
@@ -186,7 +186,7 @@ export default function OperationDashboard() {
              <button
                 onClick={triggerBackup}
                 disabled={isProcessing}
-                className="w-full py-2 bg-white text-black text-xs font-bold uppercase tracking-widest border border-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                className="w-full py-2 bg-white text-black text-xs font-bold uppercase tracking-widest border border-black disabled:opacity-50"
              >
                 Tiến hành sao lưu
              </button>
@@ -196,7 +196,7 @@ export default function OperationDashboard() {
         <div className="space-y-12">
           <section>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Hồ sơ ứng tuyển Tác giả</h2>
+              <h2 className="text-sm font-semibold text-black">Đơn ứng tuyển Tác giả</h2>
             </div>
             <div className="border border-zinc-200 bg-white overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
@@ -217,7 +217,7 @@ export default function OperationDashboard() {
                     </tr>
                   ) : (
                     applications.map((app) => (
-                      <tr key={app._id} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                      <tr key={app._id} className="border-b border-zinc-200 last:border-0">
                         <td className="py-4 px-6 align-top">
                           <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-bold text-black uppercase tracking-widest">{app.user_name}</span>
@@ -237,14 +237,14 @@ export default function OperationDashboard() {
                             <button
                               onClick={() => reviewApplication(app._id, "REJECTED")}
                               disabled={isProcessing}
-                              className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+                              className="text-xs font-semibold text-zinc-500 disabled:opacity-50"
                             >
                               Từ chối
                             </button>
                             <button
                               onClick={() => reviewApplication(app._id, "APPROVED")}
                               disabled={isProcessing}
-                              className="text-xs font-semibold text-black hover:underline underline-offset-4 disabled:opacity-50"
+                              className="text-xs font-semibold text-black disabled:opacity-50"
                             >
                               Duyệt
                             </button>
@@ -263,7 +263,7 @@ export default function OperationDashboard() {
               <h2 className="text-sm font-semibold text-black">Khóa API (API Keys)</h2>
               <button
                 onClick={createApiKey}
-                className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                className="text-xs font-semibold text-black"
               >
                 Tạo khóa mới
               </button>
@@ -287,7 +287,7 @@ export default function OperationDashboard() {
                     </tr>
                   ) : (
                     apiKeys.map((key: any, idx) => (
-                      <tr key={idx} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                      <tr key={idx} className="border-b border-zinc-200 last:border-0">
                         <td className="py-4 px-6 align-top">
                           <span className="text-sm font-mono text-black">{key.token}</span>
                         </td>
@@ -298,7 +298,7 @@ export default function OperationDashboard() {
                           <span className="text-[10px] font-bold text-black border border-black px-2 py-1 uppercase tracking-widest">Hoạt động</span>
                         </td>
                         <td className="py-4 px-6 align-top text-right">
-                          <button className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors">
+                          <button className="text-xs font-semibold text-zinc-500">
                             Thu hồi
                           </button>
                         </td>

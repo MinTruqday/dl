@@ -79,11 +79,11 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
         <div className="h-full flex items-center justify-between px-6 max-w-[1440px] mx-auto w-full">
           <div className="flex items-center gap-6">
             {onToggleSidebar && (
-              <button
-                onClick={onToggleSidebar}
-                className="p-2 text-zinc-500 hover:text-black transition-colors"
-                aria-label="Mở trình đơn"
-              >
+                <button
+                  onClick={onToggleSidebar}
+                  className="p-2 text-zinc-500 transition-colors"
+                  aria-label="Mở trình đơn"
+                >
                 <MenuIcon className="w-5 h-5" />
               </button>
             )}
@@ -91,8 +91,8 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
               href="/"
               className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 group transition-colors"
             >
-              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
-                DL
+                <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
+                dl
               </div>
               <span className="hidden sm:block">DocLib</span>
             </Link>
@@ -115,7 +115,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-black transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-zinc-400 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -129,7 +129,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-2 text-zinc-500 hover:text-black transition-colors ${
+                    className={`relative p-2 text-zinc-500 transition-colors ${
                       showNotifications ? "bg-zinc-100 text-black" : ""
                     }`}
                     aria-label="Thông báo"
@@ -158,7 +158,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-5 py-4 cursor-pointer transition-colors hover:bg-zinc-50 ${
+                                className={`px-5 py-4 cursor-pointer transition-colors ${
                                   !notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
                                 }`}
                                 onClick={() => {
@@ -192,7 +192,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <Link
                         href="/notification"
                         onClick={() => setShowNotifications(false)}
-                        className="block py-3 text-center text-xs font-medium text-zinc-500 hover:text-black border-t border-zinc-200 transition-colors bg-zinc-50 hover:bg-zinc-100"
+                        className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200 transition-colors bg-zinc-50"
                       >
                         Xem tất cả thông báo
                       </Link>
@@ -203,7 +203,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 hover:text-black transition-colors ${
+                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 transition-colors ${
                       showUserMenu ? "bg-zinc-100 text-black" : ""
                     }`}
                   >
@@ -251,7 +251,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <Link
                         href="/profile"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:text-black hover:bg-zinc-50 transition-colors"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
                       >
                         <User className="w-4 h-4" />
                         Hồ sơ cá nhân
@@ -259,7 +259,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <Link
                         href="/settings"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:text-black hover:bg-zinc-50 transition-colors"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
                       >
                         <Monitor className="w-4 h-4" />
                         Cài đặt hệ thống
@@ -267,7 +267,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                       <div className="border-t border-zinc-200 my-2" />
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:text-black hover:bg-zinc-50 transition-colors w-full text-left"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors w-full text-left"
                       >
                         <LogOut className="w-4 h-4" />
                         Đăng xuất
@@ -278,15 +278,15 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-black transition-colors"
-                >
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors"
+                  >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-zinc-800 transition-colors rounded-none"
+                  className="px-4 py-2 text-sm font-medium text-white bg-black transition-colors rounded-none"
                 >
                   Đăng ký
                 </Link>

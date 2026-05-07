@@ -37,7 +37,7 @@ export function Button({
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-sans disabled:opacity-50 disabled:cursor-not-allowed rounded-none active:scale-[0.98] ${vClass[variant]} ${sClass[size]} ${className}`}
+      className={`inline-flex items-center justify-center font-sans disabled:opacity-50 disabled:cursor-not-allowed rounded-none ${vClass[variant]} ${sClass[size]} ${className}`}
       {...props}
     >
       {icon && <span className={children ? "mr-2" : ""}>{icon}</span>}

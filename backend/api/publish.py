@@ -5,6 +5,7 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import get_current_user, require_role
 from services.publish import PublisherService
 from services.document import DocumentService
+from services.chapter import ChapterService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/publish")
@@ -24,7 +25,7 @@ class SeoMetadataRequest(BaseModel):
 @router.post("/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def publish_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await DocumentService.publish_document(document_id, current_user), 
+        data=await PublisherService.publish_document(document_id, current_user), 
         message="Xuất bản tài liệu thành công.", 
         status=status.HTTP_200_OK
     )
@@ -40,8 +41,18 @@ async def schedule_publish(document_id: str, req: SchedulePublishRequest, curren
 @router.post("/{document_id}/premium", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
 async def config_premium(document_id: str, req: PremiumConfigRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
+        # Note: both config_premium and set_free_preview are related to monetization
+        # config_premium is currently in PublisherService, let's keep it there for now
         data=await PublisherService.config_premium(document_id, req.premium_chapters, current_user), 
         message="Thiết lập chương tính phí thành công.", 
+        status=200
+    )
+
+@router.post("/{document_id}/free-preview", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def set_free_preview(document_id: str, chapter_ids: List[str], current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ChapterService.set_free_preview(document_id, chapter_ids, current_user), 
+        message="Thiết lập chương đọc thử thành công.", 
         status=200
     )
 
@@ -58,21 +69,5 @@ async def get_readability_score(document_id: str, current_user: UserInDB = Depen
     return APIResponse(
         data=await PublisherService.get_readability_score(document_id, current_user), 
         message="Tính toán điểm độ đọc hiểu thành công.", 
-        status=200
-    )
-
-@router.post("/{document_id}/warnings", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
-async def set_warnings(document_id: str, warnings: List[str], current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.set_warnings(document_id, warnings, current_user), 
-        message="Thiết lập cảnh báo nội dung thành công.", 
-        status=200
-    )
-
-@router.post("/{document_id}/design", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
-async def set_custom_design(document_id: str, custom_css: Optional[str] = None, custom_font: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.set_custom_design(document_id, custom_css, custom_font, current_user), 
-        message="Cập nhật thiết kế tùy chỉnh thành công.", 
         status=200
     )

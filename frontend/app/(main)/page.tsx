@@ -9,6 +9,7 @@ import {
 import { semanticSearchAPI } from "@/services/search.service";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
+import { useToast } from "@/contexts/ToastContext";
 import {
   ChevronRight,
   LayoutGrid,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 export default function ExplorePage() {
+  const { showToast } = useToast();
   const [documents, setDocuments] = useState<any[]>([]);
   const [trending, setTrending] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -40,9 +42,9 @@ export default function ExplorePage() {
       setTrending(trendData.data || trendData || []);
       setRecommendations(recData.data || recData || []);
     } catch (err) {
-      console.error("Lỗi tải dữ liệu khám phá:", err);
+      showToast("Lỗi tải dữ liệu khám phá", "error");
     }
-  }, []);
+  }, [showToast]);
 
   const loadDocuments = useCallback(async () => {
     setLoading(true);
@@ -59,11 +61,11 @@ export default function ExplorePage() {
       }
       setDocuments(data.data || data || []);
     } catch (err) {
-      console.error("Lỗi tải tài liệu:", err);
+      showToast("Lỗi tải danh sách tài liệu", "error");
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, searchQuery, useSemantic]);
+  }, [selectedCategory, searchQuery, useSemantic, showToast]);
 
   const { user } = useAuth();
 
@@ -91,7 +93,7 @@ export default function ExplorePage() {
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold text-black">Khám phá</h1>
             <p className="text-zinc-500 text-sm font-medium">
-              Tìm kiếm và kết nối với nguồn tri thức mới nhất
+              Tìm kiếm và kết nối với nguồn nội dung mới nhất
             </p>
           </div>
 
@@ -99,10 +101,10 @@ export default function ExplorePage() {
             <div className="flex border border-zinc-200 bg-white rounded-none">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 transition-colors duration-150 ${
+                className={`p-2 ${
                   viewMode === "grid"
                     ? "bg-zinc-100 text-black"
-                    : "bg-transparent text-zinc-500 hover:text-black hover:bg-zinc-50"
+                    : "bg-transparent text-zinc-500"
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -110,10 +112,10 @@ export default function ExplorePage() {
               <div className="w-[1px] bg-zinc-200" />
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 transition-colors duration-150 ${
+                className={`p-2 ${
                   viewMode === "list"
                     ? "bg-zinc-100 text-black"
-                    : "bg-transparent text-zinc-500 hover:text-black hover:bg-zinc-50"
+                    : "bg-transparent text-zinc-500"
                 }`}
               >
                 <ListIcon className="w-4 h-4" />
@@ -132,10 +134,10 @@ export default function ExplorePage() {
             <nav className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                   !selectedCategory
                     ? "bg-zinc-100 text-black border-zinc-300"
-                    : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                    : "bg-white text-zinc-500 border-transparent"
                 }`}
               >
                 Tất cả tài liệu
@@ -147,10 +149,10 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                     selectedCategory === cat
                       ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                      : "bg-white text-zinc-500 border-transparent"
                   }`}
                 >
                   {cat}
@@ -178,7 +180,7 @@ export default function ExplorePage() {
                       {i + 1}
                     </span>
                     <div className="space-y-1">
-                      <h4 className="text-sm font-medium text-black group-hover:underline line-clamp-2 leading-snug">
+                      <h4 className="text-sm font-medium text-black line-clamp-2 leading-snug">
                         {document.title}
                       </h4>
                       <div className="text-xs font-medium text-zinc-500">
@@ -212,7 +214,7 @@ export default function ExplorePage() {
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/documents/${doc.slug}`}
-                    className="flex gap-4 p-4 border border-zinc-200 bg-white rounded-none hover:bg-zinc-50 transition-colors duration-150"
+                    className="flex gap-4 p-4 border border-zinc-200 bg-white rounded-none"
                   >
                     <div className="w-20 h-28 shrink-0 bg-zinc-100 border border-zinc-200 overflow-hidden relative">
                       {doc.cover_url ? (
@@ -249,7 +251,7 @@ export default function ExplorePage() {
               <h2 className="text-lg font-semibold text-black">
                 {searchQuery
                   ? `Kết quả tìm kiếm cho "${searchQuery}"`
-                  : "Kho tàng tri thức"}
+                  : "Kho nội dung"}
               </h2>
             </div>
 
@@ -286,7 +288,7 @@ export default function ExplorePage() {
                       viewMode === "grid"
                         ? "flex-col"
                         : "flex-row gap-6 p-4"
-                    } border border-zinc-200 bg-white hover:bg-zinc-50 transition-colors duration-150 rounded-none`}
+                    } border border-zinc-200 bg-white rounded-none`}
                   >
                     <div
                       className={`${
@@ -299,7 +301,7 @@ export default function ExplorePage() {
                         <img
                           src={document.cover_url}
                           alt={document.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -335,7 +337,7 @@ export default function ExplorePage() {
                       </h3>
 
                       <div className="text-xs text-zinc-500 flex items-center gap-1.5">
-                        <span className="truncate hover:underline text-black font-medium">
+                        <span className="truncate text-black font-medium">
                           {document.author?.full_name ||
                             document.author?.username ||
                             "Ẩn danh"}
@@ -376,12 +378,12 @@ export default function ExplorePage() {
                       >
                         <span className="text-xs font-semibold text-black">
                           {document.is_premium
-                            ? `${document.price || 0} DL`
+                            ? `${document.price || 0} dl`
                             : "Miễn phí"}
                         </span>
-                        <button className="text-xs font-medium text-black border border-zinc-200 px-3 py-1.5 hover:bg-black hover:text-white transition-colors duration-150">
+                        <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider">
                           Xem
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </Link>

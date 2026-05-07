@@ -82,7 +82,7 @@ export default function AuthorProfilePage() {
           <div className="flex flex-col items-center gap-6">
             <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
             <p className="text-[11px] font-bold text-zinc-300">
-              Đang đồng bộ dữ liệu tri thức
+              Đang đồng bộ dữ liệu nội dung
             </p>
           </div>
         </div>
@@ -203,14 +203,14 @@ export default function AuthorProfilePage() {
                         )}
                         {doc.price_dl > 0 && (
                           <div className="absolute top-4 right-4 bg-black text-white text-[9px] font-bold px-3 py-1.5 border border-white/20">
-                            {doc.price_dl} DL
+                            {doc.price_dl} dl
                           </div>
                         )}
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[9px] font-bold text-zinc-300">
-                            {doc.category_name || "Tri thức"}
+                            {doc.category_name || "Nội dung"}
                           </span>
                           <span className="text-[9px] font-bold text-zinc-300">
                             {doc.views_count || 0} lượt xem
@@ -240,7 +240,7 @@ export default function AuthorProfilePage() {
                 <div className="flex items-center gap-4 mb-8 border-b border-zinc-50 pb-6">
                   <LinkIcon className="w-5 h-5 text-zinc-300" />
                   <h2 className="text-lg font-bold text-black tracking-tight">
-                    Hành trình tri thức
+                    Hành trình nội dung
                   </h2>
                 </div>
                 <div className="prose prose-zinc max-w-none text-zinc-600 leading-relaxed text-sm font-medium">

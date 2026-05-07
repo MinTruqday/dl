@@ -9,27 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/users")
 
-@router.get("/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def get_all_users(limit: int = 50, offset: int = 0):
-    return APIResponse(
-        data=await UserService.get_all_users(limit, offset),
-        message="Lấy danh sách người dùng thành công."
-    )
-
-@router.put("/{user_id}/role", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def update_user_role(user_id: str, role: str):
-    return APIResponse(
-        data=await UserService.update_user_role(user_id, role),
-        message="Cập nhật vai trò thành công."
-    )
-
-@router.put("/{user_id}/status", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def update_user_status(user_id: str, is_active: bool):
-    return APIResponse(
-        data=await UserService.update_user_status(user_id, is_active),
-        message="Cập nhật trạng thái thành công."
-    )
-
 class UpdateRoleRequest(BaseModel):
     role: str
 

@@ -235,3 +235,24 @@ class NotificationService:
         )
         return {"message": "Đã đánh dấu tất cả thông báo là đã đọc.", "count": result.modified_count}
 
+    @staticmethod
+    async def notify_purchase(document_id: str, document_title: str, author_id: str, buyer_name: str):
+        db = db_client.mongodb.get_default_database()
+        notif_id = str(uuid.uuid4())
+        notification = {
+            "_id": notif_id,
+            "target_user_id": author_id,
+            "title": "Giao dịch mới",
+            "body": f"{buyer_name} vừa mua tài liệu '{document_title}'.",
+            "is_read": False,
+            "type": "purchase",
+            "created_at": datetime.utcnow(),
+        }
+        await db["notifications"].insert_one(notification)
+        if db_client.redis:
+            await db_client.redis.publish(
+                f"user_notifications:{author_id}",
+                json.dumps({"title": notification["title"], "body": notification["body"]})
+            )
+        logger.info(f"Notification: Purchase notification sent to author {author_id}")
+

@@ -42,7 +42,7 @@ export default function Preview({
         <div className="max-w-3xl mx-auto space-y-12">
           <div className="prose prose-zinc max-w-none">
             <h2 className="text-4xl font-bold text-black mb-10 tracking-tight leading-tight">
-              Mở đầu tri thức
+              Mở đầu nội dung
             </h2>
             <div className="text-zinc-800 leading-relaxed text-lg font-medium space-y-6">
               {document.content ? (
@@ -71,7 +71,7 @@ export default function Preview({
                   Đã đạt đến giới hạn xem trước
                 </p>
                 <p className="text-[11px] font-bold text-zinc-400">
-                  Sở hữu tài liệu để khai mở toàn bộ kho tàng tri thức này
+                  Sở hữu tài liệu để khai mở toàn bộ kho nội dung này
                 </p>
               </div>
             </div>

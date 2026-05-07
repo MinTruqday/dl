@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface CommentUser {
   id: string;
-  display_name: string;
+  full_name: string;
   avatar_url?: string;
 }
 
@@ -54,7 +54,7 @@ export default function Comment({
       const data = await getNestedCommentsAPI(itemId);
       setComments(Array.isArray(data.data) ? data.data : []);
     } catch (err: any) {
-      showToast("Không thể kết nối mạng lưới thảo luận", "error");
+      showToast("Không thể kết nối hệ thống thảo luận", "error");
     } finally {
       setLoading(false);
     }
@@ -81,10 +81,10 @@ export default function Comment({
       });
       setNewText("");
       setReplyTo(null);
-      showToast("Đã đăng thảo luận tri thức thành công", "success");
+      showToast("Đã đăng thảo luận thành công", "success");
       fetchComments();
     } catch (err: any) {
-      showToast(err.message || "Lỗi kết nối mạng lưới thảo luận", "error");
+      showToast(err.message || "Lỗi kết nối hệ thống thảo luận", "error");
     } finally {
       setSubmitting(false);
     }
@@ -122,7 +122,7 @@ export default function Comment({
               onClick={() => setReplyTo(null)}
               className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-4 py-2 border border-dashed border-zinc-100 rounded-sm"
             >
-              Hủy phản hồi hệ thống
+              Hủy phản hồi
             </button>
           ) : (
             <div />
@@ -179,8 +179,8 @@ export default function Comment({
                       )}
                     </div>
                     <div>
-                      <span className="font-bold text-sm text-black uppercase tracking-tight">
-                        {c.user?.display_name || "Độc giả tri thức"}
+                        <span className="font-bold text-sm text-black uppercase tracking-tight">
+                        {c.user?.full_name || "Độc giả"}
                       </span>
                       <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">
                         {new Date(c.created_at).toLocaleDateString("vi-VN")}
@@ -192,7 +192,7 @@ export default function Comment({
                   {c.text || c.content}
                 </p>
                 <div className="flex justify-end mt-4">
-                  <button
+                    <button
                     onClick={() => {
                       setReplyTo(c._id);
                       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -200,7 +200,7 @@ export default function Comment({
                     className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest flex items-center gap-2 opacity-0  "
                   >
                     <Reply className="w-3.5 h-3.5" />
-                    Phản hồi tri thức
+                    Phản hồi
                   </button>
                 </div>
               </div>

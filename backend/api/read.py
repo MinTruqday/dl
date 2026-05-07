@@ -48,7 +48,7 @@ async def update_progress(data: ProgressUpdate, current_user: UserInDB = Depends
         message="Cập nhật tiến độ thành công."
     )
 
-@router.get("/continue", response_model=APIResponse[Any])
+@router.get("/continuations", response_model=APIResponse[Any])
 async def get_continue_reading(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.get_continue_reading(current_user),
@@ -70,18 +70,34 @@ async def get_reading_goal(current_user: UserInDB = Depends(get_current_user)):
         message="Lấy thông tin mục tiêu thành công."
     )
 
-@router.put("/pinned", response_model=APIResponse[Any])
+@router.put("/pins", response_model=APIResponse[Any])
 async def set_pinned_documents(data: PinnedDocumentRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.set_pinned_documents(data.document_ids, current_user),
         message="Cập nhật danh sách ghim thành công."
     )
 
-@router.get("/pinned", response_model=APIResponse[Any])
+@router.get("/pins", response_model=APIResponse[Any])
 async def get_pinned_documents(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.get_pinned_documents(current_user),
         message="Lấy danh sách đã ghim thành công."
+    )
+
+@router.post("/pins/{document_id}", response_model=APIResponse[Any])
+async def pin_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    # Re-using set_pinned_documents logic but for single. 
+    # Usually service would have a dedicated method, I'll check ReadService.
+    return APIResponse(
+        data=await ReadService.pin_document(document_id, current_user),
+        message="Đã ghim tài liệu thành công."
+    )
+
+@router.delete("/pins/{document_id}", response_model=APIResponse[Any])
+async def unpin_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadService.unpin_document(document_id, current_user),
+        message="Đã bỏ ghim tài liệu thành công."
     )
 
 @router.get("/documents/{document_id}/search", response_model=APIResponse[Any])
@@ -89,28 +105,4 @@ async def search_in_document(document_id: str, q: str = Query(...), current_user
     return APIResponse(
         data=await ReadService.search_in_document(document_id, q, current_user),
         message="Tìm kiếm trong tài liệu thành công."
-    )
-@router.post("/documents/{document_id}/highlights", response_model=APIResponse[Any])
-async def create_highlight(document_id: str, data: dict, current_user: UserInDB = Depends(get_current_user)):
-    from services.highlight import HighlightService
-    return APIResponse(
-        data=await HighlightService.create_highlight(document_id, data, current_user),
-        message="Tạo điểm nhấn thành công.",
-        status=201
-    )
-
-@router.get("/documents/{document_id}/highlights", response_model=APIResponse[Any])
-async def get_highlights(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from services.highlight import HighlightService
-    return APIResponse(
-        data=await HighlightService.get_highlights(document_id, current_user),
-        message="Lấy danh sách điểm nhấn thành công."
-    )
-
-@router.delete("/highlights/{highlight_id}", response_model=APIResponse[Any])
-async def delete_highlight(highlight_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from services.highlight import HighlightService
-    return APIResponse(
-        data=await HighlightService.delete_highlight(highlight_id, current_user),
-        message="Xóa điểm nhấn thành công."
     )

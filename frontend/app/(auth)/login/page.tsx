@@ -160,7 +160,7 @@ export default function LoginPage() {
           Chưa có tài khoản?{" "}
           <a
             href="/register"
-            className="font-medium text-black hover:underline transition-all"
+            className="font-medium text-black underline"
           >
             Đăng ký ngay
           </a>
@@ -188,7 +188,7 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setEmail(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -210,13 +210,13 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setPassword(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
                 <div className="mt-2 text-right">
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-xs font-medium text-zinc-500 hover:text-black hover:underline transition-all"
+                    className="text-xs font-medium text-zinc-500 underline"
                   >
                     {showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                   </button>
@@ -243,7 +243,7 @@ export default function LoginPage() {
               <div className="text-sm">
                 <a
                   href="/forgot-password"
-                  className="font-medium text-black hover:underline transition-all"
+                  className="font-medium text-black underline"
                 >
                   Quên mật khẩu?
                 </a>
@@ -254,7 +254,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-none text-sm font-medium text-white bg-black hover:bg-zinc-800 focus:outline-none transition-colors disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-none text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
@@ -287,7 +287,7 @@ export default function LoginPage() {
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black hover:bg-zinc-50 transition-colors gap-2"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black gap-2"
               >
                 <Fingerprint className="w-5 h-5 text-black" />
                 Passkey
@@ -302,7 +302,7 @@ export default function LoginPage() {
                     showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black hover:bg-zinc-50 transition-colors gap-2"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black gap-2"
               >
                 <GoogleIcon />
                 Google

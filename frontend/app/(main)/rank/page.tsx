@@ -23,7 +23,7 @@ interface LeaderboardDocument {
   cover_image?: string;
   author: {
     _id: string;
-    display_name: string;
+    full_name: string;
     slug: string;
   };
   views_count: number;
@@ -80,7 +80,7 @@ export default function LeaderboardPage() {
           <div className="space-y-2">
             <h1 className="text-3xl font-semibold text-black">Xếp hạng</h1>
             <p className="text-zinc-500 text-sm font-medium">
-              Tôn vinh giá trị tri thức
+              Tôn vinh giá trị nội dung
             </p>
           </div>
         </div>
@@ -101,10 +101,10 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                     activeTab === tab.id
                       ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                      : "bg-white text-zinc-500 border-transparent"
                   }`}
                 >
                   {tab.label}
@@ -142,10 +142,10 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 px-4 py-2 text-xs font-medium transition-colors border-r border-zinc-200 last:border-0 ${
+                  className={`flex-1 px-4 py-2 text-xs font-medium border-r border-zinc-200 last:border-0 ${
                     activeTab === tab.id
                       ? "bg-zinc-100 text-black"
-                      : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                      : "text-zinc-500"
                   }`}
                 >
                   {tab.label}
@@ -160,12 +160,12 @@ export default function LeaderboardPage() {
                 ))}
               </div>
             ) : (
-              <div className={`transition-opacity duration-500 ${visible ? "opacity-100" : "opacity-0"}`}>
+              <div className="">
                 {((activeTab === "authors" ? data?.top_authors : activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).length > 0 ? (
                   <div className="flex flex-col border border-zinc-200 bg-white rounded-none">
                     {activeTab === "views" || activeTab === "rating" ? (
                       ((activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).map((document, index) => (
-                        <div key={`${document._id}-${index}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-50 transition-colors">
+                        <div key={`${document._id}-${index}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0">
                           <div className="flex items-center gap-4">
                             {renderRankNumber(index)}
                             <div className="w-12 h-16 bg-white border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
@@ -180,11 +180,11 @@ export default function LeaderboardPage() {
                               )}
                             </div>
                             <div className="flex flex-col justify-center">
-                              <Link href={`/documents/${document.slug}`} className="text-sm font-semibold text-black hover:underline line-clamp-1">
+                              <Link href={`/documents/${document.slug}`} className="text-sm font-semibold text-black line-clamp-1">
                                 {document.title}
                               </Link>
                               <span className="text-xs font-medium text-zinc-500 mt-1 line-clamp-1">
-                                Tác giả: {document.author?.display_name || "Tác giả ẩn danh"}
+                                Tác giả: {document.author?.full_name || "Tác giả ẩn danh"}
                               </span>
                             </div>
                           </div>
@@ -205,7 +205,7 @@ export default function LeaderboardPage() {
                       ))
                     ) : (
                       (data?.top_authors || []).map((author, index) => (
-                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0 hover:bg-zinc-50 transition-colors">
+                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="flex items-center justify-between p-4 border-b border-zinc-200 last:border-b-0">
                           <div className="flex items-center gap-4">
                             {renderRankNumber(index)}
                             <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
@@ -213,14 +213,14 @@ export default function LeaderboardPage() {
                                 <img
                                   src={author.avatar_url.startsWith("http") ? author.avatar_url : `${API_URL}/storage/${author.avatar_url}`}
                                   className="w-full h-full object-cover grayscale mix-blend-multiply"
-                                  alt={author.display_name}
+                                  alt={author.full_name}
                                 />
                               ) : (
-                                <span className="font-semibold text-black text-sm">{author.display_name?.[0]?.toUpperCase()}</span>
+                                <span className="font-semibold text-black text-sm">{author.full_name?.[0]?.toUpperCase()}</span>
                               )}
                             </div>
                             <div className="flex flex-col justify-center">
-                              <span className="text-sm font-semibold text-black">{author.display_name}</span>
+                              <span className="text-sm font-semibold text-black">{author.full_name}</span>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">Tác giả</span>
                               </div>

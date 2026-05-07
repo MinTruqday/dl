@@ -38,5 +38,14 @@ class Settings(BaseModel):
     PASSKEY_RP_ID: str = os.getenv("PASSKEY_RP_ID")
     PASSKEY_RP_NAME: str = os.getenv("PASSKEY_RP_NAME")
     PASSKEY_ALLOWED_ORIGINS: str = os.getenv("PASSKEY_ALLOWED_ORIGINS")
+    
+    PLATFORM_ADMIN_ID: str = os.getenv("PLATFORM_ADMIN_ID")
+
+    MOMO_PARTNER_CODE: Optional[str] = os.getenv("MOMO_PARTNER_CODE")
+    MOMO_ACCESS_KEY: Optional[str] = os.getenv("MOMO_ACCESS_KEY")
+    MOMO_SECRET_KEY: Optional[str] = os.getenv("MOMO_SECRET_KEY")
+    MOMO_ENDPOINT: str = os.getenv("MOMO_ENDPOINT")
+    MOMO_RETURN_URL: str = os.getenv("MOMO_RETURN_URL")
+    MOMO_NOTIFY_URL: str = os.getenv("MOMO_NOTIFY_URL")
 
 settings = Settings()

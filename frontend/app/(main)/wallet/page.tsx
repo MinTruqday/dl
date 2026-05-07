@@ -63,7 +63,7 @@ export default function WalletPage() {
       setBalance(balanceRes.data?.balance || balanceRes.balance || 0);
       setHistory(historyRes.data || historyRes || []);
     } catch (error) {
-      console.error("Lỗi tải dữ liệu ví:", error);
+      showToast("Lỗi tải dữ liệu ví", "error");
     } finally {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
@@ -143,7 +143,7 @@ export default function WalletPage() {
         </div>
         <button
           onClick={() => (window.location.href = "/login")}
-          className="bg-black text-white h-10 px-8 text-xs font-medium flex items-center justify-center rounded-none hover:bg-zinc-800 transition-colors"
+          className="bg-black text-white h-10 px-8 text-xs font-medium flex items-center justify-center rounded-none"
         >
           Đăng nhập ngay
         </button>
@@ -159,7 +159,7 @@ export default function WalletPage() {
         className="max-w-md"
       >
         <ModalHeader>
-          <ModalTitle>Nạp tài nguyên (VNĐ)</ModalTitle>
+          <ModalTitle>Nạp tiền (VNĐ)</ModalTitle>
           <ModalDescription>Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>
         </ModalHeader>
 
@@ -169,10 +169,10 @@ export default function WalletPage() {
               <button
                 key={amt}
                 onClick={() => setTopupAmount(amt)}
-                className={`py-3 text-xs font-medium border transition-colors rounded-none ${
+                className={`py-3 text-xs font-medium border rounded-none ${
                   topupAmount === amt
                     ? "bg-zinc-100 border-zinc-200 text-black font-semibold"
-                    : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:text-black"
+                    : "bg-white border-zinc-200 text-zinc-500"
                 }`}
               >
                 {amt.toLocaleString()} VNĐ
@@ -195,7 +195,7 @@ export default function WalletPage() {
 
           <div className="flex items-center justify-between py-3 border-t border-zinc-200">
             <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tỷ giá</span>
-            <span className="text-xs font-medium text-black">1.000 VNĐ = 1 DL</span>
+            <span className="text-xs font-medium text-black">1.000 VNĐ = 1 dl</span>
           </div>
         </ModalContent>
 
@@ -203,14 +203,14 @@ export default function WalletPage() {
           <button
             onClick={() => setShowTopupModal(false)}
             disabled={topupLoading}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={handleTopup}
             disabled={topupLoading || topupAmount < 10000}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {topupLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận nạp"}
           </button>
@@ -229,9 +229,9 @@ export default function WalletPage() {
         </div>
         <button
           onClick={() => setShowTopupModal(true)}
-          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors rounded-none"
+          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none"
         >
-          <Plus className="w-4 h-4" /> Nạp năng lượng
+          <Plus className="w-4 h-4" /> Nạp tiền
         </button>
       </div>
 
@@ -242,7 +242,7 @@ export default function WalletPage() {
               <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Số dư hiện tại</p>
               <div className="flex items-baseline gap-2 mt-2">
                 <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>
-                <span className="text-sm font-semibold text-black">DL</span>
+                <span className="text-sm font-semibold text-black">dl</span>
               </div>
             </div>
             
@@ -269,7 +269,7 @@ export default function WalletPage() {
               <button
                 type="submit"
                 disabled={isRedeeming || !voucherCode.trim()}
-                className="w-full h-10 bg-white text-black border border-zinc-200 text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 rounded-none flex items-center justify-center"
+                className="w-full h-10 bg-white text-black border border-zinc-200 text-xs font-medium disabled:opacity-50 rounded-none flex items-center justify-center"
               >
                 {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận mã"}
               </button>
@@ -322,7 +322,7 @@ export default function WalletPage() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-black">
-                            {tx.note || (tx.type === "TOPUP" ? "Nạp năng lượng tri thức" : "Trao đổi tri thức")}
+                            {tx.note || (tx.type === "TOPUP" ? "Nạp tiền" : "Giao dịch")}
                           </p>
                           <p className="text-[10px] font-medium text-zinc-500 mt-1">
                             {new Date(tx.created_at).toLocaleString("vi-VN")} • TX-{tx._id.slice(-8)}
@@ -336,7 +336,7 @@ export default function WalletPage() {
                             tx.type === "TOPUP" ? "text-black" : "text-zinc-500"
                           }`}
                         >
-                          {tx.type === "TOPUP" ? "+" : "-"}{tx.amount.toLocaleString()} DL
+                          {tx.type === "TOPUP" ? "+" : "-"}{tx.amount.toLocaleString()} dl
                         </span>
                         <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
                           {tx.status === "COMPLETED" ? (

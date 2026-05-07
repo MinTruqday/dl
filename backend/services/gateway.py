@@ -135,35 +135,57 @@ class GatewayService:
         users = db["users"]
         transactions = db["transactions"]
         
-        result = await orders.update_one(
-            {"order_id": order_id, "status": "pending"},
-            {"$set": {"status": "success", "updated_at": datetime.utcnow()}}
-        )
+        order = await orders.find_one({"order_id": order_id, "status": "pending"})
+        if not order:
+            logger.warning(f"Order {order_id} not found or already processed")
+            return
         
-        if result.modified_count == 1:
-            order = await orders.find_one({"order_id": order_id})
-            dl_to_add = order.get("dl", 0)
-            user_id = order["user_id"]
-            
-            await users.update_one(
-                {"_id": user_id},
-                {"$inc": {"wallet_balance": dl_to_add}}
-            )
-            
-            tx = Transaction(
-                user_id=user_id,
-                type=TransactionType.TOPUP,
-                amount=dl_to_add,
-                note=f"Nạp tiền qua {order['gateway']}: {order['amount']} VNĐ"
-            )
-            await transactions.insert_one(tx.model_dump(by_alias=True))
-            
-            if getattr(db_client, "redis", None):
-                await db_client.redis.publish(
-                    f"user_notifications:{user_id}", 
-                    json.dumps({
-                        "title": "Nạp tiền thành công", 
-                        "body": f"Tài khoản vừa được cộng thêm {dl_to_add} dl."
-                    })
+        dl_to_add = order.get("dl", 0)
+        user_id = order["user_id"]
+        
+        session = await db_client.mongodb.start_session()
+        try:
+            async with session.start_transaction():
+                result = await orders.update_one(
+                    {"order_id": order_id, "status": "pending"},
+                    {"$set": {"status": "success", "updated_at": datetime.utcnow()}},
+                    session=session
                 )
-            logger.info(f"Added {dl_to_add} dl to user {user_id} (Order {order_id})")
+                
+                if result.modified_count != 1:
+                    await session.abort_transaction()
+                    logger.warning(f"Order {order_id} status update failed (already processed?)")
+                    return
+                
+                await users.update_one(
+                    {"_id": user_id},
+                    {"$inc": {"wallet_balance": dl_to_add}},
+                    session=session
+                )
+                
+                tx = Transaction(
+                    user_id=user_id,
+                    type=TransactionType.TOPUP,
+                    amount=dl_to_add,
+                    note=f"Nạp tiền qua {order['gateway']}: {order['amount']} VNĐ"
+                )
+                await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
+                
+                await session.commit_transaction()
+                
+                # Send notification (outside transaction)
+                if getattr(db_client, "redis", None):
+                    await db_client.redis.publish(
+                        f"user_notifications:{user_id}", 
+                        json.dumps({
+                            "title": "Nạp tiền thành công", 
+                            "body": f"Tài khoản vừa được cộng thêm {dl_to_add} dl."
+                        })
+                    )
+                logger.info(f"Added {dl_to_add} dl to user {user_id} (Order {order_id}) (atomic)")
+        except Exception as e:
+            await session.abort_transaction()
+            logger.error(f"Order processing failed for {order_id}: {e}")
+            raise
+        finally:
+            await session.end_session()

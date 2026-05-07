@@ -46,12 +46,11 @@ export default function AuthorCouponsPage() {
       const data = await getAuthorCouponsAPI();
       setCoupons(data.data || data || []);
     } catch (err: any) {
-      console.error("Lỗi tải mã giảm giá:", err);
+      showToast("Lỗi tải mã giảm giá", "error");
     } finally {
       setLoading(false);
-      requestAnimationFrame(() => setVisible(true));
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchCoupons();
@@ -108,10 +107,7 @@ export default function AuthorCouponsPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
-      >
+      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">Mã ưu đãi</h1>
           <p className="text-zinc-500 text-sm font-medium">
@@ -120,7 +116,7 @@ export default function AuthorCouponsPage() {
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 hover:bg-zinc-800 transition-colors rounded-none"
+          className="h-10 px-6 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 rounded-none border border-black"
         >
           {showCreate ? (
             <X className="w-4 h-4" />
@@ -132,7 +128,7 @@ export default function AuthorCouponsPage() {
       </div>
 
       {showCreate && (
-        <div className="mb-8 border border-zinc-200 bg-white p-8 animate-in fade-in slide-in-from-top-4">
+        <div className="mb-8 border border-zinc-200 bg-white p-8">
           <div className="max-w-3xl space-y-6">
             <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">
               Thiết lập ưu đãi mới
@@ -151,7 +147,7 @@ export default function AuthorCouponsPage() {
                     })
                   }
                   placeholder="Ví dụ: SUMMER20"
-                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-mono font-semibold focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400 placeholder:font-sans"
+                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-mono font-semibold focus:outline-none focus:border-black rounded-none placeholder:text-zinc-400 placeholder:font-sans"
                 />
               </div>
               <div className="space-y-2">
@@ -167,7 +163,7 @@ export default function AuthorCouponsPage() {
                       discount_percent: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none"
                 />
               </div>
               <div className="space-y-2">
@@ -183,7 +179,7 @@ export default function AuthorCouponsPage() {
                       max_uses: parseInt(e.target.value) || 0,
                     })
                   }
-                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                  className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none"
                 />
               </div>
             </div>
@@ -191,7 +187,7 @@ export default function AuthorCouponsPage() {
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="h-10 px-8 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50 rounded-none"
+                className="h-10 px-8 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 rounded-none border border-black"
               >
                 {creating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -209,19 +205,16 @@ export default function AuthorCouponsPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-zinc-50 border border-zinc-200 h-48 animate-pulse rounded-none"
+              className="bg-zinc-50 border border-zinc-200 h-48 rounded-none"
             />
           ))}
         </div>
       ) : coupons.length > 0 ? (
-        <div
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-500"
-          style={{ opacity: visible ? 1 : 0 }}
-        >
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {coupons.map((c: any) => (
             <div
               key={c.id}
-              className="border border-zinc-200 bg-white flex flex-col hover:border-black transition-colors rounded-none"
+              className="border border-zinc-200 bg-white flex flex-col rounded-none"
             >
               <div className="p-6 border-b border-zinc-200 flex justify-between items-start bg-zinc-50">
                 <div>
@@ -235,17 +228,17 @@ export default function AuthorCouponsPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleStatus(c.id)}
-                    className={`px-3 py-1.5 text-[10px] font-semibold uppercase border transition-colors rounded-none ${
+                    className={`px-3 py-1.5 text-[10px] font-semibold uppercase border rounded-none ${
                       c.is_active
                         ? "bg-black text-white border-black"
-                        : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                        : "bg-white text-zinc-500 border-zinc-200"
                     }`}
                   >
                     {c.is_active ? "Hoạt động" : "Tạm dừng"}
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(c)}
-                    className="p-1.5 border border-zinc-200 bg-white text-zinc-400 hover:text-black hover:border-black transition-colors rounded-none"
+                    className="p-1.5 border border-zinc-200 bg-white text-zinc-400 rounded-none"
                     title="Xóa mã"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -305,14 +298,14 @@ export default function AuthorCouponsPage() {
           <button
             onClick={() => setDeleteConfirm(null)}
             disabled={isDeleting}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 rounded-none"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 rounded-none"
           >
             Hủy bỏ
           </button>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center rounded-none"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center rounded-none"
           >
             {isDeleting ? (
               <Loader2 className="w-3 h-3 animate-spin" />

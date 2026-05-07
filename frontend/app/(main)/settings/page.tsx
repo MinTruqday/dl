@@ -226,12 +226,12 @@ export default function SettingsPage() {
   }) => (
     <button
       onClick={onToggle}
-      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 transition-colors ${
+      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 ${
         active ? "bg-black border-black" : "bg-zinc-100"
       }`}
     >
       <div
-        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 transition-all ${
+        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 ${
           active ? "left-5 border-black" : "left-0"
         }`}
       />
@@ -301,8 +301,7 @@ export default function SettingsPage() {
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6"
       >
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">Cài đặt</h1>
@@ -313,8 +312,7 @@ export default function SettingsPage() {
       </div>
 
       <div
-        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
+        className="grid lg:grid-cols-12 gap-12"
       >
         <aside className="lg:col-span-3 space-y-12">
           <div className="space-y-4">
@@ -326,10 +324,10 @@ export default function SettingsPage() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
                     activeSection === section.id
                       ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200"
+                      : "bg-white text-zinc-500 border-transparent"
                   }`}
                 >
                   {section.label}
@@ -361,14 +359,14 @@ export default function SettingsPage() {
 
         <main className="lg:col-span-9 space-y-6">
           {activeSection === "appearance" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
                     Hiển thị & Kiểu chữ
                   </h3>
                   <p className="text-xs text-zinc-500 mt-1">
-                    Tùy biến không gian tiếp nhận tri thức
+                    Tùy biến không gian hiển thị
                   </p>
                 </div>
 
@@ -377,7 +375,7 @@ export default function SettingsPage() {
                     Bản xem trước
                   </div>
                   <div
-                    className="bg-white border border-zinc-200 p-6 text-black transition-all"
+                    className="bg-white border border-zinc-200 p-6 text-black"
                     style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
                   >
                     Kiến trúc thông tin (Information Architecture) là nền tảng cốt
@@ -402,10 +400,10 @@ export default function SettingsPage() {
                         <button
                           key={font}
                           onClick={() => setFontFamily(font)}
-                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center transition-colors rounded-none truncate ${
+                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center rounded-none truncate ${
                             fontFamily === font
                               ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black"
+                              : "bg-white text-zinc-500 border-zinc-200"
                           }`}
                           style={{ fontFamily: font }}
                         >
@@ -424,7 +422,7 @@ export default function SettingsPage() {
                         type="number"
                         value={fontSize}
                         onChange={(e) => setFontSize(parseInt(e.target.value))}
-                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none"
+                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -438,7 +436,7 @@ export default function SettingsPage() {
                         onChange={(e) =>
                           setLineHeight(parseFloat(e.target.value))
                         }
-                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none transition-colors rounded-none"
+                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none"
                       />
                     </div>
                   </div>
@@ -448,7 +446,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleSaveTypography}
                     disabled={loading}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -463,7 +461,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "privacy" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
@@ -497,7 +495,7 @@ export default function SettingsPage() {
                         Thư viện nội bộ
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Giới hạn quyền truy cập bộ sưu tập tri thức cá nhân đối với
+                        Giới hạn quyền truy cập bộ sưu tập cá nhân đối với
                         người dùng khác.
                       </p>
                     </div>
@@ -512,7 +510,7 @@ export default function SettingsPage() {
                   <button
                     onClick={handleSavePrivacy}
                     disabled={loading}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 disabled:opacity-50"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -527,7 +525,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "author" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
@@ -573,10 +571,10 @@ export default function SettingsPage() {
                             });
                             if (success) setDefaultVisibility(mode);
                           }}
-                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none transition-colors ${
+                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none ${
                             defaultVisibility === mode
                               ? "bg-black text-white border-black"
-                              : "bg-zinc-50 text-zinc-500 border-zinc-200 hover:bg-zinc-100 hover:text-black"
+                              : "bg-zinc-50 text-zinc-500 border-zinc-200"
                           }`}
                         >
                           {mode === "public" ? "Công khai" : "Riêng tư"}
@@ -592,7 +590,7 @@ export default function SettingsPage() {
                     <textarea
                       value={payoutInfo}
                       onChange={(e) => setPayoutInfo(e.target.value)}
-                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none transition-colors rounded-none"
+                      className="w-full min-h-[120px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none rounded-none"
                     />
                   </div>
                 </div>
@@ -605,7 +603,7 @@ export default function SettingsPage() {
                       setLoading(false);
                       showToast("Đã lưu thông tin thụ hưởng", "success");
                     }}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 hover:bg-zinc-800 transition-colors"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2"
                   >
                     <Save className="w-4 h-4" /> Lưu cấu hình
                   </button>
@@ -615,7 +613,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "moderator" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
@@ -685,7 +683,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "admin" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
@@ -744,14 +742,14 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "apply_author" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
                     Đăng ký Tác giả
                   </h3>
                   <p className="text-xs text-zinc-500 mt-1">
-                    Tham gia đội ngũ sáng tạo nội dung tri thức
+                    Tham gia đội ngũ sáng tạo nội dung
                   </p>
                 </div>
 
@@ -822,7 +820,7 @@ export default function SettingsPage() {
                       <button
                         onClick={handleApplyAuthor}
                         disabled={loading}
-                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-none flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                        className="w-full h-10 bg-black text-white text-xs font-medium uppercase tracking-widest rounded-none flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         {loading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -839,7 +837,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "notifications" && (
-            <div className="border border-zinc-200 bg-white flex flex-col items-center justify-center min-h-[400px] text-center p-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="border border-zinc-200 bg-white flex flex-col items-center justify-center min-h-[400px] text-center p-8">
               <Bell className="w-6 h-6 text-zinc-400 mb-4" />
               <h3 className="text-sm font-semibold text-black mb-1">
                 Trung tâm thông báo
@@ -851,7 +849,7 @@ export default function SettingsPage() {
           )}
 
           {activeSection === "account" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
@@ -873,7 +871,7 @@ export default function SettingsPage() {
                         danh cấp cao
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-100 transition-colors rounded-none">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none">
                       Đổi mật khẩu
                     </button>
                   </div>
@@ -887,7 +885,7 @@ export default function SettingsPage() {
                         {user?.email || "Chưa định danh"}
                       </div>
                     </div>
-                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-100 transition-colors rounded-none">
+                    <button className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none">
                       Cập nhật Email
                     </button>
                   </div>
@@ -927,7 +925,7 @@ export default function SettingsPage() {
                       onClick={() =>
                         showToast("Đã gửi yêu cầu trích xuất dữ liệu", "success")
                       }
-                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors rounded-none"
+                      className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none"
                     >
                       Yêu cầu trích xuất
                     </button>
@@ -945,7 +943,7 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() => showToast("Chức năng đang bảo trì", "error")}
-                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none"
+                      className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium rounded-none"
                     >
                       Xóa tài khoản
                     </button>
@@ -982,7 +980,7 @@ export default function SettingsPage() {
           <button
             onClick={() => setConfirmModal(null)}
             disabled={loading}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none disabled:opacity-50"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black rounded-none disabled:opacity-50"
           >
             Hủy bỏ
           </button>
@@ -994,7 +992,7 @@ export default function SettingsPage() {
                 handleToggleRegistration();
             }}
             disabled={loading}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none flex items-center justify-center disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium rounded-none flex items-center justify-center disabled:opacity-50"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

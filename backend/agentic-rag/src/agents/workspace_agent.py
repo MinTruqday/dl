@@ -38,7 +38,7 @@ def get_trash_documents() -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/documents/me/trash", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/documents/trash", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -74,7 +74,7 @@ def restore_document(document_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.post(f"{INTERNAL_API_URL}/documents/{document_id}/restore", headers=headers, timeout=5)
+            response = client.post(f"{INTERNAL_API_URL}/documents/{document_id}/restoration", headers=headers, timeout=5)
         if response.status_code == 200:
             return f"Đã khôi phục tài liệu {document_id} thành công"
         return "Khôi phục tài liệu thất bại"

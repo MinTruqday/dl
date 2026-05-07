@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setNewPassword(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black transition-colors"
+                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
                 />
               </div>
             </div>
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 hover:bg-zinc-800 rounded-none transition-colors"
+              className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black disabled:bg-zinc-200 disabled:text-zinc-500 rounded-none"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? "Đang xử lý" : "Cập nhật mật khẩu"}

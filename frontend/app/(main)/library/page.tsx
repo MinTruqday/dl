@@ -209,7 +209,7 @@ export default function LibraryPage() {
     { id: "history", label: "Lịch sử đọc" },
     { id: "folders", label: "Thư mục lưu trữ" },
     { id: "lists", label: "Danh sách đọc" },
-    ...(canManageSeries ? [{ id: "series", label: "Chuỗi tri thức" }] : []),
+    ...(canManageSeries ? [{ id: "series", label: "Chuỗi nội dung" }] : []),
   ];
 
   return (
@@ -218,7 +218,7 @@ export default function LibraryPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">Thư viện</h1>
           <p className="text-zinc-500 text-sm font-medium">
-            Quản lý tài liệu và kho lưu trữ tri thức cá nhân
+            Quản lý tài liệu và kho nội dung cá nhân
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -232,7 +232,7 @@ export default function LibraryPage() {
                 } ${
                   activeTab === t.id
                     ? "bg-zinc-100 text-black"
-                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                    : "text-zinc-500"
                 }`}
               >
                 {t.label}
@@ -242,14 +242,14 @@ export default function LibraryPage() {
           <div className="flex border border-zinc-200 bg-white rounded-none">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 transition-colors ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500 hover:text-black hover:bg-zinc-50"}`}
+              className={`p-2 transition-colors ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <div className="w-px bg-zinc-200" />
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 transition-colors ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-500 hover:text-black hover:bg-zinc-50"}`}
+              className={`p-2 ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-500"}`}
             >
               <ListIcon className="w-4 h-4" />
             </button>
@@ -257,7 +257,7 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-9 space-y-12">
           {activeTab === "overview" && (
             <>
@@ -268,7 +268,7 @@ export default function LibraryPage() {
                   </h2>
                   <button
                     onClick={() => setActiveTab("history")}
-                    className="text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                    className="text-xs font-medium text-zinc-500"
                   >
                     Xem toàn bộ lịch sử
                   </button>
@@ -280,7 +280,7 @@ export default function LibraryPage() {
                       <Link
                         key={doc.document_id}
                         href={`/documents/${doc.document_slug}`}
-                        className={`border border-zinc-200 bg-white group hover:bg-zinc-50 transition-colors ${viewMode === "grid" ? "flex flex-col" : "flex items-start gap-4 p-4"}`}
+                        className={`border border-zinc-200 bg-white group ${viewMode === "grid" ? "flex flex-col" : "flex items-start gap-4 p-4"}`}
                       >
                         <div className={`${viewMode === "grid" ? "aspect-[3/4] border-b border-zinc-200" : "w-16 h-20 border border-zinc-200"} bg-zinc-50 overflow-hidden relative shrink-0`}>
                           {doc.cover_url ? (
@@ -299,7 +299,7 @@ export default function LibraryPage() {
                           </div>
                         </div>
                         <div className={`flex-1 min-w-0 ${viewMode === "grid" ? "p-3" : "flex flex-col justify-center h-20"}`}>
-                          <h4 className="text-xs font-semibold text-black line-clamp-2 group-hover:underline">
+                          <h4 className="text-xs font-semibold text-black line-clamp-2">
                             {doc.document_title}
                           </h4>
                           <p className="text-[10px] font-medium text-zinc-500 mt-1">
@@ -326,7 +326,7 @@ export default function LibraryPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setActiveTab("folders")}
-                      className="text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                      className="text-xs font-medium text-zinc-500"
                     >
                       Xem tất cả
                     </button>
@@ -335,7 +335,7 @@ export default function LibraryPage() {
                         setCreateType("folder");
                         setIsCreateModalOpen(true);
                       }}
-                      className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5 hover:bg-zinc-800 transition-colors"
+                      className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" /> Tạo mới
                     </button>
@@ -348,7 +348,7 @@ export default function LibraryPage() {
                       <Link
                         key={item.id || item._id}
                         href={item.id ? `/library/folder/${item.id}` : `/collection/${item._id}`}
-                        className="p-4 border border-zinc-200 bg-white flex flex-col justify-between hover:bg-zinc-50 transition-colors"
+                        className="p-4 border border-zinc-200 bg-white flex flex-col justify-between"
                       >
                         <div className="space-y-1">
                           <div className="flex justify-between items-start">
@@ -389,7 +389,7 @@ export default function LibraryPage() {
                 </h2>
                 <button
                   onClick={() => setIsClearModalOpen(true)}
-                  className="text-xs font-medium text-zinc-500 hover:text-black transition-colors flex items-center gap-1.5"
+                  className="text-xs font-medium text-zinc-500 flex items-center gap-1.5"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Xóa lịch sử
                 </button>
@@ -400,7 +400,7 @@ export default function LibraryPage() {
                   history.map((item, idx) => (
                     <div
                       key={item.document_id + idx}
-                      className={`border border-zinc-200 bg-white group hover:bg-zinc-50 transition-colors relative ${isDeletingHistory === item.document_id ? "opacity-50" : ""} ${viewMode === "grid" ? "flex flex-col" : "flex items-start gap-4 p-4"}`}
+                      className={`border border-zinc-200 bg-white relative ${isDeletingHistory === item.document_id ? "opacity-50" : ""} ${viewMode === "grid" ? "flex flex-col" : "flex items-start gap-4 p-4"}`}
                     >
                       <Link href={`/documents/${item.document_slug}`} className={`block ${viewMode === "grid" ? "aspect-[3/4] border-b border-zinc-200" : "w-16 h-20 border border-zinc-200"} bg-zinc-50 overflow-hidden relative shrink-0`}>
                         {item.cover_url ? (
@@ -421,7 +421,7 @@ export default function LibraryPage() {
                       <div className={`flex-1 min-w-0 flex flex-col justify-between ${viewMode === "grid" ? "p-3" : "h-20"}`}>
                         <div>
                           <Link href={`/documents/${item.document_slug}`}>
-                            <h4 className="text-xs font-semibold text-black line-clamp-2 group-hover:underline">
+                            <h4 className="text-xs font-semibold text-black line-clamp-2">
                               {item.document_title}
                             </h4>
                           </Link>
@@ -437,7 +437,7 @@ export default function LibraryPage() {
                       </div>
                       <button
                         onClick={() => handleDeleteHistoryItem(item.document_id)}
-                        className="absolute top-2 right-2 p-1.5 bg-white border border-zinc-200 text-zinc-400 hover:text-black opacity-0 group-hover:opacity-100 transition-all"
+                        className="absolute top-2 right-2 p-1.5 bg-white border border-zinc-200 text-zinc-400"
                         title="Xóa khỏi lịch sử"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -464,7 +464,7 @@ export default function LibraryPage() {
                     setCreateType("folder");
                     setIsCreateModalOpen(true);
                   }}
-                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5 hover:bg-zinc-800 transition-colors"
+                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" /> Tạo thư mục
                 </button>
@@ -476,7 +476,7 @@ export default function LibraryPage() {
                     <Link
                       key={folder.id}
                       href={`/library/folder/${folder.id}`}
-                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between hover:bg-zinc-50 transition-colors h-32"
+                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between h-32"
                     >
                       <div className="flex justify-between items-start">
                         <h4 className="text-sm font-semibold text-black line-clamp-2">{folder.name}</h4>
@@ -514,7 +514,7 @@ export default function LibraryPage() {
                     setCreateType("list");
                     setIsCreateModalOpen(true);
                   }}
-                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5 hover:bg-zinc-800 transition-colors"
+                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" /> Tạo danh sách
                 </button>
@@ -526,7 +526,7 @@ export default function LibraryPage() {
                     <Link
                       key={list._id}
                       href={`/collection/${list._id}`}
-                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between hover:bg-zinc-50 transition-colors min-h-[140px]"
+                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between min-h-[140px]"
                     >
                       <div className="space-y-1">
                         <div className="flex justify-between items-start">
@@ -562,14 +562,14 @@ export default function LibraryPage() {
             <section className="space-y-6">
               <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
                 <h2 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <Layers className="w-4 h-4" /> Chuỗi tri thức chuyên sâu
+                  <Layers className="w-4 h-4" /> Chuỗi nội dung chuyên sâu
                 </h2>
                 <button
                   onClick={() => {
                     setCreateType("series");
                     setIsCreateModalOpen(true);
                   }}
-                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5 hover:bg-zinc-800 transition-colors"
+                  className="h-8 px-3 bg-black text-white text-xs font-medium flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" /> Khởi tạo chuỗi
                 </button>
@@ -581,7 +581,7 @@ export default function LibraryPage() {
                     <Link
                       key={s._id}
                       href={`/series/${s._id}`}
-                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between hover:bg-zinc-50 transition-colors min-h-[140px]"
+                      className="p-4 border border-zinc-200 bg-white flex flex-col justify-between min-h-[140px]"
                     >
                       <div className="space-y-1">
                         <div className="flex justify-between items-start">
@@ -605,7 +605,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="md:col-span-3 py-12 text-center border border-dashed border-zinc-200 bg-zinc-50">
                     <p className="text-xs font-medium text-zinc-500">
-                      Chưa có chuỗi tri thức nào
+                      Chưa có chuỗi nội dung nào
                     </p>
                   </div>
                 )}
@@ -626,7 +626,7 @@ export default function LibraryPage() {
                   <Link
                     key={doc.id}
                     href={`/documents/${doc.slug}`}
-                    className="flex items-start gap-3 p-3 bg-zinc-50 border border-zinc-200 hover:border-black transition-colors group"
+                    className="flex items-start gap-3 p-3 bg-zinc-50 border border-zinc-200"
                   >
                     <div className="w-10 h-14 bg-white border border-zinc-200 shrink-0 overflow-hidden relative">
                       {doc.cover_url ? (
@@ -642,7 +642,7 @@ export default function LibraryPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-semibold text-black line-clamp-2 group-hover:underline">{doc.title}</h4>
+                      <h4 className="text-xs font-semibold text-black line-clamp-2">{doc.title}</h4>
                       <p className="text-[10px] font-medium text-zinc-500 mt-1">Truy cập nhanh</p>
                     </div>
                   </Link>
@@ -668,10 +668,10 @@ export default function LibraryPage() {
           </p>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setIsClearModalOpen(false)} disabled={isClearing} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center">
+          <button onClick={() => setIsClearModalOpen(false)} disabled={isClearing} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center">
             Hủy bỏ
           </button>
-          <button onClick={handleClearHistory} disabled={isClearing} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center">
+          <button onClick={handleClearHistory} disabled={isClearing} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center">
             {isClearing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận xóa"}
           </button>
         </ModalFooter>
@@ -680,7 +680,7 @@ export default function LibraryPage() {
       <Modal isOpen={isCreateModalOpen} onClose={() => !isCreating && setIsCreateModalOpen(false)}>
         <ModalHeader>
           <ModalTitle>
-            {createType === "folder" ? "Tạo thư mục lưu trữ" : createType === "list" ? "Tạo danh sách đọc" : "Khởi tạo chuỗi tri thức"}
+            {createType === "folder" ? "Tạo thư mục lưu trữ" : createType === "list" ? "Tạo danh sách đọc" : "Tạo chuỗi nội dung"}
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
@@ -690,7 +690,7 @@ export default function LibraryPage() {
               type="text"
               value={createType === "folder" ? newFolderName : createListForm.name}
               onChange={(e) => createType === "folder" ? setNewFolderName(e.target.value) : setCreateListForm({ ...createListForm, name: e.target.value })}
-              className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:border-black outline-none transition-colors"
+              className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:border-black outline-none"
               placeholder=""
             />
           </div>
@@ -700,17 +700,17 @@ export default function LibraryPage() {
               <textarea
                 value={createListForm.description}
                 onChange={(e) => setCreateListForm({ ...createListForm, description: e.target.value })}
-                className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none transition-colors"
+                className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none"
                 placeholder=""
               />
             </div>
           )}
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center justify-center">
+          <button onClick={() => setIsCreateModalOpen(false)} disabled={isCreating} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center">
             Hủy bỏ
           </button>
-          <button onClick={handleCreate} disabled={isCreating} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 flex items-center justify-center">
+          <button onClick={handleCreate} disabled={isCreating} className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center">
             {isCreating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận tạo"}
           </button>
         </ModalFooter>

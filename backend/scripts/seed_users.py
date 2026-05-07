@@ -57,7 +57,7 @@ async def seed_users():
             "role": RoleEnum.AUTHOR,
             "password_hash": test_password_hash,
             "wallet_balance": 20000,
-            "bio": "Tác giả sáng tạo nội dung tri thức.",
+            "bio": "Tác giả sáng tạo nội dung.",
             "is_verified": True
         },
         {
@@ -67,7 +67,7 @@ async def seed_users():
             "role": RoleEnum.READER,
             "password_hash": test_password_hash,
             "wallet_balance": 10000,
-            "bio": "Độc giả đam mê tri thức.",
+            "bio": "Độc giả đam mê nội dung.",
             "is_verified": True
         },
         {

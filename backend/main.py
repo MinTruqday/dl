@@ -78,28 +78,32 @@ app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    response = JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"data": None, "message": str(exc.detail), "status": exc.status_code}
+    )
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    response = JSONResponse(status_code=422, content={"detail": exc.errors()})
-    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
+    errors = exc.errors()
+    # Simple formatting of validation errors
+    msg = "Dữ liệu không hợp lệ: " + ", ".join([f"{e['loc'][-1]}: {e['msg']}" for e in errors])
+    return JSONResponse(
+        status_code=422,
+        content={"data": {"errors": errors}, "message": msg, "status": 422}
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global Exception on {request.method} {request.url}: {repr(exc)}")
-    response = JSONResponse(
+    return JSONResponse(
         status_code=500,
-        content={"detail": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."},
+        content={
+            "data": None, 
+            "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.", 
+            "status": 500
+        }
     )
-    response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
 
 @app.middleware("http")
 async def add_process_time_header(request, call_next):

@@ -59,7 +59,7 @@ export default function LogsPage() {
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
@@ -88,7 +88,7 @@ export default function LogsPage() {
                   </tr>
                 ) : (
                   activityLogs.map((log: any, idx: number) => (
-                    <tr key={idx} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                    <tr key={idx} className="border-b border-zinc-200 last:border-0">
                       <td className="py-4 px-6 align-top">
                         <span className="text-sm font-semibold text-black uppercase">{log.action || "Thao tác điều hành"}</span>
                       </td>

@@ -52,7 +52,7 @@ export const toggleReactionAPI = async (
   reactionType: string | null,
 ) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/social/${itemType}/${itemId}/reaction`, {
+  const res = await fetch(`${API_URL}/social/${itemType}/${itemId}/reactions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -108,7 +108,7 @@ export const toggleFeedBookmarkAPI = async (itemId: string) => {
 export async function uploadMediaAPI(formData: FormData) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác.");
-  const res = await fetch(`${API_URL}/social/upload-media`, {
+  const res = await fetch(`${API_URL}/social/assets`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -157,7 +157,7 @@ export async function replyDiscussionAPI(
 ) {
   const token = getToken();
   const res = await fetch(
-    `${API_URL}/social/discussions/${discussionId}/reply`,
+    `${API_URL}/social/discussions/${discussionId}/replies`,
     {
       method: "POST",
       headers: {
@@ -377,7 +377,7 @@ export async function repostPostAPI(postId: string) {
 }
 
 export async function savePostAPI(postId: string) {
-  const res = await fetch(`${API_URL}/social/posts/${postId}/save`, {
+  const res = await fetch(`${API_URL}/social/posts/${postId}/saves`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -405,10 +405,11 @@ export async function hidePostAPI(postId: string) {
 
 export async function reportPostAPI(postId: string, reason: string) {
   const res = await fetch(
-    `${API_URL}/social/posts/${postId}/report?reason=${encodeURIComponent(reason)}`,
+    `${API_URL}/social/posts/${postId}/reports`,
     {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
     },
   );
   if (!res.ok) throw new Error("Báo cáo bài viết thất bại.");
@@ -416,7 +417,7 @@ export async function reportPostAPI(postId: string, reason: string) {
 }
 
 export async function followUserAPI(userId: string) {
-  const res = await fetch(`${API_URL}/social/users/${userId}/follow`, {
+  const res = await fetch(`${API_URL}/social/users/${userId}/followers`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -436,7 +437,7 @@ export async function votePostAPI(postId: string, amount: number) {
 
 export async function submitPollVoteAPI(postId: string, optionId: string) {
   const res = await fetch(
-    `${API_URL}/social/polls/${postId}/vote/${optionId}`,
+    `${API_URL}/social/polls/${postId}/votes/${optionId}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -480,7 +481,7 @@ export async function getFeedAPI(
 }
 
 export async function recordPostViewAPI(postId: string) {
-  const res = await fetch(`${API_URL}/social/posts/${postId}/view`, {
+  const res = await fetch(`${API_URL}/social/posts/${postId}/views`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

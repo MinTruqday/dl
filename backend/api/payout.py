@@ -34,6 +34,13 @@ async def verify_payout(payout_id: str, action: str, current_user: UserInDB = De
         message="Xử lý thanh toán thành công."
     )
 
+@router.post("/{payout_id}/cancel", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
+async def cancel_payout(payout_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await PayoutService.cancel_payout(payout_id, current_user),
+        message="Hủy yêu cầu rút tiền thành công."
+    )
+
 @router.get("/my/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
 async def get_my_payouts(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(

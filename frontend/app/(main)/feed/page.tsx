@@ -86,7 +86,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import confetti from "canvas-confetti";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -294,7 +294,7 @@ export default function Feed() {
         const data = await getDocumentsAPI(match[2], 5);
         setDocumentSuggestions(data.data || data);
       } catch (e) {
-        console.error("API error:", e);
+        showToast("Lỗi hệ thống", "error");
       }
     } else {
       setDocumentSuggestions([]);
@@ -423,7 +423,7 @@ export default function Feed() {
       const json = await getIntersectionFriendsAPI();
       setSuggestions(json.data?.suggestions || json.suggestions || []);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -472,7 +472,7 @@ export default function Feed() {
         return (
           <span
             key={i}
-            className="text-black font-semibold cursor-pointer hover:underline"
+            className="text-black font-semibold cursor-pointer"
           >
             {part}
           </span>
@@ -525,7 +525,7 @@ export default function Feed() {
     try {
       await recordPostViewAPI(postId);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -551,8 +551,8 @@ export default function Feed() {
     } catch (error) {
       if (reset)
         showToast(
-          "Không thể tải bảng tin lúc này, vui lòng thử lại sau.",
-          "error"
+         "Không thể tải bảng tin lúc này, vui lòng thử lại sau.",
+         "error"
         );
     } finally {
       setLoading(false);
@@ -587,7 +587,7 @@ export default function Feed() {
       const response = await fetch(`${API_URL}/wallet/vote`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+         "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("doclib_token")}`,
         },
         body: JSON.stringify({
@@ -600,12 +600,7 @@ export default function Feed() {
       if (response.ok) {
         showToast(data.message || "Đã tặng quà thành công!", "success");
         setGiftModal(null);
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#000000", "#ffffff", "#71717a"],
-        });
+
       } else {
         showToast(data.detail || "Lỗi khi tặng quà", "error");
       }
@@ -621,7 +616,7 @@ export default function Feed() {
       const json = await getStoriesAPI();
       setStories(json.data?.stories || json.data || json.stories || []);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -630,7 +625,7 @@ export default function Feed() {
       const json = await getArchivedStoriesAPI();
       setArchivedStories(json.data?.stories || json.data || json.stories || []);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -639,7 +634,7 @@ export default function Feed() {
       const json = await getSocialRankingAPI();
       setRanking(json.data || json || []);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -648,7 +643,7 @@ export default function Feed() {
       const json = await getReaderRankingAPI();
       setReaderRanking(json.data || json || []);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -721,7 +716,7 @@ export default function Feed() {
       showToast("Đã tạo tin thành công.", "success");
       fetchStories();
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -735,7 +730,7 @@ export default function Feed() {
       setDeleteStoryConfirm(null);
       fetchStories();
     } catch (e: any) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
       showToast(e.message || "Xóa tin thất bại", "error");
     } finally {
       setIsProcessing(false);
@@ -781,7 +776,7 @@ export default function Feed() {
       setDeletePostConfirm(null);
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -804,7 +799,7 @@ export default function Feed() {
 
   const [quoteText, setQuoteText] = useState("");
   const [quoteBg, setQuoteBg] = useState(
-    "bg-gray-100 dark:bg-gray-800 from-gray-200 to-gray-200"
+   "bg-gray-100 dark:bg-gray-800 from-gray-200 to-gray-200"
   );
 
   const createPost = async () => {
@@ -812,7 +807,7 @@ export default function Feed() {
       return showToast("Bảng tin không thể trống.", "error");
     try {
       const privacyEl = document.getElementById(
-        "post-privacy"
+       "post-privacy"
       ) as HTMLSelectElement;
       const privacy = privacyEl ? privacyEl.value : "public";
       const db_poll_opts = [pollText1, pollText2].filter((p) => p.trim());
@@ -857,16 +852,7 @@ export default function Feed() {
     try {
       const data = await toggleReactionAPI(postId, "posts", reactionType);
       if (data.message === "Đã thích" && event) {
-        const rect = (event.target as HTMLElement).getBoundingClientRect();
-        const x = (rect.left + rect.width / 2) / window.innerWidth;
-        const y = (rect.top + rect.height / 2) / window.innerHeight;
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { x, y },
-          colors: ["#000000", "#ffffff", "#71717a"],
-          disableForReducedMotion: true,
-        });
+        // Confetti removed for brutalist compliance
       }
       fetchFeed(true);
     } catch (e) {
@@ -902,7 +888,7 @@ export default function Feed() {
       await savePostAPI(postId);
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -912,7 +898,7 @@ export default function Feed() {
       showToast("Bình chọn thành công", "success");
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -924,7 +910,7 @@ export default function Feed() {
       await pinPostAPI(postId);
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -936,7 +922,7 @@ export default function Feed() {
       showToast("Cảm ơn, báo cáo đã được ghi nhận.", "success");
       setReportModal(null);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     } finally {
       setIsProcessing(false);
     }
@@ -948,7 +934,7 @@ export default function Feed() {
       showToast("Đã ẩn.", "info");
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -958,7 +944,7 @@ export default function Feed() {
       showToast(data.message, "success");
       fetchSuggestions();
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -970,7 +956,7 @@ export default function Feed() {
       setEditingPostId(null);
       fetchFeed(true);
     } catch (e) {
-      console.error("API error:", e);
+      showToast("Lỗi hệ thống", "error");
     }
   };
 
@@ -982,26 +968,26 @@ export default function Feed() {
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold text-black">Bảng tin</h1>
               <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
-                Kết nối và chia sẻ tri thức <Sparkles className="w-4 h-4" />
+                Kết nối và chia sẻ nội dung <Sparkles className="w-4 h-4" />
               </p>
             </div>
             <div className="flex border border-zinc-200 bg-white rounded-none">
               <button
                 onClick={() => setFilter("recent")}
-                className={`px-4 py-2 text-xs font-medium transition-colors duration-150 border-r border-zinc-200 ${
+                className={`px-4 py-2 text-xs font-medium   border-r border-zinc-200 ${
                   filter === "recent"
                     ? "bg-zinc-100 text-black"
-                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                    : "text-zinc-500"
                 }`}
               >
                 Mới nhất
               </button>
               <button
                 onClick={() => setFilter("trending")}
-                className={`px-4 py-2 text-xs font-medium transition-colors duration-150 ${
+                className={`px-4 py-2 text-xs font-medium ${
                   filter === "trending"
                     ? "bg-zinc-100 text-black"
-                    : "text-zinc-500 hover:text-black hover:bg-zinc-50"
+                    : "text-zinc-500"
                 }`}
               >
                 Xu hướng
@@ -1051,7 +1037,7 @@ export default function Feed() {
                     <Link
                       key={i}
                       href={`/search?q=${encodeURIComponent(tag.tag)}&type=posts`}
-                      className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-xs font-medium text-zinc-600 hover:text-black hover:bg-zinc-100 transition-colors"
+                      className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-xs font-medium text-zinc-600"
                     >
                       #{tag.tag}
                     </Link>
@@ -1073,11 +1059,11 @@ export default function Feed() {
                   {suggestions.map((s, i) => (
                     <div key={i} className="flex gap-3 items-center">
                       <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
-                        {s.display_name?.[0]?.toUpperCase() || "A"}
+                        {s.full_name?.[0]?.toUpperCase() || "A"}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs font-semibold text-black truncate">
-                          {s.display_name}
+                          {s.full_name}
                         </h4>
                         <span className="text-[10px] text-zinc-500 font-medium truncate">
                           {s.total_match || 0} điểm chung
@@ -1088,7 +1074,7 @@ export default function Feed() {
                           if (currentUser) followUser(s._id);
                           else showToast("Vui lòng đăng nhập.", "error");
                         }}
-                        className="h-7 px-3 border border-zinc-200 text-[10px] font-medium hover:bg-zinc-50 transition-colors"
+                        className="h-7 px-3 border border-zinc-200 text-[10px] font-medium"
                       >
                         Theo dõi
                       </button>
@@ -1114,7 +1100,7 @@ export default function Feed() {
                         <BookText className="w-4 h-4 text-zinc-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-black truncate hover:underline cursor-pointer">
+                        <h4 className="text-xs font-semibold text-black truncate cursor-pointer">
                           {b.title}
                         </h4>
                         <span className="text-[10px] text-zinc-500 font-medium">
@@ -1136,7 +1122,7 @@ export default function Feed() {
                     onClick={() => setShowStoryModal(true)}
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                   >
-                    <div className="w-16 h-16 rounded-full border border-zinc-200 flex items-center justify-center relative bg-zinc-50 overflow-hidden">
+                    <div className="w-16 h-16 rounded-none border border-zinc-200 flex items-center justify-center relative bg-zinc-50 overflow-hidden">
                       {currentUser?.avatar_url ? (
                         <img
                           src={currentUser.avatar_url}
@@ -1162,8 +1148,8 @@ export default function Feed() {
                     }}
                     className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                   >
-                    <div className="w-16 h-16 rounded-full border border-zinc-200 p-[2px]">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-zinc-100 border border-zinc-200">
+                    <div className="w-16 h-16 rounded-none border border-zinc-200 p-[2px]">
+                      <div className="w-full h-full rounded-none overflow-hidden bg-zinc-100 border border-zinc-200">
                         {story.user?.avatar_url ? (
                           <img
                             src={story.user.avatar_url}
@@ -1186,7 +1172,7 @@ export default function Feed() {
               {currentUser && (
                 <div className="bg-white border border-zinc-200 p-6 rounded-none flex flex-col space-y-4">
                   <div className="flex gap-4 items-start">
-                    <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200 flex shrink-0 items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 rounded-none bg-zinc-100 border border-zinc-200 flex shrink-0 items-center justify-center overflow-hidden">
                       {currentUser?.avatar_url ? (
                         <img
                           src={currentUser.avatar_url}
@@ -1199,7 +1185,7 @@ export default function Feed() {
                     <div className="flex-1">
                       <textarea
                         className="w-full bg-transparent outline-none text-black resize-none min-h-[48px] text-sm font-medium placeholder:text-zinc-400"
-                        placeholder="Chia sẻ kiến thức của bạn"
+                        placeholder="Chia sẻ nội dung của bạn"
                         value={content}
                         rows={
                           isQuoteMode
@@ -1217,7 +1203,7 @@ export default function Feed() {
                           {documentSuggestions.map((doc: any, i: number) => (
                             <div
                               key={i}
-                              className="px-4 py-3 cursor-pointer border-b border-zinc-50 hover:bg-zinc-50 flex justify-between items-center"
+                              className="px-4 py-3 cursor-pointer border-b border-zinc-50  flex justify-between items-center"
                               onClick={() => selectAttachedDocument(doc)}
                             >
                               <div className="flex flex-col">
@@ -1227,7 +1213,7 @@ export default function Feed() {
                                 <span className="text-[10px] text-zinc-500">
                                   {doc.author_name ||
                                     doc.author ||
-                                    "Tác giả ẩn danh"}
+                                   "Tác giả ẩn danh"}
                                 </span>
                               </div>
                               <ChevronRight className="w-4 h-4 text-zinc-400" />
@@ -1256,7 +1242,7 @@ export default function Feed() {
                               setAttachedDocumentId("");
                               setAttachedDocumentTitle("");
                             }}
-                            className="p-1 hover:text-black text-zinc-400 transition-colors"
+                            className="p-1 text-zinc-400"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -1294,7 +1280,7 @@ export default function Feed() {
                                     mediaUrls.filter((_, idx) => idx !== i)
                                   )
                                 }
-                                className="absolute top-2 right-2 bg-white border border-zinc-200 p-1 text-black hover:bg-zinc-100 transition-colors"
+                                className="absolute top-2 right-2 bg-white border border-zinc-200 p-1 text-black"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -1327,7 +1313,7 @@ export default function Feed() {
 
                   <div className="pt-4 border-t border-zinc-200 flex items-center justify-between">
                     <div className="flex gap-2">
-                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 transition-colors">
+                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500">
                         <ImageIcon className="w-4 h-4" />
                         <input
                           type="file"
@@ -1339,20 +1325,20 @@ export default function Feed() {
                       </label>
                       <button
                         onClick={() => setShowExtras(!showExtras)}
-                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                        className={`h-10 w-10 border flex items-center justify-center  ${
                           showExtras
                             ? "bg-black border-black text-white"
-                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                            : "bg-white border-zinc-200 text-zinc-500"
                         }`}
                       >
                         <BarChart2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setIsQuoteMode(!isQuoteMode)}
-                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                        className={`h-10 w-10 border flex items-center justify-center  ${
                           isQuoteMode
                             ? "bg-black border-black text-white"
-                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                            : "bg-white border-zinc-200 text-zinc-500"
                         }`}
                       >
                         <Quote className="w-4 h-4" />
@@ -1371,7 +1357,7 @@ export default function Feed() {
                       <button
                         onClick={enhanceContent}
                         disabled={!content.trim() || isEnhancing}
-                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium hover:bg-zinc-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2"
                       >
                         {isEnhancing ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -1383,7 +1369,7 @@ export default function Feed() {
                       <button
                         onClick={createPost}
                         disabled={!content.trim() && mediaUrls.length === 0}
-                        className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 transition-opacity"
+                        className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 "
                       >
                         Đăng bài
                       </button>
@@ -1417,14 +1403,14 @@ export default function Feed() {
                         }
                       }}
                       disabled={isSummarizing}
-                      className="px-4 py-2 border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 border border-zinc-200 text-xs font-medium text-black disabled:opacity-50"
                     >
                       {isSummarizing ? "Đang xử lý" : "Bắt đầu tóm tắt"}
                     </button>
                   </div>
                   {aiSummary && (
                     <div className="pt-4 border-t border-zinc-100 text-sm text-black italic font-medium leading-relaxed">
-                      "{aiSummary}"
+                     "{aiSummary}"
                     </div>
                   )}
                 </div>
@@ -1447,7 +1433,7 @@ export default function Feed() {
                       Chưa có nội dung nào
                     </h3>
                     <p className="text-xs font-medium text-zinc-500 mt-2">
-                      Hãy là người đầu tiên chia sẻ tri thức hôm nay
+                      Hãy là người đầu tiên chia sẻ nội dung hôm nay
                     </p>
                   </div>
                 ) : (
@@ -1458,7 +1444,7 @@ export default function Feed() {
                     >
                       <div className="flex flex-row justify-between items-start">
                         <div className="flex gap-3 items-center">
-                          <div className="w-10 h-10 rounded-full border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0">
+                          <div className="w-10 h-10 rounded-none border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0">
                             {post.user?.avatar_url ? (
                               <img
                                 src={post.user.avatar_url}
@@ -1472,10 +1458,10 @@ export default function Feed() {
                           </div>
                           <div className="flex flex-col">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold text-sm text-black cursor-pointer hover:underline">
+                              <span className="font-semibold text-sm text-black cursor-pointer">
                                 {post.user?.username ||
-                                  post.user?.display_name ||
-                                  "Ẩn danh"}
+                                  post.user?.full_name ||
+                                 "Ẩn danh"}
                               </span>
                               {post.user?.role === "admin" && (
                                 <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">
@@ -1503,7 +1489,7 @@ export default function Feed() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => translatePost(post.id, post.content)}
-                            className="p-2 text-zinc-400 hover:text-black transition-colors"
+                            className="p-2 text-zinc-400"
                           >
                             <Sparkles className="w-4 h-4" />
                           </button>
@@ -1513,7 +1499,7 @@ export default function Feed() {
                             <>
                               <button
                                 onClick={() => togglePinPost(post.id)}
-                                className="p-2 text-zinc-400 hover:text-black transition-colors"
+                                className="p-2 text-zinc-400"
                               >
                                 <Pin
                                   className={`w-4 h-4 ${
@@ -1525,7 +1511,7 @@ export default function Feed() {
                               </button>
                               <button
                                 onClick={() => setDeletePostConfirm(post.id)}
-                                className="p-2 text-zinc-400 hover:text-black transition-colors"
+                                className="p-2 text-zinc-400"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1534,7 +1520,7 @@ export default function Feed() {
                             <>
                               <button
                                 onClick={() => hidePost(post.id)}
-                                className="p-2 text-zinc-400 hover:text-black transition-colors"
+                                className="p-2 text-zinc-400"
                               >
                                 <EyeOff className="w-4 h-4" />
                               </button>
@@ -1545,7 +1531,7 @@ export default function Feed() {
                                     reason: "",
                                   })
                                 }
-                                className="p-2 text-zinc-400 hover:text-black transition-colors"
+                                className="p-2 text-zinc-400"
                               >
                                 <Flag className="w-4 h-4" />
                               </button>
@@ -1593,7 +1579,7 @@ export default function Feed() {
                       {post.attached_document_id && (
                         <Link
                           href={`/documents/${post.attached_document_id}`}
-                          className="mt-4 flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 transition-colors"
+                          className="mt-4 flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50"
                         >
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-14 bg-white border border-zinc-200 flex items-center justify-center shrink-0">
@@ -1644,7 +1630,7 @@ export default function Feed() {
                                   className="relative w-full border border-zinc-200 bg-white text-left overflow-hidden h-10"
                                 >
                                   <div
-                                    className="absolute inset-y-0 left-0 bg-zinc-100 transition-all duration-300"
+                                    className="absolute inset-y-0 left-0 bg-zinc-100"
                                     style={{ width: hasVoted ? `${percent}%` : "0%" }}
                                   />
                                   <div className="absolute inset-0 flex items-center justify-between px-3 z-10 text-xs font-medium text-black">
@@ -1664,17 +1650,17 @@ export default function Feed() {
                         <div className="flex items-center gap-6">
                           <button
                             onClick={() => setGiftModal({ postId: post.id, authorId: post.user?._id || post.author_id, amount: 10 })}
-                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
                           >
                             <Coins className="w-4 h-4" />
                             Tặng quà
                           </button>
                           <button
                             onClick={(e) => toggleLike(post.id, "like", e)}
-                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${
+                            className={`flex items-center gap-2 text-xs font-medium  ${
                               post.likes?.includes(currentUser?._id || "")
                                 ? "text-black"
-                                : "text-zinc-500 hover:text-black"
+                                : "text-zinc-500"
                             }`}
                           >
                             <Heart
@@ -1692,14 +1678,14 @@ export default function Feed() {
                                 expandedComments === post.id ? null : post.id
                               )
                             }
-                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
                           >
                             <MessageCircle className="w-4 h-4" />
                             {(post.comments || []).length}
                           </button>
                           <button
                             onClick={() => repostPost(post.id)}
-                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
                           >
                             <RotateCw className="w-4 h-4" />
                           </button>
@@ -1707,10 +1693,10 @@ export default function Feed() {
                         <div className="flex items-center gap-6">
                           <button
                             onClick={() => toggleSave(post.id)}
-                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${
+                            className={`flex items-center gap-2 text-xs font-medium  ${
                               post.saved
                                 ? "text-black"
-                                : "text-zinc-500 hover:text-black"
+                                : "text-zinc-500"
                             }`}
                           >
                             <Bookmark
@@ -1721,7 +1707,7 @@ export default function Feed() {
                           </button>
                           <button
                             onClick={() => {}}
-                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 hover:text-black transition-colors"
+                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
                           >
                             <Share2 className="w-4 h-4" />
                           </button>
@@ -1744,7 +1730,7 @@ export default function Feed() {
                                   <div className="flex justify-between items-start group">
                                     <div className="space-y-1">
                                       <span className="font-semibold text-black text-xs">
-                                        {c.user.display_name || "Người dùng"}
+                                        {c.user.full_name || "Người dùng"}
                                       </span>
                                       <p className="text-zinc-600 font-medium text-xs leading-relaxed">
                                         {c.content || c.text}
@@ -1757,12 +1743,12 @@ export default function Feed() {
                                             postId: post.id,
                                             commentId: c.id,
                                             userName:
-                                              c.user.display_name ||
-                                              "Người dùng",
+                                              c.user.full_name ||
+                                             "Người dùng",
                                           });
                                           setCommentText("");
                                         }}
-                                        className="text-[10px] font-semibold text-zinc-400 hover:text-black transition-colors opacity-0 group-hover:opacity-100 shrink-0 ml-4"
+                                        className="text-[10px] font-semibold text-zinc-400   opacity-0 group- shrink-0 ml-4"
                                       >
                                         Trả lời
                                       </button>
@@ -1789,7 +1775,7 @@ export default function Feed() {
                                       </b>
                                     </span>
                                     <button
-                                      className="hover:text-black transition-colors"
+                                      className=" "
                                       onClick={() => setReplyToContext(null)}
                                     >
                                       Hủy bỏ
@@ -1811,7 +1797,7 @@ export default function Feed() {
                                 />
                                 <Button
                                   onClick={() => submitComment(post.id)}
-                                  className="h-10 w-10 bg-black border border-black text-white hover:bg-zinc-800 transition-colors rounded-none shrink-0"
+                                  className="h-10 w-10 bg-black border border-black text-white rounded-none shrink-0"
                                 >
                                   <Send className="w-4 h-4" />
                                 </Button>
@@ -1833,7 +1819,7 @@ export default function Feed() {
                     <button
                       onClick={() => fetchFeed()}
                       disabled={loading}
-                      className="px-8 py-3 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+                      className="px-8 py-3 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50"
                     >
                       {loading ? "Đang tải" : "Xem thêm bài viết"}
                     </button>
@@ -1847,7 +1833,7 @@ export default function Feed() {
 
       {currentUser && showStoryModal && (
         <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center backdrop-blur-sm p-4">
-          <div className="w-full h-[85vh] max-h-[800px] max-w-sm mx-auto border border-zinc-200 bg-zinc-50 flex flex-col relative overflow-hidden shadow-2xl">
+          <div className="w-full h-[85vh] max-h-[800px] max-w-sm mx-auto border border-zinc-200 bg-zinc-50 flex flex-col relative overflow-hidden ">
             <div className="absolute z-10 top-0 left-0 right-0 p-3 flex justify-between items-center bg-white border-b border-zinc-200">
               <div className="flex gap-2 items-center">
                 <select
@@ -1888,8 +1874,8 @@ export default function Feed() {
                     setShowStoryArchive(!showStoryArchive);
                     if (!showStoryArchive) fetchArchivedStories();
                   }}
-                  className={`p-1.5 transition-colors ${
-                    showStoryArchive ? "bg-zinc-100" : "hover:bg-zinc-50"
+                  className={`p-1.5 ${
+                    showStoryArchive ? "bg-zinc-100" : ""
                   }`}
                   title="Kho lưu trữ tin"
                 >
@@ -1897,7 +1883,7 @@ export default function Feed() {
                 </button>
                 <button
                   onClick={() => setShowStoryModal(false)}
-                  className="p-1.5 hover:bg-zinc-50 transition-colors"
+                  className="p-1.5"
                 >
                   <X className="w-4 h-4 text-black" />
                 </button>
@@ -1971,7 +1957,7 @@ export default function Feed() {
               )}
 
                 <div
-                  className="z-10 cursor-move transition-transform active:scale-95"
+                  className="z-10 cursor-move "
                   style={{ transform: `translate(${storyTextPos.x}px, ${storyTextPos.y}px)` }}
                   onMouseDown={(e) => handleDragStart(e, 'text')}
                   onTouchStart={(e) => handleDragStart(e, 'text')}
@@ -2000,7 +1986,7 @@ export default function Feed() {
                 {storyStickers.map((sticker) => (
                   <div
                     key={sticker.id}
-                    className="absolute z-20 text-5xl cursor-move select-none transition-transform active:scale-110"
+                    className="absolute z-20 text-5xl cursor-move select-none "
                     style={{ transform: `translate(${sticker.x}px, ${sticker.y}px)` }}
                     onMouseDown={(e) => handleDragStart(e, 'sticker', sticker.id)}
                     onTouchStart={(e) => handleDragStart(e, 'sticker', sticker.id)}
@@ -2017,7 +2003,7 @@ export default function Feed() {
                   </span>
                   <button
                     onClick={() => setStoryLinkUrl("")}
-                    className="text-zinc-400 hover:text-black ml-1"
+                    className="text-zinc-400 ml-1"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -2032,7 +2018,7 @@ export default function Feed() {
                     </span>
                     <button
                       onClick={() => setStoryAddPoll(false)}
-                      className="text-zinc-400 hover:text-black"
+                      className="text-zinc-400"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -2063,7 +2049,7 @@ export default function Feed() {
                       onClick={() =>
                         setStoryPollOptions([...storyPollOptions, ""])
                       }
-                      className="text-zinc-500 hover:text-black text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
+                      className="text-zinc-500 text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
                     >
                       <Plus className="w-3 h-3" />
                       Thêm lựa chọn
@@ -2080,7 +2066,7 @@ export default function Feed() {
                     </span>
                     <button
                       onClick={() => setStoryAddQuiz(false)}
-                      className="text-zinc-400 hover:text-black"
+                      className="text-zinc-400"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -2124,7 +2110,7 @@ export default function Feed() {
                       onClick={() =>
                         setStoryQuizOptions([...storyQuizOptions, ""])
                       }
-                      className="text-zinc-500 hover:text-black text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
+                      className="text-zinc-500 text-[10px] font-semibold py-1 flex items-center justify-center gap-1 border border-dashed border-zinc-200"
                     >
                       <Plus className="w-3 h-3" />
                       Thêm lựa chọn
@@ -2168,7 +2154,7 @@ export default function Feed() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <label
-                    className="cursor-pointer h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    className="cursor-pointer h-8 w-8 flex items-center justify-center bg-zinc-50 border border-zinc-200 shrink-0"
                     title="Ảnh / Video"
                   >
                     {isStoryUploading ? (
@@ -2186,18 +2172,18 @@ export default function Feed() {
                   <div className="relative">
                     <button
                       onClick={() => setShowEmojiMenu(!showEmojiMenu)}
-                      className={`h-8 w-8 flex items-center justify-center transition-colors border border-zinc-200 shrink-0 ${showEmojiMenu ? 'bg-black text-white' : 'bg-zinc-50 hover:bg-zinc-100 text-black'}`}
+                      className={`h-8 w-8 flex items-center justify-center border border-zinc-200 shrink-0 ${showEmojiMenu ? 'bg-black text-white' : 'bg-zinc-50 text-black'}`}
                       title="Thêm emoji"
                     >
                       <Smile className="w-4 h-4" />
                     </button>
                     {showEmojiMenu && (
-                      <div className="absolute bottom-full left-0 mb-2 p-2 bg-white border border-zinc-200 shadow-2xl grid grid-cols-5 gap-1 z-[400] animate-in fade-in slide-in-from-bottom-2 w-[200px]">
+                      <div className="absolute bottom-full left-0 mb-2 p-2 bg-white border border-zinc-200  grid grid-cols-5 gap-1 z-[400]    w-[200px]">
                         {["🔥", "⭐", "❤️", "😂", "🚀", "✨", "🙌", "💯", "👏", "🎉", "💡", "📍", "👋", "🥳", "🤔"].map(e => (
                           <button
                             key={e}
                             onClick={() => addSticker(e)}
-                            className="w-8 h-8 flex items-center justify-center hover:bg-zinc-100 text-xl"
+                            className="w-8 h-8 flex items-center justify-center text-xl"
                           >
                             {e}
                           </button>
@@ -2207,32 +2193,32 @@ export default function Feed() {
                   </div>
                   <button
                     onClick={() => setShowLinkInput(!showLinkInput)}
-                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 border border-zinc-200 shrink-0"
                   >
                     <LinkIcon className="w-4 h-4 text-black" />
                   </button>
                   <button
                     onClick={() => setShowMentionInput(!showMentionInput)}
-                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 border border-zinc-200 shrink-0"
                   >
                     <AtSign className="w-4 h-4 text-black" />
                   </button>
                   <button
                     onClick={() => setStoryAddPoll(!storyAddPoll)}
-                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 border border-zinc-200 shrink-0"
                   >
                     <BarChart2 className="w-4 h-4 text-black" />
                   </button>
                   <button
                     onClick={() => setStoryAddQuiz(!storyAddQuiz)}
-                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 transition-colors border border-zinc-200 shrink-0"
+                    className="h-8 w-8 flex items-center justify-center bg-zinc-50 border border-zinc-200 shrink-0"
                   >
                     <HelpCircle className="w-4 h-4 text-black" />
                   </button>
                 </div>
                 <button
                   onClick={createStory}
-                  className="px-4 h-8 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors"
+                  className="px-4 h-8 bg-black text-white text-xs font-medium"
                 >
                   Đăng tin
                 </button>
@@ -2258,7 +2244,7 @@ export default function Feed() {
                         stories[activeStoryIndex]._id
                     )
                   }
-                  className="text-black p-2 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 transition-colors"
+                  className="text-black p-2 bg-zinc-50 border border-zinc-200"
                   title="Xóa tin này"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -2269,7 +2255,7 @@ export default function Feed() {
                   setViewingStoryMode(false);
                   setStoryProgress(0);
                 }}
-                className="text-black p-2 bg-zinc-50 border border-zinc-200 hover:bg-zinc-100 transition-colors"
+                className="text-black p-2 bg-zinc-50 border border-zinc-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2317,7 +2303,7 @@ export default function Feed() {
                     className="flex-1 h-full bg-black/10 overflow-hidden"
                   >
                     <div
-                      className="h-full bg-black transition-all duration-100 ease-linear"
+                      className="h-full bg-black"
                       style={{
                         width:
                           i < activeStoryIndex
@@ -2365,7 +2351,7 @@ export default function Feed() {
                     href={stories[activeStoryIndex].link_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-white border border-zinc-200 flex gap-2 items-center z-10 pointer-events-auto hover:bg-zinc-50 transition-colors"
+                    className="absolute bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 bg-white border border-zinc-200 flex gap-2 items-center z-10 pointer-events-auto"
                   >
                     <Globe className="w-4 h-4 text-black" />
                     <span className="text-xs font-semibold text-black">
@@ -2376,7 +2362,7 @@ export default function Feed() {
 
                 {stories[activeStoryIndex].poll_data ? (
                   <div
-                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-none"
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto "
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="text-center font-bold text-[10px] uppercase text-zinc-500 mb-1">
@@ -2413,7 +2399,7 @@ export default function Feed() {
                             className="relative w-full text-black text-[10px] border border-zinc-200 bg-zinc-50 overflow-hidden font-medium h-8 flex items-center"
                           >
                             <div
-                              className="absolute top-0 bottom-0 left-0 bg-zinc-200 transition-all duration-300"
+                              className="absolute top-0 bottom-0 left-0 bg-zinc-200"
                               style={{ width: hasVoted ? `${percent}%` : "0%" }}
                             />
                             <div className="relative w-full px-2 flex justify-between items-center z-10">
@@ -2432,7 +2418,7 @@ export default function Feed() {
                   </div>
                 ) : stories[activeStoryIndex].quiz_data ? (
                   <div
-                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto shadow-none"
+                    className="w-full max-w-[240px] bg-white border border-zinc-200 p-4 z-10 flex flex-col gap-2 pointer-events-auto "
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="text-center font-bold text-[10px] uppercase text-zinc-500 mb-1">
@@ -2498,14 +2484,14 @@ export default function Feed() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-black text-xs font-bold">
-                      {stories[activeStoryIndex].user?.display_name?.[0]?.toUpperCase() ||
-                        "A"}
+                      {stories[activeStoryIndex].user?.full_name?.[0]?.toUpperCase() ||
+                       "A"}
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col">
                   <span className="text-black text-xs font-bold truncate">
-                    {stories[activeStoryIndex].user?.display_name}
+                    {stories[activeStoryIndex].user?.full_name}
                   </span>
                   <span className="text-zinc-500 text-[10px] font-medium">
                     {new Date(
@@ -2529,7 +2515,7 @@ export default function Feed() {
                       );
                       setShowViewerList(true);
                     }}
-                    className="flex-1 py-2 text-black text-xs font-semibold flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors border border-zinc-200"
+                    className="flex-1 py-2 text-black text-xs font-semibold flex items-center justify-center gap-2 border border-zinc-200"
                   >
                     <Eye className="w-4 h-4" />
                     {stories[activeStoryIndex].viewer_count || 0} người xem
@@ -2572,7 +2558,7 @@ export default function Feed() {
                             stories[activeStoryIndex]._id
                         )
                       }
-                      className="text-black bg-white border border-zinc-200 p-2 hover:bg-zinc-50 transition-colors shrink-0"
+                      className="text-black bg-white border border-zinc-200 p-2 shrink-0"
                     >
                       <Heart className="w-4 h-4" />
                     </button>
@@ -2581,14 +2567,14 @@ export default function Feed() {
               </div>
 
               {showViewerList && (
-                <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto shadow-none">
+                <div className="absolute bottom-16 left-4 right-4 z-[210] bg-white border border-zinc-200 p-4 max-h-64 overflow-y-auto ">
                   <div className="flex items-center justify-between mb-3 border-b border-zinc-100 pb-2">
                     <span className="text-black text-xs font-semibold">
                       Người đã xem
                     </span>
                     <button
                       onClick={() => setShowViewerList(false)}
-                      className="text-zinc-400 hover:text-black"
+                      className="text-zinc-400"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -2621,7 +2607,7 @@ export default function Feed() {
                             </span>
                             <span className="text-zinc-500 text-[10px] font-medium">
                               {new Date(v.viewed_at).toLocaleTimeString(
-                                "vi-VN",
+                               "vi-VN",
                                 { hour: "2-digit", minute: "2-digit" }
                               )}
                             </span>
@@ -2654,7 +2640,7 @@ export default function Feed() {
         <ModalFooter>
           <button
             onClick={() => setTranslationModal(null)}
-            className="px-6 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors"
+            className="px-6 py-2 bg-white border border-zinc-200 text-xs font-medium text-black "
           >
             Đóng
           </button>
@@ -2680,14 +2666,14 @@ export default function Feed() {
           <button
             onClick={() => setDeleteStoryConfirm(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black   disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={deleteStory}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   flex items-center justify-center disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận xóa"}
           </button>
@@ -2713,14 +2699,14 @@ export default function Feed() {
           <button
             onClick={() => setDeletePostConfirm(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black   disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={deletePost}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   flex items-center justify-center disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận xóa"}
           </button>
@@ -2754,7 +2740,7 @@ export default function Feed() {
               }
               placeholder="Nhập chi tiết"
               autoFocus
-              className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none transition-colors"
+              className="w-full min-h-[100px] p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:border-black outline-none resize-none "
             />
           </div>
         </ModalContent>
@@ -2762,14 +2748,14 @@ export default function Feed() {
           <button
             onClick={() => setReportModal(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black   disabled:opacity-50"
           >
             Hủy bỏ
           </button>
           <button
             onClick={reportPost}
             disabled={isProcessing || !reportModal?.reason.trim()}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center disabled:opacity-50"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   flex items-center justify-center disabled:opacity-50"
           >
             {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi báo cáo"}
           </button>
@@ -2783,25 +2769,25 @@ export default function Feed() {
       >
         <ModalHeader>
           <ModalTitle className="text-sm font-semibold text-black">
-            Tặng quà DL cho tác giả
+            Tặng quà dl cho tác giả
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
           <p className="text-xs text-zinc-500 font-medium mb-6">
-            Chọn số lượng DL bạn muốn tặng để ủng hộ tác giả. Bạn sẽ nhận được 10% hoàn trả nếu tặng từ 50 DL trở lên!
+            Chọn số lượng dl bạn muốn tặng để ủng hộ tác giả. Bạn sẽ nhận được 10% hoàn trả nếu tặng từ 50 dl trở lên!
           </p>
           <div className="grid grid-cols-3 gap-3">
             {[10, 20, 50, 100, 200, 500].map((amt) => (
               <button
                 key={amt}
                 onClick={() => setGiftModal(prev => prev ? { ...prev, amount: amt } : null)}
-                className={`py-3 border text-xs font-bold transition-all ${
+                className={`py-3 border text-xs font-bold  ${
                   giftModal?.amount === amt
                     ? "bg-black border-black text-white"
-                    : "bg-white border-zinc-200 text-black hover:bg-zinc-50"
+                    : "bg-white border-zinc-200 text-black"
                 }`}
               >
-                {amt} DL
+                {amt} dl
               </button>
             ))}
           </div>
@@ -2809,7 +2795,7 @@ export default function Feed() {
              <label className="text-[10px] font-semibold text-black uppercase tracking-widest mb-1 block">Hoặc nhập số khác</label>
              <input
                type="number"
-               className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:border-black outline-none bg-zinc-50 transition-colors"
+               className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:border-black outline-none bg-zinc-50 "
                value={giftModal?.amount || ""}
                onChange={(e) => setGiftModal(prev => prev ? { ...prev, amount: parseInt(e.target.value) || 0 } : null)}
              />
@@ -2819,14 +2805,14 @@ export default function Feed() {
           <button
             onClick={() => setGiftModal(null)}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black hover:bg-zinc-50 transition-colors"
+            className="flex-1 py-2 bg-white border border-zinc-200 text-xs font-medium text-black "
           >
             Hủy bỏ
           </button>
           <button
             onClick={handleGiftDL}
             disabled={isProcessing || !giftModal?.amount}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   flex items-center justify-center gap-2"
           >
             {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
             Xác nhận tặng

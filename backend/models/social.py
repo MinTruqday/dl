@@ -196,3 +196,15 @@ class StoryResponse(StoryInDB):
     has_unread: bool = True
     class Config:
         populate_by_name = True
+
+class DiscussionCreate(BaseModel):
+    title: str
+    content: str
+    tags: Optional[List[str]] = []
+
+class DiscussionReply(BaseModel):
+    content: str
+
+class ReportCreate(BaseModel):
+    reason: str
+    details: Optional[str] = None

@@ -6,17 +6,12 @@ import uuid
 import io
 import json
 import zipfile
-import qrcode
 from bson import ObjectId
-from bson.errors import InvalidId
 from fastapi import HTTPException, status
 from core.database import db_client
 from models.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
-from utils.metric import calculate_flesch_kincaid, calculate_vocabulary_richness
-from core.publisher import trigger_document_publish_job, publish_compile_task
 from loguru import logger
 from services.notification import NotificationService
-from services.rag import RagService
 
 def serialize_document(document):
     if not document:
@@ -61,7 +56,6 @@ class DocumentService:
     async def get_semantic_search(query: str, limit: int = 10) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
-        # Simple regex fallback as semantic search is usually handled by a separate engine
         cursor = docs_col.find({
             "status": DocumentStatus.PUBLISHED, 
             "is_deleted": {"$ne": True},
@@ -77,7 +71,6 @@ class DocumentService:
     async def get_ai_recommendations(limit: int = 10) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
-        # Simplified recommendation logic based on rating and views
         cursor = docs_col.find({"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}).sort([("average_rating", -1), ("views", -1)]).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
@@ -141,31 +134,6 @@ class DocumentService:
         return await docs_collection.find_one({"_id": document_id})
 
     @staticmethod
-    async def publish_document(document_id: str, current_user):
-        db = db_client.mongodb.get_default_database()
-        docs_collection = db["documents"]
-        user_id = str(current_user.id)
-        document = await docs_collection.find_one({"_id": document_id, "author_id": user_id})
-        if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
-            
-        await trigger_document_publish_job(document_id, user_id)
-        try:
-            await RagService.ingest(document_id)
-        except Exception as e:
-            logger.error(f"RAG: Ingestion failed for {document_id}: {e}")
-            
-        await docs_collection.update_one(
-            {"_id": document_id},
-            {"$set": {
-                "status": "processing_publish",
-                "updated_at": datetime.datetime.utcnow()
-            }}
-        )
-        logger.info(f"Workspace: Document publishing triggered {document_id}")
-        return await docs_collection.find_one({"_id": document_id})
-
-    @staticmethod
     async def list_documents(limit: int, offset: int, q: str, sort_by: str, category: str = None, tag: str = None):
         db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
@@ -215,39 +183,6 @@ class DocumentService:
                 raise HTTPException(status_code=403, detail="Tài liệu đang ở bản nháp.")
         
         return document
-
-    @staticmethod
-    async def schedule_publish(document_id: str, publish_at: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
-            
-        scheduled_time = datetime.datetime.fromisoformat(publish_at)
-        if scheduled_time <= datetime.datetime.utcnow():
-            raise HTTPException(status_code=400, detail="Thời gian xuất bản phải ở tương lai.")
-            
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {"$set": {"scheduled_publish_at": scheduled_time, "status": "scheduled", "updated_at": datetime.datetime.utcnow()}}
-        )
-        logger.info(f"Workspace: Document scheduled {document_id} for {publish_at}")
-        return {"message": "Đã lên lịch xuất bản thành công.", "scheduled_at": publish_at}
-
-    @staticmethod
-    async def set_free_preview(document_id: str, chapter_ids: list, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
-            
-        chapters = doc.get("chapters", [])
-        for ch in chapters:
-            ch["is_premium"] = ch["id"] not in chapter_ids
-            
-        await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.utcnow()}})
-        logger.info(f"Monetization: Free preview configured for {document_id}")
-        return {"message": "Đã thiết lập chương đọc thử thành công."}
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
@@ -308,104 +243,6 @@ class DocumentService:
         return {"message": "Đã thiết lập mật khẩu bảo vệ tài liệu."}
 
     @staticmethod
-    async def create_series(data: dict, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        series_id = str(uuid.uuid4())
-        series = {
-            "_id": series_id,
-            "author_id": str(current_user.id),
-            "title": data["title"],
-            "description": data.get("description", ""),
-            "document_ids": data.get("document_ids", []),
-            "created_at": datetime.datetime.utcnow(),
-        }
-        await db["series"].insert_one(series)
-        if series["document_ids"]:
-            await db["documents"].update_many(
-                {"_id": {"$in": series["document_ids"]}, "author_id": str(current_user.id)},
-                {"$set": {"series_id": series_id}}
-            )
-        logger.info(f"Workspace: Series created {series_id} by {current_user.id}")
-        return {"message": "Tạo Series thành công.", "series_id": series_id}
-
-    @staticmethod
-    async def get_my_series(current_user) -> list:
-        db = db_client.mongodb.get_default_database()
-        series_docs = await db["series"].find({"author_id": str(current_user.id)}).sort("created_at", -1).to_list(length=100)
-        return [serialize_document(s) for s in series_docs]
-
-    @staticmethod
-    async def get_series_by_id(series_id: str) -> dict:
-        db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one({"_id": series_id})
-        if not series:
-            raise HTTPException(status_code=404, detail="Không tìm thấy chuỗi tài liệu.")
-            
-        series = serialize_document(series)
-        if series.get("document_ids"):
-            docs = await db["documents"].find({"_id": {"$in": series["document_ids"]}}).to_list(length=100)
-            series["documents"] = [serialize_document(d) for d in docs]
-            
-        return series
-
-    @staticmethod
-    async def notify_purchase(document_id: str, buyer_id: str):
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id})
-        if not doc: 
-            return
-            
-        author_id = doc.get("author_id")
-        if not author_id: 
-            return
-            
-        buyer = await db["users"].find_one({"_id": buyer_id}, {"full_name": 1})
-        buyer_name = buyer.get("full_name", "Một độc giả") if buyer else "Một độc giả"
-        
-        notification = {
-            "_id": str(uuid.uuid4()),
-            "user_id": author_id,
-            "title": "Giao dịch mới",
-            "message": f"{buyer_name} vừa mua tài liệu '{doc.get('title', '')}'.",
-            "is_read": False,
-            "type": "purchase",
-            "created_at": datetime.datetime.utcnow(),
-        }
-        await db["notifications"].insert_one(notification)
-        if db_client.redis:
-            await db_client.redis.publish(
-                f"user_notifications:{author_id}",
-                json.dumps({"title": notification["title"], "body": notification["message"]})
-            )
-        logger.info(f"Notification: Purchase notification sent to author {author_id}")
-
-    @staticmethod
-    async def add_chapter(document_id: str, chapter_in, current_user):
-        db = db_client.mongodb.get_default_database()
-        docs_col = db["documents"]
-        document = await docs_col.find_one({"_id": document_id})
-        user_id = str(current_user.id)
-        if not document or (document.get("author_id") != user_id and user_id not in document.get("coauthors", [])):
-            raise HTTPException(status_code=403, detail="Không có quyền thêm chương.")
-            
-        order = len(document.get("chapters", [])) + 1
-        new_chapter = {
-            "id": str(uuid.uuid4()),
-            "title": chapter_in.title,
-            "content": chapter_in.content,
-            "order": order,
-            "is_premium": chapter_in.is_premium,
-            "price_dl": chapter_in.price_dl,
-            "words_count": len(chapter_in.content.split()),
-            "readability_score": calculate_flesch_kincaid(chapter_in.content),
-            "vocabulary_richness": calculate_vocabulary_richness(chapter_in.content),
-            "created_at": datetime.datetime.utcnow()
-        }
-        await docs_col.update_one({"_id": document_id}, {"$push": {"chapters": new_chapter}})
-        logger.info(f"Workspace: Chapter added to {document_id}")
-        return serialize_document(await docs_col.find_one({"_id": document_id}))
-
-    @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
         db = db_client.mongodb.get_default_database()
         document = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
@@ -449,7 +286,7 @@ class DocumentService:
         author = await db["users"].find_one({"_id": document["author_id"]})
         if author:
             document["author"] = {
-                "display_name": author.get("full_name") or author.get("username"),
+                "full_name": author.get("full_name") or author.get("username"),
                 "avatar_url": author.get("avatar_url"),
                 "slug": author.get("slug")
             }
@@ -479,35 +316,6 @@ class DocumentService:
         return mem_zip.read()
 
     @staticmethod
-    async def get_approval_queue(skip: int = 0, limit: int = 30) -> list:
-        db = db_client.mongodb.get_default_database()
-        documents = await db["documents"].find({"status": "processing_publish"}).sort("updated_at", 1).skip(skip).limit(limit).to_list(length=limit)
-        return [{
-            "id": str(b["_id"]),
-            "title": b.get("title", ""),
-            "author_id": b.get("author_id"),
-            "submitted_at": b.get("updated_at", datetime.datetime.utcnow()).isoformat() if isinstance(b.get("updated_at"), datetime.datetime) else ""
-        } for b in documents]
-
-    @staticmethod
-    async def moderate_document(document_id: str, action: str, reason: str, current_moderator) -> dict:
-        db = db_client.mongodb.get_default_database()
-        status = "PUBLISHED" if action == "approve" else "REJECTED"
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {"$set": {"status": status, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": datetime.datetime.utcnow()}}
-        )
-        await db["audit_logs"].insert_one({
-            "action": f"DOCUMENT_{status}", 
-            "actor_id": str(current_moderator.id), 
-            "document_id": document_id, 
-            "reason": reason, 
-            "timestamp": datetime.datetime.utcnow()
-        })
-        logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
-        return {"message": f"Đã {status.lower()} tài liệu thành công."}
-
-    @staticmethod
     async def get_document_preview(slug: str) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
@@ -524,26 +332,20 @@ class DocumentService:
         return preview_data
 
     @staticmethod
-    async def get_document_dropoff(document_id: str, current_user) -> dict:
+    async def get_document_audit_logs(document_id: str, current_user) -> list:
         db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
+        document = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)}, {"_id": 1})
+        if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-            
-        chapters = doc.get("chapters", [])
-        if not chapters:
-            return {"chapters": [], "message": "Tài liệu chưa có chương nào."}
-            
-        dropoff_data = []
-        base_readers = doc.get("views", 100)
-        for i, ch in enumerate(chapters):
-            readers = int(base_readers * (0.85 ** i))
-            dropoff_data.append({
-                "chapter_id": ch["id"],
-                "chapter_title": ch.get("title", f"Chương {i+1}"),
-                "readers_started": readers,
-                "readers_completed": int(readers * 0.9),
-                "dropoff_rate": round((readers - int(readers * 0.9)) / readers * 100, 2) if readers > 0 else 0
-            })
-            
-        return {"document_id": document_id, "dropoff_data": dropoff_data}
+
+        logs = await db["audit_logs"].find({"document_id": document_id}).sort("timestamp", -1).limit(100).to_list(length=100)
+        return [
+            {
+                "id": str(log["_id"]),
+                "action": log.get("action"),
+                "actor_id": log.get("actor_id"),
+                "reason": log.get("reason"),
+                "timestamp": log["timestamp"].isoformat() if isinstance(log.get("timestamp"), datetime.datetime) else log.get("timestamp")
+            }
+            for log in logs
+        ]

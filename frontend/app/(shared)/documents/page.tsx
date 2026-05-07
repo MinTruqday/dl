@@ -131,7 +131,7 @@ export default function DocumentsPage() {
       setDocuments(docs);
       setFolders(foldersData.data || foldersData || []);
     } catch (err: any) {
-      showToast("Không thể tải danh sách tri thức", "error");
+      showToast("Không thể tải danh sách tài liệu", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
@@ -316,7 +316,7 @@ export default function DocumentsPage() {
 
         <Modal isOpen={createDocModal} onClose={() => setCreateDocModal(false)} className="max-w-3xl rounded-none border border-zinc-200 bg-white p-0">
           <ModalHeader className="border-b border-zinc-200 p-6">
-            <ModalTitle className="text-sm font-semibold text-black">{isAdmin ? "Thêm tài liệu hệ thống" : "Khởi tạo tri thức mới"}</ModalTitle>
+            <ModalTitle className="text-sm font-semibold text-black">{isAdmin ? "Thêm tài liệu hệ thống" : "Khởi tạo tài liệu mới"}</ModalTitle>
             <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Điền thông tin để bắt đầu quá trình lưu trữ chuyên sâu</ModalDescription>
           </ModalHeader>
           <ModalContent className="grid md:grid-cols-2 gap-8 p-6">
@@ -345,7 +345,7 @@ export default function DocumentsPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Giá (DL)</label>
+                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Giá (dl)</label>
                   <input 
                     type="number" 
                     className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
@@ -427,7 +427,7 @@ export default function DocumentsPage() {
         <Modal isOpen={createFolderModal} onClose={() => setCreateFolderModal(false)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
           <ModalHeader className="border-b border-zinc-200 p-6">
             <ModalTitle className="text-sm font-semibold text-black">Kiến tạo không gian mới</ModalTitle>
-            <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Phân loại tri thức theo cấu trúc thư mục chuyên nghiệp</ModalDescription>
+            <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Phân loại tài liệu theo cấu trúc thư mục chuyên nghiệp</ModalDescription>
           </ModalHeader>
           <ModalContent className="p-6">
             <div className="space-y-2">
@@ -466,7 +466,7 @@ export default function DocumentsPage() {
               </div>
               <div>
                 <ModalTitle className="text-sm font-semibold text-black">Thiết lập bảo mật</ModalTitle>
-                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Mã hóa đa lớp cho thực thể tri thức</ModalDescription>
+                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Mã hóa đa lớp cho thực thể</ModalDescription>
               </div>
             </div>
           </ModalHeader>
@@ -505,7 +505,7 @@ export default function DocumentsPage() {
             <form id="share-form" onSubmit={handleShareSubmit} className="space-y-6">
               <div className="flex items-center gap-3 bg-zinc-50 p-4 border border-zinc-200 rounded-none">
                 <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="w-4 h-4 accent-black cursor-pointer rounded-none" />
-                <label className="text-xs font-semibold text-black uppercase tracking-widest cursor-pointer">Công khai thực thể tri thức</label>
+                <label className="text-xs font-semibold text-black uppercase tracking-widest cursor-pointer">Công khai tài liệu</label>
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -548,7 +548,7 @@ export default function DocumentsPage() {
               Tài liệu & Học liệu
             </h1>
             <p className="text-zinc-500 text-sm font-medium">
-              Kiến tạo không gian tri thức cá nhân hóa
+              Kiến tạo không gian nội dung cá nhân hóa
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -576,7 +576,7 @@ export default function DocumentsPage() {
             {/* Search */}
             <div className="border border-zinc-200 bg-white p-6 space-y-4">
               <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
-                <Search className="w-4 h-4" /> Tìm kiếm tri thức
+                <Search className="w-4 h-4" /> Tìm kiếm tài liệu
               </h3>
               <input 
                 type="text"
@@ -625,7 +625,7 @@ export default function DocumentsPage() {
 
             <div className="p-6 border border-zinc-200 bg-zinc-50">
               <p className="text-[10px] font-semibold text-zinc-500 leading-relaxed uppercase tracking-widest">
-                Hệ thống lưu trữ tri thức DocLib đảm bảo tính toàn vẹn và bảo mật tuyệt đối cho mọi thực thể dữ liệu.
+                Hệ thống lưu trữ của DocLib đảm bảo tính toàn vẹn và bảo mật tuyệt đối cho mọi thực thể dữ liệu.
               </p>
             </div>
           </aside>
@@ -679,7 +679,7 @@ export default function DocumentsPage() {
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="bg-zinc-50 border-b border-zinc-200 text-black font-semibold">
-                      <th className="px-6 py-4">Thực thể tri thức</th>
+                      <th className="px-6 py-4">Tài liệu</th>
                       <th className="px-6 py-4">Phân loại</th>
                       <th className="px-6 py-4">Bảo mật</th>
                       <th className="px-6 py-4 text-right">Hành động</th>
@@ -840,7 +840,7 @@ export default function DocumentsPage() {
               <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-zinc-50 rounded-none">
                 <Search className="w-8 h-8 text-zinc-400 mb-4" />
                 <h2 className="text-sm font-semibold text-black mb-1">
-                  Không tìm thấy tri thức
+                  Không tìm thấy tài liệu
                 </h2>
                 <p className="text-xs font-medium text-zinc-500 max-w-xs text-center">
                   Hiện tại không có bất kỳ thực thể dữ liệu nào hoặc không khớp với tiêu chí tìm kiếm.

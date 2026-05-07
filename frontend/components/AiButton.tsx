@@ -37,7 +37,7 @@ export default function AiButton() {
               </div>
               <div className="bg-white border border-zinc-100 p-3 text-xs font-medium leading-relaxed">
                 Xin chào {user.full_name}, tôi có thể giúp bạn tìm kiếm tài liệu
-                hoặc tóm tắt kiến thức ngay lúc này.
+                hoặc tóm tắt nội dung ngay bây giờ.
               </div>
             </div>
           </div>

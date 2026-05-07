@@ -50,4 +50,4 @@ async def ingest_document(document_id: str, current_user: UserInDB = Depends(get
         raise HTTPException(status_code=401, detail="Bạn cần đăng nhập để thực hiện hành động này.")
     
     result = await RagService.ingest(document_id)
-    return APIResponse(data=result, message="Tiến trình đồng bộ tri thức AI đã được bắt đầu.", status=200)
+    return APIResponse(data=result, message="Tiến trình đồng bộ dữ liệu AI đã được bắt đầu.", status=200)

@@ -71,7 +71,7 @@ export default function AuthorApplicationsPage() {
             ? "Đã phê duyệt hồ sơ tác giả."
             : "Hồ sơ chưa đạt tiêu chuẩn kiểm duyệt."),
       );
-      showToast("Đã cập nhật trạng thái hồ sơ ứng tuyển.", "success");
+      showToast("Đã cập nhật trạng thái đơn ứng tuyển.", "success");
       setReviewModal(null);
       fetchData();
     } catch (err: any) {
@@ -120,14 +120,14 @@ export default function AuthorApplicationsPage() {
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
         <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-semibold text-black">Hồ sơ ứng tuyển</h1>
+            <h1 className="text-3xl font-semibold text-black">Đơn ứng tuyển</h1>
             <p className="text-sm text-zinc-500 mt-1">Quản lý và xét duyệt tác giả</p>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
               {isRefreshing ? "Đang đồng bộ" : "Đồng bộ dữ liệu"}
             </button>
@@ -144,10 +144,10 @@ export default function AuthorApplicationsPage() {
               <button
                 key={f.id}
                 onClick={() => setStatusFilter(f.id)}
-                className={`pb-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                className={`pb-3 px-4 text-sm font-medium border-b-2 whitespace-nowrap ${
                   statusFilter === f.id
                     ? "border-black text-black"
-                    : "border-transparent text-zinc-500 hover:text-black"
+                    : "border-transparent text-zinc-500"
                 }`}
               >
                 {f.label}
@@ -162,7 +162,7 @@ export default function AuthorApplicationsPage() {
               placeholder="Tìm kiếm ứng viên"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function AuthorApplicationsPage() {
               </thead>
               <tbody>
                 {filteredApplications.map((app: any) => (
-                  <tr key={app._id} className="border-b border-zinc-200 last:border-0 hover:bg-zinc-50 transition-colors">
+                  <tr key={app._id} className="border-b border-zinc-200 last:border-0">
                     <td className="py-5 px-6 align-top">
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-semibold text-black truncate max-w-[200px]">
@@ -202,7 +202,7 @@ export default function AuthorApplicationsPage() {
                             href={app.portfolio_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-medium text-black hover:underline"
+                            className="text-xs font-medium text-black underline"
                           >
                             Tài liệu đính kèm
                           </a>
@@ -225,13 +225,13 @@ export default function AuthorApplicationsPage() {
                         <div className="flex justify-end gap-4">
                           <button
                             onClick={() => openReviewModal(app._id, "REJECTED")}
-                            className="text-xs font-semibold text-zinc-500 hover:text-black transition-colors"
+                            className="text-xs font-semibold text-zinc-500"
                           >
                             Từ chối
                           </button>
                           <button
                             onClick={() => openReviewModal(app._id, "APPROVED")}
-                            className="text-xs font-semibold text-black hover:underline underline-offset-4"
+                            className="text-xs font-semibold text-black underline underline-offset-4"
                           >
                             Phê duyệt
                           </button>
@@ -267,7 +267,7 @@ export default function AuthorApplicationsPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Nội dung chi tiết</label>
               <textarea
-                className="w-full min-h-[120px] border border-zinc-200 p-3 text-xs font-medium text-black focus:outline-none focus:border-black resize-none bg-zinc-50 placeholder:text-zinc-400 transition-colors"
+                className="w-full min-h-[120px] border border-zinc-200 p-3 text-xs font-medium text-black focus:outline-none focus:border-black resize-none bg-zinc-50 placeholder:text-zinc-400"
                 value={reasonText}
                 onChange={(e) => setReasonText(e.target.value)}
                 placeholder="Nhập nội dung..."
@@ -278,13 +278,13 @@ export default function AuthorApplicationsPage() {
         <ModalFooter>
           <button
             onClick={() => setReviewModal(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors flex items-center justify-center"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center"
           >
             Hủy
           </button>
           <button
             onClick={confirmReview}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black hover:bg-zinc-800 transition-colors flex items-center justify-center"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center"
           >
             Xác nhận
           </button>

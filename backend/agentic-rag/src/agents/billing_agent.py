@@ -62,7 +62,7 @@ def redeem_voucher(code: str) -> str:
     logger.info(f"Voucher redemption requested")
     token = auth_token_var.get()
     if not token:
-        return "Lỗi xác thực: Vui lòng đăng nhập để nạp voucher"
+        return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
 
     headers = {"Authorization": token}
     try:
@@ -76,10 +76,10 @@ def redeem_voucher(code: str) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Nạp voucher thành công. Tài khoản đã được cộng thêm {bonus} dl"
+            return f"Đổi voucher thành công. Tài khoản đã được cộng thêm {bonus} dl"
         data = response.json()
-        detail = data.get("detail", "Mã nạp không hợp lệ hoặc đã sử dụng")
-        return f"Lỗi nạp voucher: {detail}"
+        detail = data.get("detail", "Mã voucher không hợp lệ hoặc đã sử dụng")
+        return f"Lỗi đổi voucher: {detail}"
     except Exception as e:
         logger.error(f"Error calling redeem API: {e}")
         return "Hệ thống nạp thẻ hiện đang bảo trì"
@@ -138,12 +138,12 @@ tools = [
     StructuredTool.from_function(
         func=redeem_voucher,
         name="redeem_voucher",
-        description="Nạp dl vào tài khoản bằng mã voucher"
+        description="Đổi voucher để nạp dl vào tài khoản"
     ),
     StructuredTool.from_function(
         func=get_revenue_report,
         name="get_revenue_report",
-        description="Xem báo cáo doanh thu và số tiền đang chờ thanh toán"
+        description="Xem báo cáo doanh thu và số dl đang chờ thanh toán"
     ),
     StructuredTool.from_function(
         func=send_virtual_tip,
