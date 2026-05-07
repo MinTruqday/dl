@@ -1,19 +1,15 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends
 from api.dependency import require_role
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from models.document import CoauthorInviteRequest, CollaborationResponse
+from core.response import APIResponse
 from services.collaboration import CollaborationService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/collaboration")
 
-class CoauthorInviteRequest(BaseModel):
-    email: str
-    role: str = "editor"
-
-class CollaborationResponse(BaseModel):
-    status: str
+# Models moved to models.document
 
 @router.post("/invites", response_model=APIResponse[Any])
 async def send_collaboration_invite(document_id: str, data: CoauthorInviteRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):

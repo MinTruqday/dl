@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 class BannerBase(BaseModel):
     title: str
@@ -27,5 +27,11 @@ class BannerUpdate(BaseModel):
 
 class BannerInDB(BannerBase):
     id: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BannerRequest(BaseModel):
+    title: str
+    image_url: str
+    link_url: Optional[str] = None
+    priority: int = 0

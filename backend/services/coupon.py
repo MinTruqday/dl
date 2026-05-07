@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -18,7 +18,7 @@ class CouponService:
             "document_id": data.get("document_id"),
             "expires_at": datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
             "is_active": True,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         
         existing = await db["coupons"].find_one({"code": coupon["code"]})

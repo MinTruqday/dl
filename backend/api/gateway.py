@@ -1,15 +1,14 @@
 from typing import Any
-from shared.core.response import APIResponse
+from datetime import datetime
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from core.response import APIResponse
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
+from models.user import UserInDB
+from models.wallet import TopupRequest, CouponCreateRequest
 from services.gateway import GatewayService
 
 router = APIRouter(prefix="/cong-thanh-toan")
-
-class TopupRequest(BaseModel):
-    amount: int 
 
 @router.post("/momo/tao-moi", response_model=APIResponse[Any])
 async def create_momo_payment(req: TopupRequest, current_user: UserInDB = Depends(get_current_user)):

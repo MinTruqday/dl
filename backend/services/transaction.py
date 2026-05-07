@@ -1,5 +1,5 @@
 from bson import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import json
 import uuid
 from typing import Optional, List
@@ -263,7 +263,7 @@ class TransactionService:
                     "document_id": document_id,
                     "item_type": "document",
                     "price": price,
-                    "purchased_at": datetime.utcnow(),
+                    "purchased_at": datetime.now(timezone.utc),
                 }, session=session)
                 
                 tx_buyer = Transaction(
@@ -363,7 +363,7 @@ class TransactionService:
                     "item_id": chapter_id,
                     "item_type": "chapter",
                     "price": price,
-                    "purchased_at": datetime.utcnow(),
+                    "purchased_at": datetime.now(timezone.utc),
                 }, session=session)
                 
                 await session.commit_transaction()
@@ -395,11 +395,11 @@ class TransactionService:
         if not purchase:
             raise HTTPException(status_code=404, detail="Không tìm thấy ghi nhận mua này.")
         
-        purchased_at = purchase.get("purchased_at", datetime.utcnow())
+        purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
             purchased_at = datetime.fromisoformat(purchased_at)
         
-        if datetime.utcnow() - purchased_at > timedelta(hours=48):
+        if datetime.now(timezone.utc) - purchased_at > timedelta(hours=48):
             raise HTTPException(status_code=400, detail="Chỉ có thể hoàn tiền trong vòng 48 giờ sau khi mua.")
         
         price = purchase.get("price", 0)
@@ -414,7 +414,7 @@ class TransactionService:
                 if author_id:
                     await db["users"].update_one({"_id": author_id}, {"$inc": {"wallet_balance": -price}}, session=session)
                 
-                await db["purchases"].update_one({"_id": purchase_id}, {"$set": {"status": "CANCELLED", "cancelled_at": datetime.utcnow()}}, session=session)
+                await db["purchases"].update_one({"_id": purchase_id}, {"$set": {"status": "CANCELLED", "cancelled_at": datetime.now(timezone.utc)}}, session=session)
                 
                 tx_refund_buyer = Transaction(user_id=str(current_user.id), type=TransactionType.REFUND, amount=price, note=f"Hoàn tiền giao dịch: {purchase_id}")
                 tx_refund_seller = Transaction(user_id=author_id, type=TransactionType.REFUND, amount=-price, note=f"Hoàn tiền giao dịch: {purchase_id}")
@@ -430,7 +430,7 @@ class TransactionService:
             await session.end_session()
 
     @staticmethod
-    async def request_payout(amount: int, current_user):
+    async def request_withdrawal(amount: int, current_user):
         db = db_client.mongodb.get_default_database()
         if amount < 100000:
             raise HTTPException(status_code=400, detail="Số tiền rút tối thiểu là 100,000 dl.")
@@ -439,24 +439,24 @@ class TransactionService:
         if not user or user.get("wallet_balance", 0) < amount:
             raise HTTPException(status_code=400, detail="Số dư không đủ.")
 
-        payout_id = str(uuid.uuid4())
+        withdrawal_id = str(uuid.uuid4())
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
                 await db["users"].update_one({"_id": str(current_user.id)}, {"$inc": {"wallet_balance": -amount}}, session=session)
-                await db["payout_requests"].insert_one({
-                    "_id": payout_id,
+                await db["withdrawal_requests"].insert_one({
+                    "_id": withdrawal_id,
                     "user_id": str(current_user.id),
                     "amount": amount,
                     "status": "PENDING",
-                    "created_at": datetime.utcnow()
+                    "created_at": datetime.now(timezone.utc)
                 }, session=session)
                 
-                tx = Transaction(user_id=str(current_user.id), amount=-amount, type=TransactionType.WITHDRAW, note=f"Yêu cầu rút tiền {payout_id}", reference_id=payout_id)
+                tx = Transaction(user_id=str(current_user.id), amount=-amount, type=TransactionType.WITHDRAW, note=f"Yêu cầu rút tiền {withdrawal_id}", reference_id=withdrawal_id)
                 await db["transactions"].insert_one(tx.model_dump(by_alias=True), session=session)
                 
                 await session.commit_transaction()
-                return {"message": "Đã gửi yêu cầu rút tiền.", "payout_id": payout_id}
+                return {"message": "Đã gửi yêu cầu rút tiền.", "withdrawal_id": withdrawal_id}
         except Exception as e:
             await session.abort_transaction()
             raise HTTPException(status_code=500, detail="Yêu cầu rút tiền thất bại.")
@@ -474,13 +474,13 @@ class TransactionService:
         res = await cursor.to_list(length=1)
         total_revenue = res[0]["total_revenue"] if res else 0
         
-        payout_res = await db["payout_requests"].aggregate([
+        withdrawal_res = await db["withdrawal_requests"].aggregate([
             {"$match": {"user_id": str(current_user.id), "status": "PENDING"}},
             {"$group": {"_id": None, "pending": {"$sum": "$amount"}}}
         ]).to_list(length=1)
-        pending_payout = payout_res[0]["pending"] if payout_res else 0
+        pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
         
-        return {"total_revenue": total_revenue, "pending_payout": pending_payout, "currency": "dl"}
+        return {"total_revenue": total_revenue, "pending_withdrawal": pending_withdrawal, "currency": "dl"}
 
     @staticmethod
     async def get_top_donators():

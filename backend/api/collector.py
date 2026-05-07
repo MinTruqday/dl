@@ -1,18 +1,15 @@
 from typing import Any, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.collector import CollectorService
+from models.collector import CollectionRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/thu-thap")
 
-class CollectionRequest(BaseModel):
-    source: str
-    url: Optional[str] = None
-    index_type: Optional[str] = "list"
-    target_class: Optional[str] = None
+# Models moved to models.collector
 
 @router.post("/kich-hoat", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def trigger_collection(req: CollectionRequest):

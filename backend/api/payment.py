@@ -1,9 +1,9 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
+from models.user import UserInDB
 from services.payment import PaymentService
 
 router = APIRouter(prefix="/thanh-toan")

@@ -1,30 +1,12 @@
 from typing import Any
-from shared.core.response import APIResponse
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
+from models.user import UserInDB
+from models.highlight import HighlightCreateRequest, HighlightNoteUpdateRequest, ReadingPreferenceUpdate
 from services.highlight import HighlightService, ReadingPreferenceService
-from pydantic import BaseModel
+from core.response import APIResponse
 
 router = APIRouter(prefix="/doc-tai-lieu")
-
-class HighlightCreateRequest(BaseModel):
-    text: str
-    chapter_slug: str = ""
-    color: str = "#e4e4e7"
-    start_offset: int = 0
-    end_offset: int = 0
-    note: str = ""
-
-class HighlightNoteUpdateRequest(BaseModel):
-    note: str
-
-class ReadingPreferenceUpdate(BaseModel):
-    theme: str = "light"
-    font_size: int = 16
-    line_height: float = 1.8
-    font_family: str = "Inter"
-    is_dyslexic_mode: bool = False
 
 @router.post("/tai-lieu/{document_id}/danh-dau", response_model=APIResponse[Any])
 async def create_highlight(

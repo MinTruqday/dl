@@ -1,8 +1,8 @@
 from typing import Any, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Request, HTTPException
 from .dependency import get_current_user_optional, get_db
-from shared.models.user import UserInDB
+from models.user import UserInDB
 from services.rag import RagService
 from motor.motor_asyncio import AsyncIOMotorDatabase
 

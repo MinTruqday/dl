@@ -1,23 +1,13 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
-from shared.core.response import APIResponse
+from models.user import UserInDB
+from models.library import ReadingListCreate, BookmarkFolderCreate, BookmarkFolderAssign
+from core.response import APIResponse
 from services.library import LibraryService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/thu-vien")
-
-class ReadingListCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    is_public: bool = True
-
-class BookmarkFolderCreate(BaseModel):
-    name: str
-
-class BookmarkFolderAssign(BaseModel):
-    bookmark_ids: List[str]
 
 @router.post("/danh-sach", response_model=APIResponse[Any])
 async def create_reading_list(data: ReadingListCreate, current_user: UserInDB = Depends(get_current_user)):

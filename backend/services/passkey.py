@@ -1,4 +1,4 @@
-from shared.core.config import settings
+from core.config import settings
 import base64
 from webauthn import (
     generate_registration_options,
@@ -16,9 +16,9 @@ from webauthn.helpers.structs import (
 )
 from webauthn.helpers.exceptions import InvalidRegistrationResponse, InvalidAuthenticationResponse
 from fastapi import HTTPException
-from shared.core.database import db_client
-from shared.models.user import UserInDB
-from datetime import datetime
+from core.database import db_client
+from models.user import UserInDB
+from datetime import datetime, timezone
 import os
 import uuid
 
@@ -81,7 +81,7 @@ class PasskeyService:
             "public_key": base64.b64encode(verification.credential_public_key).decode('utf-8'),
             "sign_count": verification.sign_count,
             "transports": credential_data.get("response", {}).get("transports", []),
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         
         await db["users"].update_one(

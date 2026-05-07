@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 
 class ProfileService:
@@ -18,7 +18,7 @@ class ProfileService:
             update_fields["donation_link"] = data["donation_link"]
         if not update_fields:
             raise HTTPException(status_code=400, detail="Không có thông tin nào để cập nhật.")
-        update_fields["updated_at"] = datetime.utcnow()
+        update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one(
             {"_id": str(current_user.id)},
             {"$set": update_fields}
@@ -97,7 +97,7 @@ logger.info("Log message sanitized"))
         if not update_fields:
             raise HTTPException(status_code=400, detail="Không có thông tin nào để cập nhật.")
             
-        update_fields["updated_at"] = datetime.utcnow()
+        update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
 logger.info("Log message sanitized"))
         return {"message": "Cập nhật trang tác giả cá nhân thành công."}

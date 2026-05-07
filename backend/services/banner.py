@@ -1,5 +1,5 @@
-from shared.core.database import db_client
-from datetime import datetime
+from core.database import db_client
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -20,7 +20,7 @@ class BannerService:
             "link_url": data.get("link_url"),
             "priority": data.get("priority", 0),
             "is_active": True,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["banners"].insert_one(banner)
 logger.info("Log message sanitized"))

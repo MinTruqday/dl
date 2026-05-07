@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -15,7 +15,7 @@ class LibraryService:
             "description": data.description, 
             "is_public": data.is_public, 
             "documents": [], 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["reading_lists"].insert_one(new_list)
 logger.info("Log message sanitized"))
@@ -47,7 +47,7 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         result = await db["reading_lists"].update_one(
             {"_id": list_id, "user_id": str(current_user.id)},
-            {"$addToSet": {"documents": document_id}, "$set": {"updated_at": datetime.utcnow()}}
+            {"$addToSet": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc.")
@@ -58,7 +58,7 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         result = await db["reading_lists"].update_one(
             {"_id": list_id, "user_id": str(current_user.id)},
-            {"$pull": {"documents": document_id}, "$set": {"updated_at": datetime.utcnow()}}
+            {"$pull": {"documents": document_id}, "$set": {"updated_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy danh sách đọc.")
@@ -72,7 +72,7 @@ logger.info("Log message sanitized"))
             "user_id": str(current_user.id),
             "name": name.strip()[:100],
             "bookmark_ids": [],
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["bookmark_folders"].insert_one(folder)
 logger.info("Log message sanitized"))
@@ -96,7 +96,7 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         result = await db["bookmark_folders"].update_one(
             {"_id": folder_id, "user_id": str(current_user.id)},
-            {"$set": {"bookmark_ids": bookmark_ids, "updated_at": datetime.utcnow()}}
+            {"$set": {"bookmark_ids": bookmark_ids, "updated_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Thư mục không tồn tại.")
@@ -147,6 +147,6 @@ logger.info("Log message sanitized"))
             
         await db["users"].update_one(
             {"_id": str(current_user.id)},
-            {"$set": {"bookmarks": bookmarks, "updated_at": datetime.utcnow()}}
+            {"$set": {"bookmarks": bookmarks, "updated_at": datetime.now(timezone.utc)}}
         )
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}

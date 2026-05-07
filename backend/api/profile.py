@@ -2,7 +2,7 @@ from typing import Any, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
 from fastapi.responses import StreamingResponse
-from models.user import UserInDB
+from models.user import UserInDB, ProfileUpdate, SettingsUpdate, BrandPageUpdate
 from api.dependency import get_current_user, RateLimiter
 from services.profile import ProfileService
 from services.setting import SettingService
@@ -15,24 +15,6 @@ import json
 import io
 
 router = APIRouter(prefix="/ho-so")
-
-class ProfileUpdate(BaseModel):
-    full_name: Optional[str] = None
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-    cover_url: Optional[str] = None
-    location: Optional[str] = None
-    website: Optional[str] = None
-
-class SettingsUpdate(BaseModel):
-    theme: Optional[str] = None
-    notifications_enabled: Optional[bool] = None
-    privacy_mode: Optional[bool] = None
-
-class BrandPageUpdate(BaseModel):
-    banner_url: Optional[str] = None
-    theme_color: Optional[str] = None
-    layout_type: Optional[str] = None
 
 @router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):

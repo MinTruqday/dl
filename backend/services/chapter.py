@@ -1,7 +1,8 @@
 import uuid
 import datetime
+from datetime import timezone
 from fastapi import HTTPException
-from shared.core.database import db_client
+from core.database import db_client
 from loguru import logger
 from utils.metric import calculate_flesch_kincaid, calculate_vocabulary_richness
 
@@ -11,7 +12,7 @@ def serialize_document(document):
     if "_id" in document:
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
-        document["created_at"] = datetime.datetime.utcnow()
+        document["created_at"] = datetime.datetime.now(timezone.utc)
     return document
 
 class ChapterService:
@@ -35,7 +36,7 @@ class ChapterService:
             "words_count": len(chapter_in.content.split()),
             "readability_score": calculate_flesch_kincaid(chapter_in.content),
             "vocabulary_richness": calculate_vocabulary_richness(chapter_in.content),
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.datetime.now(timezone.utc)
         }
         await docs_col.update_one({"_id": document_id}, {"$push": {"chapters": new_chapter}})
 logger.info("Log message sanitized"))
@@ -52,7 +53,7 @@ logger.info("Log message sanitized"))
         for ch in chapters:
             ch["is_premium"] = ch["id"] not in chapter_ids
             
-        await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.utcnow()}})
+        await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.now(timezone.utc)}})
 logger.info("Log message sanitized"))
         return {"message": "Đã thiết lập chương đọc thử thành công."}
 

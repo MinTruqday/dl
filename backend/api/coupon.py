@@ -1,19 +1,15 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import require_role
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from core.response import APIResponse
 from services.coupon import CouponService
+from models.wallet import CouponCreateRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/ma-giam-gia")
 
-class CouponCreateRequest(BaseModel):
-    code: str
-    discount_percent: int = 10
-    max_uses: int = 100
-    document_id: Optional[str] = None
-    expires_at: Optional[str] = None
+# Models moved to models.wallet
 
 @router.post("", response_model=APIResponse[Any])
 async def create_coupon(data: CouponCreateRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):

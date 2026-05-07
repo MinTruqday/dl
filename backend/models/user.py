@@ -5,49 +5,25 @@ import uuid
 from enum import Enum
 
 class KYCStatusEnum(str, Enum):
-    NONE = "none"
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-
-    @classmethod
-    def _missing_(cls, value):
-        if isinstance(value, str):
-            for member in cls:
-                if member.value == value.lower():
-                    return member
-        return None
+    NONE = "NONE"
+    PENDING = "PENDING"
+    VERIFIED = "VERIFIED"
+    REJECTED = "REJECTED"
 
 class AuthorStatusEnum(str, Enum):
-    NONE = "none"
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    SUSPENDED = "suspended"
-
-    @classmethod
-    def _missing_(cls, value):
-        if isinstance(value, str):
-            for member in cls:
-                if member.value == value.lower():
-                    return member
-        return None
+    NONE = "NONE"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUSPENDED = "SUSPENDED"
 
 class RoleEnum(str, Enum):
-    GUEST = "guest"
-    READER = "reader"
-    POTENTIAL_AUTHOR = "potential_author"
-    AUTHOR = "author"
-    MODERATOR = "moderator"
-    ADMIN = "admin"
-
-    @classmethod
-    def _missing_(cls, value):
-        if isinstance(value, str):
-            for member in cls:
-                if member.value == value.lower():
-                    return member
-        return None
+    GUEST = "GUEST"
+    READER = "READER"
+    POTENTIAL_AUTHOR = "POTENTIAL_AUTHOR"
+    AUTHOR = "AUTHOR"
+    MODERATOR = "MODERATOR"
+    ADMIN = "ADMIN"
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -102,3 +78,38 @@ class UserResponse(UserBase):
     
     class Config:
         populate_by_name = True
+
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
+    cover_url: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+
+class SettingsUpdate(BaseModel):
+    theme: Optional[str] = None
+    notifications_enabled: Optional[bool] = None
+    privacy_mode: Optional[bool] = None
+
+class BrandPageUpdate(BaseModel):
+    banner_url: Optional[str] = None
+    theme_color: Optional[str] = None
+    layout_type: Optional[str] = None
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class VerifyCodeRequest(BaseModel):
+    token: str
+
+class NotificationSettingsUpdate(BaseModel):
+    enable_comment_notifications: bool = True
+    enable_follow_notifications: bool = True
+    enable_mention_notifications: bool = True
+    enable_system_notifications: bool = True
+    enable_email_digest: bool = False

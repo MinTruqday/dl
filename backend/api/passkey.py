@@ -1,18 +1,11 @@
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user
-from shared.core.response import APIResponse
-from pydantic import BaseModel, EmailStr
+from core.response import APIResponse
+from models.user import PasskeyRequest, PasskeyFinishRequest
 from services.passkey import PasskeyService
 from typing import Any
 
 router = APIRouter(prefix="/xac-thuc/passkey")
-
-class PasskeyRequest(BaseModel):
-    email: EmailStr
-
-class PasskeyFinishRequest(BaseModel):
-    email: EmailStr
-    credential: dict
 
 @router.post("/dang-ky/bat-dau", response_model=APIResponse[Any])
 async def passkey_register_begin(payload: PasskeyRequest):

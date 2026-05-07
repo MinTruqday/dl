@@ -1,6 +1,6 @@
 from typing import List, Optional, Any
-from datetime import datetime
-from shared.core.database import db_client
+from datetime import datetime, timezone
+from core.database import db_client
 from loguru import logger
 
 class RankService:

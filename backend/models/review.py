@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 class ReviewBase(BaseModel):
@@ -16,9 +16,17 @@ class ReviewInDB(ReviewBase):
     user_id: str
     full_name: str
     avatar_url: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ReviewResponse(ReviewInDB):
     id: str = Field(alias="_id")
     class Config:
         populate_by_name = True
+
+class RatingRequest(BaseModel):
+    rating: int # 1-5
+    content: Optional[str] = None
+
+class ChapterRatingRequest(BaseModel):
+    chapter_id: str
+    rating: int # 1-5

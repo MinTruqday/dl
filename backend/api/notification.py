@@ -1,25 +1,19 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum, NotificationSettingsUpdate
+from models.social import NewsletterRequest
 from api.dependency import get_current_user, get_current_user_token_param, require_role, RateLimiter
 from services.notification import NotificationService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/thong-bao")
 
-class NotificationSettingsUpdate(BaseModel):
-    enable_comment_notifications: bool = True
-    enable_follow_notifications: bool = True
-    enable_mention_notifications: bool = True
-    enable_system_notifications: bool = True
-    enable_email_digest: bool = False
-
 @router.get("/dong-du-lieu", response_model=Any)
 async def stream_notifications(
     request: Request,
-    token: str = Query(.),
+    token: str = Query(...),
     _ = Depends(RateLimiter(calls=60, period=60))
 ):
     current_user = await get_current_user_token_param(token)
@@ -53,8 +47,7 @@ async def update_notification_settings(data: NotificationSettingsUpdate, current
 async def mark_all_read(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await NotificationService.mark_all_read(current_user), message="Đã đánh dấu tất cả thông báo là đã đọc", status=200)
 
-class NewsletterRequest(BaseModel):
-    email: str
+# Models moved to models.social
 
 @router.post("/ban-tin/dang-ky", response_model=APIResponse[Any])
 async def subscribe_newsletter(req: NewsletterRequest):

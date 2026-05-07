@@ -1,23 +1,13 @@
 from typing import Any, List, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user, require_role
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from services.monetization import MonetizationService
+from models.wallet import PlanCreate, TipRequest, DocumentPricingRequest, FlashSaleRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/kiem-tien")
-
-class PlanCreate(BaseModel):
-    name: str
-    description: str
-    price_dl: int
-    benefits: List[str]
-
-class TipRequest(BaseModel):
-    author_id: str
-    amount: int
-    message: Optional[str] = ""
 
 @router.post("/goi-hoi-vien", response_model=APIResponse[Any])
 async def create_plan(plan: PlanCreate, current_user: UserInDB = Depends(get_current_user)):
@@ -72,17 +62,11 @@ async def cancel_subscription(subscription_id: str, current_user: UserInDB = Dep
 @router.post("/ung-ho", response_model=APIResponse[Any])
 async def tip(req: TipRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await MonetizationService.tip_author(req.author_id, req.amount, current_user, req.message), 
+        data=await MonetizationService.tip_author(req.receiver_id, req.amount, current_user, req.message), 
         message="Ủng hộ tác giả thành công"
     )
 
-class DocumentPricingRequest(BaseModel):
-    price_dl: int = 0
-    is_drm_protected: bool = True
-
-class FlashSaleRequest(BaseModel):
-    price: float
-    expires_at: str
+# Models moved to models.wallet
 
 @router.put("/tai-lieu/{document_id}/gia-ban", response_model=APIResponse[Any])
 async def set_document_pricing(document_id: str, data: DocumentPricingRequest, current_user: UserInDB = Depends(get_current_user)):

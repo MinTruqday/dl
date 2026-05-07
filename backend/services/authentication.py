@@ -1,5 +1,5 @@
 from core.config import settings
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import secrets
 import uuid
 import os
@@ -46,7 +46,7 @@ class AuthenticationService:
         if await users_col.find_one({"slug": user_in.slug}):
             raise HTTPException(status_code=400, detail="Đường dẫn hồ sơ (slug) này đã tồn tại trên hệ thống.")
         
-        tos_accepted_at = datetime.utcnow() if user_in.agreed_to_terms else None
+        tos_accepted_at = datetime.now(timezone.utc) if user_in.agreed_to_terms else None
         user_doc = UserInDB(
             **user_in.model_dump(exclude={"password", "agreed_to_terms", "tos_accepted_at"}), 
             password_hash=get_password_hash(user_in.password),
@@ -57,7 +57,7 @@ class AuthenticationService:
             "action": "REGISTER_USER", 
             "actor_email": user_in.email, 
             "ip": client_ip, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"New user registered: {user_in.email} from {client_ip}")
         return user_doc
@@ -81,7 +81,7 @@ class AuthenticationService:
                 "action": "LOGIN_FAILED_WRONG_PASSWORD", 
                 "actor_email": user_doc["email"], 
                 "ip": client_ip, 
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc)
             })
             logger.warning(f"Login failed: Incorrect password for - {username} from {client_ip}")
             raise HTTPException(status_code=401, detail="Mật khẩu bạn nhập không chính xác.")
@@ -130,15 +130,15 @@ class AuthenticationService:
                 "_id": secrets.token_hex(8),
                 "email": email,
                 "token": otp_code,
-                "expires_at": datetime.utcnow() + timedelta(minutes=10),
+                "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
                 "used": False,
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
             })
             await db["audit_logs"].insert_one({
                 "action": "FORGOT_PASSWORD_REQUEST", 
                 "actor_email": email, 
                 "ip": client_ip, 
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.now(timezone.utc)
             })
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
@@ -150,19 +150,19 @@ class AuthenticationService:
     async def reset_password(token: str, new_password: str, client_ip: str):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
         token_doc = await db["password_reset_tokens"].find_one({"token": token, "used": False})
-        if not token_doc or token_doc.get("expires_at") < datetime.utcnow():
+        if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.")
             
         await db["users"].update_one(
             {"email": token_doc["email"]}, 
-            {"$set": {"password_hash": get_password_hash(new_password), "updated_at": datetime.utcnow()}}
+            {"$set": {"password_hash": get_password_hash(new_password), "updated_at": datetime.now(timezone.utc)}}
         )
         await db["password_reset_tokens"].update_one({"_id": token_doc["_id"]}, {"$set": {"used": True}})
         await db["audit_logs"].insert_one({
             "action": "RESET_PASSWORD_SUCCESS", 
             "actor_email": token_doc["email"], 
             "ip": client_ip, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Password reset success for: {token_doc['email']} from {client_ip}")
         return {"status": "ok", "message": "Mật khẩu của bạn đã được thay đổi thành công."}
@@ -171,7 +171,7 @@ class AuthenticationService:
     async def verify_reset_code(token: str, client_ip: str):
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
         token_doc = await db["password_reset_tokens"].find_one({"token": token, "used": False})
-        if not token_doc or token_doc.get("expires_at") < datetime.utcnow():
+        if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn.")
         
         return {"status": "ok", "message": "Mã xác thực hợp lệ."}
@@ -237,7 +237,7 @@ class AuthenticationService:
                 )
 
             user_id = str(uuid.uuid4())
-            user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": RoleEnum.READER, "is_active": True, "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
+            user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": RoleEnum.READER, "is_active": True, "created_at": datetime.now(timezone.utc), "updated_at": datetime.now(timezone.utc)}
             await users_col.insert_one(user_doc)
             logger.info(f"New user created via Google login: {email}")
         

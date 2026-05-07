@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from bson import ObjectId
@@ -94,7 +94,7 @@ class EditorService:
             "suggested_text": payload.get("suggested_text"),
             "comment": payload.get("comment"),
             "status": "pending",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Inline suggestion added for document {document_id} by user {user_id}")
         return {"message": "Đã thêm gợi ý chỉnh sửa thành công."}
@@ -108,7 +108,7 @@ class EditorService:
             raise HTTPException(status_code=404, detail="Không tìm thấy gợi ý.")
         await db["editor_suggestions"].update_one({"_id": ObjectId(suggestion_id)}, {"$set": {
             "status": payload.get("action", "rejected"),
-            "resolved_at": datetime.utcnow()
+            "resolved_at": datetime.now(timezone.utc)
         }})
         logger.info(f"Suggestion {suggestion_id} resolved by user {user_id}")
         action_map = {"accepted": "chấp nhận", "rejected": "từ chối"}
@@ -124,7 +124,7 @@ class EditorService:
             "document_id": str(payload.get("document_id")),
             "duration_minutes": payload.get("duration"),
             "words_written": payload.get("words_written"),
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Pomodoro session recorded for user {user_id}")
         return {"status": "recorded"}
@@ -135,9 +135,9 @@ class EditorService:
         user_id = str(current_user.id)
         await db["documents"].update_one(
             {"_id": document_id, "$or": [{"author_id": user_id}, {"co_authors": user_id}]},
-            {"$set": {"draft_content": content, "updated_at": datetime.utcnow()}}
+            {"$set": {"draft_content": content, "updated_at": datetime.now(timezone.utc)}}
         )
-        return {"message": "Tự động lưu bản nháp thành công.", "timestamp": str(datetime.utcnow())}
+        return {"message": "Tự động lưu bản nháp thành công.", "timestamp": str(datetime.now(timezone.utc))}
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user):
@@ -179,7 +179,7 @@ class EditorService:
         update_data = {
             "title": new_title,
             "description": new_desc,
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.now(timezone.utc)
         }
         if new_content:
             update_data["content"] = new_content
@@ -191,7 +191,7 @@ class EditorService:
             "author_id": user_id,
             "action": "GLOBAL_REPLACE",
             "details": f"Replaced '{search_term}' with '{replace_term}'",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Global find/replace executed for document {document_id} by user {user_id}")
         return {"message": "Thay thế nội dung toàn cục thành công.", "affected_fields": ["title", "description", "content"]}
@@ -220,6 +220,6 @@ class EditorService:
             
         data = await AIService.generate_cover(doc.get("title", ""), doc.get("description", ""), style)
         if data.get("cover_url"):
-            await db["documents"].update_one({"_id": document_id}, {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.utcnow()}})
+            await db["documents"].update_one({"_id": document_id}, {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.now(timezone.utc)}})
             logger.info(f"Workspace: Cover generated for {document_id}")
         return data

@@ -1,6 +1,6 @@
 import uuid
 from fastapi import HTTPException
-from shared.core.storage import generate_presigned_url, upload_file
+from core.storage import generate_presigned_url, upload_file
 from loguru import logger
 
 class StorageService:

@@ -1,5 +1,5 @@
 from bson import ObjectId
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from core.database import db_client
 from models.user import UserInDB
 from typing import Optional, Dict, Any
@@ -15,7 +15,7 @@ class TelemetryService:
             "event_name": event_name,
             "properties": properties,
             "user_id": str(current_user.id) if current_user else "anonymous",
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
         
 
@@ -28,7 +28,7 @@ class TelemetryService:
     @staticmethod
     async def get_activity_stats(days: int = 7):
         db = db_client.mongodb.get_default_database()
-        since = datetime.utcnow() - timedelta(days=days)
+        since = datetime.now(timezone.utc) - timedelta(days=days)
         
         pipeline = [
             {"$match": {"timestamp": {"$gte": since}}},
@@ -59,7 +59,7 @@ class TelemetryService:
             "total_users": total_users,
             "total_documents": total_documents,
             "total_authors": total_authors,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
 
     @staticmethod
@@ -74,7 +74,7 @@ class TelemetryService:
         return {
             "status": "online",
             "mongodb": mongo_status,
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
 
     @staticmethod

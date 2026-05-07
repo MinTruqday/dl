@@ -1,16 +1,12 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from models.document import ModerateDocumentRequest
+from core.response import APIResponse
 from services.document import DocumentService
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/ban-nhap")
-
-class ModerateDocumentRequest(BaseModel):
-    action: str
-    reason: str
 
 @router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_approval_queue(skip: int = 0, limit: int = 30):

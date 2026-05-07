@@ -1,31 +1,15 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
-from shared.core.response import APIResponse
+from models.user import UserInDB
+from models.library import TypographyRequest, ProgressUpdate, ReadingGoalCreate, PinnedDocumentRequest
+from core.response import APIResponse
 from services.read import ReadService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/doc")
 
-class TypographyRequest(BaseModel):
-    font_family: str
-    font_size: int = 16
-    line_height: float = 1.8
-    letter_spacing: float = 0
-
-class ProgressUpdate(BaseModel):
-    document_id: str
-    progress_percentage: float
-    current_chapter_slug: str = None
-
-class ReadingGoalCreate(BaseModel):
-    target_documents: int = 0
-    target_pages: int = 0
-    period: str = "monthly"
-
-class PinnedDocumentRequest(BaseModel):
-    document_ids: List[str]
+# Models moved to models.library
 
 @router.put("/trinh-bay", response_model=APIResponse[Any])
 async def update_typography(data: TypographyRequest, current_user: UserInDB = Depends(get_current_user)):

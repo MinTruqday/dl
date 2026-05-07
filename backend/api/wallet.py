@@ -1,30 +1,14 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
+from models.user import UserInDB
+from models.wallet import RedeemVoucherRequest, VoteRequest, UnlockRequest, WithdrawalRequest, TipRequest
 from services.wallet import WalletService
 from services.transaction import TransactionService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/vi-tien")
-
-class RedeemVoucherRequest(BaseModel):
-    code: str
-
-class VoteRequest(BaseModel):
-    item_id: str
-    item_type: str
-    amount: int
-
-class UnlockRequest(BaseModel):
-    post_id: str
-
-class PayoutRequest(BaseModel):
-    amount: int
-
-class TipRequest(BaseModel):
-    amount: int
 
 @router.post("/binh-chon", response_model=APIResponse[Any])
 async def vote_item(req: VoteRequest, current_user: UserInDB = Depends(get_current_user)):

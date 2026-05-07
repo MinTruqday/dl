@@ -1,5 +1,5 @@
-from shared.core.database import db_client
-from datetime import datetime
+from core.database import db_client
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -13,7 +13,7 @@ class CommentService:
             "actor_id": str(current_moderator.id), 
             "target_user_id": user_id, 
             "count": result.deleted_count, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
 logger.info("Log message sanitized"))
         return {"message": f"Đã xóa {result.deleted_count} bình luận thành công."}
@@ -23,7 +23,7 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         await db["comments"].update_one(
             {"_id": comment_id}, 
-            {"$set": {"is_removed": True, "removal_reason": reason, "removed_at": datetime.utcnow()}}
+            {"$set": {"is_removed": True, "removal_reason": reason, "removed_at": datetime.now(timezone.utc)}}
         )
 logger.info("Log message sanitized"))
         return {"message": "Đã gỡ bỏ bình luận vi phạm."}

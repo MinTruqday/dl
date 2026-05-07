@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -41,7 +41,7 @@ class CollaborationService:
             "invitee_id": invitee_id,
             "role": role,
             "status": "PENDING",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["collaboration_invites"].insert_one(invite)
         logger.info(f"Workspace: User {current_user.id} invited {invitee_id} to collaborate on {document_id}")
@@ -71,13 +71,13 @@ class CollaborationService:
             
         await db["collaboration_invites"].update_one(
             {"_id": invite_id},
-            {"$set": {"status": status, "responded_at": datetime.utcnow()}}
+            {"$set": {"status": status, "responded_at": datetime.now(timezone.utc)}}
         )
         
         if status == "ACCEPTED":
             await db["documents"].update_one(
                 {"_id": invite["document_id"]},
-                {"$push": {"coauthors": str(current_user.id)}, "$set": {"updated_at": datetime.utcnow()}}
+                {"$push": {"coauthors": str(current_user.id)}, "$set": {"updated_at": datetime.now(timezone.utc)}}
             )
             
         logger.info(f"Workspace: User {current_user.id} {status} collaboration invite {invite_id}")

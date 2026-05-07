@@ -1,7 +1,7 @@
 from typing import List, Any
 from core.config import settings
 import datetime
-from datetime import datetime as dt
+from datetime import datetime, timezone as dt
 import os
 import uuid
 import io
@@ -20,7 +20,7 @@ def serialize_document(document):
     if "_id" in document:
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
-        document["created_at"] = datetime.datetime.utcnow()
+        document["created_at"] = datetime.datetime.now(timezone.utc)
     return document
 
 class DocumentService:
@@ -127,7 +127,7 @@ class DocumentService:
             {"$set": {
                 "content": content_in.content, 
                 "content_format": content_in.content_format,
-                "updated_at": datetime.datetime.utcnow()
+                "updated_at": datetime.datetime.now(timezone.utc)
             }}
         )
         await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), current_user.full_name)
@@ -190,7 +190,7 @@ class DocumentService:
         db = db_client.mongodb.get_default_database()
         res = await db["documents"].update_one(
             {"_id": document_id, "author_id": str(current_user.id), "is_deleted": {"$ne": True}},
-            {"$set": {"is_deleted": True, "deleted_at": datetime.datetime.utcnow()}}
+            {"$set": {"is_deleted": True, "deleted_at": datetime.datetime.now(timezone.utc)}}
         )
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
@@ -238,7 +238,7 @@ class DocumentService:
         hashed = pwd_context.hash(password)
         await db["documents"].update_one(
             {"_id": document_id},
-            {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.datetime.utcnow()}}
+            {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.datetime.now(timezone.utc)}}
         )
         logger.info(f"Workspace: Password protection enabled for {document_id}")
         return {"message": "Đã thiết lập mật khẩu bảo vệ tài liệu."}

@@ -1,28 +1,14 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Response
-from pydantic import BaseModel
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
+from models.latex import CompileRequest, FormatRequest, ExportRequest, AutoSaveRequest
 from services.latex import LatexService
+from core.response import APIResponse
 import time
 
 router = APIRouter(prefix="/soan-thao-latex")
-
-class CompileRequest(BaseModel):
-    content: str
-    is_fragment: bool = False
-
-class FormatRequest(BaseModel):
-    content: str
-
-class ExportRequest(BaseModel):
-    content: str
-    format: str = "docx"
-
-class AutoSaveRequest(BaseModel):
-    document_id: str
-    content: str
 
 @router.delete("/don-dep", response_model=APIResponse[Any])
 async def clean_temp_files(current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))):

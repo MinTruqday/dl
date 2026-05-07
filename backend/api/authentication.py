@@ -1,8 +1,9 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from shared.models.user import UserCreate, UserInDB, UserResponse
+from models.user import UserCreate, UserInDB, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, VerifyCodeRequest
 from api.dependency import get_current_user, RateLimiter
 from services.authentication import AuthenticationService
 from pydantic import BaseModel, EmailStr
@@ -10,17 +11,6 @@ from typing import Any
 from services.passkey import PasskeyService
 
 router = APIRouter(prefix="/xac-thuc")
-
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
-
-class VerifyCodeRequest(BaseModel):
-    token: str
-
 
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):

@@ -1,8 +1,8 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from core.response import APIResponse
 from services.user import UserService
 
 router = APIRouter(prefix="/nhat-ky")

@@ -1,10 +1,10 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from services.operation import OperationService
-from services.payout import PayoutService
+from services.withdrawal import WithdrawalService
 from services.user import UserService
 
 router = APIRouter(prefix="/van-hanh")
@@ -31,9 +31,9 @@ async def toggle_maintenance(enabled: bool):
     )
 
 @router.get("/rut-tien", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def get_payouts_list(status: str = "PENDING"):
+async def get_withdrawals_list(status: str = "PENDING"):
     return APIResponse(
-        data=await PayoutService.get_payout_queue(status),
+        data=await WithdrawalService.get_withdrawal_queue(status),
         message="Lấy danh sách thanh toán thành công"
     )
 

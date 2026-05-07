@@ -1,12 +1,12 @@
 from typing import List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import json
 import re
 from fastapi import HTTPException
-from shared.core.database import db_client
-from shared.models.user import UserInDB
-from shared.models.social import StatusUpdateInDB
+from core.database import db_client
+from models.user import UserInDB
+from models.social import StatusUpdateInDB
 from loguru import logger
 
 class PostService:
@@ -51,7 +51,7 @@ class PostService:
             repost_post_id=request.repost_post_id,
             scheduled_at=request.scheduled_at,
             poll_options=[{"id": str(uuid.uuid4()), "text": opt, "votes": 0} for opt in request.poll_options] if request.poll_options else [],
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         await db["status_updates"].insert_one(new_post.model_dump(by_alias=True))
 logger.info("Log message sanitized"))
@@ -68,7 +68,7 @@ logger.info("Log message sanitized"))
         
         await db["status_updates"].update_one(
             {"_id": post_id},
-            {"$set": {"is_deleted": True, "deleted_at": datetime.utcnow()}}
+            {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
         )
 logger.info("Log message sanitized"))
         return {"message": "Đã xóa bài viết thành công."}
@@ -88,7 +88,7 @@ logger.info("Log message sanitized"))
             "repost_post_id": post_id,
             "item_type": "post",
             "privacy": "public",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["status_updates"].insert_one(new_post)
         return {"message": "Đã chia sẻ lại bài viết thành công.", "post_id": new_post["_id"]}
@@ -136,7 +136,7 @@ logger.info("Log message sanitized"))
             "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "post_id": post_id,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         })
         await db["status_updates"].update_one({"_id": post_id}, {"$addToSet": {"saved_by": str(current_user.id)}})
         return {"message": "Đã lưu bài viết vào mục yêu thích.", "saved": True}
@@ -180,7 +180,7 @@ logger.info("Log message sanitized"))
                 "id": str(p["_id"]),
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
-                "created_at": p.get("created_at", datetime.utcnow()).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
+                "created_at": p.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
                 "user": {
                     "id": str(author.get("_id")) if author else p["user_id"],
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
@@ -256,7 +256,7 @@ logger.info("Log message sanitized"))
             "attached_document_id": data["document_id"], 
             "attached_document_title": doc.get("title", ""), 
             "privacy": "public", 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["status_updates"].insert_one(excerpt_post)
 logger.info("Log message sanitized"))
@@ -295,7 +295,7 @@ logger.info("Log message sanitized"))
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
                 "tags": p.get("tags", []),
-                "created_at": p.get("created_at", datetime.utcnow()).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
+                "created_at": p.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
                 "user": {
                     "id": str(author.get("_id")) if author else p["user_id"],
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",

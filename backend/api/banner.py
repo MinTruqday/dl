@@ -1,18 +1,15 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import require_role
-from shared.models.user import RoleEnum
-from shared.core.response import APIResponse
+from models.user import RoleEnum
+from core.response import APIResponse
 from services.banner import BannerService
+from models.banner import BannerRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/anh-quang-cao")
 
-class BannerRequest(BaseModel):
-    title: str
-    image_url: str
-    link_url: Optional[str] = None
-    priority: int = 0
+# Models moved to models.banner
 
 @router.get("/", response_model=APIResponse[Any])
 async def get_active_banners():

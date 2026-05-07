@@ -1,18 +1,15 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
 from api.dependency import require_role
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from core.response import APIResponse
 from services.asset import AssetService
+from models.asset import AssetUploadRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/tai-nguyen")
 
-class AssetUploadRequest(BaseModel):
-    filename: str
-    type: str = "image"
-    size_bytes: int = 0
-    url: str = ""
+# Models moved to models.asset
 
 @router.get("", response_model=APIResponse[Any])
 async def get_my_assets(type: str = Query("all"), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))):

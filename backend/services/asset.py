@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 from models.user import UserInDB
@@ -37,7 +37,7 @@ class AssetService:
             "type": data.get("type", "image"),
             "size_bytes": data.get("size_bytes", 0),
             "url": data["url"],
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["assets"].insert_one(asset)
         logger.info(f"Workspace: Author {current_user.id} uploaded asset {data['filename']}")

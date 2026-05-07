@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import json
 import uuid
 from typing import Optional
 from fastapi import HTTPException
 from bson import ObjectId
-from shared.core.database import db_client
-from shared.models.user import UserInDB
-from shared.models.social import StoryCreate, StoryInDB
+from core.database import db_client
+from models.user import UserInDB
+from models.social import StoryCreate, StoryInDB
 from loguru import logger
 
 
@@ -30,7 +30,7 @@ class StoryService:
             poll_data=request.poll_data,
             quiz_data=request.quiz_data,
             mentions=request.mentions or [],
-            expires_at=datetime.utcnow() + timedelta(hours=24),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
         )
         await db["stories"].insert_one(story.model_dump(by_alias=True))
 logger.info("Log message sanitized"))
@@ -39,7 +39,7 @@ logger.info("Log message sanitized"))
     @staticmethod
     async def list_stories(current_user: Optional[UserInDB]) -> dict:
         db = db_client.mongodb.get_default_database()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         query = {"expires_at": {"$gt": now}, "is_archived": False, "privacy": "public"}
         cursor = db["stories"].find(query).sort("created_at", -1)
         stories_raw = await cursor.to_list(length=50)
@@ -75,7 +75,7 @@ logger.info("Log message sanitized"))
     @staticmethod
     async def get_my_stories(current_user: UserInDB) -> dict:
         db = db_client.mongodb.get_default_database()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         cursor = db["stories"].find(
             {"user_id": str(current_user.id), "expires_at": {"$gt": now}, "is_archived": False}
         ).sort("created_at", -1)
@@ -114,7 +114,7 @@ logger.info("Log message sanitized"))
         if str(current_user.id) not in existing_viewers:
             await db["stories"].update_one(
                 {"_id": story_id},
-                {"$push": {"viewers": {"user_id": str(current_user.id), "viewed_at": datetime.utcnow()}}}
+                {"$push": {"viewers": {"user_id": str(current_user.id), "viewed_at": datetime.now(timezone.utc)}}}
             )
             if story["user_id"] != str(current_user.id):
                 await db_client.redis.publish(
@@ -220,7 +220,7 @@ logger.info("Log message sanitized"))
             "sender_id": str(current_user.id),
             "recipient_id": story["user_id"],
             "message": message.strip(),
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         })
         await db_client.redis.publish(
             f"user_notifications:{story['user_id']}",
@@ -303,7 +303,7 @@ logger.info("Log message sanitized"))
         new_status = "approved" if action == "approve" else "rejected"
         result = await db["stories"].update_one(
             {"_id": story_id},
-            {"$set": {"moderation_status": new_status, "moderated_by": str(current_moderator.id), "moderated_at": datetime.utcnow()}}
+            {"$set": {"moderation_status": new_status, "moderated_by": str(current_moderator.id), "moderated_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Story không tồn tại.")

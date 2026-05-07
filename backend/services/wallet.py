@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from fastapi import HTTPException, status
 from core.database import db_client
@@ -41,7 +41,7 @@ class WalletService:
                 {"$set": {
                     "is_used": True,
                     "used_by": str(current_user.id),
-                    "used_at": datetime.utcnow()
+                    "used_at": datetime.now(timezone.utc)
                 }}
             )
             

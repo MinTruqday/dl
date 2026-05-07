@@ -1,8 +1,8 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Response
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
+from models.user import UserInDB
 from services.export import ExportService
 from services.document import DocumentService
 

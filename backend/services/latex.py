@@ -8,7 +8,7 @@ import zipfile
 import io
 from fastapi import HTTPException
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timezone
 from core.database import db_client
 
 class LatexService:
@@ -169,6 +169,6 @@ class LatexService:
         db = db_client.mongodb.get_default_database()
         await db["documents"].update_one(
             {"_id": request.document_id},
-            {"$set": {"content": request.content, "updated_at": datetime.utcnow()}}
+            {"$set": {"content": request.content, "updated_at": datetime.now(timezone.utc)}}
         )
-        return {"status": "success", "timestamp": datetime.utcnow().isoformat()}
+        return {"status": "success", "timestamp": datetime.now(timezone.utc).isoformat()}

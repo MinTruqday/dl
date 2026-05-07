@@ -1,5 +1,5 @@
-from shared.core.database import db_client
-from datetime import datetime
+from core.database import db_client
+from datetime import datetime, timezone
 from loguru import logger
 
 class AuditService:
@@ -26,6 +26,6 @@ class AuditService:
             "actor_id": actor_id,
             "target_id": target_id,
             "details": details or {},
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
 logger.info("Log message sanitized"))

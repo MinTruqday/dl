@@ -1,7 +1,7 @@
-from shared.core.config import settings
-from shared.core.database import db_client
+from core.config import settings
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import uuid
 import httpx
 import json
@@ -84,7 +84,7 @@ logger.info("Log message sanitized"))
                         "document_id": document_id, 
                         "front": data.get("front"), 
                         "back": data.get("back"), 
-                        "created_at": datetime.utcnow()
+                        "created_at": datetime.now(timezone.utc)
                     }
                     await db["flashcards"].insert_one(flashcard)
                     return data
@@ -115,7 +115,7 @@ logger.info("Log message sanitized"))
             interval = 1
             
         ef = max(1.3, ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
-        next_review = datetime.utcnow() + timedelta(days=interval)
+        next_review = datetime.now(timezone.utc) + timedelta(days=interval)
         
         await db["flashcards"].update_one(
             {"_id": card_id},

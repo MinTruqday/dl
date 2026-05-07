@@ -1,5 +1,5 @@
 from core.database import db_client
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -11,7 +11,7 @@ class ConfigService:
             await db["system_tags"].insert_one({
                 "_id": str(uuid.uuid4()), 
                 "name": tag_name.lower(), 
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info(f"System: Tag '{tag_name}' created by {current_moderator.id}")
             return {"message": f"Đã tạo thẻ '{tag_name}' thành công."}
@@ -34,7 +34,7 @@ class ConfigService:
             await db["blacklist_keywords"].insert_one({
                 "_id": str(uuid.uuid4()), 
                 "keyword": keyword.lower(), 
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             })
             logger.info(f"System: Keyword '{keyword}' blacklisted by {current_moderator.id}")
             return {"message": f"Đã thêm '{keyword}' vào danh sách cấm."}
@@ -55,7 +55,7 @@ class ConfigService:
         db = db_client.mongodb.get_default_database()
         await db["system_config"].update_one(
             {"key": "nsfw_filter_level"}, 
-            {"$set": {"value": level, "updated_at": datetime.utcnow()}}, 
+            {"$set": {"value": level, "updated_at": datetime.now(timezone.utc)}}, 
             upsert=True
         )
         logger.info(f"System: NSFW sensitivity set to '{level}' by {current_moderator.id}")

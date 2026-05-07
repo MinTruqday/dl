@@ -34,7 +34,7 @@ from api.export import router as export_router
 from api.gateway import router as gateway_router
 from api.read import router as read_router
 from api.monetization import router as monetization_router
-from api.payout import router as payout_router
+from api.withdrawal import router as withdrawal_router
 from api.story import router as story_router
 from api.rag import router as rag_router
 from api.inference import router as inference_router
@@ -172,7 +172,7 @@ app.include_router(notification_router)
 app.include_router(chat_router)
 app.include_router(coauthor_router)
 app.include_router(collector_router)
-app.include_router(payout_router)
+app.include_router(withdrawal_router)
 app.include_router(operation_router)
 app.include_router(draft_router)
 app.include_router(report_router)

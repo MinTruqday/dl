@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import asyncio
 import uuid
@@ -68,7 +68,7 @@ class NotificationService:
         db = db_client.mongodb.get_default_database()
         res = await db["notifications"].update_one(
             {"_id": notif_id, "$or": [{"target_user_id": current_user.id}, {"is_global": True}]},
-            {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
+            {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc)}}
         )
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông báo.")
@@ -93,7 +93,7 @@ class NotificationService:
             "title": title,
             "body": body,
             "created_by": current_user.id,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
             "is_global": True
         })
         
@@ -112,7 +112,7 @@ class NotificationService:
         await db["newsletter_subscribers"].insert_one({
             "_id": str(uuid.uuid4()),
             "email": email,
-            "subscribed_at": datetime.utcnow(),
+            "subscribed_at": datetime.now(timezone.utc),
             "is_active": True,
         })
         logger.info(f"Newsletter subscription: {email}")
@@ -123,7 +123,7 @@ class NotificationService:
         db = db_client.mongodb.get_default_database()
         result = await db["newsletter_subscribers"].update_one(
             {"email": email},
-            {"$set": {"is_active": False, "unsubscribed_at": datetime.utcnow()}}
+            {"$set": {"is_active": False, "unsubscribed_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Email chưa đăng ký bản tin.")
@@ -132,7 +132,7 @@ class NotificationService:
     @staticmethod
     async def get_system_notices() -> list:
         db = db_client.mongodb.get_default_database()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         notices = await db["system_notices"].find({
             "is_active": True,
             "$or": [
@@ -168,7 +168,7 @@ class NotificationService:
                 "title": f"Cập nhật mới: {title}",
                 "body": f"Tác giả {author_name} vừa cập nhật nội dung mới cho tài liệu bạn đang theo dõi.",
                 "link": f"/preview?slug={document_id}",
-                "created_at": datetime.utcnow(),
+                "created_at": datetime.now(timezone.utc),
                 "is_read": False
             })
             
@@ -219,7 +219,7 @@ class NotificationService:
                 "enable_mention_notifications": data.get("enable_mention_notifications", True),
                 "enable_system_notifications": data.get("enable_system_notifications", True),
                 "enable_email_digest": data.get("enable_email_digest", False),
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             }},
             upsert=True,
         )
@@ -231,7 +231,7 @@ class NotificationService:
         db = db_client.mongodb.get_default_database()
         result = await db["notifications"].update_many(
             {"target_user_id": str(current_user.id), "is_read": False},
-            {"$set": {"is_read": True, "read_at": datetime.utcnow()}}
+            {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc)}}
         )
         return {"message": "Đã đánh dấu tất cả thông báo là đã đọc.", "count": result.modified_count}
 
@@ -246,7 +246,7 @@ class NotificationService:
             "body": f"{buyer_name} vừa mua tài liệu '{document_title}'.",
             "is_read": False,
             "type": "purchase",
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["notifications"].insert_one(notification)
         if db_client.redis:

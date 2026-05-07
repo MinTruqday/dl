@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from fastapi import HTTPException
-from shared.core.database import db_client
-from shared.models.user import AuthorStatusEnum, KYCStatusEnum
-from shared.core.storage import upload_file
+from core.database import db_client
+from models.user import AuthorStatusEnum, KYCStatusEnum
+from core.storage import upload_file
 from loguru import logger
 
 class IdentityService:
@@ -25,7 +25,7 @@ class IdentityService:
             "portfolio_url": application.portfolio_url,
             "reason": application.reason,
             "status": AuthorStatusEnum.PENDING,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         
         await db["author_applications"].insert_one(application_data)
@@ -33,7 +33,7 @@ class IdentityService:
             {"_id": user_id},
             {"$set": {
                 "author_status": AuthorStatusEnum.PENDING,
-                "tos_accepted_at": datetime.utcnow()
+                "tos_accepted_at": datetime.now(timezone.utc)
             }}
         )
 logger.info("Log message sanitized"))
@@ -60,7 +60,7 @@ logger.info("Log message sanitized"))
             "user_id": user_id,
             "document_url": object_name,
             "status": KYCStatusEnum.PENDING,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         
         await db["kyc_applications"].insert_one(kyc_data)

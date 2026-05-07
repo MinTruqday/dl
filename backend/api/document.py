@@ -1,12 +1,13 @@
 from typing import Any, List, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from api.dependency import get_current_user_optional, get_current_user, require_role
 from fastapi import APIRouter, Depends, Response, Query, status
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
 from services.chapter import ChapterService
-from shared.models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate
+from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, InviteCoauthorRequest, DocumentPasswordRequest
+from models.series import SeriesCreateRequest, SeriesResponse
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/tai-lieu")
@@ -77,16 +78,6 @@ async def get_document_preview(slug: str):
         message="Lấy bản xem trước tài liệu thành công"
     )
 
-class SeriesCreateRequest(BaseModel):
-    title: str
-    description: Optional[str] = ""
-    document_ids: List[str] = []
-
-class InviteCoauthorRequest(BaseModel):
-    email: str
-
-class DocumentPasswordRequest(BaseModel):
-    password: str
 
 @router.get("/chuoi-tai-lieu/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_my_series(current_user: UserInDB = Depends(get_current_user)):

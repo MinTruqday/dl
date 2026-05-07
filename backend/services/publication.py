@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 
 class PublicationService:
@@ -20,7 +20,7 @@ class PublicationService:
             "seo_keywords": seo_data.get("keywords", []),
             "seo_slug": seo_data.get("slug", ""),
             "meta_description": seo_data.get("description", ""),
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.now(timezone.utc)
         }})
         
         logger.info(f"SEO metadata updated for document {document_id} by user {user_id}")
@@ -103,7 +103,7 @@ class PublicationService:
             {"_id": document_id},
             {"$set": {
                 "status": "processing_publish",
-                "updated_at": datetime.utcnow()
+                "updated_at": datetime.now(timezone.utc)
             }}
         )
         logger.info(f"Workspace: Document publishing triggered {document_id}")

@@ -1,22 +1,17 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
 from services.editor import EditorService, manager
 from typing import List, Optional
 from loguru import logger
 
 from services.document import DocumentService
+from models.chapter import ChapterCreate
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/soan-thao")
-
-class ChapterCreate(BaseModel):
-    title: str
-    content: str
-    is_premium: bool = False
-    price_dl: int = 0
 
 @router.websocket("/o-cam/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):

@@ -1,25 +1,12 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum, UpdateRoleRequest, UpdateStatusRequest, ModerationActionRequest, NoteRequest
 from api.dependency import require_role, get_current_user
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from services.user import UserService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/nguoi-dung")
-
-class UpdateRoleRequest(BaseModel):
-    role: str
-
-class UpdateStatusRequest(BaseModel):
-    is_active: bool
-
-class ModerationActionRequest(BaseModel):
-    reason: str
-    duration_hours: Optional[int] = 24
-
-class NoteRequest(BaseModel):
-    note: str
 
 @router.get("", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))])
 async def get_all_users(limit: int = 50, offset: int = 0):

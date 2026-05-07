@@ -1,9 +1,9 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from typing import Optional
-from shared.models.user import UserInDB
-from shared.models.social import StoryCreate
+from models.user import UserInDB
+from models.social import StoryCreate
 from api.dependency import get_current_user, get_current_user_optional, RateLimiter
 from services.story import StoryService
 

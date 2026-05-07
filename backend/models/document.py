@@ -4,21 +4,7 @@ from datetime import datetime, timezone
 import uuid
 from enum import Enum
 
-class Chapter(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str
-    content: str
-    order: int
-    is_premium: bool = False
-    price_dl: int = Field(default=0, alias="price_dl")
-    words_count: int = 0
-    locked: bool = False
-    readability_score: float = 0.0
-    vocabulary_richness: float = 0.0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    class Config:
-        populate_by_name = True
+from .chapter import ChapterBase
 
 class DocumentStatus(str, Enum):
     DRAFT = "draft"
@@ -54,13 +40,12 @@ class DocumentBase(BaseModel):
     pages_count: Optional[int] = 0
     preview_pages: int = 5
     scheduled_publish_at: Optional[datetime] = None
-    chapters: List[Chapter] = []
+    chapters: List[ChapterBase] = []
     coauthors: List[str] = []
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
     flash_sale: Optional[dict] = None
     publisher_name: Optional[str] = None
-
 
 class DocumentContentUpdate(BaseModel):
     content: str
@@ -92,3 +77,29 @@ class DocumentResponse(DocumentBase):
     
     class Config:
         populate_by_name = True
+
+class DocumentPasswordRequest(BaseModel):
+    password: str
+
+class SchedulePublishRequest(BaseModel):
+    publish_at: str
+
+class PremiumConfigRequest(BaseModel):
+    premium_chapters: List[str]
+
+class SeoMetadataRequest(BaseModel):
+    tags: List[str] = []
+    keywords: List[str] = []
+    slug: str = ""
+    description: str = ""
+
+class CoauthorInviteRequest(BaseModel):
+    email: str
+    role: str = "editor"
+
+class CollaborationResponse(BaseModel):
+    status: str
+
+class ModerateDocumentRequest(BaseModel):
+    action: str
+    reason: str

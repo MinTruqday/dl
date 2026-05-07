@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from loguru import logger
 
 class ReadService:
@@ -17,7 +17,7 @@ class ReadService:
             "font_size": max(12, min(28, data.get("font_size", 16))), 
             "line_height": max(1.2, min(3.0, data.get("line_height", 1.8))), 
             "letter_spacing": max(-0.5, min(2.0, data.get("letter_spacing", 0))), 
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.now(timezone.utc)
         }
         await db["reading_preferences"].update_one({"user_id": str(current_user.id)}, {"$set": update_data}, upsert=True)
         return {"message": "Đã cập nhật tùy chỉnh kiểu chữ."}
@@ -54,7 +54,7 @@ class ReadService:
             {"$set": {
                 "progress_percentage": min(100.0, max(0.0, data.progress_percentage)), 
                 "current_chapter_slug": data.current_chapter_slug, 
-                "last_read_at": datetime.utcnow()
+                "last_read_at": datetime.now(timezone.utc)
             }}, 
             upsert=True
         )
@@ -91,7 +91,7 @@ class ReadService:
                 "target_documents": max(0, data.target_documents),
                 "target_pages": max(0, data.target_pages),
                 "period": data.period if data.period in ["weekly", "monthly", "yearly"] else "monthly",
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             }},
             upsert=True,
         )

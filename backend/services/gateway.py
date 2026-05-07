@@ -4,7 +4,7 @@ import hashlib
 import json
 import httpx
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException, Response
 from core.database import db_client
 from models.wallet import Transaction, TransactionType
@@ -77,7 +77,7 @@ class GatewayService:
                     "dl": req.amount // 1000,
                     "gateway": "MOMO",
                     "status": "pending",
-                    "created_at": datetime.utcnow()
+                    "created_at": datetime.now(timezone.utc)
                 })
                 return {"payUrl": res_data.get("payUrl")}
             else:
@@ -148,7 +148,7 @@ class GatewayService:
             async with session.start_transaction():
                 result = await orders.update_one(
                     {"order_id": order_id, "status": "pending"},
-                    {"$set": {"status": "success", "updated_at": datetime.utcnow()}},
+                    {"$set": {"status": "success", "updated_at": datetime.now(timezone.utc)}},
                     session=session
                 )
                 

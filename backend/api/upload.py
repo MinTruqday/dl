@@ -1,7 +1,7 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.upload import UploadService
 from typing import Any

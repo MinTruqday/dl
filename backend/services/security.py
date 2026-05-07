@@ -1,5 +1,5 @@
-from shared.core.database import db_client
-from datetime import datetime
+from core.database import db_client
+from datetime import datetime, timezone
 from loguru import logger
 
 class SecurityService:
@@ -18,7 +18,7 @@ class SecurityService:
         db = db_client.mongodb.get_default_database()
         await db["system_config"].update_one(
             {"key": "security_settings"},
-            {"$set": {"value": data, "updated_at": datetime.utcnow()}},
+            {"$set": {"value": data, "updated_at": datetime.now(timezone.utc)}},
             upsert=True
         )
 logger.info("Log message sanitized"))

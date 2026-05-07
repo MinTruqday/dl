@@ -1,5 +1,5 @@
 from typing import List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import httpx
 from fastapi import HTTPException
 from core.database import db_client
@@ -105,7 +105,7 @@ class FeedService:
                 "quote_text": doc.get("quote_text"),
                 "bg_color": doc.get("bg_color"),
                 "font_style": doc.get("font_style"),
-                "created_at": doc.get("created_at", datetime.utcnow()).isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at"),
+                "created_at": doc.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at"),
                 "reactions": doc.get("reactions", {}),
                 "user_reaction": doc.get("reaction_users", {}).get(str(current_user.id)) if current_user else None,
                 "is_pinned": doc.get("is_pinned", False),

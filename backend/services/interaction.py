@@ -1,11 +1,11 @@
 from typing import List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import json
 from fastapi import HTTPException
-from shared.core.database import db_client
-from shared.models.user import UserInDB
-from shared.models.social import FollowInDB
+from core.database import db_client
+from models.user import UserInDB
+from models.social import FollowInDB
 from loguru import logger
 
 class InteractionService:
@@ -31,7 +31,7 @@ logger.info("Log message sanitized"))
                     "message": welcome_msg,
                     "is_read": False,
                     "type": "welcome",
-                    "created_at": datetime.utcnow(),
+                    "created_at": datetime.now(timezone.utc),
                 }
                 await db["notifications"].insert_one(notif)
                 if db_client.redis:
@@ -100,7 +100,7 @@ logger.info("Log message sanitized"))
             "reporter_id": str(current_user.id),
             "reason": reason,
             "status": "PENDING",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
 logger.info("Log message sanitized"))
@@ -119,7 +119,7 @@ logger.info("Log message sanitized"))
             "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "muted_id": target_user_id,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         })
         return {"message": "Đã tắt tiếng người dùng này.", "muted": True}
 

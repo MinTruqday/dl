@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 
 class ConversationMemory:
@@ -29,12 +29,12 @@ class ConversationMemory:
             self.conversations[session_id] = {
                 "summary": "",
                 "recent_messages": [],
-                "updated_at": datetime.utcnow()
+                "updated_at": datetime.now(timezone.utc)
             }
             
         mem = self.conversations[session_id]
         mem["recent_messages"].append({"role": role, "content": content})
-        mem["updated_at"] = datetime.utcnow()
+        mem["updated_at"] = datetime.now(timezone.utc)
         
         if len(mem["recent_messages"]) > self.max_recent_turns * 2:
             await self._summarize_oldest(session_id)

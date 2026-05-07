@@ -1,8 +1,8 @@
 from typing import Any, List, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, status, UploadFile, File
-from shared.models.user import UserInDB
-from shared.models.social import StatusUpdateCreate, DiscussionCreate, DiscussionReply, ReportCreate
+from models.user import UserInDB
+from models.social import StatusUpdateCreate, DiscussionCreate, DiscussionReply, ReportCreate
 from api.dependency import get_current_user, get_current_user_optional, RateLimiter, require_permissions
 from services.post import PostService
 from services.interaction import InteractionService

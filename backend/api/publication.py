@@ -1,26 +1,17 @@
 from typing import Any, List, Optional
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, status
-from shared.models.user import UserInDB, RoleEnum
+from models.user import UserInDB, RoleEnum
 from api.dependency import get_current_user, require_role
 from services.publication import PublicationService
 from services.document import DocumentService
 from services.chapter import ChapterService
+from models.document import SchedulePublishRequest, PremiumConfigRequest, SeoMetadataRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/xuat-ban")
 
-class SchedulePublishRequest(BaseModel):
-    publish_at: str
-
-class PremiumConfigRequest(BaseModel):
-    premium_chapters: List[str]
-
-class SeoMetadataRequest(BaseModel):
-    tags: List[str] = []
-    keywords: List[str] = []
-    slug: str = ""
-    description: str = ""
+# Models moved to models.document
 
 @router.post("/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def publish_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):

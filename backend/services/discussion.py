@@ -1,8 +1,8 @@
 from typing import List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from fastapi import HTTPException
-from shared.core.database import db_client
+from core.database import db_client
 from loguru import logger
 
 class DiscussionService:
@@ -19,7 +19,7 @@ class DiscussionService:
             "title": data["title"],
             "content": data["content"],
             "replies": [],
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["discussions"].insert_one(discussion)
 logger.info("Log message sanitized"))
@@ -52,7 +52,7 @@ logger.info("Log message sanitized"))
             "id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "content": data["content"],
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         result = await db["discussions"].update_one(
             {"_id": discussion_id},

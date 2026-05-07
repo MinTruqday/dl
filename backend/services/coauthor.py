@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import HTTPException
 import uuid
 
@@ -22,7 +22,7 @@ logger.info("Log message sanitized"))
             "type": "coauthor_invite",
             "metadata": {"document_id": document_id, "inviter_id": str(current_user.id)},
             "read": False,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
 logger.info("Log message sanitized"))
         return {"message": "Đã gửi lời mời đồng tác giả thành công."}

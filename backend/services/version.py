@@ -1,7 +1,8 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
 from bson import ObjectId
 import datetime
+from datetime import timezone
 import json
 import uuid
 import re
@@ -21,7 +22,7 @@ class VersionsService:
             'author_id': str(current_user.id), 
             'note': version_note, 
             'content': doc.get('content', ''),
-            'created_at': datetime.datetime.utcnow()
+            'created_at': datetime.datetime.now(timezone.utc)
         })
         return {'message': 'Đã lưu phiên bản thành công.'}
 
@@ -44,6 +45,6 @@ class VersionsService:
             
         await db['documents'].update_one(
             {'_id': version['document_id']},
-            {'$set': {'content': version['content'], 'updated_at': datetime.datetime.utcnow()}}
+            {'$set': {'content': version['content'], 'updated_at': datetime.datetime.now(timezone.utc)}}
         )
         return {'message': 'Đã khôi phục phiên bản thành công.'}

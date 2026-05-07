@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -13,7 +13,7 @@ class ReviewService:
             {"$set": {
                 "rating": rating_data.rating, 
                 "review_text": rating_data.review_text, 
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             }}, 
             upsert=True
         )
@@ -27,7 +27,7 @@ logger.info("Log message sanitized"))
             raise HTTPException(status_code=400, detail="Điểm đánh giá phải từ 1 đến 5.")
         await db["chapter_ratings"].update_one(
             {"user_id": str(current_user.id), "document_id": document_id, "chapter_slug": data.chapter_slug},
-            {"$set": {"rating": data.rating, "updated_at": datetime.utcnow()}},
+            {"$set": {"rating": data.rating, "updated_at": datetime.now(timezone.utc)}},
             upsert=True,
         )
 logger.info("Log message sanitized"))
@@ -44,7 +44,7 @@ logger.info("Log message sanitized"))
             "text_excerpt": data.text_excerpt[:500],
             "description": data.description[:300],
             "status": "pending",
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["typo_reports"].insert_one(report)
 logger.info("Log message sanitized"))
@@ -84,7 +84,7 @@ logger.info("Log message sanitized"))
             "reason": data.reason,
             "description": data.description,
             "status": "pending",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
 logger.info("Log message sanitized"))

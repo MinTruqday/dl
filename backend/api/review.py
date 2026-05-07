@@ -1,9 +1,9 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, status
 from typing import List, Any
-from shared.models.user import UserInDB
-from shared.models.review import ReviewCreate, ReviewResponse
+from models.user import UserInDB
+from models.review import ReviewCreate, ReviewResponse
 from api.dependency import get_current_user
 from services.review import ReviewService
 

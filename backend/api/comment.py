@@ -1,26 +1,17 @@
 from typing import Any
-from shared.core.response import APIResponse
+from core.response import APIResponse
 from fastapi import APIRouter, Depends, status
 from typing import List, Optional, Any
-from shared.models.user import UserInDB
-from shared.models.comment import CommentCreate, CommentResponse
+from models.user import UserInDB
+from models.comment import CommentCreate, CommentResponse, CommentEditRequest
 from api.dependency import get_current_user, require_permissions, RateLimiter
 from services.comment import CommentService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/binh-luan")
 
-class CommentRequest(BaseModel):
-    item_id: str
-    item_type: str
-    content: str
-    parent_id: Optional[str] = None
-
-class CommentEditRequest(BaseModel):
-    content: str
-
 @router.post("/", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(calls=15, period=60))])
-async def create_feed_comment(req: CommentRequest, current_user: UserInDB = Depends(get_current_user)):
+async def create_feed_comment(req: CommentCreate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await CommentService.create_feed_comment(req, current_user), message="Đăng bình luận thành công", status=201)
 
 @router.post("/doi-tuong/{item_id}", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED)

@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import uuid
 from loguru import logger
 from models.wallet import Transaction, TransactionType
@@ -18,7 +18,7 @@ class MonetizationService:
             "description": plan_data["description"],
             "price_dl": plan_data.get("price_dl"),
             "benefits": plan_data.get("benefits", []),
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["subscription_plans"].insert_one(plan_doc)
         logger.info(f"Monetization: Author {current_user.id} created subscription plan {plan_doc['name']}")
@@ -71,8 +71,8 @@ class MonetizationService:
                     "user_id": str(current_user.id),
                     "author_id": author_id,
                     "plan_id": plan_id,
-                    "start_date": datetime.utcnow(),
-                    "end_date": datetime.utcnow() + timedelta(days=30),
+                    "start_date": datetime.now(timezone.utc),
+                    "end_date": datetime.now(timezone.utc) + timedelta(days=30),
                     "status": "ACTIVE"
                 }
                 await db["subscriptions"].insert_one(subscription, session=session)
@@ -173,7 +173,7 @@ class MonetizationService:
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
         await db["documents"].update_one({"_id": document_id}, {"$set": update})
         logger.info(f"Monetization: Pricing updated for {document_id} by {current_user.id}")
@@ -197,7 +197,7 @@ class MonetizationService:
                     "expires_at": expires_at,
                     "is_active": True
                 },
-                "updated_at": datetime.utcnow()
+                "updated_at": datetime.now(timezone.utc)
             }}
         )
         logger.info(f"Monetization: Flash sale set for {document_id} until {expires_at}")
@@ -224,7 +224,7 @@ class MonetizationService:
             "total_revenue": stats.get("total_revenue", 0),
             "transaction_count": stats.get("transaction_count", 0),
             "currency": "dl",
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         }
 
     @staticmethod
@@ -260,7 +260,7 @@ class MonetizationService:
 
         await db["subscriptions"].update_one(
             {"_id": subscription_id, "user_id": str(current_user.id)},
-            {"$set": {"status": "PAUSED", "updated_at": datetime.utcnow()}}
+            {"$set": {"status": "PAUSED", "updated_at": datetime.now(timezone.utc)}}
         )
         logger.info(f"Subscription {subscription_id} paused by user {current_user.id}")
         return {"message": "Đã tạm dừng gói hội viên."}
@@ -276,7 +276,7 @@ class MonetizationService:
 
         await db["subscriptions"].update_one(
             {"_id": subscription_id, "user_id": str(current_user.id)},
-            {"$set": {"status": "ACTIVE", "updated_at": datetime.utcnow()}}
+            {"$set": {"status": "ACTIVE", "updated_at": datetime.now(timezone.utc)}}
         )
         logger.info(f"Subscription {subscription_id} resumed by user {current_user.id}")
         return {"message": "Đã tiếp tục gói hội viên."}
@@ -292,13 +292,13 @@ class MonetizationService:
 
         await db["subscriptions"].update_one(
             {"_id": subscription_id, "user_id": str(current_user.id)},
-            {"$set": {"status": "CANCELLED", "updated_at": datetime.utcnow(), "cancelled_at": datetime.utcnow()}}
+            {"$set": {"status": "CANCELLED", "updated_at": datetime.now(timezone.utc), "cancelled_at": datetime.now(timezone.utc)}}
         )
         logger.info(f"Subscription {subscription_id} cancelled by user {current_user.id}")
     @staticmethod
     async def check_and_expire_subscriptions():
         db = db_client.mongodb.get_default_database()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         result = await db["subscriptions"].update_many(
             {"status": "ACTIVE", "end_date": {"$lt": now}},

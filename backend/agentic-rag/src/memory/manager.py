@@ -2,7 +2,7 @@ import os
 import json
 from loguru import logger
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import redis
 
 class MemoryManager:

@@ -1,6 +1,6 @@
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 from models.user import RoleEnum
@@ -25,7 +25,7 @@ class OperationService:
     @staticmethod
     async def update_user_role(user_id: str, role: str) -> dict:
         db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.utcnow()}})
+        res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
         logger.info(f"Administration: Role for user {user_id} updated to {role}")
@@ -34,7 +34,7 @@ class OperationService:
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool) -> dict:
         db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}})
+        res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
         logger.info(f"Administration: User {user_id} status updated to {is_active}")
@@ -57,7 +57,7 @@ class OperationService:
         
         await db["author_applications"].update_one(
             {"_id": application_id},
-            {"$set": {"status": status, "reason": reason, "reviewed_by": reviewer_id, "reviewed_at": datetime.utcnow()}}
+            {"$set": {"status": status, "reason": reason, "reviewed_by": reviewer_id, "reviewed_at": datetime.now(timezone.utc)}}
         )
         
         if status == "APPROVED":
@@ -71,7 +71,7 @@ class OperationService:
         db = db_client.mongodb.get_default_database()
         await db["system_config"].update_one(
             {"key": "maintenance_mode"}, 
-            {"$set": {"enabled": enabled, "message": message, "updated_at": datetime.utcnow()}}, 
+            {"$set": {"enabled": enabled, "message": message, "updated_at": datetime.now(timezone.utc)}}, 
             upsert=True
         )
         logger.warning(f"Administration: Maintenance mode {'enabled' if enabled else 'disabled'} by admin")
@@ -93,7 +93,7 @@ class OperationService:
             "name": name,
             "provider": provider,
             "key_value": key_value,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Administration: API Key '{name}' for '{provider}' created")
         return {"message": "Đã lưu API Key thành công.", "key": key_value}
@@ -107,7 +107,7 @@ class OperationService:
             "target_audience": data.get("target", "ALL"),
             "discount_percent": data.get("discount", 0),
             "status": "active",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["marketing_campaigns"].insert_one(campaign)
         logger.info(f"Administration: Campaign '{campaign['title']}' created")
@@ -130,7 +130,7 @@ class OperationService:
             "uptime": "99.9%",
             "database": db_status,
             "cpu_load": f"{load_avg[0]}%",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     @staticmethod
@@ -149,7 +149,7 @@ class OperationService:
         total_docs = await db["documents"].count_documents({})
         total_assets = await db["assets"].count_documents({})
         recent_crawls = await db["documents"].find({}, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
-        last_crawl = recent_crawls[0]["created_at"].isoformat() if recent_crawls else datetime.utcnow().isoformat()
+        last_crawl = recent_crawls[0]["created_at"].isoformat() if recent_crawls else datetime.now(timezone.utc).isoformat()
         
         return {
             "total_documents": total_docs,
@@ -169,7 +169,7 @@ class OperationService:
             "description": data["description"], 
             "status": "open", 
             "assigned_to": str(current_moderator.id), 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Administration: Bug report {report_id} handled by {current_moderator.id}")
         return {"message": "Đã tiếp nhận báo cáo lỗi thành công."}
@@ -182,7 +182,7 @@ class OperationService:
             "assigned_to": data["moderator_id"], 
             "title": data["title"], 
             "status": "pending", 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["moderator_tasks"].insert_one(task)
         logger.info(f"Administration: Task assigned to {data['moderator_id']} by {current_moderator.id}")
@@ -198,13 +198,13 @@ class OperationService:
             "title": data["title"], 
             "content": data["content"], 
             "status": "pending", 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Administration: Policy proposal {proposal_id} submitted by {current_moderator.id}")
     @staticmethod
-    async def get_payout_requests(status: str = "PENDING", limit: int = 50) -> list:
+    async def get_withdrawal_requests(status: str = "PENDING", limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
-        apps = await db["payout_requests"].find({"status": status}).sort("created_at", -1).limit(limit).to_list(length=limit)
+        apps = await db["withdrawal_requests"].find({"status": status}).sort("created_at", -1).limit(limit).to_list(length=limit)
         
         result = []
         for a in apps:
@@ -222,61 +222,61 @@ class OperationService:
         return result
 
     @staticmethod
-    async def approve_payout(payout_id: str, admin_id: str) -> dict:
+    async def approve_withdrawal(withdrawal_id: str, admin_id: str) -> dict:
         db = db_client.mongodb.get_default_database()
-        payout = await db["payout_requests"].find_one({"_id": payout_id, "status": "PENDING"})
-        if not payout:
+        withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id, "status": "PENDING"})
+        if not withdrawal:
             raise HTTPException(status_code=404, detail="Yêu cầu rút tiền không tồn tại hoặc đã được xử lý.")
             
-        await db["payout_requests"].update_one(
-            {"_id": payout_id},
-            {"$set": {"status": "COMPLETED", "processed_by": admin_id, "processed_at": datetime.utcnow()}}
+        await db["withdrawal_requests"].update_one(
+            {"_id": withdrawal_id},
+            {"$set": {"status": "COMPLETED", "processed_by": admin_id, "processed_at": datetime.now(timezone.utc)}}
         )
-        logger.info(f"Administration: Payout {payout_id} approved by {admin_id}")
+        logger.info(f"Administration: Withdrawal {withdrawal_id} approved by {admin_id}")
         return {"message": "Đã phê duyệt yêu cầu rút tiền."}
 
     @staticmethod
-    async def reject_payout(payout_id: str, reason: str, admin_id: str) -> dict:
+    async def reject_withdrawal(withdrawal_id: str, reason: str, admin_id: str) -> dict:
         db = db_client.mongodb.get_default_database()
-        payout = await db["payout_requests"].find_one({"_id": payout_id, "status": "PENDING"})
-        if not payout:
+        withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id, "status": "PENDING"})
+        if not withdrawal:
             raise HTTPException(status_code=404, detail="Yêu cầu rút tiền không tồn tại")
             
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
                 await db["users"].update_one(
-                    {"_id": payout["user_id"]},
-                    {"$inc": {"wallet_balance": payout["amount"]}},
+                    {"_id": withdrawal["user_id"]},
+                    {"$inc": {"wallet_balance": withdrawal["amount"]}},
                     session=session
                 )
                 
-                await db["payout_requests"].update_one(
-                    {"_id": payout_id},
+                await db["withdrawal_requests"].update_one(
+                    {"_id": withdrawal_id},
                     {"$set": {
                         "status": "REJECTED", 
                         "rejection_reason": reason, 
                         "processed_by": admin_id, 
-                        "processed_at": datetime.utcnow()
+                        "processed_at": datetime.now(timezone.utc)
                     }},
                     session=session
                 )
                 
                 from models.wallet import Transaction, TransactionType
                 tx = Transaction(
-                    user_id=payout["user_id"],
+                    user_id=withdrawal["user_id"],
                     type=TransactionType.REFUND,
-                    amount=payout["amount"],
+                    amount=withdrawal["amount"],
                     note=f"Hoàn trả yêu cầu rút tiền bị từ chối: {reason}"
                 )
                 await db["transactions"].insert_one(tx.model_dump(by_alias=True), session=session)
                 
                 await session.commit_transaction()
-                logger.info(f"Administration: Payout {payout_id} rejected by {admin_id}. Reason: {reason}")
+                logger.info(f"Administration: Withdrawal {withdrawal_id} rejected by {admin_id}. Reason: {reason}")
                 return {"message": "Đã từ chối yêu cầu rút tiền và hoàn trả số dư"}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Reject payout failed: {e}")
+            logger.error(f"Reject withdrawal failed: {e}")
             raise HTTPException(status_code=500, detail="Xử lý từ chối thất bại")
         finally:
             await session.end_session()

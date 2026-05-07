@@ -96,7 +96,7 @@ def get_revenue_report() -> str:
         if response.status_code == 200:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
-            pending = data.get("pending_payout", 0)
+            pending = data.get("pending_withdrawal", 0)
             return f"Báo cáo tài chính:\n- Tổng doanh thu: {total} dl\n- Đang chờ thanh toán: {pending} dl"
         return "Không thể truy xuất dữ liệu doanh thu"
     except Exception as e:

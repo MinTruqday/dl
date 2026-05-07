@@ -90,7 +90,6 @@ async def edit_message(message_id: str, req: dict, current_user: UserInDB = Depe
     if not result:
         return APIResponse(message="Không thể chỉnh sửa tin nhắn này", status=403)
     
-    # Notify other user
     other_id = result["receiver_id"] if result["sender_id"] == current_user.id else result["sender_id"]
     await manager.send_personal_message({
         "type": "message_edited",

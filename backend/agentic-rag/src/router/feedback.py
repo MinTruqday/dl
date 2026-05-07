@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.core.config import settings
@@ -27,7 +27,7 @@ async def submit_feedback(req: FeedbackRequest):
             "user_id": req.user_id,
             "vote_type": req.vote_type,
             "comment": req.comment,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         
         await db.rag_feedback.insert_one(feedback_doc)

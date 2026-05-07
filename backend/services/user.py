@@ -1,12 +1,12 @@
 from typing import List, Dict, Any
 from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from loguru import logger
 from models.user import RoleEnum
 import uuid
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 class UserService:
     @staticmethod
@@ -28,7 +28,7 @@ class UserService:
     @staticmethod
     async def update_user_role(user_id: str, role: str) -> Dict[str, str]:
         db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.utcnow()}})
+        res = await db["users"].update_one({"_id": user_id}, {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
         logger.info(f"User service: Role for user {user_id} updated to {role}")
@@ -37,7 +37,7 @@ class UserService:
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool) -> Dict[str, str]:
         db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}})
+        res = await db["users"].update_one({"_id": user_id}, {"$set": {"is_active": is_active, "updated_at": datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
         logger.info(f"User service: User {user_id} status updated to {is_active}")
@@ -55,7 +55,7 @@ class UserService:
             "user_id": user_id, 
             "moderator_id": str(current_moderator.id), 
             "reason": reason, 
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }
         await db["warnings"].insert_one(warning)
         await db["audit_logs"].insert_one({
@@ -63,7 +63,7 @@ class UserService:
             "actor_id": str(current_moderator.id), 
             "target_user_id": user_id, 
             "reason": reason, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         
         if db_client.redis:
@@ -75,10 +75,10 @@ class UserService:
     @staticmethod
     async def lock_user(user_id: str, reason: str, duration_hours: int, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
-        lock_until = datetime.utcnow() + timedelta(hours=duration_hours)
+        lock_until = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
         await db["users"].update_one(
             {"_id": user_id}, 
-            {"$set": {"is_active": False, "locked_until": lock_until, "lock_reason": reason, "updated_at": datetime.utcnow()}}
+            {"$set": {"is_active": False, "locked_until": lock_until, "lock_reason": reason, "updated_at": datetime.now(timezone.utc)}}
         )
         await db["audit_logs"].insert_one({
             "action": "LOCK_USER", 
@@ -86,7 +86,7 @@ class UserService:
             "target_user_id": user_id, 
             "reason": reason, 
             "duration": duration_hours, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Moderation: User {user_id} locked for {duration_hours}h by {current_moderator.id}")
         return {"message": f"Đã khóa tài khoản {duration_hours} giờ."}
@@ -94,13 +94,13 @@ class UserService:
     @staticmethod
     async def shadowban_user(user_id: str, is_banned: bool, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
-        await db["users"].update_one({"_id": user_id}, {"$set": {"is_shadowbanned": is_banned, "updated_at": datetime.utcnow()}})
+        await db["users"].update_one({"_id": user_id}, {"$set": {"is_shadowbanned": is_banned, "updated_at": datetime.now(timezone.utc)}})
         action = "SHADOWBAN" if is_banned else "UNSHADOWBAN"
         await db["audit_logs"].insert_one({
             "action": action, 
             "actor_id": str(current_moderator.id), 
             "target_user_id": user_id, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Moderation: User {user_id} {action.lower()} by {current_moderator.id}")
         return {"message": f"Đã cập nhật trạng thái hạn chế người dùng thành công."}
@@ -110,13 +110,13 @@ class UserService:
         db = db_client.mongodb.get_default_database()
         await db["users"].update_one(
             {"_id": user_id}, 
-            {"$set": {"kyc_status": status, "is_kyc_verified": status == "VERIFIED", "updated_at": datetime.utcnow()}}
+            {"$set": {"kyc_status": status, "is_kyc_verified": status == "VERIFIED", "updated_at": datetime.now(timezone.utc)}}
         )
         await db["audit_logs"].insert_one({
             "action": f"KYC_{status}", 
             "actor_id": str(current_moderator.id), 
             "target_user_id": user_id, 
-            "timestamp": datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Moderation: KYC for {user_id} set to {status} by {current_moderator.id}")
         return {"message": f"Cập nhật KYC thành công."}
@@ -140,7 +140,7 @@ class UserService:
             "user_id": user_id,
             "moderator_id": str(current_moderator.id),
             "note": note,
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         })
         logger.info(f"Moderation: Note added for user {user_id} by {current_moderator.id}")
         return {"message": "Đã thêm ghi chú điều hành."}
@@ -174,7 +174,7 @@ class UserService:
                 "status": "resolved", 
                 "action_taken": action, 
                 "resolved_by": str(current_moderator.id), 
-                "resolved_at": datetime.utcnow()
+                "resolved_at": datetime.now(timezone.utc)
             }}
         )
         logger.info(f"Moderation: Report {report_id} resolved with action '{action}' by {current_moderator.id}")
@@ -186,8 +186,8 @@ class UserService:
         logs = await db["audit_logs"].find({"actor_id": moderator_id}).sort("timestamp", -1).limit(50).to_list(length=50)
         result = []
         for l in logs:
-            target_id = l.get("document_id") or l.get("target_user_id") or l.get("payout_id") or l.get("item_id") or "N/A"
-            target_type = "Tài liệu" if "document_id" in l else "Người dùng" if "target_user_id" in l else "Thanh toán" if "payout_id" in l else "Đối tượng"
+            target_id = l.get("document_id") or l.get("target_user_id") or l.get("withdrawal_id") or l.get("item_id") or "N/A"
+            target_type = "Tài liệu" if "document_id" in l else "Người dùng" if "target_user_id" in l else "Thanh toán" if "withdrawal_id" in l else "Đối tượng"
             result.append({
                 "action": l.get("action"),
                 "target_id": target_id,
@@ -200,7 +200,7 @@ class UserService:
     @staticmethod
     async def unlock_accounts_task():
         db = db_client.mongodb.get_default_database()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         res = await db["users"].update_many(
             {"locked_until": {"$lt": now}, "is_active": False},
             {"$set": {"is_active": True}, "$unset": {"locked_until": "", "lock_reason": ""}}

@@ -1,5 +1,5 @@
-from datetime import datetime
-from shared.core.database import db_client
+from datetime import datetime, timezone
+from core.database import db_client
 from loguru import logger
 
 class SettingService:
@@ -28,7 +28,7 @@ class SettingService:
         db = db_client.mongodb.get_default_database()
         await db["users"].update_one(
             {"_id": str(current_user.id)},
-            {"$set": {"settings": settings_data, "updated_at": datetime.utcnow()}}
+            {"$set": {"settings": settings_data, "updated_at": datetime.now(timezone.utc)}}
         )
 logger.info("Log message sanitized"))
         return {"message": "Đã lưu cài đặt."}

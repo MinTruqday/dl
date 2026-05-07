@@ -1,31 +1,14 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import get_current_user
-from shared.models.user import UserInDB
-from shared.core.response import APIResponse
+from models.user import UserInDB
+from models.review import RatingRequest, ChapterRatingRequest
+from models.feedback import ReportRequest, TypoReportRequest
+from core.response import APIResponse
 from services.review import ReviewService
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/phan-hoi")
-
-class RatingRequest(BaseModel):
-    rating: int
-    review_text: Optional[str] = None
-
-class ChapterRatingRequest(BaseModel):
-    chapter_slug: str
-    rating: int
-
-class TypoReportRequest(BaseModel):
-    chapter_slug: str
-    text_excerpt: str
-    description: str = ""
-
-class ReportRequest(BaseModel):
-    item_type: str 
-    item_id: str
-    reason: str
-    description: Optional[str] = None
 
 @router.post("/bao-cao", response_model=APIResponse[Any])
 async def report_content(req: ReportRequest, current_user: UserInDB = Depends(get_current_user)):

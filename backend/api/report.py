@@ -1,15 +1,15 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from api.dependency import require_role, get_current_user
-from shared.models.user import UserInDB, RoleEnum
-from shared.core.response import APIResponse
+from models.user import UserInDB, RoleEnum
+from core.response import APIResponse
 from services.user import UserService
+from models.feedback import ResolveReportRequest
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/bao-cao")
 
-class ResolveReportRequest(BaseModel):
-    action: str
+# Models moved to models.feedback
 
 @router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_reports(status: str = "pending", skip: int = 0, limit: int = 30):

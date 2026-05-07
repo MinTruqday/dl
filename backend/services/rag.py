@@ -121,7 +121,7 @@ class RagService:
     @staticmethod
     async def create_session(user_id: str, document_id: Optional[str] = None, first_query: str = "") -> dict:
         from core.database import db_client
-        from datetime import datetime
+        from datetime import datetime, timezone
         db = db_client.mongodb.get_default_database()
         title = first_query[:40] if first_query else "Cuộc hội thoại mới"
         session = {
@@ -130,8 +130,8 @@ class RagService:
             "document_id": document_id,
             "title": title,
             "messages": [],
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
         }
         await db["ai_sessions"].insert_one(session)
         return session
@@ -148,12 +148,12 @@ class RagService:
     @staticmethod
     async def add_message(session_id: str, role: str, content: str, user_id: str) -> bool:
         from core.database import db_client
-        from datetime import datetime
+        from datetime import datetime, timezone
         db = db_client.mongodb.get_default_database()
-        message = {"id": str(uuid.uuid4()), "role": role, "content": content, "created_at": datetime.utcnow()}
+        message = {"id": str(uuid.uuid4()), "role": role, "content": content, "created_at": datetime.now(timezone.utc)}
         result = await db["ai_sessions"].update_one(
             {"_id": session_id, "user_id": user_id},
-            {"$push": {"messages": message}, "$set": {"updated_at": datetime.utcnow()}}
+            {"$push": {"messages": message}, "$set": {"updated_at": datetime.now(timezone.utc)}}
         )
         return result.modified_count > 0
 
@@ -167,10 +167,10 @@ class RagService:
     @staticmethod
     async def update_title(session_id: str, title: str, user_id: str) -> bool:
         from core.database import db_client
-        from datetime import datetime
+        from datetime import datetime, timezone
         db = db_client.mongodb.get_default_database()
         result = await db["ai_sessions"].update_one(
             {"_id": session_id, "user_id": user_id},
-            {"$set": {"title": title, "updated_at": datetime.utcnow()}}
+            {"$set": {"title": title, "updated_at": datetime.now(timezone.utc)}}
         )
         return result.modified_count > 0

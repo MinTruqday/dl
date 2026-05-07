@@ -1,6 +1,6 @@
-from shared.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from loguru import logger
 
@@ -24,7 +24,7 @@ class HighlightService:
             "start_offset": data.get("start_offset", 0),
             "end_offset": data.get("end_offset", 0),
             "note": data.get("note", ""),
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["highlights"].insert_one(highlight)
 logger.info("Log message sanitized"))
@@ -55,7 +55,7 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         result = await db["highlights"].update_one(
             {"_id": highlight_id, "user_id": str(current_user.id)},
-            {"$set": {"note": note, "updated_at": datetime.utcnow()}}
+            {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Ghi chú không tồn tại.")
@@ -102,7 +102,7 @@ logger.info("Log message sanitized"))
         highlights = await db["highlights"].find(
             {"user_id": str(current_user.id), "document_id": document_id}
         ).sort("created_at", 1).to_list(length=500)
-        lines = [f"# {document_title}", "", f"_DocLib Highlights - {datetime.utcnow().strftime('%d/%m/%Y')}_", ""]
+        lines = [f"# {document_title}", "", f"_DocLib Highlights - {datetime.now(timezone.utc).strftime('%d/%m/%Y')}_", ""]
         for h in highlights:
             text = h.get("text", "")
             note = h.get("note", "")
@@ -150,7 +150,7 @@ class ReadingPreferenceService:
             "line_height": max(1.2, min(3.0, data.get("line_height", 1.8))),
             "font_family": data.get("font_family", "Inter"),
             "is_dyslexic_mode": data.get("is_dyslexic_mode", False),
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
         await db["reading_preferences"].update_one(
             {"user_id": str(current_user.id)},
