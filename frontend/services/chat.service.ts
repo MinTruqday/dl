@@ -28,7 +28,12 @@ export const getMessagesAPI = async (
   return data;
 };
 
-export const sendMessageAPI = async (receiverId: string, content: string) => {
+export const sendMessageAPI = async (
+  receiverId: string,
+  content: string,
+  imageUrl?: string,
+  replyToId?: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/tro-chuyen/tin-nhan`, {
@@ -37,9 +42,42 @@ export const sendMessageAPI = async (receiverId: string, content: string) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ receiver_id: receiverId, content }),
+    body: JSON.stringify({
+      receiver_id: receiverId,
+      content,
+      image_url: imageUrl,
+      reply_to_id: replyToId,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Gửi tin nhắn thất bại");
+  return data;
+};
+
+export const togglePinAPI = async (messageId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/tro-chuyen/ghim/${messageId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể thực hiện ghim");
+  return data;
+};
+
+export const editMessageAPI = async (messageId: string, content: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/tro-chuyen/chinh-sua/${messageId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể chỉnh sửa tin nhắn");
   return data;
 };

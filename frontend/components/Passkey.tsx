@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShieldCheck, Fingerprint, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
@@ -97,47 +97,43 @@ export default function Passkey({
 
   return (
     <Modal isOpen={true} onClose={onClose} showCloseButton={!loading}>
-      <ModalHeader className="text-center">
-        <div className="w-20 h-20 bg-white border border-zinc-100 flex items-center justify-center mx-auto mb-8 rounded-sm">
-          <Fingerprint className="w-10 h-10 text-black" />
-        </div>
+      <ModalHeader>
         <ModalTitle>Bảo mật bằng Passkey</ModalTitle>
       </ModalHeader>
 
-      <ModalContent className="text-center">
-        <p className="text-sm text-zinc-500 font-medium leading-relaxed">
-          Kích hoạt Passkey để đăng nhập nhanh chóng bằng vân tay hoặc khuôn mặt
-          mà không cần mật khẩu.
-        </p>
-
-        <div className="flex flex-col gap-3 pt-4">
-          <button
-            onClick={handleRegister}
-            disabled={loading}
-            className="h-16 w-full bg-black text-white font-bold text-sm flex items-center justify-center gap-3 active:scale-95 disabled:bg-zinc-400 rounded-sm transition-transform"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <ShieldCheck className="w-5 h-5" />
-            )}
-            {loading ? "Đang xử lý" : "Thiết lập ngay"}
-          </button>
-          {!loading && (
-            <button
-              onClick={onClose}
-              className="h-16 w-full border border-zinc-100 text-zinc-400 font-bold text-sm active:scale-95 rounded-sm transition-transform"
-            >
-              Để sau
-            </button>
-          )}
+      <ModalContent>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-semibold text-black uppercase tracking-widest leading-tight">
+              Xác thực sinh trắc học
+            </label>
+            <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+              Kích hoạt Passkey để đăng nhập nhanh chóng bằng vân tay hoặc khuôn
+              mặt mà không cần mật khẩu.
+            </p>
+          </div>
         </div>
       </ModalContent>
 
       <ModalFooter>
-        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-          Công nghệ bảo mật sinh trắc học tiên tiến
-        </p>
+        {!loading && (
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center"
+          >
+            Để sau
+          </button>
+        )}
+        <button
+          onClick={handleRegister}
+          disabled={loading}
+          className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center"
+        >
+          {loading ? (
+            <Loader2 className="w-3 h-3 animate-spin mr-2" />
+          ) : null}
+          {loading ? "Đang xử lý" : "Xác nhận kích hoạt"}
+        </button>
       </ModalFooter>
     </Modal>
   );

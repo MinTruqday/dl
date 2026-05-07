@@ -126,7 +126,7 @@ export const resetPasswordAPI = async (
 };
 
 export const verifyCodeAPI = async (token: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/xac-thuc/xac-thuc-ma`, {
+  const res = await fetch(`${API_URL}/xac-thuc/ma-xac-thuc`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),

@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logoutState = () => {
     clearAuth();
-    router.push("/login");
+    router.push("/dang-nhap");
   };
 
   return (

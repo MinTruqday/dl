@@ -190,7 +190,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                         )}
                       </div>
                       <Link
-                        href="/notification"
+                        href="/thong-bao"
                         onClick={() => setShowNotifications(false)}
                         className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200 transition-colors bg-zinc-50"
                       >
@@ -249,7 +249,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                         </p>
                       </div>
                       <Link
-                        href="/profile"
+                        href="/ho-so"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
                       >
@@ -257,7 +257,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
                         Hồ sơ cá nhân
                       </Link>
                       <Link
-                        href="/settings"
+                        href="/cai-dat"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
                       >
@@ -279,13 +279,13 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
             ) : (
               <div className="flex items-center gap-2">
                   <Link
-                    href="/login"
+                    href="/dang-nhap"
                     className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors"
                   >
                   Đăng nhập
                 </Link>
                 <Link
-                  href="/register"
+                  href="/dang-ky"
                   className="px-4 py-2 text-sm font-medium text-white bg-black transition-colors rounded-none"
                 >
                   Đăng ký

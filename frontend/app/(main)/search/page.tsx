@@ -275,7 +275,7 @@ export default function SearchResultsPage() {
               results.map((document) => (
                 <Link
                   key={document._id}
-                  href={`/documents/${document.slug}`}
+                  href={`/tai-lieu/${document.slug}`}
                   className="group p-8 bg-white border border-zinc-100 flex gap-10 rounded-sm active:scale-[0.99]"
                 >
                   <div className="w-32 h-44 bg-white border border-zinc-100 shrink-0 overflow-hidden relative rounded-sm">

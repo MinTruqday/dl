@@ -110,3 +110,70 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
   if (!res.ok) throw new Error(data.message || "Tìm kiếm trong tài liệu thất bại");
   return data;
 }
+
+export async function getBookmarksAPI() {
+  const res = await fetch(`${API_URL}/ho-so/danh-dau`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải bộ sưu tập");
+  return data;
+}
+
+export async function getBookmarkFoldersAPI() {
+  const res = await fetch(`${API_URL}/thu-vien/danh-dau/thu-muc`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thư mục");
+  return data;
+}
+
+export async function getReadingListsAPI() {
+  const res = await fetch(`${API_URL}/thu-vien/danh-sach`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách bộ sưu tập");
+  return data;
+}
+
+export async function clearReadingHistoryAPI() {
+  const res = await fetch(`${API_URL}/reader/history`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa lịch sử thất bại");
+  return data;
+}
+
+export async function deleteReadingHistoryItemAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/reader/history/${documentId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa mục lịch sử thất bại");
+  return data;
+}
+
+export async function getMySeriesAPI() {
+  const res = await fetch(`${API_URL}/author/series`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách chuỗi tài liệu");
+  return data;
+}
+
+export async function createSeriesAPI(data: { title: string; description: string; document_ids: string[] }) {
+  const res = await fetch(`${API_URL}/author/series`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể tạo chuỗi tài liệu mới");
+  return result;
+}

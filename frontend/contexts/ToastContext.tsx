@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { X } from "lucide-react";
 
 export interface Toast {
@@ -17,6 +17,11 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const showToast = useCallback(
     (message: string, type: "success" | "error" | "info" = "info") => {
@@ -36,34 +41,49 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-6 right-6 z-[99999] flex flex-col gap-3 max-w-md w-full sm:w-[400px] font-sans pointer-events-none">
-        {toasts.map((t) => {
-          let typeStyles = "text-black";
-          if (t.type === "error") typeStyles = "text-red-600 font-bold";
-          if (t.type === "success") typeStyles = "text-green-600";
+      {isClient && (
+        <div
+          style={{
+            position: "fixed",
+            top: "80px",
+            right: "30px",
+            zIndex: 999999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: "16px",
+            pointerEvents: "none",
+            fontFamily: "sans-serif",
+          }}
+        >
+          {toasts.map((t) => {
+            let typeStyles = "text-black";
+            if (t.type === "error") typeStyles = "text-red-600 font-bold";
+            if (t.type === "success") typeStyles = "text-green-600";
 
-          return (
-            <div
-              key={t.id}
-              className={`border-l-[6px] border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto ${typeStyles}`}
-            >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <p className="leading-relaxed font-bold tracking-tight">
-                    {t.message}
-                  </p>
+            return (
+              <div
+                key={t.id}
+                className={`border-l-4 border-l-black border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto shadow-sm ${typeStyles}`}
+              >
+                <div className="flex justify-between items-start gap-10 whitespace-nowrap min-w-max">
+                  <div className="flex-1">
+                    <p className="leading-relaxed font-bold tracking-tight">
+                      {t.message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => removeToast(t.id)}
+                    className="opacity-40 transition-opacity p-1 -mt-1 -mr-1 hover:opacity-100"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeToast(t.id)}
-                  className="opacity-40 transition-opacity p-1 -mt-1 -mr-1 hover:opacity-100"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </ToastContext.Provider>
   );
 }

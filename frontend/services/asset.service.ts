@@ -79,3 +79,16 @@ export async function uploadImageAPI(file: File) {
   if (!res.ok) throw new Error(data.message || "Lỗi tải hình ảnh");
   return data;
 }
+
+export async function uploadMediaAPI(formData: FormData) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/social/upload-media`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tải tệp tin lên thất bại.");
+  return data;
+}

@@ -85,3 +85,14 @@ export async function deleteAiSessionAPI(sessionId: string) {
   if (!res.ok) throw new Error(data.message || "Xóa hội thoại thất bại");
   return data;
 }
+export async function streamAiChatAPI(payload: any) {
+  const token = getToken();
+  return await fetch(`${API_URL}/tri-tue-nhan-tao/tro-chuyen`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}

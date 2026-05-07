@@ -88,7 +88,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import {
@@ -98,9 +97,10 @@ import {
   ModalContent,
   ModalFooter,
 } from "@/components/ui/Modal";
+import { parseUTC } from "@/lib/utils";
 
 const getTimeElapsed = (dateString: string) => {
-  const diff = Date.now() - new Date(dateString).getTime();
+  const diff = Date.now() - parseUTC(dateString).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${Math.max(1, mins)} phút trước`;
   const hours = Math.floor(mins / 60);
@@ -1563,7 +1563,7 @@ export default function Feed() {
 
                       {post.attached_document_id && (
                         <Link
-                          href={`/documents/${post.attached_document_id}`}
+                          href={`/tai-lieu/${post.attached_document_id}`}
                           className="mt-4 flex items-center justify-between p-4 border border-zinc-200 bg-zinc-50"
                         >
                           <div className="flex items-center gap-4">

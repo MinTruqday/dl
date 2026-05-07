@@ -7,8 +7,8 @@ import { useEffect } from "react";
 const protectedRoutes: Record<string, string[]> = {
   "/studio": ["author", "admin"],
   "/operation": ["admin"],
-  "/profile": ["reader", "author", "admin"],
-  "/wallet": ["reader", "author", "admin"],
+  "/ho-so": ["reader", "author", "admin"],
+  "/vi-tien": ["reader", "author", "admin"],
   "/draft": ["moderator", "admin"],
   "/logs": ["moderator", "admin"],
   "/collector": ["admin"],
@@ -17,7 +17,7 @@ const protectedRoutes: Record<string, string[]> = {
   "/assets": ["author", "admin"],
   "/collab": ["author", "admin"],
   "/coupon": ["author", "admin"],
-  "/library": ["author", "admin"],
+  "/thu-vien": ["author", "admin"],
   "/payout": ["author", "admin"],
   "/upload": ["author", "admin"],
   "/user": ["admin"],
@@ -38,7 +38,7 @@ export default function Auth({ children }: { children: React.ReactNode }) {
 
     if (protectedRoutes[basePath]) {
       if (!isAuthenticated) {
-        router.push("/login");
+        router.push("/dang-nhap");
         return;
       }
 

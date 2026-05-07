@@ -43,7 +43,7 @@ from api.latex import router as latex_router
 from api.collector import router as collector_router
 from api.library import router as library_router
 from api.feedback import router as feedback_router
-from api.ai import router as ai_router
+from api.ai import router as ai_router, ai_router_en
 from api.operation import router as operation_router
 from api.draft import router as draft_router
 from api.report import router as report_router
@@ -81,25 +81,34 @@ app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
+    response = JSONResponse(
         status_code=exc.status_code,
         content={"data": None, "message": str(exc.detail), "status": exc.status_code}
     )
+    origin = request.headers.get("origin")
+    if origin in allowed_origins or "*" in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
-    # Simple formatting of validation errors
     msg = "Dữ liệu không hợp lệ: " + ", ".join([f"{e['loc'][-1]}: {e['msg']}" for e in errors])
-    return JSONResponse(
+    response = JSONResponse(
         status_code=422,
         content={"data": {"errors": errors}, "message": msg, "status": 422}
     )
+    origin = request.headers.get("origin")
+    if origin in allowed_origins or "*" in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global Exception on {request.method} {request.url}: {repr(exc)}")
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
         content={
             "data": None, 
@@ -107,6 +116,11 @@ async def global_exception_handler(request: Request, exc: Exception):
             "status": 500
         }
     )
+    origin = request.headers.get("origin")
+    if origin in allowed_origins or "*" in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
@@ -130,47 +144,48 @@ async def startup_event():
 async def shutdown_event():
     await close_db()
 
-app.include_router(auth_router, prefix="/xac-thuc")
-app.include_router(asset_router, prefix="/tai-nguyen")
-app.include_router(profile_router, prefix="/ho-so")
-app.include_router(wallet_router, prefix="/vi-tien")
-app.include_router(payment_router, prefix="/thanh-toan")
-app.include_router(gateway_router, prefix="/cong-thanh")
-app.include_router(export_router, prefix="/xuat-tai-lieu")
-app.include_router(upload_router, prefix="/tai-len")
-app.include_router(social_router, prefix="/cong-dong")
-app.include_router(story_router, prefix="/cau-chuyen")
-app.include_router(comment_router, prefix="/binh-luan")
-app.include_router(document_router, prefix="/tai-lieu")
-app.include_router(review_router, prefix="/danh-gia")
-app.include_router(version_router, prefix="/phien-ban")
-app.include_router(latex_router, prefix="/soan-thao-latex")
-app.include_router(editor_router, prefix="/soan-thao")
-app.include_router(monetization_router, prefix="/kiem-tien")
-app.include_router(read_router, prefix="/doc")
-app.include_router(library_router, prefix="/thu-vien")
-app.include_router(feedback_router, prefix="/phan-hoi")
-app.include_router(ai_router, prefix="/tri-tue-nhan-tao")
-app.include_router(rag_router, prefix="/tri-tue-nhan-tao")
-app.include_router(inference_router, prefix="/suy-luan")
-app.include_router(notification_router, prefix="/thong-bao")
-app.include_router(chat_router, prefix="/tro-chuyen")
-app.include_router(coauthor_router, prefix="/dong-tac-gia")
-app.include_router(collector_router, prefix="/thu-thap")
-app.include_router(payout_router, prefix="/rut-tien")
-app.include_router(operation_router, prefix="/van-hanh", tags=["operation"])
-app.include_router(draft_router, prefix="/ban-nhap", tags=["draft"])
-app.include_router(report_router, prefix="/bao-cao", tags=["reports"])
-app.include_router(log_router, prefix="/nhat-ky", tags=["logs"])
-app.include_router(telemetry_router, prefix="/do-luong", tags=["telemetry"])
-app.include_router(banner_router, prefix="/anh-quang-cao", tags=["banner"])
-app.include_router(user_router, prefix="/nguoi-dung")
-app.include_router(discovery_router, prefix="/kham-pha")
-app.include_router(passkey_router, prefix="/xac-thuc/passkey")
-app.include_router(publish_router, prefix="/xuat-ban")
-app.include_router(coupon_router, prefix="/ma-giam-gia")
-app.include_router(collaboration_router, prefix="/cong-tac")
-app.include_router(compilation_router, prefix="/bien-dich")
+app.include_router(auth_router)
+app.include_router(asset_router)
+app.include_router(profile_router)
+app.include_router(wallet_router)
+app.include_router(payment_router)
+app.include_router(gateway_router)
+app.include_router(export_router)
+app.include_router(upload_router)
+app.include_router(social_router)
+app.include_router(story_router)
+app.include_router(comment_router)
+app.include_router(document_router)
+app.include_router(review_router)
+app.include_router(version_router)
+app.include_router(latex_router)
+app.include_router(editor_router)
+app.include_router(monetization_router)
+app.include_router(read_router)
+app.include_router(library_router)
+app.include_router(feedback_router)
+app.include_router(ai_router)
+app.include_router(ai_router_en, prefix="/ai")
+app.include_router(rag_router)
+app.include_router(inference_router)
+app.include_router(notification_router)
+app.include_router(chat_router)
+app.include_router(coauthor_router)
+app.include_router(collector_router)
+app.include_router(payout_router)
+app.include_router(operation_router)
+app.include_router(draft_router)
+app.include_router(report_router)
+app.include_router(log_router)
+app.include_router(telemetry_router)
+app.include_router(banner_router)
+app.include_router(user_router)
+app.include_router(discovery_router)
+app.include_router(passkey_router)
+app.include_router(publish_router)
+app.include_router(coupon_router)
+app.include_router(collaboration_router)
+app.include_router(compilation_router)
 
 @app.get("/health")
 async def health_check():

@@ -126,7 +126,7 @@ export default function DraftPage() {
                       <div className="flex items-start justify-between gap-4">
                         <h3 className="font-semibold text-lg text-black truncate">{doc.title}</h3>
                         <button
-                          onClick={() => window.open(`/documents/viewer/${doc._id}`, "_blank")}
+                          onClick={() => window.open(`/tai-lieu/viewer/${doc._id}`, "_blank")}
                           className="text-xs font-medium text-zinc-500 whitespace-nowrap"
                         >
                           Đọc nội dung ↗

@@ -16,7 +16,7 @@ export function ToastContainer({
   removeToast: (id: string) => void;
 }) {
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-4 left-4 !z-[2147483647] flex flex-col gap-2">
       {toasts.map((t) => (
         <div
           key={t.id}

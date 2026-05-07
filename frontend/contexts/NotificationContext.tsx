@@ -72,7 +72,7 @@ export function NotificationProvider({
     if (!token) return;
 
     const eventSource = new EventSource(
-      `${API_URL}/notifications/stream?token=${token}`,
+      `${API_URL}/thong-bao/dong-du-lieu?token=${token}`,
     );
 
     eventSource.onmessage = (event) => {

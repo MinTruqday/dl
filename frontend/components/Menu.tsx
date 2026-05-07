@@ -127,21 +127,21 @@ export default function Menu({
             href="/feed"
             roles={["reader", "author", "admin"]}
           />
-          <NavLink icon={Trophy} label="Xếp hạng" href="/rank" />
+          <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />
           <NavLink
             icon={MessageSquare}
             label="Tin nhắn"
-            href="/messages"
+            href="/tin-nhan"
             requireAuth
           />
           <NavLink
             icon={Library}
-            href="/library"
+            href="/thu-vien"
             label="Thư viện"
             requireAuth
           />
-          <NavLink icon={User} href="/profile" label="Hồ sơ" requireAuth />
-          <NavLink icon={Wallet} href="/wallet" label="Ví" requireAuth />
+          <NavLink icon={User} href="/ho-so" label="Hồ sơ" requireAuth />
+          <NavLink icon={Wallet} href="/vi-tien" label="Ví" requireAuth />
 
           <div className="mt-4 mb-2 px-6">
             <span className={`text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isOpen && "hidden"}`}>Tác giả & Quản lý</span>
@@ -180,7 +180,7 @@ export default function Menu({
           />
 
           <NavLink
-            href="/documents"
+            href="/tai-lieu"
             label="Kho tài liệu"
             icon={Files}
             roles={["admin", "author"]}
@@ -237,7 +237,7 @@ export default function Menu({
 
           <div className="mt-auto pt-4 border-t border-zinc-200">
             <NavLink
-              href="/settings"
+              href="/cai-dat"
               label="Cài đặt"
               icon={Settings}
               requireAuth

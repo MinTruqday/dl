@@ -186,7 +186,7 @@ export default function AuthorProfilePage() {
                   {documents.map((doc) => (
                     <a
                       key={doc.id || doc._id}
-                      href={`/documents/${doc.slug || doc.id || doc._id}`}
+                      href={`/tai-lieu/${doc.slug || doc.id || doc._id}`}
                       className="group block bg-white border border-zinc-100 p-6 "
                     >
                       <div className="aspect-[2/3] w-full bg-white border border-zinc-50 relative overflow-hidden mb-6">

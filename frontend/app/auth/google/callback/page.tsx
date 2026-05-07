@@ -65,7 +65,7 @@ export default function GoogleCallbackPage() {
           </h2>
           <p className="mt-3 text-base text-zinc-500">{error}</p>
           <button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/dang-nhap")}
             className="mt-8 w-full py-3 bg-black text-white font-bold text-sm active:scale-95 "
           >
             Quay lại đăng nhập

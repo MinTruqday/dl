@@ -53,7 +53,7 @@ export default function StudioPayoutsPage() {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && !user) router.push("/login");
+    if (!isLoading && !user) router.push("/dang-nhap");
     if (!isLoading && user) loadData();
   }, [isLoading, user, router, loadData]);
 

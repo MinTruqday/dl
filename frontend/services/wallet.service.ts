@@ -99,3 +99,14 @@ export async function purchaseChapterAPI(documentId: string, chapterId: string) 
   if (!res.ok) throw new Error(data.message || "Mua chương thất bại");
   return data;
 }
+
+export async function depositDLAPI(amount: number) {
+  const res = await fetch(`${API_URL}/payment/deposit`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ amount }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể khởi tạo giao dịch nạp tiền");
+  return data;
+}

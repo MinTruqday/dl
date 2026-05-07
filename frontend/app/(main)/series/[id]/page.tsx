@@ -146,7 +146,7 @@ export default function SeriesDetailPage() {
 
                 <div className="flex-1 min-w-0 space-y-3">
                   <Link
-                    href={`/documents/${doc.slug}`}
+                    href={`/tai-lieu/${doc.slug}`}
                     className="text-2xl font-bold text-black tracking-tighter truncate block"
                   >
                     {doc.title}
@@ -170,7 +170,7 @@ export default function SeriesDetailPage() {
 
                 <div className="flex gap-3">
                   <Link
-                    href={`/documents/${doc.slug}`}
+                    href={`/tai-lieu/${doc.slug}`}
                     className="w-14 h-14 flex items-center justify-center border border-zinc-100 rounded-none"
                   >
                     <ArrowRight className="w-5 h-5" />
@@ -190,7 +190,7 @@ export default function SeriesDetailPage() {
             <p className="text-[10px] font-bold text-zinc-300 mb-10 max-w-xs text-center uppercase tracking-[0.2em] leading-loose">
               Hãy kết nối các thực thể giá trị để hoàn thiện chuỗi nội dung này
             </p>
-            <Link href="/documents">
+            <Link href="/tai-lieu">
               <button className="h-16 px-12 bg-black text-white text-[10px] font-bold tracking-[0.3em] uppercase rounded-none">
                 Khám phá ngay
               </button>
