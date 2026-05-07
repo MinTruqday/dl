@@ -6,7 +6,7 @@ from core.response import APIResponse
 from services.banner import BannerService
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/banners")
+router = APIRouter(prefix="/anh-quang-cao")
 
 class BannerRequest(BaseModel):
     title: str
@@ -18,27 +18,27 @@ class BannerRequest(BaseModel):
 async def get_active_banners():
     return APIResponse(
         data=await BannerService.get_banners(active_only=True), 
-        message="Lấy danh sách banner quảng cáo thành công."
+        message="Lấy danh sách banner quảng cáo thành công"
     )
 
-@router.get("/all/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.get("/tat-ca", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_all_banners():
     return APIResponse(
         data=await BannerService.get_banners(active_only=False), 
-        message="Lấy toàn bộ danh sách banner thành công."
+        message="Lấy toàn bộ danh sách banner thành công"
     )
 
 @router.post("/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_banner(data: BannerRequest):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump()), 
-        message="Tạo banner quảng cáo thành công.",
+        message="Tạo banner quảng cáo thành công",
         status=201
     )
 
-@router.delete("/{banner_id}/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.delete("/{banner_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def delete_banner(banner_id: str):
     return APIResponse(
         data=await BannerService.delete_banner(banner_id), 
-        message="Xóa banner thành công."
+        message="Xóa banner thành công"
     )

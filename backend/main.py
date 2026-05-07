@@ -14,7 +14,7 @@ import os
 import sys
 import time
 
-from api.auth import router as auth_router
+from api.authentication import router as auth_router
 from api.asset import router as asset_router
 from api.comment import router as comment_router
 from api.document import router as document_router
@@ -52,8 +52,10 @@ from api.banner import router as banner_router
 from api.user import router as user_router
 from api.discovery import router as discovery_router
 from api.passkey import router as passkey_router
-from api.publish import router as publish_router
+from api.publication import router as publish_router
 from api.coupon import router as coupon_router
+from api.collaboration import router as collaboration_router
+from api.compilation import router as compilation_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -126,45 +128,47 @@ async def startup_event():
 async def shutdown_event():
     await close_db()
 
-app.include_router(auth_router, prefix="")
-app.include_router(asset_router)
-app.include_router(profile_router, prefix="")
-app.include_router(wallet_router, prefix="/wallet")
-app.include_router(payment_router, prefix="/payment")
-app.include_router(gateway_router, prefix="/gateways")
-app.include_router(export_router)
-app.include_router(upload_router)
-app.include_router(social_router, prefix="")
-app.include_router(story_router, prefix="")
-app.include_router(comment_router, prefix="")
-app.include_router(document_router, prefix="")
-app.include_router(review_router, prefix="")
-app.include_router(version_router, prefix="")
-app.include_router(latex_router)
-app.include_router(editor_router)
-app.include_router(monetization_router)
-app.include_router(read_router)
-app.include_router(library_router)
-app.include_router(feedback_router)
-app.include_router(ai_router)
-app.include_router(rag_router)
-app.include_router(inference_router)
-app.include_router(notification_router)
-app.include_router(chat_router)
-app.include_router(coauthor_router)
-app.include_router(collector_router)
-app.include_router(payout_router, tags=["payout"])
-app.include_router(operation_router, prefix="/operation", tags=["operation"])
-app.include_router(draft_router, tags=["draft"])
-app.include_router(report_router, tags=["reports"])
-app.include_router(log_router, tags=["logs"])
-app.include_router(telemetry_router, prefix="/telemetry", tags=["telemetry"])
-app.include_router(banner_router, tags=["banner"])
-app.include_router(user_router)
-app.include_router(discovery_router)
-app.include_router(passkey_router)
-app.include_router(publish_router)
-app.include_router(coupon_router)
+app.include_router(auth_router, prefix="/xac-thuc")
+app.include_router(asset_router, prefix="/tai-nguyen")
+app.include_router(profile_router, prefix="/ho-so")
+app.include_router(wallet_router, prefix="/vi-tien")
+app.include_router(payment_router, prefix="/thanh-toan")
+app.include_router(gateway_router, prefix="/cong-thanh")
+app.include_router(export_router, prefix="/xuat-tai-lieu")
+app.include_router(upload_router, prefix="/tai-len")
+app.include_router(social_router, prefix="/cong-dong")
+app.include_router(story_router, prefix="/cau-chuyen")
+app.include_router(comment_router, prefix="/binh-luan")
+app.include_router(document_router, prefix="/tai-lieu")
+app.include_router(review_router, prefix="/danh-gia")
+app.include_router(version_router, prefix="/phien-ban")
+app.include_router(latex_router, prefix="/soan-thao-latex")
+app.include_router(editor_router, prefix="/soan-thao")
+app.include_router(monetization_router, prefix="/kiem-tien")
+app.include_router(read_router, prefix="/doc")
+app.include_router(library_router, prefix="/thu-vien")
+app.include_router(feedback_router, prefix="/phan-hoi")
+app.include_router(ai_router, prefix="/tri-tue-nhan-tao")
+app.include_router(rag_router, prefix="/tri-tue-nhan-tao")
+app.include_router(inference_router, prefix="/suy-luan")
+app.include_router(notification_router, prefix="/thong-bao")
+app.include_router(chat_router, prefix="/tro-chuyen")
+app.include_router(coauthor_router, prefix="/dong-tac-gia")
+app.include_router(collector_router, prefix="/thu-thap")
+app.include_router(payout_router, prefix="/rut-tien")
+app.include_router(operation_router, prefix="/van-hanh", tags=["operation"])
+app.include_router(draft_router, prefix="/ban-nhap", tags=["draft"])
+app.include_router(report_router, prefix="/bao-cao", tags=["reports"])
+app.include_router(log_router, prefix="/nhat-ky", tags=["logs"])
+app.include_router(telemetry_router, prefix="/do-luong", tags=["telemetry"])
+app.include_router(banner_router, prefix="/anh-quang-cao", tags=["banner"])
+app.include_router(user_router, prefix="/nguoi-dung")
+app.include_router(discovery_router, prefix="/kham-pha")
+app.include_router(passkey_router, prefix="/xac-thuc/passkey")
+app.include_router(publish_router, prefix="/xuat-ban")
+app.include_router(coupon_router, prefix="/ma-giam-gia")
+app.include_router(collaboration_router, prefix="/cong-tac")
+app.include_router(compilation_router, prefix="/bien-dich")
 
 @app.get("/health")
 async def health_check():

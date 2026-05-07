@@ -11,7 +11,7 @@ INTERNAL_API_URL = settings.INTERNAL_API_URL
 auth_token_var = contextvars.ContextVar("auth_token", default=None)
 
 def get_user_balance(user_id: str) -> str:
-    logger.info(f"Balance check requested for user: {user_id}")
+    logger.info(f"get_user_balance requested for user_id: {user_id}")
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
@@ -19,7 +19,7 @@ def get_user_balance(user_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/wallet/balance", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
@@ -32,7 +32,7 @@ def get_user_balance(user_id: str) -> str:
         return "Hệ thống hiện không thể kết nối tới cơ sở dữ liệu"
 
 def get_transaction_history(user_id: str) -> str:
-    logger.info(f"Transaction history requested for user: {user_id}")
+    logger.info(f"get_transaction_history requested for user_id: {user_id}")
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
@@ -40,7 +40,7 @@ def get_transaction_history(user_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/wallet/history", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -68,7 +68,7 @@ def redeem_voucher(code: str) -> str:
     try:
         with httpx.Client() as client:
             response = client.post(
-                f"{INTERNAL_API_URL}/wallet/redeem-voucher", 
+                f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma", 
                 json={"code": code}, 
                 headers=headers, 
                 timeout=5
@@ -92,7 +92,7 @@ def get_revenue_report() -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/wallet/revenue", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
@@ -112,7 +112,7 @@ def send_virtual_tip(target_user_id: str, amount: int) -> str:
     try:
         with httpx.Client() as client:
             response = client.post(
-                f"{INTERNAL_API_URL}/wallet/tip/{target_user_id}?amount={amount}", 
+                f"{INTERNAL_API_URL}/vi-tien/tien-ung-ho/{target_user_id}?amount={amount}", 
                 headers=headers, 
                 timeout=5
             )

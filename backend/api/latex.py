@@ -7,7 +7,7 @@ from api.dependency import require_role
 from services.latex import LatexService
 import time
 
-router = APIRouter(prefix="/latex")
+router = APIRouter(prefix="/soan-thao-latex")
 
 class CompileRequest(BaseModel):
     content: str
@@ -24,11 +24,11 @@ class AutoSaveRequest(BaseModel):
     document_id: str
     content: str
 
-@router.delete("/clean-temp", response_model=APIResponse[Any])
+@router.delete("/don-dep", response_model=APIResponse[Any])
 async def clean_temp_files(current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))):
-    return APIResponse(data=await LatexService.clean_temp_files(current_user), message="Dọn dẹp tập tin tạm thời thành công.", status=200)
+    return APIResponse(data=await LatexService.clean_temp_files(current_user), message="Dọn dẹp tập tin tạm thời thành công", status=200)
 
-@router.post("/compile-preview", response_model=Any)
+@router.post("/bien-dich-xem-truoc", response_model=Any)
 async def compile_latex_preview(
     request: CompileRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
@@ -36,14 +36,14 @@ async def compile_latex_preview(
     pdf_bytes = await LatexService.compile_latex_preview(request, current_user)
     return Response(content=pdf_bytes, media_type="application/pdf")
 
-@router.post("/format", response_model=APIResponse[Any])
+@router.post("/dinh-dang", response_model=APIResponse[Any])
 async def format_latex(
     request: FormatRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ):
-    return APIResponse(data=await LatexService.format_latex(request), message="Định dạng mã nguồn LaTeX thành công.", status=200)
+    return APIResponse(data=await LatexService.format_latex(request), message="Định dạng mã nguồn LaTeX thành công", status=200)
 
-@router.post("/export", response_model=Any)
+@router.post("/xuat-tai-lieu", response_model=Any)
 async def export_latex(
     request: ExportRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
@@ -52,14 +52,14 @@ async def export_latex(
     media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document" if request.format == "docx" else "text/html"
     return Response(content=file_bytes, media_type=media_type, headers={"Content-Disposition": f"attachment; filename=export.{request.format}"})
 
-@router.post("/auto-save", response_model=APIResponse[Any])
+@router.post("/tu-dong-luu", response_model=APIResponse[Any])
 async def cloud_auto_save(
     request: AutoSaveRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ):
-    return APIResponse(data=await LatexService.auto_save(request), message="Tự động lưu mã nguồn thành công.", status=200)
+    return APIResponse(data=await LatexService.auto_save(request), message="Tự động lưu mã nguồn thành công", status=200)
 
-@router.post("/export-zip", response_model=Any)
+@router.post("/xuat-zip", response_model=Any)
 async def export_project_zip(
     request: CompileRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))

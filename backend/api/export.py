@@ -6,7 +6,7 @@ from models.user import UserInDB
 from services.export import ExportService
 from services.document import DocumentService
 
-router = APIRouter(prefix="/export")
+router = APIRouter(prefix="/xuat-tai-lieu")
 
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])
 async def export_document_pdf(document_id: str, current_user: UserInDB = Depends(get_current_user)):
@@ -14,7 +14,7 @@ async def export_document_pdf(document_id: str, current_user: UserInDB = Depends
     headers = {"Content-Disposition": f'attachment; filename="DocLib_Export_{document_id}_Watermarked.pdf"'}
     return APIResponse(
         data=Response(content=pdf_content, media_type="application/pdf", headers=headers), 
-        message="Xuất bản sao PDF đính kèm dấu bản quyền thành công.", 
+        message="Xuất bản sao PDF đính kèm dấu bản quyền thành công", 
         status=200
     )
 
@@ -24,6 +24,6 @@ async def export_document_epub(document_id: str, current_user: UserInDB = Depend
     headers = {"Content-Disposition": f'attachment; filename="DocLib_{document_id}.epub"'}
     return APIResponse(
         data=Response(content=content, media_type="application/epub+zip", headers=headers), 
-        message="Xuất bản sao EPUB thành công.", 
+        message="Xuất bản sao EPUB thành công", 
         status=200
     )

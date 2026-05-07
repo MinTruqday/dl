@@ -17,7 +17,7 @@ def get_my_documents() -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/documents/me", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -38,7 +38,7 @@ def get_trash_documents() -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/documents/trash", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -59,7 +59,7 @@ def delete_document(document_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.delete(f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers, timeout=5)
+            response = client.delete(f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=5)
         if response.status_code == 200:
             return f"Đã chuyển tài liệu {document_id} vào thùng rác thành công"
         return "Xóa tài liệu thất bại"
@@ -74,7 +74,7 @@ def restore_document(document_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.post(f"{INTERNAL_API_URL}/documents/{document_id}/restoration", headers=headers, timeout=5)
+            response = client.post(f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, timeout=5)
         if response.status_code == 200:
             return f"Đã khôi phục tài liệu {document_id} thành công"
         return "Khôi phục tài liệu thất bại"
@@ -89,7 +89,7 @@ def get_document_analytics(document_id: str) -> str:
     headers = {"Authorization": token}
     try:
         with httpx.Client() as client:
-            response = client.get(f"{INTERNAL_API_URL}/documents/{document_id}/analytics/dropoff", headers=headers, timeout=5)
+            response = client.get(f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, timeout=5)
         if response.status_code == 200:
             data = response.json().get("data", {})
             dropoff = data.get("dropoff_data", [])

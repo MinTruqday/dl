@@ -7,10 +7,10 @@ from models.user import UserInDB
 from core.config import settings
 from loguru import logger
 
-class SocialFeedService:
+class FeedService:
     @staticmethod
     async def generate_ai_feed_summary(current_user: UserInDB) -> str:
-        feed = await SocialFeedService.get_social_feed("foryou", None, 0, 10, current_user)
+        feed = await FeedService.get_social_feed("foryou", None, 0, 10, current_user)
         if not feed:
             return "Chưa có nội dung mới nào để tóm tắt."
         

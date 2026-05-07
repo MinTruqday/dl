@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from datetime import datetime
 from loguru import logger
 
-class PublisherService:
+class PublicationService:
     @staticmethod
     async def update_seo_metadata(document_id: str, seo_data: dict, current_user):
         db = db_client.mongodb.get_default_database()
@@ -90,7 +90,7 @@ class PublisherService:
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
             
-        from core.publisher import trigger_document_publish_job
+        from core.publication import trigger_document_publish_job
         from services.rag import RagService
         
         await trigger_document_publish_job(document_id, user_id)

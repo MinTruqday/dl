@@ -5,7 +5,7 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.storage import StorageService
 
-router = APIRouter(prefix="/storage")
+router = APIRouter(prefix="/luu-trư")
 
 @router.post("/", response_model=APIResponse[Any])
 async def upload_asset_to_minio(

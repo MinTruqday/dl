@@ -3,7 +3,7 @@ from datetime import datetime
 from core.database import db_client
 from loguru import logger
 
-class RankingService:
+class RankService:
     @staticmethod
     async def get_contribution_ranking(limit: int = 5) -> List[dict]:
         db = db_client.mongodb.get_default_database()

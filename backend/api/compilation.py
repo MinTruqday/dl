@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
-from services.compile import CompileService
+from services.compilation import CompilationService
 from services.editor import EditorService
 from io import BytesIO
 
@@ -16,7 +16,7 @@ async def compile_latex_to_pdf(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ):
     content = payload.get("content", "")
-    pdf_data = await CompileService.compile_latex_to_pdf(content)
+    pdf_data = await CompilationService.compile_latex_to_pdf(content)
     
     return StreamingResponse(
         BytesIO(pdf_data), 

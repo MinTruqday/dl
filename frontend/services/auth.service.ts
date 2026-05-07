@@ -35,7 +35,7 @@ export async function login(email: string, password: string) {
   formData.append("username", email);
   formData.append("password", password);
 
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dang-nhap`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -45,7 +45,7 @@ export async function login(email: string, password: string) {
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.detail || json.message || "Đăng nhập thất bại.");
+    throw new Error(json.detail || json.message || "Đăng nhập thất bại");
   return json.data;
 }
 
@@ -56,7 +56,7 @@ export async function register(
   slug: string,
   agreed_to_terms: boolean,
 ) {
-  const res = await fetch(`${API_URL}/auth/register`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dang-ky`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -66,7 +66,7 @@ export async function register(
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(json.detail || json.message || "Đăng ký thất bại.");
+    throw new Error(json.detail || json.message || "Đăng ký thất bại");
   return json.data;
 }
 
@@ -78,7 +78,7 @@ export async function getUserMe() {
 
   userMePromise = (async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/me`, {
+      const res = await fetch(`${API_URL}/xac-thuc/ca-nhan`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -99,12 +99,12 @@ export async function getUserMe() {
 }
 
 export const forgotPasswordAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+  const res = await fetch(`${API_URL}/xac-thuc/quen-mat-khau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
-  if (!res.ok) throw new Error("Yêu cầu khôi phục mật khẩu thất bại.");
+  if (!res.ok) throw new Error("Yêu cầu khôi phục mật khẩu thất bại");
   return res.json();
 };
 
@@ -112,7 +112,7 @@ export const resetPasswordAPI = async (
   token: string,
   newPassword: string,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/reset-password`, {
+  const res = await fetch(`${API_URL}/xac-thuc/dat-lai-mat-khau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, new_password: newPassword }),
@@ -120,25 +120,25 @@ export const resetPasswordAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Đặt lại mật khẩu thất bại.",
+      data.message || data.detail || "Đặt lại mật khẩu thất bại",
     );
   return data.data || data;
 };
 
 export const verifyCodeAPI = async (token: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/verify-code`, {
+  const res = await fetch(`${API_URL}/xac-thuc/xac-thuc-ma`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(data.message || data.detail || "Mã xác thực không hợp lệ.");
+    throw new Error(data.message || data.detail || "Mã xác thực không hợp lệ");
   return data.data || data;
 };
 
 export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/begin`, {
+  const res = await fetch(`${API_URL}/xac-thuc/passkey/dang-nhap/bat-dau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -146,7 +146,7 @@ export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Bắt đầu đăng nhập Passkey thất bại.",
+      data.message || data.detail || "Bắt đầu đăng nhập Passkey thất bại",
     );
   return data.data || data;
 };
@@ -155,7 +155,7 @@ export const passkeyLoginFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/passkey/dang-nhap/hoan-tat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),
@@ -163,13 +163,13 @@ export const passkeyLoginFinishAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Hoàn tất đăng nhập Passkey thất bại.",
+      data.message || data.detail || "Hoàn tất đăng nhập Passkey thất bại",
     );
   return data.data || data;
 };
 
 export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/begin`, {
+  const res = await fetch(`${API_URL}/xac-thuc/passkey/dang-ky/bat-dau`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -177,7 +177,7 @@ export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Bắt đầu đăng ký Passkey thất bại.",
+      data.message || data.detail || "Bắt đầu đăng ký Passkey thất bại",
     );
   return data.data || data;
 };
@@ -186,7 +186,7 @@ export const passkeyRegisterFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/finish`, {
+  const res = await fetch(`${API_URL}/xac-thuc/passkey/dang-ky/hoan-tat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),
@@ -194,14 +194,14 @@ export const passkeyRegisterFinishAPI = async (
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.message || data.detail || "Hoàn tất đăng ký Passkey thất bại.",
+      data.message || data.detail || "Hoàn tất đăng ký Passkey thất bại",
     );
   return data.data || data;
 };
 export const getGoogleLoginUrlAPI = async (): Promise<string> => {
-  const res = await fetch(`${API_URL}/auth/google/login`);
+  const res = await fetch(`${API_URL}/xac-thuc/google/dang-nhap`);
   const data = await res.json();
   if (!res.ok || !data.data?.url)
-    throw new Error("Không thể lấy liên kết đăng nhập Google.");
+    throw new Error("Không thể lấy liên kết đăng nhập Google");
   return data.data.url;
 };

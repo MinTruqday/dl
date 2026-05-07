@@ -10,7 +10,7 @@ from models.user import UserCreate, UserInDB
 from services.email import EmailService
 from loguru import logger
 
-class AuthService:
+class AuthenticationService:
     @staticmethod
     async def get_google_auth_url():
         google_client_id = getattr(settings, "GOOGLE_CLIENT_ID", None)
@@ -241,4 +241,4 @@ class AuthService:
             await users_col.insert_one(user_doc)
             logger.info(f"New user created via Google login: {email}")
         
-        return await AuthService.issue_token_for_user(user_doc, client_ip)
+        return await AuthenticationService.issue_token_for_user(user_doc, client_ip)

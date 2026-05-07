@@ -2,7 +2,7 @@ from datetime import datetime
 from core.database import db_client
 from loguru import logger
 
-class SettingsService:
+class SettingService:
     @staticmethod
     async def get_settings(current_user) -> dict:
         db = db_client.mongodb.get_default_database()

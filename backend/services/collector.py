@@ -1,6 +1,6 @@
 from typing import Any, Optional, List
 from core.database import db_client
-from core.publisher import publish_event
+from core.publication import publish_event
 from fastapi import HTTPException
 from loguru import logger
 import uuid

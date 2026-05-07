@@ -1,6 +1,7 @@
 from typing import List, Any
 from core.config import settings
 import datetime
+from datetime import datetime as dt
 import os
 import uuid
 import io
@@ -349,3 +350,47 @@ class DocumentService:
             }
             for log in logs
         ]
+
+    @staticmethod
+    async def get_approval_queue(skip: int = 0, limit: int = 30) -> list:
+        db = db_client.mongodb.get_default_database()
+        documents = await db["documents"].find({"status": "processing_publish"}).sort("updated_at", 1).skip(skip).limit(limit).to_list(length=limit)
+        return [{
+            "id": str(b["_id"]),
+            "title": b.get("title", ""),
+            "author_id": b.get("author_id"),
+            "submitted_at": b.get("updated_at", dt.utcnow()).isoformat() if isinstance(b.get("updated_at"), dt) else ""
+        } for b in documents]
+
+    @staticmethod
+    async def moderate_document(document_id: str, action: str, reason: str, current_moderator) -> dict:
+        db = db_client.mongodb.get_default_database()
+        status = "PUBLISHED" if action == "approve" else "REJECTED"
+        await db["documents"].update_one(
+            {"_id": document_id},
+            {"$set": {"status": status, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": dt.utcnow()}}
+        )
+        await db["audit_logs"].insert_one({
+            "action": f"DOCUMENT_{status}", 
+            "actor_id": str(current_moderator.id), 
+            "document_id": document_id, 
+            "reason": reason, 
+            "timestamp": dt.utcnow()
+        })
+        logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
+        return {"message": f"Đã {status.lower()} tài liệu thành công."}
+
+    @staticmethod
+    async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["copyright_disputes"].update_one(
+            {"_id": dispute_id}, 
+            {"$set": {
+                "status": "resolved", 
+                "resolution": resolution, 
+                "resolved_by": str(current_moderator.id), 
+                "resolved_at": dt.utcnow()
+            }}
+        )
+        logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
+        return {"message": "Đã giải quyết tranh chấp bản quyền thành công."}

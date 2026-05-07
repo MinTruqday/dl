@@ -154,5 +154,5 @@ class PasskeyService:
             {"$set": {"passkeys.$.sign_count": verification.new_sign_count}}
         )
         
-        from services.auth import AuthService
-        return await AuthService.issue_token_for_user(user, "passkey_login")
+        from services.authentication import AuthenticationService
+        return await AuthenticationService.issue_token_for_user(user, "passkey_login")

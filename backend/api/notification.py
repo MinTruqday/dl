@@ -7,7 +7,7 @@ from api.dependency import get_current_user, get_current_user_token_param, requi
 from services.notification import NotificationService
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(prefix="/thong-bao")
 
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
@@ -16,7 +16,7 @@ class NotificationSettingsUpdate(BaseModel):
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
 
-@router.get("/notifications/stream", response_model=Any)
+@router.get("/dong-du-lieu", response_model=Any)
 async def stream_notifications(
     request: Request,
     token: str = Query(...),
@@ -25,41 +25,41 @@ async def stream_notifications(
     current_user = await get_current_user_token_param(token)
     return EventSourceResponse(NotificationService.sse_generator(current_user.id))
 
-@router.get("/notifications", response_model=APIResponse[Any])
+@router.get("/", response_model=APIResponse[Any])
 async def get_notifications(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.get_notifications(current_user), message="Lấy danh sách thông báo thành công.", status=200)
+    return APIResponse(data=await NotificationService.get_notifications(current_user), message="Lấy danh sách thông báo thành công", status=200)
 
-@router.put("/notifications/{notif_id}/read", response_model=APIResponse[Any])
+@router.put("/{notif_id}/da-doc", response_model=APIResponse[Any])
 async def mark_notification_read(notif_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.mark_notification_read(notif_id, current_user), message="Đã đánh dấu thông báo là đã đọc.", status=200)
+    return APIResponse(data=await NotificationService.mark_notification_read(notif_id, current_user), message="Đã đánh dấu thông báo là đã đọc", status=200)
 
-@router.post("/notifications/trigger_test", response_model=APIResponse[Any])
+@router.post("/thu-nghiem", response_model=APIResponse[Any])
 async def trigger_test_notification(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.trigger_test_notification(current_user), message="Gửi thông báo thử nghiệm thành công.", status=200)
+    return APIResponse(data=await NotificationService.trigger_test_notification(current_user), message="Gửi thông báo thử nghiệm thành công", status=200)
 
-@router.post("/notifications/push", response_model=APIResponse[Any])
+@router.post("/day-tin", response_model=APIResponse[Any])
 async def trigger_push_notif(title: str, body: str, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))):
-    return APIResponse(data=await NotificationService.trigger_push_notif(title, body, current_user), message="Gửi thông báo đẩy thành công.", status=200)
+    return APIResponse(data=await NotificationService.trigger_push_notif(title, body, current_user), message="Gửi thông báo đẩy thành công", status=200)
 
-@router.get("/notifications/settings", response_model=APIResponse[Any])
+@router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_notification_settings(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.get_notification_settings(current_user), message="Lấy cài đặt thông báo thành công.", status=200)
+    return APIResponse(data=await NotificationService.get_notification_settings(current_user), message="Lấy cài đặt thông báo thành công", status=200)
 
-@router.put("/notifications/settings", response_model=APIResponse[Any])
+@router.put("/cai-dat", response_model=APIResponse[Any])
 async def update_notification_settings(data: NotificationSettingsUpdate, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.update_notification_settings(data.model_dump(), current_user), message="Cập nhật cài đặt thông báo thành công.", status=200)
+    return APIResponse(data=await NotificationService.update_notification_settings(data.model_dump(), current_user), message="Cập nhật cài đặt thông báo thành công", status=200)
 
-@router.post("/notifications/mark-all-read", response_model=APIResponse[Any])
+@router.post("/danh-dau-tat-ca", response_model=APIResponse[Any])
 async def mark_all_read(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await NotificationService.mark_all_read(current_user), message="Đã đánh dấu tất cả thông báo là đã đọc.", status=200)
+    return APIResponse(data=await NotificationService.mark_all_read(current_user), message="Đã đánh dấu tất cả thông báo là đã đọc", status=200)
 
 class NewsletterRequest(BaseModel):
     email: str
 
-@router.post("/newsletter/subscribe", response_model=APIResponse[Any])
+@router.post("/ban-tin/dang-ky", response_model=APIResponse[Any])
 async def subscribe_newsletter(req: NewsletterRequest):
     return APIResponse(
         data=await NotificationService.subscribe_newsletter(req.email),
-        message="Đăng ký nhận bản tin thành công.",
+        message="Đăng ký nhận bản tin thành công",
         status=201
     )

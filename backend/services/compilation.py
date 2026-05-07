@@ -4,7 +4,7 @@ import os
 from loguru import logger
 from fastapi import HTTPException
 
-class CompileService:
+class CompilationService:
     @staticmethod
     async def compile_latex_to_pdf(content: str):
         if not content:
