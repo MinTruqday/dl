@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: microservices/gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/backend
+    depends_on:
+      - auth
+      - wallet
+      - document
+      - social
+      - inference
+
+  auth:
+    build:
+      context: .
+      dockerfile: microservices/auth/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URI=${REDIS_URI}
+      - SECRET_KEY=${SECRET_KEY}
+
+  wallet:
+    build:
+      context: .
+      dockerfile: microservices/wallet/Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URI=${REDIS_URI}
+
+  document:
+    build:
+      context: .
+      dockerfile: microservices/document/Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+
+  social:
+    build:
+      context: .
+      dockerfile: microservices/social/Dockerfile
+    ports:
+      - "8005:8005"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URI=${REDIS_URI}
+
+  inference:
+    build:
+      context: .
+      dockerfile: microservices/inference/Dockerfile
+    ports:
+      - "8006:8006"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URI=${REDIS_URI}
+      - HF_TOKEN=${HF_TOKEN}
+      - LLAMA_MODEL=${LLAMA_MODEL}
+
+  utility:
+    build:
+      context: .
+      dockerfile: microservices/utility/Dockerfile
+    ports:
+      - "8007:8007"
+    environment:
+      - PYTHONPATH=/app/backend
+      - MONGODB_URI=${MONGODB_URI}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
