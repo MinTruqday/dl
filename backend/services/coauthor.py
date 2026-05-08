@@ -11,7 +11,7 @@ class CoauthorService:
         
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             raise HTTPException(status_code=403, detail="Bạn không có quyền mời đồng tác giả cho tài liệu này.")
 
         await db["notifications"].insert_one({
@@ -24,7 +24,7 @@ logger.info("Log message sanitized"))
             "read": False,
             "created_at": datetime.now(timezone.utc)
         })
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã gửi lời mời đồng tác giả thành công."}
 
     @staticmethod

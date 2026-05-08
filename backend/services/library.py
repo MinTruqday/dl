@@ -18,7 +18,7 @@ class LibraryService:
             "created_at": datetime.now(timezone.utc)
         }
         await db["reading_lists"].insert_one(new_list)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return new_list
 
     @staticmethod
@@ -75,7 +75,7 @@ logger.info("Log message sanitized"))
             "created_at": datetime.now(timezone.utc),
         }
         await db["bookmark_folders"].insert_one(folder)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return folder
 
     @staticmethod

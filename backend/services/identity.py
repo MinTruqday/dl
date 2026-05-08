@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import uuid
+# pyrefly: ignore [missing-import]
 from fastapi import HTTPException
 from core.database import db_client
 from models.user import AuthorStatusEnum, KYCStatusEnum
@@ -36,7 +37,7 @@ class IdentityService:
                 "tos_accepted_at": datetime.now(timezone.utc)
             }}
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"status": "success", "message": "Đã gửi đơn đăng ký tác giả."}
 
     @staticmethod
@@ -68,7 +69,7 @@ logger.info("Log message sanitized"))
             {"_id": user_id},
             {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"status": "success", "message": "Đã tải lên tài liệu KYC."}
 
     @staticmethod

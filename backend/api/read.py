@@ -19,7 +19,7 @@ async def update_typography(data: TypographyRequest, current_user: UserInDB = De
     )
 
 @router.get("/lich-su", response_model=APIResponse[Any])
-async def get_history(skip: int = Query(0), limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
+async def get_history(skip: int = Query(...), limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.get_reading_history(current_user, skip, limit),
         message="Lấy lịch sử đọc thành công"
@@ -83,7 +83,7 @@ async def unpin_document(document_id: str, current_user: UserInDB = Depends(get_
     )
 
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
-async def search_in_document(document_id: str, q: str = Query(.), current_user: UserInDB = Depends(get_current_user)):
+async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.search_in_document(document_id, q, current_user),
         message="Tìm kiếm trong tài liệu thành công"

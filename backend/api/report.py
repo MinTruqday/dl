@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/bao-cao")
 
-# Models moved to models.feedback
-
 @router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_reports(status: str = "pending", skip: int = 0, limit: int = 30):
     return APIResponse(

@@ -17,7 +17,7 @@ class InteractionService:
         existing = await db["follows"].find_one({"follower_id": str(current_user.id), "following_id": target_user_id})
         if existing:
             await db["follows"].delete_one({"_id": existing["_id"]})
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             return {"message": "Đã bỏ theo dõi thành công."}
         else:
             await db["follows"].insert_one(FollowInDB(follower_id=str(current_user.id), following_id=target_user_id).model_dump(by_alias=True))
@@ -48,7 +48,7 @@ logger.info("Log message sanitized"))
                     "link": "/profile"
                 })
             )
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             return {"message": "Đã theo dõi thành công."}
 
     @staticmethod
@@ -103,7 +103,7 @@ logger.info("Log message sanitized"))
             "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã gửi báo cáo vi phạm."}
 
     @staticmethod
@@ -149,7 +149,7 @@ logger.info("Log message sanitized"))
             {"follower_id": user_id_str, "following_id": target_user_id},
             {"follower_id": target_user_id, "following_id": user_id_str},
         ]})
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã chặn người dùng này thành công.", "blocked": True}
 
     @staticmethod

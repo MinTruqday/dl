@@ -60,7 +60,7 @@ async def toggle_follow(user_id: str, current_user: UserInDB = Depends(get_curre
     return APIResponse(data=await InteractionService.toggle_follow(user_id, current_user), message="Cập nhật trạng thái theo dõi thành công", status=status.HTTP_200_OK)
 
 @router.post("/tai-nguyen", response_model=APIResponse[Any])
-async def upload_media(file: UploadFile = File(.), current_user: UserInDB = Depends(get_current_user)):
+async def upload_media(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await AssetService.upload_media(file, current_user), message="Tải lên tệp đa phương tiện thành công", status=status.HTTP_200_OK)
 
 @router.get("/xep-hang", response_model=APIResponse[Any])
@@ -132,7 +132,7 @@ async def get_posts_by_hashtag(tag: str, skip: int = Query(0, ge=0), limit: int 
     return APIResponse(data=await PostService.get_posts_by_hashtag(tag, skip, limit, current_user), message="Lấy danh sách trạng thái theo hashtag thành công", status=status.HTTP_200_OK)
 
 @router.get("/tim-kiem-nguoi-dung", response_model=APIResponse[Any])
-async def search_users(q: str = Query(., min_length=1), limit: int = Query(10, ge=1, le=20)):
+async def search_users(q: str = Query(..., min_length=1), limit: int = Query(10, ge=1, le=20)):
     return APIResponse(data=await FeedService.search_users(q, limit), message="Tìm kiếm người dùng thành công", status=status.HTTP_200_OK)
 
 @router.post("/khao-sat/{post_id}/binh-chon/{option_id}", response_model=APIResponse[Any])

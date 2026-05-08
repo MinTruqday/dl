@@ -17,7 +17,7 @@ class ReviewService:
             }}, 
             upsert=True
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"status": "success"}
 
     @staticmethod
@@ -30,7 +30,7 @@ logger.info("Log message sanitized"))
             {"$set": {"rating": data.rating, "updated_at": datetime.now(timezone.utc)}},
             upsert=True,
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã ghi nhận đánh giá chương của bạn."}
 
     @staticmethod
@@ -47,7 +47,7 @@ logger.info("Log message sanitized"))
             "created_at": datetime.now(timezone.utc),
         }
         await db["typo_reports"].insert_one(report)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã gửi báo cáo lỗi chính tả thành công."}
 
     @staticmethod
@@ -87,5 +87,5 @@ logger.info("Log message sanitized"))
             "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã gửi báo cáo nội dung thành công."}

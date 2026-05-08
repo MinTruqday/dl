@@ -24,7 +24,7 @@ class AIService:
                     return resp.json()
                 raise HTTPException(status_code=resp.status_code, detail="Dịch vụ AI phản hồi không chính xác.")
         except Exception as e:
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             raise HTTPException(status_code=500, detail="Lỗi kết nối đến hệ thống trí tuệ nhân tạo.")
 
     @staticmethod
@@ -64,7 +64,7 @@ logger.info("Log message sanitized"))
                     res.raise_for_status()
                     return {"status": "success", "result": res.json().get("result", "")}
         except Exception as e:
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             raise HTTPException(status_code=500, detail="Lỗi khi xử lý văn bản với AI.")
 
     @staticmethod
@@ -90,7 +90,7 @@ logger.info("Log message sanitized"))
                     return data
                 raise HTTPException(status_code=resp.status_code, detail="AI không thể tạo thẻ ghi nhớ.")
         except Exception as e:
-logger.info("Log message sanitized"))
+            logger.info("Log message sanitized")
             raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ AI.")
             
     @staticmethod
@@ -121,7 +121,7 @@ logger.info("Log message sanitized"))
             {"_id": card_id},
             {"$set": {"repetitions": rep, "easiness_factor": ef, "interval": interval, "next_review": next_review}}
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã cập nhật lịch ôn tập.", "next_review": next_review.isoformat()}
 
     @staticmethod
@@ -135,8 +135,8 @@ logger.info("Log message sanitized"))
                 if resp.status_code == 200: 
                     return resp.json()
         except Exception as e:
-logger.info("Log message sanitized"))
-        return {"score": 100, "message": "Kiểm tra ngữ pháp hiện không khả dụng."}
+            logger.info("Log message sanitized")
+            return {"score": 100, "message": "Kiểm tra ngữ pháp hiện không khả dụng."}
 
     @staticmethod
     async def generate_cover(title: str, description: str, style: str) -> dict:
@@ -149,8 +149,8 @@ logger.info("Log message sanitized"))
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-logger.info("Log message sanitized"))
-        return {"message": "Dịch vụ tạo ảnh bìa hiện chưa khả dụng."}
+            logger.info("Log message sanitized")
+            return {"message": "Dịch vụ tạo ảnh bìa hiện chưa khả dụng."}
 
     @staticmethod
     async def generate_code(prompt: str, language: str = "python") -> dict:
@@ -163,5 +163,5 @@ logger.info("Log message sanitized"))
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-logger.info("Log message sanitized"))
-        return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}
+            logger.info("Log message sanitized")
+            return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}

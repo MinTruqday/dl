@@ -28,4 +28,4 @@ class AuditService:
             "details": details or {},
             "timestamp": datetime.now(timezone.utc)
         })
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")

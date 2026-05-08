@@ -22,7 +22,7 @@ class DiscussionService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["discussions"].insert_one(discussion)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Tạo thảo luận thành công.", "discussion_id": discussion["_id"]}
 
     @staticmethod

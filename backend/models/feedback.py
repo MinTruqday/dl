@@ -23,3 +23,6 @@ class FeedbackInDB(BaseModel):
     data: dict
     status: str = "pending"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ResolveReportRequest(BaseModel):
+    action: str

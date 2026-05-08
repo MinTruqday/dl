@@ -60,7 +60,7 @@ class NotificationService:
         notifs = []
         async for n in cursor:
             n["_id"] = str(n["_id"])
-            notifs.append(n)
+            notifs.append()
         return notifs
 
     @staticmethod
@@ -185,7 +185,6 @@ class NotificationService:
         
         if notifications:
             await db["notifications"].insert_many(notifications)
-        
         logger.info(f"Document update notification sent for document {document_id} to {len(user_ids)} users.")
 
     @staticmethod
@@ -255,4 +254,5 @@ class NotificationService:
                 json.dumps({"title": notification["title"], "body": notification["body"]})
             )
         logger.info(f"Notification: Purchase notification sent to author {author_id}")
+
 

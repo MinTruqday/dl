@@ -27,7 +27,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["highlights"].insert_one(highlight)
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return highlight
 
     @staticmethod
@@ -69,7 +69,7 @@ logger.info("Log message sanitized"))
         )
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Ghi chú không tồn tại.")
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã xóa ghi chú."}
 
     @staticmethod
@@ -157,5 +157,5 @@ class ReadingPreferenceService:
             {"$set": update_data},
             upsert=True,
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã cập nhật tùy chỉnh đọc."}

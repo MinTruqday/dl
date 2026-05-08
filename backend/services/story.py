@@ -33,7 +33,6 @@ class StoryService:
             expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
         )
         await db["stories"].insert_one(story.model_dump(by_alias=True))
-logger.info("Log message sanitized"))
         return {"message": "Đã đăng tin thành công.", "story_id": str(story.id)}
 
     @staticmethod
@@ -125,7 +124,6 @@ logger.info("Log message sanitized"))
                         "link": "/feed"
                     })
                 )
-logger.info("Log message sanitized"))
         return {"status": "ok"}
 
     @staticmethod
@@ -157,7 +155,6 @@ logger.info("Log message sanitized"))
             {"_id": story_id},
             {"$inc": {f"reactions.{reaction_type}": 1}}
         )
-logger.info("Log message sanitized"))
         return {"status": "ok", "reaction": reaction_type}
 
     @staticmethod
@@ -182,7 +179,6 @@ logger.info("Log message sanitized"))
                 "$set": {f"poll_data.voters.{str(current_user.id)}": option_index}
             }
         )
-logger.info("Log message sanitized"))
         return {"status": "ok", "voted_index": option_index}
 
     @staticmethod
@@ -203,7 +199,6 @@ logger.info("Log message sanitized"))
             {"_id": story_id},
             {"$set": {f"quiz_data.answers.{str(current_user.id)}": {"option": option_index, "is_correct": is_correct}}}
         )
-logger.info("Log message sanitized"))
         return {"status": "ok", "is_correct": is_correct, "correct_index": correct_idx}
 
     @staticmethod
@@ -230,7 +225,6 @@ logger.info("Log message sanitized"))
                 "link": "/feed"
             })
         )
-logger.info("Log message sanitized"))
         return {"message": "Đã gửi phản hồi."}
 
     @staticmethod
@@ -242,7 +236,6 @@ logger.info("Log message sanitized"))
         if story["user_id"] != str(current_user.id):
             raise HTTPException(status_code=403, detail="Bạn không có quyền lưu trữ tin này.")
         await db["stories"].update_one({"_id": story_id}, {"$set": {"is_archived": True}})
-logger.info("Log message sanitized"))
         return {"message": "Đã lưu trữ tin."}
 
     @staticmethod
@@ -274,7 +267,6 @@ logger.info("Log message sanitized"))
         if story["user_id"] != str(current_user.id):
             raise HTTPException(status_code=403, detail="Bạn không có quyền xóa tin này.")
         await db["stories"].delete_one({"_id": story_id})
-logger.info("Log message sanitized"))
         return {"message": "Đã xóa tin."}
 
     @staticmethod
@@ -300,6 +292,14 @@ logger.info("Log message sanitized"))
         db = db_client.mongodb.get_default_database()
         if action not in ["approve", "reject"]:
             raise HTTPException(status_code=400, detail="Hành động không hợp lệ.")
+        new_status = "approved" if action == "approve" else "rejected"
+        result = await db["stories"].update_one(
+            {"_id": story_id},
+            {"$set": {"moderation_status": new_status, "moderated_by": str(current_moderator.id), "moderated_at": datetime.now(timezone.utc)}}
+        )
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Story không tồn tại.")
+        return {"message": f"Đã {('duyệt' if action == 'approve' else 'từ chối')} Story."}
         new_status = "approved" if action == "approve" else "rejected"
         result = await db["stories"].update_one(
             {"_id": story_id},

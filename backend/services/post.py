@@ -54,7 +54,6 @@ class PostService:
             created_at=datetime.now(timezone.utc)
         )
         await db["status_updates"].insert_one(new_post.model_dump(by_alias=True))
-logger.info("Log message sanitized"))
         return {"message": "Đã đăng bài thành công.", "post_id": str(new_post.id)}
 
     @staticmethod
@@ -70,7 +69,6 @@ logger.info("Log message sanitized"))
             {"_id": post_id},
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
         )
-logger.info("Log message sanitized"))
         return {"message": "Đã xóa bài viết thành công."}
 
     @staticmethod
@@ -180,9 +178,9 @@ logger.info("Log message sanitized"))
                 "id": str(p["_id"]),
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
-                "created_at": p.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
+                "created_at": p.get("created_at", datetime.now(timezone.utc).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at")),
                 "user": {
-                    "id": str(author.get("_id")) if author else p["user_id"],
+                    "id": str(author.get("_id") if author else p["user_id"]),
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                     "avatar_url": author.get("avatar_url") if author else None,
                 },
@@ -259,7 +257,6 @@ logger.info("Log message sanitized"))
             "created_at": datetime.now(timezone.utc)
         }
         await db["status_updates"].insert_one(excerpt_post)
-logger.info("Log message sanitized"))
         return {"message": "Đã chia sẻ trích đoạn.", "post_id": excerpt_post["_id"]}
 
     @staticmethod
@@ -295,9 +292,9 @@ logger.info("Log message sanitized"))
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
                 "tags": p.get("tags", []),
-                "created_at": p.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at"),
+                "created_at": p.get("created_at", datetime.now(timezone.utc).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at")),
                 "user": {
-                    "id": str(author.get("_id")) if author else p["user_id"],
+                    "id": str(author.get("_id") if author else p["user_id"]),
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                     "avatar_url": author.get("avatar_url") if author else None,
                 },

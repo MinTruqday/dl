@@ -18,12 +18,12 @@ class AuthorStatusEnum(str, Enum):
     SUSPENDED = "SUSPENDED"
 
 class RoleEnum(str, Enum):
-    GUEST = "GUEST"
-    READER = "READER"
-    POTENTIAL_AUTHOR = "POTENTIAL_AUTHOR"
-    AUTHOR = "AUTHOR"
-    MODERATOR = "MODERATOR"
-    ADMIN = "ADMIN"
+    GUEST = "guest"
+    READER = "reader"
+    POTENTIAL_AUTHOR = "potential_author"
+    AUTHOR = "author"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -113,3 +113,23 @@ class NotificationSettingsUpdate(BaseModel):
     enable_mention_notifications: bool = True
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
+
+class UpdateRoleRequest(BaseModel):
+    role: RoleEnum
+
+class UpdateStatusRequest(BaseModel):
+    is_active: bool
+
+class ModerationActionRequest(BaseModel):
+    reason: str
+    duration_hours: Optional[int] = None
+
+class NoteRequest(BaseModel):
+    note: str
+
+class PasskeyRequest(BaseModel):
+    email: str
+
+class PasskeyFinishRequest(BaseModel):
+    email: str
+    credential: dict

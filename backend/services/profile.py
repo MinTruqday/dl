@@ -23,7 +23,7 @@ class ProfileService:
             {"_id": str(current_user.id)},
             {"$set": update_fields}
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã cập nhật hồ sơ cá nhân."}
 
     @staticmethod
@@ -99,5 +99,5 @@ logger.info("Log message sanitized"))
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Cập nhật trang tác giả cá nhân thành công."}

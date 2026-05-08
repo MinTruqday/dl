@@ -208,3 +208,6 @@ class DiscussionReply(BaseModel):
 class ReportCreate(BaseModel):
     reason: str
     details: Optional[str] = None
+
+class NewsletterRequest(BaseModel):
+    email: str

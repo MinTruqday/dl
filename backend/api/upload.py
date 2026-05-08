@@ -10,14 +10,14 @@ router = APIRouter(prefix="/dang-tai")
 
 @router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
-    file: UploadFile = File(.),
+    file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
     return APIResponse(data=await UploadService.upload_image(file), message="Tải hình ảnh lên thành công", status=201)
 
 @router.post("/tai-lieu", response_model=APIResponse[Any])
 async def upload_document(
-    file: UploadFile = File(.),
+    file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
     return APIResponse(data=await UploadService.upload_document(file), message="Tải tài liệu lên thành công", status=201)

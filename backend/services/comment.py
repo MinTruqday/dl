@@ -15,7 +15,7 @@ class CommentService:
             "count": result.deleted_count, 
             "timestamp": datetime.now(timezone.utc)
         })
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": f"Đã xóa {result.deleted_count} bình luận thành công."}
 
     @staticmethod
@@ -25,5 +25,5 @@ logger.info("Log message sanitized"))
             {"_id": comment_id}, 
             {"$set": {"is_removed": True, "removal_reason": reason, "removed_at": datetime.now(timezone.utc)}}
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã gỡ bỏ bình luận vi phạm."}

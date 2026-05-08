@@ -16,7 +16,6 @@ class ChatService:
         )
         db = db_client.mongodb.get_default_database()
         await db["messages"].insert_one(message.model_dump(by_alias=True))
-        
         res_data = message.model_dump(by_alias=True)
         if reply_to_id:
             res_data["replied_message"] = await db["messages"].find_one({"_id": reply_to_id})
@@ -150,4 +149,5 @@ class ChatService:
                     "pinned_messages": pinned_messages,
                     "unread_count": conv["unread_count"]
                 })
+        return results
         return results

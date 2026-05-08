@@ -1,3 +1,6 @@
+from api import feedback
+from api import feedback
+from api import feedback
 from typing import List, Any
 from core.config import settings
 import datetime
@@ -312,7 +315,7 @@ class DocumentService:
             html_content += html_body + "</body></html>"
             zf.writestr("OEBPS/content.xhtml", html_content)
             
-        mem_zip.seek(0)
+        mem_zip.seek()
         logger.info(f"Workspace: EPUB exported for {document_id}")
         return mem_zip.read()
 
@@ -359,7 +362,7 @@ class DocumentService:
             "id": str(b["_id"]),
             "title": b.get("title", ""),
             "author_id": b.get("author_id"),
-            "submitted_at": b.get("updated_at", dt.utcnow()).isoformat() if isinstance(b.get("updated_at"), dt) else ""
+            "submitted_at": b.get("updated_at", dt.utcnow().isoformat() if isinstance(b.get("updated_at"), dt) else "")
         } for b in documents]
 
     @staticmethod

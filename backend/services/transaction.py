@@ -75,7 +75,6 @@ class TransactionService:
                             note=f"Hoàn 10% dl khi tặng cho bài viết {req.item_id}!"
                         )
                         txs.append(tx_cashback.model_dump(by_alias=True))
-                        
                 await transactions.insert_many(txs, session=session)
                 await session.commit_transaction()
                 
@@ -419,7 +418,6 @@ class TransactionService:
                 tx_refund_buyer = Transaction(user_id=str(current_user.id), type=TransactionType.REFUND, amount=price, note=f"Hoàn tiền giao dịch: {purchase_id}")
                 tx_refund_seller = Transaction(user_id=author_id, type=TransactionType.REFUND, amount=-price, note=f"Hoàn tiền giao dịch: {purchase_id}")
                 await db["transactions"].insert_many([tx_refund_buyer.model_dump(by_alias=True), tx_refund_seller.model_dump(by_alias=True)], session=session)
-                
                 await session.commit_transaction()
                 return {"message": "Hoàn tiền thành công.", "refunded_amount": price}
         except Exception as e:

@@ -39,7 +39,6 @@ class ChapterService:
             "created_at": datetime.datetime.now(timezone.utc)
         }
         await docs_col.update_one({"_id": document_id}, {"$push": {"chapters": new_chapter}})
-logger.info("Log message sanitized"))
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
     @staticmethod
@@ -54,7 +53,6 @@ logger.info("Log message sanitized"))
             ch["is_premium"] = ch["id"] not in chapter_ids
             
         await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.now(timezone.utc)}})
-logger.info("Log message sanitized"))
         return {"message": "Đã thiết lập chương đọc thử thành công."}
 
     @staticmethod
@@ -89,5 +87,7 @@ logger.info("Log message sanitized"))
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
+        chapters = doc.get("chapters", [])
+        return chapters
         chapters = doc.get("chapters", [])
         return chapters

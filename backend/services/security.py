@@ -21,5 +21,5 @@ class SecurityService:
             {"$set": {"value": data, "updated_at": datetime.now(timezone.utc)}},
             upsert=True
         )
-logger.info("Log message sanitized"))
+        logger.info("Log message sanitized")
         return {"message": "Đã cập nhật cấu hình bảo mật hệ thống."}

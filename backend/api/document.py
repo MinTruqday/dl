@@ -6,7 +6,7 @@ from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
 from services.chapter import ChapterService
-from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, InviteCoauthorRequest, DocumentPasswordRequest
+from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, CoauthorInviteRequest, DocumentPasswordRequest
 from models.series import SeriesCreateRequest, SeriesResponse
 from pydantic import BaseModel
 
@@ -131,7 +131,7 @@ async def link_series(document_id: str, series_id: str, current_user: UserInDB =
     )
 
 @router.post("/{document_id}/dong-tac-gia", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def invite_coauthor(document_id: str, req: InviteCoauthorRequest, current_user: UserInDB = Depends(get_current_user)):
+async def invite_coauthor(document_id: str, req: CoauthorInviteRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.invite_coauthor(document_id, req.email, current_user), 
         message="Mời đồng tác giả thành công", 
