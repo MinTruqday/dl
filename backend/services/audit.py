@@ -4,9 +4,12 @@ from loguru import logger
 
 class AuditService:
     @staticmethod
-    async def get_audit_logs(limit: int = 50, offset: int = 0) -> list:
+    async def get_audit_logs(limit: int = 50, cursor: str = None) -> list:
         db = db_client.mongodb.get_default_database()
-        logs = await db["audit_logs"].find().sort("timestamp", -1).skip(offset).limit(limit).to_list(length=limit)
+        query = {}
+        if cursor:
+            query["timestamp"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+        logs = await db["audit_logs"].find(query).sort("timestamp", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(l["_id"]) if "_id" in l else "",

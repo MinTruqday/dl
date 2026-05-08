@@ -11,8 +11,13 @@ class AIService:
     @staticmethod
     async def semantic_search(query: str, current_user) -> list:
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
-        if not rag_url: 
-            raise HTTPException(status_code=503, detail="Dịch vụ AI chưa được cấu hình.")
+        cache_key = f"semantic_search:{query}"
+        if db_client.redis:
+            cached = await db_client.redis.get(cache_key)
+            if cached:
+                logger.info(f"AI: Semantic search cache hit for '{query}'")
+                return json.loads(cached)
+
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(f"{rag_url}/chat", json={
@@ -21,10 +26,13 @@ class AIService:
                     "useSmart": True
                 })
                 if resp.status_code == 200:
-                    return resp.json()
+                    result = resp.json()
+                    if db_client.redis:
+                        await db_client.redis.setex(cache_key, 300, json.dumps(result)) # Cache for 5 mins
+                    return result
                 raise HTTPException(status_code=resp.status_code, detail="Dịch vụ AI phản hồi không chính xác.")
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Semantic search failed for '{query}': {e}")
             raise HTTPException(status_code=500, detail="Lỗi kết nối đến hệ thống trí tuệ nhân tạo.")
 
     @staticmethod
@@ -64,7 +72,7 @@ class AIService:
                     res.raise_for_status()
                     return {"status": "success", "result": res.json().get("result", "")}
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Text processing failed for action {req.action}: {e}")
             raise HTTPException(status_code=500, detail="Lỗi khi xử lý văn bản với AI.")
 
     @staticmethod
@@ -90,7 +98,7 @@ class AIService:
                     return data
                 raise HTTPException(status_code=resp.status_code, detail="AI không thể tạo thẻ ghi nhớ.")
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Flashcard generation failed: {e}")
             raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ AI.")
             
     @staticmethod
@@ -135,7 +143,7 @@ class AIService:
                 if resp.status_code == 200: 
                     return resp.json()
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Grammar check failed: {e}")
             return {"score": 100, "message": "Kiểm tra ngữ pháp hiện không khả dụng."}
 
     @staticmethod
@@ -149,7 +157,7 @@ class AIService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Cover generation failed: {e}")
             return {"message": "Dịch vụ tạo ảnh bìa hiện chưa khả dụng."}
 
     @staticmethod
@@ -163,5 +171,5 @@ class AIService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"AI: Code generation failed: {e}")
             return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}

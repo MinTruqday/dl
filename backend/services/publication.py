@@ -88,16 +88,11 @@ class PublicationService:
         user_id = str(current_user.id)
         document = await docs_collection.find_one({"_id": document_id, "author_id": user_id})
         if not document:
-            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu")
             
         from core.publication import trigger_document_publish_job
-        from services.rag import RagService
         
         await trigger_document_publish_job(document_id, user_id)
-        try:
-            await RagService.ingest(document_id)
-        except Exception as e:
-            logger.error(f"RAG: Ingestion failed for {document_id}: {e}")
             
         await docs_collection.update_one(
             {"_id": document_id},

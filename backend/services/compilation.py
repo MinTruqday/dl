@@ -48,5 +48,5 @@ class CompilationService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.info("Log message sanitized")
+            logger.error(f"Compilation: System error during LaTeX compilation: {e}")
             raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình biên dịch tài liệu.")

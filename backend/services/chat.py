@@ -23,20 +23,29 @@ class ChatService:
         return res_data
 
     @staticmethod
-    async def get_messages(other_user_id: str, current_user: UserInDB, limit: int = 50):
+    async def get_messages(other_user_id: str, current_user: UserInDB, limit: int = 50, cursor: str = None):
         query = {
             "$or": [
                 {"sender_id": current_user.id, "receiver_id": other_user_id},
                 {"sender_id": other_user_id, "receiver_id": current_user.id}
             ]
         }
-        db = db_client.mongodb.get_default_database()
-        cursor = db["messages"].find(query).sort("created_at", -1).limit(limit)
-        messages = await cursor.to_list(length=limit)
         
-        for msg in messages:
-            if msg.get("reply_to_id"):
-                msg["replied_message"] = await db["messages"].find_one({"_id": msg["reply_to_id"]})
+        if cursor:
+            from datetime import datetime
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
+        db = db_client.mongodb.get_default_database()
+        cursor_query = db["messages"].find(query).sort("created_at", -1).limit(limit)
+        messages = await cursor_query.to_list(length=limit)
+        
+        reply_ids = [msg["reply_to_id"] for msg in messages if msg.get("reply_to_id")]
+        if reply_ids:
+            replied_msgs = await db["messages"].find({"_id": {"$in": reply_ids}}).to_list(length=len(reply_ids))
+            reply_map = {str(r["_id"]): r for r in replied_msgs}
+            for msg in messages:
+                if msg.get("reply_to_id"):
+                    msg["replied_message"] = reply_map.get(msg["reply_to_id"])
         
         await db["messages"].update_many(
             {"sender_id": other_user_id, "receiver_id": current_user.id, "is_read": False},
@@ -123,21 +132,35 @@ class ChatService:
         ]
         
         db = db_client.mongodb.get_default_database()
-        cursor = db["messages"].aggregate(pipeline)
-        conversations = await cursor.to_list(length=100)
+        conversations = await db["messages"].aggregate(pipeline).to_list(length=100)
         
+        other_user_ids = [conv["_id"] for conv in conversations]
+        if not other_user_ids:
+            return []
+
+        users_list = await db["users"].find({"_id": {"$in": other_user_ids}}, {"username": 1, "avatar_url": 1, "full_name": 1}).to_list(length=len(other_user_ids))
+        user_map = {str(u["_id"]): u for u in users_list}
+
+        pinned_query = {
+            "$or": [],
+            "is_pinned": True
+        }
+        for uid in other_user_ids:
+            pinned_query["$or"].append({"sender_id": current_user.id, "receiver_id": uid})
+            pinned_query["$or"].append({"sender_id": uid, "receiver_id": current_user.id})
+        
+        all_pinned = await db["messages"].find(pinned_query).sort("created_at", -1).to_list(length=500)
+        pinned_map = {}
+        for pm in all_pinned:
+            key = pm["receiver_id"] if pm["sender_id"] == current_user.id else pm["sender_id"]
+            pinned_map.setdefault(key, [])
+            if len(pinned_map[key]) < 5:
+                pinned_map[key].append(pm)
+
         results = []
         for conv in conversations:
-            other_user = await db["users"].find_one({"_id": conv["_id"]})
+            other_user = user_map.get(conv["_id"])
             if other_user:
-                pinned_cursor = db["messages"].find({
-                    "$or": [
-                        {"sender_id": current_user.id, "receiver_id": conv["_id"], "is_pinned": True},
-                        {"sender_id": conv["_id"], "receiver_id": current_user.id, "is_pinned": True}
-                    ]
-                }).sort("created_at", -1)
-                pinned_messages = await pinned_cursor.to_list(length=5)
-
                 results.append({
                     "other_user_id": conv["_id"],
                     "other_user": {
@@ -146,8 +169,8 @@ class ChatService:
                         "full_name": other_user.get("full_name")
                     },
                     "last_message": conv["last_message"],
-                    "pinned_messages": pinned_messages,
+                    "pinned_messages": pinned_map.get(conv["_id"], []),
                     "unread_count": conv["unread_count"]
                 })
         return results
-        return results
+

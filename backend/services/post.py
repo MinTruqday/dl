@@ -140,13 +140,17 @@ class PostService:
         return {"message": "Đã lưu bài viết vào mục yêu thích.", "saved": True}
 
     @staticmethod
-    async def get_saved_posts(current_user: UserInDB, skip: int = 0, limit: int = 20) -> list:
+    async def get_saved_posts(current_user: UserInDB, cursor: str = None, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
         
+        match_query = {"user_id": str(current_user.id)}
+        if cursor:
+            from datetime import datetime
+            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
         pipeline = [
-            {"$match": {"user_id": str(current_user.id)}},
+            {"$match": match_query},
             {"$sort": {"created_at": -1}},
-            {"$skip": skip},
             {"$limit": limit},
             {
                 "$lookup": {
@@ -260,16 +264,19 @@ class PostService:
         return {"message": "Đã chia sẻ trích đoạn.", "post_id": excerpt_post["_id"]}
 
     @staticmethod
-    async def get_posts_by_hashtag(tag: str, skip: int, limit: int, current_user: Optional[UserInDB]) -> list:
+    async def get_posts_by_hashtag(tag: str, cursor: str = None, limit: int = 20, current_user: Optional[UserInDB] = None) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"tags": tag.lower(), "is_shadowbanned": {"$ne": True}, "is_deleted": {"$ne": True}}
         if current_user:
             query["is_hidden_by"] = {"$ne": str(current_user.id)}
             
+        if cursor:
+            from datetime import datetime
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
         pipeline = [
             {"$match": query},
             {"$sort": {"created_at": -1}},
-            {"$skip": skip},
             {"$limit": limit},
             {
                 "$lookup": {

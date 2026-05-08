@@ -10,9 +10,12 @@ from datetime import datetime, timezone, timedelta
 
 class UserService:
     @staticmethod
-    async def get_all_users(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    async def get_all_users(limit: int = 50, cursor: str = None) -> List[Dict[str, Any]]:
         db = db_client.mongodb.get_default_database()
-        users = await db["users"].find().sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
+        query = {}
+        if cursor:
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+        users = await db["users"].find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(u["_id"]),
@@ -146,13 +149,30 @@ class UserService:
         return {"message": "Đã thêm ghi chú điều hành."}
 
     @staticmethod
-    async def get_report_queue(status_filter: str = "pending", skip: int = 0, limit: int = 30) -> list:
+    async def get_report_queue(status_filter: str = "pending", cursor: str = None, limit: int = 30) -> list:
         db = db_client.mongodb.get_default_database()
-        query = {"status": status_filter} if status_filter else {}
-        reports = await db["reports"].find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        match_query = {"status": status_filter} if status_filter else {}
+        if cursor:
+            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+
+        pipeline = [
+            {"$match": match_query},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "reporter_id",
+                    "foreignField": "_id",
+                    "as": "reporter"
+                }
+            },
+            {"$unwind": {"path": "$reporter", "preserveNullAndEmptyArrays": True}}
+        ]
+        reports = await db["reports"].aggregate(pipeline).to_list(length=limit)
         result = []
         for r in reports:
-            reporter = await db["users"].find_one({"_id": r.get("reporter_id")}, {"full_name": 1})
+            reporter = r.get("reporter", {})
             result.append({
                 "id": str(r["_id"]),
                 "item_type": r.get("item_type", ""),

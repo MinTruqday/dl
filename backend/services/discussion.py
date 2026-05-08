@@ -26,20 +26,36 @@ class DiscussionService:
         return {"message": "Tạo thảo luận thành công.", "discussion_id": discussion["_id"]}
 
     @staticmethod
-    async def get_discussions(document_id: str, skip: int = 0, limit: int = 20) -> list:
+    async def get_discussions(document_id: str, cursor: str = None, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
-        discussions = await db["discussions"].find(
-            {"document_id": document_id}
-        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        match_query = {"document_id": document_id}
+        if cursor:
+            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+
+        pipeline = [
+            {"$match": match_query},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        discussions = await db["discussions"].aggregate(pipeline).to_list(length=limit)
         result = []
         for d in discussions:
-            user = await db["users"].find_one({"_id": d["user_id"]}, {"full_name": 1, "avatar_url": 1})
+            author = d.get("author", {})
             result.append({
                 "id": d["_id"],
                 "title": d.get("title", ""),
                 "content": d.get("content", ""),
-                "user_name": user.get("full_name", "Ẩn danh") if user else "Ẩn danh",
-                "user_avatar": user.get("avatar_url") if user else None,
+                "user_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
+                "user_avatar": author.get("avatar_url") if author else None,
                 "replies_count": len(d.get("replies", [])),
                 "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else d.get("created_at"),
             })

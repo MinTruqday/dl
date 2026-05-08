@@ -57,8 +57,8 @@ async def send_message(req: MessageCreate, current_user: UserInDB = Depends(get_
     )
 
 @router.get("/tin-nhan/{other_user_id}", response_model=APIResponse[Any])
-async def get_messages(other_user_id: str, limit: int = Query(50), current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ChatService.get_messages(other_user_id, current_user, limit), message="Lấy lịch sử tin nhắn thành công", status=200)
+async def get_messages(other_user_id: str, cursor: str = None, limit: int = Query(50), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await ChatService.get_messages(other_user_id, current_user, limit, cursor), message="Lấy lịch sử tin nhắn thành công", status=200)
 
 @router.get("/hoi-thoai", response_model=APIResponse[Any])
 async def get_conversations(current_user: UserInDB = Depends(get_current_user)):

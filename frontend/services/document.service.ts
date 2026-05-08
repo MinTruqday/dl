@@ -54,6 +54,8 @@ export async function getDocumentsAPI(
   is_starred?: boolean,
   fmt?: string,
   author_slug?: string,
+  cursor?: string,
+  limit: number = 50
 ) {
   const token = getToken();
   let url = `${API_URL}/tai-lieu`;
@@ -66,6 +68,8 @@ export async function getDocumentsAPI(
   if (is_starred) params.append("is_starred", "true");
   if (fmt && fmt !== "all") params.append("fmt", fmt);
   if (author_slug) params.append("author_slug", author_slug);
+  if (cursor) params.append("cursor", cursor);
+  params.append("limit", limit.toString());
 
   if (params.toString()) url += `?${params.toString()}`;
 
@@ -100,10 +104,10 @@ export async function getDocumentBySlugAPI(slug: string) {
   return data;
 }
 
-export async function getMyDocumentsAPI(skip: number = 0, limit: number = 50) {
+export async function getMyDocumentsAPI(cursor: string = "", limit: number = 50) {
   const token = getToken();
   const res = await fetch(
-    `${API_URL}/tai-lieu/ca-nhan?skip=${skip}&limit=${limit}`,
+    `${API_URL}/tai-lieu/ca-nhan?cursor=${cursor}&limit=${limit}`,
     {
       method: "GET",
       headers: {

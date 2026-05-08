@@ -10,7 +10,7 @@ from loguru import logger
 class FeedService:
     @staticmethod
     async def generate_ai_feed_summary(current_user: UserInDB) -> str:
-        feed = await FeedService.get_social_feed("foryou", None, 0, 10, current_user)
+        feed = await FeedService.get_social_feed("foryou", None, 10, current_user, None)
         if not feed:
             return "Chưa có nội dung mới nào để tóm tắt."
         
@@ -32,7 +32,7 @@ class FeedService:
         return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
 
     @staticmethod
-    async def get_social_feed(tab: str, item_type: Optional[str], skip: int, limit: int, current_user: Optional[UserInDB]) -> List[dict]:
+    async def get_social_feed(tab: str, item_type: Optional[str], limit: int, current_user: Optional[UserInDB], cursor: str = None) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         updates_col = db["status_updates"]
         
@@ -44,15 +44,19 @@ class FeedService:
         if item_type:
             query["item_type"] = item_type
             
+        if cursor:
+            from datetime import datetime
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
         if tab == "following" and current_user:
             follows_col = db["follows"]
-            following_cursor = await follows_col.find({"follower_id": str(current_user.id)}).to_list(length=None)
+            following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
             following_ids = [f["following_id"] for f in following_cursor]
             query["user_id"] = {"$in": following_ids}
         elif tab == "foryou":
             if current_user:
                 follows_col = db["follows"]
-                following_cursor = await follows_col.find({"follower_id": str(current_user.id)}).to_list(length=None)
+                following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
                 following_ids = [f["following_id"] for f in following_cursor]
                 query["$or"] = [
                     {"privacy": "public"},
@@ -65,7 +69,7 @@ class FeedService:
         pipeline = [
             {"$match": query},
             {"$sort": {"created_at": -1}},
-            {"$skip": skip},
+
             {"$limit": limit},
             {
                 "$lookup": {
@@ -121,7 +125,7 @@ class FeedService:
         user_col = db["users"]
         follows_col = db["follows"]
         
-        following = await follows_col.find({"follower_id": str(current_user.id)}).to_list(length=None)
+        following = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
         exclude_ids = [f["following_id"] for f in following] + [str(current_user.id)]
         
         user_tags = current_user.interests if hasattr(current_user, 'interests') else []

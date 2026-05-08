@@ -46,7 +46,7 @@ class AnnaArchiveCollector:
                 content = await page.content()
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
                     logger.info("Search page blocked, trying FlareSolverr to bypass...")
-                    FLARESOLVERR_URL = "http://flaresolverr:8191/v1"
+                    FLARESOLVERR_URL = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
                     async with aiohttp.ClientSession() as session:
                         async with session.post(FLARESOLVERR_URL, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
                             if resp.status == 200:
@@ -91,8 +91,9 @@ class AnnaArchiveCollector:
     async def get_flare_cleared_context(browser, url: str, logger):
         logger.info("Using FlareSolverr to fetch clearance cookies and userAgent...")
         try:
+            flare_url = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
             async with aiohttp.ClientSession() as session:
-                async with session.post("http://flaresolverr:8191/v1", json={"cmd": "request.get", "url": url, "maxTimeout": 60000}) as resp:
+                async with session.post(flare_url, json={"cmd": "request.get", "url": url, "maxTimeout": 60000}) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         sol = data.get("solution", {})
@@ -240,25 +241,25 @@ class AnnaArchiveCollector:
         ext = payload.get("content_format", "epub")
         filename = payload.get("filename") or f"{slug}.{ext}"
         
-        os.makedirs("/app/documents/anna_archive", exist_ok=True)
-        target_local = f"/app/documents/anna_archive/{filename}"
-        
+        import tempfile
         minio_url = None
         
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=300) as resp:
                     if resp.status == 200:
-                        with open(target_local, "wb") as f:
+                        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                             while True:
                                 chunk = await resp.content.read(65536)
                                 if not chunk:
                                     break
-                                f.write(chunk)
+                                tmp_file.write(chunk)
+                            target_local = tmp_file.name
                                 
-                        logger.info(f"[Anna Stream] Copied to ./documents/anna_archive/{filename}")
+                        logger.info(f"[Anna Stream] Copied to temp file {target_local}")
                         
                         minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
+                        os.unlink(target_local)
                     else:
                         logger.error(f"[Anna Download Error] Cannot get. Code: {resp.status} - {url}")
         except Exception as e:

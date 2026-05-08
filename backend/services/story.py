@@ -42,9 +42,14 @@ class StoryService:
         query = {"expires_at": {"$gt": now}, "is_archived": False, "privacy": "public"}
         cursor = db["stories"].find(query).sort("created_at", -1)
         stories_raw = await cursor.to_list(length=50)
+        
+        user_ids = list(set(s["user_id"] for s in stories_raw))
+        users_list = await db["users"].find({"_id": {"$in": user_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=len(user_ids)) if user_ids else []
+        user_map = {str(u["_id"]): u for u in users_list}
+        
         stories = []
         for s in stories_raw:
-            user = await db["users"].find_one({"_id": s["user_id"]}, {"full_name": 1, "avatar_url": 1})
+            user = user_map.get(s["user_id"], {})
             viewer_ids = [v["user_id"] for v in s.get("viewers", [])]
             stories.append({
                 "id": str(s["_id"]),
@@ -79,15 +84,22 @@ class StoryService:
             {"user_id": str(current_user.id), "expires_at": {"$gt": now}, "is_archived": False}
         ).sort("created_at", -1)
         stories_raw = await cursor.to_list(length=50)
+
+        all_viewer_ids = list(set(
+            v["user_id"] for s in stories_raw for v in s.get("viewers", [])
+        ))
+        viewer_users = await db["users"].find({"_id": {"$in": all_viewer_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=len(all_viewer_ids)) if all_viewer_ids else []
+        viewer_map = {str(u["_id"]): u for u in viewer_users}
+
         stories = []
         for s in stories_raw:
             viewers_enriched = []
             for v in s.get("viewers", []):
-                viewer_user = await db["users"].find_one({"_id": v["user_id"]}, {"full_name": 1, "avatar_url": 1})
+                vu = viewer_map.get(v["user_id"], {})
                 viewers_enriched.append({
                     "user_id": v["user_id"],
-                    "full_name": viewer_user.get("full_name", "Ẩn danh") if viewer_user else "Ẩn danh",
-                    "avatar_url": viewer_user.get("avatar_url") if viewer_user else None,
+                    "full_name": vu.get("full_name", "Ẩn danh") if vu else "Ẩn danh",
+                    "avatar_url": vu.get("avatar_url") if vu else None,
                     "viewed_at": v["viewed_at"].isoformat() if isinstance(v.get("viewed_at"), datetime) else v.get("viewed_at"),
                 })
             stories.append({
@@ -134,13 +146,16 @@ class StoryService:
             raise HTTPException(status_code=404, detail="Tin không tồn tại.")
         if story["user_id"] != str(current_user.id):
             raise HTTPException(status_code=403, detail="Bạn không có quyền xem danh sách này.")
+        viewer_ids = [v["user_id"] for v in story.get("viewers", [])]
+        viewer_users = await db["users"].find({"_id": {"$in": viewer_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=len(viewer_ids)) if viewer_ids else []
+        viewer_map = {str(u["_id"]): u for u in viewer_users}
         viewers_enriched = []
         for v in story.get("viewers", []):
-            viewer_user = await db["users"].find_one({"_id": v["user_id"]}, {"full_name": 1, "avatar_url": 1})
+            vu = viewer_map.get(v["user_id"], {})
             viewers_enriched.append({
                 "user_id": v["user_id"],
-                "full_name": viewer_user.get("full_name", "Ẩn danh") if viewer_user else "Ẩn danh",
-                "avatar_url": viewer_user.get("avatar_url") if viewer_user else None,
+                "full_name": vu.get("full_name", "Ẩn danh") if vu else "Ẩn danh",
+                "avatar_url": vu.get("avatar_url") if vu else None,
                 "viewed_at": v["viewed_at"].isoformat() if isinstance(v.get("viewed_at"), datetime) else v.get("viewed_at"),
             })
         return {"viewers": viewers_enriched, "total": len(viewers_enriched)}
@@ -270,17 +285,33 @@ class StoryService:
         return {"message": "Đã xóa tin."}
 
     @staticmethod
-    async def get_story_moderation_queue(skip: int = 0, limit: int = 20) -> list:
+    async def get_story_moderation_queue(cursor: str = None, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
-        stories = await db["stories"].find(
-            {"moderation_status": "pending"}
-        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        match_query = {"moderation_status": "pending"}
+        if cursor:
+            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+
+        pipeline = [
+            {"$match": match_query},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        stories = await db["stories"].aggregate(pipeline).to_list(length=limit)
         result = []
         for s in stories:
-            user = await db["users"].find_one({"_id": s.get("user_id")}, {"full_name": 1})
+            author = s.get("author", {})
             result.append({
                 "id": str(s["_id"]),
-                "user_name": user.get("full_name", "Ẩn danh") if user else "Ẩn danh",
+                "user_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                 "content": s.get("text_content", "")[:200],
                 "media_url": s.get("media_url"),
                 "created_at": s["created_at"].isoformat() if isinstance(s.get("created_at"), datetime) else s.get("created_at"),
@@ -300,11 +331,4 @@ class StoryService:
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Story không tồn tại.")
         return {"message": f"Đã {('duyệt' if action == 'approve' else 'từ chối')} Story."}
-        new_status = "approved" if action == "approve" else "rejected"
-        result = await db["stories"].update_one(
-            {"_id": story_id},
-            {"$set": {"moderation_status": new_status, "moderated_by": str(current_moderator.id), "moderated_at": datetime.now(timezone.utc)}}
-        )
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Story không tồn tại.")
-        return {"message": f"Đã {('duyệt' if action == 'approve' else 'từ chối')} Story."}
+

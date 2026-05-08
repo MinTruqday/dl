@@ -73,15 +73,30 @@ class HighlightService:
         return {"message": "Đã xóa ghi chú."}
 
     @staticmethod
-    async def get_all_notes(current_user, skip: int = 0, limit: int = 50) -> list:
+    async def get_all_notes(current_user, cursor: str = None, limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
-        highlights = await db["highlights"].find(
-            {"user_id": str(current_user.id), "note": {"$ne": ""}}
-        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
-        documents_col = db["documents"]
+        match_query = {"user_id": str(current_user.id), "note": {"$ne": ""}}
+        if cursor:
+            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+
+        pipeline = [
+            {"$match": match_query},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "documents",
+                    "localField": "document_id",
+                    "foreignField": "_id",
+                    "as": "doc"
+                }
+            },
+            {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}}
+        ]
+        highlights = await db["highlights"].aggregate(pipeline).to_list(length=limit)
         result = []
         for h in highlights:
-            document = await documents_col.find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1})
+            document = h.get("doc", {})
             result.append({
                 "id": str(h["_id"]),
                 "document_id": h["document_id"],

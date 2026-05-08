@@ -110,6 +110,13 @@ async def process_document_publish(message: AbstractIncomingMessage):
             total_words = sum(len(c.get("content", "").split()) for c in document.get("chapters", []))
             base_price = max(10, total_words // 1000 * 5)
             
+            try:
+                from services.rag import RagService
+                await RagService.ingest(document_id)
+                logger.info(f"Worker: RAG ingestion successful for document {document_id}")
+            except Exception as e:
+                logger.error(f"Worker: RAG ingestion failed for document {document_id}: {str(e)}")
+            
             await docs_col.update_one(
                 {"_id": document_id},
                 {"$set": {

@@ -9,9 +9,9 @@ from services.document import DocumentService
 router = APIRouter(prefix="/ban-nhap")
 
 @router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def get_approval_queue(skip: int = 0, limit: int = 30):
+async def get_approval_queue(cursor: str = None, limit: int = 30):
     return APIResponse(
-        data=await DocumentService.get_approval_queue(skip, limit),
+        data=await DocumentService.get_approval_queue(cursor, limit),
         message="Lấy hàng đợi phê duyệt thành công"
     )
 

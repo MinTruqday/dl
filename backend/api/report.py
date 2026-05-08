@@ -10,9 +10,9 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/bao-cao")
 
 @router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def get_reports(status: str = "pending", skip: int = 0, limit: int = 30):
+async def get_reports(status: str = "pending", cursor: str = None, limit: int = 30):
     return APIResponse(
-        data=await UserService.get_report_queue(status, skip, limit),
+        data=await UserService.get_report_queue(status, cursor, limit),
         message="Lấy danh sách báo cáo thành công"
     )
 

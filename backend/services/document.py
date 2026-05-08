@@ -97,11 +97,14 @@ class DocumentService:
         return doc_doc
 
     @staticmethod
-    async def get_my_documents(current_user, skip: int = 0, limit: int = 50) -> list:
+    async def get_my_documents(current_user, cursor: str = None, limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
-        docs = await db["documents"].find(
-            {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
-        ).sort("created_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        if cursor:
+            from bson import ObjectId
+            query["_id"] = {"$lt": ObjectId(cursor)}
+            
+        docs = await db["documents"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(b["_id"]),
@@ -138,7 +141,7 @@ class DocumentService:
         return await docs_collection.find_one({"_id": document_id})
 
     @staticmethod
-    async def list_documents(limit: int, offset: int, q: str, sort_by: str, category: str = None, tag: str = None):
+    async def list_documents(limit: int, cursor: str, q: str, sort_by: str, category: str = None, tag: str = None):
         db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
@@ -158,8 +161,14 @@ class DocumentService:
             "rating": ("average_rating", -1)
         }
         sort_field, sort_dir = sort_mapping.get(sort_by, ("created_at", -1))
-        cursor = docs_collection.find(query).sort(sort_field, sort_dir).skip(offset).limit(limit)
-        documents = await cursor.to_list(length=limit)
+        
+        if cursor:
+            from bson import ObjectId
+            if sort_field == "created_at":
+                query["_id"] = {"$lt": ObjectId(cursor)}
+            
+        cursor_db = docs_collection.find(query).sort(sort_field, sort_dir).limit(limit)
+        documents = await cursor_db.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
     @staticmethod
@@ -355,9 +364,13 @@ class DocumentService:
         ]
 
     @staticmethod
-    async def get_approval_queue(skip: int = 0, limit: int = 30) -> list:
+    async def get_approval_queue(cursor: str = None, limit: int = 30) -> list:
         db = db_client.mongodb.get_default_database()
-        documents = await db["documents"].find({"status": "processing_publish"}).sort("updated_at", 1).skip(skip).limit(limit).to_list(length=limit)
+        query = {"status": "processing_publish"}
+        if cursor:
+            import datetime as dt_mod
+            query["updated_at"] = {"$gt": dt_mod.datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+        documents = await db["documents"].find(query).sort("updated_at", 1).limit(limit).to_list(length=limit)
         return [{
             "id": str(b["_id"]),
             "title": b.get("title", ""),
@@ -368,20 +381,29 @@ class DocumentService:
     @staticmethod
     async def moderate_document(document_id: str, action: str, reason: str, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
-        status = "PUBLISHED" if action == "approve" else "REJECTED"
+        status_val = "PUBLISHED" if action == "approve" else "REJECTED"
+        
         await db["documents"].update_one(
             {"_id": document_id},
-            {"$set": {"status": status, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": dt.utcnow()}}
+            {"$set": {"status": status_val, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": dt.utcnow()}}
         )
+        
+        if action == "approve":
+            from core.publication import trigger_document_publish_job
+            doc = await db["documents"].find_one({"_id": document_id})
+            if doc:
+                await trigger_document_publish_job(document_id, doc.get("author_id"))
+                logger.info(f"Moderation: Triggered publish job for approved document {document_id}")
+        
         await db["audit_logs"].insert_one({
-            "action": f"DOCUMENT_{status}", 
+            "action": f"DOCUMENT_{status_val}", 
             "actor_id": str(current_moderator.id), 
             "document_id": document_id, 
             "reason": reason, 
             "timestamp": dt.utcnow()
         })
-        logger.info(f"Moderation: Document {document_id} {status.lower()} by {current_moderator.id}")
-        return {"message": f"Đã {status.lower()} tài liệu thành công."}
+        logger.info(f"Moderation: Document {document_id} {status_val.lower()} by {current_moderator.id}")
+        return {"message": f"Đã {status_val.lower()} tài liệu thành công."}
 
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:

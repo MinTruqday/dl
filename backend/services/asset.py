@@ -8,13 +8,18 @@ from typing import Any
 
 class AssetService:
     @staticmethod
-    async def get_assets(current_user, asset_type: str = "all") -> list:
+    async def get_assets(current_user, asset_type: str = "all", cursor: str = None, limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id)}
-        if asset_type != "all":
-            query["type"] = {"$regex": asset_type, "$options": "i"}
         
-        assets = await db["assets"].find(query).sort("created_at", -1).to_list(length=200)
+        if asset_type != "all":
+            query["type"] = asset_type
+            
+        if cursor:
+            from bson import ObjectId
+            query["_id"] = {"$lt": ObjectId(cursor)}
+        
+        assets = await db["assets"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(a["_id"]),
@@ -55,31 +60,27 @@ class AssetService:
 
     @staticmethod
     async def upload_media(file, current_user: UserInDB):
-        import shutil
-        import os
+        from core.storage import upload_file
         ext = file.filename.split(".")[-1].lower()
         if ext not in ["jpg", "jpeg", "png", "gif", "webp", "mp4"]:
-            raise HTTPException(status_code=400, detail="Hệ thống chỉ hỗ trợ các định dạng tệp ảnh hoặc video mp4.")
+            raise HTTPException(status_code=400, detail="Hệ thống chỉ hỗ trợ các định dạng tệp ảnh hoặc video mp4")
         
-        filename = f"feed_{uuid.uuid4().hex}.{ext}"
-        if ".." in filename:
-            raise HTTPException(status_code=400, detail="Tên tệp không hợp lệ.")
-            
-        upload_dir = "public/feed_uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_location = os.path.join(upload_dir, filename)
+        filename = f"feed_uploads/{uuid.uuid4().hex}.{ext}"
+        content = await file.read()
         
-        with open(file_location, "wb+") as f:
-            shutil.copyfileobj(file.file, f)
+        try:
+            await upload_file(content, filename, file.content_type)
+        except Exception as e:
+            logger.error(f"MinIO media upload error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tải tệp đa phương tiện lên MinIO")
             
         logger.info(f"Media uploaded by user {current_user.id}: {filename}")
         
-        # Optionally record as asset
         await AssetService.upload_asset({
             "filename": filename,
             "type": "image" if ext != "mp4" else "video",
-            "size_bytes": os.path.getsize(file_location),
-            "url": f"/feed_uploads/{filename}"
+            "size_bytes": len(content),
+            "url": filename
         }, current_user)
         
-        return {"url": f"/feed_uploads/{filename}", "type": "image" if ext != "mp4" else "video"}
+        return {"url": filename, "type": "image" if ext != "mp4" else "video"}

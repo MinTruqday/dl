@@ -23,27 +23,52 @@ class ReadService:
         return {"message": "Đã cập nhật tùy chỉnh kiểu chữ."}
 
     @staticmethod
-    async def get_reading_history(current_user, skip: int = 0, limit: int = 20) -> list:
+    async def get_reading_history(current_user, cursor: str = None, limit: int = 20) -> list:
         db = db_client.mongodb.get_default_database()
-        history = await db["reading_history"].find({"user_id": str(current_user.id)}).sort("last_read_at", -1).skip(skip).limit(limit).to_list(length=limit)
+        
+        match_stage = {"user_id": str(current_user.id)}
+        if cursor:
+            from datetime import datetime
+            match_stage["last_read_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
+        pipeline = [
+            {"$match": match_stage},
+            {"$sort": {"last_read_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "documents",
+                    "localField": "document_id",
+                    "foreignField": "_id",
+                    "as": "doc"
+                }
+            },
+            {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "doc.author_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        
+        history = await db["reading_history"].aggregate(pipeline).to_list(length=limit)
         result = []
         for h in history:
-            doc = await db["documents"].find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1, "cover_url": 1, "author_id": 1})
-            if doc:
-                author_name = "Hệ thống DocLib"
-                author = await db["users"].find_one({"_id": doc.get("author_id")}, {"full_name": 1})
-                if author:
-                    author_name = author.get("full_name") or author_name
-                
-                result.append({
-                    "document_id": h["document_id"], 
-                    "document_title": doc.get("title", ""), 
-                    "document_slug": doc.get("slug", ""), 
-                    "author_name": author_name,
-                    "cover_url": doc.get("cover_url"), 
-                    "progress_percentage": h.get("progress_percentage", 0), 
-                    "last_read_at": h["last_read_at"].isoformat() if isinstance(h.get("last_read_at"), datetime) else ""
-                })
+            doc = h.get("doc") or {}
+            author = h.get("author") or {}
+            result.append({
+                "document_id": h["document_id"], 
+                "document_title": doc.get("title", ""), 
+                "document_slug": doc.get("slug", ""), 
+                "author_name": author.get("full_name") or "Hệ thống DocLib",
+                "cover_url": doc.get("cover_url"), 
+                "progress_percentage": h.get("progress_percentage", 0), 
+                "last_read_at": h["last_read_at"].isoformat() if isinstance(h.get("last_read_at"), datetime) else ""
+            })
         return result
 
     @staticmethod
@@ -67,9 +92,16 @@ class ReadService:
             {"user_id": str(current_user.id), "progress_percentage": {"$lt": 100, "$gt": 0}}
         ).sort("last_read_at", -1).limit(3).to_list(length=3)
         
+        if not history:
+            return []
+        
+        doc_ids = [h["document_id"] for h in history]
+        docs = await db["documents"].find({"_id": {"$in": doc_ids}}, {"title": 1, "slug": 1, "cover_url": 1}).to_list(length=len(doc_ids))
+        doc_map = {str(d["_id"]): d for d in docs}
+        
         result = []
         for h in history:
-            doc = await db["documents"].find_one({"_id": h["document_id"]}, {"title": 1, "slug": 1, "cover_url": 1})
+            doc = doc_map.get(h["document_id"])
             if doc:
                 result.append({
                     "document_id": h["document_id"],

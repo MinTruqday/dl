@@ -47,6 +47,14 @@ async def setup_indexes():
         db = db_client.mongodb[settings.MONGODB_DB_NAME]
 
         await db["documents"].create_index([("title", "text"), ("description", "text"), ("author", "text")], background=True)
+        await db["documents"].create_index([("author_id", 1)], background=True)
+        await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("created_at", -1)], background=True)
+        await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("views", -1)], background=True)
+        await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("average_rating", -1)], background=True)
+        await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("categories", 1), ("created_at", -1)], background=True)
+        await db["documents"].create_index([("status", 1), ("is_deleted", 1), ("tags", 1), ("created_at", -1)], background=True)
+        await db["documents"].create_index([("slug", 1)], unique=True, background=True)
+        
         await db["status_updates"].create_index([("created_at", -1)], background=True)
         await db["status_updates"].create_index([("user_id", 1)], background=True)
         await db["status_updates"].create_index([("is_shadowbanned", 1)], background=True)

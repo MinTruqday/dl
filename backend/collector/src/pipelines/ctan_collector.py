@@ -134,6 +134,9 @@ class CTANCollector:
 
     @staticmethod
     async def run_download_processor(payload: dict):
+        import tempfile
+        import shutil
+        
         url = payload.get("download_link")
         title = payload.get("title", "package")
         
@@ -146,11 +149,9 @@ class CTANCollector:
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
         
-        os.makedirs("/app/books/ctan/zips", exist_ok=True)
-        os.makedirs("/app/books/ctan/extracted", exist_ok=True)
-        
-        target_zip_local = f"/app/books/ctan/zips/{filename}"
-        extracted_folder_path = f"/app/books/ctan/extracted/{slug}"
+        temp_base = tempfile.mkdtemp(prefix="ctan_")
+        target_zip_local = os.path.join(temp_base, filename)
+        extracted_folder_path = os.path.join(temp_base, "extracted", slug)
         
         minio_url_book = None
         
@@ -165,11 +166,11 @@ class CTANCollector:
                                     break
                                 f.write(chunk)
                                 
-                        logger.info(f"[CTAN Stream] Downloaded to {target_zip_local}")
+                        logger.info(f"[CTAN Stream] Downloaded to temp: {target_zip_local}")
                         
                         minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
-                        logger.info(f"Extracting ZIP archive to {extracted_folder_path}...")
+                        logger.info(f"Extracting ZIP archive...")
                         os.makedirs(extracted_folder_path, exist_ok=True)
                         with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                             zip_ref.extractall(extracted_folder_path)
@@ -181,6 +182,8 @@ class CTANCollector:
         except Exception as e:
             logger.error(f"[Aiohttp/Extraction Error]: {e}")
             return
+        finally:
+            shutil.rmtree(temp_base, ignore_errors=True)
             
         if minio_url_book:
             logger.info(f"[Success] Package saved to MinIO: {minio_url_book}")
@@ -191,16 +194,16 @@ class CTANCollector:
                 "description": payload.get("description", "Extracted via CTAN bot."),
                 "file_url": minio_url_book,
                 "tags": payload.get("authors", []),
-                "contents": extracted_folder_path, 
                 "content_format": "zip",
                 "price": 0.0,
                 "visibility": "public",
                 "author_id": "ctan-crawler",
                 "status": "published",
+                "rag_status": "pending",
                 "views": 0,
                 "average_rating": 0.0
             }
             
             doc_id = await db_client.insert_document(book_document)
             if doc_id:
-                await mq_client.publish("format_converter_queue", {"book_id": doc_id, "file_url": minio_url_book, "filename": filename, "contents_path": extracted_folder_path})
+                await mq_client.publish("format_converter_queue", {"book_id": doc_id, "file_url": minio_url_book, "filename": filename})

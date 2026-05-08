@@ -102,34 +102,38 @@ export default function DocumentsPage() {
 
   const isAdmin = user?.role === "admin";
 
-  const fetchData = useCallback(async () => {
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const fetchData = useCallback(async (isLoadMore = false) => {
+    if (isRefreshing || (!hasMore && isLoadMore)) return;
     setIsRefreshing(true);
+    
     try {
+      const currentCursor = isLoadMore ? cursor : undefined;
+      
       const [docsData, foldersData] = await Promise.all([
-        isAdmin ? getDocumentsAPI(searchQuery, undefined, undefined, undefined, currentFolder?._id, filterStar, filterFormat) : getMyDocumentsAPI(),
-        getFoldersAPI(currentFolder?._id)
+        isAdmin ? getDocumentsAPI(searchQuery, undefined, undefined, undefined, currentFolder?._id, filterStar, filterFormat, undefined, currentCursor || "", 20) : getMyDocumentsAPI(currentCursor || "", 20),
+        !isLoadMore ? getFoldersAPI(currentFolder?._id) : Promise.resolve([])
       ]);
       
       let docs = docsData.data || docsData || [];
       if (!isAdmin) {
-        if (currentFolder) {
-          docs = docs.filter((d: any) => d.folder_id === currentFolder._id);
-        } else {
-          docs = docs.filter((d: any) => !d.folder_id);
-        }
-        
+        if (currentFolder) docs = docs.filter((d: any) => d.folder_id === currentFolder._id);
+        else docs = docs.filter((d: any) => !d.folder_id);
         if (filterStar) docs = docs.filter((d: any) => d.is_starred);
         if (filterFormat !== "all") docs = docs.filter((d: any) => d.file_url?.toLowerCase().endsWith(filterFormat));
-        if (searchQuery) {
-          docs = docs.filter((d: any) => 
-            d.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            (d.publisher_name || "").toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        }
+        if (searchQuery) docs = docs.filter((d: any) => d.title.toLowerCase().includes(searchQuery.toLowerCase()) || (d.publisher_name || "").toLowerCase().includes(searchQuery.toLowerCase()));
       }
       
-      setDocuments(docs);
-      setFolders(foldersData.data || foldersData || []);
+      if (docs.length < 20) setHasMore(false);
+      else setHasMore(true);
+      
+      if (docs.length > 0) setCursor(docs[docs.length - 1].id || docs[docs.length - 1]._id);
+
+      setDocuments(prev => isLoadMore ? [...prev, ...docs] : docs);
+      if (!isLoadMore) setFolders(foldersData.data || foldersData || []);
     } catch (err: any) {
       showToast("Không thể tải danh sách tài liệu", "error");
     } finally {
@@ -137,7 +141,7 @@ export default function DocumentsPage() {
       setIsLoading(false);
       requestAnimationFrame(() => setVisible(true));
     }
-  }, [isAdmin, searchQuery, currentFolder, filterStar, filterFormat, showToast]);
+  }, [isAdmin, searchQuery, currentFolder, filterStar, filterFormat, cursor, hasMore, showToast, isRefreshing]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -147,7 +151,24 @@ export default function DocumentsPage() {
         publisher_name: isAdmin ? "DocLib" : (user.full_name || "") 
       }));
     }
-  }, [user, authLoading, fetchData, isAdmin]);
+  }, [user, authLoading, isAdmin]); // removed fetchData to avoid infinite loops when cursor changes
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !isRefreshing) {
+          fetchData(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isRefreshing, fetchData]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -845,6 +866,12 @@ export default function DocumentsPage() {
                 <p className="text-xs font-medium text-zinc-500 max-w-xs text-center">
                   Hiện tại không có bất kỳ thực thể dữ liệu nào hoặc không khớp với tiêu chí tìm kiếm.
                 </p>
+              </div>
+            )}
+            
+            {(documents.length > 0 || folders.length > 0) && (
+              <div ref={observerTarget} className="h-10 mt-4 flex items-center justify-center">
+                {isRefreshing && hasMore && <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />}
               </div>
             )}
           </main>

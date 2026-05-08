@@ -102,11 +102,12 @@ class NXBSTStreamState:
             logger.error(f"Viewer loop error: {e}")
 
     async def compile_and_upload(self, title: str, author: str):
+        import tempfile
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         final_pdf_name = f"{slug}_{uuid4().hex[:6]}.pdf"
 
-        os.makedirs("/app/documents/nxbst", exist_ok=True)
-        pdf_path = f"/app/documents/nxbst/{final_pdf_name}"
+        temp_pdf_dir = tempfile.mkdtemp(prefix="nxbst_pdf_")
+        pdf_path = os.path.join(temp_pdf_dir, final_pdf_name)
 
         files_by_page = {}
         for f in os.listdir(self.temp_dir):
@@ -203,6 +204,8 @@ class NXBSTStreamState:
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
+            if os.path.exists(temp_pdf_dir):
+                shutil.rmtree(temp_pdf_dir, ignore_errors=True)
 
 class NXBSTCollector:
     @staticmethod
@@ -325,9 +328,8 @@ class NXBSTCollector:
                 if read_btn:
                     logger.info("Found watch/read button. Preparing to capture")
 
-                    os.makedirs("/app/documents/nxbst_temp", exist_ok=True)
-                    state_manager.temp_dir = f"/app/documents/nxbst_temp/{safe_title}"
-                    os.makedirs(state_manager.temp_dir, exist_ok=True)
+                    import tempfile
+                    state_manager.temp_dir = tempfile.mkdtemp(prefix=f"nxbst_{safe_title[:20]}_")
 
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0

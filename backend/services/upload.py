@@ -1,39 +1,26 @@
-import os
 import uuid
-import shutil
-import asyncio
 from fastapi import HTTPException
-from core.storage import generate_presigned_url
+from core.storage import generate_presigned_url, upload_file
 from loguru import logger
-
-UPLOAD_DIR = "public/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class UploadService:
     @staticmethod
     async def upload_image(file):
         if not file.content_type.startswith("image/"):
-            raise HTTPException(status_code=400, detail="Hệ thống chỉ chấp nhận các tệp tin hình ảnh.")
+            raise HTTPException(status_code=400, detail="Hệ thống chỉ chấp nhận các tệp tin hình ảnh")
             
         ext = file.filename.split(".")[-1]
-        filename = f"{uuid.uuid4().hex}.{ext}"
-        file_location = os.path.join(UPLOAD_DIR, filename)
+        filename = f"images/{uuid.uuid4().hex}.{ext}"
+        content = await file.read()
         
-        def save_sync():
-            try:
-                with open(file_location, "wb+") as file_object:
-                    shutil.copyfileobj(file.file, file_object)
-                return True
-            except Exception as e:
-                logger.error(f"Sync image save error: {e}")
-                return False
-        
-        success = await asyncio.to_thread(save_sync)
-        if not success:
-            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang lưu trữ hình ảnh.")
+        try:
+            await upload_file(content, filename, file.content_type)
+        except Exception as e:
+            logger.error(f"MinIO image upload error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tải hình ảnh lên MinIO")
 
-        logger.info(f"Image uploaded: {filename}")
-        return {"url": f"/uploads/{filename}", "filename": filename}
+        logger.info(f"Image uploaded to MinIO: {filename}")
+        return {"url": filename, "filename": filename}
 
     @staticmethod
     async def upload_document(file):
@@ -43,30 +30,27 @@ class UploadService:
         if ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail=f"Hệ thống không hỗ trợ định dạng .{ext}")
             
-        filename = f"docs_{uuid.uuid4().hex}.{ext}"
-        file_location = os.path.join(UPLOAD_DIR, filename)
+        filename = f"documents/{uuid.uuid4().hex}.{ext}"
+        content = await file.read()
         
-        def save_sync():
-            try:
-                with open(file_location, "wb+") as file_object:
-                    shutil.copyfileobj(file.file, file_object)
-                return True
-            except Exception as e:
-                logger.error(f"Sync document save error: {e}")
-                return False
-        
-        success = await asyncio.to_thread(save_sync)
-        if not success:
-            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi đang lưu trữ tài liệu.")
+        try:
+            await upload_file(content, filename, file.content_type)
+        except Exception as e:
+            logger.error(f"MinIO document upload error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tải tài liệu lên MinIO")
 
-        logger.info(f"Document uploaded: {filename}")
-        return {"url": f"/uploads/{filename}", "filename": filename, "extension": ext}
+        logger.info(f"Document uploaded to MinIO: {filename}")
+        return {"url": filename, "filename": filename, "extension": ext}
 
     @staticmethod
     async def get_presigned_url(file_path: str):
         if ".." in file_path or file_path.startswith("/"):
-            raise HTTPException(status_code=400, detail="Đường dẫn tệp tin không hợp lệ.")
+            raise HTTPException(status_code=400, detail="Đường dẫn tệp tin không hợp lệ")
             
-        url = await generate_presigned_url(file_path, 3600)
-        return {"download_url": url}
+        try:
+            url = await generate_presigned_url(file_path, 3600)
+            return {"download_url": url}
+        except Exception as e:
+            logger.error(f"MinIO presigned url error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tạo liên kết tải về")
 

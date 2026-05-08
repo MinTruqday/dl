@@ -30,18 +30,18 @@ async def update_document_content(
 @router.get("/", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
     limit: int = 10, 
-    offset: int = 0,
+    cursor: Optional[str] = None,
     q: Optional[str] = None,
     sort_by: str = "latest",
     category: Optional[str] = None,
     tag: Optional[str] = None
 ) -> Any:
-    return APIResponse(data=await DocumentService.list_documents(limit, offset, q, sort_by, category, tag), message="Lấy danh sách tài liệu thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.list_documents(limit, cursor, q, sort_by, category, tag), message="Lấy danh sách tài liệu thành công", status=status.HTTP_200_OK)
 
 @router.get("/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_my_documents(skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user)):
+async def get_my_documents(cursor: Optional[str] = None, limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await DocumentService.get_my_documents(current_user, skip, limit),
+        data=await DocumentService.get_my_documents(current_user, cursor, limit),
         message="Lấy danh sách tài liệu cá nhân thành công"
     )
 

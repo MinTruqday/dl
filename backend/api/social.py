@@ -25,11 +25,11 @@ async def get_friend_suggestions(current_user: UserInDB = Depends(get_current_us
 async def get_feed(
     tab: str = Query("foryou", pattern="^(foryou|following)$"),
     item_type: Optional[str] = Query(None),
-    skip: int = Query(0, ge=0),
+    cursor: Optional[str] = None,
     limit: int = Query(20, ge=1, le=50),
     current_user: Optional[UserInDB] = Depends(get_current_user_optional)
 ):
-    return APIResponse(data=await FeedService.get_social_feed(tab, item_type, skip, limit, current_user), message="Lấy bảng tin thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await FeedService.get_social_feed(tab, item_type, limit, current_user, cursor), message="Lấy bảng tin thành công", status=status.HTTP_200_OK)
 
 @router.post("/bai-viet", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(calls=10, period=60))])
 async def create_post(request: StatusUpdateCreate, current_user: UserInDB = Depends(get_current_user)):
@@ -68,8 +68,8 @@ async def get_ranking(limit: int = Query(5, ge=1, le=50)):
     return APIResponse(data=await RankService.get_contribution_ranking(limit), message="Lấy bảng xếp hạng đóng góp thành công", status=status.HTTP_200_OK)
 
 @router.get("/tai-lieu/{document_id}/thao-luan", response_model=APIResponse[Any])
-async def get_discussions(document_id: str, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50)):
-    return APIResponse(data=await DiscussionService.get_discussions(document_id, skip, limit), message="Lấy danh sách thảo luận thành công", status=status.HTTP_200_OK)
+async def get_discussions(document_id: str, cursor: str = None, limit: int = Query(20, ge=1, le=50)):
+    return APIResponse(data=await DiscussionService.get_discussions(document_id, cursor, limit), message="Lấy danh sách thảo luận thành công", status=status.HTTP_200_OK)
 
 @router.post("/tai-lieu/{document_id}/thao-luan", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED)
 async def create_discussion(document_id: str, data: DiscussionCreate, current_user: UserInDB = Depends(get_current_user)):
@@ -104,8 +104,8 @@ async def save_post(post_id: str, current_user: UserInDB = Depends(get_current_u
     return APIResponse(data=await PostService.save_post(post_id, current_user), message="Lưu trạng thái thành công", status=status.HTTP_200_OK)
 
 @router.get("/bai-viet-da-luu", response_model=APIResponse[Any])
-async def get_saved_posts(skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50), current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await PostService.get_saved_posts(current_user, skip, limit), message="Lấy danh sách trạng thái đã lưu thành công", status=status.HTTP_200_OK)
+async def get_saved_posts(cursor: str = None, limit: int = Query(20, ge=1, le=50), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await PostService.get_saved_posts(current_user, cursor, limit), message="Lấy danh sách trạng thái đã lưu thành công", status=status.HTTP_200_OK)
 
 @router.post("/nguoi-dung/{user_id}/tam-an", response_model=APIResponse[Any])
 async def mute_user(user_id: str, current_user: UserInDB = Depends(get_current_user)):
@@ -128,8 +128,8 @@ async def get_poll_voters(post_id: str, current_user: UserInDB = Depends(get_cur
     return APIResponse(data=await PostService.get_poll_voters(post_id, current_user), message="Lấy danh sách người bình chọn thành công", status=status.HTTP_200_OK)
 
 @router.get("/the-tag/{tag}", response_model=APIResponse[Any])
-async def get_posts_by_hashtag(tag: str, skip: int = Query(0, ge=0), limit: int = Query(20, ge=1, le=50), current_user: Optional[UserInDB] = Depends(get_current_user_optional)):
-    return APIResponse(data=await PostService.get_posts_by_hashtag(tag, skip, limit, current_user), message="Lấy danh sách trạng thái theo hashtag thành công", status=status.HTTP_200_OK)
+async def get_posts_by_hashtag(tag: str, cursor: str = None, limit: int = Query(20, ge=1, le=50), current_user: Optional[UserInDB] = Depends(get_current_user_optional)):
+    return APIResponse(data=await PostService.get_posts_by_hashtag(tag, cursor, limit, current_user), message="Lấy danh sách trạng thái theo hashtag thành công", status=status.HTTP_200_OK)
 
 @router.get("/tim-kiem-nguoi-dung", response_model=APIResponse[Any])
 async def search_users(q: str = Query(..., min_length=1), limit: int = Query(10, ge=1, le=20)):

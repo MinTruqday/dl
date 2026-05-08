@@ -7,9 +7,12 @@ from models.user import RoleEnum
 
 class OperationService:
     @staticmethod
-    async def get_all_users(limit: int = 50, offset: int = 0) -> list:
+    async def get_all_users(limit: int = 50, cursor: str = None) -> list:
         db = db_client.mongodb.get_default_database()
-        users = await db["users"].find().sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
+        query = {}
+        if cursor:
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+        users = await db["users"].find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(u["_id"]),
@@ -204,11 +207,25 @@ class OperationService:
     @staticmethod
     async def get_withdrawal_requests(status: str = "PENDING", limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
-        apps = await db["withdrawal_requests"].find({"status": status}).sort("created_at", -1).limit(limit).to_list(length=limit)
+        pipeline = [
+            {"$match": {"status": status}},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user"
+                }
+            },
+            {"$unwind": {"path": "$user", "preserveNullAndEmptyArrays": True}}
+        ]
+        apps = await db["withdrawal_requests"].aggregate(pipeline).to_list(length=limit)
         
         result = []
         for a in apps:
-            user = await db["users"].find_one({"_id": a["user_id"]}, {"full_name": 1, "email": 1, "bank_info": 1})
+            user = a.get("user", {})
             result.append({
                 "id": str(a["_id"]),
                 "user_id": a["user_id"],

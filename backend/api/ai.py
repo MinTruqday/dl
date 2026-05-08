@@ -62,6 +62,18 @@ async def review_flashcard(data: FlashcardReviewRequest, current_user: UserInDB 
         message="Đã ghi nhận ôn tập"
     )
 
+@router.get("/lich-su/{session_id}", response_model=APIResponse[Any])
+async def get_session(session_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from services.rag import RagService
+    session = await RagService.get_session_detail(session_id, str(current_user.id))
+    if not session:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Không tìm thấy lịch sử hội thoại")
+    return APIResponse(
+        data=session,
+        message="Lấy chi tiết hội thoại thành công"
+    )
+
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_sessions(document_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
     from services.rag import RagService

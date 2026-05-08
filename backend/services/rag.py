@@ -100,6 +100,19 @@ class RagService:
 
     @staticmethod
     async def ingest(document_id: str) -> Dict[str, Any]:
+        from core.database import db_client
+        db = db_client.mongodb.get_default_database()
+        
+        doc = await db["documents"].find_one({"_id": document_id}, {"rag_status": 1, "title": 1})
+        if doc and doc.get("rag_status") == "indexed":
+            logger.info(f"RAG Ingest skipped: document {document_id} already indexed")
+            return {"status": "skipped", "message": "Tài liệu đã được lập chỉ mục trước đó."}
+        
+        await db["documents"].update_one(
+            {"_id": document_id},
+            {"$set": {"rag_status": "processing"}}
+        )
+        
         base_url = settings.AGENTIC_RAG_URL
         ingest_url = f"{base_url}/ingest"
         
@@ -110,11 +123,23 @@ class RagService:
                 response = await client.post(ingest_url, json=payload, timeout=300.0)
                 
             if response.status_code == 200:
+                await db["documents"].update_one(
+                    {"_id": document_id},
+                    {"$set": {"rag_status": "indexed"}}
+                )
                 return response.json()
             else:
+                await db["documents"].update_one(
+                    {"_id": document_id},
+                    {"$set": {"rag_status": "failed"}}
+                )
                 logger.error(f"RAG Ingest error: {response.status_code} - {response.text}")
                 return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}
         except Exception as e:
+            await db["documents"].update_one(
+                {"_id": document_id},
+                {"$set": {"rag_status": "failed"}}
+            )
             logger.error(f"RAG ingest exception: {e}")
             return {"status": "error", "message": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}
 
@@ -142,20 +167,43 @@ class RagService:
         db = db_client.mongodb.get_default_database()
         query = {"user_id": user_id}
         if document_id: query["document_id"] = document_id
-        cursor = db["ai_sessions"].find(query).sort("updated_at", -1)
+        cursor = db["ai_sessions"].find(query, {"messages": 0}).sort("updated_at", -1)
         return await cursor.to_list(length=50)
+
+    @staticmethod
+    async def get_session_detail(session_id: str, user_id: str) -> Optional[dict]:
+        from core.database import db_client
+        db = db_client.mongodb.get_default_database()
+        session = await db["ai_sessions"].find_one({"_id": session_id, "user_id": user_id})
+        if not session:
+            return None
+            
+        messages = await db["ai_messages"].find({"session_id": session_id}).sort("created_at", 1).to_list(length=100)
+        session["messages"] = messages
+        return session
 
     @staticmethod
     async def add_message(session_id: str, role: str, content: str, user_id: str) -> bool:
         from core.database import db_client
         from datetime import datetime, timezone
         db = db_client.mongodb.get_default_database()
-        message = {"id": str(uuid.uuid4()), "role": role, "content": content, "created_at": datetime.now(timezone.utc)}
-        result = await db["ai_sessions"].update_one(
+        
+        message_id = str(uuid.uuid4())
+        message = {
+            "_id": message_id,
+            "session_id": session_id,
+            "user_id": user_id,
+            "role": role,
+            "content": content,
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db["ai_messages"].insert_one(message)
+        await db["ai_sessions"].update_one(
             {"_id": session_id, "user_id": user_id},
-            {"$push": {"messages": message}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+            {"$set": {"updated_at": datetime.now(timezone.utc)}}
         )
-        return result.modified_count > 0
+        return True
 
     @staticmethod
     async def delete_session(session_id: str, user_id: str) -> bool:

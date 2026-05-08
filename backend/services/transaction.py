@@ -487,13 +487,21 @@ class TransactionService:
             {"$match": {"type": "withdraw", "amount": {"$lt": 0}, "note": {"$regex": "^Tặng dl"}}},
             {"$group": {"_id": "$user_id", "total_donated": {"$sum": {"$abs": "$amount"}}}},
             {"$sort": {"total_donated": -1}},
-            {"$limit": 5}
+            {"$limit": 5},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "_id",
+                    "foreignField": "_id",
+                    "as": "user_info"
+                }
+            },
+            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}}
         ]
-        cursor = db["transactions"].aggregate(pipeline)
-        top_donators = await cursor.to_list(length=5)
+        top_donators = await db["transactions"].aggregate(pipeline).to_list(length=5)
         result = []
         for td in top_donators:
-            user = await db["users"].find_one({"_id": td["_id"]}, {"full_name": 1, "avatar_url": 1})
+            user = td.get("user_info", {})
             result.append({
                 "user_id": td["_id"],
                 "name": user.get("full_name", "Ẩn danh") if user else "Ẩn danh",
@@ -501,3 +509,4 @@ class TransactionService:
                 "total_donated": int(td["total_donated"])
             })
         return result
+

@@ -73,14 +73,16 @@ class WalletService:
             await db_client.redis.delete(lock_key)
 
     @staticmethod
-    async def get_history(current_user, skip: int = 0, limit: int = 30, tx_type: str = None):
+    async def get_history(current_user, cursor: str = None, limit: int = 30, tx_type: str = None):
         db = db_client.mongodb.get_default_database()
         query = {"user_id": str(current_user.id)}
         if tx_type:
             query["type"] = tx_type
+        if cursor:
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             
-        cursor = db["transactions"].find(query).sort("created_at", -1).skip(skip).limit(limit)
-        txs = await cursor.to_list(length=limit)
+        tx_cursor = db["transactions"].find(query).sort("created_at", -1).limit(limit)
+        txs = await tx_cursor.to_list(length=limit)
         
         for tx in txs:
             tx["_id"] = str(tx["_id"])

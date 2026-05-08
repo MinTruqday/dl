@@ -60,7 +60,7 @@ class NotificationService:
         notifs = []
         async for n in cursor:
             n["_id"] = str(n["_id"])
-            notifs.append()
+            notifs.append(n)
         return notifs
 
     @staticmethod
@@ -153,39 +153,53 @@ class NotificationService:
     @staticmethod
     async def notify_document_update(document_id: str, title: str, author_name: str):
         db = db_client.mongodb.get_default_database()
-        libraries = await db["libraries"].find({"document_id": document_id}).to_list(length=None)
-        user_ids = [lib["user_id"] for lib in libraries]
         
-        if not user_ids:
-            return
-            
-        notifications = []
-        for uid in user_ids:
-            notif_id = str(uuid.uuid4())
-            notifications.append({
-                "_id": notif_id,
-                "target_user_id": uid,
-                "title": f"Cập nhật mới: {title}",
-                "body": f"Tác giả {author_name} vừa cập nhật nội dung mới cho tài liệu bạn đang theo dõi.",
-                "link": f"/preview?slug={document_id}",
-                "created_at": datetime.now(timezone.utc),
-                "is_read": False
-            })
-            
-            if db_client.redis:
-                await db_client.redis.publish(
-                    f"user_notifications:{uid}", 
-                    json.dumps({
-                        "id": notif_id,
-                        "title": f"Cập nhật mới: {title}",
-                        "body": f"Tài liệu '{title}' vừa có chương mới!",
-                        "link": f"/preview?slug={document_id}"
-                    })
-                )
+        BATCH_SIZE = 1000
+        last_id = None
+        total_notified = 0
         
-        if notifications:
-            await db["notifications"].insert_many(notifications)
-        logger.info(f"Document update notification sent for document {document_id} to {len(user_ids)} users.")
+        while True:
+            query = {"document_id": document_id}
+            if last_id:
+                query["_id"] = {"$gt": last_id}
+            
+            libraries = await db["libraries"].find(query).sort("_id", 1).limit(BATCH_SIZE).to_list(length=BATCH_SIZE)
+            if not libraries:
+                break
+            
+            last_id = libraries[-1]["_id"]
+            user_ids = [lib["user_id"] for lib in libraries]
+            
+            notifications = []
+            for uid in user_ids:
+                notif_id = str(uuid.uuid4())
+                notifications.append({
+                    "_id": notif_id,
+                    "target_user_id": uid,
+                    "title": f"Cập nhật mới: {title}",
+                    "body": f"Tác giả {author_name} vừa cập nhật nội dung mới cho tài liệu bạn đang theo dõi.",
+                    "link": f"/preview?slug={document_id}",
+                    "created_at": datetime.now(timezone.utc),
+                    "is_read": False
+                })
+                
+                if db_client.redis:
+                    await db_client.redis.publish(
+                        f"user_notifications:{uid}", 
+                        json.dumps({
+                            "id": notif_id,
+                            "title": f"Cập nhật mới: {title}",
+                            "body": f"Tài liệu '{title}' vừa có chương mới!",
+                            "link": f"/preview?slug={document_id}"
+                        })
+                    )
+            
+            if notifications:
+                await db["notifications"].insert_many(notifications)
+                total_notified += len(notifications)
+        
+        if total_notified > 0:
+            logger.info(f"Document update notification sent for document {document_id} to {total_notified} users.")
 
     @staticmethod
     async def get_notification_settings(current_user) -> dict:

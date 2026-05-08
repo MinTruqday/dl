@@ -123,11 +123,10 @@ class SeriesService:
         if not series:
             raise HTTPException(status_code=404, detail="Không tìm thấy chuỗi tài liệu hoặc không có quyền.")
         
-        # Validate all documents belong to this author
         docs = await db["documents"].find({
             "_id": {"$in": document_ids},
             "author_id": str(current_user.id)
-        }).to_list(length=None)
+        }).to_list(length=500)
         
         if len(docs) != len(document_ids):
             raise HTTPException(status_code=400, detail="Một số tài liệu không tồn tại hoặc không thuộc về bạn.")

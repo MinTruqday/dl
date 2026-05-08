@@ -72,10 +72,25 @@ class WithdrawalService:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_PAYOUT_QUEUE_STATUSES:
             raise HTTPException(status_code=400, detail="Trạng thái yêu cầu rút tiền không hợp lệ.")
-        withdrawals = await db["withdrawal_requests"].find({"status": normalized_status}).sort("created_at", -1).to_list(length=100)
+        
+        pipeline = [
+            {"$match": {"status": normalized_status}},
+            {"$sort": {"created_at": -1}},
+            {"$limit": 100},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user_info"
+                }
+            },
+            {"$unwind": {"path": "$user_info", "preserveNullAndEmptyArrays": True}}
+        ]
+        withdrawals = await db["withdrawal_requests"].aggregate(pipeline).to_list(length=100)
         result = []
         for p in withdrawals:
-            user = await db["users"].find_one({"_id": p.get("user_id")}, {"full_name": 1})
+            user = p.get("user_info", {})
             result.append({
                 "id": str(p["_id"]),
                 "user_id": p.get("user_id"),
