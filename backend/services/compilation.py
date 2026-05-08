@@ -33,7 +33,7 @@ class CompilationService:
                 
                 if process.returncode != 0:
                     err_msg = stderr.decode()
-                    logger.info("Log message sanitized")
+                    logger.warning(f"Compilation: Tectonic error for LaTeX job: {err_msg}")
                     raise HTTPException(status_code=422, detail={"error": "Lỗi định dạng LaTeX, không thể biên dịch.", "logs": err_msg})
                     
                 pdf_path = os.path.join(tmpdir, "main.pdf")

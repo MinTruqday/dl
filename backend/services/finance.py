@@ -8,7 +8,26 @@ from models.wallet import Transaction, TransactionType
 ALLOWED_PAYOUT_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
 ALLOWED_PAYOUT_ACTIONS = {"approve", "reject"}
 
-class WithdrawalService:
+class FinanceService:
+    @staticmethod
+    async def get_revenue(current_user):
+        db = db_client.mongodb.get_default_database()
+        pipeline = [
+            {"$match": {"user_id": str(current_user.id), "type": {"$in": ["receive", "tip"]}}},
+            {"$group": {"_id": None, "total_revenue": {"$sum": "$amount"}}}
+        ]
+        cursor = db["transactions"].aggregate(pipeline)
+        res = await cursor.to_list(length=1)
+        total_revenue = res[0]["total_revenue"] if res else 0
+        
+        withdrawal_res = await db["withdrawal_requests"].aggregate([
+            {"$match": {"user_id": str(current_user.id), "status": "PENDING"}},
+            {"$group": {"_id": None, "pending": {"$sum": "$amount"}}}
+        ]).to_list(length=1)
+        pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
+        
+        return {"total_revenue": total_revenue, "pending_withdrawal": pending_withdrawal, "currency": "dl"}
+
     @staticmethod
     async def request_withdrawal(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
@@ -55,13 +74,13 @@ class WithdrawalService:
                 await db["transactions"].insert_one(transaction.model_dump(by_alias=True), session=session)
 
                 await session.commit_transaction()
-                logger.info(f"Withdrawal requested by user {current_user.id} for {amount} dl")
+                logger.info(f"Finance: Withdrawal requested by user {current_user.id} for {amount} dl")
                 return {"message": "Yêu cầu rút tiền đã được gửi thành công.", "withdrawal_id": withdrawal_id}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Withdrawal request failed for user {current_user.id}: {e}")
+            logger.error(f"Finance: Withdrawal request failed for user {current_user.id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -135,7 +154,7 @@ class WithdrawalService:
                     refund_transaction = Transaction(
                         user_id=withdrawal.get("user_id"),
                         amount=withdrawal.get("amount", 0),
-                        type=TransactionType.TOPUP,
+                        type=TransactionType.REFUND,
                         note=f"Hoàn tiền yêu cầu rút tiền {withdrawal_id}",
                         reference_id=withdrawal_id
                     )
@@ -155,7 +174,7 @@ class WithdrawalService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Verify withdrawal failed for {withdrawal_id}: {e}")
+            logger.error(f"Finance: Verify withdrawal failed for {withdrawal_id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -191,13 +210,13 @@ class WithdrawalService:
                 )
                 await db["transactions"].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Withdrawal {withdrawal_id} cancelled by user {current_user.id}")
+                logger.info(f"Finance: Withdrawal {withdrawal_id} cancelled by user {current_user.id}")
                 return {"message": "Đã hủy yêu cầu rút tiền thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Cancel withdrawal failed for {withdrawal_id}: {e}")
+            logger.error(f"Finance: Cancel withdrawal failed for {withdrawal_id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()

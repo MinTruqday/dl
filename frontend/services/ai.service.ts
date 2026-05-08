@@ -96,3 +96,18 @@ export async function streamAiChatAPI(payload: any) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function queryRagAPI(documentId: string, query: string, useSmart: boolean = false, sessionId?: string) {
+  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tro-chuyen`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_id: documentId, query, useSmart, session_id: sessionId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Truy vấn AI thất bại");
+  return data;
+}
+
+export async function translateTextAPI(text: string, targetLang: string = "vi") {
+  return await processTextAPI(text, "translate", "", targetLang);
+}

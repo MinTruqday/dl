@@ -1,13 +1,13 @@
 import asyncio
 from loguru import logger
-from services.monetization import MonetizationService
+from services.subscription import SubscriptionService
 from services.user import UserService
 
 async def run_cron_jobs():
     logger.info("Cron Service: Starting background automation tasks")
     while True:
         try:
-            expired_count = await MonetizationService.check_and_expire_subscriptions()
+            expired_count = await SubscriptionService.check_and_expire_subscriptions()
             if expired_count > 0:
                 logger.info(f"Cron Service: Expired {expired_count} subscriptions")
 

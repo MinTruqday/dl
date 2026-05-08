@@ -151,8 +151,12 @@ class NotificationService:
             for n in notices
         ]
     @staticmethod
-    async def notify_document_update(document_id: str, title: str, author_name: str):
+    async def notify_document_update(document_id: str, title: str, author_id: str, author_name: str):
         db = db_client.mongodb.get_default_database()
+        
+        # Get author's blocked users to exclude them
+        author = await db["users"].find_one({"_id": author_id}, {"blocked_users": 1})
+        blocked_users = author.get("blocked_users", []) if author else []
         
         BATCH_SIZE = 1000
         last_id = None
@@ -162,6 +166,10 @@ class NotificationService:
             query = {"document_id": document_id}
             if last_id:
                 query["_id"] = {"$gt": last_id}
+            
+            # Exclude blocked users from the library query
+            if blocked_users:
+                query["user_id"] = {"$nin": blocked_users}
             
             libraries = await db["libraries"].find(query).sort("_id", 1).limit(BATCH_SIZE).to_list(length=BATCH_SIZE)
             if not libraries:

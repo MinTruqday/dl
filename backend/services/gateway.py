@@ -17,6 +17,9 @@ class GatewayService:
         access_key = getattr(settings, "MOMO_ACCESS_KEY", None)
         secret_key = getattr(settings, "MOMO_SECRET_KEY", None)
         endpoint = getattr(settings, "MOMO_ENDPOINT", None)
+        if endpoint and not endpoint.endswith("/v2/gateway/api/create"):
+            endpoint = f"{endpoint.rstrip('/')}/v2/gateway/api/create"
+            
         return_url = getattr(settings, "MOMO_RETURN_URL", None)
         notify_url = f"{getattr(settings, 'MOMO_NOTIFY_URL', None)}/api/gateways/momo/ipn"
 
@@ -126,7 +129,7 @@ class GatewayService:
         if data.get("resultCode") == 0:
             await GatewayService.process_success_order(data.get("orderId"))
             
-        return Response(status_code=204)
+        return Response(content=json.dumps({"resultCode": 0, "message": "Success"}), media_type="application/json")
 
     @staticmethod
     async def process_success_order(order_id: str):

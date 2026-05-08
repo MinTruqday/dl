@@ -27,7 +27,7 @@ class HighlightService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["highlights"].insert_one(highlight)
-        logger.info("Log message sanitized")
+        logger.info(f"Social: User {current_user.id} created a highlight in document {document_id}")
         return highlight
 
     @staticmethod
@@ -69,7 +69,7 @@ class HighlightService:
         )
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Ghi chú không tồn tại.")
-        logger.info("Log message sanitized")
+        logger.info(f"Social: User {current_user.id} deleted highlight {highlight_id}")
         return {"message": "Đã xóa ghi chú."}
 
     @staticmethod
@@ -131,46 +131,4 @@ class HighlightService:
         return {"markdown": "\n".join(lines), "filename": f"highlights_{document_id}.md"}
 
 
-class ReadingPreferenceService:
-    @staticmethod
-    async def get_preferences(current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        prefs = await db["reading_preferences"].find_one({"user_id": str(current_user.id)})
-        if not prefs:
-            return {
-                "theme": "light",
-                "font_size": 16,
-                "line_height": 1.8,
-                "font_family": "Inter",
-                "is_dyslexic_mode": False,
-            }
-        return {
-            "theme": prefs.get("theme", "light"),
-            "font_size": prefs.get("font_size", 16),
-            "line_height": prefs.get("line_height", 1.8),
-            "font_family": prefs.get("font_family", "Inter"),
-            "is_dyslexic_mode": prefs.get("is_dyslexic_mode", False),
-        }
 
-    @staticmethod
-    async def update_preferences(data: dict, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        allowed_themes = ["light", "dark", "gray"]
-        theme = data.get("theme", "light")
-        if theme not in allowed_themes:
-            raise HTTPException(status_code=400, detail="Chế độ đọc không hợp lệ.")
-        update_data = {
-            "theme": theme,
-            "font_size": max(12, min(28, data.get("font_size", 16))),
-            "line_height": max(1.2, min(3.0, data.get("line_height", 1.8))),
-            "font_family": data.get("font_family", "Inter"),
-            "is_dyslexic_mode": data.get("is_dyslexic_mode", False),
-            "updated_at": datetime.now(timezone.utc),
-        }
-        await db["reading_preferences"].update_one(
-            {"user_id": str(current_user.id)},
-            {"$set": update_data},
-            upsert=True,
-        )
-        logger.info("Log message sanitized")
-        return {"message": "Đã cập nhật tùy chỉnh đọc."}

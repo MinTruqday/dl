@@ -23,7 +23,7 @@ class ProfileService:
             {"_id": str(current_user.id)},
             {"$set": update_fields}
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Profile: User {current_user.id} updated their profile info")
         return {"message": "Đã cập nhật hồ sơ cá nhân."}
 
     @staticmethod
@@ -59,29 +59,7 @@ class ProfileService:
             "message": f"Tuyệt vời! Bạn đang có chuỗi {current_s} ngày đọc tài liệu." if current_s > 0 else "Hãy bắt đầu đọc tài liệu ngay hôm nay để tích điểm chuỗi!"
         }
 
-    @staticmethod
-    async def toggle_bookmark(document_id: str, current_user):
-        db = db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
-        user = await db["users"].find_one({"_id": user_id})
-        if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
-        bookmarks = user.get("bookmarks", [])
-        if document_id in bookmarks:
-            await db["users"].update_one({"_id": user_id}, {"$pull": {"bookmarks": document_id}})
-            return {"status": "unbookmarked", "message": "Đã xóa khỏi danh sách lưu trữ."}
-        await db["users"].update_one({"_id": user_id}, {"$addToSet": {"bookmarks": document_id}})
-        return {"status": "bookmarked", "message": "Đã thêm vào danh sách lưu trữ."}
 
-    @staticmethod
-    async def get_bookmarks(current_user):
-        db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": str(current_user.id)})
-        bookmark_ids = user.get("bookmarks", []) if user else []
-        documents = await db["documents"].find({"_id": {"$in": bookmark_ids}}).to_list(length=100)
-        for doc in documents:
-            doc["_id"] = str(doc["_id"])
-        return documents
 
     @staticmethod
     async def update_brand_page(data: dict, current_user) -> dict:
@@ -99,5 +77,5 @@ class ProfileService:
             
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
-        logger.info("Log message sanitized")
+        logger.info(f"Profile: Author {current_user.id} updated their brand page")
         return {"message": "Cập nhật trang tác giả cá nhân thành công."}

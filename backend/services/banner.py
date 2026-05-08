@@ -23,12 +23,12 @@ class BannerService:
             "created_at": datetime.now(timezone.utc)
         }
         await db["banners"].insert_one(banner)
-        logger.info("Log message sanitized")
+        logger.info(f"Marketing: New banner '{banner.get('title')}' created.")
         return banner
 
     @staticmethod
     async def delete_banner(banner_id: str) -> dict:
         db = db_client.mongodb.get_default_database()
         await db["banners"].delete_one({"_id": banner_id})
-        logger.info("Log message sanitized")
+        logger.info(f"Marketing: Banner {banner_id} deleted.")
         return {"message": "Đã xóa banner thành công."}

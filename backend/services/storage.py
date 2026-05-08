@@ -11,7 +11,7 @@ class StorageService:
         content = await file.read()
         
         await upload_file(content, filename, file.content_type)
-        logger.info("Log message sanitized")
+        logger.info(f"Storage: Asset uploaded by user {current_user.id}: {filename}")
         return {"url": filename, "filename": filename}
 
     @staticmethod

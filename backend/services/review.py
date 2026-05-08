@@ -17,7 +17,7 @@ class ReviewService:
             }}, 
             upsert=True
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Review: Document {document_id} rated by {current_user.id}")
         return {"status": "success"}
 
     @staticmethod
@@ -30,7 +30,7 @@ class ReviewService:
             {"$set": {"rating": data.rating, "updated_at": datetime.now(timezone.utc)}},
             upsert=True,
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Review: Chapter {data.chapter_slug} of document {document_id} rated by {current_user.id}")
         return {"message": "Đã ghi nhận đánh giá chương của bạn."}
 
     @staticmethod
@@ -47,7 +47,7 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["typo_reports"].insert_one(report)
-        logger.info("Log message sanitized")
+        logger.info(f"Review: Typo reported in document {document_id} by {current_user.id}")
         return {"message": "Đã gửi báo cáo lỗi chính tả thành công."}
 
     @staticmethod
@@ -87,5 +87,5 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
-        logger.info("Log message sanitized")
+        logger.info(f"Review: Content {data.item_type} ({data.item_id}) reported by {current_user.id}")
         return {"message": "Đã gửi báo cáo nội dung thành công."}

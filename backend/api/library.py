@@ -45,31 +45,4 @@ async def remove_from_list(list_id: str, document_id: str, current_user: UserInD
         message="Đã xóa khỏi danh sách"
     )
 
-@router.post("/danh-dau/thu-muc", response_model=APIResponse[Any])
-async def create_bookmark_folder(data: BookmarkFolderCreate, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await LibraryService.create_bookmark_folder(data.name, current_user),
-        message="Tạo thư mục đánh dấu thành công",
-        status=201
-    )
 
-@router.get("/danh-dau/thu-muc", response_model=APIResponse[Any])
-async def get_bookmark_folders(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await LibraryService.get_bookmark_folders(current_user),
-        message="Lấy danh sách thư mục thành công"
-    )
-
-@router.put("/danh-dau/thu-muc/{folder_id}", response_model=APIResponse[Any])
-async def assign_bookmarks(folder_id: str, data: BookmarkFolderAssign, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await LibraryService.assign_bookmarks_to_folder(folder_id, data.bookmark_ids, current_user),
-        message="Cập nhật thư mục thành công"
-    )
-
-@router.delete("/danh-dau/thu-muc/{folder_id}", response_model=APIResponse[Any])
-async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await LibraryService.delete_bookmark_folder(folder_id, current_user),
-        message="Xóa thư mục thành công"
-    )

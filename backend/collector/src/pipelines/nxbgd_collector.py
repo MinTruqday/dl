@@ -213,7 +213,9 @@ class NXBGDCollector:
                             logger.info(f"-> Processing Resource: {full_title} at {viewer_url}")
                             
 
-                            self.temp_dir = f"/app/documents/nxbgd/temp/{safe_title}"
+                            safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
+                            import tempfile
+                            self.temp_dir = tempfile.mkdtemp(prefix=f"nxbgd_{safe_title[:20]}_")
                             os.makedirs(self.temp_dir, exist_ok=True)
                             
                             self.captured_hashes = set()

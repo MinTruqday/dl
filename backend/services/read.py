@@ -4,23 +4,7 @@ from datetime import datetime, timezone, timedelta
 from loguru import logger
 
 class ReadService:
-    @staticmethod
-    async def update_typography(data: dict, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        allowed_fonts = ["Inter", "Roboto", "Outfit", "Noto Sans", "Source Sans Pro"]
-        font = data.get("font_family", "Inter")
-        if font not in allowed_fonts: 
-            raise HTTPException(status_code=400, detail="Font chữ không được hỗ trợ.")
-            
-        update_data = {
-            "font_family": font, 
-            "font_size": max(12, min(28, data.get("font_size", 16))), 
-            "line_height": max(1.2, min(3.0, data.get("line_height", 1.8))), 
-            "letter_spacing": max(-0.5, min(2.0, data.get("letter_spacing", 0))), 
-            "updated_at": datetime.now(timezone.utc)
-        }
-        await db["reading_preferences"].update_one({"user_id": str(current_user.id)}, {"$set": update_data}, upsert=True)
-        return {"message": "Đã cập nhật tùy chỉnh kiểu chữ."}
+
 
     @staticmethod
     async def get_reading_history(current_user, cursor: str = None, limit: int = 20) -> list:
@@ -74,16 +58,56 @@ class ReadService:
     @staticmethod
     async def update_progress(data, current_user):
         db = db_client.mongodb.get_default_database()
+        user_id = str(current_user.id)
+        now = datetime.now(timezone.utc)
+        
+        # Update reading history
         await db["reading_history"].update_one(
-            {"user_id": str(current_user.id), "document_id": data.document_id}, 
+            {"user_id": user_id, "document_id": data.document_id}, 
             {"$set": {
                 "progress_percentage": min(100.0, max(0.0, data.progress_percentage)), 
                 "current_chapter_slug": data.current_chapter_slug, 
-                "last_read_at": datetime.now(timezone.utc)
+                "last_read_at": now
             }}, 
             upsert=True
         )
-        return {"status": "success"}
+
+        # Update User Streak
+        user = await db["users"].find_one({"_id": user_id}, {"reading_stats": 1})
+        stats = user.get("reading_stats", {})
+        last_date = stats.get("last_read_date")
+        current_streak = stats.get("current_streak", 0)
+        longest_streak = stats.get("longest_streak", 0)
+        
+        today_date = now.date().isoformat()
+        
+        if last_date != today_date:
+            yesterday = (now - timedelta(days=1)).date().isoformat()
+            if last_date == yesterday:
+                current_streak += 1
+            else:
+                current_streak = 1
+            
+            if current_streak > longest_streak:
+                longest_streak = current_streak
+            
+            await db["users"].update_one(
+                {"_id": user_id},
+                {"$set": {
+                    "reading_stats.last_read_date": today_date,
+                    "reading_stats.current_streak": current_streak,
+                    "reading_stats.longest_streak": longest_streak
+                }}
+            )
+
+        # Badge: Mọt Sách (Read 1 full document)
+        if data.progress_percentage >= 100:
+            await db["users"].update_one(
+                {"_id": user_id},
+                {"$addToSet": {"badges": {"name": "Mọt Sách", "awarded_at": now}}}
+            )
+
+        return {"status": "success", "current_streak": current_streak}
 
     @staticmethod
     async def get_continue_reading(current_user) -> list:
@@ -168,53 +192,4 @@ class ReadService:
             search_from = idx + len(query)
         return {"total": len(results), "results": results, "query": query}
 
-    @staticmethod
-    async def get_pinned_documents(current_user) -> list:
-        db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": str(current_user.id)}, {"pinned_documents": 1})
-        if not user or "pinned_documents" not in user:
-            return []
-            
-        doc_ids = user["pinned_documents"]
-        docs = await db["documents"].find({"_id": {"$in": doc_ids}}).to_list(length=len(doc_ids))
-        
-        doc_map = {str(d["_id"]): d for d in docs}
-        result = []
-        for d_id in doc_ids:
-            if d_id in doc_map:
-                d = doc_map[d_id]
-                result.append({
-                    "id": str(d["_id"]),
-                    "title": d.get("title", ""),
-                    "slug": d.get("slug", ""),
-                    "cover_url": d.get("cover_url"),
-                    "author_id": d.get("author_id")
-                })
-        return result
 
-    @staticmethod
-    async def pin_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"$addToSet": {"pinned_documents": document_id}}
-        )
-        return {"status": "success"}
-
-    @staticmethod
-    async def unpin_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"$pull": {"pinned_documents": document_id}}
-        )
-        return {"status": "success"}
-
-    @staticmethod
-    async def set_pinned_documents(document_ids: list, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"$set": {"pinned_documents": document_ids}}
-        )
-        return {"status": "success"}

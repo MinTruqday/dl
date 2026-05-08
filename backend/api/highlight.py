@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
 from models.user import UserInDB
 from models.highlight import HighlightCreateRequest, HighlightNoteUpdateRequest, ReadingPreferenceUpdate
-from services.highlight import HighlightService, ReadingPreferenceService
+from services.highlight import HighlightService
 from core.response import APIResponse
 
 router = APIRouter(prefix="/doc-tai-lieu")
@@ -40,16 +40,7 @@ async def get_all_notes(
 ):
     return APIResponse(data=await HighlightService.get_all_notes(current_user, cursor, limit), message="Lấy danh sách ghi chú thành công", status=200)
 
-@router.get("/tuy-chinh", response_model=APIResponse[Any])
-async def get_reading_preferences(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await ReadingPreferenceService.get_preferences(current_user), message="Lấy cài đặt tùy chỉnh đọc sách thành công", status=200)
 
-@router.put("/tuy-chinh", response_model=APIResponse[Any])
-async def update_reading_preferences(
-    data: ReadingPreferenceUpdate,
-    current_user: UserInDB = Depends(get_current_user)
-):
-    return APIResponse(data=await ReadingPreferenceService.update_preferences(data.model_dump(), current_user), message="Cập nhật cài đặt tùy chỉnh đọc sách thành công", status=200)
 
 @router.get("/tai-lieu/{document_id}/danh-dau/xuat-tai-lieu", response_model=APIResponse[Any])
 async def export_highlights_markdown(

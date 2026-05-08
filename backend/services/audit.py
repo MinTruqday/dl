@@ -31,4 +31,4 @@ class AuditService:
             "details": details or {},
             "timestamp": datetime.now(timezone.utc)
         })
-        logger.info("Log message sanitized")
+        logger.info(f"Audit: Action '{action}' by '{actor_id}' on '{target_id}' recorded.")

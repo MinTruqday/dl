@@ -111,30 +111,19 @@ class PaymentService:
 
     @staticmethod
     async def deposit_fiat(amount_vnd: int, current_user):
-        if amount_vnd < 10000:
-            raise HTTPException(status_code=400, detail="Số tiền nạp tối thiểu là 10,000 VNĐ.")
+        from services.gateway import GatewayService
+        from pydantic import BaseModel
         
-        dl_expected = int(amount_vnd / 1000)
-        db = db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
+        class MockRequest:
+            def __init__(self, amount):
+                self.amount = amount
+                
+        req = MockRequest(amount=amount_vnd)
+        momo_data = await GatewayService.create_momo_payment(req, current_user)
         
-        tx_deposit = Transaction(
-            user_id=user_id,
-            type=TransactionType.TOPUP,
-            amount=dl_expected,
-            note=f"Nạp {dl_expected} dl qua cổng thanh toán."
-        )
-        
-        result = await db["transactions"].insert_one(tx_deposit.model_dump(by_alias=True))
-        transaction_id = str(result.inserted_id)
-        
-        gateway_url = getattr(settings, "PAYMENT_GATEWAY_URL")
-        payment_url = f"{gateway_url}/checkout?tx={transaction_id}&amount={amount_vnd}"
-        
-        logger.info(f"Fiat deposit initiated by user {user_id}: {amount_vnd} VND")
         return {
             "status": "pending_payment",
-            "payment_url": payment_url,
-            "transaction_id": transaction_id,
-            "dl_expected": dl_expected
+            "payment_url": momo_data.get("payUrl"),
+            "amount_vnd": amount_vnd,
+            "dl_expected": int(amount_vnd / 1000)
         }

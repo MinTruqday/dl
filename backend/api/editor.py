@@ -23,7 +23,7 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.info("Log message sanitized")
+        logger.error(f"WebSocket/CRDT error for document {document_id}: {e}")
         manager.disconnect(websocket, document_id)
 
 @router.websocket("/o-cam-crdt/{document_id}")
@@ -36,7 +36,7 @@ async def editor_crdt_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.info("Log message sanitized")
+        logger.error(f"WebSocket/CRDT error for document {document_id}: {e}")
         manager.disconnect(websocket, document_id)
 
 @router.post("/{document_id}/kiem-tra-dao-van", response_model=APIResponse[Any])

@@ -5,9 +5,13 @@ from api.dependency import get_current_user
 from models.user import UserInDB
 from models.chat import MessageCreate, MessageResponse, ConversationResponse
 from services.chat import ChatService
+from core.database import db_client
 import json
+import asyncio
 
 router = APIRouter(prefix="/tro-chuyen")
+
+
 
 class ConnectionManager:
     def __init__(self):
@@ -16,14 +20,37 @@ class ConnectionManager:
     async def connect(self, user_id: str, websocket: WebSocket):
         await websocket.accept()
         self.active_connections[user_id] = websocket
+        asyncio.create_task(self._listen_redis(user_id, websocket))
 
     def disconnect(self, user_id: str):
         if user_id in self.active_connections:
             del self.active_connections[user_id]
 
+    async def _listen_redis(self, user_id: str, websocket: WebSocket):
+        if not db_client.redis:
+            return
+            
+        pubsub = db_client.redis.pubsub()
+        channel_name = f"chat_delivery:{user_id}"
+        await pubsub.subscribe(channel_name)
+        
+        try:
+            while user_id in self.active_connections:
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message:
+                    await websocket.send_text(message["data"].decode("utf-8"))
+                await asyncio.sleep(0.1)
+        except Exception as e:
+            logger.error(f"Redis chat listener error for {user_id}: {e}")
+        finally:
+            await pubsub.unsubscribe(channel_name)
+
     async def send_personal_message(self, message: dict, user_id: str):
-        if user_id in self.active_connections:
-            await self.active_connections[user_id].send_text(json.dumps(message))
+        if db_client.redis:
+            await db_client.redis.publish(f"chat_delivery:{user_id}", json.dumps(message))
+        else:
+            if user_id in self.active_connections:
+                await self.active_connections[user_id].send_text(json.dumps(message))
 
 manager = ConnectionManager()
 
@@ -72,7 +99,6 @@ async def toggle_pin(message_id: str, current_user: UserInDB = Depends(get_curre
     if result == "limit_reached":
         return APIResponse(message="Bạn chỉ có thể ghim tối đa 3 tin nhắn", status=400)
     
-    # Notify other user
     other_id = result["receiver_id"] if result["sender_id"] == current_user.id else result["sender_id"]
     await manager.send_personal_message({
         "type": "message_pinned",

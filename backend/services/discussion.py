@@ -22,13 +22,33 @@ class DiscussionService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["discussions"].insert_one(discussion)
-        logger.info("Log message sanitized")
+        logger.info(f"Discussion: New topic created for document {document_id} by {current_user.id}")
         return {"message": "Tạo thảo luận thành công.", "discussion_id": discussion["_id"]}
 
     @staticmethod
-    async def get_discussions(document_id: str, cursor: str = None, limit: int = 20) -> list:
+    async def get_discussions(document_id: str, cursor: str = None, limit: int = 20, current_user: Optional[Any] = None) -> list:
         db = db_client.mongodb.get_default_database()
+        
+        exclude_ids = []
+        if current_user:
+            # 1. Get users I blocked
+            user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
+            my_blocks = user_doc.get("blocked_users", []) if user_doc else []
+            
+            # 2. Get users who blocked me
+            blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
+            blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
+            
+            # 3. Get users I muted
+            muted_cursor = db["muted_users"].find({"user_id": str(current_user.id)}, {"muted_id": 1})
+            my_mutes = [m["muted_id"] async for m in muted_cursor]
+            
+            exclude_ids = list(set(my_blocks + blocked_by_me_ids + my_mutes))
+
         match_query = {"document_id": document_id}
+        if exclude_ids:
+            match_query["user_id"] = {"$nin": exclude_ids}
+
         if cursor:
             match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
 
@@ -50,13 +70,17 @@ class DiscussionService:
         result = []
         for d in discussions:
             author = d.get("author", {})
+            # Filter replies from blocked users
+            all_replies = d.get("replies", [])
+            filtered_replies = [r for r in all_replies if r.get("user_id") not in exclude_ids]
+            
             result.append({
                 "id": d["_id"],
                 "title": d.get("title", ""),
                 "content": d.get("content", ""),
                 "user_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                 "user_avatar": author.get("avatar_url") if author else None,
-                "replies_count": len(d.get("replies", [])),
+                "replies_count": len(filtered_replies),
                 "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else d.get("created_at"),
             })
         return result

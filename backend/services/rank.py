@@ -81,11 +81,27 @@ class RankService:
     @staticmethod
     async def get_featured_authors(limit: int = 10) -> list:
         db = db_client.mongodb.get_default_database()
-        authors = await db["users"].find({"role": "AUTHOR", "is_active": True}).sort("created_at", -1).limit(limit).to_list(length=limit)
+        pipeline = [
+            {"$match": {"role": "AUTHOR", "is_active": True}},
+            {"$lookup": {
+                "from": "documents",
+                "localField": "_id",
+                "foreignField": "author_id",
+                "as": "docs"
+            }},
+            {"$addFields": {
+                "total_views": {"$sum": "$docs.views"},
+                "doc_count": {"$size": "$docs"}
+            }},
+            {"$sort": {"total_views": -1, "doc_count": -1}},
+            {"$limit": limit}
+        ]
+        authors = await db["users"].aggregate(pipeline).to_list(length=limit)
         return [{
             "id": str(a["_id"]),
-            "full_name": a.get("full_name", "Tác giả ẩn danh"),
+            "full_name": a.get("full_name", "Tác giả nổi bật"),
             "avatar_url": a.get("avatar_url"),
             "bio": a.get("bio", ""),
-            "slug": a.get("slug", "")
+            "slug": a.get("slug", ""),
+            "popularity_score": a.get("total_views", 0)
         } for a in authors]

@@ -25,12 +25,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         session_id: str = payload.get("sid")
-        if email is None:
-            logger.warning(f"Token payload missing 'sub' (email)")
+        if email is None or session_id is None:
+            logger.warning(f"Token payload missing 'sub' or 'sid'")
             raise credentials_exception
     except jwt.PyJWTError as e:
         logger.warning(f"JWT Decode error: {str(e)}")
         raise credentials_exception
+
+    # Cross-check session with Redis (Instant Revocation)
+    if db_client.redis:
+        user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]["users"].find_one({"email": email}, {"_id": 1})
+        if not user_doc:
+            raise credentials_exception
+            
+        user_id_str = str(user_doc["_id"])
+        is_valid_session = await db_client.redis.sismember(f"user_sessions:{user_id_str}", session_id)
+        if not is_valid_session:
+            logger.warning(f"Security: Revoked session attempt for user {email}")
+            raise credentials_exception
 
     user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]["users"].find_one({"email": email})
     if user_doc is None:

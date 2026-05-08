@@ -57,7 +57,7 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    async def get_semantic_search(query: str, limit: int = 10) -> List[dict]:
+    async def get_text_search(query: str, limit: int = 10) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         cursor = docs_col.find({
@@ -68,14 +68,6 @@ class DocumentService:
                 {"description": {"$regex": query, "$options": "i"}}
             ]
         }).limit(limit)
-        documents = await cursor.to_list(length=limit)
-        return [serialize_document(d) for d in documents]
-
-    @staticmethod
-    async def get_ai_recommendations(limit: int = 10) -> List[dict]:
-        db = db_client.mongodb.get_default_database()
-        docs_col = db["documents"]
-        cursor = docs_col.find({"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}).sort([("average_rating", -1), ("views", -1)]).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
 
@@ -136,7 +128,7 @@ class DocumentService:
                 "updated_at": datetime.datetime.now(timezone.utc)
             }}
         )
-        await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), current_user.full_name)
+        await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), str(current_user.id), current_user.full_name)
         logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
         return await docs_collection.find_one({"_id": document_id})
 
@@ -419,3 +411,24 @@ class DocumentService:
         )
         logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
         return {"message": "Đã giải quyết tranh chấp bản quyền thành công."}
+
+    @staticmethod
+    async def generate_ai_cover(document_id: str, current_user) -> dict:
+        from services.ai import AIService
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
+        
+        data = await AIService.generate_cover(
+            doc.get("title", ""), 
+            doc.get("description", ""), 
+            "minimalist" 
+        )
+        if data.get("cover_url"):
+            await db["documents"].update_one(
+                {"_id": document_id}, 
+                {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.now(dt.utc)}}
+            )
+            logger.info(f"AI: Cover generated for document {document_id}")
+        return data

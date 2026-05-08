@@ -13,17 +13,8 @@ ai_router_en = APIRouter(prefix="/ai", tags=["AI"])
 
 @router.post("/tro-chuyen")
 async def chat_streaming(data: dict, current_user: UserInDB = Depends(get_current_user)):
-    from sse_starlette.sse import EventSourceResponse
-    async def event_generator():
-        query = data.get("query", "")
-        # Giả lập phản hồi streaming từ RAG Service
-        full_response = f"Tôi là trợ lý AI của DocLib. Bạn vừa hỏi: {query}. Hiện tại hệ thống RAG đang được kết nối lại."
-        for chunk in full_response.split(" "):
-            yield {"event": "message", "data": json.dumps({"chunk": chunk + " "})}
-            await asyncio.sleep(0.05)
-        yield {"data": "[DONE]"}
-
-    return EventSourceResponse(event_generator())
+    from services.rag import RagService
+    return await RagService.proxy_rag_stream(data, None, current_user)
 # Aliases for Frontend compatibility
 @ai_router_en.get("/history")
 async def get_sessions_en(document_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
@@ -108,3 +99,17 @@ async def delete_session(session_id: str, current_user: UserInDB = Depends(get_c
         from fastapi import HTTPException;
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return APIResponse(data={}, message="Xóa hội thoại thành công")
+
+@router.get("/cong-dong/tom-tat-bang-tin", response_model=APIResponse[Any])
+async def get_social_feed_summary(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data={"summary": await AIService.generate_social_feed_summary(current_user)},
+        message="Tạo tóm tắt bảng tin thành công"
+    )
+
+@router.get("/tai-lieu/{document_id}/cam-quan", response_model=APIResponse[Any])
+async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await AIService.analyze_reader_sentiment(document_id),
+        message="Phân tích cảm nhận độc giả thành công"
+    )

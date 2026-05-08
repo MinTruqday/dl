@@ -30,5 +30,5 @@ class SettingService:
             {"_id": str(current_user.id)},
             {"$set": {"settings": settings_data, "updated_at": datetime.now(timezone.utc)}}
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Settings: User {current_user.id} updated their system settings")
         return {"message": "Đã lưu cài đặt."}

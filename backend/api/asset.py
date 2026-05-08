@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/tai-nguyen")
 
-# Models moved to models.asset
-
 @router.get("", response_model=APIResponse[Any])
 async def get_my_assets(type: str = Query("all"), current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))):
     return APIResponse(

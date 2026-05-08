@@ -129,7 +129,7 @@ class AIService:
             {"_id": card_id},
             {"$set": {"repetitions": rep, "easiness_factor": ef, "interval": interval, "next_review": next_review}}
         )
-        logger.info("Log message sanitized")
+        logger.info(f"AI: Flashcard {card_id} reviewed by user {current_user.id} (quality: {quality})")
         return {"message": "Đã cập nhật lịch ôn tập.", "next_review": next_review.isoformat()}
 
     @staticmethod
@@ -173,3 +173,69 @@ class AIService:
         except Exception as e:
             logger.error(f"AI: Code generation failed: {e}")
             return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}
+
+    @staticmethod
+    async def generate_social_feed_summary(current_user) -> str:
+        from services.feed import FeedService
+        feed = await FeedService.get_social_feed("foryou", None, 10, current_user, None)
+        if not feed:
+            return "Chưa có nội dung mới nào để tóm tắt."
+        
+        texts = [f"{item['user']['full_name']}: {item['content']}" for item in feed if item.get('content')]
+        combined_text = "\n".join(texts)
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{settings.AGENTIC_RAG_URL}/inference/summarize",
+                    json={"text": combined_text, "language": "vi"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data.get("summary", "Không thể tạo tóm tắt vào lúc này.")
+        except Exception as e:
+            logger.error(f"AI: Social feed summary failed: {str(e)}")
+            
+        return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
+
+    @staticmethod
+    async def analyze_reader_sentiment(document_id: str) -> dict:
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if not rag_url:
+            return {"message": "Dịch vụ AI hiện chưa được cấu hình."}
+            
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                # We send the document ID to the RAG backend which will analyze 
+                # reviews, comments, and document content to produce a sentiment report
+                resp = await client.post(
+                    f"{rag_url}/inference/sentiment-analysis",
+                    json={"document_id": document_id}
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                
+                # If the endpoint returns 404/500, we use a smarter fallback
+                logger.warning(f"AI: Sentiment endpoint returned {resp.status_code}")
+        except Exception as e:
+            logger.error(f"AI: Sentiment analysis failed for {document_id}: {e}")
+            
+        return {
+            "sentiment_score": 0.0, # Indicates no data yet
+            "mood": "unknown",
+            "summary": "Hệ thống đang thu thập thêm dữ liệu từ độc giả để thực hiện phân tích.",
+            "top_emotions": []
+        }
+
+    @staticmethod
+    async def get_ai_recommendations(limit: int = 10) -> list:
+        db = db_client.mongodb.get_default_database()
+        from services.document import serialize_document
+        # Real AI recommendations would use vector similarity or user behavior
+        # Here we use a hybrid approach of rating and views as a fallback
+        cursor = db["documents"].find({
+            "status": "published", 
+            "is_deleted": {"$ne": True}
+        }).sort([("average_rating", -1), ("views", -1)]).limit(limit)
+        documents = await cursor.to_list(length=limit)
+        return [serialize_document(d) for d in documents]

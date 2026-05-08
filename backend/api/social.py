@@ -13,9 +13,7 @@ from services.asset import AssetService
 
 router = APIRouter(prefix="/cong-dong")
 
-@router.get("/ai/tom-tat-bang-tin", response_model=APIResponse[Any])
-async def get_ai_feed_summary(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data={"summary": await FeedService.generate_ai_feed_summary(current_user)}, message="Tạo tóm tắt bảng tin thành công", status=status.HTTP_200_OK)
+
 
 @router.get("/goi-y-ket-noi", response_model=APIResponse[Any], dependencies=[Depends(RateLimiter(calls=50, period=120))])
 async def get_friend_suggestions(current_user: UserInDB = Depends(get_current_user)):
@@ -68,8 +66,13 @@ async def get_ranking(limit: int = Query(5, ge=1, le=50)):
     return APIResponse(data=await RankService.get_contribution_ranking(limit), message="Lấy bảng xếp hạng đóng góp thành công", status=status.HTTP_200_OK)
 
 @router.get("/tai-lieu/{document_id}/thao-luan", response_model=APIResponse[Any])
-async def get_discussions(document_id: str, cursor: str = None, limit: int = Query(20, ge=1, le=50)):
-    return APIResponse(data=await DiscussionService.get_discussions(document_id, cursor, limit), message="Lấy danh sách thảo luận thành công", status=status.HTTP_200_OK)
+async def get_discussions(
+    document_id: str, 
+    cursor: str = None, 
+    limit: int = Query(20, ge=1, le=50),
+    current_user: Optional[UserInDB] = Depends(get_current_user_optional)
+):
+    return APIResponse(data=await DiscussionService.get_discussions(document_id, cursor, limit, current_user), message="Lấy danh sách thảo luận thành công", status=status.HTTP_200_OK)
 
 @router.post("/tai-lieu/{document_id}/thao-luan", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED)
 async def create_discussion(document_id: str, data: DiscussionCreate, current_user: UserInDB = Depends(get_current_user)):
@@ -132,8 +135,12 @@ async def get_posts_by_hashtag(tag: str, cursor: str = None, limit: int = Query(
     return APIResponse(data=await PostService.get_posts_by_hashtag(tag, cursor, limit, current_user), message="Lấy danh sách trạng thái theo hashtag thành công", status=status.HTTP_200_OK)
 
 @router.get("/tim-kiem-nguoi-dung", response_model=APIResponse[Any])
-async def search_users(q: str = Query(..., min_length=1), limit: int = Query(10, ge=1, le=20)):
-    return APIResponse(data=await FeedService.search_users(q, limit), message="Tìm kiếm người dùng thành công", status=status.HTTP_200_OK)
+async def search_users(
+    q: str = Query(..., min_length=1), 
+    limit: int = Query(10, ge=1, le=20),
+    current_user: Optional[UserInDB] = Depends(get_current_user_optional)
+):
+    return APIResponse(data=await FeedService.search_users(q, limit, current_user), message="Tìm kiếm người dùng thành công", status=status.HTTP_200_OK)
 
 @router.post("/khao-sat/{post_id}/binh-chon/{option_id}", response_model=APIResponse[Any])
 async def vote_poll(post_id: str, option_id: str, current_user: UserInDB = Depends(get_current_user)):
@@ -154,9 +161,4 @@ async def get_featured_authors(limit: int = Query(10, ge=1, le=50)):
         message="Lấy danh sách tác giả nổi bật thành công"
     )
 
-@router.get("/tai-lieu/{document_id}/cam-quan", response_model=APIResponse[Any], dependencies=[Depends(require_permissions(["documents:read_any"]))])
-async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=None,
-        message="Tính năng phân tích cảm nhận độc giả đang được phát triển"
-    )
+

@@ -37,7 +37,7 @@ class IdentityService:
                 "tos_accepted_at": datetime.now(timezone.utc)
             }}
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Identity: User {user_id} applied for author status")
         return {"status": "success", "message": "Đã gửi đơn đăng ký tác giả."}
 
     @staticmethod
@@ -69,7 +69,7 @@ class IdentityService:
             {"_id": user_id},
             {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
-        logger.info("Log message sanitized")
+        logger.info(f"Identity: User {user_id} uploaded KYC documents")
         return {"status": "success", "message": "Đã tải lên tài liệu KYC."}
 
     @staticmethod

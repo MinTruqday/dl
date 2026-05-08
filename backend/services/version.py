@@ -17,13 +17,23 @@ class VersionsService:
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
+        # Snapshot the entire state
         await db['document_versions'].insert_one({
             'document_id': document_id, 
             'author_id': str(current_user.id), 
             'note': version_note, 
-            'content': doc.get('content', ''),
+            'snapshot': {
+                'title': doc.get('title'),
+                'description': doc.get('description'),
+                'content': doc.get('content', ''),
+                'chapters': doc.get('chapters', []),
+                'cover_url': doc.get('cover_url'),
+                'tags': doc.get('tags', []),
+                'categories': doc.get('categories', [])
+            },
             'created_at': datetime.datetime.now(timezone.utc)
         })
+        logger.info(f"Versioning: Snapshot created for document {document_id} by {current_user.id}")
         return {'message': 'Đã lưu phiên bản thành công.'}
 
     @staticmethod
@@ -37,14 +47,28 @@ class VersionsService:
         return versions
 
     @staticmethod
-    async def restore_version(version_id, current_user):
+    async def restore_version(version_id: str, current_user):
         db = db_client.mongodb.get_default_database()
         version = await db['document_versions'].find_one({'_id': ObjectId(version_id), 'author_id': str(current_user.id)})
         if not version:
             raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản.")
             
+        snapshot = version.get('snapshot')
+        if not snapshot:
+            # Fallback for old content-only versions
+            update_data = {
+                'content': version.get('content', ''),
+                'updated_at': datetime.datetime.now(timezone.utc)
+            }
+        else:
+            update_data = {
+                **snapshot,
+                'updated_at': datetime.datetime.now(timezone.utc)
+            }
+
         await db['documents'].update_one(
             {'_id': version['document_id']},
-            {'$set': {'content': version['content'], 'updated_at': datetime.datetime.now(timezone.utc)}}
+            {'$set': update_data}
         )
+        logger.info(f"Versioning: Document {version['document_id']} restored to version {version_id} by {current_user.id}")
         return {'message': 'Đã khôi phục phiên bản thành công.'}
