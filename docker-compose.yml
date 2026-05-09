@@ -129,6 +129,7 @@ services:
       - redis
       - qdrant
     volumes:
+      - ./backend/agentic-rag/src:/app/src
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network

@@ -27,14 +27,15 @@ llama_model = settings.LLAMA_MODEL
 if not llama_model:
     raise ValueError("LLAMA_MODEL is not set")
 
-_hf_endpoint = HuggingFaceEndpoint(
-    repo_id=llama_model,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.1,
-    task="conversational",
-    streaming=True
+from huggingface_hub import AsyncInferenceClient
+from src.utils.hf import HFInferenceChat
+
+llama_client = AsyncInferenceClient(
+    model=settings.LLAMA_MODEL,
+    token=settings.HF_TOKEN,
 )
-router_llm = ChatHuggingFace(llm=_hf_endpoint)
+
+router_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
 class RouteDecision(BaseModel):
     destination: Literal["rag", "billing", "workspace", "chat"] = Field(description="Luồng AI mà câu hỏi cần được gửi đến")

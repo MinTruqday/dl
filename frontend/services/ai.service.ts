@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders } from "./authentication.service";
+import { API_URL, getAuthHeaders, getToken } from "./authentication.service";
 
 export async function processTextAPI(text: string, action: string, context: string = "", targetLang: string = "Vietnamese") {
   const res = await fetch(`${API_URL}/ai/van-ban`, {

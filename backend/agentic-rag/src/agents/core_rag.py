@@ -49,17 +49,15 @@ class AgentState(TypedDict):
     image_data: str
     file_data: str
 
-llama_model = settings.LLAMA_MODEL
-hf_token = settings.HF_TOKEN
+from huggingface_hub import AsyncInferenceClient
+from src.utils.hf import HFInferenceChat
 
-_hf_endpoint = HuggingFaceEndpoint(
-    repo_id=llama_model,
-    huggingfacehub_api_token=hf_token,
-    temperature=0.1,
-    task="conversational",
-    streaming=True
+llama_client = AsyncInferenceClient(
+    model=settings.LLAMA_MODEL,
+    token=settings.HF_TOKEN,
 )
-llm = ChatHuggingFace(llm=_hf_endpoint)
+
+llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 try:
@@ -116,7 +114,7 @@ Câu hỏi của người dùng: "{question}"
 
 Hãy đánh giá: Để trả lời câu hỏi này một cách chính xác nhất, bạn có cần tra cứu các tài liệu chuyên môn, dự án, quy trình hoặc dữ liệu bên ngoài không?
 
-        Nếu câu trả lời là có (câu hỏi về nội dung, tài liệu, dữ liệu cụ thể): Trả về 'rag'
+Nếu câu trả lời là có (câu hỏi về nội dung, tài liệu, dữ liệu cụ thể): Trả về 'rag'
 
 Chỉ trả về duy nhất một từ ('rag' hoặc 'direct'), không kèm theo bất kỳ dấu câu hay lời giải thích nào khác.""",
         input_variables=["question"]
@@ -154,14 +152,14 @@ async def retrieve_db(state: AgentState):
         prompt = PromptTemplate(
             template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
 
-            Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
-            Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh nội dung khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
+Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
+Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh nội dung khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
 
-            Nhiệm vụ của bạn:
-            - Nếu câu hỏi thuộc dạng tra cứu sự thật đơn giản (1 nhánh): Trả về đúng một từ "SIMPLE".
-            - Nếu câu hỏi phức tạp (nhiều nhánh): Đúc kết các nhánh suy nghĩ của bạn thành danh sách các câu truy vấn tối ưu nhất. In ra mỗi câu trên một dòng (tối đa 3 câu).
+Nhiệm vụ của bạn:
+- Nếu câu hỏi thuộc dạng tra cứu sự thật đơn giản (1 nhánh): Trả về đúng một từ "SIMPLE".
+- Nếu câu hỏi phức tạp (nhiều nhánh): Đúc kết các nhánh suy nghĩ của bạn thành danh sách các câu truy vấn tối ưu nhất. In ra mỗi câu trên một dòng (tối đa 3 câu).
 
-            Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn). Không in ra quá trình suy nghĩ.""",
+Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn). Không in ra quá trình suy nghĩ.""",
             input_variables=["question"]
         )
         
@@ -170,7 +168,7 @@ async def retrieve_db(state: AgentState):
             response = llm.invoke(prompt.format(question=question))
             decision = response.content.strip()
             if "SIMPLE" not in decision.upper():
-                logger.info("Complex query detected. Adding sub-queries")
+                logger.info("Complex query detected adding sub-queries")
                 for q in decision.split("\n"):
                     q_clean = q.strip("- 123. ")
                     if q_clean and q_clean.lower() != question.lower():
@@ -210,12 +208,12 @@ def grade_documents(state: AgentState):
     documents = state.get("documents", [])
     prompt = PromptTemplate(
         template="""Bạn là Chuyên gia Thẩm định Dữ liệu. 
-        Hãy đánh giá: Tài liệu này có chứa thông tin, manh mối hoặc bối cảnh nào giúp ích cho việc trả lời câu hỏi không?
-        Nếu có giá trị tham khảo, trả về 'yes'. Nếu hoàn toàn lạc đề, trả về 'no'.
-        
-        Tài liệu: {context}
-        Câu hỏi: {question}
-        Kết luận (yes/no):""",
+Hãy đánh giá: Tài liệu này có chứa thông tin, manh mối hoặc bối cảnh nào giúp ích cho việc trả lời câu hỏi không?
+Nếu có giá trị tham khảo, trả về 'yes'. Nếu hoàn toàn lạc đề, trả về 'no'.
+
+Tài liệu: {context}
+Câu hỏi: {question}
+Kết luận (yes/no):""",
         input_variables=["context", "question"]
     )
     filtered_docs = []
@@ -241,7 +239,7 @@ def decide_after_grade(state: AgentState):
     use_web = state.get("use_web", False)
     if current_source == "db":
         if use_web:
-            logger.info("No relevant docs in DB. Falling back to internet")
+            logger.info("No relevant docs in DB falling back to internet")
             return "retrieve_internet"
         return "generate"
     else:
@@ -249,15 +247,15 @@ def decide_after_grade(state: AgentState):
             return "transform_query"
         return "generate"
 
-def transform_query(state: AgentState):
+async def transform_query(state: AgentState):
     logger.info("Rewriting query")
     question = state["question"]
     prompt = PromptTemplate(
         template="""Bạn là Chuyên gia Khai thác Dữ liệu. Người dùng đã hỏi: "{question}" nhưng hệ thống chưa tìm được thông tin.
-        Dựa trên bản năng của hệ thống tìm kiếm, hãy suy đoán xem người dùng thực sự đang tìm kiếm điều gì. 
-        Loại bỏ các từ ngữ dư thừa, chuyển đổi câu hỏi thành một cụm từ khóa hoặc thuật ngữ chuyên môn có xác suất trúng đích cao nhất.
-        
-        Chỉ trả về duy nhất câu truy vấn mới đã được tối ưu hóa.""",
+Dựa trên bản năng của hệ thống tìm kiếm, hãy suy đoán xem người dùng thực sự đang tìm kiếm điều gì. 
+Loại bỏ các từ ngữ dư thừa, chuyển đổi câu hỏi thành một cụm từ khóa hoặc thuật ngữ chuyên môn có xác suất trúng đích cao nhất.
+
+Chỉ trả về duy nhất câu truy vấn mới đã được tối ưu hóa.""",
         input_variables=["question"]
     )
     chain = prompt | llm
@@ -275,10 +273,10 @@ async def generate_direct(state: AgentState):
     question = state["question"]
     user_context = memory_agent.get_context(question, user_id)
     prompt_str = f"""Bạn là DocLib AI - một trợ lý thông minh và tinh tế.
-    Nhiệm vụ của bạn là giao tiếp tự nhiên với người dùng. Dựa vào thông tin bạn biết về họ, hãy thể hiện sự thấu cảm và phản hồi như một cộng sự đắc lực. Hãy linh hoạt và thấu hiểu. Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
-    
-    Thông tin người dùng: {user_context}
-    Câu hỏi: {question}"""
+Nhiệm vụ của bạn là giao tiếp tự nhiên với người dùng. Dựa vào thông tin bạn biết về họ, hãy thể hiện sự thấu cảm và phản hồi như một cộng sự đắc lực. Hãy linh hoạt và thấu hiểu. Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
+
+Thông tin người dùng: {user_context}
+Câu hỏi: {question}"""
     response = await llm_generate.ainvoke(prompt_str)
     generation = response.content
     if user_id != "guess_user":
@@ -300,31 +298,32 @@ async def generate(state: AgentState):
         
     prompt = PromptTemplate(
         template="""Bạn là Cố vấn Thông thái của hệ thống DocLib. 
-        Dựa trên nền tảng tài liệu được cung cấp, hãy phân tích để giải quyết trọn vẹn câu hỏi của người dùng.
+Dựa trên nền tảng tài liệu được cung cấp, hãy phân tích để giải quyết trọn vẹn câu hỏi của người dùng.
 
-        Quy trình tư duy:
-        Bước 1: Quét tài liệu để trích xuất bằng chứng liên quan trực tiếp đến câu hỏi.
-        Bước 2: Kết nối các bằng chứng bằng tư duy phản biện. Nếu tài liệu thiếu thông tin, hãy thông báo tôi không có đủ thông tin.
-        Bước 3: Lập dàn ý ngầm (đi thẳng vào trọng tâm và cung cấp minh chứng).
-        Bước 4: Sinh câu trả lời cuối cùng, linh hoạt sử dụng markdown như bảng biểu hoặc mã nguồn nếu cần thiết.
+Quy trình tư duy:
+Bước 1: Quét tài liệu để trích xuất bằng chứng liên quan trực tiếp đến câu hỏi.
+Bước 2: Kết nối các bằng chứng bằng tư duy phản biện. Nếu tài liệu thiếu thông tin, hãy thông báo tôi không có đủ thông tin.
+Bước 3: Lập dàn ý ngầm (đi thẳng vào trọng tâm và cung cấp minh chứng).
+Bước 4: Sinh câu trả lời cuối cùng, linh hoạt sử dụng markdown như bảng biểu hoặc mã nguồn nếu cần thiết.
 
-        Nguyên tắc cốt lõi:
-        - Trích dẫn nguồn inline như [1], [2] khi tham khảo dữ kiện từ tài liệu.
-        - Tự động phản hồi bằng chính ngôn ngữ của người dùng.
-        - Tuyệt đối không tự bịa thông tin.
+Nguyên tắc cốt lõi:
+- Trích dẫn nguồn inline như [1], [2] khi tham khảo dữ kiện từ tài liệu.
+- Tự động phản hồi bằng chính ngôn ngữ của người dùng.
+- Tuyệt đối không tự bịa thông tin.
 
-        Thông tin cá nhân hoá:
-        {user_context}
-        
-        Nguồn tài liệu: {source_name}
-        
-        Tài liệu tham khảo:
-        {documents}
-        
-        Câu hỏi người dùng: {question}
-        Kết quả phản hồi:""",
+Thông tin cá nhân hoá:
+{user_context}
+
+Nguồn tài liệu: {source_name}
+
+Tài liệu tham khảo:
+{documents}
+
+Câu hỏi người dùng: {question}
+Kết quả phản hồi:""",
         input_variables=["question", "documents", "source_name", "user_context"]
     )
+    
     source_name = "Kho tài liệu nội bộ" if state.get("current_source") == "db" else "Internet"
     docs_str = "\n\n".join(documents) if documents else "Không có tài liệu tham khảo cụ thể."
     
@@ -379,7 +378,7 @@ def check_hallucination(state: AgentState):
     if state.get("hallucination_pass", "yes") == "yes":
         return END
     else:
-        logger.info("Hallucination detected. Rewriting query")
+        logger.info("Hallucination detected rewriting query")
         if state.get("retry_count", 0) > 2: return END
         return "transform_query"
 

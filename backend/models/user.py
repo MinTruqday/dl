@@ -46,6 +46,13 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
     is_verified: bool = False
+
+    @field_validator("kyc_status", "author_status", mode="before")
+    @classmethod
+    def validate_enum_case(cls, v: Any):
+        if isinstance(v, str):
+            return v.upper()
+        return v
     tos_accepted_at: Optional[datetime] = None
     welcome_message: Optional[str] = None
     blocked_users: List[str] = []
