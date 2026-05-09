@@ -231,11 +231,23 @@ class AIService:
     async def get_ai_recommendations(limit: int = 10) -> list:
         db = db_client.mongodb.get_default_database()
         from services.document import serialize_document
-        # Real AI recommendations would use vector similarity or user behavior
-        # Here we use a hybrid approach of rating and views as a fallback
         cursor = db["documents"].find({
             "status": "published", 
             "is_deleted": {"$ne": True}
         }).sort([("average_rating", -1), ("views", -1)]).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
+
+    @staticmethod
+    async def generate_text_completion(prompt: str, max_tokens: int = 300) -> str:
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if not rag_url:
+            return "Dịch vụ AI hiện không khả dụng."
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/generate", json={"prompt": prompt, "max_tokens": max_tokens})
+                if resp.status_code == 200:
+                    return resp.json().get("result", "Không thể tạo nội dung vào lúc này.")
+        except Exception as e:
+            logger.error(f"AI: Text completion failed: {e}")
+        return "Lỗi kết nối đến máy chủ AI."

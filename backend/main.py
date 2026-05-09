@@ -43,7 +43,7 @@ from api.latex import router as latex_router
 from api.collector import router as collector_router
 from api.library import router as library_router
 from api.feedback import router as feedback_router
-from api.ai import router as ai_router, ai_router_en
+from api.ai import router as ai_router
 from api.operation import router as operation_router
 from api.draft import router as draft_router
 from api.report import router as report_router
@@ -168,7 +168,6 @@ app.include_router(read_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
 app.include_router(ai_router)
-app.include_router(ai_router_en, prefix="/ai")
 app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)

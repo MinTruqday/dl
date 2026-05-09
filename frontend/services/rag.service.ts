@@ -6,7 +6,7 @@ export async function queryRagAPI(
   usePro: boolean = false,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/truy-van`, {
+  const res = await fetch(`${API_URL}/ai/truy-van`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, query, usePro }),
@@ -29,7 +29,7 @@ export async function streamAiChatAPI(payload: {
   file_data?: string | null;
 }) {
   const token = getToken();
-  return fetch(`${API_URL}/tri-tue-nhan-tao/luong`, {
+  return fetch(`${API_URL}/ai/luong`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -46,7 +46,7 @@ export async function streamAiChatAPI(payload: {
 
 export async function ingestDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/dong-bo/${documentId}`, {
+  const res = await fetch(`${API_URL}/ai/dong-bo/${documentId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

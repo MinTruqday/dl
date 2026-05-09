@@ -2,7 +2,10 @@ from typing import Any, List, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, status, UploadFile, File
 from models.user import UserInDB
-from models.social import StatusUpdateCreate, DiscussionCreate, DiscussionReply, ReportCreate
+from models.social import (
+    StatusUpdateCreate, DiscussionCreate, DiscussionReply, ReportCreate,
+    ExcerptShareRequest
+)
 from api.dependency import get_current_user, get_current_user_optional, RateLimiter, require_permissions
 from services.post import PostService
 from services.interaction import InteractionService
@@ -147,9 +150,9 @@ async def vote_poll(post_id: str, option_id: str, current_user: UserInDB = Depen
     return APIResponse(data=await PostService.vote_poll(post_id, option_id, current_user), message="Bình chọn thành công", status=status.HTTP_200_OK)
 
 @router.post("/chia-se-trich-doan", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED)
-async def share_excerpt(data: dict, current_user: UserInDB = Depends(get_current_user)):
+async def share_excerpt(payload: ExcerptShareRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await PostService.share_excerpt(data, current_user), 
+        data=await PostService.share_excerpt(payload.model_dump(), current_user), 
         message="Chia sẻ trích đoạn thành công", 
         status=status.HTTP_201_CREATED
     )

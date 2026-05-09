@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function processTextAPI(text: string, action: string, context: string = "", targetLang: string = "Vietnamese") {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/van-ban`, {
+  const res = await fetch(`${API_URL}/ai/van-ban`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
@@ -12,7 +12,7 @@ export async function processTextAPI(text: string, action: string, context: stri
 }
 
 export async function semanticSearchAIAPI(query: string) {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tim-kiem?q=${encodeURIComponent(query)}`, {
+  const res = await fetch(`${API_URL}/ai/tim-kiem?q=${encodeURIComponent(query)}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -21,7 +21,7 @@ export async function semanticSearchAIAPI(query: string) {
 }
 
 export async function generateFlashcardAPI(documentId: string, text: string, context: string = "") {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tai-lieu/${documentId}/the-ghi-nho`, {
+  const res = await fetch(`${API_URL}/ai/tai-lieu/${documentId}/the-ghi-nho`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, context }),
@@ -32,7 +32,7 @@ export async function generateFlashcardAPI(documentId: string, text: string, con
 }
 
 export async function reviewFlashcardAPI(cardId: string, quality: number) {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/the-ghi-nho/on-tap`, {
+  const res = await fetch(`${API_URL}/ai/the-ghi-nho/on-tap`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ card_id: cardId, quality }),
@@ -44,8 +44,8 @@ export async function reviewFlashcardAPI(cardId: string, quality: number) {
 
 export async function getAiSessionsAPI(documentId?: string) {
   const url = documentId 
-    ? `${API_URL}/tri-tue-nhan-tao/lich-su?document_id=${documentId}`
-    : `${API_URL}/tri-tue-nhan-tao/lich-su`;
+    ? `${API_URL}/ai/lich-su?document_id=${documentId}`
+    : `${API_URL}/ai/lich-su`;
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -55,7 +55,7 @@ export async function getAiSessionsAPI(documentId?: string) {
 }
 
 export async function createAiSessionAPI(documentId: string, firstQuery: string = "") {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su`, {
+  const res = await fetch(`${API_URL}/ai/lich-su`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
@@ -66,7 +66,7 @@ export async function createAiSessionAPI(documentId: string, firstQuery: string 
 }
 
 export async function updateAiSessionTitleAPI(sessionId: string, title: string) {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su/${sessionId}/tieu-de`, {
+  const res = await fetch(`${API_URL}/ai/lich-su/${sessionId}/tieu-de`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ title }),
@@ -77,7 +77,7 @@ export async function updateAiSessionTitleAPI(sessionId: string, title: string) 
 }
 
 export async function deleteAiSessionAPI(sessionId: string) {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/lich-su/${sessionId}`, {
+  const res = await fetch(`${API_URL}/ai/lich-su/${sessionId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -87,7 +87,7 @@ export async function deleteAiSessionAPI(sessionId: string) {
 }
 export async function streamAiChatAPI(payload: any) {
   const token = getToken();
-  return await fetch(`${API_URL}/tri-tue-nhan-tao/tro-chuyen`, {
+  return await fetch(`${API_URL}/ai/tro-chuyen`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export async function streamAiChatAPI(payload: any) {
 }
 
 export async function queryRagAPI(documentId: string, query: string, useSmart: boolean = false, sessionId?: string) {
-  const res = await fetch(`${API_URL}/tri-tue-nhan-tao/tro-chuyen`, {
+  const res = await fetch(`${API_URL}/ai/tro-chuyen`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, query, useSmart, session_id: sessionId }),

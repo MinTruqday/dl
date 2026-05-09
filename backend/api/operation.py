@@ -4,8 +4,9 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
 from core.response import APIResponse
 from services.operation import OperationService
-from services.withdrawal import WithdrawalService
+from services.finance import FinanceService
 from services.user import UserService
+from models.operation import CampaignRequest, ApplicationReviewRequest
 
 router = APIRouter(prefix="/van-hanh")
 
@@ -33,7 +34,7 @@ async def toggle_maintenance(enabled: bool):
 @router.get("/rut-tien", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_withdrawals_list(status: str = "PENDING"):
     return APIResponse(
-        data=await WithdrawalService.get_withdrawal_queue(status),
+        data=await FinanceService.get_withdrawal_queue(status),
         message="Lấy danh sách thanh toán thành công"
     )
 
@@ -52,9 +53,9 @@ async def create_api_key(name: str):
     )
 
 @router.post("/tiep-thi/chien-dich", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def create_marketing_campaign(data: dict):
+async def create_marketing_campaign(payload: CampaignRequest):
     return APIResponse(
-        data=await OperationService.create_marketing_campaign(data), 
+        data=await OperationService.create_marketing_campaign(payload.model_dump()), 
         message="Khởi tạo chiến dịch tiếp thị thành công"
     )
 
@@ -66,9 +67,9 @@ async def get_author_applications(status: str = "PENDING"):
     )
 
 @router.put("/don-ung-tuyen/tac-gia/{application_id}/xet-duyet", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def review_author_application(application_id: str, data: dict, current_user: UserInDB = Depends(get_current_user)):
+async def review_author_application(application_id: str, payload: ApplicationReviewRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await OperationService.review_author_application(application_id, data["status"], data.get("reason", ""), str(current_user.id)),
+        data=await OperationService.review_author_application(application_id, payload.status, payload.reason or "", str(current_user.id)),
         message="Xử lý đơn ứng tuyển thành công"
     )
 

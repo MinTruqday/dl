@@ -87,7 +87,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
   const fetchHistory = async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/ai/history`, {
+      const res = await fetch(`${API_URL}/ai/lich-su`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -167,7 +167,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
     if (!sessionId) {
       try {
         const token = getToken();
-        const res = await fetch(`${API_URL}/ai/history`, {
+        const res = await fetch(`${API_URL}/ai/lich-su`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -466,7 +466,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                           try {
                             const token = getToken();
                             const res = await fetch(
-                              `${API_URL}/ai/history/${s._id}`,
+                              `${API_URL}/ai/lich-su/${s._id}`,
                               {
                                 method: "DELETE",
                                 headers: { Authorization: `Bearer ${token}` },

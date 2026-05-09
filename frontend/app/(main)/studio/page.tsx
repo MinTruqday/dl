@@ -88,6 +88,9 @@ function StudioContent() {
 
   const [trash, setTrash] = useState<any[]>([]);
   const [loadingTrash, setLoadingTrash] = useState(false);
+  const [selectedVersions, setSelectedVersions] = useState<string[]>([]);
+  const [diffData, setDiffData] = useState<any>(null);
+  const [isComparing, setIsComparing] = useState(false);
 
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState(0);
@@ -120,7 +123,6 @@ function StudioContent() {
       if (user?.role === "admin") {
         data = await getDocumentsAPI();
       } else {
-
         data = await getMyDocumentsAPI();
       }
       
@@ -218,7 +220,6 @@ function StudioContent() {
 
   const handleRestoreDocument = async (docId: string) => {
     try {
-
       await restoreDocumentAPI(docId);
       showToast("Đã khôi phục tài liệu thành công", "success");
       fetchTrash();
@@ -236,12 +237,10 @@ function StudioContent() {
     if (!confirmAction) return;
     try {
       if (confirmAction.type === "restore_version") {
-
         await restoreVersionAPI(confirmAction.id);
         showToast("Đã khôi phục phiên bản thành công", "success");
         loadDraft();
       } else if (confirmAction.type === "delete_doc") {
-
         await softDeleteDocumentAPI(confirmAction.id);
         showToast("Đã chuyển tài liệu vào thùng rác", "success");
         if (selectedDocumentId === confirmAction.id) setSelectedDocumentId("");
@@ -254,12 +253,31 @@ function StudioContent() {
     }
   };
 
+  const toggleVersionSelection = (id: string) => {
+    setSelectedVersions(prev => 
+      prev.includes(id) ? prev.filter(v => v !== id) : prev.length < 2 ? [...prev, id] : [prev[1], id]
+    );
+  };
+
+  const handleCompareVersions = async () => {
+    if (selectedVersions.length !== 2) return;
+    setIsComparing(true);
+    try {
+      const { getVersionDiffAPI } = await import("@/services/editor.service");
+      const data = await getVersionDiffAPI(selectedDocumentId, selectedVersions[0], selectedVersions[1]);
+      setDiffData(data);
+    } catch (err: any) {
+      showToast(err.message || "Không thể so sánh phiên bản", "error");
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
   const handleIngestAI = async () => {
     if (!selectedDocumentId) return;
     setIsIngesting(true);
     setStatusMsg("Đang đồng bộ AI");
     try {
-
       await ingestDocumentAPI(selectedDocumentId);
       showToast("AI đã cập nhật nội dung mới", "success");
     } catch (e: any) {
@@ -275,7 +293,6 @@ function StudioContent() {
     setGeneratingCover(true);
     setStatusMsg("Đang tạo ảnh bìa AI");
     try {
-
       await generateAICoverAPI(selectedDocumentId);
       showToast("Ảnh bìa AI đã được khởi tạo và cập nhật", "success");
       fetchDocuments();
@@ -568,7 +585,7 @@ function StudioContent() {
                        <>
                         {selectedDocument.chapters.map((ch: any, idx: number) => (
                           <div
-                            key={ch.id || idx}
+                            key={`chapter-${idx}`}
                             onClick={() => setSelectedChapterIndex(idx)}
                             className={`group flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer transition-colors rounded-none ${
                               selectedChapterIndex === idx 
@@ -603,9 +620,9 @@ function StudioContent() {
                     Tác phẩm khác
                   </div>
                   <nav className="flex flex-col gap-1">
-                    {documents.filter(d => d._id !== selectedDocumentId).map((doc) => (
+                    {documents.filter(d => d._id !== selectedDocumentId).map((doc, idx) => (
                       <button
-                        key={doc._id}
+                        key={doc._id || `other-doc-${idx}`}
                         onClick={() => setSelectedDocumentId(doc._id)}
                         className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 transition-colors duration-150 rounded-none"
                       >
@@ -622,9 +639,9 @@ function StudioContent() {
                   Danh sách tác phẩm
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {documents.map((doc) => (
+                  {documents.map((doc, idx) => (
                     <button
-                      key={doc._id}
+                      key={doc._id || `doc-list-${idx}`}
                       onClick={() => {
                         setSelectedDocumentId(doc._id);
                         setViewMode("edit");
@@ -665,14 +682,18 @@ function StudioContent() {
                 <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
                    <div className="w-full h-full animate-in fade-in duration-300">
                       {editorMode === "edit" ? (
-                        <Editor initialContent={currentChapterContent} onSave={(val) => {
-                          if (selectedChapterIndex !== null && selectedDocument) {
-                            const newChapters = [...(selectedDocument.chapters || [])];
-                            newChapters[selectedChapterIndex].content = val;
-                          } else {
-                            setContent(val);
-                          }
-                        }} />
+                        <Editor 
+                          documentId={selectedDocumentId}
+                          initialContent={currentChapterContent} 
+                          onSave={(val) => {
+                            if (selectedChapterIndex !== null && selectedDocument) {
+                              const newChapters = [...(selectedDocument.chapters || [])];
+                              newChapters[selectedChapterIndex].content = val;
+                            } else {
+                              setContent(val);
+                            }
+                          }} 
+                        />
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 border border-zinc-200 rounded-none">
                           <div 
@@ -755,8 +776,8 @@ function StudioContent() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-200">
-                          {(stats?.documents || []).map((doc: any) => (
-                            <tr key={doc.id} className="transition-colors group cursor-pointer">
+                          {(stats?.documents || []).map((doc: any, idx: number) => (
+                            <tr key={doc.id || `stats-doc-${idx}`} className="transition-colors group cursor-pointer">
                               <td className="px-6 py-4 font-medium text-black">{doc.title}</td>
                               <td className="px-6 py-4 text-zinc-600">{doc.views.toLocaleString()}</td>
                               <td className="px-6 py-4">
@@ -850,9 +871,23 @@ function StudioContent() {
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
                         <h2 className="text-xl font-medium text-black">Lịch sử phiên bản</h2>
-                        <p className="text-sm font-medium text-zinc-500">Khôi phục phiên bản tại các mốc thời gian</p>
+                        <p className="text-sm font-medium text-zinc-500">
+                          {selectedVersions.length === 2 ? "Đã chọn 2 phiên bản để so sánh" : "Chọn tối đa 2 phiên bản để so sánh sự khác biệt"}
+                        </p>
                       </div>
-                      <RotateCcw className="w-6 h-6 text-zinc-400" />
+                      <div className="flex gap-3">
+                        {selectedVersions.length === 2 && (
+                          <button 
+                            onClick={handleCompareVersions}
+                            disabled={isComparing}
+                            className="h-10 bg-black text-white px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none"
+                          >
+                            {isComparing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                            So sánh ngay
+                          </button>
+                        )}
+                        <RotateCcw className="w-6 h-6 text-zinc-400" />
+                      </div>
                    </div>
                    
                    <div className="space-y-4">
@@ -865,22 +900,30 @@ function StudioContent() {
                         </div>
                       ) : (
                         versions.map((v) => (
-                          <div key={v.id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between transition-colors rounded-none">
+                          <div 
+                            key={v.id} 
+                            onClick={() => toggleVersionSelection(v.id)}
+                            className={`bg-white border p-6 flex items-center justify-between transition-all duration-150 rounded-none cursor-pointer ${
+                              selectedVersions.includes(v.id) ? "border-black ring-1 ring-black" : "border-zinc-200"
+                            }`}
+                          >
                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center rounded-none border border-zinc-200">
-                                   <Clock className="w-4 h-4 text-zinc-500" />
+                                <div className={`w-10 h-10 flex items-center justify-center rounded-none border ${selectedVersions.includes(v.id) ? "bg-black text-white border-black" : "bg-zinc-50 text-zinc-500 border-zinc-200"}`}>
+                                   <Clock className="w-4 h-4" />
                                 </div>
                                 <div className="space-y-1">
                                    <p className="text-base font-medium text-black">{new Date(v.created_at).toLocaleString("vi-VN")}</p>
                                    <p className="text-sm font-medium text-zinc-500">Lưu bởi: {v.author_name || "Hệ thống"}</p>
                                 </div>
                              </div>
-                             <button 
-                               onClick={() => handleRestoreVersion(v.id)}
-                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none"
-                             >
-                                Khôi phục
-                             </button>
+                             <div className="flex gap-3">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleRestoreVersion(v.id); }}
+                                  className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none bg-white"
+                                >
+                                   Khôi phục
+                                </button>
+                             </div>
                           </div>
                         ))
                       )}
@@ -921,8 +964,8 @@ function StudioContent() {
                                 </div>
                              </div>
                              <button 
-                               onClick={() => handleRestoreDocument(doc._id)}
-                               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none flex items-center gap-2"
+                                onClick={() => handleRestoreDocument(doc._id)}
+                                className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none flex items-center gap-2"
                              >
                                 <RotateCcw className="w-4 h-4" /> Khôi phục
                              </button>
@@ -934,7 +977,30 @@ function StudioContent() {
              </div>
            )}
 
-
+            <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-5xl h-[80vh] flex flex-col">
+              <ModalHeader>
+                <ModalTitle>So sánh sự khác biệt</ModalTitle>
+              </ModalHeader>
+              <ModalContent className="flex-1 overflow-hidden p-0">
+                 <div className="flex h-full divide-x divide-zinc-200">
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                       <div className="p-3 bg-zinc-50 border-b border-zinc-200 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản A</div>
+                       <div className="flex-1 overflow-y-auto p-6 bg-white prose prose-zinc max-w-none text-xs font-mono">
+                          {diffData?.version_a || "Nội dung trống"}
+                       </div>
+                    </div>
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                       <div className="p-3 bg-zinc-50 border-b border-zinc-200 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản B</div>
+                       <div className="flex-1 overflow-y-auto p-6 bg-white prose prose-zinc max-w-none text-xs font-mono">
+                          {diffData?.version_b || "Nội dung trống"}
+                       </div>
+                    </div>
+                 </div>
+              </ModalContent>
+              <ModalFooter>
+                 <button onClick={() => setDiffData(null)} className="px-6 py-2 bg-black text-white text-xs font-medium border border-black transition-colors">Đóng cửa sổ</button>
+              </ModalFooter>
+            </Modal>
         </main>
       </div>
     </div>

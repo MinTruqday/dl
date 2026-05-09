@@ -8,21 +8,12 @@ from models.ai import AITextRequest, FlashcardRequest, FlashcardReviewRequest
 from core.response import APIResponse
 from services.ai import AIService
 
-router = APIRouter(prefix="/tri-tue-nhan-tao", tags=["AI"])
-ai_router_en = APIRouter(prefix="/ai", tags=["AI"])
+router = APIRouter(prefix="/ai", tags=["AI"])
 
 @router.post("/tro-chuyen")
 async def chat_streaming(data: dict, current_user: UserInDB = Depends(get_current_user)):
     from services.rag import RagService
     return await RagService.proxy_rag_stream(data, None, current_user)
-# Aliases for Frontend compatibility
-@ai_router_en.get("/history")
-async def get_sessions_en(document_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
-    return await get_sessions(document_id, current_user)
-
-@ai_router_en.post("/history")
-async def create_session_en(data: dict, current_user: UserInDB = Depends(get_current_user)):
-    return await create_session(data, current_user)
 
 @router.get("/tim-kiem", response_model=APIResponse[Any])
 async def semantic_search(q: str = Query(), current_user: UserInDB = Depends(get_current_user)):

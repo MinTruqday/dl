@@ -7,7 +7,7 @@ from core.response import APIResponse
 from services.collaboration import CollaborationService
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/collaboration")
+router = APIRouter(prefix="/cong-tac")
 
 # Models moved to models.document
 

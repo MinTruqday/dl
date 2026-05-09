@@ -8,7 +8,7 @@ from services.compilation import CompilationService
 from services.editor import EditorService
 from io import BytesIO
 
-router = APIRouter(prefix="/compile")
+router = APIRouter(prefix="/bien-dich")
 
 @router.post("/pdf", response_model=Any)
 async def compile_latex_to_pdf(

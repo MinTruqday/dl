@@ -1,10 +1,6 @@
-from api import feedback
-from api import feedback
-from api import feedback
 from typing import List, Any
 from core.config import settings
-import datetime
-from datetime import datetime, timezone as dt
+from datetime import datetime, timezone
 import os
 import uuid
 import io
@@ -23,7 +19,7 @@ def serialize_document(document):
     if "_id" in document:
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
-        document["created_at"] = datetime.datetime.now(timezone.utc)
+        document["created_at"] = datetime.now(timezone.utc)
     return document
 
 class DocumentService:
@@ -107,7 +103,7 @@ class DocumentService:
                 "views": b.get("views", 0),
                 "average_rating": b.get("average_rating"),
                 "chapters_count": len(b.get("chapters", [])),
-                "created_at": b["created_at"].isoformat() if isinstance(b.get("created_at"), datetime.datetime) else b.get("created_at"),
+                "created_at": b["created_at"].isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at"),
             }
             for b in docs
         ]
@@ -125,7 +121,7 @@ class DocumentService:
             {"$set": {
                 "content": content_in.content, 
                 "content_format": content_in.content_format,
-                "updated_at": datetime.datetime.now(timezone.utc)
+                "updated_at": datetime.now(timezone.utc)
             }}
         )
         await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), str(current_user.id), current_user.full_name)
@@ -194,7 +190,7 @@ class DocumentService:
         db = db_client.mongodb.get_default_database()
         res = await db["documents"].update_one(
             {"_id": document_id, "author_id": str(current_user.id), "is_deleted": {"$ne": True}},
-            {"$set": {"is_deleted": True, "deleted_at": datetime.datetime.now(timezone.utc)}}
+            {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
         )
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
@@ -225,7 +221,7 @@ class DocumentService:
             {
                 "id": str(b["_id"]),
                 "title": b.get("title", ""),
-                "deleted_at": b["deleted_at"].isoformat() if isinstance(b.get("deleted_at"), datetime.datetime) else b.get("deleted_at"),
+                "deleted_at": b["deleted_at"].isoformat() if isinstance(b.get("deleted_at"), datetime) else b.get("deleted_at"),
             }
             for b in docs
         ]
@@ -242,7 +238,7 @@ class DocumentService:
         hashed = pwd_context.hash(password)
         await db["documents"].update_one(
             {"_id": document_id},
-            {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.datetime.now(timezone.utc)}}
+            {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.now(timezone.utc)}}
         )
         logger.info(f"Workspace: Password protection enabled for {document_id}")
         return {"message": "Đã thiết lập mật khẩu bảo vệ tài liệu."}
@@ -367,7 +363,7 @@ class DocumentService:
             "id": str(b["_id"]),
             "title": b.get("title", ""),
             "author_id": b.get("author_id"),
-            "submitted_at": b.get("updated_at", dt.utcnow().isoformat() if isinstance(b.get("updated_at"), dt) else "")
+            "submitted_at": b.get("updated_at", datetime.now(timezone.utc).isoformat() if isinstance(b.get("updated_at"), datetime) else "")
         } for b in documents]
 
     @staticmethod
@@ -377,7 +373,7 @@ class DocumentService:
         
         await db["documents"].update_one(
             {"_id": document_id},
-            {"$set": {"status": status_val, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": dt.utcnow()}}
+            {"$set": {"status": status_val, "moderation_reason": reason, "moderated_by": str(current_moderator.id), "moderated_at": datetime.now(timezone.utc)}}
         )
         
         if action == "approve":
@@ -392,7 +388,7 @@ class DocumentService:
             "actor_id": str(current_moderator.id), 
             "document_id": document_id, 
             "reason": reason, 
-            "timestamp": dt.utcnow()
+            "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Moderation: Document {document_id} {status_val.lower()} by {current_moderator.id}")
         return {"message": f"Đã {status_val.lower()} tài liệu thành công."}
@@ -406,7 +402,7 @@ class DocumentService:
                 "status": "resolved", 
                 "resolution": resolution, 
                 "resolved_by": str(current_moderator.id), 
-                "resolved_at": dt.utcnow()
+                "resolved_at": datetime.now(timezone.utc)
             }}
         )
         logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
@@ -414,21 +410,5 @@ class DocumentService:
 
     @staticmethod
     async def generate_ai_cover(document_id: str, current_user) -> dict:
-        from services.ai import AIService
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
-        
-        data = await AIService.generate_cover(
-            doc.get("title", ""), 
-            doc.get("description", ""), 
-            "minimalist" 
-        )
-        if data.get("cover_url"):
-            await db["documents"].update_one(
-                {"_id": document_id}, 
-                {"$set": {"cover_url": data["cover_url"], "updated_at": datetime.now(dt.utc)}}
-            )
-            logger.info(f"AI: Cover generated for document {document_id}")
-        return data
+        from services.editor import EditorService
+        return await EditorService.generate_cover(document_id, "minimalist", current_user)

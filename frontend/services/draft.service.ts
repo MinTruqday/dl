@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getApprovalQueueAPI() {
-  const res = await fetch(`${API_URL}/ban-nhap/queue`, {
+  const res = await fetch(`${API_URL}/ban-nhap/hang-doi`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

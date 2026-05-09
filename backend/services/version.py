@@ -1,8 +1,9 @@
 from core.database import db_client
+from loguru import logger
 from fastapi import HTTPException
 from bson import ObjectId
-import datetime
-from datetime import timezone
+from datetime import datetime, timezone
+
 import json
 import uuid
 import re
@@ -31,7 +32,7 @@ class VersionsService:
                 'tags': doc.get('tags', []),
                 'categories': doc.get('categories', [])
             },
-            'created_at': datetime.datetime.now(timezone.utc)
+            'created_at': datetime.now(timezone.utc)
         })
         logger.info(f"Versioning: Snapshot created for document {document_id} by {current_user.id}")
         return {'message': 'Đã lưu phiên bản thành công.'}
@@ -58,12 +59,12 @@ class VersionsService:
             # Fallback for old content-only versions
             update_data = {
                 'content': version.get('content', ''),
-                'updated_at': datetime.datetime.now(timezone.utc)
+                'updated_at': datetime.now(timezone.utc)
             }
         else:
             update_data = {
                 **snapshot,
-                'updated_at': datetime.datetime.now(timezone.utc)
+                'updated_at': datetime.now(timezone.utc)
             }
 
         await db['documents'].update_one(

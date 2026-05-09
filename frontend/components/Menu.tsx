@@ -125,7 +125,7 @@ export default function Menu({
             icon={LayoutDashboard}
             label="Bảng tin"
             href="/feed"
-            roles={["reader", "author", "admin"]}
+            requireAuth
           />
           <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />
           <NavLink
@@ -149,13 +149,13 @@ export default function Menu({
           </div>
           
           <NavLink
-            href="/create"
+            href="/khoi-tao"
             label="Sáng tác"
             icon={PenTool}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/coupon"
+            href="/ma-giam-gia"
             label="Ưu đãi"
             icon={Ticket}
             roles={["author", "admin"]}
@@ -191,12 +191,6 @@ export default function Menu({
             {!isOpen && <div className="h-px w-6 mx-auto bg-zinc-200" />}
           </div>
 
-          <NavLink
-            href="/draft"
-            label="Duyệt bản thảo"
-            icon={CheckCircle2}
-            roles={["moderator", "admin"]}
-          />
           <NavLink
             href="/logs"
             label="Nhật ký hệ thống"

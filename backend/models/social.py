@@ -211,3 +211,8 @@ class ReportCreate(BaseModel):
 
 class NewsletterRequest(BaseModel):
     email: str
+
+class ExcerptShareRequest(BaseModel):
+    document_id: str
+    text: str
+    caption: Optional[str] = ""

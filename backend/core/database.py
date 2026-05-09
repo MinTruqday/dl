@@ -66,6 +66,11 @@ async def setup_indexes():
         await db["reports"].create_index([("status", 1)], background=True)
         await db["reports"].create_index([("created_at", -1)], background=True)
         
+        await db["editor_comments"].create_index([("document_id", 1), ("block_id", 1)], background=True)
+        await db["document_versions"].create_index([("document_id", 1), ("created_at", -1)], background=True)
+        await db["flashcards"].create_index([("user_id", 1), ("document_id", 1)], background=True)
+        await db["flashcards"].create_index([("next_review", 1)], background=True)
+        
         logger.info("MongoDB indexes created successfully.")
     except Exception as e:
         logger.error(f"Failed to create MongoDB indexes: {e}")

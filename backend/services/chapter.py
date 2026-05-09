@@ -1,6 +1,6 @@
 import uuid
-import datetime
-from datetime import timezone
+from datetime import datetime, timezone
+
 from fastapi import HTTPException
 from core.database import db_client
 from loguru import logger
@@ -12,7 +12,7 @@ def serialize_document(document):
     if "_id" in document:
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
-        document["created_at"] = datetime.datetime.now(timezone.utc)
+        document["created_at"] = datetime.now(timezone.utc)
     return document
 
 class ChapterService:
@@ -36,7 +36,7 @@ class ChapterService:
             "words_count": len(chapter_in.content.split()),
             "readability_score": calculate_flesch_kincaid(chapter_in.content),
             "vocabulary_richness": calculate_vocabulary_richness(chapter_in.content),
-            "created_at": datetime.datetime.now(timezone.utc)
+            "created_at": datetime.now(timezone.utc)
         }
         await docs_col.update_one({"_id": document_id}, {"$push": {"chapters": new_chapter}})
         return serialize_document(await docs_col.find_one({"_id": document_id}))
@@ -52,7 +52,7 @@ class ChapterService:
         for ch in chapters:
             ch["is_premium"] = ch["id"] not in chapter_ids
             
-        await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.datetime.now(timezone.utc)}})
+        await db["documents"].update_one({"_id": document_id}, {"$set": {"chapters": chapters, "updated_at": datetime.now(timezone.utc)}})
         return {"message": "Đã thiết lập chương đọc thử thành công."}
 
     @staticmethod

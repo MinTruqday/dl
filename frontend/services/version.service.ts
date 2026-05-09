@@ -6,7 +6,7 @@ export async function getDocumentVersionsAPI(documentId: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải danh sách phiên bản");
-  return data;
+  return data.data || data;
 }
 
 export async function saveVersionAPI(documentId: string, versionNote: string) {
@@ -16,7 +16,7 @@ export async function saveVersionAPI(documentId: string, versionNote: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lưu phiên bản thất bại");
-  return data;
+  return data.data || data;
 }
 
 export async function restoreVersionAPI(versionId: string) {
@@ -26,5 +26,5 @@ export async function restoreVersionAPI(versionId: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Khôi phục phiên bản thất bại");
-  return data;
+  return data.data || data;
 }

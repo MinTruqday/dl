@@ -29,3 +29,22 @@ export async function removeCollaboratorAPI(collaborationId: string) {
   if (!res.ok) throw new Error(data.message || "Xóa người cộng tác thất bại");
   return data;
 }
+export async function getCollaborationInvitesAPI() {
+  const res = await fetch(`${API_URL}/cong-tac/invites`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách lời mời");
+  return data;
+}
+
+export async function respondToInviteAPI(inviteId: string, status: string) {
+  const res = await fetch(`${API_URL}/cong-tac/invites/${inviteId}`, {
+    method: "PATCH",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Phản hồi lời mời thất bại");
+  return data;
+}

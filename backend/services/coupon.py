@@ -1,13 +1,18 @@
+from typing import Any, Optional
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
 from loguru import logger
+from models.wallet import CouponStatus, CouponTargetType
+from models.user import RoleEnum
 
 class CouponService:
     @staticmethod
     async def create_coupon(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
+        status = CouponStatus.APPROVED if current_user.role == RoleEnum.ADMIN else CouponStatus.PENDING
+        
         coupon = {
             "_id": str(uuid.uuid4()),
             "author_id": str(current_user.id),
@@ -16,6 +21,8 @@ class CouponService:
             "max_uses": data.get("max_uses", 100),
             "used_count": 0,
             "document_id": data.get("document_id"),
+            "target_type": data.get("target_type", CouponTargetType.ALL),
+            "status": status,
             "expires_at": datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
@@ -26,15 +33,17 @@ class CouponService:
             raise HTTPException(status_code=400, detail="Mã giảm giá này đã tồn tại trên hệ thống.")
             
         await db["coupons"].insert_one(coupon)
-        logger.info(f"Identity: Author {current_user.id} created coupon {coupon['code']}")
-        return {"message": "Tạo mã giảm giá thành công.", "coupon_id": coupon["_id"]}
+        logger.info(f"Identity: User {current_user.id} created coupon {coupon['code']} with status {status}")
+        return {"message": f"Tạo mã giảm giá thành công. Trạng thái: {status}", "coupon_id": coupon["_id"]}
 
     @staticmethod
-    async def get_my_coupons(current_user) -> list:
+    async def get_coupons(current_user) -> list:
         db = db_client.mongodb.get_default_database()
-        coupons = await db["coupons"].find(
-            {"author_id": str(current_user.id)}
-        ).sort("created_at", -1).to_list(length=50)
+        query = {}
+        if current_user.role != RoleEnum.ADMIN:
+            query["author_id"] = str(current_user.id)
+            
+        coupons = await db["coupons"].find(query).sort("created_at", -1).to_list(length=100)
         
         return [
             {
@@ -44,6 +53,8 @@ class CouponService:
                 "max_uses": c.get("max_uses", 0),
                 "used_count": c.get("used_count", 0),
                 "document_id": c.get("document_id"),
+                "target_type": c.get("target_type", CouponTargetType.ALL),
+                "status": c.get("status", CouponStatus.APPROVED),
                 "is_active": c.get("is_active", True),
                 "expires_at": c["expires_at"].isoformat() if isinstance(c.get("expires_at"), datetime) else c.get("expires_at"),
             }
@@ -51,9 +62,59 @@ class CouponService:
         ]
 
     @staticmethod
+    async def approve_coupon(coupon_id: str, action: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        if current_user.role != RoleEnum.ADMIN:
+            raise HTTPException(status_code=403, detail="Chỉ quản trị viên mới có thể duyệt mã.")
+            
+        status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
+        res = await db["coupons"].update_one({"_id": coupon_id}, {"$set": {"status": status}})
+        if res.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá.")
+            
+        logger.info(f"Monetization: Admin {current_user.id} {action}ed coupon {coupon_id}")
+        return {"message": f"Đã { 'duyệt' if action == 'approve' else 'từ chối' } mã giảm giá thành công."}
+
+    @staticmethod
+    async def validate_coupon(code: str, user: Any, document_id: Optional[str] = None) -> dict:
+        db = db_client.mongodb.get_default_database()
+        coupon = await db["coupons"].find_one({"code": code.upper(), "is_active": True, "status": CouponStatus.APPROVED})
+        
+        if not coupon:
+            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại hoặc chưa được duyệt.")
+            
+        if coupon.get("expires_at") and coupon["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết hạn.")
+            
+        if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
+            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết lượt sử dụng.")
+            
+        if coupon.get("document_id") and coupon["document_id"] != document_id:
+            raise HTTPException(status_code=400, detail="Mã giảm giá không áp dụng cho tài liệu này.")
+
+        target = coupon.get("target_type", CouponTargetType.ALL)
+        if target == CouponTargetType.NEW_USER:
+            purchase_count = await db["purchases"].count_documents({"user_id": str(user.id)})
+            if purchase_count > 0:
+                raise HTTPException(status_code=400, detail="Mã này chỉ dành cho người mới mua lần đầu.")
+        elif target == CouponTargetType.SUBSCRIBER:
+            if not getattr(user, "is_premium", False):
+                raise HTTPException(status_code=400, detail="Mã này chỉ dành cho người dùng Premium.")
+
+        return {
+            "code": coupon["code"],
+            "discount_percent": coupon["discount_percent"],
+            "target_type": target
+        }
+
+    @staticmethod
     async def toggle_coupon_status(coupon_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        coupon = await db["coupons"].find_one({"_id": coupon_id, "author_id": str(current_user.id)})
+        query = {"_id": coupon_id}
+        if current_user.role != RoleEnum.ADMIN:
+            query["author_id"] = str(current_user.id)
+            
+        coupon = await db["coupons"].find_one(query)
         if not coupon:
             raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
             
@@ -65,9 +126,13 @@ class CouponService:
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        res = await db["coupons"].delete_one({"_id": coupon_id, "author_id": str(current_user.id)})
+        query = {"_id": coupon_id}
+        if current_user.role != RoleEnum.ADMIN:
+            query["author_id"] = str(current_user.id)
+            
+        res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
             
-        logger.info(f"Monetization: Coupon {coupon_id} deleted by author {current_user.id}")
+        logger.info(f"Monetization: Coupon {coupon_id} deleted by user {current_user.id}")
         return {"message": "Đã xóa mã giảm giá thành công."}

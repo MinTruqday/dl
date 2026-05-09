@@ -1,6 +1,6 @@
 import uuid
-import datetime
-from datetime import timezone
+from datetime import datetime, timezone
+
 from fastapi import HTTPException
 from core.database import db_client
 from loguru import logger
@@ -11,7 +11,7 @@ def serialize_document(document):
     if "_id" in document:
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
-        document["created_at"] = datetime.datetime.now(timezone.utc)
+        document["created_at"] = datetime.now(timezone.utc)
     return document
 
 class SeriesService:
@@ -25,7 +25,7 @@ class SeriesService:
             "title": data["title"],
             "description": data.get("description", ""),
             "document_ids": data.get("document_ids", []),
-            "created_at": datetime.datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc),
         }
         await db["series"].insert_one(series)
         if series["document_ids"]:
@@ -73,7 +73,7 @@ class SeriesService:
         if not update_fields:
             raise HTTPException(status_code=400, detail="Không có trường nào để cập nhật.")
         
-        update_fields["updated_at"] = datetime.datetime.now(timezone.utc)
+        update_fields["updated_at"] = datetime.now(timezone.utc)
         
         await db["series"].update_one(
             {"_id": series_id},
@@ -133,7 +133,7 @@ class SeriesService:
         
         await db["series"].update_one(
             {"_id": series_id},
-            {"$set": {"document_ids": document_ids, "updated_at": datetime.datetime.now(timezone.utc)}}
+            {"$set": {"document_ids": document_ids, "updated_at": datetime.now(timezone.utc)}}
         )
         
         logger.info(f"Series {series_id} documents reordered by {current_user.id}")

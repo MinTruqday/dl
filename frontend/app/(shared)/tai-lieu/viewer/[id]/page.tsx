@@ -156,7 +156,7 @@ export default function DocumentViewer() {
   const fetchSessions = useCallback(async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/ai/history?document_id=${id}`, {
+      const res = await fetch(`${API_URL}/ai/lich-su?document_id=${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -194,7 +194,7 @@ export default function DocumentViewer() {
     if (!sessionId) {
       try {
         const token = getToken();
-        const res = await fetch(`${API_URL}/ai/history`, {
+        const res = await fetch(`${API_URL}/ai/lich-su`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

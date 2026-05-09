@@ -74,7 +74,7 @@ export async function getReadingGoalAPI() {
 }
 
 export async function getPinnedDocumentsAPI() {
-  const res = await fetch(`${API_URL}/doc/ghim`, {
+  const res = await fetch(`${API_URL}/ghim`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -83,7 +83,7 @@ export async function getPinnedDocumentsAPI() {
 }
 
 export async function pinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/doc/ghim/${documentId}`, {
+  const res = await fetch(`${API_URL}/ghim/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -93,7 +93,7 @@ export async function pinDocumentAPI(documentId: string) {
 }
 
 export async function unpinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/doc/ghim/${documentId}`, {
+  const res = await fetch(`${API_URL}/ghim/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -121,11 +121,22 @@ export async function getBookmarksAPI() {
 }
 
 export async function getBookmarkFoldersAPI() {
-  const res = await fetch(`${API_URL}/thu-vien/danh-dau/thu-muc`, {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thư mục");
+  return data;
+}
+
+export async function createBookmarkFolderAPI(name: string) {
+  const res = await fetch(`${API_URL}/danh-dau/thu-muc`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tạo thư mục mới");
   return data;
 }
 
@@ -136,6 +147,17 @@ export async function getReadingListsAPI() {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải danh sách bộ sưu tập");
   return data;
+}
+
+export async function createReadingListAPI(data: { title: string; description?: string }) {
+  const res = await fetch(`${API_URL}/thu-vien/danh-sach`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể tạo danh sách đọc mới");
+  return result;
 }
 
 export async function clearReadingHistoryAPI() {
@@ -159,7 +181,7 @@ export async function deleteReadingHistoryItemAPI(documentId: string) {
 }
 
 export async function getMySeriesAPI() {
-  const res = await fetch(`${API_URL}/author/series`, {
+  const res = await fetch(`${API_URL}/tai-lieu/chuoi-tai-lieu/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -168,7 +190,7 @@ export async function getMySeriesAPI() {
 }
 
 export async function createSeriesAPI(data: { title: string; description: string; document_ids: string[] }) {
-  const res = await fetch(`${API_URL}/author/series`, {
+  const res = await fetch(`${API_URL}/tai-lieu/chuoi-tai-lieu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),

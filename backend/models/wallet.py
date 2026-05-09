@@ -13,6 +13,16 @@ class TransactionType(str, Enum):
     SUBSCRIPTION = "subscription"
     REFUND = "refund"
 
+class CouponTargetType(str, Enum):
+    ALL = "all"
+    NEW_USER = "new_user"
+    SUBSCRIBER = "subscriber"
+
+class CouponStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     user_id: str
@@ -93,3 +103,4 @@ class CouponCreateRequest(BaseModel):
     max_uses: int = 100
     document_id: Optional[str] = None
     expires_at: Optional[str] = None
+    target_type: CouponTargetType = CouponTargetType.ALL

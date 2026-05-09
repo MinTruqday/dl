@@ -8,6 +8,7 @@ from core.config import settings
 import os
 import json
 import httpx
+import uuid
 
 class ConnectionManager:
     def __init__(self):
@@ -168,15 +169,19 @@ class EditorService:
         new_title = pattern.sub(replace_term, document.get("title", ""))
         new_desc = pattern.sub(replace_term, document.get("description", ""))
         
+        content = document.get("content")
         new_content = None
-        if document.get("content"):
-            content_str = json.dumps(document["content"])
-            new_content_str = pattern.sub(replace_term, content_str)
-            try:
-                new_content = json.loads(new_content_str)
-            except Exception as e:
-                logger.error(f"Regex JSON load failed for globally replacing content: {e}")
-                new_content = None
+        if content and isinstance(content, dict) and "blocks" in content:
+            new_content = content.copy()
+            new_blocks = []
+            for block in content.get("blocks", []):
+                new_block = block.copy()
+                if "data" in block and "text" in block["data"]:
+                    new_block["data"]["text"] = pattern.sub(replace_term, block["data"]["text"])
+                elif "data" in block and "items" in block["data"]: # List blocks
+                    new_block["data"]["items"] = [pattern.sub(replace_term, item) for item in block["data"]["items"]]
+                new_blocks.append(new_block)
+            new_content["blocks"] = new_blocks
                 
         update_data = {
             "title": new_title,
@@ -199,8 +204,69 @@ class EditorService:
         return {"message": "Thay thế nội dung toàn cục thành công.", "affected_fields": ["title", "description", "content"]}
 
     @staticmethod
-    async def check_deep_plagiarism(document_id: str, current_user) -> dict:
+    async def get_ai_suggestions(document_id: str, context: str, current_user) -> dict:
         from services.ai import AIService
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id})
+        prompt = f"Dựa trên bối cảnh tài liệu '{doc.get('title')}' và nội dung hiện tại: '{context}', hãy gợi ý 3 hướng phát triển tiếp theo cho câu chuyện hoặc đoạn văn này."
+        suggestions = await AIService.generate_text_completion(prompt)
+        return {"suggestions": suggestions}
+
+    @staticmethod
+    async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        comment_id = str(uuid.uuid4())
+        comment = {
+            "_id": comment_id,
+            "document_id": document_id,
+            "user_id": str(current_user.id),
+            "user_name": current_user.full_name,
+            "block_id": data["block_id"],
+            "text": data["text"],
+            "selected_text": data.get("selected_text", ""),
+            "status": "open",
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db["editor_comments"].insert_one(comment)
+        return {"id": comment_id, "message": "Đã thêm nhận xét thành công."}
+
+    @staticmethod
+    async def get_inline_comments(document_id: str, current_user) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        cursor = db["editor_comments"].find({"document_id": document_id, "status": "open"}).sort("created_at", -1)
+        comments = await cursor.to_list(length=100)
+        for c in comments:
+            c["id"] = c.pop("_id")
+            c["created_at"] = c["created_at"].isoformat()
+        return comments
+
+    @staticmethod
+    async def resolve_comment(comment_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["editor_comments"].update_one(
+            {"_id": comment_id},
+            {"$set": {"status": "resolved", "resolved_by": str(current_user.id), "resolved_at": datetime.now(timezone.utc)}}
+        )
+        return {"message": "Đã xử lý nhận xét."}
+
+    @staticmethod
+    async def get_version_diff(document_id: str, version_id_a: str, version_id_b: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        v_a = await db["document_versions"].find_one({"_id": version_id_a})
+        v_b = await db["document_versions"].find_one({"_id": version_id_b})
+        
+        if not v_a or not v_b:
+            raise HTTPException(status_code=404, detail="Không tìm thấy phiên bản để so sánh.")
+            
+        return {
+            "version_a": v_a.get("content"),
+            "version_b": v_b.get("content"),
+            "timestamp_a": v_a.get("created_at"),
+            "timestamp_b": v_b.get("created_at")
+        }
+
+    @staticmethod
+    async def check_deep_plagiarism(document_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
@@ -209,7 +275,7 @@ class EditorService:
         content = str(doc.get("content", ""))
         try:
             rag_url = settings.AGENTIC_RAG_URL
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(f"{rag_url}/inference/plagiarism", json={"text": content[:5000]})
                 if resp.status_code == 200:
                     return resp.json()
@@ -217,11 +283,20 @@ class EditorService:
             logger.error(f"Deep plagiarism check failed: {e}")
         
         return {
-            "plagiarism_score": 5.2,
-            "status": "clean",
-            "sources": [],
-            "message": "Không tìm thấy dấu hiệu đạo văn chuyên sâu từ các nguồn công khai."
+            "plagiarism_score": None,
+            "status": "error",
+            "message": "Không thể kết nối với máy chủ phân tích đạo văn. Vui lòng thử lại sau."
         }
+
+    @staticmethod
+    async def check_logic(document_id: str, content: str, current_user) -> dict:
+        from services.ai import AIService
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id})
+        previous_chapters = "\n".join([ch.get("content", "") for ch in doc.get("chapters", [])])
+        prompt = f"Dưới đây là các chương trước:\n{previous_chapters[:3000]}\n\nNội dung mới đang viết:\n{content}\n\nHãy tìm ra bất kỳ sự mâu thuẫn nào về cốt truyện hoặc nhân vật."
+        conflicts = await AIService.generate_text_completion(prompt)
+        return {"conflicts": [conflicts] if conflicts else []}
 
     @staticmethod
     async def check_grammar(document_id: str, chapter_id: str, current_user) -> dict:

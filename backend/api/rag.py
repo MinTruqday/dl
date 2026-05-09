@@ -6,7 +6,7 @@ from models.user import UserInDB
 from services.rag import RagService
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-router = APIRouter(prefix="/tri-tue-nhan-tao")
+router = APIRouter(prefix="/ai")
 
 @router.post("/luong", response_model=Any)
 async def proxy_rag_stream(

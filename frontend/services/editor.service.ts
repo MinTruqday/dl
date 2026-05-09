@@ -113,3 +113,46 @@ export async function updateCoverAPI(documentId: string, coverUrl: string) {
   if (!res.ok) throw new Error(data.message || "Cập nhật ảnh bìa thất bại");
   return data;
 }
+
+export async function getAiSuggestionsAPI(documentId: string, context: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/goi-y-ai`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ context }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lấy gợi ý AI thất bại");
+  return data.data;
+}
+
+export async function addInlineCommentAPI(documentId: string, payload: { block_id: string; text: string; selected_text?: string }) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Thêm nhận xét thất bại");
+  return data.data;
+}
+
+export async function resolveCommentAPI(commentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xử lý nhận xét thất bại");
+  return data.data;
+}
+
+export async function getVersionDiffAPI(documentId: string, versionIdA: string, versionIdB: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/so-sanh-phien-ban`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ version_id_a: versionIdA, version_id_b: versionIdB }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Lấy so sánh phiên bản thất bại");
+  return data.data;
+}

@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/thu-thap")
 
-# Models moved to models.collector
-
 @router.post("/kich-hoat", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def trigger_collection(req: CollectionRequest):
     return APIResponse(

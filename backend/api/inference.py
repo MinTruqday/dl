@@ -22,6 +22,11 @@ async def proxy_post(path: str, payload: dict):
 
 @router.post("/tao-anh-bia", response_model=APIResponse[Any])
 async def generate_cover(payload: dict, current_user: UserInDB = Depends(get_current_user)):
+    document_id = payload.get("document_id")
+    if document_id:
+        from services.editor import EditorService
+        style = payload.get("style", "minimalist")
+        return APIResponse(data=await EditorService.generate_cover(document_id, style, current_user), message="Yêu cầu tạo ảnh bìa thành công", status=status.HTTP_200_OK)
     return APIResponse(data=await proxy_post("generate-cover", payload), message="Yêu cầu tạo ảnh bìa thành công", status=status.HTTP_200_OK)
 
 @router.post("/phan-tich-cam-xuc", response_model=APIResponse[Any])
