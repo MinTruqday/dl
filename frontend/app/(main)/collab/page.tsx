@@ -110,8 +110,8 @@ export default function StudioCollabPage() {
       <div className="grid lg:grid-cols-12 gap-12">
         <aside className="lg:col-span-4 space-y-6">
           <div className="border border-zinc-200 bg-white p-6 space-y-6">
-            <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 flex items-center gap-2">
-              <UserPlus className="w-4 h-4" /> Gửi lời mời cộng tác
+            <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">
+              Gửi lời mời cộng tác
             </h2>
 
             <div className="space-y-4">
@@ -193,31 +193,26 @@ export default function StudioCollabPage() {
         </aside>
 
         <main className="lg:col-span-8">
-          <div className="border border-zinc-200 bg-white p-8">
-            <div className="border-b border-zinc-200 pb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> Lời mời đang chờ
-                </h3>
-                <p className="text-xs text-zinc-500 font-medium mt-1">
-                  Danh sách yêu cầu cộng tác tài liệu
-                </p>
-              </div>
+          <div className="space-y-6">
+            <div className="border-b border-zinc-200 pb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-black">
+                Lời mời cộng tác
+              </h2>
               <span className="text-xs font-semibold text-black">
                 {invites.length} yêu cầu
               </span>
             </div>
 
-            <div className="pt-4">
+            <div>
               {invites.length > 0 ? (
                 <div className="space-y-4">
                   {invites.map((invite) => (
                     <div
                       key={invite._id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 gap-4"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-white gap-4"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 border border-zinc-200 bg-white flex items-center justify-center shrink-0 rounded-none">
+                        <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none">
                           <span className="text-xs font-bold text-black uppercase">
                             {invite.inviter_name?.charAt(0) || "U"}
                           </span>
@@ -239,7 +234,7 @@ export default function StudioCollabPage() {
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleRespond(invite._id, "REJECTED")}
-                          className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium rounded-none"
+                          className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium rounded-none hover:border-black transition-colors"
                         >
                           Từ chối
                         </button>
@@ -254,14 +249,8 @@ export default function StudioCollabPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 flex flex-col items-center justify-center gap-2 bg-zinc-50 border border-dashed border-zinc-200 rounded-none">
-                  <Mail className="w-5 h-5 text-zinc-400 mb-2" />
-                  <span className="text-xs font-semibold text-black">
-                    Không có lời mời nào
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-500">
-                    Bạn hiện không có yêu cầu cộng tác đang chờ xử lý
-                  </span>
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                  <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                 </div>
               )}
             </div>

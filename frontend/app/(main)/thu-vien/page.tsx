@@ -308,9 +308,9 @@ export default function LibraryPage() {
                   </Link>
                 ))
               ) : (
-                <div className="py-8 border border-zinc-200 flex flex-col items-center justify-center gap-2 bg-white">
-                  <p className="text-[10px] font-medium text-zinc-500">
-                    Chưa ghim tài liệu
+                <div className="py-24 border border-zinc-200 flex flex-col items-center justify-center bg-white">
+                  <p className="text-sm font-medium text-zinc-500">
+                    Chưa có dữ liệu
                   </p>
                 </div>
               )}
@@ -406,7 +406,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
                     <p className="text-sm font-medium text-zinc-500">
-                      Chưa có tài liệu đang đọc
+                      Chưa có dữ liệu
                     </p>
                   </div>
                 )}
@@ -484,7 +484,7 @@ export default function LibraryPage() {
                   ) : (
                     <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
                       <p className="text-sm font-medium text-zinc-500">
-                        Chưa có thư mục hoặc danh sách nào
+                        Chưa có dữ liệu
                       </p>
                     </div>
                   )}
@@ -594,7 +594,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="py-24 text-center border border-zinc-200 bg-white col-span-full">
                     <p className="text-sm font-medium text-zinc-500">
-                      Lịch sử đọc trống
+                      Chưa có dữ liệu
                     </p>
                   </div>
                 )}
@@ -646,7 +646,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
                     <p className="text-sm font-medium text-zinc-500">
-                      Chưa có thư mục nào
+                      Chưa có dữ liệu
                     </p>
                   </div>
                 )}
@@ -705,7 +705,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
                     <p className="text-sm font-medium text-zinc-500">
-                      Chưa có danh sách nào
+                      Chưa có dữ liệu
                     </p>
                   </div>
                 )}
@@ -764,7 +764,7 @@ export default function LibraryPage() {
                 ) : (
                   <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
                     <p className="text-sm font-medium text-zinc-500">
-                      Chưa có chuỗi nội dung nào
+                      Chưa có dữ liệu
                     </p>
                   </div>
                 )}

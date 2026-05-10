@@ -2,7 +2,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 import json
 import asyncio
-from api.dependency import get_current_user
+from api.dependency import get_current_user, check_quota
 from models.user import UserInDB
 from models.ai import AITextRequest, FlashcardRequest, FlashcardReviewRequest
 from core.response import APIResponse
@@ -11,26 +11,26 @@ from services.ai import AIService
 router = APIRouter(prefix="/ai", tags=["AI"])
 
 @router.post("/tro-chuyen")
-async def chat_streaming(data: dict, current_user: UserInDB = Depends(get_current_user)):
+async def chat_streaming(data: dict, current_user: UserInDB = Depends(check_quota)):
     from services.rag import RagService
     return await RagService.proxy_rag_stream(data, None, current_user)
 
-@router.get("/tim-kiem", response_model=APIResponse[Any])
-async def semantic_search(q: str = Query(), current_user: UserInDB = Depends(get_current_user)):
+@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
+async def smart_search(q: str = Query(), current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
-        data=await AIService.semantic_search(q, current_user),
-        message="Tìm kiếm ngữ nghĩa hoàn tất"
+        data=await AIService.smart_search(q, current_user),
+        message="Tìm kiếm thông minh hoàn tất"
     )
 
 @router.post("/van-ban", response_model=APIResponse[Any])
-async def process_text(req: AITextRequest):
+async def process_text(req: AITextRequest, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
         data=await AIService.process_text(req), 
         message="Xử lý văn bản bằng AI thành công"
     )
 
 @router.post("/tai-lieu/{document_id}/the-ghi-nho", response_model=APIResponse[Any])
-async def generate_flashcard(document_id: str, data: FlashcardRequest, current_user: UserInDB = Depends(get_current_user)):
+async def generate_flashcard(document_id: str, data: FlashcardRequest, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
         data=await AIService.generate_flashcard(document_id, data.text, data.context, current_user),
         message="Tạo flashcard thành công",
@@ -78,7 +78,7 @@ async def update_title(session_id: str, data: dict, current_user: UserInDB = Dep
     from services.rag import RagService
     success = await RagService.update_title(session_id, data.get("title", ""), str(current_user.id))
     if not success:
-        from fastapi import HTTPException;
+        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return APIResponse(data={}, message="Cập nhật tiêu đề thành công")
 
@@ -87,19 +87,19 @@ async def delete_session(session_id: str, current_user: UserInDB = Depends(get_c
     from services.rag import RagService
     success = await RagService.delete_session(session_id, str(current_user.id))
     if not success:
-        from fastapi import HTTPException;
+        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return APIResponse(data={}, message="Xóa hội thoại thành công")
 
 @router.get("/cong-dong/tom-tat-bang-tin", response_model=APIResponse[Any])
-async def get_social_feed_summary(current_user: UserInDB = Depends(get_current_user)):
+async def get_social_feed_summary(current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
         data={"summary": await AIService.generate_social_feed_summary(current_user)},
         message="Tạo tóm tắt bảng tin thành công"
     )
 
 @router.get("/tai-lieu/{document_id}/cam-quan", response_model=APIResponse[Any])
-async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
         data=await AIService.analyze_reader_sentiment(document_id),
         message="Phân tích cảm nhận độc giả thành công"

@@ -44,20 +44,15 @@ export default function ApprovalPage() {
   };
 
   return (
-    <div className="border border-zinc-200 bg-white p-8 space-y-6">
-      <div className="border-b border-zinc-200 pb-4">
-        <h3 className="text-sm font-semibold text-black uppercase tracking-widest">Hàng chờ phê duyệt</h3>
-        <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">Kiểm soát chất lượng nội dung toàn hệ thống</p>
-      </div>
+    <div className="space-y-6">
 
       {loading ? (
         <div className="py-24 flex justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
         </div>
       ) : pendingDocs.length === 0 ? (
-        <div className="py-24 flex flex-col items-center justify-center text-center border border-zinc-200 bg-zinc-50 rounded-none">
-          <ShieldCheck className="w-10 h-10 text-zinc-400 mb-4" />
-          <p className="text-xs font-semibold text-black uppercase tracking-widest">Hàng chờ hiện đang trống</p>
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+          <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -66,7 +61,7 @@ export default function ApprovalPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="font-semibold text-base text-black">{doc.title}</h4>
-                  <div className="flex items-center gap-3 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <div className="flex items-center gap-3 text-xs font-medium text-zinc-400">
                     <span>Tác giả: <span className="text-black">{doc.author_name}</span></span>
                     <span>•</span>
                     <span>{new Date(doc.created_at).toLocaleDateString("vi-VN")}</span>
@@ -85,13 +80,13 @@ export default function ApprovalPage() {
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
                 <button
                   onClick={() => setConfirmModal({ type: "reject", data: doc })}
-                  className="px-4 py-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-red-500 transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-red-500 transition-colors"
                 >
                   Từ chối
                 </button>
                 <button
                   onClick={() => setConfirmModal({ type: "approve", data: doc })}
-                  className="px-4 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest border border-black hover:bg-zinc-800 transition-colors"
+                  className="px-4 py-2 bg-black text-white text-xs font-semibold border border-black hover:bg-zinc-800 transition-colors"
                 >
                   Phê duyệt
                 </button>

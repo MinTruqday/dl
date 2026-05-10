@@ -5,12 +5,10 @@ import {
   getSystemHealthAPI,
   getMaintenanceModeAPI,
   toggleMaintenanceModeAPI,
-  getCollectorStatsAPI,
   triggerBackupAPI,
-  getAuthorApplicationsAPI,
-  reviewAuthorApplicationAPI,
 } from "@/services/operation.service";
-import { Loader2 } from "lucide-react";
+import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/services/quota.service";
+import { Loader2, Save } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -19,34 +17,34 @@ export default function OperationDashboard() {
   const { showToast } = useToast();
 
   const [health, setHealth] = useState<any>(null);
-  const [collectorStats, setCollectorStats] = useState<any>(null);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [applications, setApplications] = useState<any[]>([]);
-  const [apiKeys, setApiKeys] = useState<any[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [quotaConfigs, setQuotaConfigs] = useState<any>(null);
+  const [quotaLoading, setQuotaLoading] = useState(true);
+  const [isSavingQuota, setIsSavingQuota] = useState<string | null>(null);
+
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const [hData, cData, mData, aData] = await Promise.all([
+      const [hData, mData, qData] = await Promise.all([
         getSystemHealthAPI(),
-        getCollectorStatsAPI(),
         getMaintenanceModeAPI(),
-        getAuthorApplicationsAPI(),
+        getGlobalQuotaConfigAPI()
       ]);
 
       if (hData) setHealth(hData.data || hData);
-      if (cData) setCollectorStats(cData.data || cData);
       if (mData) setMaintenanceMode(mData.data?.enabled || mData.enabled || false);
-      if (aData) setApplications(aData.data || aData);
+      if (qData) setQuotaConfigs(qData);
     } catch (err: any) {
       showToast("Không thể tải dữ liệu hệ thống.", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
+      setQuotaLoading(false);
     }
   }, [showToast]);
 
@@ -86,26 +84,33 @@ export default function OperationDashboard() {
     }
   };
 
-  const createApiKey = () => {
-    showToast("Đã tạo API Key mới.", "success");
+  const handleUpdateQuota = async (role: string) => {
+    setIsSavingQuota(role);
+    try {
+      await updateRoleQuotaAPI(role, quotaConfigs[role]);
+      showToast(`Đã cập nhật hạn mức cho nhóm ${role}.`, "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi khi cập nhật.", "error");
+    } finally {
+      setIsSavingQuota(null);
+    }
   };
 
-  const reviewApplication = async (appId: string, status: string) => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-    try {
-      await reviewAuthorApplicationAPI(
-        appId,
-        status,
-        status === "APPROVED" ? "Đã duyệt" : "Không đủ tiêu chuẩn"
-      );
-      showToast(status === "APPROVED" ? "Đã duyệt hồ sơ." : "Đã từ chối hồ sơ.", "success");
-      fetchData();
-    } catch (err: any) {
-      showToast(err.message || "Lỗi xử lý hồ sơ.", "error");
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleQuotaChange = (role: string, field: string, value: string) => {
+    setQuotaConfigs((prev: any) => ({
+      ...prev,
+      [role]: {
+        ...prev[role],
+        [field]: parseInt(value) || 0
+      }
+    }));
+  };
+
+  const roleLabels: Record<string, string> = {
+    reader: "Độc giả",
+    author: "Tác giả",
+    moderator: "Kiểm duyệt viên",
+    admin: "Quản trị viên"
   };
 
   if (authLoading || isLoading) {
@@ -135,179 +140,178 @@ export default function OperationDashboard() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-zinc-200 border border-zinc-200 mb-12">
-          <div className="bg-white p-6 flex flex-col justify-between h-32">
-             <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Sức khỏe hệ thống</span>
-                <span className="text-[10px] font-bold text-black border border-black px-2 py-1 uppercase">
-                  {health?.status || "HEALTHY"}
-                </span>
-             </div>
-             <div className="flex items-center gap-6 text-sm font-medium text-black">
-                <span className="flex items-center gap-2">
-                  <span className="text-zinc-400 text-xs uppercase tracking-widest">DB</span>
-                  {health?.mongodb || "OK"}
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="text-zinc-400 text-xs uppercase tracking-widest">Cache</span>
-                  {health?.redis || "OK"}
-                </span>
-             </div>
-          </div>
-          
-          <div className="bg-white p-6 flex flex-col justify-between h-32">
-             <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Chỉ số thu thập</span>
-             </div>
-             <p className="text-3xl font-bold tracking-tight text-black">
-               {collectorStats?.total_documents_collected || 0} <span className="text-sm font-medium text-zinc-500">tài liệu</span>
-             </p>
-          </div>
-          
-          <div className="bg-white p-6 flex flex-col justify-between h-32">
-             <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Chế độ bảo trì</span>
-             </div>
-             <button
-                onClick={toggleMaintenance}
-                disabled={isProcessing}
-                className={`w-full py-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50 border border-transparent ${
-                  maintenanceMode ? "bg-black text-white" : "bg-zinc-200 text-black"
-                }`}
-             >
-                {maintenanceMode ? "Đang bật bảo trì" : "Bật chế độ bảo trì"}
-             </button>
-          </div>
-          
-          <div className="bg-white p-6 flex flex-col justify-between h-32">
-             <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Sao lưu dữ liệu</span>
-             </div>
-             <button
-                onClick={triggerBackup}
-                disabled={isProcessing}
-                className="w-full py-2 bg-white text-black text-xs font-bold uppercase tracking-widest border border-black disabled:opacity-50"
-             >
-                Tiến hành sao lưu
-             </button>
+        <div className="space-y-12 mb-16 animate-in fade-in duration-300">
+          <div className="space-y-12">
+            <section className="space-y-6">
+              <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">Sức khỏe hệ thống</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Máy chủ chính</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${health?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <span className="text-xs font-medium text-black">
+                        {health?.status === "healthy" ? "Hoạt động" : "Gặp sự cố"}
+                      </span>
+                    </div>
+                    {health?.resources?.cpu_load && (
+                      <span className="text-[10px] text-zinc-500 font-medium">Tải CPU: {health.resources.cpu_load}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Cơ sở dữ liệu</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${health?.services?.database === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <span className="text-xs font-medium text-black">
+                        {health?.services?.database === "connected" ? "Đã kết nối" : "Mất kết nối"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 font-medium">MongoDB v7.0</span>
+                  </div>
+                </div>
+
+                <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Bộ nhớ đệm</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${health?.services?.cache === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <span className="text-xs font-medium text-black">
+                        {health?.services?.cache === "connected" ? "Đã kết nối" : "Lỗi kết nối"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 font-medium">Redis Cloud</span>
+                  </div>
+                </div>
+
+                <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                  <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Trí tuệ nhân tạo</div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${health?.services?.ai_agent === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <span className="text-xs font-medium text-black">
+                        {health?.services?.ai_agent === "healthy" ? "Sẵn sàng" : "Chưa sẵn sàng"}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-zinc-500 font-medium">Agentic RAG Service</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-6">
+              <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">Hành động điều hành</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 border border-zinc-200 bg-white space-y-6">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-black">Chế độ bảo trì</h3>
+                    <p className="text-xs text-zinc-500 font-medium">Ngắt kết nối người dùng để bảo trì hệ thống</p>
+                  </div>
+                  <button
+                    onClick={toggleMaintenance}
+                    disabled={isProcessing}
+                    className={`h-10 px-6 text-xs font-semibold border transition-all duration-200 disabled:opacity-50 rounded-none ${
+                      maintenanceMode 
+                        ? "bg-black text-white border-black" 
+                        : "bg-white text-black border-zinc-200 hover:border-black"
+                    }`}
+                  >
+                    {maintenanceMode ? "Tắt bảo trì" : "Bật bảo trì"}
+                  </button>
+                </div>
+
+                <div className="p-6 border border-zinc-200 bg-white space-y-6">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-semibold text-black">Sao lưu dữ liệu</h3>
+                    <p className="text-xs text-zinc-500 font-medium">Khởi tạo quy trình sao lưu toàn bộ cơ sở dữ liệu</p>
+                  </div>
+                  <button
+                    onClick={triggerBackup}
+                    disabled={isProcessing}
+                    className="h-10 px-6 bg-white text-black text-xs font-semibold border border-black hover:bg-black hover:text-white transition-all duration-200 disabled:opacity-50 rounded-none"
+                  >
+                    Tiến hành sao lưu
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-12 animate-in fade-in duration-300">
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Đơn ứng tuyển Tác giả</h2>
+            <div className="flex flex-col gap-1 mb-6">
+              <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 w-full">Hạn mức Trí tuệ nhân tạo (AI Quota)</h2>
+              <p className="text-[10px] text-zinc-500 font-medium">Áp dụng cho toàn bộ tính năng: Chat, Tìm kiếm thông minh, Tóm tắt, Phân tích cảm quan và Flashcards</p>
             </div>
-            <div className="border border-zinc-200 bg-white overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50">
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Người ứng tuyển</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Động lực & Lý do</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Ngày gửi</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-24 text-center">
-                        <p className="text-sm font-medium text-zinc-500">Không có hồ sơ chờ duyệt</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    applications.map((app) => (
-                      <tr key={app._id} className="border-b border-zinc-200 last:border-0">
-                        <td className="py-4 px-6 align-top">
-                          <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-bold text-black uppercase tracking-widest">{app.user_name}</span>
-                            <span className="text-xs text-zinc-500 font-mono">{app.user_email}</span>
+            
+            {quotaLoading ? (
+              <div className="py-12 flex justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
+              </div>
+            ) : (
+              <div className="border border-zinc-200 bg-white overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-zinc-200">
+                  {Object.keys(quotaConfigs || {})
+                    .filter(role => roleLabels[role])
+                    .sort((a, b) => {
+                      const order = ["reader", "author", "moderator", "admin"];
+                      return order.indexOf(a) - order.indexOf(b);
+                    })
+                    .map((role) => {
+                      const isAdmin = role === "admin";
+                      return (
+                        <div key={role} className={`p-6 flex flex-col gap-6 ${isAdmin ? 'bg-zinc-50' : 'bg-white'}`}>
+                          <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                            <span className="text-xs font-semibold text-black">
+                              {roleLabels[role] || role}
+                            </span>
+                            {!isAdmin && (
+                              <button
+                                onClick={() => handleUpdateQuota(role)}
+                                disabled={!!isSavingQuota}
+                                className="p-1 text-zinc-400 hover:text-black transition-all duration-200 rounded-none disabled:opacity-50"
+                              >
+                                {isSavingQuota === role ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                              </button>
+                            )}
                           </div>
-                        </td>
-                        <td className="py-4 px-6 align-top max-w-sm">
-                          <p className="text-xs text-zinc-600 line-clamp-2">"{app.motivation}"</p>
-                        </td>
-                        <td className="py-4 px-6 align-top whitespace-nowrap">
-                          <span className="text-xs font-medium text-zinc-500">
-                            {new Date(app.created_at).toLocaleDateString("vi-VN")}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 align-top text-right whitespace-nowrap">
-                          <div className="flex justify-end gap-4">
-                            <button
-                              onClick={() => reviewApplication(app._id, "REJECTED")}
-                              disabled={isProcessing}
-                              className="text-xs font-semibold text-zinc-500 disabled:opacity-50"
-                            >
-                              Từ chối
-                            </button>
-                            <button
-                              onClick={() => reviewApplication(app._id, "APPROVED")}
-                              disabled={isProcessing}
-                              className="text-xs font-semibold text-black disabled:opacity-50"
-                            >
-                              Duyệt
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
 
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-black">Khóa API (API Keys)</h2>
-              <button
-                onClick={createApiKey}
-                className="text-xs font-semibold text-black"
-              >
-                Tạo khóa mới
-              </button>
-            </div>
-            <div className="border border-zinc-200 bg-white overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50">
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Khóa truy cập</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Phân quyền</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Trạng thái</th>
-                    <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {apiKeys.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-24 text-center">
-                        <p className="text-sm font-medium text-zinc-500">Chưa có khóa API nào được tạo</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    apiKeys.map((key: any, idx) => (
-                      <tr key={idx} className="border-b border-zinc-200 last:border-0">
-                        <td className="py-4 px-6 align-top">
-                          <span className="text-sm font-mono text-black">{key.token}</span>
-                        </td>
-                        <td className="py-4 px-6 align-top">
-                          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{key.role}</span>
-                        </td>
-                        <td className="py-4 px-6 align-top whitespace-nowrap">
-                          <span className="text-[10px] font-bold text-black border border-black px-2 py-1 uppercase tracking-widest">Hoạt động</span>
-                        </td>
-                        <td className="py-4 px-6 align-top text-right">
-                          <button className="text-xs font-semibold text-zinc-500">
-                            Thu hồi
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                          <div className="space-y-5">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 tracking-widest block">
+                                Lượt yêu cầu / ngày
+                              </label>
+                              <input
+                                type={isAdmin ? "text" : "number"}
+                                value={isAdmin ? "Không giới hạn" : quotaConfigs[role].daily_requests}
+                                readOnly={isAdmin}
+                                onChange={(e) => !isAdmin && handleQuotaChange(role, "daily_requests", e.target.value)}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none transition-all duration-200 rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-zinc-400 tracking-widest block">
+                                Token / ngày
+                              </label>
+                              <input
+                                type={isAdmin ? "text" : "number"}
+                                value={isAdmin ? "Không giới hạn" : quotaConfigs[role].daily_tokens}
+                                readOnly={isAdmin}
+                                onChange={(e) => !isAdmin && handleQuotaChange(role, "daily_tokens", e.target.value)}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none transition-all duration-200 rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </div>

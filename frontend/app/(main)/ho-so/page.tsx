@@ -304,7 +304,7 @@ export default function ProfilePage() {
                     }`}
                 >
                   <div className="flex items-center gap-3">
-                    <tab.icon className="w-4 h-4" /> {tab.label}
+                    {tab.label}
                   </div>
                   {activeTab === tab.id && (
                     <ChevronRight className="w-4 h-4 text-black" />
@@ -493,11 +493,10 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-zinc-50">
-                  <Bookmark className="w-8 h-8 text-zinc-300 mb-3 stroke-[1]" />
-                  <span className="text-xs font-medium text-zinc-500">
-                    Bộ sưu tập rỗng
-                  </span>
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                  <p className="text-sm font-medium text-zinc-500">
+                    Chưa có dữ liệu
+                  </p>
                 </div>
               )}
             </div>
@@ -572,11 +571,10 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 flex flex-col items-center justify-center border border-dashed border-zinc-200 bg-zinc-50">
-                  <CreditCard className="w-8 h-8 text-zinc-300 mb-3 stroke-[1]" />
-                  <span className="text-xs font-medium text-zinc-500">
-                    Chưa có giao dịch nào
-                  </span>
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                  <p className="text-sm font-medium text-zinc-500">
+                    Chưa có dữ liệu
+                  </p>
                 </div>
               )}
             </div>

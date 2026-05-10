@@ -26,13 +26,13 @@ async def get_tags_categories():
         status=status.HTTP_200_OK
     )
 
-@router.get("/tim-kiem-ngu-nghia", response_model=APIResponse[Any])
-async def semantic_search(query: str, limit: int = 10, current_user: UserInDB = Depends(get_current_user_optional)):
+@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
+async def smart_search(query: str, limit: int = 10, current_user: UserInDB = Depends(get_current_user_optional)):
     if not current_user:
         return APIResponse(data=await DocumentService.get_text_search(query, limit), message="Tìm kiếm văn bản cơ bản (Vui lòng đăng nhập để dùng AI)")
     return APIResponse(
-        data=await AIService.semantic_search(query, current_user), 
-        message="Tìm kiếm ngữ nghĩa AI thành công"
+        data=await AIService.smart_search(query, current_user), 
+        message="Tìm kiếm thông minh AI thành công"
     )
 
 @router.get("/goi-y/ai", response_model=APIResponse[Any])

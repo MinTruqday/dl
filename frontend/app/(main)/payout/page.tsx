@@ -98,7 +98,7 @@ export default function StudioPayoutsPage() {
             <p className="text-sm text-zinc-500 mt-1">Quản trị tài chính & Thu nhập</p>
           </div>
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 border border-zinc-200 text-xs font-medium text-zinc-500 bg-white">
-            <Banknote className="w-3.5 h-3.5" /> Hệ thống thanh toán
+            Hệ thống thanh toán
           </div>
         </header>
 
@@ -138,8 +138,8 @@ export default function StudioPayoutsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <div>
-              <h2 className="text-sm font-semibold text-black mb-6 flex items-center gap-2">
-                <History className="w-4 h-4" /> Nhật ký giao dịch
+              <h2 className="text-sm font-semibold text-black mb-6">
+                Nhật ký giao dịch
               </h2>
               <div className="border border-zinc-200 bg-white">
                 {history.length > 0 ? (
@@ -190,9 +190,8 @@ export default function StudioPayoutsPage() {
                     </tbody>
                   </table>
                 ) : (
-                  <div className="py-24 flex flex-col items-center justify-center bg-white">
-                    <History className="w-8 h-8 text-zinc-300 mb-4" />
-                    <p className="text-sm font-medium text-black">Không có dữ liệu giao dịch</p>
+                  <div className="py-24 flex flex-col items-center justify-center bg-white border-t border-zinc-200">
+                    <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                   </div>
                 )}
               </div>
@@ -200,8 +199,8 @@ export default function StudioPayoutsPage() {
           </div>
 
           <aside className="space-y-6">
-            <h2 className="text-sm font-semibold text-black flex items-center gap-2">
-              <ArrowDownToLine className="w-4 h-4" /> Rút tiền
+            <h2 className="text-sm font-semibold text-black">
+              Rút tiền
             </h2>
             <div className="border border-zinc-200 bg-white p-6 space-y-5">
               <div className="space-y-2">

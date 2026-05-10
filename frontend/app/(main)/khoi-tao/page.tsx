@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createDocumentAPI } from "@/services/document.service";
-import { BookOpen, Loader2, Globe, Lock, FileText } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -55,15 +55,11 @@ export default function CreateDocumentPage() {
 
   return (
     <form onSubmit={handleCreate} className="space-y-8">
-      <div className="border border-zinc-200 bg-white p-8">
-        <div className="border-b border-zinc-200 pb-4 mb-6">
-          <h3 className="text-sm font-semibold text-black">Thông tin sơ bộ</h3>
-          <p className="text-xs text-zinc-500 mt-1">Cấu hình siêu dữ liệu cho tài liệu</p>
-        </div>
+      <div className="space-y-6">
 
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề tác phẩm</label>
+            <label className="text-sm font-semibold text-black">Tiêu đề tác phẩm</label>
             <input
               required
               type="text"
@@ -74,7 +70,7 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Người đăng / Nhà xuất bản</label>
+            <label className="text-sm font-semibold text-black">Người đăng / Nhà xuất bản</label>
             <input
               readOnly={user?.role === "admin"}
               type="text"
@@ -85,7 +81,7 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tóm tắt nội dung (Tùy chọn)</label>
+            <label className="text-sm font-semibold text-black">Tóm tắt nội dung (Tùy chọn)</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -94,11 +90,11 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Chế độ hiển thị</label>
+            <label className="text-sm font-semibold text-black">Chế độ hiển thị</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { id: "public", label: "Công khai", desc: "Mọi độc giả đều có thể tiếp cận.", icon: Globe },
-                { id: "private", label: "Riêng tư", desc: "Chỉ bạn hoặc cộng tác viên.", icon: Lock },
+                { id: "public", label: "Công khai", desc: "Mọi độc giả đều có thể tiếp cận." },
+                { id: "private", label: "Riêng tư", desc: "Chỉ bạn hoặc cộng tác viên." },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -106,9 +102,8 @@ export default function CreateDocumentPage() {
                   onClick={() => setVisibility(opt.id)}
                   className={`p-4 border text-left flex items-start gap-4 rounded-none ${visibility === opt.id ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                 >
-                  <opt.icon className="w-5 h-5 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <p className={`text-xs font-semibold uppercase tracking-widest ${visibility === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
+                    <p className={`text-sm font-semibold ${visibility === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
                     <p className={`text-[10px] font-medium leading-relaxed ${visibility === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>{opt.desc}</p>
                   </div>
                 </button>
@@ -119,20 +114,17 @@ export default function CreateDocumentPage() {
 
         <div className="pt-6 mt-8 border-t border-zinc-200 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-14 bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0 rounded-none">
-              <FileText className="w-5 h-5 text-zinc-400" />
-            </div>
             <div className="space-y-1">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Khởi tạo bởi: {publisherName}</p>
+              <p className="text-xs font-medium text-zinc-500">Khởi tạo bởi: {publisherName}</p>
               <p className="text-xs font-semibold text-black">Sẵn sàng thiết lập không gian soạn thảo</p>
             </div>
           </div>
           <button
             type="submit"
             disabled={loading || !title.trim()}
-            className="w-full md:w-auto h-10 px-6 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 rounded-none border border-black disabled:opacity-50"
+            className="w-full md:w-auto h-10 px-6 bg-black text-white text-sm font-semibold flex items-center justify-center gap-2 rounded-none border border-black disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BookOpen className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             Bắt đầu soạn thảo
           </button>
         </div>

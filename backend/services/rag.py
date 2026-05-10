@@ -4,6 +4,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 from loguru import logger
 from core.config import settings
+from services.quota import QuotaService
 
 class RagService:
     @staticmethod
@@ -32,6 +33,13 @@ class RagService:
                 if session_id and current_user:
                     await RagService.add_message(session_id, "user", user_query, str(current_user.id))
                     await RagService.add_message(session_id, "assistant", result.get("answer", ""), str(current_user.id))
+                
+                if current_user:
+                    await QuotaService.consume_request(str(current_user.id))
+                    # Basic token estimation: query + answer
+                    approx_tokens = (len(user_query) + len(result.get("answer", ""))) // 3
+                    await QuotaService.consume_tokens(str(current_user.id), approx_tokens)
+                    
                 return result
             else:
                 logger.error(f"RAG Service error: {response.status_code} - {response.text}")
@@ -91,6 +99,11 @@ class RagService:
 
                 if session_id and current_user and full_response:
                     await RagService.add_message(session_id, "assistant", full_response, str(current_user.id))
+                
+                if current_user:
+                    await QuotaService.consume_request(str(current_user.id))
+                    approx_tokens = (len(user_query) + len(full_response)) // 3
+                    await QuotaService.consume_tokens(str(current_user.id), approx_tokens)
 
             except Exception as e:
                 logger.error(f"RAG stream exception: {str(e)}")

@@ -1412,14 +1412,8 @@ export default function Feed() {
                     ))}
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="text-center py-20 border border-zinc-200 bg-white">
-                    <MessageCircle className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-black">
-                      Chưa có nội dung nào
-                    </h3>
-                    <p className="text-xs font-medium text-zinc-500 mt-2">
-                      Hãy là người đầu tiên chia sẻ nội dung hôm nay
-                    </p>
+                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                    <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                   </div>
                 ) : (
                   posts.map((post) => (

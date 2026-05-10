@@ -11,12 +11,12 @@ export async function processTextAPI(text: string, action: string, context: stri
   return data;
 }
 
-export async function semanticSearchAIAPI(query: string) {
-  const res = await fetch(`${API_URL}/ai/tim-kiem?q=${encodeURIComponent(query)}`, {
+export async function smartSearchAIAPI(query: string) {
+  const res = await fetch(`${API_URL}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm kiếm ngữ nghĩa thất bại");
+  if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
   return data;
 }
 

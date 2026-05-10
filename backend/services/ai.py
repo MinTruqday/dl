@@ -9,13 +9,14 @@ from loguru import logger
 
 class AIService:
     @staticmethod
-    async def semantic_search(query: str, current_user) -> list:
+    async def smart_search(query: str, current_user) -> list:
+        from services.quota import QuotaService
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
-        cache_key = f"semantic_search:{query}"
+        cache_key = f"smart_search:{query}"
         if db_client.redis:
             cached = await db_client.redis.get(cache_key)
             if cached:
-                logger.info(f"AI: Semantic search cache hit for '{query}'")
+                logger.info(f"AI: Smart search cache hit for '{query}'")
                 return json.loads(cached)
 
         try:
@@ -28,15 +29,18 @@ class AIService:
                 if resp.status_code == 200:
                     result = resp.json()
                     if db_client.redis:
-                        await db_client.redis.setex(cache_key, 300, json.dumps(result)) # Cache for 5 mins
+                        await db_client.redis.setex(cache_key, 300, json.dumps(result))
+                    
+                    await QuotaService.consume_request(str(current_user.id))
                     return result
                 raise HTTPException(status_code=resp.status_code, detail="Dịch vụ AI phản hồi không chính xác.")
         except Exception as e:
-            logger.error(f"AI: Semantic search failed for '{query}': {e}")
+            logger.error(f"AI: Smart search failed for '{query}': {e}")
             raise HTTPException(status_code=500, detail="Lỗi kết nối đến hệ thống trí tuệ nhân tạo.")
 
     @staticmethod
-    async def process_text(req):
+    async def process_text(req, current_user):
+        from services.quota import QuotaService
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             raise HTTPException(status_code=503, detail="Cấu hình dịch vụ AI chưa hoàn tất.")
@@ -50,6 +54,7 @@ class AIService:
                         timeout=30.0
                     )
                     res.raise_for_status()
+                    await QuotaService.consume_request(str(current_user.id))
                     return {"status": "success", "result": res.json().get("translation", "")}
                 else:
                     prompt = ""
@@ -70,6 +75,7 @@ class AIService:
                         timeout=30.0
                     )
                     res.raise_for_status()
+                    await QuotaService.consume_request(str(current_user.id))
                     return {"status": "success", "result": res.json().get("result", "")}
         except Exception as e:
             logger.error(f"AI: Text processing failed for action {req.action}: {e}")
@@ -77,6 +83,7 @@ class AIService:
 
     @staticmethod
     async def generate_flashcard(document_id: str, text: str, context: str, current_user):
+        from services.quota import QuotaService
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url: 
             raise HTTPException(status_code=503, detail="Dịch vụ AI hiện chưa được cấu hình.")
@@ -95,6 +102,7 @@ class AIService:
                         "created_at": datetime.now(timezone.utc)
                     }
                     await db["flashcards"].insert_one(flashcard)
+                    await QuotaService.consume_request(str(current_user.id))
                     return data
                 raise HTTPException(status_code=resp.status_code, detail="AI không thể tạo thẻ ghi nhớ.")
         except Exception as e:
@@ -176,6 +184,7 @@ class AIService:
 
     @staticmethod
     async def generate_social_feed_summary(current_user) -> str:
+        from services.quota import QuotaService
         from services.feed import FeedService
         feed = await FeedService.get_social_feed("foryou", None, 10, current_user, None)
         if not feed:
@@ -192,6 +201,7 @@ class AIService:
                 )
                 if resp.status_code == 200:
                     data = resp.json()
+                    await QuotaService.consume_request(str(current_user.id))
                     return data.get("summary", "Không thể tạo tóm tắt vào lúc này.")
         except Exception as e:
             logger.error(f"AI: Social feed summary failed: {str(e)}")
@@ -199,29 +209,28 @@ class AIService:
         return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
 
     @staticmethod
-    async def analyze_reader_sentiment(document_id: str) -> dict:
+    async def analyze_reader_sentiment(document_id: str, current_user) -> dict:
+        from services.quota import QuotaService
         rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
         if not rag_url:
             return {"message": "Dịch vụ AI hiện chưa được cấu hình."}
             
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                # We send the document ID to the RAG backend which will analyze 
-                # reviews, comments, and document content to produce a sentiment report
                 resp = await client.post(
                     f"{rag_url}/inference/sentiment-analysis",
                     json={"document_id": document_id}
                 )
                 if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
                     return resp.json()
                 
-                # If the endpoint returns 404/500, we use a smarter fallback
                 logger.warning(f"AI: Sentiment endpoint returned {resp.status_code}")
         except Exception as e:
             logger.error(f"AI: Sentiment analysis failed for {document_id}: {e}")
             
         return {
-            "sentiment_score": 0.0, # Indicates no data yet
+            "sentiment_score": 0.0,
             "mood": "unknown",
             "summary": "Hệ thống đang thu thập thêm dữ liệu từ độc giả để thực hiện phân tích.",
             "top_emotions": []

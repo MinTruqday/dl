@@ -140,7 +140,7 @@ export default function ReportsManagementPage() {
               {filteredReports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-24 text-center">
-                    <p className="text-sm font-medium text-zinc-500">Hệ thống hiện tại không có báo cáo vi phạm</p>
+                    <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                   </td>
                 </tr>
               ) : (

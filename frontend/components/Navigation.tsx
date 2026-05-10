@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-import { semanticSearchAPI } from "@/services/discovery.service";
+import { smartSearchAPI } from "@/services/discovery.service";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -61,10 +61,10 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
-      await semanticSearchAPI(searchQuery);
+      await smartSearchAPI(searchQuery);
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     } catch (err: any) {
-      console.error("Lỗi tìm kiếm ngữ nghĩa:", err);
+      console.error("Lỗi tìm kiếm thông minh:", err);
     } finally {
       setIsSearching(false);
     }

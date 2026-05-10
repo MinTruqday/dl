@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/services/document.service";
-import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, semanticSearchAPI } from "@/services/discovery.service";
+import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, smartSearchAPI } from "@/services/discovery.service";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { useToast } from "@/contexts/ToastContext";
@@ -24,7 +24,7 @@ export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [useSemantic, setUseSemantic] = useState(false);
+  const [useSmart, setUseSmart] = useState(false);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -45,8 +45,8 @@ export default function ExplorePage() {
     setLoading(true);
     try {
       let data;
-      if (useSemantic && searchQuery.trim()) {
-        data = await semanticSearchAPI(searchQuery);
+      if (useSmart && searchQuery.trim()) {
+        data = await smartSearchAPI(searchQuery);
       } else {
         data = await getDocumentsAPI(
           searchQuery || undefined,
@@ -60,7 +60,7 @@ export default function ExplorePage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory, searchQuery, useSemantic, showToast]);
+  }, [selectedCategory, searchQuery, useSmart, showToast]);
 
   const { user } = useAuth();
 
@@ -386,11 +386,8 @@ export default function ExplorePage() {
               </div>
             ) : (
               <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
-                <p className="text-sm font-medium text-black mb-2">
-                  Không tìm thấy tài liệu phù hợp
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Hãy thay đổi tiêu chí tìm kiếm hoặc khám phá các danh mục khác.
+                <p className="text-sm font-medium text-zinc-500">
+                  Chưa có dữ liệu
                 </p>
               </div>
             )}

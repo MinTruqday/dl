@@ -17,8 +17,7 @@ export default function KhoiTaoLayout({
   const navItems = [
     { id: "step1", label: "Thông tin sơ bộ", href: "/khoi-tao" },
     { id: "step2", label: "Kho lưu trữ nháp", href: "/khoi-tao/ban-thao" },
-    { id: "step3", label: "Trí tuệ nhân tạo", href: "/khoi-tao/ai" },
-    ...(isAdminOrMod ? [{ id: "step4", label: "Duyệt bản thảo", href: "/khoi-tao/duyet-ban-thao" }] : []),
+    ...(isAdminOrMod ? [{ id: "step3", label: "Duyệt bản thảo", href: "/khoi-tao/duyet-ban-thao" }] : []),
   ];
 
   const isActive = (href: string) => {
@@ -34,9 +33,6 @@ export default function KhoiTaoLayout({
           <p className="text-zinc-500 text-sm font-medium">
             Khởi tạo & Thiết lập không gian soạn thảo
           </p>
-        </div>
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 text-xs font-medium text-black rounded-none">
-          <PenTool className="w-4 h-4" /> Studio sáng tác chuyên nghiệp
         </div>
       </div>
 
@@ -64,11 +60,6 @@ export default function KhoiTaoLayout({
             </nav>
           </div>
 
-          <div className="p-6 border border-zinc-200 bg-zinc-50">
-            <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest leading-relaxed">
-              "Hãy bắt đầu với một tiêu đề bao quát và một tóm tắt đủ sức hấp dẫn để AI có thể hiểu đúng linh hồn tác phẩm của bạn."
-            </p>
-          </div>
         </aside>
 
         <main className="lg:col-span-9">{children}</main>

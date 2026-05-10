@@ -94,9 +94,9 @@ export default function LeaderboardPage() {
             </div>
             <nav className="flex flex-col gap-1">
               {[
-                { id: "views", label: "Tài liệu xem nhiều nhất", icon: TrendingUp },
-                { id: "rating", label: "Tài liệu đánh giá cao", icon: Star },
-                { id: "authors", label: "Tác giả nổi bật", icon: Users },
+                { id: "views", label: "Tài liệu xem nhiều nhất" },
+                { id: "rating", label: "Tài liệu đánh giá cao" },
+                { id: "authors", label: "Tác giả nổi bật" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -119,12 +119,10 @@ export default function LeaderboardPage() {
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col border-l-2 border-black pl-3 py-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cập nhật</span>
-                <span className="text-xs font-semibold text-black">Thời gian thực</span>
+                <span className="text-xs font-semibold text-black">Cập nhật thời gian thực</span>
               </div>
               <div className="flex flex-col border-l-2 border-zinc-200 pl-3 py-1">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Chu kỳ</span>
-                <span className="text-xs font-semibold text-black">Hàng ngày</span>
+                <span className="text-xs font-semibold text-black">Đồng bộ hàng ngày</span>
               </div>
             </div>
           </div>
@@ -237,12 +235,8 @@ export default function LeaderboardPage() {
                     )}
                   </>
                 ) : (
-                  <div className="py-32 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-none">
-                    <Trophy className="w-10 h-10 text-zinc-300 mb-6 stroke-[1]" />
-                    <h2 className="text-base font-bold text-black mb-1 uppercase tracking-tight">Chưa có dữ liệu</h2>
-                    <p className="text-[11px] font-medium text-zinc-400 text-center max-w-xs">
-                      Hệ thống đang đồng bộ dữ liệu xếp hạng.
-                    </p>
+                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                    <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                   </div>
                 )}
               </div>

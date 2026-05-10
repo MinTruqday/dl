@@ -118,7 +118,9 @@ class OperationService:
     @staticmethod
     async def get_system_health() -> dict:
         import os
-        import time
+        import httpx
+        from core.config import settings
+        
         db = db_client.mongodb.get_default_database()
         try:
             await db.command("ping")
@@ -126,13 +128,40 @@ class OperationService:
         except Exception:
             db_status = "disconnected"
         
+        redis_status = "disconnected"
+        if db_client.redis:
+            try:
+                await db_client.redis.ping()
+                redis_status = "connected"
+            except Exception:
+                redis_status = "error"
+        else:
+            redis_status = "not_configured"
+            
+        rag_status = "unknown"
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        if rag_url:
+            try:
+                async with httpx.AsyncClient(timeout=2.0) as client:
+                    resp = await client.get(f"{rag_url}/health")
+                    rag_status = "healthy" if resp.status_code == 200 else "degraded"
+            except Exception:
+                rag_status = "unreachable"
+        
         load_avg = os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
+        cpu_usage = f"{min(load_avg[0] / os.cpu_count() * 100, 100):.1f}%" if hasattr(os, 'cpu_count') else f"{min(load_avg[0] * 10, 100):.1f}%"
         
         return {
-            "status": "healthy" if db_status == "connected" else "degraded",
-            "uptime": "99.9%",
-            "database": db_status,
-            "cpu_load": f"{load_avg[0]}%",
+            "status": "healthy" if db_status == "connected" and redis_status == "connected" and rag_status == "healthy" else "degraded",
+            "services": {
+                "database": db_status,
+                "cache": redis_status,
+                "ai_agent": rag_status
+            },
+            "resources": {
+                "cpu_load": cpu_usage,
+                "uptime": "99.9%"
+            },
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 

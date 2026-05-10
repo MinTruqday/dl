@@ -14,10 +14,10 @@ export const getTagsCategoriesAPI = async () => {
   return data;
 };
 
-export const semanticSearchAPI = async (query: string, limit: number = 10) => {
-  const res = await fetch(`${API_URL}/kham-pha/tim-kiem-ngu-nghia?query=${encodeURIComponent(query)}&limit=${limit}`);
+export const smartSearchAPI = async (query: string, limit: number = 10) => {
+  const res = await fetch(`${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}&limit=${limit}`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm kiếm ngữ nghĩa thất bại");
+  if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
   return data;
 };
 

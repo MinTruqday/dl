@@ -60,6 +60,7 @@ from api.compilation import router as compilation_router
 from api.bookmark import router as bookmark_router
 from api.pin import router as pin_router
 from api.preference import router as preference_router
+from api.quota import router as quota_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -191,6 +192,7 @@ app.include_router(compilation_router)
 app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(preference_router)
+app.include_router(quota_router)
 
 @app.get("/health")
 async def health_check():

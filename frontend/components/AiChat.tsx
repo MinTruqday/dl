@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Trash2,
 } from "lucide-react";
+import QuotaIndicator from "./QuotaIndicator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 import ReactMarkdown from "react-markdown";
@@ -224,11 +225,15 @@ export default function AiChat({ standalone = false }: AiChatProps) {
 
       if (!res.ok) {
         let errorText = "Hệ thống hiện không phản hồi, vui lòng thử lại sau";
-        try {
-          const errJson = await res.json();
-          errorText = errJson.detail || errorText;
-        } catch (e) {
-          console.error("Error parsing response error", e);
+        if (res.status === 429) {
+          errorText = "Bạn đã hết hạn mức sử dụng hôm nay. Vui lòng quay lại vào ngày mai hoặc nâng cấp gói cước";
+        } else {
+          try {
+            const errJson = await res.json();
+            errorText = errJson.message || errJson.detail || errorText;
+          } catch (e) {
+            console.error("Error parsing response error", e);
+          }
         }
         setMessages((prev) => {
           const updated = [...prev];
@@ -426,7 +431,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white no-scrollbar"
           >
             {view === "history" ? (
-              <div className="p-6 space-y-4 animate-in fade-in max-w-3xl mx-auto w-full">
+              <div className="p-6 space-y-6 animate-in fade-in max-w-3xl mx-auto w-full">
+                <QuotaIndicator />
+                
                 {sessions.length === 0 ? (
                   <div className="py-20 text-center">
                     <HistoryIcon className="w-8 h-8 mx-auto mb-4 text-zinc-300" />
@@ -502,6 +509,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 <p className="text-sm text-zinc-500 mt-3 leading-relaxed max-w-sm">
                   Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm thông tin hoặc giải đáp các thắc mắc chuyên sâu.
                 </p>
+                <div className="mt-8 w-full max-w-[280px]">
+                  <QuotaIndicator />
+                </div>
               </div>
             ) : (
               <div className="flex flex-col w-full p-6 gap-8">

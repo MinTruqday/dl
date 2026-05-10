@@ -330,30 +330,8 @@ export default function SearchResultsPage() {
                 </Link>
               ))
             ) : (
-              <div className="h-[500px] flex flex-col items-center justify-center text-center border border-dashed border-zinc-100 bg-white/20 p-20 rounded-sm">
-                <div className="w-20 h-20 bg-white border border-zinc-100 flex items-center justify-center mb-6">
-                  <Search className="w-8 h-8 text-zinc-200" />
-                </div>
-                <h3 className="text-lg font-bold tracking-tight mb-2 text-black">
-                  Không tìm thấy tài liệu nào
-                </h3>
-                <p className="text-[10px] font-bold text-zinc-400">
-                  Thử điều chỉnh bộ lọc hoặc sử dụng từ khóa khác
-                </p>
-                <button
-                  onClick={() =>
-                    setFilters({
-                      price: "all",
-                      rating: 0,
-                      time: "all",
-                      category: "Tất cả",
-                      sort: "newest",
-                    })
-                  }
-                  className="mt-8 h-10 px-8 bg-black text-white text-[10px] font-bold active:scale-95 "
-                >
-                  Xóa tất cả bộ lọc
-                </button>
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
               </div>
             )}
           </div>

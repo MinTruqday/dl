@@ -48,7 +48,27 @@ export async function getAdminConfigAPI() {
   return data;
 }
 
+export async function getSystemHealthAPI() {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/van-hanh/suc-khoe-he-thong`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải sức khỏe hệ thống");
+  return data;
+}
 
+export async function getCollectorStatsAPI() {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/van-hanh/thu-thap/thong-ke`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải chỉ số thu thập");
+  return data;
+}
 
 export async function getMaintenanceModeAPI() {
   const token = getToken();

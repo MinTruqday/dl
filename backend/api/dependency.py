@@ -124,3 +124,8 @@ def require_permissions(required_permissions: List[str]):
             )
         return current_user
     return permission_checker
+
+async def check_quota(current_user: UserInDB = Depends(get_current_user)):
+    from services.quota import QuotaService
+    await QuotaService.check_quota(str(current_user.id), current_user.role.value)
+    return current_user
