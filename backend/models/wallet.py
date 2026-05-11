@@ -90,7 +90,7 @@ class FlashSaleRequest(BaseModel):
 
 class TopupRequest(BaseModel):
     amount: int
-    method: str = "momo" # momo, vnpay, transfer
+    method: str = "payos"
 
 class VoucherCreateRequest(BaseModel):
     code: str

@@ -127,8 +127,9 @@ export default function ProfilePage() {
     setIsDepositing(true);
     try {
       const res = await depositDLAPI(amount);
-      if (res.data?.payment_url) {
-        window.location.href = res.data.payment_url;
+      const checkoutUrl = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
         showToast("Giao thức thanh toán chưa được kích hoạt", "error");
       }

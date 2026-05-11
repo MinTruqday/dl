@@ -101,12 +101,13 @@ export async function purchaseChapterAPI(documentId: string, chapterId: string) 
 }
 
 export async function depositDLAPI(amount: number) {
-  const res = await fetch(`${API_URL}/payment/deposit`, {
+  const res = await fetch(`${API_URL}/cong-thanh-toan/tao-link`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ amount }),
+    body: JSON.stringify({ amount, method: "payos" }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể khởi tạo giao dịch nạp tiền");
+  if (!res.ok) throw new Error(data.message || "Khong the khoi tao giao dich nap tien");
   return data;
 }
+

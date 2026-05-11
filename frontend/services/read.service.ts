@@ -111,6 +111,52 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
   return data;
 }
 
+export async function getHighlightsAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/doc/diem-nhan/${documentId}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách điểm nhấn");
+  return data;
+}
+
+export async function createHighlightAPI(data: {
+  document_id: string;
+  selection_range: any;
+  text: string;
+  color?: string;
+  note?: string;
+}) {
+  const res = await fetch(`${API_URL}/doc/diem-nhan`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Tạo điểm nhấn thất bại");
+  return result;
+}
+
+export async function deleteHighlightAPI(highlightId: string) {
+  const res = await fetch(`${API_URL}/doc/diem-nhan/${highlightId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa điểm nhấn thất bại");
+  return data;
+}
+
+export async function toggleBookmarkAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/doc/danh-dau/${documentId}`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Thao tác đánh dấu thất bại");
+  return data;
+}
+
 export async function getBookmarksAPI() {
   const res = await fetch(`${API_URL}/ho-so/danh-dau`, {
     headers: getAuthHeaders(),

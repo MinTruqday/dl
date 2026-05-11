@@ -1,7 +1,8 @@
 import operator
 import os
 import langchain
-from typing import Annotated, Sequence, TypedDict, List
+import asyncio
+from typing import Annotated, Sequence, TypedDict, List, Optional
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -9,12 +10,12 @@ from pydantic import BaseModel, Field
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_community.cache import RedisCache
 from redis import Redis
-from langchain_community.tools.tavily_search import TavilySearchResults
 from loguru import logger
 from src.store.vector_store import vector_store
 from src.ingestion.embedder import embedding_service
 from src.agents.retrieval_agent import retrieval_agent
 from src.agents.memory_agent import memory_agent
+from src.memory.manager import memory_manager
 from src.core.config import settings
 from src.utils.file_processor import extract_text_from_base64
 
@@ -22,16 +23,15 @@ try:
     from sentence_transformers import CrossEncoder
     nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
-    logger.info(f"Loaded NLI model: {nli_model_name}")
 except Exception as e:
     nli_model = None
-    logger.warning(f"Failed to load NLI model: {e}")
+    logger.error(f"NLI model load error: {e}")
 
 try:
     redis_url = settings.REDIS_URI
     langchain.llm_cache = RedisCache(redis_=Redis.from_url(redis_url))
 except Exception as e:
-    logger.warning(f"Failed to initialize RedisCache: {e}")
+    logger.error(f"Redis cache error: {e}")
 
 class AgentState(TypedDict):
     chat_history: List[dict]
@@ -60,22 +60,13 @@ llama_client = AsyncInferenceClient(
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
-try:
-    embedder = embedding_service
-except Exception as e:
-    logger.error(f"Failed to initialize embedder: {e}")
-    embedder = None
-
-def contextualize_question(state: AgentState):
-    logger.info("Contextualizing question")
+async def contextualize_question(state: AgentState):
     question = state["question"]
     history = state.get("chat_history", [])
-    
     if not history:
-        return {"question": question, "chat_history": history}
+        return {"question": question}
 
     history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-5:]])
-    
     prompt = PromptTemplate(
         template="""Bạn là một hệ thống thấu hiểu ngôn ngữ tự nhiên.
 Dưới đây là lịch sử trò chuyện và câu nói mới nhất của người dùng.
@@ -94,18 +85,14 @@ Câu nói mới nhất: {question}
 Truy vấn hoàn chỉnh:""",
         input_variables=["history", "question"]
     )
-    
     try:
-        response = llm.invoke(prompt.format(history=history_str, question=question))
-        new_q = response.content.strip()
-        logger.info(f"Contextualized query: {new_q}")
-        return {"question": new_q}
+        response = await llm.ainvoke(prompt.format(history=history_str, question=question))
+        return {"question": response.content.strip()}
     except Exception as e:
-        logger.error(f"Contextualization failed: {e}")
+        logger.error(f"Contextualization error: {e}")
         return {"question": question}
 
-def route_question(state: AgentState):
-    logger.info("Routing question")
+async def route_question(state: AgentState):
     question = state["question"]
     prompt = PromptTemplate(
         template="""Bạn là hệ thống Điều phối thông minh (Router). Nhiệm vụ của bạn là quyết định cách tốt nhất để phản hồi người dùng.
@@ -120,37 +107,28 @@ Chỉ trả về duy nhất một từ ('rag' hoặc 'direct'), không kèm theo
         input_variables=["question"]
     )
     try:
-        response = llm.invoke(prompt.format(question=question))
+        response = await llm.ainvoke(prompt.format(question=question))
         res = response.content.strip().lower()
-        route = "direct" if "direct" in res else "rag"
+        return {"current_source": "db", "route": "direct" if "direct" in res else "rag"}
     except Exception as e:
         logger.error(f"Routing error: {e}")
-        route = "rag"
-    return {"current_source": "db", "route": route}
+        return {"current_source": "db", "route": "rag"}
 
 def decide_initial_route(state: AgentState):
-    if state.get("route") == "direct": 
-        return "generate_direct"
-    return "preprocess_file"
+    return "generate_direct" if state.get("route") == "direct" else "preprocess_file"
 
 def preprocess_file(state: AgentState):
     file_data = state.get("file_data")
     if file_data and file_data.startswith("data:"):
-        logger.info("Processing uploaded file data")
-        extracted_text = extract_text_from_base64(file_data)
-        if extracted_text:
-            return {"file_data": extracted_text}
+        text = extract_text_from_base64(file_data)
+        if text: return {"file_data": text}
     return {}
 
 async def retrieve_db(state: AgentState):
-    logger.info("Retrieving from internal database")
     question = state["question"]
     document_id = state.get("document_id")
-    documents = []
-
-    if embedder:
-        prompt = PromptTemplate(
-            template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
+    prompt = PromptTemplate(
+        template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
 
 Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
 Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh nội dung khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
@@ -160,72 +138,58 @@ Nhiệm vụ của bạn:
 - Nếu câu hỏi phức tạp (nhiều nhánh): Đúc kết các nhánh suy nghĩ của bạn thành danh sách các câu truy vấn tối ưu nhất. In ra mỗi câu trên một dòng (tối đa 3 câu).
 
 Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn). Không in ra quá trình suy nghĩ.""",
-            input_variables=["question"]
-        )
-        
-        queries = [question]
-        try:
-            response = llm.invoke(prompt.format(question=question))
-            decision = response.content.strip()
-            if "SIMPLE" not in decision.upper():
-                logger.info("Complex query detected adding sub-queries")
-                for q in decision.split("\n"):
-                    q_clean = q.strip("- 123. ")
-                    if q_clean and q_clean.lower() != question.lower():
-                        queries.append(q_clean)
-        except Exception as e:
-            logger.error(f"Retrieval strategy error: {e}")
-            
-        extracted_docs = []
-        for q in list(dict.fromkeys(queries))[:4]: 
-            results = await retrieval_agent.retrieve(query=q, document_id=document_id, k=3)
-            for doc in results:
-                chunk_id = doc.get("metadata", {}).get("chunk_id", "unknown")
-                doc_name = doc.get("metadata", {}).get("title", "System Document")
-                text = doc.get("text", "")
-                formatted_doc = f"[Nguồn: {doc_name} | ID: {chunk_id}]\n{text}"
-                extracted_docs.append(formatted_doc)
-        documents = list(set(extracted_docs))
-    return {"documents": documents, "question": question, "current_source": "db"}
-
-def retrieve_internet(state: AgentState):
-    logger.info("Retrieving from internet search")
-    question = state["question"]
-    documents = []
+        input_variables=["question"]
+    )
+    queries = [question]
     try:
-        tavily_tool = TavilySearchResults(max_results=3)
-        docs = tavily_tool.invoke({"query": question})
-        for d in docs:
-            content = d.get("content", str(d))
-            documents.append(f"[Nguồn Internet: Tavily Web Search]\n{content}")
+        response = await llm.ainvoke(prompt.format(question=question))
+        decision = response.content.strip()
+        if "SIMPLE" not in decision.upper():
+            for q in decision.split("\n"):
+                q_clean = q.strip("- 123. ")
+                if q_clean: queries.append(q_clean)
     except Exception as e:
-        logger.error(f"Internet search error: {e}")
-    return {"documents": documents, "current_source": "internet"}
+        logger.error(f"Retrieval strategy error: {e}")
+            
+    extracted_docs = []
+    for q in list(dict.fromkeys(queries))[:3]: 
+        try:
+            results = await vector_store.search(query_vector=await embedding_service.embed_query(q), limit=3)
+            for doc in results:
+                extracted_docs.append(f"[Nguồn: {doc.payload.get('title', 'Tài liệu')}]\n{doc.payload.get('text', '')}")
+        except Exception as e:
+            logger.error(f"Vector search error for query '{q}': {e}")
+    
+    return {"documents": list(set(extracted_docs)), "current_source": "db"}
 
-def grade_documents(state: AgentState):
-    logger.info(f"Grading documents from source: {state.get('current_source', 'unknown')}")
+async def retrieve_internet(state: AgentState):
+    from src.tools.web_search import web_search_tool
+    question = state["question"]
+    try:
+        results = await web_search_tool.arun(question)
+        return {"documents": [f"[Nguồn Internet]\n{results}"], "current_source": "internet"}
+    except Exception as e:
+        logger.error(f"Web search error: {e}")
+        return {"documents": [], "current_source": "internet"}
+
+async def grade_documents(state: AgentState):
     question = state["question"]
     documents = state.get("documents", [])
     prompt = PromptTemplate(
-        template="""Bạn là Chuyên gia Thẩm định Dữ liệu. 
-Hãy đánh giá: Tài liệu này có chứa thông tin, manh mối hoặc bối cảnh nào giúp ích cho việc trả lời câu hỏi không?
-Nếu có giá trị tham khảo, trả về 'yes'. Nếu hoàn toàn lạc đề, trả về 'no'.
+        template="""Bạn là Chuyên gia Thẩm định Dữ liệu. Hãy đánh giá: Tài liệu này có chứa thông tin giúp trả lời câu hỏi không?
+Nếu có giá trị, trả về 'yes'. Nếu lạc đề, trả về 'no'.
 
 Tài liệu: {context}
 Câu hỏi: {question}
-Kết luận (yes/no):""",
+Kết luận:""",
         input_variables=["context", "question"]
     )
     filtered_docs = []
     for d in documents:
         try:
-            response = llm.invoke(prompt.format(context=d, question=question))
-            res = response.content.strip().lower()
-            if "yes" in res:
+            response = await llm.ainvoke(prompt.format(context=d, question=question))
+            if "yes" in response.content.strip().lower():
                 filtered_docs.append(d)
-                logger.info("Document relevant")
-            else:
-                logger.info("Document irrelevant")
         except Exception as e:
             logger.error(f"Grading error: {e}")
             filtered_docs.append(d)
@@ -234,168 +198,106 @@ Kết luận (yes/no):""",
 def decide_after_grade(state: AgentState):
     if len(state.get("documents", [])) > 0:
         return "generate"
-    current_source = state.get("current_source", "db")
-    retry_count = state.get("retry_count", 0)
-    use_web = state.get("use_web", False)
-    if current_source == "db":
-        if use_web:
-            logger.info("No relevant docs in DB falling back to internet")
-            return "retrieve_internet"
-        return "generate"
-    else:
-        if retry_count < 2:
-            return "transform_query"
-        return "generate"
+    if state.get("current_source") == "db" and state.get("use_web"):
+        return "retrieve_internet"
+    return "generate"
 
 async def transform_query(state: AgentState):
-    logger.info("Rewriting query")
     question = state["question"]
     prompt = PromptTemplate(
-        template="""Bạn là Chuyên gia Khai thác Dữ liệu. Người dùng đã hỏi: "{question}" nhưng hệ thống chưa tìm được thông tin.
-Dựa trên bản năng của hệ thống tìm kiếm, hãy suy đoán xem người dùng thực sự đang tìm kiếm điều gì. 
-Loại bỏ các từ ngữ dư thừa, chuyển đổi câu hỏi thành một cụm từ khóa hoặc thuật ngữ chuyên môn có xác suất trúng đích cao nhất.
-
-Chỉ trả về duy nhất câu truy vấn mới đã được tối ưu hóa.""",
+        template="Viết lại câu hỏi để tối ưu tìm kiếm: {question}",
         input_variables=["question"]
     )
-    chain = prompt | llm
     try:
-        response = chain.invoke({"question": question})
-        new_question = response.content.strip()
-        logger.info(f"Transformed query: {new_question}")
-        return {"question": new_question, "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
+        res = await llm.ainvoke(prompt.format(question=question))
+        return {"question": res.content.strip(), "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
     except Exception as e:
-        logger.error(f"Transformation failed: {e}")
+        logger.error(f"Transform query error: {e}")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
-    user_id = state.get("user_id", "guess_user")
-    question = state["question"]
-    user_context = memory_agent.get_context(question, user_id)
-    prompt_str = f"""Bạn là DocLib AI - một trợ lý thông minh và tinh tế.
-Nhiệm vụ của bạn là giao tiếp tự nhiên với người dùng. Dựa vào thông tin bạn biết về họ, hãy thể hiện sự thấu cảm và phản hồi như một cộng sự đắc lực. Hãy linh hoạt và thấu hiểu. Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
-
-Thông tin người dùng: {user_context}
-Câu hỏi: {question}"""
-    response = await llm_generate.ainvoke(prompt_str)
-    generation = response.content
-    if user_id != "guess_user":
-        memory_agent.add_memory([
-            {"role": "user", "content": question},
-            {"role": "assistant", "content": generation}
-        ], user_id)
-    return {"generation": generation}
+    prompt = f"Bạn là trợ lý DocLib thông thái. Trả lời người dùng thân thiện.\nCâu hỏi: {state['question']}"
+    try:
+        response = await llm_generate.ainvoke(prompt)
+        return {"generation": response.content}
+    except Exception as e:
+        logger.error(f"Generate direct error: {e}")
+        return {"generation": "Xin lỗi, tôi gặp sự cố khi xử lý yêu cầu."}
 
 async def generate(state: AgentState):
-    logger.info("Generating answer")
     question = state["question"]
     documents = state.get("documents", [])
-    user_id = state.get("user_id", "guess_user")
-    user_context = memory_agent.get_context(question, user_id)
-    
+    user_id = state.get("user_id", "guest_user")
+    user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
-        documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data']}")
-        
+        documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data'][:6000]}")
+    
+    citation_instruction = "- Sử dụng trích dẫn nguồn inline (ví dụ: [1], [2])" if documents else "- Tuyệt đối KHÔNG sử dụng trích dẫn."
+    thought_instruction = "- Trình bày lập luận trong thẻ <think>...</think>." if state.get("use_smart") else ""
+
     prompt = PromptTemplate(
-        template="""Bạn là Cố vấn Thông thái của hệ thống DocLib. 
-Dựa trên nền tảng tài liệu được cung cấp, hãy phân tích để giải quyết trọn vẹn câu hỏi của người dùng.
+        template="""Bạn là DocLib AI - Cố vấn thông thái. Hãy áp dụng quy trình tư duy sâu sau đây:
 
-Quy trình tư duy:
-Bước 1: Quét tài liệu để trích xuất bằng chứng liên quan trực tiếp đến câu hỏi.
-Bước 2: Kết nối các bằng chứng bằng tư duy phản biện. Nếu tài liệu thiếu thông tin, hãy thông báo tôi không có đủ thông tin.
-Bước 3: Lập dàn ý ngầm (đi thẳng vào trọng tâm và cung cấp minh chứng).
-Bước 4: Sinh câu trả lời cuối cùng, linh hoạt sử dụng markdown như bảng biểu hoặc mã nguồn nếu cần thiết.
+Quy trình tư duy nội bộ (không in ra ngoài):
+1. Phân tích tài liệu: Quét toàn bộ nguồn cấp để lọc ra các bằng chứng xác đáng.
+2. Kết nối logic: Xâu chuỗi các dữ kiện bằng tư duy phản biện.
+3. Lập dàn ý: Sắp xếp các ý chính theo thứ tự ưu tiên.
+4. Tổng hợp: Sinh câu trả lời cuối cùng dựa trên các bước trên.
 
-Nguyên tắc cốt lõi:
-- Trích dẫn nguồn inline như [1], [2] khi tham khảo dữ kiện từ tài liệu.
-- Tự động phản hồi bằng chính ngôn ngữ của người dùng.
-- Tuyệt đối không tự bịa thông tin.
+Nguyên tắc phản hồi:
+- Chỉ xuất ra kết quả cuối cùng từ bước 4. Tuyệt đối không in ra các tiêu đề "Bước 1, 2, 3".
+- Sử dụng chữ viết thường và viết hoa đúng quy tắc tiếng Việt (Sentence case).
+- Nếu tài liệu ({source_name}) KHÔNG có thông tin, hãy thông báo và có thể hỗ trợ bằng kiến thức hệ thống.
+{citation_instruction}
+{thought_instruction}
+- Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
 
 Thông tin cá nhân hoá:
 {user_context}
 
-Nguồn tài liệu: {source_name}
-
-Tài liệu tham khảo:
+Dữ liệu tham khảo ({source_name}):
 {documents}
 
-Câu hỏi người dùng: {question}
-Kết quả phản hồi:""",
-        input_variables=["question", "documents", "source_name", "user_context"]
+Câu hỏi: {question}
+Kết quả phản hồi (Chỉ in kết quả cuối cùng):""",
+        input_variables=["question", "documents", "source_name", "user_context", "citation_instruction", "thought_instruction"]
     )
-    
-    source_name = "Kho tài liệu nội bộ" if state.get("current_source") == "db" else "Internet"
-    docs_str = "\n\n".join(documents) if documents else "Không có tài liệu tham khảo cụ thể."
-    
-    formatted_prompt = prompt.format(question=question, documents=docs_str, source_name=source_name, user_context=user_context)
-    
-    if state.get("image_data"):
-        content_blocks = [
-            {"type": "text", "text": formatted_prompt},
-            {"type": "image_url", "image_url": {"url": state["image_data"]}}
-        ]
-        messages = [HumanMessage(content=content_blocks)]
-        try:
-            response = await llm_generate.ainvoke(messages)
-            generation = response.content
-        except Exception as e:
-            logger.error(f"Multimodal failed: {e}")
-            response = await llm_generate.ainvoke(formatted_prompt)
-            generation = response.content
-    else:
-        response = await llm_generate.ainvoke(formatted_prompt)
+    try:
+        response = await llm_generate.ainvoke(prompt.format(
+            question=question, documents="\n\n".join(documents), source_name="Hệ thống" if state.get("current_source") == "db" else "Internet",
+            user_context=user_context, citation_instruction=citation_instruction, thought_instruction=thought_instruction
+        ))
         generation = response.content
-    
-    if user_id != "guess_user":
-        memory_agent.add_memory([
-            {"role": "user", "content": question},
-            {"role": "assistant", "content": generation}
-        ], user_id)
-    return {"generation": generation}
+        if user_id != "guest_user":
+            memory_agent.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
+        return {"generation": generation}
+    except Exception as e:
+        logger.error(f"Generate error: {e}")
+        return {"generation": "Hệ thống gặp sự cố khi tổng hợp câu trả lời."}
 
-def grade_generation(state: AgentState):
-    logger.info("Grading generation via NLI")
+async def grade_generation(state: AgentState):
     documents = state.get("documents", [])
     generation = state["generation"]
-    if not documents or "không có đủ thông tin" in generation.lower():
+    if not documents or not nli_model:
         return {"hallucination_pass": "yes"}
-    docs_str = "".join(documents)
-    if nli_model:
-        try:
-            scores = nli_model.predict([[docs_str[:1500], generation]]) 
-            entail_score = scores[0][1]
-            contradict_score = scores[0][0]
-            logger.info(f"NLI Scores: Entail={entail_score:.2f}, Predict={contradict_score:.2f}")
-            hallucination_pass = "yes" if entail_score > contradict_score else "no"
-        except Exception as e:
-            logger.error(f"NLI evaluation error: {e}")
-            hallucination_pass = "yes"
-    else:
-        hallucination_pass = "yes"
-    return {"hallucination_pass": hallucination_pass}
+    try:
+        docs_str = "".join(documents)[:1500]
+        scores = await asyncio.to_thread(nli_model.predict, [[docs_str, generation]])
+        return {"hallucination_pass": "yes" if scores[0][1] > scores[0][0] else "no"}
+    except Exception as e:
+        logger.error(f"Grade generation error: {e}")
+        return {"hallucination_pass": "yes"}
 
 def check_hallucination(state: AgentState):
-    if state.get("hallucination_pass", "yes") == "yes":
-        return END
-    else:
-        logger.info("Hallucination detected rewriting query")
-        if state.get("retry_count", 0) > 2: return END
+    if state.get("hallucination_pass") == "no" and state.get("retry_count", 0) < 2:
         return "transform_query"
+    return END
 
 def decide_after_retrieve(state: AgentState):
-    if state.get("use_smart", False):
-        return "grade_documents"
-    else:
-        docs = state.get("documents", [])
-        if not docs and state.get("use_web", False) and state.get("current_source", "db") == "db":
-            return "retrieve_internet"
-        return "generate"
-
-def decide_after_generate(state: AgentState):
-    if state.get("use_smart", False):
-        return "grade_generation"
-    else:
-        return END
+    if state.get("use_smart"): return "grade_documents"
+    if not state.get("documents") and state.get("use_web") and state.get("current_source") == "db":
+        return "retrieve_internet"
+    return "generate"
 
 workflow = StateGraph(AgentState)
 workflow.add_node("preprocess_file", preprocess_file)
@@ -411,6 +313,15 @@ workflow.add_node("contextualize_question", contextualize_question)
 workflow.set_entry_point("contextualize_question")
 workflow.add_edge("contextualize_question", "route_question")
 workflow.add_conditional_edges("route_question", decide_initial_route, {"preprocess_file": "preprocess_file", "generate_direct": "generate_direct"})
+workflow.add_edge("preprocess_file", "retrieve_db")
+workflow.add_edge("generate_direct", END)
+workflow.add_conditional_edges("retrieve_db", decide_after_retrieve, {"grade_documents": "grade_documents", "retrieve_internet": "retrieve_internet", "generate": "generate"})
+workflow.add_edge("retrieve_internet", "grade_documents")
+workflow.add_conditional_edges("grade_documents", decide_after_grade, {"generate": "generate", "retrieve_internet": "retrieve_internet"})
+workflow.add_edge("transform_query", "retrieve_db")
+workflow.add_conditional_edges("generate", lambda s: "grade_generation" if s.get("use_smart") else END, {"grade_generation": "grade_generation", END: END})
+workflow.add_conditional_edges("grade_generation", check_hallucination, {"transform_query": "transform_query", END: END})
+rag_agent_app = workflow.compile()"generate_direct"})
 workflow.add_edge("preprocess_file", "retrieve_db")
 workflow.add_edge("generate_direct", END)
 workflow.add_conditional_edges("retrieve_db", decide_after_retrieve, {"grade_documents": "grade_documents", "retrieve_internet": "retrieve_internet", "generate": "generate"})

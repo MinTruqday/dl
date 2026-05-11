@@ -107,8 +107,9 @@ export default function WalletPage() {
     setTopupLoading(true);
     try {
       const res = await depositDLAPI(topupAmount);
-      if (res.data?.payment_url || res.payUrl) {
-        window.location.href = res.data?.payment_url || res.payUrl;
+      const checkoutUrl = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
         showToast("Không thể khởi tạo thanh toán lúc này.", "error");
       }

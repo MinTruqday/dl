@@ -20,6 +20,7 @@ import {
   Edit2,
   ChevronLeft,
   Trash2,
+  Plus as PlusIcon,
 } from "lucide-react";
 import QuotaIndicator from "./QuotaIndicator";
 import { useAuth } from "@/contexts/AuthContext";
@@ -370,7 +371,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
         <div
           className={
             standalone
-              ? "w-full h-full bg-white border-zinc-200 flex flex-col overflow-hidden animate-in fade-in"
+              ? "w-full h-full bg-white flex flex-col overflow-hidden animate-in fade-in"
               : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none shadow-none`
           }
         >
@@ -391,14 +392,27 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             {!standalone && (
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => {
+                    setCurrentSessionId(null);
+                    setMessages([]);
+                    setView("chat");
+                  }}
+                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
+                  title="Cuộc hội thoại mới"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </button>
+                <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
-                  className={`p-2 transition-colors rounded-none ${view === "history" ? "bg-black text-white" : "text-zinc-500 hover:text-black"}`}
+                  className={`p-2 transition-colors rounded-none border ${view === "history" ? "bg-black text-white border-black" : "text-zinc-500 hover:text-black border-zinc-100 hover:border-zinc-200"}`}
+                  title="Lịch sử nghiên cứu"
                 >
                   <HistoryIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
+                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
+                  title={isExpanded ? "Thu nhỏ" : "Mở rộng"}
                 >
                   {isExpanded ? (
                     <Minimize2 className="w-4 h-4" />
@@ -408,7 +422,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none"
+                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -416,6 +430,16 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             )}
             {standalone && (
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentSessionId(null);
+                    setMessages([]);
+                    setView("chat");
+                  }}
+                  className="px-4 py-2 text-xs font-bold transition-all border bg-white text-black border-zinc-200 hover:bg-zinc-50"
+                >
+                  Cuộc hội thoại mới
+                </button>
                 <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
                   className={`px-4 py-2 text-xs font-bold transition-all border ${view === "history" ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 hover:bg-zinc-50"}`}
@@ -431,7 +455,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white no-scrollbar"
           >
             {view === "history" ? (
-              <div className="p-6 space-y-6 animate-in fade-in max-w-3xl mx-auto w-full">
+              <div className="p-6 space-y-6 animate-in fade-in w-full">
                 <QuotaIndicator />
                 
                 {sessions.length === 0 ? (
@@ -448,16 +472,37 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                       className={`p-5 border bg-white cursor-pointer group relative rounded-none transition-colors ${currentSessionId === s._id ? "border-black" : "border-zinc-200 hover:border-black"}`}
                     >
                       <div
-                        onClick={() => {
+                        onClick={async () => {
+                          const token = getToken();
                           setCurrentSessionId(s._id);
-                          const mapped = (s.messages || []).map((m: any) => ({
-                            id: m.id || m._id || Date.now().toString(),
-                            role: m.role || "user",
-                            content: m.content || "",
-                            thoughts: m.thoughts || [],
-                          }));
-                          setMessages(mapped);
                           setView("chat");
+                          // Tải lại tin nhắn chi tiết từ session nếu cần
+                          try {
+                            const res = await fetch(`${API_URL}/ai/lich-su/${s._id}`, {
+                              headers: { Authorization: `Bearer ${token}` }
+                            });
+                            if (res.ok) {
+                              const data = await res.json();
+                              const mapped = (data.data.messages || []).map((m: any) => ({
+                                id: m.id || m._id || Math.random().toString(),
+                                role: m.role || "user",
+                                content: m.content || "",
+                                thoughts: m.thoughts || [],
+                              }));
+                              setMessages(mapped);
+                            } else {
+                              // Nếu lỗi, vẫn map dữ liệu cũ từ list (dù ít hơn)
+                              const mapped = (s.messages || []).map((m: any) => ({
+                                id: m.id || m._id || Math.random().toString(),
+                                role: m.role || "user",
+                                content: m.content || "",
+                                thoughts: m.thoughts || [],
+                              }));
+                              setMessages(mapped);
+                            }
+                          } catch (e) {
+                             console.error("Lỗi tải chi tiết lịch sử", e);
+                          }
                         }}
                       >
                         <p className="text-sm font-medium text-black pr-8 truncate">
@@ -592,83 +637,112 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                             {msg.thoughts.map((t, idx2) => (
                               <div
                                 key={idx2}
-                                className="text-sm text-zinc-600 flex items-center gap-3"
+                                        {/* UI MỚI: Khung hiển thị suy nghĩ nội tại của LLM (Vision/Logic) */}
+                      {(() => {
+                        const text = msg.content || "";
+                        const thinkMatch = text.match(/<think>([\s\S]*?)(?:<\/think>|$)/);
+                        const modelThought = thinkMatch ? thinkMatch[1].trim() : null;
+                        const cleanText = text.replace(/<think>([\s\S]*?)(?:<\/think>|$)/, "").trim();
+
+                        return (
+                          <>
+                            {modelThought && (
+                              <details 
+                                className="mb-4 border border-zinc-200 rounded-none group/modelthought bg-zinc-50/30" 
+                                open={isTyping}
                               >
-                                <div className="w-1.5 h-1.5 bg-zinc-300 shrink-0 rounded-none" />
-                                <span>{t}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </details>
-                      )}
-                      
-                      <div className="w-full prose prose-zinc max-w-none text-sm leading-relaxed">
-                        {isTyping ? (
-                          <div className="flex items-center gap-2 py-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
-                          </div>
-                        ) : (
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath]}
-                            rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                            components={{
-                              p: ({ children }) => (
-                                <p className="mb-4 last:mb-0">
-                                  {children}
-                                </p>
-                              ),
-                              code({ node, inline, className, children, ...props }: any) {
-                                const match = /language-(\w+)/.exec(className || "");
-                                const content = String(children).replace(/\n$/, "");
-                                if (!inline && match) {
-                                  const lang = match[1];
-                                  return (
-                                    <div className="my-5 bg-black border border-black rounded-none overflow-hidden">
-                                      <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-black">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                          {lang}
-                                        </span>
-                                        <button
-                                          onClick={() => {
-                                            navigator.clipboard.writeText(content);
-                                            showToast("Đã sao chép", "info");
-                                          }}
-                                          className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors rounded-none"
-                                        >
-                                          Sao chép
-                                        </button>
-                                      </div>
-                                      <pre className="p-4 overflow-x-auto m-0">
-                                        <code className="text-[13px] font-mono text-zinc-300 leading-relaxed">
-                                          {content}
-                                        </code>
-                                      </pre>
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <code
-                                    className={`${className} bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 text-black font-mono text-[13px] rounded-none`}
-                                    {...props}
-                                  >
-                                    {children}
-                                  </code>
-                                );
-                              },
-                              table: ({ children }) => (
-                                <div className="overflow-x-auto my-5 border border-zinc-200 rounded-none">
-                                  <table className="min-w-full divide-y divide-zinc-200">
-                                    {children}
-                                  </table>
+                                <summary className="flex items-center gap-3 p-3 cursor-pointer text-xs font-bold uppercase tracking-widest text-zinc-400 group-hover/modelthought:text-black transition-colors list-none">
+                                  <Zap className="w-3.5 h-3.5" />
+                                  <span>Tiến trình phân tích nội tại</span>
+                                </summary>
+                                <div className="p-3 pt-0 flex flex-col gap-2">
+                                  <div className="h-px w-full bg-zinc-200 mb-1" />
+                                  <div className="text-sm text-zinc-500 whitespace-pre-wrap leading-relaxed italic opacity-80">
+                                    {modelThought}
+                                  </div>
                                 </div>
-                              ),
-                              th: ({ children }) => (
-                                <th className="px-4 py-3 bg-zinc-50 text-left text-xs font-bold uppercase tracking-widest text-black border-b border-zinc-200">
-                                  {children}
-                                </th>
-                              ),
-                              td: ({ children }) => (
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
+                              </details>
+                            )}
+
+                            <div className="w-full prose prose-zinc max-w-none text-sm leading-relaxed">
+                              {isTyping && !cleanText ? (
+                                <div className="flex items-center gap-2 py-2">
+                                  <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />
+                                </div>
+                              ) : (
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm, remarkMath]}
+                                  rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                                  components={{
+                                    p: ({ children }) => (
+                                      <p className="mb-4 last:mb-0">
+                                        {children}
+                                      </p>
+                                    ),
+                                    code({ node, inline, className, children, ...props }: any) {
+                                      const match = /language-(\w+)/.exec(className || "");
+                                      const content = String(children).replace(/\n$/, "");
+                                      if (!inline && match) {
+                                        const lang = match[1];
+                                        return (
+                                          <div className="my-5 bg-black border border-black rounded-none overflow-hidden">
+                                            <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-black">
+                                              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                                {lang}
+                                              </span>
+                                              <button
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(content);
+                                                  showToast("Đã sao chép", "info");
+                                                }}
+                                                className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors rounded-none"
+                                              >
+                                                Sao chép
+                                              </button>
+                                            </div>
+                                            <pre className="p-4 overflow-x-auto m-0">
+                                              <code className="text-[13px] font-mono text-zinc-300 leading-relaxed">
+                                                {content}
+                                              </code>
+                                            </pre>
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <code
+                                          className={`${className} bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 text-black font-mono text-[13px] rounded-none`}
+                                          {...props}
+                                        >
+                                          {children}
+                                        </code>
+                                      );
+                                    },
+                                    table: ({ children }) => (
+                                      <div className="overflow-x-auto my-5 border border-zinc-200 rounded-none">
+                                        <table className="min-w-full divide-y divide-zinc-200">
+                                          {children}
+                                        </table>
+                                      </div>
+                                    ),
+                                    th: ({ children }) => (
+                                      <th className="px-4 py-3 bg-zinc-50 text-left text-xs font-bold uppercase tracking-widest text-black border-b border-zinc-200">
+                                        {children}
+                                      </th>
+                                    ),
+                                    td: ({ children }) => (
+                                      <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
+                                        {children}
+                                      </td>
+                                    ),
+                                  }}
+                                >
+                                  {cleanText}
+                                </ReactMarkdown>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}                           <td className="px-4 py-3 whitespace-nowrap text-sm text-zinc-600 border-b border-zinc-100">
                                   {children}
                                 </td>
                               ),
@@ -687,7 +761,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           </div>
 
           <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
-            <div className="w-full max-w-3xl relative">
+            <div className="w-full relative">
               {(selectedFile || selectedImage) && (
                 <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
                   {selectedImage && (

@@ -1,18 +1,18 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function createPaymentSessionAPI(amount: number, method: string = "momo") {
-  const res = await fetch(`${API_URL}/cong-thanh-toan/phien-thanh-toan`, {
+export async function createPaymentLinkAPI(amount: number) {
+  const res = await fetch(`${API_URL}/cong-thanh-toan/tao-link`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, method }),
+    body: JSON.stringify({ amount, method: "payos" }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khởi tạo phiên thanh toán thất bại");
+  if (!res.ok) throw new Error(data.message || "Khởi tạo liên kết thanh toán thất bại");
   return data;
 }
 
-export async function checkPaymentStatusAPI(sessionId: string) {
-  const res = await fetch(`${API_URL}/cong-thanh/kiem-tra/${sessionId}`, {
+export async function verifyPaymentAPI(orderCode: number) {
+  const res = await fetch(`${API_URL}/cong-thanh-toan/kiem-tra/${orderCode}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

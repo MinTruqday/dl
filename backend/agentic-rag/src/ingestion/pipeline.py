@@ -43,39 +43,42 @@ class IngestionPipeline:
         extraction_method = "local"
         chunks = []
 
+        extraction_method = "local"
+        chunks = []
+
         from src.agents.ade_agent import ade_agent
         ade_chunks = await ade_agent.get_ade_chunks_for_ingestion(file_url)
 
-        def get_summary_chunk(first_pages, extract_method):
+        async def get_summary_chunk(first_pages, extract_method):
             try:
-                from langchain_huggingface import HuggingFaceEndpoint
+                from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
                 from langchain_core.prompts import PromptTemplate
                 
                 llama_model = settings.LLAMA_MODEL
                 hf_token = settings.HF_TOKEN
                 
                 _hf = HuggingFaceEndpoint(repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
-                llm_summary = _hf
+                llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
                     template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: ...\nTác giả: ...\nNăm xuất bản/Bối cảnh: ...\nTóm tắt nội dung chính: ...\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
                     input_variables=["text"]
                 )
-                global_summary_text = llm_summary.invoke(prompt.format(text=first_pages)).strip()
+                response = await llm_summary.ainvoke(prompt.format(text=first_pages))
+                global_summary_text = response.content.strip()
                 
-                logger.info(f"Generated Global Summary Chunk for {title}")
                 return {
                     "id": f"{document_id}_global_summary",
                     "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nTài liệu: {title}\nTác giả: {author}\n{global_summary_text}",
                     "metadata": {**metadata, "chunk_id": "summary_001", "chunk_type": "summary", "chunk_index": -1, "extraction_method": extract_method}
                 }
             except Exception as e:
-                logger.warning(f"Failed to generate Global Summary Chunk: {e}")
+                logger.error(f"Failed to generate Global Summary Chunk: {e}")
                 return None
 
         if ade_chunks:
             extraction_method = "ade"
             first_few_pages = " ".join([ac["text"] for ac in ade_chunks[:5]])[:15000]
-            summary_chunk = get_summary_chunk(first_few_pages, "ade_llm")
+            summary_chunk = await get_summary_chunk(first_few_pages, "ade_llm")
             if summary_chunk:
                 chunks.append(summary_chunk)
 
@@ -93,15 +96,13 @@ class IngestionPipeline:
                     "text": ac["text"],
                     "metadata": chunk_meta,
                 })
-            logger.info(f"ADE extraction: {len(chunks)} chunks")
         else:
-            logger.info("ADE unavailable or failed, using local extraction")
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
                 raise ValueError(f"Extracted text too short for document {document_id}")
                 
             first_few_pages = raw_text[:15000]
-            summary_chunk = get_summary_chunk(first_few_pages, "local")
+            summary_chunk = await get_summary_chunk(first_few_pages, "local")
             if summary_chunk:
                 chunks.append(summary_chunk)
 
@@ -112,11 +113,11 @@ class IngestionPipeline:
             raise ValueError(f"No chunks produced for document {document_id}")
 
         texts = [c["text"] for c in chunks]
-        embeddings = embedding_service.embed_batch(texts)
+        embeddings = await embedding_service.embed_batch(texts)
         ids = [c["id"] for c in chunks]
         metadatas = [c["metadata"] for c in chunks]
 
-        vector_store.upsert(
+        await vector_store.upsert(
             ids=ids,
             embeddings=embeddings,
             documents=texts,
@@ -132,15 +133,13 @@ class IngestionPipeline:
             }}
         )
 
-        result = {
+        return {
             "document_id": document_id,
             "title": title,
             "chunks": len(chunks),
             "extraction_method": extraction_method,
             "status": "indexed"
         }
-        logger.info(f"Ingestion complete: {result}")
-        return result
 
     async def _extract_text(self, file_url: str) -> str:
         file_bytes = await self._download_file(file_url)
