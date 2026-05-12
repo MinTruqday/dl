@@ -1,15 +1,12 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 from loguru import logger
 from src.ingestion.pipeline import ingestion_pipeline
 from src.store.vector_store import vector_store
+from src.models.ingest import IngestRequest
 
 router = APIRouter()
 
-class IngestRequest(BaseModel):
-    document_id: str
-
-@router.post("/ingest")
+@router.post("/nap-du-lieu")
 async def ingest_endpoint(req: IngestRequest):
     logger.info(f"Ingestion: Starting for document {req.document_id}")
     return await ingestion_pipeline.ingest_document(req.document_id)

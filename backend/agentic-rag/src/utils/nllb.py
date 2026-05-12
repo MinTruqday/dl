@@ -16,10 +16,8 @@ def get_nllb_codes():
 NAME_TO_NLLB = {
     "vietnamese": "vie_Latn",
     "vi": "vie_Latn",
-    "tiếng việt": "vie_Latn",
     "english": "eng_Latn",
     "en": "eng_Latn",
-    "tiếng anh": "eng_Latn",
     "french": "fra_Latn",
     "fr": "fra_Latn",
     "german": "deu_Latn",
@@ -38,4 +36,4 @@ def map_to_nllb(lang_name: str) -> str:
     lang_name = lang_name.lower().strip()
     if lang_name in NAME_TO_NLLB:
         return NAME_TO_NLLB[lang_name]
-    return "eng_Latn"
+    return "vie_Latn"

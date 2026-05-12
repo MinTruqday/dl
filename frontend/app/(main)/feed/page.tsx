@@ -22,6 +22,7 @@ import {
   getFriendSuggestionsAPI as getIntersectionFriendsAPI,
   getAIFeedSummaryAPI,
 } from "@/services/social.service";
+import { suggestEngagementAPI, createPostAPI as createPostAI, createStoryAPI as createStoryAI } from "@/services/ai.service";
 import {
   getStoriesAPI,
   createStoryAPI,
@@ -165,6 +166,8 @@ export default function Feed() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isQuoteMode, setIsQuoteMode] = useState(false);
+  const [engagementSuggestions, setEngagementSuggestions] = useState<Record<string, string[]>>({});
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const savedDraft = localStorage.getItem("doclib_feed_draft");
@@ -749,6 +752,55 @@ export default function Feed() {
       showToast("Lỗi kết nối dịch thuật", "error");
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleSuggestEngagement = async (postId: string, content: string) => {
+    if (isGeneratingSuggestions[postId]) return;
+    setIsGeneratingSuggestions(prev => ({ ...prev, [postId]: true }));
+    try {
+      const data = await suggestEngagementAPI(content);
+      if (data.suggestions) {
+        setEngagementSuggestions(prev => ({ ...prev, [postId]: data.suggestions }));
+      }
+    } catch (err: any) {
+      showToast(err.message || "Không thể lấy gợi ý", "error");
+    } finally {
+      setIsGeneratingSuggestions(prev => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const generatePostWithAI = async () => {
+    if (isEnhancing) return;
+    setIsEnhancing(true);
+    showToast("AI đang soạn thảo bài đăng...", "info");
+    try {
+      const data = await createPostAI(content, attachedDocumentTitle || "");
+      if (data.post) {
+        setContent(data.post);
+        showToast("Đã soạn thảo xong!", "success");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Lỗi khi tạo bài đăng", "error");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const generateStoryWithAI = async () => {
+    if (isStoryUploading) return;
+    setIsStoryUploading(true);
+    showToast("AI đang lên kịch bản story...", "info");
+    try {
+      const data = await createStoryAI(storyText);
+      if (data.story) {
+        setStoryText(data.story);
+        showToast("Đã xong kịch bản!", "success");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Lỗi khi tạo kịch bản", "error");
+    } finally {
+      setIsStoryUploading(false);
     }
   };
 
@@ -1352,6 +1404,14 @@ export default function Feed() {
                         Tối ưu AI
                       </button>
                       <button
+                        onClick={generatePostWithAI}
+                        disabled={isEnhancing}
+                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <PenTool className="w-3 h-3" />
+                        Soạn thảo AI
+                      </button>
+                      <button
                         onClick={createPost}
                         disabled={!content.trim() && mediaUrls.length === 0}
                         className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 "
@@ -1743,7 +1803,43 @@ export default function Feed() {
                           </div>
 
                           {currentUser ? (
-                            <div className="space-y-3">
+                            <div className="space-y-4">
+                              {(!engagementSuggestions[post.id] || engagementSuggestions[post.id].length === 0) ? (
+                                <button
+                                  onClick={() => handleSuggestEngagement(post.id, post.content)}
+                                  disabled={isGeneratingSuggestions[post.id]}
+                                  className="w-full py-2 border border-zinc-200 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-black hover:border-black transition-all flex items-center justify-center gap-2"
+                                >
+                                  {isGeneratingSuggestions[post.id] ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <Sparkles className="w-3 h-3" />
+                                  )}
+                                  Gợi ý phản hồi bằng AI
+                                </button>
+                              ) : (
+                                <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                  {engagementSuggestions[post.id].map((suggestion, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => {
+                                        setCommentText(suggestion);
+                                        setEngagementSuggestions(prev => ({ ...prev, [post.id]: [] }));
+                                      }}
+                                      className="px-3 py-1.5 bg-zinc-50 border border-zinc-200 text-[10px] font-semibold text-black hover:bg-black hover:text-white transition-all text-left max-w-full truncate"
+                                    >
+                                      {suggestion}
+                                    </button>
+                                  ))}
+                                  <button 
+                                    onClick={() => setEngagementSuggestions(prev => ({ ...prev, [post.id]: [] }))}
+                                    className="p-1.5 border border-zinc-200 text-zinc-400"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )}
+
                               {replyToContext &&
                                 replyToContext.postId === post.id && (
                                   <div className="text-xs font-medium text-zinc-500 flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded-none">
@@ -1846,6 +1942,14 @@ export default function Feed() {
                   className="w-5 h-5 p-0 border border-zinc-200 cursor-pointer"
                   title="Màu chữ"
                 />
+                <button
+                  onClick={generateStoryWithAI}
+                  disabled={isStoryUploading}
+                  className="bg-black text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 border border-black flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Kịch bản AI
+                </button>
               </div>
               <div className="flex items-center gap-1">
                 <button

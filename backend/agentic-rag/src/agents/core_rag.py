@@ -227,7 +227,9 @@ async def generate_direct(state: AgentState):
 async def generate(state: AgentState):
     question = state["question"]
     documents = state.get("documents", [])
-    user_id = state.get("user_id", "guest_user")
+    user_id = state.get("user_id")
+    if not user_id:
+        return {"generation": "Vui lòng đăng nhập để sử dụng tính năng này."}
     user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
         documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data'][:6000]}")
@@ -268,8 +270,7 @@ Kết quả phản hồi (Chỉ in kết quả cuối cùng):""",
             user_context=user_context, citation_instruction=citation_instruction, thought_instruction=thought_instruction
         ))
         generation = response.content
-        if user_id != "guest_user":
-            memory_agent.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
+        memory_agent.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception as e:
         logger.error(f"Generate error: {e}")

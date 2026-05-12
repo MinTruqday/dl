@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from typing import Optional
 import json
 from langchain_core.messages import HumanMessage
@@ -8,19 +7,11 @@ from src.agents.router_agent import router_agent_app, router_llm
 from src.agents.core_rag import rag_agent_app
 from src.agents.action_agent import action_agent_app, auth_token_var
 from loguru import logger
+from src.models.chat import ChatRequest
 
 router = APIRouter()
 
-class ChatRequest(BaseModel):
-    query: str
-    user_id: str
-    document_id: Optional[str] = None
-    useWeb: bool = False
-    useSmart: bool = False
-    image_data: Optional[str] = None
-    file_data: Optional[str] = None
-
-@router.post("/chat")
+@router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
@@ -74,7 +65,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         "route": route
     }
 
-@router.post("/stream")
+@router.post("/luong-du-lieu")
 async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None

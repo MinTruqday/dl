@@ -21,7 +21,7 @@ class AIService:
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/chat", json={
+                resp = await client.post(f"{rag_url}/tro-chuyen", json={
                     "query": f"Tìm kiếm tài liệu liên quan đến: {query}",
                     "user_id": str(current_user.id),
                     "useSmart": True
@@ -49,7 +49,7 @@ class AIService:
             async with httpx.AsyncClient() as client:
                 if req.action == "translate":
                     res = await client.post(
-                        f"{rag_url}/inference/translate",
+                        f"{rag_url}/inference/dich-thuat",
                         json={"text": req.text, "target_lang": req.target_lang},
                         timeout=30.0
                     )
@@ -57,21 +57,9 @@ class AIService:
                     await QuotaService.consume_request(str(current_user.id))
                     return {"status": "success", "result": res.json().get("translation", "")}
                 else:
-                    prompt = ""
-                    if req.action == "autocomplete":
-                        prompt = f"Write the next reasonable sentence for this text without echoing my text. Context: {req.context}. Text: {req.text}"
-                    elif req.action == "grammar":
-                        prompt = f"Fix all grammar and spelling mistakes in the following text. Only return the corrected text: {req.text}"
-                    elif req.action == "summarize":
-                        prompt = f"Provide a clean, concise summary of the following text: {req.text}"
-                    elif req.action == "enhance_social":
-                        prompt = f"As a professional social media manager, polish the following content to be more engaging and editorial (Swiss-Brutalist style: direct, minimal, bold). Also suggest 3-5 relevant hashtags. Only return the polished text and hashtags. Text: {req.text}"
-                    else:
-                        raise HTTPException(status_code=400, detail="Hành động không hợp lệ.")
-
                     res = await client.post(
-                        f"{rag_url}/inference/generate",
-                        json={"prompt": prompt, "max_tokens": 150},
+                        f"{rag_url}/inference/hanh-dong",
+                        json={"action": req.action, "text": req.text, "context": req.context or ""},
                         timeout=30.0
                     )
                     res.raise_for_status()
@@ -89,7 +77,7 @@ class AIService:
             raise HTTPException(status_code=503, detail="Dịch vụ AI hiện chưa được cấu hình.")
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/inference/generate-flashcard", json={"text": text, "context": context})
+                resp = await client.post(f"{rag_url}/inference/tao-the-ghi-nho", json={"text": text, "context": context})
                 if resp.status_code == 200:
                     data = resp.json()
                     db = db_client.mongodb.get_default_database()
@@ -147,7 +135,7 @@ class AIService:
             return {"score": 100, "message": "AI không khả dụng."}
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/inference/grammar-check", json={"text": text[:5000]})
+                resp = await client.post(f"{rag_url}/inference/kiem-tra-ngu-phap", json={"text": text[:5000]})
                 if resp.status_code == 200: 
                     return resp.json()
         except Exception as e:
@@ -161,7 +149,7 @@ class AIService:
             return {"message": "AI không khả dụng."}
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{rag_url}/inference/generate-cover", json={"title": title, "description": description, "style": style})
+                resp = await client.post(f"{rag_url}/inference/tao-anh-bia", json={"title": title, "description": description, "style": style})
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
@@ -175,7 +163,7 @@ class AIService:
             return {"message": "AI không khả dụng."}
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{rag_url}/inference/generate-code", json={"prompt": prompt, "language": language})
+                resp = await client.post(f"{rag_url}/inference/tao-ma-nguon", json={"prompt": prompt, "language": language})
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
@@ -183,7 +171,7 @@ class AIService:
             return {"message": "Dịch vụ tạo mã nguồn hiện chưa khả dụng."}
 
     @staticmethod
-    async def generate_social_feed_summary(current_user) -> str:
+    async def generate_feed_summary(current_user) -> str:
         from services.quota import QuotaService
         from services.feed import FeedService
         feed = await FeedService.get_social_feed("foryou", None, 10, current_user, None)
@@ -196,7 +184,7 @@ class AIService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{settings.AGENTIC_RAG_URL}/inference/summarize",
+                    f"{settings.AGENTIC_RAG_URL}/inference/tom-tat",
                     json={"text": combined_text, "language": "vi"}
                 )
                 if resp.status_code == 200:
@@ -204,7 +192,7 @@ class AIService:
                     await QuotaService.consume_request(str(current_user.id))
                     return data.get("summary", "Không thể tạo tóm tắt vào lúc này.")
         except Exception as e:
-            logger.error(f"AI: Social feed summary failed: {str(e)}")
+            logger.error(f"AI: Feed summary failed: {str(e)}")
             
         return "Dịch vụ AI hiện đang bận, vui lòng thử lại sau."
 
@@ -218,7 +206,7 @@ class AIService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{rag_url}/inference/sentiment-analysis",
+                    f"{rag_url}/inference/phan-tich-cam-xuc",
                     json={"document_id": document_id}
                 )
                 if resp.status_code == 200:
@@ -254,9 +242,121 @@ class AIService:
             return "Dịch vụ AI hiện không khả dụng."
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(f"{rag_url}/inference/generate", json={"prompt": prompt, "max_tokens": max_tokens})
+                resp = await client.post(f"{rag_url}/inference/tao-noi-dung", json={"prompt": prompt, "max_tokens": max_tokens})
                 if resp.status_code == 200:
                     return resp.json().get("result", "Không thể tạo nội dung vào lúc này.")
         except Exception as e:
             logger.error(f"AI: Text completion failed: {e}")
         return "Lỗi kết nối đến máy chủ AI."
+
+    @staticmethod
+    async def generate_mindmap(text: str, depth: int, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/tao-ban-do-tu-duy", json={"text": text, "depth": depth})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Mindmap generation failed: {e}")
+        return {"error": "Không thể tạo bản đồ tư duy vào lúc này."}
+
+    @staticmethod
+    async def suggest_citations(text: str, style: str, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/trich-dan-thong-minh", json={"text": text, "style": style})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Citation suggestion failed: {e}")
+        return {"error": "Không thể gợi ý trích dẫn vào lúc này."}
+
+    @staticmethod
+    async def transform_tone(text: str, tone: str, expansion: bool, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/bien-doi-van-ban", json={"text": text, "tone": tone, "expansion": expansion})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Tone transformation failed: {e}")
+        return {"error": "Không thể biến đổi văn bản vào lúc này."}
+
+    @staticmethod
+    async def peer_review(text: str, criteria: list, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/tham-dinh-noi-dung", json={"text": text, "criteria": criteria})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Peer review failed: {e}")
+        return {"error": "Không thể thẩm định nội dung vào lúc này."}
+
+    @staticmethod
+    async def multi_doc_synthesis(document_ids: list, query: str, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/tong-hop-da-tai-lieu", json={"document_ids": document_ids, "query": query})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Multi-doc synthesis failed: {e}")
+        return {"error": "Không thể tổng hợp đa tài liệu vào lúc này."}
+
+    @staticmethod
+    async def create_post(text: str, context: str, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/tao-bai-dang-mang-xa-hoi", json={"text": text, "context": context})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Post generation failed: {e}")
+        return {"error": "Không thể tạo bài đăng vào lúc này."}
+
+    @staticmethod
+    async def create_story(text: str, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(f"{rag_url}/inference/tao-tin-mang-xa-hoi", json={"text": text})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Story generation failed: {e}")
+        return {"error": "Không thể tạo tin vào lúc này."}
+
+    @staticmethod
+    async def suggest_engagement(content: str, current_user) -> dict:
+        from services.quota import QuotaService
+        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(f"{rag_url}/inference/goi-y-tuong-tac", json={"content": content})
+                if resp.status_code == 200:
+                    await QuotaService.consume_request(str(current_user.id))
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"AI: Engagement suggestion failed: {e}")
+        return {"error": "Không thể gợi ý tương tác vào lúc này."}

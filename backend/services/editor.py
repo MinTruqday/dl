@@ -208,9 +208,19 @@ class EditorService:
         from services.ai import AIService
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id})
-        prompt = f"Dựa trên bối cảnh tài liệu '{doc.get('title')}' và nội dung hiện tại: '{context}', hãy gợi ý 3 hướng phát triển tiếp theo cho câu chuyện hoặc đoạn văn này."
-        suggestions = await AIService.generate_text_completion(prompt)
-        return {"suggestions": suggestions}
+        rag_url = settings.AGENTIC_RAG_URL
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{rag_url}/inference/action", 
+                json={
+                    "action": "ai_suggestions", 
+                    "text": context, 
+                    "context": doc.get("title", "")
+                }
+            )
+            if resp.status_code == 200:
+                return {"suggestions": resp.json().get("result", "")}
+        return {"suggestions": "Không thể lấy gợi ý vào lúc này."}
 
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
@@ -276,7 +286,7 @@ class EditorService:
         try:
             rag_url = settings.AGENTIC_RAG_URL
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f"{rag_url}/inference/plagiarism", json={"text": content[:5000]})
+                resp = await client.post(f"{rag_url}/inference/kiem-tra-dao-van", json={"text": content[:5000]})
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
@@ -290,13 +300,23 @@ class EditorService:
 
     @staticmethod
     async def check_logic(document_id: str, content: str, current_user) -> dict:
-        from services.ai import AIService
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id})
         previous_chapters = "\n".join([ch.get("content", "") for ch in doc.get("chapters", [])])
-        prompt = f"Dưới đây là các chương trước:\n{previous_chapters[:3000]}\n\nNội dung mới đang viết:\n{content}\n\nHãy tìm ra bất kỳ sự mâu thuẫn nào về cốt truyện hoặc nhân vật."
-        conflicts = await AIService.generate_text_completion(prompt)
-        return {"conflicts": [conflicts] if conflicts else []}
+        rag_url = settings.AGENTIC_RAG_URL
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{rag_url}/inference/action", 
+                json={
+                    "action": "check_logic", 
+                    "text": content, 
+                    "context": previous_chapters[:2000]
+                }
+            )
+            if resp.status_code == 200:
+                conflicts = resp.json().get("result", "")
+                return {"conflicts": [conflicts] if conflicts else []}
+        return {"conflicts": []}
 
     @staticmethod
     async def check_grammar(document_id: str, chapter_id: str, current_user) -> dict:

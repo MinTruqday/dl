@@ -175,7 +175,31 @@ class CTANCollector:
                         with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                             zip_ref.extractall(extracted_folder_path)
                             
-                        logger.info(f"Successfully extracted {filename}.")
+                        # Handle nested folder issue mentioned by user
+                        search_root = extracted_folder_path
+                        contents = os.listdir(extracted_folder_path)
+                        if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
+                            search_root = os.path.join(extracted_folder_path, contents[0])
+                            logger.info(f"Detected nested folder: {contents[0]}, adjusting search root.")
+
+                        # Find primary document (PDF or README)
+                        found_pdf = None
+                        for root, _, files in os.walk(search_root):
+                            for f in files:
+                                if f.lower().endswith(".pdf"):
+                                    # Prioritize files matching package name or in 'doc' folder
+                                    if slug in f.lower() or "doc" in root.lower():
+                                        found_pdf = os.path.join(root, f)
+                                        break
+                            if found_pdf: break
+                        
+                        if found_pdf:
+                            pdf_filename = os.path.basename(found_pdf)
+                            minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
+                            logger.info(f"Found and uploaded primary PDF: {minio_url_pdf}")
+                            payload["pdf_url"] = minio_url_pdf
+                        
+                        logger.info(f"Successfully processed {filename}.")
                     else:
                         logger.error(f"[CTAN Download Error] Cannot get. Code: {resp.status} - {url}")
                         return
@@ -193,6 +217,7 @@ class CTANCollector:
                 "slug": slug,
                 "description": payload.get("description", "Extracted via CTAN bot."),
                 "file_url": minio_url_book,
+                "pdf_url": payload.get("pdf_url"),
                 "tags": payload.get("authors", []),
                 "content_format": "zip",
                 "price": 0.0,

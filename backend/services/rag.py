@@ -1,5 +1,6 @@
 import httpx
 import os
+from fastapi import HTTPException
 import uuid
 from typing import Dict, Any, List, Optional
 from loguru import logger
@@ -10,12 +11,12 @@ class RagService:
     @staticmethod
     async def proxy_rag_chat(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Dict[str, Any]:
         base_url = settings.AGENTIC_RAG_URL
-        rag_url = f"{base_url}/chat"
+        rag_url = f"{base_url}/tro-chuyen"
         
         if current_user:
             payload["user_id"] = str(current_user.id)
         else:
-            payload["user_id"] = f"guest_{uuid.uuid4().hex[:8]}"
+            raise HTTPException(status_code=401, detail="Bạn cần đăng nhập để sử dụng tính năng này.")
             
         headers = {"Content-Type": "application/json"}
         if auth_header:
@@ -55,12 +56,13 @@ class RagService:
     async def proxy_rag_stream(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Any:
         from fastapi.responses import StreamingResponse
         base_url = settings.AGENTIC_RAG_URL
-        rag_url = f"{base_url}/stream"
+        rag_url = f"{base_url}/luong-du-lieu"
         
         if current_user:
             payload["user_id"] = str(current_user.id)
         else:
-            payload["user_id"] = f"guest_{uuid.uuid4().hex[:8]}"
+            from fastapi import HTTPException
+            raise HTTPException(status_code=401, detail="Bạn cần đăng nhập để sử dụng tính năng này.")
             
         headers = {"Content-Type": "application/json"}
         if auth_header:
@@ -127,13 +129,13 @@ class RagService:
         )
         
         base_url = settings.AGENTIC_RAG_URL
-        ingest_url = f"{base_url}/ingest"
+        rag_url = f"{base_url}/nap-du-lieu"
         
         payload = {"document_id": document_id}
         
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post(ingest_url, json=payload, timeout=300.0)
+                response = await client.post(rag_url, json=payload, timeout=300.0)
                 
             if response.status_code == 200:
                 await db["documents"].update_one(

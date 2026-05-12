@@ -12,7 +12,8 @@ import {
     getVersionDiffAPI
 } from "@/services/editor.service";
 import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
-import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X } from "lucide-react";
+import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain } from "lucide-react";
+import AIToolsModal from "./AIToolsModal";
 
 export default function Editor({
   documentId,
@@ -30,6 +31,7 @@ export default function Editor({
   const [isCompiling, setIsCompiling] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
+  const [isAiToolsOpen, setIsAiToolsOpen] = useState(false);
   const [activeSidebar, setActiveSidebar] = useState<"none" | "comments" | "history">("none");
   const [sidebarData, setSidebarData] = useState<any[]>([]);
   const [loadingSidebar, setLoadingSidebar] = useState(false);
@@ -307,6 +309,13 @@ export default function Editor({
                 Trợ lý AI
               </button>
               <button
+                onClick={() => setIsAiToolsOpen(true)}
+                className="px-4 py-1.5 border border-black bg-white text-black flex gap-2 items-center text-xs font-bold active:scale-[0.98] transition-all hover:bg-zinc-50"
+              >
+                <Brain className="w-4 h-4" />
+                Công cụ AI nâng cao
+              </button>
+              <button
                 onClick={handleConsistencyCheck}
                 disabled={isSuggesting}
                 className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
@@ -439,6 +448,12 @@ export default function Editor({
              <span className="text-[10px] font-bold text-zinc-400 uppercase">Mục tiêu ngày</span>
           </div>
       </div>
+
+      <AIToolsModal 
+        isOpen={isAiToolsOpen} 
+        onClose={() => setIsAiToolsOpen(false)} 
+        editorContent={lastContentRef.current} 
+      />
     </div>
   );
 }

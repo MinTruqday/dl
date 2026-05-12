@@ -4,7 +4,12 @@ import json
 import asyncio
 from api.dependency import get_current_user, check_quota
 from models.user import UserInDB
-from models.ai import AITextRequest, FlashcardRequest, FlashcardReviewRequest
+from models.ai import (
+    AITextRequest, FlashcardRequest, FlashcardReviewRequest,
+    AIMindmapRequest, AICitationRequest, AIToneRequest,
+    AIReviewRequest, AISynthesisRequest, AISocialPostRequest,
+    AISocialStoryRequest, AISocialEngagementRequest
+)
 from core.response import APIResponse
 from services.ai import AIService
 
@@ -101,6 +106,62 @@ async def get_social_feed_summary(current_user: UserInDB = Depends(check_quota))
 @router.get("/tai-lieu/{document_id}/cam-quan", response_model=APIResponse[Any])
 async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
-        data=await AIService.analyze_reader_sentiment(document_id),
+        data=await AIService.analyze_reader_sentiment(document_id, current_user),
         message="Phân tích cảm nhận độc giả thành công"
+    )
+
+@router.post("/tao-ban-do-tu-duy", response_model=APIResponse[Any])
+async def generate_mindmap(req: AIMindmapRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.generate_mindmap(req.text, req.depth, current_user),
+        message="Tạo bản đồ tư duy thành công"
+    )
+
+@router.post("/trich-dan-thong-minh", response_model=APIResponse[Any])
+async def suggest_citations(req: AICitationRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.suggest_citations(req.text, req.style, current_user),
+        message="Gợi ý trích dẫn thành công"
+    )
+
+@router.post("/bien-doi-van-ban", response_model=APIResponse[Any])
+async def transform_tone(req: AIToneRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.transform_tone(req.text, req.tone, req.expansion, current_user),
+        message="Biến đổi văn bản thành công"
+    )
+
+@router.post("/tham-dinh-noi-dung", response_model=APIResponse[Any])
+async def peer_review(req: AIReviewRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.peer_review(req.text, req.criteria, current_user),
+        message="Thẩm định nội dung thành công"
+    )
+
+@router.post("/tong-hop-da-tai-lieu", response_model=APIResponse[Any])
+async def multi_doc_synthesis(req: AISynthesisRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.multi_doc_synthesis(req.document_ids, req.query, current_user),
+        message="Tổng hợp đa tài liệu thành công"
+    )
+
+@router.post("/tao-bai-dang-mang-xa-hoi", response_model=APIResponse[Any])
+async def create_post(req: AIPostRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.create_post(req.text, req.context, current_user),
+        message="Tạo bài đăng thành công"
+    )
+
+@router.post("/tao-tin-mang-xa-hoi", response_model=APIResponse[Any])
+async def create_story(req: AIStoryRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.create_story(req.text, current_user),
+        message="Tạo tin thành công"
+    )
+
+@router.post("/goi-y-tuong-tac", response_model=APIResponse[Any])
+async def suggest_engagement(req: AIEngagementRequest, current_user: UserInDB = Depends(check_quota)):
+    return APIResponse(
+        data=await AIService.suggest_engagement(req.content, current_user),
+        message="Gợi ý tương tác thành công"
     )

@@ -111,3 +111,91 @@ export async function queryRagAPI(documentId: string, query: string, useSmart: b
 export async function translateTextAPI(text: string, targetLang: string = "vi") {
   return await processTextAPI(text, "translate", "", targetLang);
 }
+
+export async function generateMindmapAPI(text: string, depth: number = 2) {
+  const res = await fetch(`${API_URL}/ai/tao-ban-do-tu-duy`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, depth }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tạo bản đồ tư duy thất bại");
+  return data;
+}
+
+export async function suggestCitationsAPI(text: string, style: string = "APA") {
+  const res = await fetch(`${API_URL}/ai/trich-dan-thong-minh`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, style }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gợi ý trích dẫn thất bại");
+  return data;
+}
+
+export async function transformToneAPI(text: string, tone: string, expansion: boolean = false) {
+  const res = await fetch(`${API_URL}/ai/bien-doi-van-ban`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, tone, expansion }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Biến đổi văn bản thất bại");
+  return data;
+}
+
+export async function peerReviewAPI(text: string, criteria: string[] = []) {
+  const res = await fetch(`${API_URL}/ai/tham-dinh-noi-dung`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, criteria }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Thẩm định nội dung thất bại");
+  return data;
+}
+
+export async function multiDocSynthesisAPI(documentIds: string[], query: string) {
+  const res = await fetch(`${API_URL}/ai/tong-hop-da-tai-lieu`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ document_ids: documentIds, query }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tổng hợp đa tài liệu thất bại");
+  return data;
+}
+
+export async function createPostAPI(text: string, context: string = "") {
+  const res = await fetch(`${API_URL}/ai/tao-bai-dang-mang-xa-hoi`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text, context }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tạo bài đăng thất bại");
+  return data;
+}
+
+export async function createStoryAPI(text: string) {
+  const res = await fetch(`${API_URL}/ai/tao-tin-mang-xa-hoi`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tạo tin thất bại");
+  return data;
+}
+
+export async function suggestEngagementAPI(content: string) {
+  const res = await fetch(`${API_URL}/ai/goi-y-tuong-tac`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gợi ý tương tác thất bại");
+  return data;
+}

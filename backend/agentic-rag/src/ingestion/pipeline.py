@@ -146,7 +146,56 @@ class IngestionPipeline:
         if not file_bytes:
             return ""
         
+        ext = os.path.splitext(file_url.split("?")[0])[1].lower()
+        
+        if ext == ".zip":
+            logger.info(f"Detected ZIP archive for ingestion: {file_url}")
+            return await self._extract_from_zip(file_bytes)
+            
         return self._extract_with_markitdown(file_bytes, file_url)
+
+    async def _extract_from_zip(self, zip_data: bytes) -> str:
+        import zipfile
+        import tempfile
+        import shutil
+        
+        all_text = []
+        supported_exts = {".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".epub", ".mobi", ".ppt", ".pptx", ".md", ".tex"}
+        
+        with tempfile.TemporaryDirectory(prefix="rag_zip_") as tmp_dir:
+            zip_path = os.path.join(tmp_dir, "archive.zip")
+            with open(zip_path, "wb") as f:
+                f.write(zip_data)
+                
+            extract_path = os.path.join(tmp_dir, "extracted")
+            os.makedirs(extract_path)
+            
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_path)
+            
+            # Handle nested folder logic
+            search_root = extract_path
+            top_contents = os.listdir(extract_path)
+            if len(top_contents) == 1 and os.path.isdir(os.path.join(extract_path, top_contents[0])):
+                search_root = os.path.join(extract_path, top_contents[0])
+                logger.info(f"RAG: Navigating into nested folder: {top_contents[0]}")
+
+            for root, _, files in os.walk(search_root):
+                for f in files:
+                    f_ext = os.path.splitext(f)[1].lower()
+                    if f_ext in supported_exts:
+                        f_path = os.path.join(root, f)
+                        logger.info(f"RAG: Extracting content from nested file: {f}")
+                        try:
+                            with open(f_path, "rb") as f_handle:
+                                content_bytes = f_handle.read()
+                                file_text = self._extract_with_markitdown(content_bytes, f)
+                                if file_text:
+                                    all_text.append(f"--- FILE: {f} ---\n{file_text}")
+                        except Exception as e:
+                            logger.error(f"RAG: Failed to extract {f}: {e}")
+                            
+        return "\n\n".join(all_text)
 
     async def _download_file(self, url: str) -> Optional[bytes]:
         try:

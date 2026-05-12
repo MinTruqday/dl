@@ -199,6 +199,7 @@ export default function DocumentsPage() {
         const submissionData = {
           ...newDoc,
           file_url,
+          content_format: uploadRes.data.extension || file.name.split(".").pop()?.toLowerCase(),
           folder_id: currentFolder?._id || null,
           slug: newDoc.slug || newDoc.title.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now().toString().slice(-4),
           publish_at: newDoc.status === 'scheduled' ? newDoc.publish_at : null
@@ -388,7 +389,7 @@ export default function DocumentsPage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thực thể đính kèm</label>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.epub" />
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.epub,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip,.csv,.json,.md" />
                 <div 
                   onClick={() => fileInputRef.current?.click()}
                   className="border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:border-black p-6 flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer rounded-none"
@@ -398,7 +399,7 @@ export default function DocumentsPage() {
                   </div>
                   <div className="text-center">
                     <p className="text-xs font-semibold text-black mb-1 truncate max-w-[200px]">
-                      {file ? file.name : "Chọn tệp PDF/EPUB"}
+                      {file ? file.name : "Chọn tệp tin (PDF, EPUB, Office...)"}
                     </p>
                     <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
                       {file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Tối đa 50MB"}
@@ -637,6 +638,10 @@ export default function DocumentsPage() {
                       <option value="all">Mọi định dạng</option>
                       <option value="pdf">Tài liệu PDF</option>
                       <option value="epub">Sách EPUB</option>
+                      <option value="docx">Văn bản Word</option>
+                      <option value="xlsx">Bảng tính Excel</option>
+                      <option value="pptx">Thuyết trình PPT</option>
+                      <option value="zip">Gói nén (ZIP)</option>
                     </select>
                     <ChevronRight className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rotate-90 text-zinc-500" />
                   </div>

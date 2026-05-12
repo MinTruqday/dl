@@ -33,7 +33,9 @@ import {
   User as UserIcon,
   Search,
   X,
+  Combine,
 } from "lucide-react";
+import LibraryAISynthesisModal from "@/components/LibraryAISynthesisModal";
 import Link from "next/link";
 import {
   Modal,
@@ -97,6 +99,7 @@ export default function LibraryPage() {
   const [isClearing, setIsClearing] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isDeletingHistory, setIsDeletingHistory] = useState<string | null>(null);
+  const [isSynthesisOpen, setIsSynthesisOpen] = useState(false);
 
   const canManageSeries = useMemo(() => {
     const role = user?.role?.toLowerCase() || "";
@@ -265,6 +268,13 @@ export default function LibraryPage() {
                   {activeTab === t.id && <ChevronRight className="w-4 h-4" />}
                 </button>
               ))}
+              <button
+                onClick={() => setIsSynthesisOpen(true)}
+                className="flex items-center gap-3 px-3 py-3 mt-4 text-[10px] font-bold uppercase tracking-widest border border-black bg-black text-white hover:bg-zinc-800 transition-all active:scale-95"
+              >
+                <Combine className="w-4 h-4" />
+                Tổng hợp đa tài liệu AI
+              </button>
             </nav>
           </div>
 
@@ -831,6 +841,11 @@ export default function LibraryPage() {
           </button>
         </ModalFooter>
       </Modal>
+      <LibraryAISynthesisModal 
+        isOpen={isSynthesisOpen} 
+        onClose={() => setIsSynthesisOpen(false)} 
+        availableDocuments={[...pinnedDocs, ...continueDocs, ...history.slice(0, 20)]} 
+      />
     </div>
   );
 }

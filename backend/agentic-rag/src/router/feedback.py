@@ -1,21 +1,13 @@
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime, timezone
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.core.config import settings
+from src.models.feedback import FeedbackRequest
 
 router = APIRouter()
 
-class FeedbackRequest(BaseModel):
-    session_id: str
-    message_id: str
-    user_id: Optional[str] = "guest"
-    vote_type: str = Field(..., description="Must be 'upvote', 'downvote', or 'hallucination_report'")
-    comment: Optional[str] = ""
-
-@router.post("/feedback")
+@router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)

@@ -8,7 +8,7 @@ from src.core.config import settings
 class VectorStore:
     def __init__(self):
         self.client = AsyncQdrantClient(url=settings.QDRANT_URL)
-        self.collection_name = "doclib_documents"
+        self.collection_name = "doclib"
 
     async def ensure_collection(self):
         try:
