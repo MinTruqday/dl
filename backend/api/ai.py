@@ -7,8 +7,8 @@ from models.user import UserInDB
 from models.ai import (
     AITextRequest, FlashcardRequest, FlashcardReviewRequest,
     AIMindmapRequest, AICitationRequest, AIToneRequest,
-    AIReviewRequest, AISynthesisRequest, AISocialPostRequest,
-    AISocialStoryRequest, AISocialEngagementRequest
+    AIReviewRequest, AISynthesisRequest, AIPostRequest,
+    AIStoryRequest, AIEngagementRequest
 )
 from core.response import APIResponse
 from services.ai import AIService

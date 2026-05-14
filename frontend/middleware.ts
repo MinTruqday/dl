@@ -15,14 +15,13 @@ export function middleware(request: NextRequest) {
 
   const isPublicRoute =
     pathname === "/" ||
-    pathname.startsWith("/feed") ||
-    pathname.startsWith("/explore") ||
-    pathname.startsWith("/leaderboard") ||
-    pathname.startsWith("/search") ||
-    pathname.startsWith("/document") ||
+    pathname.startsWith("/bang-tin") ||
+    pathname.startsWith("/kham-pha") ||
+    pathname.startsWith("/xep-hang") ||
+    pathname.startsWith("/tim-kiem") ||
     pathname.startsWith("/tai-lieu") ||
-    pathname.startsWith("/authors") ||
-    pathname.startsWith("/preview") ||
+    pathname.startsWith("/tac-gia") ||
+    pathname.startsWith("/xem-truoc") ||
     pathname.startsWith("/auth/google/callback");
 
   if (!token && !isAuthRoute && !isPublicRoute) {
@@ -31,8 +30,9 @@ export function middleware(request: NextRequest) {
 
   if (role === "reader") {
     if (
-      pathname.startsWith("/studio") ||
-      pathname.startsWith("/moderation") ||
+      pathname.startsWith("/sang-tac") ||
+      pathname.startsWith("/van-hanh") ||
+      pathname.startsWith("/tac-gia-tiem-nang") ||
       pathname.startsWith("/admin")
     ) {
       return NextResponse.redirect(new URL("/", request.url));
@@ -40,14 +40,18 @@ export function middleware(request: NextRequest) {
   }
 
   if (role === "author") {
-    if (pathname.startsWith("/moderation") || pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/studio", request.url));
+    if (
+      pathname.startsWith("/van-hanh") || 
+      pathname.startsWith("/tac-gia-tiem-nang") ||
+      pathname.startsWith("/admin")
+    ) {
+      return NextResponse.redirect(new URL("/sang-tac", request.url));
     }
   }
 
   if (role === "moderator") {
-    if (pathname.startsWith("/studio") || pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/moderation", request.url));
+    if (pathname.startsWith("/sang-tac") || pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/van-hanh", request.url));
     }
   }
 

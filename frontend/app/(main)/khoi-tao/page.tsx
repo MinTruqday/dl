@@ -43,7 +43,7 @@ export default function CreateDocumentPage() {
       if (res) {
         showToast("Khởi tạo tác phẩm thành công.", "success");
         setTimeout(() => {
-          router.push(`/studio?document=${res.data?.id || res.data?._id || res.id || res._id}`);
+          router.push(`/sang-tac?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`);
         }, 1000);
       }
     } catch (err: any) {

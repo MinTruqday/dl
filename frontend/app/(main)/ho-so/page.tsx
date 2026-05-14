@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/services/authentication.service";
 import { updateProfileAPI } from "@/services/setting.service";
 import { depositDLAPI, getDetailedHistoryAPI } from "@/services/wallet.service";
-import { applyAuthorAPI } from "@/services/setting.service";
+import { applyAuthorAPI, becomeAuthorAPI } from "@/services/setting.service";
 import { uploadMediaAPI } from "@/services/asset.service";
 import { getBookmarksAPI } from "@/services/read.service";
 import {
@@ -142,18 +142,31 @@ export default function ProfilePage() {
 
   const handleApplyAuthor = async () => {
     if (!motivation.trim()) {
-      showToast("Vui lòng nhập lý do ứng tuyển tác giả", "error");
+      showToast("Vui lòng nhập lý do ứng tuyển tác giả tiềm năng", "error");
       return;
     }
     setIsApplying(true);
     try {
-      await applyAuthorAPI(motivation);
-      showToast("Đã gửi đơn ứng tuyển tác giả", "success");
+      await applyAuthorAPI({ reason: motivation });
+      showToast("Đã gửi đơn ứng tuyển tác giả tiềm năng", "success");
       setMotivation("");
     } catch (e: any) {
       showToast("Giao thức ứng tuyển thất bại", "error");
     } finally {
       setIsApplying(false);
+    }
+  };
+
+  const handleBecomeAuthor = async () => {
+    setIsSaving(true);
+    try {
+      await becomeAuthorAPI();
+      showToast("Chúc mừng! Bạn đã trở thành tác giả chính thức", "success");
+      window.location.reload();
+    } catch (e: any) {
+      showToast("Nâng cấp tác giả thất bại", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -404,19 +417,37 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {user.role !== "author" && (
+              {user.role === "reader" && (
                 <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
                   <h3 className="text-sm font-semibold text-black">
-                    Nâng cấp tác giả
+                    Trở thành tác giả
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">
-                    Tham gia cộng đồng tác giả để xuất bản tài liệu trên hệ thống.
+                    Bạn có thể nâng cấp tài khoản lên tác giả ngay lập tức để bắt đầu xuất bản nội dung.
+                  </p>
+                  <button
+                    onClick={handleBecomeAuthor}
+                    disabled={isSaving}
+                    className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-none"
+                  >
+                    {isSaving ? "Đang xử lý..." : "Trở thành tác giả ngay"}
+                  </button>
+                </div>
+              )}
+
+              {user.role === "author" && (
+                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                  <h3 className="text-sm font-semibold text-black">
+                    Ứng tuyển Tác giả tiềm năng
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium">
+                    Nâng cấp lên vị trí tác giả tiềm năng để nhận được nhiều ưu đãi và hiển thị đặc biệt.
                   </p>
                   <div className="flex items-start gap-4">
                     <input
                       value={motivation}
                       onChange={(e) => setMotivation(e.target.value)}
-                      placeholder="Lý do ứng tuyển"
+                      placeholder="Lý do ứng tuyển tác giả tiềm năng"
                       className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
                     />
                     <button
@@ -427,6 +458,17 @@ export default function ProfilePage() {
                       {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {user.role === "potential_author" && (
+                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                  <h3 className="text-sm font-semibold text-black">
+                    Vị thế Tác giả tiềm năng
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-medium italic">
+                    Chúc mừng! Bạn hiện là tác giả tiềm năng của hệ thống DocLib.
+                  </p>
                 </div>
               )}
             </div>

@@ -16,7 +16,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 
-export default function AuthorApplicationsPage() {
+export default function PotentialAuthorPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
   const { showToast } = useToast();
   const [applications, setApplications] = useState<any[]>([]);
@@ -56,7 +56,7 @@ export default function AuthorApplicationsPage() {
   const openReviewModal = (appId: string, status: string) => {
     setReviewModal({ isOpen: true, appId, status });
     setReasonText(
-      status === "APPROVED" ? "Đã phê duyệt hồ sơ tác giả." : "",
+      status === "APPROVED" ? "Đã phê duyệt hồ sơ tác giả tiềm năng." : "",
     );
   };
 
@@ -68,8 +68,8 @@ export default function AuthorApplicationsPage() {
         reviewModal.status,
         reasonText ||
           (reviewModal.status === "APPROVED"
-            ? "Đã phê duyệt hồ sơ tác giả."
-            : "Hồ sơ chưa đạt tiêu chuẩn kiểm duyệt."),
+            ? "Đã phê duyệt trở thành tác giả tiềm năng."
+            : "Chưa đạt tiêu chuẩn trở thành tác giả tiềm năng."),
       );
       showToast("Đã cập nhật trạng thái đơn ứng tuyển.", "success");
       setReviewModal(null);
@@ -120,8 +120,8 @@ export default function AuthorApplicationsPage() {
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
         <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-semibold text-black">Đơn ứng tuyển</h1>
-            <p className="text-sm text-zinc-500 mt-1">Quản lý và xét duyệt tác giả</p>
+            <h1 className="text-3xl font-semibold text-black">Tác giả tiềm năng</h1>
+            <p className="text-sm text-zinc-500 mt-1">Xét duyệt và nâng cấp tác giả</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -172,8 +172,8 @@ export default function AuthorApplicationsPage() {
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50">
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Ứng viên</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Nội dung hồ sơ</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Tác giả</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Lý do ứng tuyển</th>
                   <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Trạng thái</th>
                   <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Ngày gửi</th>
                   <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Thao tác</th>
@@ -195,7 +195,7 @@ export default function AuthorApplicationsPage() {
                     <td className="py-5 px-6 align-top max-w-sm">
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[10px] font-bold text-black uppercase tracking-wider">
-                          {app.type || "Hồ sơ tác giả"}
+                          {app.type || "Hồ sơ Tác giả tiềm năng"}
                         </span>
                         {app.portfolio_url && (
                           <a

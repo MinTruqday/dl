@@ -24,9 +24,13 @@ async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):
 async def update_my_profile(data: ProfileUpdate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await ProfileService.update_profile(data.model_dump(exclude_unset=True), current_user), message="Cập nhật hồ sơ thành công", status=200)
 
-@router.post("/dang-ky-tac-gia", response_model=APIResponse[Any])
+@router.post("/tac-gia-tiem-nang", response_model=APIResponse[Any])
 async def apply_author(data: Any, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await IdentityService.apply_author(data, current_user), message="Gửi đơn đăng ký thành công", status=201)
+    return APIResponse(data=await IdentityService.apply_author(data, current_user), message="Gửi đơn ứng tuyển tác giả tiềm năng thành công", status=201)
+
+@router.post("/tro-thanh-tac-gia", response_model=APIResponse[Any])
+async def become_author(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await IdentityService.become_author(current_user), message="Nâng cấp tài khoản thành công", status=200)
 
 @router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(current_user: UserInDB = Depends(get_current_user)):

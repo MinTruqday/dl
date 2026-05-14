@@ -24,17 +24,17 @@ async def proxy_rag_chat(
     current_user: UserInDB = Depends(get_current_user_optional),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    use_pro = payload.get("usePro", False)
+    use_smart = payload.get("useSmart", False)
     
-    if use_pro:
+    if use_smart:
         if not current_user:
-            raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để sử dụng tính năng Pro")
+            raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để sử dụng tính năng Chuyên sâu")
 
         user_wallet = await db.wallets.find_one({"user_id": current_user.id})
         balance = user_wallet.get("balance", 0) if user_wallet else 0
         
         if balance < 10:
-            raise HTTPException(status_code=400, detail="Số dư không đủ để sử dụng AI Pro. Vui lòng nạp thêm dl")
+            raise HTTPException(status_code=400, detail="Số dư không đủ để sử dụng Chế độ chuyên sâu. Vui lòng nạp thêm dl")
 
     auth_header = req.headers.get("Authorization")
     result = await RagService.proxy_rag_chat(payload, auth_header, current_user)

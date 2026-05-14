@@ -3,7 +3,8 @@ from typing import Optional, List, Any
 from loguru import logger
 from src.core.config import settings
 from src.models.inference import (
-    GenerationRequest, TranslationRequest, SentimentRequest, 
+    GenerationRequest, TranslationRequest, SentimentRequest,
+    CoverRequest, CodeRequest, GrammarRequest, FlashcardRequest,
     SummarizeRequest, ActionRequest, MindmapRequest, CitationRequest,
     ToneRequest, ReviewRequest, SynthesisRequest, PostRequest,
     StoryRequest, EngagementRequest
@@ -319,7 +320,7 @@ async def get_synonyms(req: GrammarRequest):
 @router.post("/tao-ban-do-tu-duy")
 async def generate_mindmap(req: MindmapRequest):
     try:
-        prompt = f"Phân tích văn bản sau và tạo một bản đồ tư duy (mindmap) với độ sâu {req.depth}. Trả về định dạng JSON hợp lệ: {{'nodes': [{{'id': '...', 'label': '...'}}], 'edges': [{{'from': '...', 'to': '...'}}]}}.\n\nVăn bản: {req.text[:2000]}"
+        prompt = f"Phân tích văn bản sau và tạo một bản đồ tư duy (mindmap) với độ sâu {req.depth}. Trả về ĐÚNG MỘT khối JSON hợp lệ, KHÔNG có markdown, KHÔNG có text thừa. Cấu trúc JSON: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"...\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"...\"}}]}}.\n\nVăn bản: {req.text[:2000]}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,

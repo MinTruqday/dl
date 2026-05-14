@@ -67,7 +67,7 @@ function StudioContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const rawDocId = searchParams.get("document");
+  const rawDocId = searchParams.get("tai-lieu");
   const docIdFromUrl = rawDocId && rawDocId !== "undefined" ? rawDocId : "";
 
   const [documents, setDocuments] = useState<StudioDocument[]>([]);
@@ -105,7 +105,7 @@ function StudioContent() {
   const [generatingCover, setGeneratingCover] = useState(false);
 
   const selectedDocument = useMemo(
-    () => documents.find((b) => b._id === selectedDocumentId) || null,
+    () => documents.find((b: any) => (b._id || b.id) === selectedDocumentId) || null,
     [documents, selectedDocumentId]
   );
 
@@ -133,7 +133,7 @@ function StudioContent() {
         if (docIdFromUrl) {
           setSelectedDocumentId(docIdFromUrl);
         } else if (!selectedDocumentId) {
-          setSelectedDocumentId(list[0]._id);
+          setSelectedDocumentId(list[0]._id || list[0].id);
         }
       }
     } catch {
@@ -150,6 +150,12 @@ function StudioContent() {
       const data = await getDocumentDraftAPI(selectedDocumentId);
       const draft = data.data || data;
       setContent(draft?.content || "");
+      setDocuments(prev => {
+        if (!prev.find(d => (d as any).id === selectedDocumentId || (d as any)._id === selectedDocumentId)) {
+          return [draft, ...prev];
+        }
+        return prev;
+      });
       setStatusMsg("Đã tải xong");
     } catch (e: any) {
       setStatusMsg("Lỗi tải bản nháp");
@@ -187,7 +193,7 @@ function StudioContent() {
     setLoadingTrash(true);
     try {
       const data = await getTrashAPI();
-      setTrash(data || []);
+      setTrash(data.data || data || []);
     } catch (err: any) {
       showToast("Không thể tải danh sách thùng rác", "error");
     } finally {
@@ -620,10 +626,10 @@ function StudioContent() {
                     Tác phẩm khác
                   </div>
                   <nav className="flex flex-col gap-1">
-                    {documents.filter(d => d._id !== selectedDocumentId).map((doc, idx) => (
+                    {documents.filter((d: any) => (d.id || d._id) !== selectedDocumentId).map((doc: any, idx) => (
                       <button
-                        key={doc._id || `other-doc-${idx}`}
-                        onClick={() => setSelectedDocumentId(doc._id)}
+                        key={doc._id || doc.id || `other-doc-${idx}`}
+                        onClick={() => setSelectedDocumentId(doc._id || doc.id)}
                         className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 transition-colors duration-150 rounded-none"
                       >
                         <span className="truncate">{doc.title}</span>
@@ -639,21 +645,21 @@ function StudioContent() {
                   Danh sách tác phẩm
                 </div>
                 <nav className="flex flex-col gap-1">
-                  {documents.map((doc, idx) => (
+                  {documents.map((doc: any, idx) => (
                     <button
-                      key={doc._id || `doc-list-${idx}`}
+                      key={doc._id || doc.id || `doc-list-${idx}`}
                       onClick={() => {
-                        setSelectedDocumentId(doc._id);
+                        setSelectedDocumentId(doc._id || doc.id);
                         setViewMode("edit");
                       }}
                       className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
-                        selectedDocumentId === doc._id 
+                        selectedDocumentId === (doc._id || doc.id) 
                           ? "bg-zinc-100 text-black border-zinc-300" 
                           : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
                       <span className="truncate">{doc.title}</span>
-                      {selectedDocumentId === doc._id && <ChevronRight className="w-4 h-4" />}
+                      {selectedDocumentId === (doc._id || doc.id) && <ChevronRight className="w-4 h-4" />}
                     </button>
                   ))}
                 </nav>
@@ -946,13 +952,13 @@ function StudioContent() {
                    <div className="space-y-4">
                       {loadingTrash ? (
                         <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-400" /></div>
-                      ) : trash.length === 0 ? (
+                      ) : !Array.isArray(trash) || trash.length === 0 ? (
                         <div className="bg-zinc-50 border border-zinc-200 p-16 text-center rounded-none flex flex-col items-center justify-center gap-3">
                            <X className="w-6 h-6 text-zinc-400" />
                            <p className="text-sm font-medium text-zinc-500">Thùng rác trống</p>
                         </div>
                       ) : (
-                        trash.map((doc) => (
+                        trash.map((doc: any) => (
                           <div key={doc._id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between transition-colors rounded-none">
                              <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center rounded-none border border-zinc-200">
@@ -964,7 +970,7 @@ function StudioContent() {
                                 </div>
                              </div>
                              <button 
-                                onClick={() => handleRestoreDocument(doc._id)}
+                                onClick={() => handleRestoreDocument(doc._id || doc.id)}
                                 className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none flex items-center gap-2"
                              >
                                 <RotateCcw className="w-4 h-4" /> Khôi phục

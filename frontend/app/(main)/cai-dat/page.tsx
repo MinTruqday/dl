@@ -275,7 +275,7 @@ export default function SettingsPage() {
       ? [
         {
           id: "apply_author",
-          label: "Đăng ký Tác giả",
+          label: "Tác giả tiềm năng",
           icon: UserPlus,
           roles: ["reader"],
         },
@@ -741,7 +741,7 @@ export default function SettingsPage() {
               <div className="border border-zinc-200 bg-white p-8">
                 <div className="border-b border-zinc-200 pb-4 mb-6">
                   <h3 className="text-sm font-semibold text-black">
-                    Đăng ký Tác giả
+                    Tác giả tiềm năng
                   </h3>
                   <p className="text-xs text-zinc-500 mt-1">
                     Tham gia đội ngũ sáng tạo nội dung

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Workspace from "@/components/Workspace";
 import {
   HelpCircle,
   Book,
@@ -43,7 +42,7 @@ export default function HelpPage() {
   );
 
   return (
-    <Workspace>
+    <>
       <div
         className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans"
         style={{
@@ -141,6 +140,6 @@ export default function HelpPage() {
           </button>
         </div>
       </div>
-    </Workspace>
+    </>
   );
 }

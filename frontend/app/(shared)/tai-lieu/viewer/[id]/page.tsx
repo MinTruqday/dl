@@ -55,7 +55,7 @@ export default function DocumentViewer() {
   const [messages, setMessages] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
-  const [usePro, setUsePro] = useState(false);
+  const [useSmart, setUseSmart] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<
     "chat" | "highlights" | "thumbnails" | "history"
   >("chat");
@@ -231,7 +231,7 @@ export default function DocumentViewer() {
       const apiCall = queryRagAPI(
         id,
         textToSubmit,
-        usePro,
+        useSmart,
         sessionId || undefined,
       );
       const res: any = await Promise.race([apiCall, timeoutPromise]);
@@ -621,10 +621,10 @@ export default function DocumentViewer() {
           </div>
           {sidebarTab === "chat" && (
             <button
-              onClick={() => setUsePro(!usePro)}
-              className={`px-3 py-1 text-xs font-medium border rounded-none transition-colors ${usePro ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200 hover:border-black hover:text-black"}`}
+              onClick={() => setUseSmart(!useSmart)}
+              className={`px-3 py-1 text-xs font-medium border rounded-none transition-colors ${useSmart ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200 hover:border-black hover:text-black"}`}
             >
-              {usePro ? "Chuyên sâu" : "Tiêu chuẩn"}
+              {useSmart ? "Chuyên sâu" : "Tiêu chuẩn"}
             </button>
           )}
         </div>

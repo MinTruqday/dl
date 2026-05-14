@@ -6,8 +6,8 @@ import { getAuthorRevenueAPI } from "@/services/monetization.service";
 import {
   getWalletHistoryAPI,
   getWalletBalanceAPI,
-  requestPayoutAPI,
 } from "@/services/wallet.service";
+import { requestPayoutAPI } from "@/services/payout.service";
 import {
   Wallet,
   TrendingUp,

@@ -23,6 +23,8 @@ class DocumentContentFormat(str, Enum):
     EPUB = "epub"
     MOBI = "mobi"
     ZIP = "zip"
+    HTML = "html"
+    JSON = "json"
 
 class DocumentBase(BaseModel):
     title: str

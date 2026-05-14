@@ -2,16 +2,22 @@
 import { useState, useEffect } from "react";
 import Navigation from "./Navigation";
 import Menu from "./Menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 interface AppShellProps {
   children: React.ReactNode;
+  requireAuth?: boolean;
 }
 
-export default function Workspace({ children }: AppShellProps) {
+export default function Workspace({ children, requireAuth = false }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { user, isLoading } = useAuth() as any;
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -31,6 +37,12 @@ export default function Workspace({ children }: AppShellProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    if (requireAuth && !isLoading && !user) {
+      router.push("/dang-nhap");
+    }
+  }, [requireAuth, isLoading, user, router]);
+
   const toggleSidebar = () => {
     if (isMobile) {
       setMobileMenuOpen((v) => !v);
@@ -46,6 +58,14 @@ export default function Workspace({ children }: AppShellProps) {
       ? mobileMenuOpen
       : sidebarOpen
     : true;
+
+  if (requireAuth && (isLoading || (!user && mounted))) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">

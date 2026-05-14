@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import {
-  triggerCollectionAPI,
-  getCollectorStatsAPI,
-} from "@/services/operation.service";
+import { getCollectorStatsAPI } from "@/services/operation.service";
+import { triggerCollectionAPI } from "@/services/collector.service";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";

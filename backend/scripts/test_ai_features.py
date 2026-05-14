@@ -42,7 +42,7 @@ async def test_ai_features():
         print("\nStep 3: Testing Agentic RAG Chat (/ai/truy-van)...")
         chat_resp = await client.post(f"{BASE_URL}/ai/truy-van", json={
             "query": "DocLib là gì?",
-            "usePro": False
+            "useSmart": False
         }, headers=headers)
         
         if chat_resp.status_code == 200:

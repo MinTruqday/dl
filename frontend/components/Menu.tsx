@@ -124,7 +124,7 @@ export default function Menu({
           <NavLink
             icon={LayoutDashboard}
             label="Bảng tin"
-            href="/feed"
+            href="/bang-tin"
             requireAuth
           />
           <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />
@@ -161,19 +161,19 @@ export default function Menu({
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/collab"
+            href="/cong-tac"
             label="Hợp tác"
             icon={Users}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/assets"
+            href="/tai-nguyen"
             label="Kho lưu trữ"
             icon={FolderOpen}
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/payout"
+            href="/rut-tien"
             label="Doanh thu"
             icon={Wallet}
             roles={["author", "admin"]}
@@ -192,38 +192,38 @@ export default function Menu({
           </div>
 
           <NavLink
-            href="/logs"
+            href="/nhat-ky"
             label="Nhật ký hệ thống"
             icon={Clock}
             roles={["moderator", "admin"]}
           />
           <NavLink
-            href="/collector"
+            href="/thu-thap"
             label="Thu thập dữ liệu"
             icon={Database}
             roles={["admin"]}
           />
 
           <NavLink
-            href="/user"
+            href="/quan-ly-nguoi-dung"
             label="Người dùng"
             icon={Users}
             roles={["admin"]}
           />
           <NavLink
-            href="/applications"
-            label="Đăng ký tác giả"
+            href="/tac-gia-tiem-nang"
+            label="Tác giả tiềm năng"
             icon={UserCheck}
             roles={["admin", "moderator"]}
           />
           <NavLink
-            href="/reports"
+            href="/bao-cao"
             label="Báo cáo vi phạm"
             icon={AlertTriangle}
             roles={["admin", "moderator"]}
           />
           <NavLink
-            href="/operation"
+            href="/van-hanh"
             label="Quản trị hệ thống"
             icon={Shield}
             roles={["admin"]}

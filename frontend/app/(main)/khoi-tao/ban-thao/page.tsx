@@ -45,7 +45,7 @@ export default function DraftsPage() {
           {drafts.map((draft: any) => (
             <button
               key={draft._id || draft.id}
-              onClick={() => router.push(`/studio?document=${draft._id || draft.id}`)}
+              onClick={() => router.push(`/sang-tac?tai-lieu=${draft._id || draft.id}`)}
               className="group flex items-center justify-between p-4 border border-zinc-200 bg-white text-left rounded-none hover:border-black transition-colors"
             >
               <div className="flex items-center gap-4">

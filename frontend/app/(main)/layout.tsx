@@ -5,5 +5,5 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <Workspace>{children}</Workspace>;
+  return <Workspace requireAuth={true}>{children}</Workspace>;
 }

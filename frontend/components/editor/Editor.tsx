@@ -12,8 +12,8 @@ import {
     getVersionDiffAPI
 } from "@/services/editor.service";
 import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
-import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain } from "lucide-react";
-import AIToolsModal from "./AIToolsModal";
+import { API_URL, getAuthHeaders } from "@/services/authentication.service";
+import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network } from "lucide-react";
 
 export default function Editor({
   documentId,
@@ -31,7 +31,6 @@ export default function Editor({
   const [isCompiling, setIsCompiling] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
-  const [isAiToolsOpen, setIsAiToolsOpen] = useState(false);
   const [activeSidebar, setActiveSidebar] = useState<"none" | "comments" | "history">("none");
   const [sidebarData, setSidebarData] = useState<any[]>([]);
   const [loadingSidebar, setLoadingSidebar] = useState(false);
@@ -180,7 +179,12 @@ export default function Editor({
       }
       showToast("Đang phân tích ngữ pháp bằng AI", "info");
       const res = await grammarCheckAPI(text);
-      showToast(`Kết quả AI: ${res.message} (Điểm: ${res.score}/100)`, "success");
+      if (res.data) {
+        showToast(`Kết quả AI: Điểm ${res.data.score}/100.`, "success");
+        if (res.data.corrected_text) {
+          editorRef.current.blocks.insert("paragraph", { text: `<i>[Đề xuất sửa ngữ pháp]: ${res.data.corrected_text}</i>` });
+        }
+      }
     } catch (err: any) {
       showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
     }
@@ -191,20 +195,21 @@ export default function Editor({
     setIsSuggesting(true);
     try {
       const data = await editorRef.current.save();
-      let text = "";
-      data.blocks.forEach((b: any) => {
-        if (b.data?.text) text += b.data.text + " ";
-      });
-      if (!text || text.length < 10) {
-        showToast("Vui lòng chọn một từ để tìm từ đồng nghĩa", "info");
+      let text = data.blocks.map((b: any) => b.data?.text || "").join(" ");
+      
+      const selection = window.getSelection();
+      const targetWord = selection?.toString().trim();
+
+      if (!targetWord || targetWord.split(" ").length > 3) {
+        showToast("Vui lòng chọn một từ hoặc cụm từ ngắn để tìm đồng nghĩa", "info");
         setIsSuggesting(false);
         return;
       }
-      const words = text.split(" ").filter((w: string) => w.trim().length > 0);
-      const targetWord = words[words.length - 1];
+
       const res = await getSynonymsAPI(targetWord, text);
-      if (res.synonyms && res.synonyms.length > 0) {
-        showToast(`Gợi ý cho "${targetWord}": ${res.synonyms.join(", ")}`, "info");
+      const synonyms = res.data?.synonyms || [];
+      if (synonyms.length > 0) {
+        showToast(`Gợi ý cho "${targetWord}": ${synonyms.join(", ")}`, "info");
       } else {
         showToast("Không tìm thấy từ đồng nghĩa phù hợp", "info");
       }
@@ -225,8 +230,9 @@ export default function Editor({
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {
         const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
-            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+            headers: getAuthHeaders()
         });
+        if (!res.ok) throw new Error("Lỗi xác thực hoặc không thể tải nhận xét");
         const data = await res.json();
         setSidebarData(data.data || []);
       }
@@ -247,14 +253,16 @@ export default function Editor({
     try {
       const data = await editorRef.current.save();
       const text = data.blocks.map(b => b.data?.text || "").join(" ");
+      const contextText = text.length > 3000 ? text.slice(-3000) : text;
       const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-logic`, {
           method: "POST",
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-          body: JSON.stringify({ content: text })
+          body: JSON.stringify({ content: contextText })
       });
       const result = await res.json();
-      if (result.conflicts && result.conflicts.length > 0) {
-          showToast(`Cảnh báo logic: ${result.conflicts[0]}`, "error");
+      const conflicts = result.data?.conflicts || [];
+      if (conflicts.length > 0) {
+          showToast(`Cảnh báo logic: ${conflicts[0]}`, "error");
       } else {
           showToast("Nội dung nhất quán với các chương trước", "success");
       }
@@ -272,13 +280,18 @@ export default function Editor({
       const data = await editorRef.current.save();
       let lastText = "";
       if (data.blocks.length > 0) {
-        const lastBlock = data.blocks[data.blocks.length - 1];
-        lastText = lastBlock.data?.text || "";
+        const lastBlocks = data.blocks.slice(-5);
+        lastText = lastBlocks.map((b: any) => b.data?.text || "").join(" ");
       }
       
       const res = await getAiSuggestionsAPI(documentId, lastText);
-      showToast("AI đã tạo gợi ý mới", "success");
-      console.log("AI Suggestions:", res);
+      const suggestion = res.suggestions || "";
+      if (suggestion) {
+        editorRef.current.blocks.insert("paragraph", { text: `<i>[Gợi ý AI]: ${suggestion}</i>` });
+        showToast("Đã chèn gợi ý AI vào cuối văn bản", "success");
+      } else {
+        showToast("AI chưa có gợi ý phù hợp lúc này", "info");
+      }
     } catch (err: any) {
       showToast(err.message || "Không thể gọi trợ lý AI", "error");
     } finally {
@@ -295,39 +308,28 @@ export default function Editor({
               <button
                 onClick={handleSynonyms}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
               >
-                <Sparkles className="w-4 h-4" />
                 Gợi ý từ ngữ
               </button>
               <button
                 onClick={handleAiWritingPartner}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-black flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
               >
-                <Wand2 className="w-4 h-4" />
                 Trợ lý AI
-              </button>
-              <button
-                onClick={() => setIsAiToolsOpen(true)}
-                className="px-4 py-1.5 border border-black bg-white text-black flex gap-2 items-center text-xs font-bold active:scale-[0.98] transition-all hover:bg-zinc-50"
-              >
-                <Brain className="w-4 h-4" />
-                Công cụ AI nâng cao
               </button>
               <button
                 onClick={handleConsistencyCheck}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
               >
-                <CheckSquare className="w-4 h-4" />
                 Kiểm tra tính logic
               </button>
               <button
                 onClick={handleGrammarCheck}
-                className="px-4 py-1.5 bg-black text-white flex gap-2 items-center text-xs font-bold active:scale-[0.98]"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
               >
-                <FileText className="w-4 h-4 text-zinc-400" />
                 Kiểm tra ngữ pháp
               </button>
             </div>
@@ -389,7 +391,7 @@ export default function Editor({
                     sidebarData.map((v, idx) => (
                         <div key={v.id || `history-${idx}`} className="p-4 border border-zinc-200 bg-white space-y-2">
                            <div className="flex justify-between items-start">
-                              <span className="text-[10px] font-bold text-zinc-400 uppercase">{new Date(v.created_at).toLocaleString("vi-VN")}</span>
+                              <span className="text-[10px] font-bold text-zinc-400 uppercase">{v.created_at ? new Date(v.created_at).toLocaleString("vi-VN") : ""}</span>
                               <Clock className="w-3 h-3 text-zinc-300" />
                            </div>
                            <p className="text-xs font-medium text-black">Bản lưu bởi {v.author_name || "Hệ thống"}</p>
@@ -397,12 +399,30 @@ export default function Editor({
                     ))
                 ) : (
                     sidebarData.map((c, idx) => (
-                        <div key={c.id || `comment-${idx}`} className="p-4 border border-zinc-200 bg-white space-y-2">
+                        <div 
+                           key={c.id || `comment-${idx}`} 
+                           className="p-4 border border-zinc-200 bg-white space-y-2 cursor-pointer hover:border-black transition-colors"
+                           onClick={() => {
+                             if (c.selected_text || c.content) {
+                                const searchText = c.selected_text || c.content;
+                                const elements = document.querySelectorAll('.ce-block');
+                                for (let i = 0; i < elements.length; i++) {
+                                   if (elements[i].textContent?.includes(searchText)) {
+                                      elements[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      elements[i].classList.add('bg-zinc-100', 'transition-colors', 'duration-500');
+                                      setTimeout(() => elements[i].classList.remove('bg-zinc-100'), 2000);
+                                      break;
+                                   }
+                                }
+                             }
+                           }}
+                        >
                            <div className="flex justify-between items-start">
-                              <span className="text-[10px] font-bold text-zinc-400 uppercase">{new Date(c.created_at).toLocaleString("vi-VN")}</span>
+                              <span className="text-[10px] font-bold text-zinc-400 uppercase">{c.created_at ? new Date(c.created_at).toLocaleString("vi-VN") : ""}</span>
                               <MessageSquare className="w-3 h-3 text-zinc-300" />
                            </div>
-                           <p className="text-xs font-medium text-black">{c.content}</p>
+                           <p className="text-xs font-bold text-black border-b border-zinc-100 pb-1">{c.user_name || "Khách"}</p>
+                           <p className="text-xs font-medium text-black">{c.text || c.content}</p>
                            <div className="pt-2 flex justify-end">
                               <button className="text-[10px] font-bold text-zinc-400 hover:text-black uppercase">Giải quyết</button>
                            </div>
@@ -442,18 +462,13 @@ export default function Editor({
              <div className="w-32 h-1 bg-zinc-100 relative">
                 <div 
                   className="absolute top-0 left-0 h-full bg-black transition-all duration-500" 
-                  style={{ width: `${Math.min(100, (stats.charCount / 5000) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (stats.charCount / (parseInt(typeof window !== 'undefined' ? localStorage.getItem("doclib_daily_goal") || "5000" : "5000"))) * 100)}%` }}
                 />
              </div>
              <span className="text-[10px] font-bold text-zinc-400 uppercase">Mục tiêu ngày</span>
           </div>
       </div>
 
-      <AIToolsModal 
-        isOpen={isAiToolsOpen} 
-        onClose={() => setIsAiToolsOpen(false)} 
-        editorContent={lastContentRef.current} 
-      />
     </div>
   );
 }

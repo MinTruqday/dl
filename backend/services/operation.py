@@ -64,7 +64,7 @@ class OperationService:
         )
         
         if status == "APPROVED":
-            await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.AUTHOR}})
+            await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.POTENTIAL_AUTHOR}})
             
         logger.info(f"Administration: Author application {application_id} {status} by {reviewer_id}")
         return {"message": f"Đã {status.lower()} đơn ứng tuyển thành công."}

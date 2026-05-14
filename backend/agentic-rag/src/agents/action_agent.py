@@ -11,6 +11,7 @@ auth_token_var = contextvars.ContextVar("auth_token", default=None)
 
 @tool
 async def get_user_balance() -> str:
+    """Lấy số dư ví DocLib (dl) của người dùng hiện tại."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
@@ -31,6 +32,7 @@ async def get_user_balance() -> str:
 
 @tool
 async def get_transaction_history() -> str:
+    """Xem lịch sử các giao dịch tài chính gần đây (nạp tiền, thanh toán)."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
@@ -56,6 +58,7 @@ async def get_transaction_history() -> str:
 
 @tool
 async def redeem_voucher(code: str) -> str:
+    """Đổi mã quà tặng (voucher) để cộng tiền vào tài khoản."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
@@ -81,6 +84,7 @@ async def redeem_voucher(code: str) -> str:
 
 @tool
 async def get_revenue_report() -> str:
+    """Xem báo cáo doanh thu từ việc bán tài liệu (dành cho tác giả)."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem doanh thu"
@@ -100,6 +104,7 @@ async def get_revenue_report() -> str:
 
 @tool
 async def send_virtual_tip(target_user_id: str, amount: int) -> str:
+    """Gửi tặng tiền (dl) cho một người dùng khác (tác giả)."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để gửi tặng dl"
@@ -121,6 +126,7 @@ async def send_virtual_tip(target_user_id: str, amount: int) -> str:
 
 @tool
 async def get_my_documents() -> str:
+    """Liệt kê danh sách tài liệu cá nhân đang sở hữu hoặc đã đăng."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem tài liệu"
@@ -143,6 +149,7 @@ async def get_my_documents() -> str:
 
 @tool
 async def get_trash_documents() -> str:
+    """Xem danh sách tài liệu đã bị xóa nằm trong thùng rác."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -165,6 +172,7 @@ async def get_trash_documents() -> str:
 
 @tool
 async def delete_document(document_id: str) -> str:
+    """Xóa một tài liệu (chuyển vào thùng rác) theo ID."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
@@ -181,6 +189,7 @@ async def delete_document(document_id: str) -> str:
 
 @tool
 async def restore_document(document_id: str) -> str:
+    """Khôi phục tài liệu từ thùng rác theo ID."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -197,6 +206,7 @@ async def restore_document(document_id: str) -> str:
 
 @tool
 async def get_document_analytics(document_id: str) -> str:
+    """Xem thống kê chi tiết về lượt đọc và tỉ lệ bỏ dở của tài liệu."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -218,6 +228,95 @@ async def get_document_analytics(document_id: str) -> str:
         logger.error(f"Error getting analytics: {e}")
         return "Lỗi kết nối hệ thống phân tích"
 
+async def _get_doc_text(document_id: str, token: str) -> str:
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.get(f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": f"Bearer {token}"}, timeout=10)
+        if res.status_code == 200:
+            return res.json().get("data", {}).get("content", "")
+    except Exception as e:
+        logger.error(f"Error fetching doc: {e}")
+    return ""
+
+@tool
+async def agent_generate_mindmap(document_id: str) -> str:
+    """Tạo bản đồ tư duy (mindmap) cho tài liệu."""
+    token = auth_token_var.get()
+    text = await _get_doc_text(document_id, token)
+    if not text: return "Không tìm thấy nội dung tài liệu."
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"http://127.0.0.1:8001/inference/tao-ban-do-tu-duy", json={"text": text[:2000], "depth": 2})
+            if resp.status_code == 200:
+                data = resp.json()
+                import json
+                return f"Đã tạo cấu trúc bản đồ tư duy thành công:\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
+    except Exception as e:
+        return f"Lỗi tạo bản đồ: {e}"
+    return "Thất bại"
+
+@tool
+async def agent_suggest_citations(document_id: str) -> str:
+    """Gợi ý trích dẫn cho tài liệu."""
+    token = auth_token_var.get()
+    text = await _get_doc_text(document_id, token)
+    if not text: return "Không tìm thấy nội dung tài liệu."
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"http://127.0.0.1:8001/inference/trich-dan-thong-minh", json={"text": text[:1000], "style": "APA"})
+            if resp.status_code == 200:
+                return f"Gợi ý trích dẫn:\n\n{resp.json().get('citations', '')}"
+    except Exception as e:
+        return f"Lỗi gọi AI: {e}"
+    return "Thất bại"
+
+@tool
+async def agent_peer_review(document_id: str) -> str:
+    """Thẩm định nội dung tài liệu, đánh giá ưu nhược điểm."""
+    token = auth_token_var.get()
+    text = await _get_doc_text(document_id, token)
+    if not text: return "Không tìm thấy nội dung tài liệu."
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"http://127.0.0.1:8001/inference/tham-dinh-noi-dung", json={"text": text[:2000], "criteria": ["logic", "rõ ràng"]})
+            if resp.status_code == 200:
+                return f"Báo cáo thẩm định:\n\n{resp.json().get('review_report', '')}"
+    except Exception as e:
+        return f"Lỗi gọi AI: {e}"
+    return "Thất bại"
+
+@tool
+async def agent_transform_tone(document_id: str, tone: str) -> str:
+    """Biến đổi giọng văn (tone) của tài liệu (ví dụ: hàn lâm, chuyên nghiệp)."""
+    token = auth_token_var.get()
+    text = await _get_doc_text(document_id, token)
+    if not text: return "Không tìm thấy nội dung tài liệu."
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"http://127.0.0.1:8001/inference/bien-doi-van-ban", json={"text": text[:1000], "tone": tone, "expansion": False})
+            if resp.status_code == 200:
+                return f"Văn bản đã biến đổi ({tone}):\n\n{resp.json().get('transformed_text', '')}"
+    except Exception as e:
+        return f"Lỗi gọi AI: {e}"
+    return "Thất bại"
+
+@tool
+async def agent_create_social_post(document_id: str) -> str:
+    """Tạo bài đăng mạng xã hội và story từ tài liệu."""
+    token = auth_token_var.get()
+    text = await _get_doc_text(document_id, token)
+    if not text: return "Không tìm thấy nội dung tài liệu."
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp1 = await client.post(f"http://127.0.0.1:8001/inference/tao-bai-dang-mang-xa-hoi", json={"text": text[:1500], "context": ""})
+            resp2 = await client.post(f"http://127.0.0.1:8001/inference/tao-tin-mang-xa-hoi", json={"text": text[:1500]})
+            post = resp1.json().get("post", "") if resp1.status_code == 200 else ""
+            story = resp2.json().get("story", "") if resp2.status_code == 200 else ""
+            return f"**Bài đăng Facebook/LinkedIn:**\n{post}\n\n**Kịch bản Story:**\n{story}"
+    except Exception as e:
+        return f"Lỗi gọi AI: {e}"
+    return "Thất bại"
+
 tools = [
     get_user_balance,
     get_transaction_history,
@@ -228,7 +327,12 @@ tools = [
     get_trash_documents,
     delete_document,
     restore_document,
-    get_document_analytics
+    get_document_analytics,
+    agent_generate_mindmap,
+    agent_suggest_citations,
+    agent_peer_review,
+    agent_transform_tone,
+    agent_create_social_post
 ]
 
 llama_model = settings.LLAMA_MODEL

@@ -28,13 +28,13 @@ export async function updateMyProfileAPI(data: {
 }
 
 export async function applyAuthorAPI(data: any) {
-  const res = await fetch(`${API_URL}/ho-so/dang-ky-tac-gia`, {
+  const res = await fetch(`${API_URL}/ho-so/tac-gia-tiem-nang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Gửi đơn đăng ký tác giả thất bại");
+  if (!res.ok) throw new Error(result.message || "Gửi đơn ứng tuyển tác giả tiềm năng thất bại");
   return result;
 }
 

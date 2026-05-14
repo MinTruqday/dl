@@ -3,28 +3,51 @@ import uuid
 # pyrefly: ignore [missing-import]
 from fastapi import HTTPException
 from core.database import db_client
-from models.user import AuthorStatusEnum, KYCStatusEnum
+from models.user import AuthorStatusEnum, KYCStatusEnum, RoleEnum
 from core.storage import upload_file
 from loguru import logger
 
 class IdentityService:
     @staticmethod
+    async def become_author(current_user):
+        db = db_client.mongodb.get_default_database()
+        user_id = str(current_user.id)
+        
+        if current_user.role != RoleEnum.READER:
+            raise HTTPException(status_code=400, detail="Chỉ có độc giả mới có thể nâng cấp trực tiếp lên tác giả.")
+            
+        await db["users"].update_one(
+            {"_id": user_id},
+            {"$set": {
+                "role": RoleEnum.AUTHOR,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        logger.info(f"Identity: User {user_id} upgraded to AUTHOR role directly")
+        return {"status": "success", "message": "Bạn đã trở thành tác giả chính thức."}
+
+    @staticmethod
     async def apply_author(application, current_user):
         db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         
+        if current_user.role == RoleEnum.POTENTIAL_AUTHOR:
+            raise HTTPException(status_code=400, detail="Bạn đã là tác giả tiềm năng.")
+            
+        if current_user.role != RoleEnum.AUTHOR:
+            raise HTTPException(status_code=403, detail="Bạn cần là tác giả để ứng tuyển vị trí tác giả tiềm năng.")
+
         if current_user.author_status == AuthorStatusEnum.PENDING:
-            raise HTTPException(status_code=400, detail="Đơn đăng ký của bạn đang được xét duyệt.")
+            raise HTTPException(status_code=400, detail="Đơn ứng tuyển tác giả tiềm năng của bạn đang được xét duyệt.")
+            
         if current_user.author_status == AuthorStatusEnum.SUSPENDED:
-            raise HTTPException(status_code=403, detail="Tài khoản của bạn đã bị đình chỉ quyền tác giả.")
-        if current_user.author_status == AuthorStatusEnum.APPROVED:
-            raise HTTPException(status_code=400, detail="Bạn đã là tác giả.")
+            raise HTTPException(status_code=403, detail="Tài khoản của bạn đã bị đình chỉ quyền ứng tuyển.")
             
         application_data = {
             "_id": str(uuid.uuid4()),
             "user_id": user_id,
-            "portfolio_url": application.portfolio_url,
-            "reason": application.reason,
+            "portfolio_url": application.get('portfolio_url', "") if isinstance(application, dict) else "",
+            "reason": application.get('reason', "") if isinstance(application, dict) else (application if isinstance(application, str) else ""),
             "status": AuthorStatusEnum.PENDING,
             "created_at": datetime.now(timezone.utc)
         }
@@ -37,8 +60,8 @@ class IdentityService:
                 "tos_accepted_at": datetime.now(timezone.utc)
             }}
         )
-        logger.info(f"Identity: User {user_id} applied for author status")
-        return {"status": "success", "message": "Đã gửi đơn đăng ký tác giả."}
+        logger.info(f"Identity: Author {user_id} applied for potential author status")
+        return {"status": "success", "message": "Đã gửi đơn ứng tuyển tác giả tiềm năng."}
 
     @staticmethod
     async def upload_kyc(file, current_user):

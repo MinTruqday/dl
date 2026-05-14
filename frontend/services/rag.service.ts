@@ -3,13 +3,13 @@ import { API_URL, getToken } from "./authentication.service";
 export async function queryRagAPI(
   documentId: string,
   query: string,
-  usePro: boolean = false,
+  useSmart: boolean = false,
 ) {
   const token = getToken();
   const res = await fetch(`${API_URL}/ai/truy-van`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, query, usePro }),
+    body: JSON.stringify({ document_id: documentId, query, useSmart }),
   });
   const data = await res.json();
   if (!res.ok)
@@ -21,7 +21,7 @@ export async function queryRagAPI(
 
 export async function streamAiChatAPI(payload: {
   query: string;
-  usePro: boolean;
+  useSmart: boolean;
   session_id?: string | null;
   conversation_history?: any[];
   user_id?: string;
@@ -34,7 +34,7 @@ export async function streamAiChatAPI(payload: {
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       query: payload.query,
-      usePro: payload.usePro,
+      useSmart: payload.useSmart,
       session_id: payload.session_id,
       conversation_history: payload.conversation_history,
       user_id: payload.user_id,

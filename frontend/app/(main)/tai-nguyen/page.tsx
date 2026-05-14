@@ -7,8 +7,8 @@ import {
   uploadAuthorAssetAPI,
 } from "@/services/asset.service";
 import {
-  uploadDocumentFile,
-  getFileDownloadUrl,
+  uploadDocumentFileAPI as uploadDocumentFile,
+  getFileDownloadUrlAPI as getFileDownloadUrl,
 } from "@/services/asset.service";
 import {
   Loader2,

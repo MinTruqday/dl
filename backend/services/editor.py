@@ -211,7 +211,7 @@ class EditorService:
         rag_url = settings.AGENTIC_RAG_URL
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{rag_url}/inference/action", 
+                f"{rag_url}/inference/hanh-dong", 
                 json={
                     "action": "ai_suggestions", 
                     "text": context, 
@@ -246,8 +246,11 @@ class EditorService:
         cursor = db["editor_comments"].find({"document_id": document_id, "status": "open"}).sort("created_at", -1)
         comments = await cursor.to_list(length=100)
         for c in comments:
-            c["id"] = c.pop("_id")
-            c["created_at"] = c["created_at"].isoformat()
+            c["id"] = c.pop("_id", str(uuid.uuid4()))
+            if isinstance(c.get("created_at"), datetime):
+                c["created_at"] = c["created_at"].isoformat()
+            elif not c.get("created_at"):
+                c["created_at"] = datetime.now(timezone.utc).isoformat()
         return comments
 
     @staticmethod
@@ -306,7 +309,7 @@ class EditorService:
         rag_url = settings.AGENTIC_RAG_URL
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{rag_url}/inference/action", 
+                f"{rag_url}/inference/hanh-dong", 
                 json={
                     "action": "check_logic", 
                     "text": content, 

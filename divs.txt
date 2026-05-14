@@ -1,0 +1,50 @@
+356:    <div className="font-sans">
+371:        <div
+378:          <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
+379:            <div className="flex items-center gap-4">
+380:              <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
+383:              <div>
+393:              <div className="flex items-center gap-2">
+432:              <div className="flex items-center gap-2">
+453:          <div
+458:              <div className="p-6 space-y-6 animate-in fade-in w-full">
+462:                  <div className="py-20 text-center">
+470:                    <div
+474:                      <div
+547:              <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+548:                <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center mb-6 rounded-none">
+557:                <div className="mt-8 w-full max-w-[280px]">
+562:              <div className="flex flex-col w-full p-6 gap-8">
+569:                    <div key={idx} className="flex flex-col items-end w-full animate-in fade-in">
+570:                      <div className="w-full flex justify-end items-center gap-1">
+579:                        <div className="max-w-[85%]">
+581:                            <div className="w-full min-w-[300px] md:min-w-[450px] bg-white border border-zinc-200 p-4 shadow-none">
+592:                              <div className="flex justify-end gap-3 mt-3">
+614:                            <div className="bg-zinc-100 border border-zinc-200 px-5 py-4 rounded-none">
+627:                  <div key={idx} className="flex flex-col items-start w-full animate-in fade-in">
+628:                    <div className="w-full max-w-[95%]">
+635:                          <div className="p-3 pt-0 flex flex-col gap-2">
+636:                            <div className="h-px w-full bg-zinc-200 mb-1" />
+638:                              <div key={idx2} className="flex items-center gap-2 text-xs font-medium text-zinc-600">
+639:                                <div className="w-1 h-1 bg-zinc-400 rounded-full" />
+664:                                <div className="p-3 pt-0 flex flex-col gap-2">
+665:                                  <div className="h-px w-full bg-zinc-200 mb-1" />
+666:                                  <div className="text-sm text-zinc-500 whitespace-pre-wrap leading-relaxed italic opacity-80">
+673:                            <div className="w-full prose prose-zinc max-w-none text-sm leading-relaxed">
+675:                                <div className="flex items-center gap-2 py-2">
+694:                                          <div className="my-5 bg-black border border-black rounded-none overflow-hidden">
+695:                                            <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-black">
+727:                                      <div className="overflow-x-auto my-5 border border-zinc-200 rounded-none">
+760:          <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
+761:            <div className="w-full relative">
+763:                <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
+765:                    <div className="relative group shrink-0">
+780:                    <div className="relative group shrink-0 h-16 px-4 bg-white border border-zinc-200 flex items-center gap-3 rounded-none">
+797:                <div className="absolute bottom-full left-0 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-none shadow-none">
+816:                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
+827:                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
+837:              <div className="flex items-center justify-between mb-3">
+839:                  <div className="relative inline-flex items-center">
+846:                    <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after: peer-checked:after:translate-x-4 peer-checked:bg-black rounded-none transition-all"></div>
+853:                  <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-none">
+863:                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black rounded-none transition-colors">

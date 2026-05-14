@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Workspace from "@/components/Workspace";
 import { ShieldCheck, FileText, Lock, Scale } from "lucide-react";
 
 export default function TermsPage() {
@@ -35,7 +34,7 @@ export default function TermsPage() {
   ];
 
   return (
-    <Workspace>
+    <>
       <div
         className="max-w-3xl mx-auto px-4 py-12 md:py-20 "
         style={{
@@ -91,13 +90,13 @@ export default function TermsPage() {
         <div className="mt-20 pt-8 border-t border-zinc-200 text-center">
           <p className="text-sm text-zinc-400 font-medium">
             Nếu bạn có bất kỳ thắc mắc nào về các điều khoản này, vui lòng{" "}
-            <a href="/help" className="text-black font-bold ">
+            <a href="/tro-giup" className="text-black font-bold ">
               liên hệ với chúng tôi
             </a>
             .
           </p>
         </div>
       </div>
-    </Workspace>
+    </>
   );
 }

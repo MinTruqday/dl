@@ -62,7 +62,7 @@ export default function Navigation({ onToggleSidebar }: NavbarProps) {
     setIsSearching(true);
     try {
       await smartSearchAPI(searchQuery);
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/tim-kiem?q=${encodeURIComponent(searchQuery)}`);
     } catch (err: any) {
       console.error("Lỗi tìm kiếm thông minh:", err);
     } finally {
