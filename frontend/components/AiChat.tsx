@@ -280,7 +280,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             try {
               const parsed = JSON.parse(data);
               const nodeVi =
-                nodeDescriptions[parsed.node] || `Đang xử lý (${parsed.node})`;
+                nodeDescriptions[parsed.node] || parsed.node;
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
@@ -294,6 +294,38 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               });
             } catch (e) {
               console.error("Error parsing status data", e);
+            }
+          } else if (type === "plan" && data) {
+            try {
+              const parsed = JSON.parse(data);
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastMsg = updated[updated.length - 1];
+                if (lastMsg.role === "assistant") {
+                  lastMsg.thoughts = [...(lastMsg.thoughts || []), "Đã lập kế hoạch:", ...(parsed.steps || [])];
+                }
+                return updated;
+              });
+            } catch (e) {
+              console.error("Error parsing plan data", e);
+            }
+          } else if (type === "tool" && data) {
+            try {
+              const parsed = JSON.parse(data);
+              const toolMsg = `Công cụ ${parsed.agent} xử lý thành công`;
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastMsg = updated[updated.length - 1];
+                if (
+                  lastMsg.role === "assistant" &&
+                  !lastMsg.thoughts?.includes(toolMsg)
+                ) {
+                  lastMsg.thoughts = [...(lastMsg.thoughts || []), toolMsg];
+                }
+                return updated;
+              });
+            } catch (e) {
+              console.error("Error parsing tool data", e);
             }
           } else if (type === "message" && data) {
             try {
