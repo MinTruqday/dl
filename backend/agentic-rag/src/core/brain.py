@@ -19,15 +19,17 @@ class AgenticBrain:
     def __init__(self):
         self.llm = llm
         
-    async def create_plan(self, query: str, context: Optional[str] = None) -> List[str]:
-        logger.info(f"Brain: Tạo kế hoạch cho query: {query}")
+    async def create_plan(self, req) -> List[str]:
+        """Tạo kế hoạch phân rã tác vụ (Multi-step Decomposition)."""
+        logger.info(f"Brain: Tạo kế hoạch cho query: {req.query}")
         
         system_prompt = """Bạn là Core Brain của hệ thống Agentic AI. Nhiệm vụ của bạn là phân rã yêu cầu của người dùng thành một kế hoạch chi tiết với các bước nhỏ bé hơn.
 Các công cụ/Agent mà hệ thống có sẵn (Bạn KHÔNG tự thực thi, chỉ định tuyến):
-1. CodeInterpreter: Viết và chạy mã Python (ví dụ: vẽ biểu đồ, tính toán phức tạp).
-2. SearchEngine: Tìm kiếm thông tin trên internet.
-3. InternalAPI: Truy xuất dữ liệu hệ thống nội bộ (Tài liệu, Ví tiền, Doanh thu, ...).
-4. DraftGenerator: Tạo nháp văn bản, sinh mã LaTeX, lưu trữ file.
+1. RAGAgent: Đọc, tìm kiếm và phân tích tài liệu nội bộ (sách, PDF, file đính kèm) từ thư viện người dùng. Dùng công cụ này BẤT CỨ KHI NÀO người dùng hỏi về tài liệu, sách, hoặc kho tri thức nội bộ.
+2. CodeInterpreter: Viết và chạy mã Python (ví dụ: vẽ biểu đồ, tính toán phức tạp).
+3. SearchEngine: Tìm kiếm thông tin trên internet toàn cầu. Dùng khi thông tin không có trong tài liệu nội bộ.
+4. InternalAPI: Truy xuất dữ liệu hệ thống nội bộ (Ví tiền, Doanh thu, ...).
+5. DraftGenerator: Tạo nháp văn bản, sinh mã LaTeX, lưu trữ file.
 
 Dựa trên yêu cầu của người dùng, hãy viết danh sách các bước. Trả về định dạng:
 Bước 1: [Tên Agent] - [Mô tả chi tiết tác vụ]
@@ -36,7 +38,11 @@ Bước 2: [Tên Agent] - [Mô tả chi tiết tác vụ]
 
 Hãy chỉ trả về các bước, không giải thích thêm."""
 
-        prompt = f"Yêu cầu: {query}\nNgữ cảnh hiện tại: {context or 'Không có'}\n\nKế hoạch thực thi:"
+        history_str = ""
+        if hasattr(req, "conversation_history") and req.conversation_history:
+            history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_history[-5:]])
+            
+        prompt = f"Lịch sử trò chuyện gần đây:\n{history_str}\n\nYêu cầu mới nhất: {req.query}\nNgữ cảnh hiện tại: {req.context if hasattr(req, 'context') else 'Không có'}\n\nKế hoạch thực thi:"
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=prompt)

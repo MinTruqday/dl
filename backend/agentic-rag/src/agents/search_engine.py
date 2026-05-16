@@ -2,11 +2,11 @@ import os
 from loguru import logger
 from tavily import AsyncTavilyClient
 
-tavily_api_key = os.environ.get("TAVILY_API_KEY", "tvly-mock-key")
+tavily_api_key = os.environ.get("TAVILY_API_KEY")
 
 class SearchEngineAgent:
     def __init__(self):
-        self.api_key_valid = tavily_api_key != "tvly-mock-key" and len(tavily_api_key) > 10
+        self.api_key_valid = tavily_api_key is not None and len(tavily_api_key) > 10
         if self.api_key_valid:
             self.client = AsyncTavilyClient(api_key=tavily_api_key)
         else:

@@ -1,57 +1,29 @@
-import os
 import time
 from loguru import logger
-from typing import Dict, Optional, List
-from src.agents.router_agent import router_agent_app
+from typing import List
 
 class AggregatorAgent:
     def __init__(self):
         pass
         
-    async def process_query(self, query: str, user_id: str, document_id: Optional[str] = None, 
-                          conversation_id: Optional[str] = None, use_web: bool = False, use_smart: bool = False) -> Dict:
-        
-        logger.info(f"Initiating multi-agent orchestration for query: {query[:50]}")
+    async def aggregate(self, query: str, consolidated_results: List[str]) -> str:
+        logger.info(f"Aggregator: Tổng hợp kết quả cho query: {query[:50]}")
         
         try:
-            initial_state = {
-                "question": query,
-                "user_id": user_id,
-                "document_id": document_id or "",
-                "route": "",
-                "final_answer": "",
-                "use_web": use_web,
-                "use_smart": use_smart
-            }
+            from src.core.brain import llm
+            from langchain_core.messages import HumanMessage
+            
+            final_prompt = f"Bạn là một Tổng hợp viên (Aggregator). Hãy tổng hợp các dữ liệu sau để trả lời yêu cầu ban đầu một cách tự nhiên, lịch sự.\nQuy tắc: KHÔNG dùng biểu tượng cảm xúc (emoji), dùng tiếng Việt chuẩn, viết hoa đầu dòng.\nYêu cầu: {query}\n\nDữ liệu:\n" + "\n\n".join(consolidated_results)
             
             start_time = time.time()
-            thread_id = conversation_id or user_id
-            config = {"configurable": {"thread_id": thread_id}}
-            
-            final_state = router_agent_app.invoke(initial_state, config=config)
+            final_response = await llm.ainvoke([HumanMessage(content=final_prompt)])
             elapsed = time.time() - start_time
             
-            answer = final_state.get("final_answer", "DocLib không nhận được phản hồi từ hệ thống")
-            route = final_state.get("route", "unknown")
-            
-            logger.info(f"Query processed successfully in {elapsed:.2f}s via {route.upper()} route")
-            
-            return {
-                "answer": answer,
-                "quality_score": final_state.get("quality_score", 100) if route == "rag" else 85,
-                "sources": final_state.get("sources", []), 
-                "react_steps": 2 if route != "rag" else 5, 
-                "elapsed_seconds": elapsed
-            }
+            logger.info(f"Aggregator: Đã tổng hợp xong trong {elapsed:.2f}s")
+            return final_response.content.strip()
             
         except Exception as e:
-            logger.error(f"LangGraph orchestration error: {str(e)}")
-            return {
-                "answer": "Hệ thống hiện đang gặp sự cố kỹ thuật trong quá trình xử lý, rất mong bạn vui lòng thử lại sau",
-                "quality_score": 0,
-                "sources": [],
-                "react_steps": 0,
-                "elapsed_seconds": 0
-            }
+            logger.error(f"Aggregator error: {str(e)}")
+            return "Hệ thống hiện đang gặp sự cố kỹ thuật trong quá trình xử lý, rất mong bạn vui lòng thử lại sau."
 
 aggregator_agent = AggregatorAgent()

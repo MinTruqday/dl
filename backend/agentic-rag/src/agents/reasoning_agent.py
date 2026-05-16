@@ -40,16 +40,20 @@ Chỉ trả về định dạng JSON:"""
             result_text = await llm.ainvoke(eval_prompt)
             result_text = result_text.strip()
             
-            if result_text.startswith("```"):
-                lines = result_text.split("```")
-                if len(lines) >= 3:
-                     result_text = lines[1]
-                     if result_text.startswith("json"):
-                         result_text = result_text[4:]
-                result_text = result_text.strip()
+            if "```" in result_text:
+                parts = result_text.split("```")
+                for p in parts:
+                    p = p.strip()
+                    if p.startswith("json"):
+                        result_text = p[4:].strip()
+                        break
+                    elif p.startswith("{"):
+                        result_text = p
+                        break
+            
             return json.loads(result_text)
         except Exception as e:
-            logger.error(f"Evaluation error: {e}")
+            logger.error(f"ReasoningAgent: Lỗi đánh giá: {e}")
             return {"overall": 0.5, "should_retry": False, "feedback": f"Lỗi đánh giá: {str(e)}"}
 
     def _build_context(self, docs: List[Dict]) -> str:

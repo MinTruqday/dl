@@ -246,7 +246,7 @@ async def agent_generate_mindmap(document_id: str) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"http://127.0.0.1:8001/inference/tao-ban-do-tu-duy", json={"text": text[:2000], "depth": 2})
+            resp = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/tao-ban-do-tu-duy", json={"text": text[:2000], "depth": 2})
             if resp.status_code == 200:
                 data = resp.json()
                 import json
@@ -263,7 +263,7 @@ async def agent_suggest_citations(document_id: str) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"http://127.0.0.1:8001/inference/trich-dan-thong-minh", json={"text": text[:1000], "style": "APA"})
+            resp = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/trich-dan-thong-minh", json={"text": text[:1000], "style": "APA"})
             if resp.status_code == 200:
                 return f"Gợi ý trích dẫn:\n\n{resp.json().get('citations', '')}"
     except Exception as e:
@@ -278,7 +278,7 @@ async def agent_peer_review(document_id: str) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"http://127.0.0.1:8001/inference/tham-dinh-noi-dung", json={"text": text[:2000], "criteria": ["logic", "rõ ràng"]})
+            resp = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/tham-dinh-noi-dung", json={"text": text[:2000], "criteria": ["logic", "rõ ràng"]})
             if resp.status_code == 200:
                 return f"Báo cáo thẩm định:\n\n{resp.json().get('review_report', '')}"
     except Exception as e:
@@ -293,7 +293,7 @@ async def agent_transform_tone(document_id: str, tone: str) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"http://127.0.0.1:8001/inference/bien-doi-van-ban", json={"text": text[:1000], "tone": tone, "expansion": False})
+            resp = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/bien-doi-van-ban", json={"text": text[:1000], "tone": tone, "expansion": False})
             if resp.status_code == 200:
                 return f"Văn bản đã biến đổi ({tone}):\n\n{resp.json().get('transformed_text', '')}"
     except Exception as e:
@@ -308,8 +308,8 @@ async def agent_create_social_post(document_id: str) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp1 = await client.post(f"http://127.0.0.1:8001/inference/tao-bai-dang-mang-xa-hoi", json={"text": text[:1500], "context": ""})
-            resp2 = await client.post(f"http://127.0.0.1:8001/inference/tao-tin-mang-xa-hoi", json={"text": text[:1500]})
+            resp1 = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/tao-bai-dang-mang-xa-hoi", json={"text": text[:1500], "context": ""})
+            resp2 = await client.post(f"{settings.AGENTIC_RAG_URL}/inference/tao-tin-mang-xa-hoi", json={"text": text[:1500]})
             post = resp1.json().get("post", "") if resp1.status_code == 200 else ""
             story = resp2.json().get("story", "") if resp2.status_code == 200 else ""
             return f"**Bài đăng Facebook/LinkedIn:**\n{post}\n\n**Kịch bản Story:**\n{story}"

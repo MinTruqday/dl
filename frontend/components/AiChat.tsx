@@ -708,7 +708,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                 <div className="p-5 flex items-center gap-3 text-zinc-400">
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                   <span className="text-sm font-medium animate-pulse">
-                                    Đang suy nghĩ...
+                                    Đang suy nghĩ
                                   </span>
                                 </div>
                               ) : (

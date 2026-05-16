@@ -9,3 +9,5 @@ class ChatRequest(BaseModel):
     useSmart: bool = False
     image_data: Optional[str] = None
     file_data: Optional[str] = None
+    session_id: Optional[str] = None
+    conversation_history: Optional[list] = []

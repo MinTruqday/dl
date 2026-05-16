@@ -5,6 +5,7 @@ from loguru import logger
 from src.models.chat import ChatRequest
 from src.agents.action_agent import auth_token_var
 from src.agents.coordinator import coordinator
+from src.agents.router_agent import router_agent
 
 router = APIRouter()
 
@@ -16,10 +17,21 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         auth_token_var.set(bearer_token)
 
     try:
-        final_answer = ""
-        async for event in coordinator.execute_plan(req.query, req.context if hasattr(req, 'context') else "", req.user_id):
-            if event["type"] == "message":
-                final_answer += event.get("chunk", "")
+        route = await router_agent.execute(req.query)
+        if route == "chat":
+            from src.utils.hf import HFInferenceChat
+            from huggingface_hub import AsyncInferenceClient
+            from src.core.config import settings
+            from langchain_core.messages import HumanMessage
+            
+            llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
+            chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
+            res = await chat_llm.ainvoke([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt. Câu hỏi: {req.query}")])
+            final_answer = res.content
+        else:
+            async for event in coordinator.execute_plan(req):
+                if event["type"] == "message":
+                    final_answer += event.get("chunk", "")
                 
         return {
             "answer": final_answer or "Hệ thống đang bảo trì dữ liệu.",
@@ -39,8 +51,24 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             auth_token_var.set(bearer_token)
 
         try:
-            async for event in coordinator.execute_plan(req.query, req.context if hasattr(req, 'context') else "", req.user_id):
-                event_type = event["type"]
+            route = await router_agent.execute(req.query)
+            
+            if route == "chat":
+                from src.utils.hf import HFInferenceChat
+                from huggingface_hub import AsyncInferenceClient
+                from src.core.config import settings
+                from langchain_core.messages import HumanMessage
+                
+                yield f"event: status\ndata: {json.dumps({'node': 'Đang phản hồi trực tiếp'})}\n\n"
+                
+                llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
+                chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
+                
+                res = await chat_llm.ainvoke([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt. Câu hỏi: {req.query}")])
+                yield f"event: message\ndata: {json.dumps({'chunk': res.content})}\n\n"
+            else:
+                async for event in coordinator.execute_plan(req):
+                    event_type = event["type"]
                 
                 if event_type == "status":
                     yield f"event: status\ndata: {json.dumps({'node': event['node']})}\n\n"
