@@ -31,15 +31,12 @@ class DiscussionService:
         
         exclude_ids = []
         if current_user:
-            # 1. Get users I blocked
             user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
             my_blocks = user_doc.get("blocked_users", []) if user_doc else []
             
-            # 2. Get users who blocked me
             blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
             blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
             
-            # 3. Get users I muted
             muted_cursor = db["muted_users"].find({"user_id": str(current_user.id)}, {"muted_id": 1})
             my_mutes = [m["muted_id"] async for m in muted_cursor]
             
@@ -70,7 +67,6 @@ class DiscussionService:
         result = []
         for d in discussions:
             author = d.get("author", {})
-            # Filter replies from blocked users
             all_replies = d.get("replies", [])
             filtered_replies = [r for r in all_replies if r.get("user_id") not in exclude_ids]
             

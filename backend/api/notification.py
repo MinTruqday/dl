@@ -47,7 +47,6 @@ async def update_notification_settings(data: NotificationSettingsUpdate, current
 async def mark_all_read(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await NotificationService.mark_all_read(current_user), message="Đã đánh dấu tất cả thông báo là đã đọc", status=200)
 
-# Models moved to models.social
 
 @router.post("/ban-tin/dang-ky", response_model=APIResponse[Any])
 async def subscribe_newsletter(req: NewsletterRequest):

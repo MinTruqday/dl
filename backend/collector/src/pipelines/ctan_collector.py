@@ -175,19 +175,16 @@ class CTANCollector:
                         with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                             zip_ref.extractall(extracted_folder_path)
                             
-                        # Handle nested folder issue mentioned by user
                         search_root = extracted_folder_path
                         contents = os.listdir(extracted_folder_path)
                         if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
                             search_root = os.path.join(extracted_folder_path, contents[0])
                             logger.info(f"Detected nested folder: {contents[0]}, adjusting search root.")
 
-                        # Find primary document (PDF or README)
                         found_pdf = None
                         for root, _, files in os.walk(search_root):
                             for f in files:
                                 if f.lower().endswith(".pdf"):
-                                    # Prioritize files matching package name or in 'doc' folder
                                     if slug in f.lower() or "doc" in root.lower():
                                         found_pdf = os.path.join(root, f)
                                         break

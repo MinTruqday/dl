@@ -44,15 +44,12 @@ class CommentService:
         
         exclude_ids = []
         if current_user:
-            # Get users I blocked
             user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
             my_blocks = user_doc.get("blocked_users", []) if user_doc else []
             
-            # Get users who blocked me
             blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
             blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
             
-            # Get users I muted
             muted_cursor = db["muted_users"].find({"user_id": str(current_user.id)}, {"muted_id": 1})
             my_mutes = [m["muted_id"] async for m in muted_cursor]
             

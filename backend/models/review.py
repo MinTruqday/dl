@@ -24,9 +24,9 @@ class ReviewResponse(ReviewInDB):
         populate_by_name = True
 
 class RatingRequest(BaseModel):
-    rating: int # 1-5
+    rating: int
     content: Optional[str] = None
 
 class ChapterRatingRequest(BaseModel):
     chapter_id: str
-    rating: int # 1-5
+    rating: int

@@ -61,7 +61,6 @@ class ReadService:
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
         
-        # Update reading history
         await db["reading_history"].update_one(
             {"user_id": user_id, "document_id": data.document_id}, 
             {"$set": {
@@ -72,7 +71,6 @@ class ReadService:
             upsert=True
         )
 
-        # Update User Streak
         user = await db["users"].find_one({"_id": user_id}, {"reading_stats": 1})
         stats = user.get("reading_stats", {})
         last_date = stats.get("last_read_date")
@@ -100,7 +98,6 @@ class ReadService:
                 }}
             )
 
-        # Badge: Mọt Sách (Read 1 full document)
         if data.progress_percentage >= 100:
             await db["users"].update_one(
                 {"_id": user_id},

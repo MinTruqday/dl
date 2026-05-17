@@ -178,7 +178,7 @@ class EditorService:
                 new_block = block.copy()
                 if "data" in block and "text" in block["data"]:
                     new_block["data"]["text"] = pattern.sub(replace_term, block["data"]["text"])
-                elif "data" in block and "items" in block["data"]: # List blocks
+                elif "data" in block and "items" in block["data"]:
                     new_block["data"]["items"] = [pattern.sub(replace_term, item) for item in block["data"]["items"]]
                 new_blocks.append(new_block)
             new_content["blocks"] = new_blocks

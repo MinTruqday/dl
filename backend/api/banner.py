@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/anh-quang-cao")
 
-# Models moved to models.banner
 
 @router.get("/", response_model=APIResponse[Any])
 async def get_active_banners():

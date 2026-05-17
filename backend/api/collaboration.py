@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/cong-tac")
 
-# Models moved to models.document
 
 @router.post("/invites", response_model=APIResponse[Any])
 async def send_collaboration_invite(document_id: str, data: CoauthorInviteRequest, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR]))):

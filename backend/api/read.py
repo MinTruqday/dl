@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/doc")
 
-# Models moved to models.library
 
 
 

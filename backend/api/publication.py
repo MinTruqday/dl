@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/xuat-ban")
 
-# Models moved to models.document
 
 @router.post("/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def publish_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):

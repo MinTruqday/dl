@@ -37,7 +37,6 @@ class RagService:
                 
                 if current_user:
                     await QuotaService.consume_request(str(current_user.id))
-                    # Basic token estimation: query + answer
                     approx_tokens = (len(user_query) + len(result.get("answer", ""))) // 3
                     await QuotaService.consume_tokens(str(current_user.id), approx_tokens)
                     

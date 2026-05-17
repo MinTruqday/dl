@@ -67,7 +67,7 @@ class RedeemVoucherRequest(BaseModel):
 
 class UnlockRequest(BaseModel):
     item_id: str
-    item_type: str = "chapter" # chapter, document
+    item_type: str = "chapter"
 
 class VoteRequest(BaseModel):
     item_id: str

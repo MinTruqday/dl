@@ -16,15 +16,12 @@ class FeedService:
         
         exclude_user_ids = []
         if current_user:
-            # 1. Get users I blocked
             user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
             my_blocks = user_doc.get("blocked_users", []) if user_doc else []
             
-            # 2. Get users who blocked me
             blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
             blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
             
-            # 3. Get users I muted
             muted_cursor = db["muted_users"].find({"user_id": str(current_user.id)}, {"muted_id": 1})
             my_mutes = [m["muted_id"] async for m in muted_cursor]
             
@@ -51,10 +48,7 @@ class FeedService:
             following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
             following_ids = [f["following_id"] for f in following_cursor]
             
-            # If we already have a user_id filter (nin), we must combine them
             if "user_id" in query:
-                # Combine $in (following) and $nin (blocked/muted)
-                # Filter following_ids to exclude blocked ones
                 effective_following = [fid for fid in following_ids if fid not in exclude_user_ids]
                 query["user_id"] = {"$in": effective_following}
             else:
@@ -66,7 +60,6 @@ class FeedService:
                 following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
                 following_ids = [f["following_id"] for f in following_cursor]
                 
-                # Exclude blocked users from following list
                 effective_following = [fid for fid in following_ids if fid not in exclude_user_ids]
                 
                 query["$or"] = [
@@ -206,11 +199,9 @@ class FeedService:
         
         exclude_ids = []
         if current_user:
-            # Get users I blocked
             user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
             my_blocks = user_doc.get("blocked_users", []) if user_doc else []
             
-            # Get users who blocked me
             blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
             blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
             

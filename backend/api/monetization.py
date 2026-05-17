@@ -21,7 +21,6 @@ async def create_plan(plan: PlanCreate, current_user: UserInDB = Depends(get_cur
 
 @router.get("/goi-hoi-vien/{author_id}", response_model=APIResponse[Any])
 async def get_plans(author_id: str):
-    # This might need a simple retrieval method in SubscriptionService
     from core.database import db_client
     db = db_client.mongodb.get_default_database()
     plans = await db["subscription_plans"].find({"author_id": author_id}).to_list(10)

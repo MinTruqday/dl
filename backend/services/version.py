@@ -18,7 +18,6 @@ class VersionsService:
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
-        # Snapshot the entire state
         await db['document_versions'].insert_one({
             'document_id': document_id, 
             'author_id': str(current_user.id), 
@@ -56,7 +55,6 @@ class VersionsService:
             
         snapshot = version.get('snapshot')
         if not snapshot:
-            # Fallback for old content-only versions
             update_data = {
                 'content': version.get('content', ''),
                 'updated_at': datetime.now(timezone.utc)

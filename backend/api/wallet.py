@@ -28,7 +28,6 @@ async def get_history(
 ):
     return APIResponse(data=await WalletService.get_history(current_user, cursor, limit, tx_type), message="Lấy lịch sử giao dịch thành công")
 
-# Social & Donation
 @router.post("/binh-chon", response_model=APIResponse[Any])
 async def vote_item(req: VoteRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await DonationService.vote_item(req, current_user), message="Bình chọn thành công")
@@ -45,12 +44,10 @@ async def virtual_tip(target_user_id: str, req: TipRequest, current_user: UserIn
 async def get_top_donators():
     return APIResponse(data=await DonationService.get_top_donators(), message="Lấy danh sách người ủng hộ hàng đầu thành công")
 
-# Finance & Revenue
 @router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_revenue(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await FinanceService.get_revenue(current_user), message="Lấy số liệu doanh thu thành công")
 
-# Purchases
 @router.post("/giao-dich-mua/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def purchase_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await PurchaseService.purchase_document(document_id, current_user), message="Mua tài liệu thành công")

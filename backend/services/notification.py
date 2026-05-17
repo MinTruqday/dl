@@ -154,7 +154,6 @@ class NotificationService:
     async def notify_document_update(document_id: str, title: str, author_id: str, author_name: str):
         db = db_client.mongodb.get_default_database()
         
-        # Get author's blocked users to exclude them
         author = await db["users"].find_one({"_id": author_id}, {"blocked_users": 1})
         blocked_users = author.get("blocked_users", []) if author else []
         
@@ -167,7 +166,6 @@ class NotificationService:
             if last_id:
                 query["_id"] = {"$gt": last_id}
             
-            # Exclude blocked users from the library query
             if blocked_users:
                 query["user_id"] = {"$nin": blocked_users}
             

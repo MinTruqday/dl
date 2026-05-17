@@ -94,10 +94,8 @@ class SeriesService:
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
-                # Delete series
                 await db["series"].delete_one({"_id": series_id}, session=session)
                 
-                # Remove series_id from linked documents
                 if series.get("document_ids"):
                     await db["documents"].update_many(
                         {"_id": {"$in": series["document_ids"]}},

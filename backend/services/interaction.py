@@ -144,7 +144,6 @@ class InteractionService:
             {"_id": user_id_str},
             {"$addToSet": {"blocked_users": target_user_id}}
         )
-        # Bidirectional unfollow
         await db["follows"].delete_many({"$or": [
             {"follower_id": user_id_str, "following_id": target_user_id},
             {"follower_id": target_user_id, "following_id": user_id_str},

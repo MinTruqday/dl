@@ -32,7 +32,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         logger.warning(f"JWT Decode error: {str(e)}")
         raise credentials_exception
 
-    # Cross-check session with Redis (Instant Revocation)
     if db_client.redis:
         user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]["users"].find_one({"email": email}, {"_id": 1})
         if not user_doc:
