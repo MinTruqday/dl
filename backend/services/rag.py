@@ -10,7 +10,7 @@ from services.quota import QuotaService
 class RagService:
     @staticmethod
     async def proxy_rag_chat(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Dict[str, Any]:
-        base_url = settings.AGENTIC_RAG_URL
+        base_url = settings.AGENTIC_AI_URL
         rag_url = f"{base_url}/tro-chuyen"
         
         if current_user:
@@ -55,7 +55,7 @@ class RagService:
     @staticmethod
     async def proxy_rag_stream(payload: dict, auth_header: Optional[str], current_user: Optional[Any]) -> Any:
         from fastapi.responses import StreamingResponse
-        base_url = settings.AGENTIC_RAG_URL
+        base_url = settings.AGENTIC_AI_URL
         rag_url = f"{base_url}/luong-du-lieu"
         
         if current_user:
@@ -128,7 +128,7 @@ class RagService:
             {"$set": {"rag_status": "processing"}}
         )
         
-        base_url = settings.AGENTIC_RAG_URL
+        base_url = settings.AGENTIC_AI_URL
         rag_url = f"{base_url}/nap-du-lieu"
         
         payload = {"document_id": document_id}

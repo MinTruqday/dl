@@ -11,7 +11,7 @@ class AIService:
     @staticmethod
     async def smart_search(query: str, current_user) -> list:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         cache_key = f"smart_search:{query}"
         if db_client.redis:
             cached = await db_client.redis.get(cache_key)
@@ -41,7 +41,7 @@ class AIService:
     @staticmethod
     async def process_text(req, current_user):
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             raise HTTPException(status_code=503, detail="Cấu hình dịch vụ AI chưa hoàn tất.")
 
@@ -72,7 +72,7 @@ class AIService:
     @staticmethod
     async def generate_flashcard(document_id: str, text: str, context: str, current_user):
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url: 
             raise HTTPException(status_code=503, detail="Dịch vụ AI hiện chưa được cấu hình.")
         try:
@@ -130,7 +130,7 @@ class AIService:
 
     @staticmethod
     async def check_grammar(text: str) -> dict:
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             return {"score": 100, "message": "AI không khả dụng."}
         try:
@@ -144,7 +144,7 @@ class AIService:
 
     @staticmethod
     async def generate_cover(title: str, description: str, style: str) -> dict:
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             return {"message": "AI không khả dụng."}
         try:
@@ -158,7 +158,7 @@ class AIService:
 
     @staticmethod
     async def generate_code(prompt: str, language: str = "python") -> dict:
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             return {"message": "AI không khả dụng."}
         try:
@@ -184,7 +184,7 @@ class AIService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{settings.AGENTIC_RAG_URL}/inference/tom-tat",
+                    f"{settings.AGENTIC_AI_URL}/inference/tom-tat",
                     json={"text": combined_text, "language": "vi"}
                 )
                 if resp.status_code == 200:
@@ -199,7 +199,7 @@ class AIService:
     @staticmethod
     async def analyze_reader_sentiment(document_id: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             return {"message": "Dịch vụ AI hiện chưa được cấu hình."}
             
@@ -237,7 +237,7 @@ class AIService:
 
     @staticmethod
     async def generate_text_completion(prompt: str, max_tokens: int = 300) -> str:
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         if not rag_url:
             return "Dịch vụ AI hiện không khả dụng."
         try:
@@ -252,7 +252,7 @@ class AIService:
     @staticmethod
     async def generate_mindmap(text: str, depth: int, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/tao-ban-do-tu-duy", json={"text": text, "depth": depth})
@@ -266,7 +266,7 @@ class AIService:
     @staticmethod
     async def suggest_citations(text: str, style: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/trich-dan-thong-minh", json={"text": text, "style": style})
@@ -280,7 +280,7 @@ class AIService:
     @staticmethod
     async def transform_tone(text: str, tone: str, expansion: bool, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/bien-doi-van-ban", json={"text": text, "tone": tone, "expansion": expansion})
@@ -294,7 +294,7 @@ class AIService:
     @staticmethod
     async def peer_review(text: str, criteria: list, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/tham-dinh-noi-dung", json={"text": text, "criteria": criteria})
@@ -308,7 +308,7 @@ class AIService:
     @staticmethod
     async def multi_doc_synthesis(document_ids: list, query: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/tong-hop-da-tai-lieu", json={"document_ids": document_ids, "query": query})
@@ -322,7 +322,7 @@ class AIService:
     @staticmethod
     async def create_post(text: str, context: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/tao-bai-dang-mang-xa-hoi", json={"text": text, "context": context})
@@ -336,7 +336,7 @@ class AIService:
     @staticmethod
     async def create_story(text: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(f"{rag_url}/inference/tao-tin-mang-xa-hoi", json={"text": text})
@@ -350,7 +350,7 @@ class AIService:
     @staticmethod
     async def suggest_engagement(content: str, current_user) -> dict:
         from services.quota import QuotaService
-        rag_url = getattr(settings, "AGENTIC_RAG_URL", None)
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(f"{rag_url}/inference/goi-y-tuong-tac", json={"content": content})

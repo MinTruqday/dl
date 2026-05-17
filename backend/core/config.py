@@ -23,12 +23,30 @@ class Settings(BaseModel):
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY")
     MINIO_BUCKET_NAME: str = os.getenv("MINIO_BUCKET_NAME")
+    MINIO_REGION: str = os.getenv("MINIO_REGION")
     MINIO_PUBLIC_URL: Optional[str] = os.getenv("MINIO_PUBLIC_URL")
 
+    HF_TOKEN: str = os.getenv("HF_TOKEN")
+    LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
+    RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
+    NLLB_MODEL: str = os.getenv("NLLB_MODEL")
+    NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
+    IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
+
     HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
-    ACTIVE_LLM_MODEL: str = os.getenv("LLAMA_MODEL")
-    AGENTIC_RAG_URL: str = os.getenv("AGENTIC_RAG_URL")
-    INTERNAL_API_URL: Optional[str] = os.getenv("INTERNAL_API_URL")
+    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
+    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))
+    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
+
+    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
+
+    QDRANT_URL: str = os.getenv("QDRANT_URL")
+    QDRANT_HOST: str = os.getenv("QDRANT_HOST")
+    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
+
+    AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
+    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     CORE_BACKEND_URL: Optional[str] = os.getenv("CORE_BACKEND_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
@@ -42,6 +60,8 @@ class Settings(BaseModel):
 
     PLATFORM_ADMIN_ID: str = os.getenv("PLATFORM_ADMIN_ID")
 
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
     PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID")
     PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
     PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")

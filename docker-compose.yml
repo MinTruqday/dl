@@ -118,9 +118,21 @@ services:
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     depends_on:
       - backend
-  agentic-rag:
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: doclib_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - doclib_network
+
+  agentic-ai:
     build:
-      context: ./backend/agentic-rag
+      context: ./backend/agentic-ai
       dockerfile: Dockerfile
     container_name: doclib_agentic_rag
     restart: always
@@ -131,8 +143,9 @@ services:
     depends_on:
       - redis
       - qdrant
+      - ollama
     volumes:
-      - ./backend/agentic-rag/src:/app/src
+      - ./backend/agentic-ai/src:/app/src
       - hf_cache:/home/appuser/.cache/huggingface
     networks:
       - doclib_network
@@ -190,3 +203,4 @@ volumes:
   prometheus_data:
   grafana_data:
   hf_cache:
+  ollama_data:

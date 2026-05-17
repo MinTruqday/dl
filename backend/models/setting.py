@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from datetime import datetime, timezone
 from core.config import settings
 
@@ -8,9 +8,9 @@ class SystemSettings(BaseModel):
     min_withdrawal_amount: int = Field(default=100000)
     topup_fees: Dict[str, float] = Field(default_factory=dict)
     
-    active_llm_model: str = Field(default=settings.ACTIVE_LLM_MODEL)
-    active_embedding_model: str = Field(default="BAAI/bge-m3")
-    active_reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3")
+    llm_model: str = Field(default=settings.LLAMA_MODEL)
+    embedding_model: str = Field(default=settings.EMBEDDING_MODEL)
+    reranker_model: str = Field(default=settings.RERANKER_MODEL)
     rag_hybrid_alpha: float = Field(default=settings.HYBRID_ALPHA)
     rag_top_k: int = Field(default=5)
     
@@ -27,8 +27,9 @@ class SettingsUpdate(BaseModel):
     commission_rate: Optional[float] = None
     min_withdrawal_amount: Optional[int] = None
     topup_fees: Optional[Dict[str, float]] = None
-    active_llm_model: Optional[str] = None
+    llm_model: Optional[str] = None
+    embedding_model: Optional[str] = None
+    reranker_model: Optional[str] = None
     rag_hybrid_alpha: Optional[float] = None
     is_maintenance_mode: Optional[bool] = None
     maintenance_message: Optional[str] = None
-

@@ -208,7 +208,7 @@ class EditorService:
         from services.ai import AIService
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id})
-        rag_url = settings.AGENTIC_RAG_URL
+        rag_url = settings.AGENTIC_AI_URL
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{rag_url}/inference/hanh-dong", 
@@ -287,7 +287,7 @@ class EditorService:
         
         content = str(doc.get("content", ""))
         try:
-            rag_url = settings.AGENTIC_RAG_URL
+            rag_url = settings.AGENTIC_AI_URL
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(f"{rag_url}/inference/kiem-tra-dao-van", json={"text": content[:5000]})
                 if resp.status_code == 200:
@@ -306,7 +306,7 @@ class EditorService:
         db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id})
         previous_chapters = "\n".join([ch.get("content", "") for ch in doc.get("chapters", [])])
-        rag_url = settings.AGENTIC_RAG_URL
+        rag_url = settings.AGENTIC_AI_URL
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{rag_url}/inference/hanh-dong", 

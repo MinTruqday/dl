@@ -8,7 +8,7 @@ from core.config import settings
 
 router = APIRouter(prefix="/suy-luan")
 
-RAG_SERVICE_URL = settings.AGENTIC_RAG_URL
+RAG_SERVICE_URL = settings.AGENTIC_AI_URL
 
 async def proxy_post(path: str, payload: dict):
     async with httpx.AsyncClient(timeout=60.0) as client:
