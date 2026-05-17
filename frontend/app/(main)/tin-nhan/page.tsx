@@ -10,7 +10,7 @@ import {
   editMessageAPI,
 } from "@/services/chat.service";
 import { searchUsersAPI } from "@/services/social.service";
-import { API_URL, getToken } from "@/services/authentication.service";
+import { API_URL, WS_URL, getToken } from "@/services/authentication.service";
 import { useToast } from "@/contexts/ToastContext";
 import {
   Modal,
@@ -100,7 +100,7 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user?._id) return;
 
-    const wsUrl = API_URL.replace("http", "ws") + `/tro-chuyen/ws/${user._id}`;
+    const wsUrl = `${WS_URL}/tro-chuyen/ws/${user._id}`;
     const socket = new WebSocket(wsUrl);
 
     socket.onmessage = (event) => {

@@ -150,6 +150,24 @@ services:
     networks:
       - doclib_network
 
+  websocket:
+    build:
+      context: ./backend
+      dockerfile: websocket/Dockerfile
+    container_name: doclib_websocket
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - doclib_network
+    volumes:
+      - ./backend/websocket:/app
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: doclib_qdrant
@@ -205,6 +223,20 @@ services:
       - minio
     volumes:
       - ./backend/collector/src:/app/src
+    networks:
+      - doclib_network
+
+  compiler:
+    build:
+      context: ./backend
+      dockerfile: compiler/Dockerfile
+    container_name: doclib_compiler
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - redis
     networks:
       - doclib_network
 

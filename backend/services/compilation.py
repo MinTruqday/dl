@@ -14,37 +14,45 @@ class CompilationService:
             content = f"\\documentclass{{article}}\n\\usepackage{{amsmath,amssymb}}\n\\begin{{document}}\n{content}\n\\end{{document}}"
             
         try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                tex_file = os.path.join(tmpdir, "main.tex")
-                with open(tex_file, "w", encoding="utf-8") as f:
-                    f.write(content)
+            import uuid
+            job_id = str(uuid.uuid4())
+            payload = {
+                "job_id": job_id,
+                "type": "compile_preview",
+                "content": content,
+                "is_fragment": False
+            }
+            
+            from core.publication import publish_event
+            success = await publish_event("tectonic_queue", payload)
+            if not success:
+                raise HTTPException(status_code=500, detail="Không thể gửi yêu cầu biên dịch vào hàng đợi.")
                 
-                process = await asyncio.create_subprocess_exec(
-                    "tectonic", tex_file, "--outdir", tmpdir,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
-                )
+            from core.database import db_client
+            redis_client = db_client.redis
+            if not redis_client:
+                raise HTTPException(status_code=503, detail="Dịch vụ Redis hiện không sẵn sàng.")
                 
-                try:
-                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=20.0)
-                except asyncio.TimeoutError:
-                    process.kill()
-                    raise HTTPException(status_code=408, detail="Quá thời gian xử lý biên dịch LaTeX (Timeout).")
+            result_tuple = await redis_client.blpop(f"job_result:{job_id}", timeout=25)
+            if not result_tuple:
+                raise HTTPException(status_code=408, detail="Quá thời gian xử lý biên dịch LaTeX (Timeout).")
                 
-                if process.returncode != 0:
-                    err_msg = stderr.decode()
-                    logger.warning(f"Compilation: Tectonic error for LaTeX job: {err_msg}")
-                    raise HTTPException(status_code=422, detail={"error": "Lỗi định dạng LaTeX, không thể biên dịch.", "logs": err_msg})
-                    
-                pdf_path = os.path.join(tmpdir, "main.pdf")
-                if not os.path.exists(pdf_path):
-                    raise HTTPException(status_code=500, detail="Tệp PDF không được tạo ra sau khi biên dịch.")
-                    
-                with open(pdf_path, "rb") as pdf_file:
-                    pdf_data = pdf_file.read()
-                    
-                return pdf_data
+            import json
+            import base64
+            
+            _, result_json = result_tuple
+            result = json.loads(result_json.decode('utf-8'))
+            
+            if result.get("status") == "error":
+                raise HTTPException(status_code=422, detail={"error": result.get("message"), "logs": result.get("logs", "")})
                 
+            pdf_b64 = result.get("data")
+            if not pdf_b64:
+                raise HTTPException(status_code=500, detail="Lỗi hệ thống: Dữ liệu PDF trả về trống.")
+                
+            pdf_bytes = base64.b64decode(pdf_b64)
+            return pdf_bytes
+            
         except HTTPException:
             raise
         except Exception as e:
