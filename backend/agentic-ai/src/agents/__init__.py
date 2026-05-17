@@ -1,1 +1,1 @@
-from .core_rag import AgentState, rag_agent_app
+from src.core.knowledge import AgentState, knowledge_agent_app

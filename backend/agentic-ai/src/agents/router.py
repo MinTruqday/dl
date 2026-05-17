@@ -21,25 +21,27 @@ class RouterAgent:
             template="""Bạn là Cổng kiểm duyệt (Router) của hệ thống DocLib. Phân tích ý định câu hỏi và chuyển hướng.
             
             Quy tắc định tuyến:
-            - "rag": Câu hỏi liên quan đến nội dung tài liệu, giải thích đoạn văn, tóm tắt.
-            - "action": Các yêu cầu thao tác trên hệ thống như: xem số dư, nạp tiền, thanh toán, quản lý thư viện cá nhân, xóa/khôi phục file, xem thống kê.
-            - "chat": Câu hỏi giao tiếp thông thường, chào hỏi (Ví dụ: Xin chào, bạn khỏe không, cảm ơn).
-            
-            Câu hỏi: {question}
-            Trả lời duy nhất "rag", "action" hoặc "chat":""",
+            - "knowledge": Câu hỏi liên quan đến nội dung tài liệu, giải thích đoạn văn, tóm tắt.
+            - "action": Câu hỏi hoặc yêu cầu tương tác với hệ thống (Rút tiền, xóa tài liệu, nạp tiền, v.v.).
+            - "chat": Các câu giao tiếp thông thường, hỏi han (Chào hỏi, cảm ơn, bạn là ai).
+
+            Trả lời duy nhất "knowledge", "action" hoặc "chat":""",
             input_variables=["question"]
         )
         try:
-            response = await self.router_llm.ainvoke(prompt.format(question=query))
-            decision = response.content.strip().lower()
+            from src.core.brain import llm
+            res = await llm.ainvoke(prompt.format(question=query))
+            decision = res.content.strip().lower()
+            if "action" in decision:
+                route = "action"
+            elif "chat" in decision:
+                route = "chat"
+            else:
+                route = "knowledge"
         except Exception as e:
-            logger.error(f"Router LLM error: {e}")
-            decision = "rag"
-        
-        route = "rag" 
-        if "action" in decision: route = "action"
-        elif "chat" in decision: route = "chat"
-        
+            logger.error(f"RouterAgent: Routing failed: {e}")
+            route = "knowledge"
+            
         logger.info(f"RouterAgent: Classified request as route='{route}'")
         return route
 

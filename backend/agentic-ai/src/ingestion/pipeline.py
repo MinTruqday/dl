@@ -42,8 +42,8 @@ class IngestionPipeline:
         extraction_method = "local"
         chunks = []
 
-        from src.agents.ade_agent import ade_agent
-        ade_chunks = await ade_agent.get_ade_chunks_for_ingestion(file_url)
+        from src.ingestion.document_parser import document_parser
+        doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url)
 
         async def get_summary_chunk(first_pages, extract_method):
             try:
@@ -71,14 +71,14 @@ class IngestionPipeline:
                 logger.error(f"Failed to generate Global Summary Chunk: {e}")
                 return None
 
-        if ade_chunks:
+        if doc_chunks:
             extraction_method = "ade"
-            first_few_pages = " ".join([ac["text"] for ac in ade_chunks[:5]])[:15000]
+            first_few_pages = " ".join([ac["text"] for ac in doc_chunks[:5]])[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "ade_llm")
             if summary_chunk:
                 chunks.append(summary_chunk)
 
-            for i, ac in enumerate(ade_chunks):
+            for i, ac in enumerate(doc_chunks):
                 chunk_id = str(uuid.uuid4())[:12]
                 chunk_meta = {
                     **metadata,
@@ -158,7 +158,7 @@ class IngestionPipeline:
         all_text = []
         supported_exts = {".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".epub", ".mobi", ".ppt", ".pptx", ".md", ".tex"}
         
-        with tempfile.TemporaryDirectory(prefix="rag_zip_") as tmp_dir:
+        with tempfile.TemporaryDirectory(prefix="ingestion_zip_") as tmp_dir:
             zip_path = os.path.join(tmp_dir, "archive.zip")
             with open(zip_path, "wb") as f:
                 f.write(zip_data)
@@ -169,19 +169,18 @@ class IngestionPipeline:
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(extract_path)
             
-            # Handle nested folder logic
             search_root = extract_path
             top_contents = os.listdir(extract_path)
             if len(top_contents) == 1 and os.path.isdir(os.path.join(extract_path, top_contents[0])):
                 search_root = os.path.join(extract_path, top_contents[0])
-                logger.info(f"RAG: Navigating into nested folder: {top_contents[0]}")
+                logger.info(f"Ingestion: Navigating into nested folder: {top_contents[0]}")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
                     f_ext = os.path.splitext(f)[1].lower()
                     if f_ext in supported_exts:
                         f_path = os.path.join(root, f)
-                        logger.info(f"RAG: Extracting content from nested file: {f}")
+                        logger.info(f"Ingestion: Extracting content from nested file: {f}")
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
@@ -189,7 +188,7 @@ class IngestionPipeline:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.error(f"RAG: Failed to extract {f}: {e}")
+                            logger.error(f"Ingestion: Failed to extract {f}: {e}")
                             
         return "\n\n".join(all_text)
 

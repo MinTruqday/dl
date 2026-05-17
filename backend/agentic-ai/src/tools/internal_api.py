@@ -1,9 +1,9 @@
 import httpx
 from loguru import logger
 from src.core.config import settings
-from src.agents.action_agent import auth_token_var
+from src.agents.action import auth_token_var
 from langchain_core.messages import HumanMessage
-from src.agents.action_agent import action_agent_app
+from src.agents.action import action_agent_app
 
 class InternalAPIAgent:
     def __init__(self):

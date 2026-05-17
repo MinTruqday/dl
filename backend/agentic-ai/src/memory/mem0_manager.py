@@ -1,6 +1,9 @@
 from loguru import logger
 from typing import List, Dict
+import os
 from src.core.config import settings
+
+os.environ["HUGGINGFACE_API_KEY"] = settings.HF_TOKEN
 
 try:
     from mem0 import Memory
@@ -8,7 +11,7 @@ try:
 except ImportError:
     HAS_MEM0 = False
 
-class MemoryAgent:
+class Mem0Manager:
     def __init__(self):
         self.memory = None
         if HAS_MEM0:
@@ -21,10 +24,23 @@ class MemoryAgent:
                             "port": settings.QDRANT_PORT,
                             "collection_name": "mem0_memory"
                         }
+                    },
+                    "llm": {
+                        "provider": "litellm",
+                        "config": {
+                            "model": f"huggingface/{settings.LLAMA_MODEL}",
+                            "temperature": 0
+                        }
+                    },
+                    "embedder": {
+                        "provider": "huggingface",
+                        "config": {
+                            "model": settings.EMBEDDING_MODEL
+                        }
                     }
                 }
-                self.memory = Memory()
-                logger.info("Mem0 initialized successfully for long-term usermemory.")
+                self.memory = Memory.from_config(config_dict=config)
+                logger.info("Mem0 initialized successfully for long-term memory.")
             except Exception as e:
                 logger.error(f"Failed to initialize Mem0: {e}")
 
@@ -57,4 +73,4 @@ class MemoryAgent:
             logger.error(f"Mem0 get_context error: {e}")
             return ""
 
-memory_agent = MemoryAgent()
+mem0_manager = Mem0Manager()

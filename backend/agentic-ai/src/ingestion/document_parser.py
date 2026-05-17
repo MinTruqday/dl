@@ -7,7 +7,7 @@ from typing import Dict, List
 from src.core.config import settings
 
 
-class ADEAgent:
+class DocumentParser:
     def __init__(self):
         self._minio_base = settings.MINIO_ENDPOINT.rstrip("/")
         self._bucket = settings.MINIO_BUCKET_NAME
@@ -17,13 +17,13 @@ class ADEAgent:
         self._marker_models = None
         self._ocr_engine = None
         self._pp_structure = None
-        logger.info("ADEAgent: Initialized with Marker + PaddleOCR")
+        logger.info("DocumentAgent: Initialized with Marker + PaddleOCR")
 
     def _get_marker_models(self):
         if self._marker_models is None:
             from marker.models import create_model_dict
             self._marker_models = create_model_dict()
-            logger.info("ADEAgent: Marker model dict loaded")
+            logger.info("DocumentAgent: Marker model dict loaded")
         return self._marker_models
 
     def _get_ocr_engine(self, lang: str = "en"):
@@ -35,7 +35,7 @@ class ADEAgent:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info(f"ADEAgent: PaddleOCR engine loaded (lang={lang})")
+            logger.info(f"DocumentAgent: PaddleOCR engine loaded (lang={lang})")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -50,7 +50,7 @@ class ADEAgent:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info(f"ADEAgent: PPStructure engine loaded (layout+table+ocr, lang={lang})")
+            logger.info(f"DocumentAgent: PPStructure engine loaded (layout+table+ocr, lang={lang})")
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
@@ -68,7 +68,7 @@ class ADEAgent:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception as e:
-            logger.error(f"ADEAgent: Document parse failed: {e}")
+            logger.error(f"DocumentAgent: Document parse failed: {e}")
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -113,7 +113,7 @@ class ADEAgent:
         if hasattr(rendered, "metadata") and rendered.metadata:
             page_count = rendered.metadata.get("page_count", 0) if isinstance(rendered.metadata, dict) else 0
 
-        logger.info(f"ADEAgent: Marker parsed {len(chunks)} chunks, {page_count} pages from {file_path.suffix}")
+        logger.info(f"DocumentAgent: Marker parsed {len(chunks)} chunks, {page_count} pages from {file_path.suffix}")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -171,10 +171,10 @@ class ADEAgent:
                             "index": i,
                         })
 
-            logger.info(f"ADEAgent: Extracted {len(tables)} tables via Marker TableConverter")
+            logger.info(f"DocumentAgent: Extracted {len(tables)} tables via Marker TableConverter")
             return tables
         except Exception as e:
-            logger.error(f"ADEAgent: Table extraction failed: {e}")
+            logger.error(f"DocumentAgent: Table extraction failed: {e}")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -226,7 +226,7 @@ class ADEAgent:
             return await self._parse_with_raw_ocr(file_path)
 
         full_markdown = "\n\n".join(markdown_parts)
-        logger.info(f"ADEAgent: PPStructure parsed {len(chunks)} blocks from image")
+        logger.info(f"DocumentAgent: PPStructure parsed {len(chunks)} blocks from image")
         return {
             "markdown": full_markdown,
             "chunks": chunks,
@@ -253,7 +253,7 @@ class ADEAgent:
         full_text = "\n".join(lines)
         chunks = self._group_lines_to_chunks(lines)
 
-        logger.info(f"ADEAgent: PaddleOCR raw extracted {len(chunks)} chunks from image")
+        logger.info(f"DocumentAgent: PaddleOCR raw extracted {len(chunks)} chunks from image")
         return {
             "markdown": full_text,
             "chunks": chunks,
@@ -323,10 +323,10 @@ class ADEAgent:
             chunks.append({"text": buffer.strip(), "chunk_type": "ocr"})
         return chunks
 
-    async def get_ade_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
+    async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning(f"ADEAgent: Parse failed for ingestion: {parse_result['error']}")
+            logger.warning(f"DocumentAgent: Parse failed for ingestion: {parse_result['error']}")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -352,7 +352,7 @@ class ADEAgent:
                 "index": i,
             })
 
-        logger.info(f"ADEAgent: Produced {len(ingestion_chunks)} chunks for ingestion")
+        logger.info(f"DocumentAgent: Produced {len(ingestion_chunks)} chunks for ingestion")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -372,7 +372,7 @@ class ADEAgent:
                 object_key = file_url
 
             if ".." in object_key:
-                logger.error(f"ADEAgent: Path traversal detected in object_key: {object_key}")
+                logger.error(f"DocumentAgent: Path traversal detected in object_key: {object_key}")
                 return None, ""
 
             s3 = boto3.client(
@@ -397,11 +397,11 @@ class ADEAgent:
                     ext = mapped_ext
                     break
 
-            logger.info(f"ADEAgent: Downloaded {len(data)} bytes from MinIO (ext={ext})")
+            logger.info(f"DocumentAgent: Downloaded {len(data)} bytes from MinIO (ext={ext})")
             return data, ext
 
         except Exception as e:
-            logger.error(f"ADEAgent: MinIO download failed: {e}")
+            logger.error(f"DocumentAgent: MinIO download failed: {e}")
             return None, ""
 
-ade_agent = ADEAgent()
+document_parser = DocumentParser()

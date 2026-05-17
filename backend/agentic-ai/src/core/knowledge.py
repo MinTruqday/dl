@@ -13,8 +13,8 @@ from redis import Redis
 from loguru import logger
 from src.store.vector_store import vector_store
 from src.ingestion.embedder import embedding_service
-from src.agents.retrieval_agent import retrieval_agent
-from src.agents.memory_agent import memory_agent
+from src.agents.retrieval import retrieval_agent
+from src.memory.mem0_manager import mem0_manager
 from src.memory.manager import memory_manager
 from src.core.config import settings
 from src.utils.file_processor import extract_text_from_base64
@@ -33,21 +33,7 @@ try:
 except Exception as e:
     logger.error(f"Redis cache error: {e}")
 
-class AgentState(TypedDict):
-    chat_history: List[dict]
-    question: str
-    generation: str
-    documents: List[str]
-    retry_count: int
-    hallucination_pass: str
-    current_source: str
-    route: str
-    use_web: bool
-    use_smart: bool
-    user_id: str
-    document_id: str
-    image_data: str
-    file_data: str
+from src.models.state import AgentState
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
@@ -163,7 +149,7 @@ Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn
     return {"documents": list(set(extracted_docs)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
-    from src.tools.search_engine import search_engine_agent
+    from src.integrations.search_engine import search_engine_agent
     question = state["question"]
     try:
         results = await search_engine_agent.execute(question)
@@ -269,7 +255,7 @@ Kết quả phản hồi (Chỉ in kết quả cuối cùng):""",
             user_context=user_context, citation_instruction=citation_instruction, thought_instruction=thought_instruction
         ))
         generation = response.content
-        memory_agent.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
+        mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception as e:
         logger.error(f"Generate error: {e}")
@@ -283,7 +269,7 @@ async def grade_generation(state: AgentState):
         return {"hallucination_pass": "yes"}
         
     try:
-        from src.agents.reasoning_agent import reasoning_agent
+        from src.agents.reasoning import reasoning_agent
         docs_list = [{"text": d, "metadata": {"title": "Nguồn"}} for d in documents]
         eval_res = await reasoning_agent.evaluate_quality(state["question"], generation, docs_list)
         

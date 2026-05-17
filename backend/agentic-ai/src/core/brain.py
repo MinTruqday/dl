@@ -3,6 +3,7 @@ import json
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.core.config import settings
 
@@ -13,53 +14,54 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
+from src.models.plan import PlanStep, ExecutionPlan
+
 class AgenticBrain:
     def __init__(self):
         self.llm = llm
+        self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
         
     async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info(f"Brain: Creating plan for query: {req.query}")
+        logger.info(f"Brain: Creating structured plan for query: {req.query}")
         
         system_prompt = """Bạn là Core Brain của hệ thống Agentic AI. Nhiệm vụ của bạn là phân rã yêu cầu của người dùng thành một kế hoạch chi tiết với các bước nhỏ hơn.
 Các công cụ/Agent mà hệ thống có sẵn (Bạn KHÔNG tự thực thi, chỉ định tuyến):
-1. RAGAgent: Đọc, tìm kiếm và phân tích tài liệu nội bộ (sách, PDF, file đính kèm) từ thư viện người dùng.
-2. CodeInterpreter: Viết và chạy mã Python (ví dụ: vẽ biểu đồ, tính toán phức tạp).
-3. SearchEngine: Tìm kiếm thông tin trên internet toàn cầu.
+1. KnowledgeAgent: Đọc, tìm kiếm và phân tích tài liệu nội bộ (sách, PDF, file đính kèm) từ thư viện người dùng.
+2. CodeInterpreter: Viết và chạy mã Python (ví dụ: vẽ biểu đồ, tính toán phức tạp, xử lý chuỗi/mảng).
+3. SearchEngine: Tìm kiếm thông tin cập nhật trên internet toàn cầu.
 4. ActionAgent: Truy xuất và thao tác dữ liệu hệ thống nội bộ (Ví tiền, Doanh thu, Tài liệu cá nhân, ...).
-5. DraftGenerator: Tạo nháp văn bản, sinh mã LaTeX, lưu trữ file.
+5. DraftGenerator: Tạo nháp văn bản, sinh mã LaTeX, xử lý format.
 
-Dựa trên yêu cầu của người dùng, hãy viết danh sách các bước. Trả về DUY NHAT định dạng JSON array, không có text nào khác. Ví dụ:
-[
-  {"agent": "ActionAgent", "task": "Kiểm tra số dư ví tiền của người dùng"},
-  {"agent": "CodeInterpreter", "task": "Tính toán biểu đồ tăng trưởng"}
-]"""
-
+Lưu ý: BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON HỢP LỆ THEO YÊU CẦU DƯỚI ĐÂY.
+{format_instructions}"""
+        
         history_str = ""
         if hasattr(req, "conversation_history") and req.conversation_history:
             history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_history[-5:]])
             
-        prompt = f"Lịch sử trò chuyện gần đây:\n{history_str}\n\nYêu cầu mới nhất: {req.query}\nNgữ cảnh hiện tại: {req.context if hasattr(req, 'context') else 'Không có'}\n\nKế hoạch thực thi (JSON):"
-        messages = [
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=prompt)
-        ]
+        prompt = f"Lịch sử trò chuyện gần đây:\n{history_str}\n\nYêu cầu mới nhất: {req.query}\nNgữ cảnh hiện tại: {req.context if hasattr(req, 'context') else 'Không có'}\n\nHãy lập kế hoạch:"
         
         try:
+            format_instructions = self.parser.get_format_instructions()
+            messages = [
+                SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
+                HumanMessage(content=prompt)
+            ]
+            
             response = await self.llm.ainvoke(messages)
-            content = response.content.strip()
             
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
+            parsed_result = self.parser.invoke(response)
             
-            steps = json.loads(content)
-            if not isinstance(steps, list):
+            steps = [{"agent": step["agent"], "task": step["task"]} for step in parsed_result.get("steps", [])]
+            
+            if not steps:
                 steps = [{"agent": "ActionAgent", "task": "Xử lý trực tiếp yêu cầu"}]
+                
             return steps
+            
         except Exception as e:
             logger.error(f"Brain: Plan creation failed: {e}")
-            return [{"agent": "Aggregator", "task": "Phản hồi lỗi hệ thống cho người dùng"}]
+            return [{"agent": "ActionAgent", "task": req.query}]
 
 brain = AgenticBrain()
+

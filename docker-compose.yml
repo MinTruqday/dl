@@ -134,7 +134,7 @@ services:
     build:
       context: ./backend/agentic-ai
       dockerfile: Dockerfile
-    container_name: doclib_agentic_rag
+    container_name: doclib_agentic_ai
     restart: always
     ports:
       - "8100:8100"
