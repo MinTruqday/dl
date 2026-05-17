@@ -116,14 +116,14 @@ export default function Editor({
             const val = JSON.stringify(saved);
             lastContentRef.current = val;
             onSave?.(val);
-          } catch {}
+          } catch (err) { console.error(err); }
         },
       });
 
       if (!cancelled) {
         editorRef.current = editor;
       } else {
-        editor.isReady.then(() => editor.destroy()).catch(() => {});
+        editor.isReady.then(() => editor.destroy()).catch((err) => { console.error(err); });
         holderDiv.remove();
       }
     };
@@ -135,7 +135,7 @@ export default function Editor({
       if (editorRef.current) {
         const instance = editorRef.current;
         editorRef.current = null;
-        instance.isReady.then(() => instance.destroy()).catch(() => {});
+        instance.isReady.then(() => instance.destroy()).catch((err) => { console.error(err); });
       }
       holderDiv.remove();
     };
@@ -162,7 +162,7 @@ export default function Editor({
         data = { blocks: [{ type: "paragraph", data: { text: initialContent } }] };
       }
       editorRef.current?.render(data);
-    }).catch(() => {});
+    }).catch((err) => { console.error(err); });
   }, [initialContent]);
 
   const handleGrammarCheck = async () => {

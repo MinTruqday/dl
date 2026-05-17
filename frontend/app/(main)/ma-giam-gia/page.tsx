@@ -57,7 +57,6 @@ export default function ManageCouponsPage() {
     try {
       const data = await getCouponsAPI();
       const list = data.data || data || [];
-      // Only show approved or non-pending if you want to keep list clean
       setCoupons(list.filter((c: any) => c.status !== 'pending' || isAdmin));
     } catch (err: any) {
       showToast("Lỗi tải mã giảm giá", "error");

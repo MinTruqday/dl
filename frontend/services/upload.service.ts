@@ -7,7 +7,7 @@ export async function uploadAssetAPI(file: File, type: string = "document") {
 
   const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
     method: "POST",
-    headers: { ...getAuthHeaders() }, // No Content-Type for FormData
+    headers: { ...getAuthHeaders() },
     body: formData,
   });
   const data = await res.json();

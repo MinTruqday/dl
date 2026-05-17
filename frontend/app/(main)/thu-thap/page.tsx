@@ -25,7 +25,7 @@ export default function CollectorPage() {
     source: "AnnaArchive",
     url: "",
     index_type: "list",
-    target_class: "10",
+    target_class: "-1",
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -177,20 +177,6 @@ export default function CollectorPage() {
                 </div>
               )}
 
-              {collectionForm.source === "NXBGDC" && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-black">Khối lớp</label>
-                  <select
-                    value={collectionForm.target_class}
-                    onChange={(e) => setCollectionForm({ ...collectionForm, target_class: e.target.value })}
-                    className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white appearance-none"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => (
-                      <option key={c} value={String(c)}>Lớp {c}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
 
               <button
                 onClick={() => setConfirmModal(true)}
@@ -215,8 +201,10 @@ export default function CollectorPage() {
                 <div className="border border-zinc-200 bg-white p-6 flex flex-col justify-between h-32">
                   <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Worker Status</p>
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-black rounded-none" />
-                    <p className="text-sm font-bold text-black uppercase">Đang hoạt động</p>
+                    <div className={`w-2 h-2 rounded-none ${collectorStats?.status === 'operational' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <p className="text-sm font-bold text-black uppercase">
+                      {collectorStats?.status === 'operational' ? 'Đang hoạt động' : 'Tạm dừng / Lỗi'}
+                    </p>
                   </div>
                 </div>
               </div>

@@ -136,7 +136,7 @@ class NXBGDCollector:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Extracted via NXBGD collector (OLM API).",
+                    "description": "Extracted via NXBGD collector.",
                     "file_url": minio_url,
                     "tags": ["NXB Giao duc"],
                     "content": None,
@@ -166,7 +166,7 @@ class NXBGDCollector:
     async def execute(self):
         await self.init_browser()
         
-        url = f"https://taphuan.nxbgd.vn/tap-huan?grade=-1"
+        url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
             logger.info(f"Visiting root URL OLM: {url}")
             await self.page.goto(url, timeout=60000)
@@ -182,7 +182,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
                 
-                logger.info(f"Found {len(document_urls)} documents on current page for Grade -1")
+                logger.info(f"Found {len(document_urls)} documents on current page for Grade {self.target_class}")
                 
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
@@ -268,6 +268,6 @@ class NXBGDCollector:
             await self.close()
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Starting NXBGD Collection OLM queue for Grade -1...")
+    logger.info(f"Starting NXBGD Collection OLM queue for Grade {target_class}...")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

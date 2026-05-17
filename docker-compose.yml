@@ -190,6 +190,24 @@ services:
     networks:
       - doclib_network
 
+  collector:
+    build:
+      context: ./backend/collector
+      dockerfile: Dockerfile
+    container_name: doclib_collector
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - redis
+      - minio
+    volumes:
+      - ./backend/collector/src:/app/src
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge

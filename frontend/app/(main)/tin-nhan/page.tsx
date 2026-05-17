@@ -221,7 +221,6 @@ export default function MessagesPage() {
         const newMsgs = prev.map((m) =>
           (m._id || m.id) === messageId ? { ...m, is_pinned: !m.is_pinned } : m,
         );
-        // Update selectedConv pinned list locally for immediate UI response
         if (selectedConv) {
           const pinned = newMsgs.filter(m => m.is_pinned);
           setSelectedConv({ ...selectedConv, pinned_messages: pinned });

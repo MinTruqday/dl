@@ -151,7 +151,7 @@ export default function DocumentsPage() {
         publisher_name: isAdmin ? "DocLib" : (user.full_name || "") 
       }));
     }
-  }, [user, authLoading, isAdmin]); // removed fetchData to avoid infinite loops when cursor changes
+  }, [user, authLoading, isAdmin]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -55,9 +55,7 @@ export default function NotificationsPage() {
       if (res && (res.data || res.settings)) {
         setSettings(res.data || res.settings);
       }
-    } catch {
-      // Silent fail
-    }
+    } catch (err) { console.error(err); }
   }, []);
 
   useEffect(() => {

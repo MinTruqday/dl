@@ -96,9 +96,7 @@ export default function DocumentViewer() {
           bookmarks.data.some((b: any) => (b.id || b._id) === docId),
         );
       }
-    } catch {
-      // Silent failure
-    }
+    } catch (err) { console.error(err); }
   }, [id]);
 
   const fetchDocument = useCallback(

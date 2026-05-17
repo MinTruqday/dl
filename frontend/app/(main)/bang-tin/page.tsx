@@ -889,7 +889,6 @@ export default function Feed() {
     try {
       const data = await toggleReactionAPI(postId, "posts", reactionType);
       if (data.message === "Đã thích" && event) {
-        // Confetti removed for brutalist compliance
       }
       fetchFeed(true);
     } catch (e) {

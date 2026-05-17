@@ -30,7 +30,7 @@ export default function MaGiamGiaLayout({
         activeCount: list.filter((c: any) => c.is_active && c.status === 'approved').length,
         pendingCount: list.filter((c: any) => c.status === 'pending').length,
       });
-    } catch (err) {}
+    } catch (err) { console.error(err); }
   };
 
   const navItems = [
