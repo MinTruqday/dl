@@ -4,7 +4,7 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import require_role, get_current_user
 from core.response import APIResponse
 from services.operation import OperationService
-from services.finance import FinanceService
+from services.withdrawal import WithdrawalService
 from services.user import UserService
 from models.operation import CampaignRequest, ApplicationReviewRequest
 
@@ -34,7 +34,7 @@ async def toggle_maintenance(enabled: bool):
 @router.get("/rut-tien", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_withdrawals_list(status: str = "PENDING"):
     return APIResponse(
-        data=await FinanceService.get_withdrawal_queue(status),
+        data=await WithdrawalService.get_withdrawal_queue(status),
         message="Lấy danh sách thanh toán thành công"
     )
 

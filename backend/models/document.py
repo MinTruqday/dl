@@ -53,6 +53,15 @@ class DocumentContentUpdate(BaseModel):
     content: str
     content_format: str
 
+class DocumentUpdate(BaseModel):
+    title: Optional[str] = None
+    slug: Optional[str] = None
+    description: Optional[str] = None
+    cover_url: Optional[str] = None
+    tags: Optional[List[str]] = None
+    category: Optional[str] = None
+    price_dl: Optional[int] = None
+
 class DocumentCreate(DocumentBase):
     pass
 
@@ -96,6 +105,7 @@ class SeoMetadataRequest(BaseModel):
     description: str = ""
 
 class CoauthorInviteRequest(BaseModel):
+    document_id: Optional[str] = None
     email: str
     role: str = "editor"
 

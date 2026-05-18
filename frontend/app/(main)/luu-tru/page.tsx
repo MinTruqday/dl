@@ -53,7 +53,8 @@ export default function ArchivePage() {
     setUploading(true);
     try {
       const storageData = await uploadDocumentFile(file);
-      const filePath = storageData.file_path;
+      const filePath = storageData.data?.url || storageData.data?.filename || storageData.url || storageData.filename;
+      if (!filePath) throw new Error("Không nhận được đường dẫn tệp tin từ máy chủ");
 
       const downloadUrlData = await getFileDownloadUrl(filePath);
       const url = downloadUrlData;

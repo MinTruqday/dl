@@ -9,9 +9,11 @@ import {
   createHighlightAPI,
   getHighlightsAPI,
   deleteHighlightAPI,
+} from "@/services/highlight.service";
+import {
   toggleBookmarkAPI,
   getBookmarksAPI,
-} from "@/services/read.service";
+} from "@/services/bookmark.service";
 import {
   Lock,
   AlertTriangle,
@@ -83,7 +85,7 @@ export default function DocumentViewer() {
       const res = await getHighlightsAPI(id);
       setHighlights(Array.isArray(res) ? res : res.data || []);
     } catch (err: any) {
-      showToast("Không thể đồng bộ điểm nhấn", "error");
+      showToast("Không thể đồng bộ nêu bật", "error");
     }
   }, [id, showToast]);
 
@@ -306,9 +308,9 @@ export default function DocumentViewer() {
       fetchHighlights();
       setSelection(null);
       window.getSelection()?.removeAllRanges();
-      showToast("Đã lưu điểm nhấn", "success");
+      showToast("Đã lưu nêu bật", "success");
     } catch (e) {
-      showToast("Không thể lưu điểm nhấn", "error");
+      showToast("Không thể lưu nêu bật", "error");
     }
   };
 
@@ -318,9 +320,9 @@ export default function DocumentViewer() {
       setHighlights((prev) =>
         prev.filter((h) => (h.id || h._id) !== highlightId),
       );
-      showToast("Đã xóa điểm nhấn", "success");
+      showToast("Đã xóa nêu bật", "success");
     } catch (err: any) {
-      showToast("Không thể xóa", "error");
+      showToast("Không thể xóa nêu bật", "error");
     }
   };
 
@@ -330,12 +332,12 @@ export default function DocumentViewer() {
       setIsBookmarked(!isBookmarked);
       showToast(
         isBookmarked
-          ? "Đã gỡ khỏi thư viện"
-          : "Đã lưu vào thư viện",
+          ? "Đã gỡ khỏi dấu trang"
+          : "Đã thêm vào dấu trang",
         "success",
       );
     } catch (err: any) {
-      showToast("Cập nhật thư viện thất bại", "error");
+      showToast("Cập nhật dấu trang thất bại", "error");
     }
   };
 
@@ -566,7 +568,7 @@ export default function DocumentViewer() {
               <button
                 onClick={saveHighlight}
                 className="p-2 text-zinc-600 hover:text-black transition-colors"
-                title="Lưu điểm nhấn"
+                title="Lưu nêu bật"
               >
                 <Highlighter className="w-4 h-4" />
               </button>
@@ -599,7 +601,7 @@ export default function DocumentViewer() {
               {sidebarTab === "chat"
                 ? "Cố vấn AI"
                 : sidebarTab === "highlights"
-                  ? "Điểm nhấn"
+                  ? "Nêu bật"
                   : sidebarTab === "history"
                     ? "Lịch sử"
                     : "Mục lục trang"}
@@ -699,7 +701,7 @@ export default function DocumentViewer() {
                 <div className="py-20 text-center flex flex-col items-center gap-4">
                   <Highlighter className="w-8 h-8 text-zinc-300" />
                   <p className="text-sm font-medium text-zinc-500">
-                    Chưa có điểm nhấn nào
+                    Chưa có nêu bật nào
                   </p>
                 </div>
               ) : (

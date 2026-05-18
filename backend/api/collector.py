@@ -17,7 +17,7 @@ async def trigger_collection(req: CollectionRequest):
         status=202
     )
 
-@router.get("/thong-ke", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))])
+@router.get("/thong-ke", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_collector_stats():
     return APIResponse(
         data=await CollectorService.get_collector_stats(),

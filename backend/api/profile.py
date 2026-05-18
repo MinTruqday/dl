@@ -32,6 +32,14 @@ async def apply_author(data: Any, current_user: UserInDB = Depends(get_current_u
 async def become_author(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await IdentityService.become_author(current_user), message="Nâng cấp tài khoản thành công", status=200)
 
+@router.post("/kyc", response_model=APIResponse[Any])
+async def upload_kyc(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await IdentityService.upload_kyc(file, current_user),
+        message="Tải lên tài liệu KYC thành công",
+        status=status.HTTP_200_OK
+    )
+
 @router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await SettingService.get_settings(current_user), message="Lấy cài đặt người dùng thành công", status=200)

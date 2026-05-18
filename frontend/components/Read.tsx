@@ -10,12 +10,12 @@ import {
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReaderTools from "./ReaderTools";
 import {
-  getDocumentHighlightsAPI,
+  getHighlightsAPI,
   createHighlightAPI,
   deleteHighlightAPI,
   updateHighlightNoteAPI,
   exportHighlightsMarkdownAPI,
-} from "@/services/read.service";
+} from "@/services/highlight.service";
 import {
   Highlighter,
   X,
@@ -97,10 +97,10 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
   const fetchHighlights = useCallback(async () => {
     if (!documentId) return;
     try {
-      const data = await getDocumentHighlightsAPI(documentId);
+      const data = await getHighlightsAPI(documentId);
       setHighlights(data || []);
     } catch (err: any) {
-      console.error("Lỗi tải highlights:", err);
+      console.error("Lỗi tải nêu bật:", err);
     }
   }, [documentId]);
 
@@ -122,9 +122,9 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
       setSelectionPopup(null);
       window.getSelection()?.removeAllRanges();
       fetchHighlights();
-      showToast("Đã đánh dấu đoạn văn.", "success");
+      showToast("Đã lưu nêu bật.", "success");
     } catch (e: any) {
-      showToast("Không thể tạo đánh dấu lúc này.", "error");
+      showToast("Không thể lưu nêu bật lúc này.", "error");
     }
   };
 
@@ -133,9 +133,9 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
       await deleteHighlightAPI(highlightId);
       fetchHighlights();
       setEditingNote(null);
-      showToast("Đã xóa đánh dấu.", "success");
+      showToast("Đã xóa nêu bật.", "success");
     } catch (e: any) {
-      showToast("Xóa đánh dấu thất bại.", "error");
+      showToast("Xóa nêu bật thất bại.", "error");
     }
   };
 
@@ -440,7 +440,7 @@ export default function Read({ content, title, documentId }: ReaderViewProps) {
             onClick={() => handleDeleteHighlight(editingNote.id)}
             className="h-14 px-8 border border-zinc-200 text-[11px] font-bold text-zinc-400 uppercase tracking-widest active:scale-95 rounded-sm transition-transform"
           >
-            Xóa đánh dấu
+            Xóa nêu bật
           </button>
         </ModalFooter>
       </Modal>

@@ -5,10 +5,11 @@ import uuid
 from loguru import logger
 from models.wallet import Transaction, TransactionType
 
-ALLOWED_PAYOUT_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
-ALLOWED_PAYOUT_ACTIONS = {"approve", "reject"}
+ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {"PENDING", "APPROVED", "REJECTED", "CANCELLED"}
+ALLOWED_WITHDRAWAL_ACTIONS = {"approve", "reject"}
 
-class FinanceService:
+
+class WithdrawalService:
     @staticmethod
     async def get_revenue(current_user):
         db = db_client.mongodb.get_default_database()
@@ -19,13 +20,13 @@ class FinanceService:
         cursor = db["transactions"].aggregate(pipeline)
         res = await cursor.to_list(length=1)
         total_revenue = res[0]["total_revenue"] if res else 0
-        
+
         withdrawal_res = await db["withdrawal_requests"].aggregate([
             {"$match": {"user_id": str(current_user.id), "status": "PENDING"}},
             {"$group": {"_id": None, "pending": {"$sum": "$amount"}}}
         ]).to_list(length=1)
         pending_withdrawal = withdrawal_res[0]["pending"] if withdrawal_res else 0
-        
+
         return {"total_revenue": total_revenue, "pending_withdrawal": pending_withdrawal, "currency": "dl"}
 
     @staticmethod
@@ -33,7 +34,7 @@ class FinanceService:
         db = db_client.mongodb.get_default_database()
         amount = int(data.get("amount", 0))
         bank_info = data.get("bank_info", {})
-        
+
         if amount < 100000:
             raise HTTPException(status_code=400, detail="Số tiền rút tối thiểu là 100,000 dl.")
 
@@ -74,13 +75,13 @@ class FinanceService:
                 await db["transactions"].insert_one(transaction.model_dump(by_alias=True), session=session)
 
                 await session.commit_transaction()
-                logger.info(f"Finance: Withdrawal requested by user {current_user.id} for {amount} dl")
+                logger.info(f"Withdrawal: Requested by user {current_user.id} for {amount} dl")
                 return {"message": "Yêu cầu rút tiền đã được gửi thành công.", "withdrawal_id": withdrawal_id}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Finance: Withdrawal request failed for user {current_user.id}: {e}")
+            logger.error(f"Withdrawal: Request failed for user {current_user.id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -89,9 +90,9 @@ class FinanceService:
     async def get_withdrawal_queue(status: str = "pending") -> list:
         db = db_client.mongodb.get_default_database()
         normalized_status = status.upper()
-        if normalized_status not in ALLOWED_PAYOUT_QUEUE_STATUSES:
+        if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
             raise HTTPException(status_code=400, detail="Trạng thái yêu cầu rút tiền không hợp lệ.")
-        
+
         pipeline = [
             {"$match": {"status": normalized_status}},
             {"$sort": {"created_at": -1}},
@@ -124,12 +125,12 @@ class FinanceService:
     async def verify_withdrawal(withdrawal_id: str, action: str, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
         normalized_action = action.strip().lower()
-        if normalized_action not in ALLOWED_PAYOUT_ACTIONS:
+        if normalized_action not in ALLOWED_WITHDRAWAL_ACTIONS:
             raise HTTPException(status_code=400, detail="Hành động xử lý yêu cầu rút tiền không hợp lệ.")
 
         withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id})
         if not withdrawal:
-            raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu thanh toán.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu rút tiền.")
 
         current_status = withdrawal.get("status")
         if current_status != "PENDING":
@@ -161,7 +162,7 @@ class FinanceService:
                     await db["transactions"].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
 
                 await db["audit_logs"].insert_one({
-                    "action": f"PAYOUT_{status}",
+                    "action": f"WITHDRAWAL_{status}",
                     "actor_id": str(current_moderator.id),
                     "withdrawal_id": withdrawal_id,
                     "timestamp": datetime.now(timezone.utc)
@@ -174,7 +175,7 @@ class FinanceService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Finance: Verify withdrawal failed for {withdrawal_id}: {e}")
+            logger.error(f"Withdrawal: Verify failed for {withdrawal_id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()
@@ -210,13 +211,13 @@ class FinanceService:
                 )
                 await db["transactions"].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
-                logger.info(f"Finance: Withdrawal {withdrawal_id} cancelled by user {current_user.id}")
+                logger.info(f"Withdrawal: {withdrawal_id} cancelled by user {current_user.id}")
                 return {"message": "Đã hủy yêu cầu rút tiền thành công."}
         except HTTPException:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f"Finance: Cancel withdrawal failed for {withdrawal_id}: {e}")
+            logger.error(f"Withdrawal: Cancel failed for {withdrawal_id}: {e}")
             raise HTTPException(status_code=500, detail="Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.")
         finally:
             await session.end_session()

@@ -10,7 +10,7 @@ from models.wallet import Transaction, TransactionType
 from loguru import logger
 
 
-class GatewayService:
+class DepositService:
     @staticmethod
     def _generate_payos_signature(data: dict) -> str:
         sorted_keys = sorted(data.keys())
@@ -22,7 +22,7 @@ class GatewayService:
         ).hexdigest()
 
     @staticmethod
-    async def create_payment_link(req, current_user):
+    async def create_deposit_link(req, current_user):
         if req.amount < 2000:
             raise HTTPException(status_code=400, detail="Số tiền nạp tối thiểu là 2.000 VNĐ")
 
@@ -43,7 +43,7 @@ class GatewayService:
             "orderCode": order_code,
             "returnUrl": return_url,
         }
-        signature = GatewayService._generate_payos_signature(signature_data)
+        signature = DepositService._generate_payos_signature(signature_data)
 
         payload = {
             "orderCode": order_code,
@@ -107,7 +107,7 @@ class GatewayService:
             )
 
     @staticmethod
-    async def payos_webhook(request):
+    async def deposit_webhook(request):
         data = await request.json()
         logger.info(f"Received payOS webhook: {json.dumps(data, default=str)}")
 
@@ -128,7 +128,7 @@ class GatewayService:
                 if not received_signature:
                     logger.warning("payOS webhook missing signature")
 
-                await GatewayService.process_success_order(order_code)
+                await DepositService.process_success_order(order_code)
             except Exception as e:
                 logger.error(f"payOS webhook processing error: {e}")
 
@@ -139,7 +139,7 @@ class GatewayService:
         )
 
     @staticmethod
-    async def verify_payment(order_code: int):
+    async def verify_deposit(order_code: int):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
@@ -157,7 +157,7 @@ class GatewayService:
                 status = payment_data.get("status", "UNKNOWN")
 
                 if status == "PAID":
-                    await GatewayService.process_success_order(order_code)
+                    await DepositService.process_success_order(order_code)
 
                 return {
                     "order_code": order_code,

@@ -16,6 +16,7 @@ class CommentService:
             "user_id": str(current_user.id),
             "content": req.content,
             "item_id": req.item_id,
+            "parent_id": req.parent_id if hasattr(req, "parent_id") else None,
             "created_at": datetime.now(timezone.utc),
             "is_removed": False
         }
@@ -32,6 +33,7 @@ class CommentService:
             "user_id": str(current_user.id),
             "content": req.content,
             "item_id": item_id,
+            "parent_id": req.parent_id if hasattr(req, "parent_id") else None,
             "created_at": datetime.now(timezone.utc),
             "is_removed": False
         }

@@ -4,10 +4,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { API_URL } from "@/services/authentication.service";
 import { updateProfileAPI } from "@/services/setting.service";
-import { depositDLAPI, getDetailedHistoryAPI } from "@/services/wallet.service";
+import { getDetailedHistoryAPI } from "@/services/wallet.service";
+import { createDepositLinkAPI } from "@/services/deposit.service";
 import { applyAuthorAPI, becomeAuthorAPI } from "@/services/setting.service";
 import { uploadMediaAPI } from "@/services/archive.service";
-import { getBookmarksAPI } from "@/services/read.service";
+import { getBookmarksAPI } from "@/services/bookmark.service";
 import {
   User,
   Camera,
@@ -126,7 +127,7 @@ export default function ProfilePage() {
     }
     setIsDepositing(true);
     try {
-      const res = await depositDLAPI(amount);
+      const res = await createDepositLinkAPI(amount);
       const checkoutUrl = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;

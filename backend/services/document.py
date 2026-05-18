@@ -129,6 +129,28 @@ class DocumentService:
         return await docs_collection.find_one({"_id": document_id})
 
     @staticmethod
+    async def update_document(document_id: str, doc_update, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        doc = await docs_col.find_one({"_id": document_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
+        if doc.get("author_id") != str(current_user.id) and current_user.role != "ADMIN":
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này.")
+            
+        update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
+        if "slug" in update_data and update_data["slug"] != doc.get("slug"):
+            existing = await docs_col.find_one({"slug": update_data["slug"]})
+            if existing:
+                raise HTTPException(status_code=400, detail="Đường dẫn tài liệu này đã tồn tại.")
+                
+        if update_data:
+            update_data["updated_at"] = datetime.now(timezone.utc)
+            await docs_col.update_one({"_id": document_id}, {"$set": update_data})
+            
+        return serialize_document(await docs_col.find_one({"_id": document_id}))
+
+    @staticmethod
     async def list_documents(limit: int, cursor: str, q: str, sort_by: str, category: str = None, tag: str = None):
         db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
@@ -358,12 +380,41 @@ class DocumentService:
         if cursor:
             import datetime as dt_mod
             query["updated_at"] = {"$gt": dt_mod.datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
-        documents = await db["documents"].find(query).sort("updated_at", 1).limit(limit).to_list(length=limit)
+        
+        pipeline = [
+            {"$match": query},
+            {"$sort": {"updated_at": 1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "author_id",
+                    "foreignField": "_id",
+                    "as": "author"
+                }
+            },
+            {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}}
+        ]
+        
+        documents = await db["documents"].aggregate(pipeline).to_list(length=limit)
+        
+        def format_date(val):
+            if isinstance(val, datetime):
+                return val.isoformat()
+            if isinstance(val, str):
+                return val
+            return datetime.now(timezone.utc).isoformat()
+            
         return [{
             "id": str(b["_id"]),
+            "_id": str(b["_id"]),
             "title": b.get("title", ""),
+            "description": b.get("description", ""),
             "author_id": b.get("author_id"),
-            "submitted_at": b.get("updated_at", datetime.now(timezone.utc).isoformat() if isinstance(b.get("updated_at"), datetime) else "")
+            "author_name": b.get("author", {}).get("full_name", "Ẩn danh"),
+            "created_at": format_date(b.get("created_at") or b.get("updated_at")),
+            "updated_at": format_date(b.get("updated_at")),
+            "submitted_at": format_date(b.get("updated_at"))
         } for b in documents]
 
     @staticmethod
@@ -412,3 +463,57 @@ class DocumentService:
     async def generate_ai_cover(document_id: str, current_user) -> dict:
         from services.editor import EditorService
         return await EditorService.generate_cover(document_id, "minimalist", current_user)
+
+    @staticmethod
+    async def get_trending_tags(limit: int = 10) -> List[str]:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        pipeline = [
+            {"$unwind": "$tags"},
+            {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": limit}
+        ]
+        results = await docs_col.aggregate(pipeline).to_list(length=limit)
+        return [r["_id"] for r in results]
+
+    @staticmethod
+    async def get_suggested_documents(limit: int = 5) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        docs_col = db["documents"]
+        cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
+        documents = await cursor.to_list(length=limit)
+        return [{
+            "id": str(b["_id"]),
+            "slug": b.get("slug"),
+            "title": b.get("title"),
+            "author": b.get("author", "Unknown"),
+            "cover_url": b.get("cover_url"),
+            "mentions": b.get("views", 0),
+            "average_rating": b.get("average_rating", 0)
+        } for b in documents]
+
+    @staticmethod
+    async def compile_document(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
+            
+        from services.compilation import CompilationService
+        from core.storage import upload_file
+        
+        content = doc.get("content", "")
+        pdf_data = await CompilationService.compile_latex_to_pdf(content)
+        
+        filename = f"documents/{uuid.uuid4().hex}.pdf"
+        await upload_file(pdf_data, filename, "application/pdf")
+        
+        await db["documents"].update_one(
+            {"_id": document_id},
+            {"$set": {"pdf_path": filename, "compiled_at": datetime.now(timezone.utc)}}
+        )
+        
+        logger.info(f"Compilation: Document {document_id} compiled successfully to {filename}")
+        return {"status": "success", "pdf_path": filename, "message": "Biên dịch tài liệu thành công."}
+

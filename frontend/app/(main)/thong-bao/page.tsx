@@ -227,7 +227,7 @@ export default function NotificationsPage() {
                           n.is_read ? "text-zinc-500" : "text-black"
                         }`}
                       >
-                        {n.message}
+                        {n.message || n.body}
                       </p>
 
                       <div className="mt-3 flex items-center gap-4">

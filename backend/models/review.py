@@ -5,7 +5,8 @@ import uuid
 
 class ReviewBase(BaseModel):
     rating: int
-    content: str
+    content: Optional[str] = None
+    comment: Optional[str] = None
 
 class ReviewCreate(ReviewBase):
     pass
@@ -26,7 +27,9 @@ class ReviewResponse(ReviewInDB):
 class RatingRequest(BaseModel):
     rating: int
     content: Optional[str] = None
+    review_text: Optional[str] = None
 
 class ChapterRatingRequest(BaseModel):
-    chapter_id: str
+    chapter_id: Optional[str] = None
+    chapter_slug: Optional[str] = None
     rating: int

@@ -19,7 +19,7 @@ export async function getWalletHistoryAPI() {
 }
 
 export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
-  const res = await fetch(`${API_URL}/vi-tien/lich-su/chi-tiet?skip=${skip}&limit=${limit}`, {
+  const res = await fetch(`${API_URL}/vi-tien/lich-su?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -100,14 +100,4 @@ export async function purchaseChapterAPI(documentId: string, chapterId: string) 
   return data;
 }
 
-export async function depositDLAPI(amount: number) {
-  const res = await fetch(`${API_URL}/cong-thanh-toan/tao-link`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, method: "payos" }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khong the khoi tao giao dich nap tien");
-  return data;
-}
 

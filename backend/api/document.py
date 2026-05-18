@@ -6,7 +6,7 @@ from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
 from services.chapter import ChapterService
-from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, CoauthorInviteRequest, DocumentPasswordRequest
+from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, DocumentUpdate, CoauthorInviteRequest, DocumentPasswordRequest
 from models.series import SeriesCreateRequest, SeriesResponse
 from pydantic import BaseModel
 
@@ -26,6 +26,14 @@ async def update_document_content(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
     return APIResponse(data=await DocumentService.update_document_content(document_id, content_in, current_user), message="Cập nhật nội dung tài liệu thành công", status=status.HTTP_200_OK)
+
+@router.put("/{document_id}", response_model=APIResponse[DocumentResponse])
+async def update_document(
+    document_id: str,
+    doc_update: DocumentUpdate,
+    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
+) -> Any:
+    return APIResponse(data=await DocumentService.update_document(document_id, doc_update, current_user), message="Cập nhật thông tin tài liệu thành công", status=status.HTTP_200_OK)
 
 @router.get("/", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
@@ -130,14 +138,6 @@ async def link_series(document_id: str, series_id: str, current_user: UserInDB =
         status=200
     )
 
-@router.post("/{document_id}/dong-tac-gia", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def invite_coauthor(document_id: str, req: CoauthorInviteRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.invite_coauthor(document_id, req.email, current_user), 
-        message="Mời đồng tác giả thành công", 
-        status=200
-    )
-
 @router.delete("/{document_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def soft_delete_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
@@ -171,4 +171,11 @@ async def get_document_audit_logs(document_id: str, current_user: UserInDB = Dep
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user), 
         message="Lấy nhật ký hoạt động tài liệu thành công"
+    )
+
+@router.post("/{document_id}/bien-dich", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def compile_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await DocumentService.compile_document(document_id, current_user),
+        message="Biên dịch tài liệu thành công"
     )

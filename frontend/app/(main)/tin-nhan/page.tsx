@@ -33,6 +33,7 @@ import {
   User,
   MoreVertical,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/lib/utils";
@@ -175,7 +176,7 @@ export default function MessagesPage() {
         setUploadingImage(true);
         const formData = new FormData();
         formData.append("file", imageFile);
-        const resUpload = await fetch(`${API_URL}/luu-trư/`, {
+        const resUpload = await fetch(`${API_URL}/tai-len/tap-tin`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}` },
           body: formData,

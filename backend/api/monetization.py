@@ -7,7 +7,7 @@ from models.wallet import PlanCreate, TipRequest, DocumentPricingRequest, FlashS
 from services.subscription import SubscriptionService
 from services.donation import DonationService
 from services.pricing import PricingService
-from services.finance import FinanceService
+from services.withdrawal import WithdrawalService
 
 router = APIRouter(prefix="/kiem-tien")
 
@@ -63,8 +63,12 @@ async def cancel_subscription(subscription_id: str, current_user: UserInDB = Dep
 
 @router.post("/ung-ho", response_model=APIResponse[Any])
 async def tip(req: TipRequest, current_user: UserInDB = Depends(get_current_user)):
+    receiver = req.receiver_id or req.author_id
+    if not receiver:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Thiếu mã người nhận (receiver_id hoặc author_id).")
     return APIResponse(
-        data=await DonationService.virtual_tip(req.receiver_id, req.amount, current_user, req.message), 
+        data=await DonationService.virtual_tip(receiver, req.amount, current_user, req.message), 
         message="Ủng hộ tác giả thành công"
     )
 
@@ -85,6 +89,6 @@ async def set_flash_sale(document_id: str, data: FlashSaleRequest, current_user:
 @router.get("/thong-ke/doanh-thu", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))])
 async def get_author_revenue(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await FinanceService.get_revenue(current_user),
+        data=await WithdrawalService.get_revenue(current_user),
         message="Lấy số liệu doanh thu thành công"
     )

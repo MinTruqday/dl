@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 from core.response import APIResponse
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Body, Depends, status
 from models.user import UserInDB, RoleEnum
 from api.dependency import get_current_user, require_role
 from services.publication import PublicationService
@@ -37,7 +37,7 @@ async def config_premium(document_id: str, req: PremiumConfigRequest, current_us
     )
 
 @router.post("/{document_id}/doc-thu", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
-async def set_free_preview(document_id: str, chapter_ids: List[str], current_user: UserInDB = Depends(get_current_user)):
+async def set_free_preview(document_id: str, chapter_ids: List[str] = Body(...), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ChapterService.set_free_preview(document_id, chapter_ids, current_user), 
         message="Thiết lập chương đọc thử thành công", 

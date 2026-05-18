@@ -4,7 +4,6 @@ from models.user import UserInDB
 from api.dependency import get_current_user_optional
 from core.response import APIResponse
 from services.document import DocumentService
-from services.feed import FeedService
 from services.rank import RankService
 from services.ai import AIService
 
@@ -52,7 +51,7 @@ async def get_featured_authors(limit: int = 10):
 @router.get("/hashtag-xu-huong", response_model=APIResponse[Any])
 async def get_trending_tags(limit: int = 10):
     return APIResponse(
-        data=await FeedService.get_trending_tags(limit), 
+        data=await DocumentService.get_trending_tags(limit), 
         message="Lấy danh sách hashtag xu hướng thành công", 
         status=status.HTTP_200_OK
     )

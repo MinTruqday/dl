@@ -162,6 +162,8 @@ class DonationService:
 
     @staticmethod
     async def virtual_tip(target_user_id: str, amount: int, current_user, message: str = ""):
+        if not target_user_id:
+            raise HTTPException(status_code=400, detail="Mã người nhận không hợp lệ.")
         db = db_client.mongodb.get_default_database()
         if target_user_id == str(current_user.id):
             raise HTTPException(status_code=400, detail="Bạn không thể tự tặng dl cho chính mình.")

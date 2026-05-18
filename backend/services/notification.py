@@ -33,9 +33,18 @@ class NotificationService:
             while True:
                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                 if message:
+                    try:
+                        data = json.loads(message["data"].decode("utf-8"))
+                        if "body" in data and "message" not in data:
+                            data["message"] = data["body"]
+                        elif "message" in data and "body" not in data:
+                            data["body"] = data["message"]
+                        payload = json.dumps(data)
+                    except Exception:
+                        payload = message["data"].decode("utf-8")
                     yield {
                         "event": "notification",
-                        "data": message["data"].decode("utf-8")
+                        "data": payload
                     }
                 await asyncio.sleep(0.5)
         except asyncio.CancelledError:
@@ -60,6 +69,10 @@ class NotificationService:
         notifs = []
         async for n in cursor:
             n["_id"] = str(n["_id"])
+            if "body" in n and "message" not in n:
+                n["message"] = n["body"]
+            elif "message" in n and "body" not in n:
+                n["body"] = n["message"]
             notifs.append(n)
         return notifs
 

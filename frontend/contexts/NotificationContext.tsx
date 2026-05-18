@@ -79,7 +79,7 @@ export function NotificationProvider({
       try {
         const newNotif = JSON.parse(event.data);
         setNotifications((prev) => [newNotif, ...prev]);
-        showToast(newNotif.message || "Bạn có thông báo mới", "info");
+        showToast(newNotif.message || newNotif.body || "Bạn có thông báo mới", "info");
       } catch (e) { console.error(e); }
     };
 

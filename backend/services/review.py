@@ -36,13 +36,17 @@ class ReviewService:
     @staticmethod
     async def report_typo(document_id: str, data, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
+        chapter_slug = getattr(data, "chapter_slug", None) or getattr(data, "chapter_id", "") or ""
+        text_excerpt = getattr(data, "text_excerpt", None) or getattr(data, "selected_text", "") or ""
+        description = getattr(data, "description", None) or getattr(data, "context_text", "") or ""
+        
         report = {
             "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "document_id": document_id,
-            "chapter_slug": data.chapter_slug,
-            "text_excerpt": data.text_excerpt[:500],
-            "description": data.description[:300],
+            "chapter_slug": chapter_slug,
+            "text_excerpt": text_excerpt[:500] if text_excerpt else "",
+            "description": description[:300] if description else "",
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
@@ -66,26 +70,60 @@ class ReviewService:
         } for r in reports]
 
     @staticmethod
-    async def get_document_reviews(document_id: str) -> list:
+    async def create_review(document_id: str, review_in, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        content_text = getattr(review_in, "content", None) or getattr(review_in, "comment", "") or ""
+        
+        review_item = {
+            "_id": str(uuid.uuid4()),
+            "document_id": document_id,
+            "user_id": str(current_user.id),
+            "full_name": current_user.full_name or "Cộng tác viên ẩn danh",
+            "avatar_url": getattr(current_user, "avatar_url", None),
+            "rating": review_in.rating,
+            "content": content_text,
+            "comment": content_text,
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db["reviews"].update_one(
+            {"user_id": str(current_user.id), "document_id": document_id},
+            {"$set": review_item},
+            upsert=True
+        )
+        logger.info(f"Review: Document {document_id} rated by {current_user.id} (Rating: {review_in.rating})")
+        return review_item
+
+    @staticmethod
+    async def get_reviews(document_id: str) -> list:
         db = db_client.mongodb.get_default_database()
         reviews = await db["reviews"].find({"document_id": document_id}).sort("created_at", -1).to_list(length=100)
         for r in reviews:
             r["_id"] = str(r["_id"])
+            r["comment"] = r.get("content", "")
         return reviews
+
+    @staticmethod
+    async def get_document_reviews(document_id: str) -> list:
+        return await ReviewService.get_reviews(document_id)
 
     @staticmethod
     async def report_content(data, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
+        item_type = getattr(data, "item_type", None) or getattr(data, "target_type", "") or ""
+        item_id = getattr(data, "item_id", None) or getattr(data, "target_id", "") or ""
+        description = getattr(data, "description", None) or getattr(data, "details", "") or ""
+        
         report = {
             "_id": str(uuid.uuid4()),
             "reporter_id": str(current_user.id),
-            "item_type": data.item_type,
-            "item_id": data.item_id,
+            "item_type": item_type,
+            "item_id": item_id,
             "reason": data.reason,
-            "description": data.description,
+            "description": description,
             "status": "pending",
             "created_at": datetime.now(timezone.utc)
         }
         await db["reports"].insert_one(report)
-        logger.info(f"Review: Content {data.item_type} ({data.item_id}) reported by {current_user.id}")
+        logger.info(f"Review: Content {item_type} ({item_id}) reported by {current_user.id}")
         return {"message": "Đã gửi báo cáo nội dung thành công."}

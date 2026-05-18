@@ -169,3 +169,83 @@ class InteractionService:
             return []
         users = await db["users"].find({"_id": {"$in": blocked_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=100)
         return [{"id": str(u["_id"]), "full_name": u.get("full_name", "Ẩn danh"), "avatar_url": u.get("avatar_url")} for u in users]
+
+    @staticmethod
+    async def get_friend_suggestions_by_intersection(current_user: UserInDB) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        user_col = db["users"]
+        follows_col = db["follows"]
+        
+        following = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
+        exclude_ids = [f["following_id"] for f in following] + [str(current_user.id)]
+        
+        user_doc = await user_col.find_one({"_id": str(current_user.id)}, {"interests": 1})
+        user_tags = user_doc.get("interests", []) if user_doc else []
+        
+        pipeline = [
+            {"$match": {"_id": {"$nin": exclude_ids}, "is_active": True}},
+            {"$addFields": {
+                "total_match": {
+                    "$size": {
+                        "$setIntersection": [
+                            {"$ifNull": ["$interests", []]}, 
+                            user_tags
+                        ]
+                    }
+                }
+            }},
+            {"$sort": {"total_match": -1}},
+            {"$limit": 5},
+            {"$project": {"_id": 1, "full_name": 1, "avatar_url": 1, "bio": 1, "role": 1, "total_match": 1}}
+        ]
+        
+        suggestions_cursor = await user_col.aggregate(pipeline).to_list(length=5)
+        suggestions = []
+        for doc in suggestions_cursor:
+            suggestions.append({
+                "id": str(doc["_id"]),
+                "full_name": doc.get("full_name", "Người dùng"),
+                "avatar_url": doc.get("avatar_url"),
+                "bio": doc.get("bio"),
+                "total_match": doc.get("total_match", 0),
+                "role": doc.get("role", "READER")
+            })
+        return suggestions
+
+    @staticmethod
+    async def search_users(query: str, limit: int = 10, current_user: Optional[UserInDB] = None) -> list:
+        db = db_client.mongodb.get_default_database()
+        
+        exclude_ids = []
+        if current_user:
+            user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
+            my_blocks = user_doc.get("blocked_users", []) if user_doc else []
+            
+            blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
+            blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
+            
+            exclude_ids = list(set(my_blocks + blocked_by_me_ids))
+
+        search_query = {
+            "$or": [
+                {"full_name": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}},
+            ],
+            "is_active": True,
+        }
+        
+        if exclude_ids:
+            search_query["_id"] = {"$nin": exclude_ids}
+
+        users = await db["users"].find(
+            search_query, 
+            {"full_name": 1, "slug": 1, "avatar_url": 1, "role": 1}
+        ).limit(limit).to_list(length=limit)
+        
+        return [{
+            "id": str(u["_id"]),
+            "full_name": u.get("full_name", "Ẩn danh"),
+            "slug": u.get("slug", ""),
+            "avatar_url": u.get("avatar_url"),
+            "role": u.get("role", "READER"),
+        } for u in users]

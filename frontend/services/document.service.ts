@@ -345,19 +345,6 @@ export async function getAcademicMetricsAPI(id: string) {
   return res.ok ? res.json() : null;
 }
 
-export async function purchaseDocumentAPI(documentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/vi-tien/mua-sam/tai-lieu/${documentId}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(
-      data.message || "Không thể thực hiện giao dịch mua tài liệu",
-    );
-  }
-  return data;
-}
+
 
 

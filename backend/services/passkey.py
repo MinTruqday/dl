@@ -1,5 +1,6 @@
 from core.config import settings
 import base64
+import json
 from webauthn import (
     generate_registration_options,
     verify_registration_response,
@@ -50,7 +51,7 @@ class PasskeyService:
         if db_client.redis:
             await db_client.redis.setex(f"passkey_reg_challenge:{email}", 300, options.challenge)
             
-        return options_to_json(options)
+        return json.loads(options_to_json(options))
 
     @staticmethod
     async def register_finish(email: str, credential_data: dict):
@@ -115,7 +116,7 @@ class PasskeyService:
         if db_client.redis:
             await db_client.redis.setex(f"passkey_auth_challenge:{email}", 300, options.challenge)
             
-        return options_to_json(options)
+        return json.loads(options_to_json(options))
 
     @staticmethod
     async def login_finish(email: str, credential_data: dict):

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/anh-quang-cao")
 
 
-@router.get("/", response_model=APIResponse[Any])
+@router.get("", response_model=APIResponse[Any])
 async def get_active_banners():
     return APIResponse(
         data=await BannerService.get_banners(active_only=True), 
@@ -24,7 +24,7 @@ async def get_all_banners():
         message="Lấy toàn bộ danh sách banner thành công"
     )
 
-@router.post("/", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.post("", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_banner(data: BannerRequest):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump()), 

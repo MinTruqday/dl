@@ -122,9 +122,9 @@ export default function Menu({
         <div className="flex-1 overflow-y-auto py-4 scroll-smooth flex flex-col pb-20 no-scrollbar">
           <NavLink icon={Search} label="Khám phá" href="/" />
           <NavLink
-            icon={LayoutDashboard}
-            label="Bảng tin"
-            href="/bang-tin"
+            icon={Users}
+            label="Cộng đồng"
+            href="/cong-dong"
             requireAuth
           />
           <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />

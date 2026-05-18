@@ -6,7 +6,7 @@ from models.user import UserInDB
 from services.bookmark import BookmarkService
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/danh-dau", tags=["Bookmark"])
+router = APIRouter(prefix="/dau-trang")
 
 class BookmarkFolderCreate(BaseModel):
     name: str
@@ -18,7 +18,7 @@ class BookmarkFolderAssign(BaseModel):
 async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.toggle_bookmark(document_id, current_user),
-        message="Thao tác đánh dấu hoàn tất",
+        message="Thao tác dấu trang hoàn tất",
         status=200
     )
 
@@ -26,14 +26,14 @@ async def toggle_bookmark(document_id: str, current_user: UserInDB = Depends(get
 async def get_bookmarks(limit: int = Query(100), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.get_bookmarks(current_user, limit),
-        message="Lấy danh sách đánh dấu thành công"
+        message="Lấy danh sách dấu trang thành công"
     )
 
 @router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(data: BookmarkFolderCreate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.create_bookmark_folder(data.name, current_user),
-        message="Tạo thư mục đánh dấu thành công",
+        message="Tạo thư mục dấu trang thành công",
         status=201
     )
 
@@ -41,19 +41,19 @@ async def create_bookmark_folder(data: BookmarkFolderCreate, current_user: UserI
 async def get_bookmark_folders(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.get_bookmark_folders(current_user),
-        message="Lấy danh sách thư mục đánh dấu thành công"
+        message="Lấy danh sách thư mục dấu trang thành công"
     )
 
 @router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def assign_bookmarks(folder_id: str, data: BookmarkFolderAssign, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.assign_bookmarks_to_folder(folder_id, data.bookmark_ids, current_user),
-        message="Cập nhật thư mục đánh dấu thành công"
+        message="Cập nhật thư mục dấu trang thành công"
     )
 
 @router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await BookmarkService.delete_bookmark_folder(folder_id, current_user),
-        message="Xóa thư mục đánh dấu thành công"
+        message="Xóa thư mục dấu trang thành công"
     )

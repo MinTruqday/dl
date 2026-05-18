@@ -19,7 +19,7 @@ async def stream_notifications(
     current_user = await get_current_user_token_param(token)
     return EventSourceResponse(NotificationService.sse_generator(current_user.id))
 
-@router.get("/", response_model=APIResponse[Any])
+@router.get("", response_model=APIResponse[Any])
 async def get_notifications(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await NotificationService.get_notifications(current_user), message="Lấy danh sách thông báo thành công", status=200)
 

@@ -18,11 +18,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
-import {
-  getDocumentBySlugAPI,
-  purchaseDocumentAPI,
-} from "@/services/document.service";
-import { toggleBookmarkAPI } from "@/services/read.service";
+import { getDocumentBySlugAPI } from "@/services/document.service";
+import { purchaseDocumentAPI } from "@/services/wallet.service";
+import { toggleBookmarkAPI } from "@/services/bookmark.service";
 import Review from "@/components/Review";
 import Comment from "@/components/Comment";
 import Report from "@/components/Report";
@@ -79,10 +77,10 @@ export default function DocumentDetailsPage() {
       const ok = await toggleBookmarkAPI(docData._id || docData.id);
       if (ok) {
         setIsBookmarked(!isBookmarked);
-        showToast(isBookmarked ? "Đã xóa khỏi thư viện" : "Đã lưu vào thư viện", "success");
+        showToast(isBookmarked ? "Đã gỡ khỏi dấu trang" : "Đã thêm vào dấu trang", "success");
       }
     } catch (err: any) {
-      showToast("Không thể cập nhật trạng thái lưu trữ", "error");
+      showToast("Cập nhật dấu trang thất bại", "error");
     }
   };
 

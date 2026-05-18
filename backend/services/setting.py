@@ -26,9 +26,14 @@ class SettingService:
     @staticmethod
     async def update_settings(settings_data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
+        user_id = str(current_user.id)
+        user = await db["users"].find_one({"_id": user_id}, {"settings": 1})
+        current_settings = user.get("settings", {}) if user else {}
+        
+        merged_settings = {**current_settings, **settings_data}
         await db["users"].update_one(
-            {"_id": str(current_user.id)},
-            {"$set": {"settings": settings_data, "updated_at": datetime.now(timezone.utc)}}
+            {"_id": user_id},
+            {"$set": {"settings": merged_settings, "updated_at": datetime.now(timezone.utc)}}
         )
-        logger.info(f"Settings: User {current_user.id} updated their system settings")
+        logger.info(f"Settings: User {user_id} updated their system settings")
         return {"message": "Đã lưu cài đặt."}

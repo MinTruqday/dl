@@ -22,17 +22,17 @@ from api.document import router as document_router
 from api.upload import router as upload_router
 from api.profile import router as profile_router
 from api.social import router as social_router
+from api.post import router as post_router
+from api.discussion import router as discussion_router
 from api.editor import router as editor_router
-from api.coauthor import router as coauthor_router
 from api.version import router as version_router
 from api.review import router as review_router
 from api.highlight import router as highlight_router
 from api.notification import router as notification_router
 from api.wallet import router as wallet_router
-from api.payment import router as payment_router
 from api.export import router as export_router
-from api.gateway import router as gateway_router
-from api.read import router as read_router
+from api.deposit import router as deposit_router
+from api.read import router as read_router, reader_router
 from api.monetization import router as monetization_router
 from api.withdrawal import router as withdrawal_router
 from api.story import router as story_router
@@ -61,6 +61,7 @@ from api.bookmark import router as bookmark_router
 from api.pin import router as pin_router
 from api.preference import router as preference_router
 from api.quota import router as quota_router
+from api.rank import router as rank_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -152,11 +153,12 @@ app.include_router(auth_router)
 app.include_router(archive_router)
 app.include_router(profile_router)
 app.include_router(wallet_router)
-app.include_router(payment_router)
-app.include_router(gateway_router)
+app.include_router(deposit_router)
 app.include_router(export_router)
 app.include_router(upload_router)
 app.include_router(social_router)
+app.include_router(post_router)
+app.include_router(discussion_router)
 app.include_router(story_router)
 app.include_router(comment_router)
 app.include_router(document_router)
@@ -166,6 +168,8 @@ app.include_router(latex_router)
 app.include_router(editor_router)
 app.include_router(monetization_router)
 app.include_router(read_router)
+app.include_router(reader_router)
+app.include_router(highlight_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
 app.include_router(ai_router)
@@ -173,7 +177,6 @@ app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)
 app.include_router(chat_router)
-app.include_router(coauthor_router)
 app.include_router(collector_router)
 app.include_router(withdrawal_router)
 app.include_router(operation_router)
@@ -193,6 +196,7 @@ app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(preference_router)
 app.include_router(quota_router)
+app.include_router(rank_router)
 
 @app.get("/health")
 async def health_check():

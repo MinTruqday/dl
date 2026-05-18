@@ -189,4 +189,36 @@ class ReadService:
             search_from = idx + len(query)
         return {"total": len(results), "results": results, "query": query}
 
+    @staticmethod
+    async def update_typography(data, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        update_data = {
+            "font_family": data.font_family,
+        }
+        if data.font_size is not None:
+            update_data["font_size"] = data.font_size
+        if data.line_height is not None:
+            update_data["line_height"] = data.line_height
+        if data.letter_spacing is not None:
+            update_data["letter_spacing"] = data.letter_spacing
+            
+        await db["users"].update_one(
+            {"_id": str(current_user.id)},
+            {"$set": {"typography": update_data}}
+        )
+        return {"status": "success", "typography": update_data}
+
+    @staticmethod
+    async def clear_reading_history(current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["reading_history"].delete_many({"user_id": str(current_user.id)})
+        return {"status": "success", "message": "Đã xóa toàn bộ lịch sử đọc thành công."}
+
+    @staticmethod
+    async def delete_history_item(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["reading_history"].delete_one({"user_id": str(current_user.id), "document_id": document_id})
+        return {"status": "success", "message": "Đã xóa mục lịch sử đọc thành công."}
+
+
 

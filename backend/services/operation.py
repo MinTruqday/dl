@@ -7,12 +7,12 @@ from models.user import RoleEnum
 
 class OperationService:
     @staticmethod
-    async def get_all_users(limit: int = 50, cursor: str = None) -> list:
+    async def get_all_users(limit: int = 50, offset: int = 0, cursor: str = None) -> list:
         db = db_client.mongodb.get_default_database()
         query = {}
-        if cursor:
+        if cursor and isinstance(cursor, str):
             query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
-        users = await db["users"].find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
+        users = await db["users"].find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(u["_id"]),

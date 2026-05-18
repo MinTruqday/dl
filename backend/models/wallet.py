@@ -53,7 +53,8 @@ class Voucher(BaseModel):
         populate_by_name = True
 
 class TipRequest(BaseModel):
-    receiver_id: str
+    receiver_id: Optional[str] = None
+    author_id: Optional[str] = None
     amount: int
     message: Optional[str] = None
 

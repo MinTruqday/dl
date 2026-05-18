@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getDocumentReviewsAPI,
   createDocumentReviewAPI,
-} from "@/services/social.service";
+} from "@/services/review.service";
 import { Star, User, Send, Loader2, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";

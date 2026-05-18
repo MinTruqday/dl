@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends, UploadFile, File
 from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.upload import UploadService
-from typing import Any
 
-router = APIRouter(prefix="/dang-tai")
+router = APIRouter(prefix="/tai-len")
 
 @router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
@@ -22,9 +21,16 @@ async def upload_document(
 ) -> Any:
     return APIResponse(data=await UploadService.upload_document(file), message="Tải tài liệu lên thành công", status=201)
 
+@router.post("/tap-tin", response_model=APIResponse[Any])
+async def upload_asset(
+    file: UploadFile = File(...),
+    current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN]))
+) -> Any:
+    return APIResponse(data=await UploadService.upload_document(file), message="Tải tập tin lên thành công", status=201)
+
 @router.get("/luu-tru/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(
     file_path: str,
-    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER, RoleEnum.GUEST]))
+    current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER]))
 ):
     return APIResponse(data=await UploadService.get_presigned_url(file_path), message="Tạo liên kết tải tập tin thành công", status=200)

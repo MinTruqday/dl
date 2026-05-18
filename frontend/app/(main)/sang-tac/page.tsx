@@ -8,7 +8,7 @@ import { publishDocumentAPI } from "@/services/publication.service";
 import { getDocumentVersionsAPI, restoreVersionAPI } from "@/services/version.service";
 import { ingestDocumentAPI } from "@/services/rag.service";
 import { generateAICoverAPI } from "@/services/inference.service";
-import { requestPayoutAPI } from "@/services/payout.service";
+import { requestWithdrawalAPI } from "@/services/withdrawal.service";
 import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
 import { API_URL } from "@/services/authentication.service";
 import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/services/wallet.service";
@@ -92,10 +92,10 @@ function StudioContent() {
   const [diffData, setDiffData] = useState<any>(null);
   const [isComparing, setIsComparing] = useState(false);
 
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutAmount, setPayoutAmount] = useState(0);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState(0);
   const [bankInfo, setBankInfo] = useState({ bank_name: "", account_number: "", account_name: "" });
-  const [requestingPayout, setRequestingPayout] = useState(false);
+  const [requestingWithdrawal, setRequestingWithdrawal] = useState(false);
 
   const [selectedChapterIndex, setSelectedChapterIndex] = useState<number | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; text: string } | null>(null);
@@ -373,8 +373,8 @@ function StudioContent() {
     }
   };
 
-  const handlePayout = async () => {
-    if (payoutAmount <= 0) {
+  const handleWithdrawal = async () => {
+    if (withdrawalAmount <= 0) {
       showToast("Số tiền không hợp lệ", "error");
       return;
     }
@@ -383,16 +383,16 @@ function StudioContent() {
       return;
     }
 
-    setRequestingPayout(true);
+    setRequestingWithdrawal(true);
     try {
-      await requestPayoutAPI(payoutAmount, bankInfo);
+      await requestWithdrawalAPI(withdrawalAmount, bankInfo);
       showToast("Yêu cầu rút tiền đã được gửi", "success");
-      setShowPayoutModal(false);
+      setShowWithdrawalModal(false);
       fetchStatsData();
     } catch (e: any) {
       showToast(e.message || "Yêu cầu rút tiền thất bại", "error");
     } finally {
-      setRequestingPayout(false);
+      setRequestingWithdrawal(false);
     }
   };
 
@@ -449,7 +449,7 @@ function StudioContent() {
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showPayoutModal} onClose={() => setShowPayoutModal(false)} className="max-w-md">
+      <Modal isOpen={showWithdrawalModal} onClose={() => setShowWithdrawalModal(false)} className="max-w-md">
         <ModalHeader>
           <ModalTitle>Yêu cầu rút tiền</ModalTitle>
         </ModalHeader>
@@ -459,8 +459,8 @@ function StudioContent() {
                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền rút (dl)</label>
                <input
                  type="number"
-                 value={payoutAmount}
-                 onChange={(e) => setPayoutAmount(parseInt(e.target.value) || 0)}
+                 value={withdrawalAmount}
+                 onChange={(e) => setWithdrawalAmount(parseInt(e.target.value) || 0)}
                  className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
                />
              </div>
@@ -491,15 +491,15 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowPayoutModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setShowWithdrawalModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
             Hủy
           </button>
           <button 
-            onClick={handlePayout} 
-            disabled={requestingPayout}
+            onClick={handleWithdrawal} 
+            disabled={requestingWithdrawal}
             className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center gap-2"
           >
-            {requestingPayout ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
+            {requestingWithdrawal ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
           </button>
         </ModalFooter>
       </Modal>
@@ -765,7 +765,7 @@ function StudioContent() {
                     <div className="p-6 border-b border-zinc-200 flex justify-between items-center">
                       <h3 className="text-base font-medium text-black">Tác phẩm gần đây</h3>
                       <button 
-                        onClick={() => setShowPayoutModal(true)}
+                        onClick={() => setShowWithdrawalModal(true)}
                         className="h-9 px-4 bg-black text-white text-sm font-medium transition-colors rounded-none flex items-center gap-2"
                       >
                         <Banknote className="w-4 h-4" /> Rút tiền doanh thu

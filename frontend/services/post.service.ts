@@ -108,7 +108,7 @@ export const toggleReactionAPI = async (
 };
 
 export async function votePostAPI(postId: string, amount: number) {
-  const res = await fetch(`${API_URL}/vi-tien/vote`, {
+  const res = await fetch(`${API_URL}/vi-tien/binh-chon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ item_id: postId, item_type: "post", amount }),

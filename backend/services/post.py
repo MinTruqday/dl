@@ -57,6 +57,21 @@ class PostService:
         return {"message": "Đã đăng bài thành công.", "post_id": str(new_post.id)}
 
     @staticmethod
+    async def update_post(post_id: str, content: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        post = await db["status_updates"].find_one({"_id": post_id})
+        if not post:
+            raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
+        if post["user_id"] != str(current_user.id) and current_user.role != "ADMIN":
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa bài viết này.")
+        
+        await db["status_updates"].update_one(
+            {"_id": post_id},
+            {"$set": {"content": content, "updated_at": datetime.now(timezone.utc)}}
+        )
+        return {"message": "Đã cập nhật bài viết thành công."}
+
+    @staticmethod
     async def delete_post(post_id: str, current_user: UserInDB) -> dict:
         db = db_client.mongodb.get_default_database()
         post = await db["status_updates"].find_one({"_id": post_id})
@@ -307,3 +322,116 @@ class PostService:
                 },
             })
         return result
+
+    @staticmethod
+    async def get_social_feed(tab: str, item_type: Optional[str], limit: int, current_user: Optional[UserInDB], cursor: str = None) -> List[dict]:
+        db = db_client.mongodb.get_default_database()
+        updates_col = db["status_updates"]
+        
+        exclude_user_ids = []
+        if current_user:
+            user_doc = await db["users"].find_one({"_id": str(current_user.id)}, {"blocked_users": 1})
+            my_blocks = user_doc.get("blocked_users", []) if user_doc else []
+            
+            blocked_by_cursor = db["users"].find({"blocked_users": str(current_user.id)}, {"_id": 1})
+            blocked_by_me_ids = [str(u["_id"]) async for u in blocked_by_cursor]
+            
+            muted_cursor = db["muted_users"].find({"user_id": str(current_user.id)}, {"muted_id": 1})
+            my_mutes = [m["muted_id"] async for m in muted_cursor]
+            
+            exclude_user_ids = list(set(my_blocks + blocked_by_me_ids + my_mutes))
+
+        query = {
+            "is_hidden_by": {"$ne": str(current_user.id) if current_user else "none"}, 
+            "is_shadowbanned": {"$ne": True},
+            "is_deleted": {"$ne": True}
+        }
+        
+        if exclude_user_ids:
+            query["user_id"] = {"$nin": exclude_user_ids}
+
+        if item_type:
+            query["item_type"] = item_type
+            
+        if cursor:
+            from datetime import datetime
+            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
+        if tab == "following" and current_user:
+            follows_col = db["follows"]
+            following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
+            following_ids = [f["following_id"] for f in following_cursor]
+            
+            if "user_id" in query:
+                effective_following = [fid for fid in following_ids if fid not in exclude_user_ids]
+                query["user_id"] = {"$in": effective_following}
+            else:
+                query["user_id"] = {"$in": following_ids}
+                
+        elif tab == "foryou":
+            if current_user:
+                follows_col = db["follows"]
+                following_cursor = await follows_col.find({"follower_id": str(current_user.id)}, {"following_id": 1}).to_list(length=5000)
+                following_ids = [f["following_id"] for f in following_cursor]
+                
+                effective_following = [fid for fid in following_ids if fid not in exclude_user_ids]
+                
+                query["$or"] = [
+                    {"privacy": "public"},
+                    {"user_id": str(current_user.id)},
+                    {"$and": [{"privacy": "friends"}, {"user_id": {"$in": effective_following}}]}
+                ]
+            else:
+                query["privacy"] = "public"
+
+        pipeline = [
+            {"$match": query},
+            {"$sort": {"created_at": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": "users",
+                    "localField": "user_id",
+                    "foreignField": "_id",
+                    "as": "user_details"
+                }
+            },
+            {"$unwind": {"path": "$user_details", "preserveNullAndEmptyArrays": True}}
+        ]
+        
+        cursor_res = updates_col.aggregate(pipeline)
+        results = await cursor_res.to_list(length=limit)
+        
+        feed = []
+        for doc in results:
+            user_doc = doc.get("user_details", {})
+            user_info = {
+                "id": str(user_doc.get("_id")) if user_doc else doc["user_id"],
+                "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
+                "avatar_url": user_doc.get("avatar_url") if user_doc else None,
+                "role": user_doc.get("role", "READER") if user_doc else "READER"
+            }
+            item = {
+                "id": str(doc["_id"]),
+                "user_id": doc["user_id"],
+                "content": doc.get("content", ""),
+                "item_type": doc.get("item_type", "post"),
+                "media_urls": doc.get("media_urls", []),
+                "poll_options": doc.get("poll_options", []),
+                "attached_document_id": doc.get("attached_document_id"),
+                "attached_document_title": doc.get("attached_document_title"),
+                "is_premium": doc.get("is_premium", False),
+                "price": doc.get("price", 0),
+                "read_progress": doc.get("read_progress"),
+                "quote_text": doc.get("quote_text"),
+                "bg_color": doc.get("bg_color"),
+                "font_style": doc.get("font_style"),
+                "created_at": doc.get("created_at", datetime.now(timezone.utc)).isoformat() if isinstance(doc.get("created_at"), datetime) else doc.get("created_at"),
+                "reactions": doc.get("reactions", {}),
+                "user_reaction": doc.get("reaction_users", {}).get(str(current_user.id)) if current_user else None,
+                "is_pinned": doc.get("is_pinned", False),
+                "saved": str(current_user.id) in doc.get("saved_by", []) if current_user else False,
+                "user": user_info
+            }
+            feed.append(item)
+        return feed

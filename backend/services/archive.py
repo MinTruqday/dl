@@ -16,8 +16,7 @@ class ArchiveService:
             query["type"] = archive_type
             
         if cursor:
-            from bson import ObjectId
-            query["_id"] = {"$lt": ObjectId(cursor)}
+            query["_id"] = {"$lt": cursor}
         
         archives = await db["archives"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [

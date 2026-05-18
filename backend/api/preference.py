@@ -18,6 +18,6 @@ async def get_preferences(current_user: UserInDB = Depends(get_current_user)):
 @router.put("", response_model=APIResponse[Any])
 async def update_preferences(data: ReadingPreferenceUpdate, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
-        data=await PreferenceService.update_preferences(data.model_dump(), current_user),
+        data=await PreferenceService.update_preferences(data.model_dump(exclude_unset=True), current_user),
         message="Cập nhật cài đặt tùy chỉnh thành công"
     )

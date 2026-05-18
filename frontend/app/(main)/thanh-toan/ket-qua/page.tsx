@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { verifyPaymentAPI } from "@/services/gateway.service";
+import { verifyDepositAPI } from "@/services/deposit.service";
 import { Loader2, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -34,7 +34,7 @@ export default function PaymentResultPage() {
     }
 
     try {
-      const res = await verifyPaymentAPI(Number(orderCode));
+      const res = await verifyDepositAPI(Number(orderCode));
       const data = res.data || res;
 
       setPaymentInfo(data);

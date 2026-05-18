@@ -5,7 +5,7 @@ import {
   getDiscussionsAPI,
   createDiscussionAPI,
   replyDiscussionAPI,
-} from "@/services/social.service";
+} from "@/services/discussion.service";
 import { MessageSquare, User, Send, Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";

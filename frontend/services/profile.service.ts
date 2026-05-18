@@ -65,21 +65,3 @@ export async function getBadgesAPI() {
   return data;
 }
 
-export async function getBookmarksAPI() {
-  const res = await fetch(`${API_URL}/ho-so/danh-dau`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách đánh dấu");
-  return data;
-}
-
-export async function toggleBookmarkAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/ho-so/danh-dau/${documentId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật đánh dấu thất bại");
-  return data;
-}

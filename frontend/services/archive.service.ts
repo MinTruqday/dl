@@ -57,12 +57,12 @@ export async function uploadDocumentFileAPI(file: File) {
 export async function getFileDownloadUrlAPI(filePath: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/luu-tru/${encodeURIComponent(filePath)}`, {
+  const res = await fetch(`${API_URL}/tai-len/luu-tru/${encodeURIComponent(filePath)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể lấy đường dẫn tải xuống");
-  return data.download_url;
+  return data.data?.download_url || data.download_url;
 }
 
 export async function uploadImageAPI(file: File) {

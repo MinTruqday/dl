@@ -14,7 +14,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { API_URL } from "@/services/authentication.service";
-import { getSocialRankingAPI } from "@/services/social.service";
+import { getSocialRankingAPI } from "@/services/rank.service";
 
 interface LeaderboardDocument {
   _id: string;

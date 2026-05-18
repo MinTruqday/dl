@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getCollectorStatsAPI } from "@/services/operation.service";
-import { triggerCollectionAPI } from "@/services/collector.service";
+import { getCollectorStatsAPI, triggerCollectionAPI } from "@/services/collector.service";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -48,7 +47,7 @@ export default function CollectorPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role !== "admin" && user.role !== "moderator") {
+      if (user.role !== "admin") {
         router.push("/");
       } else {
         fetchData();

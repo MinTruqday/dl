@@ -15,8 +15,8 @@ class HighlightNoteUpdateRequest(BaseModel):
     note: str
 
 class ReadingPreferenceUpdate(BaseModel):
-    theme: str = "light"
-    font_size: int = 16
-    line_height: float = 1.8
-    font_family: str = "Inter"
-    is_dyslexic_mode: bool = False
+    theme: Optional[str] = None
+    font_size: Optional[int] = None
+    line_height: Optional[float] = None
+    font_family: Optional[str] = None
+    is_dyslexic_mode: Optional[bool] = None

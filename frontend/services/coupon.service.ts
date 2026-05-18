@@ -1,7 +1,8 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function validateCouponAPI(code: string, amount: number) {
-  const res = await fetch(`${API_URL}/ma-giam-gia/kiem-tra?code=${encodeURIComponent(code)}&amount=${amount}`, {
+export async function validateCouponAPI(code: string, documentId?: string) {
+  const url = `${API_URL}/ma-giam-gia/kiem-tra?code=${encodeURIComponent(code)}` + (documentId ? `&document_id=${documentId}` : "");
+  const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

@@ -47,12 +47,33 @@ async def get_reading_goal(current_user: UserInDB = Depends(get_current_user)):
         data=await ReadService.get_reading_goal(current_user),
         message="Lấy thông tin mục tiêu thành công"
     )
-
-
+@router.put("/trinh-bay", response_model=APIResponse[Any])
+async def update_typography(data: TypographyRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadService.update_typography(data, current_user),
+        message="Cập nhật hiển thị thành công"
+    )
 
 @router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await ReadService.search_in_document(document_id, q, current_user),
         message="Tìm kiếm trong tài liệu thành công"
+    )
+
+# Secondary router matching frontend history deletions
+reader_router = APIRouter(prefix="/reader")
+
+@reader_router.delete("/history", response_model=APIResponse[Any])
+async def clear_reading_history(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadService.clear_reading_history(current_user),
+        message="Xóa toàn bộ lịch sử đọc thành công"
+    )
+
+@reader_router.delete("/history/{document_id}", response_model=APIResponse[Any])
+async def delete_history_item(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadService.delete_history_item(document_id, current_user),
+        message="Xóa mục lịch sử đọc thành công"
     )

@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function inviteCollaboratorAPI(documentId: string, email: string, role: string = "editor") {
-  const res = await fetch(`${API_URL}/cong-tac/moi`, {
+  const res = await fetch(`${API_URL}/cong-tac/loi-moi`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, email, role }),
@@ -30,7 +30,7 @@ export async function removeCollaboratorAPI(collaborationId: string) {
   return data;
 }
 export async function getCollaborationInvitesAPI() {
-  const res = await fetch(`${API_URL}/cong-tac/invites`, {
+  const res = await fetch(`${API_URL}/cong-tac/loi-moi`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -39,7 +39,7 @@ export async function getCollaborationInvitesAPI() {
 }
 
 export async function respondToInviteAPI(inviteId: string, status: string) {
-  const res = await fetch(`${API_URL}/cong-tac/invites/${inviteId}`, {
+  const res = await fetch(`${API_URL}/cong-tac/loi-moi/${inviteId}`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ status }),

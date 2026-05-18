@@ -173,8 +173,8 @@ class AIService:
     @staticmethod
     async def generate_feed_summary(current_user) -> str:
         from services.quota import QuotaService
-        from services.feed import FeedService
-        feed = await FeedService.get_social_feed("foryou", None, 10, current_user, None)
+        from services.post import PostService
+        feed = await PostService.get_social_feed("foryou", None, 10, current_user, None)
         if not feed:
             return "Chưa có nội dung mới nào để tóm tắt."
         

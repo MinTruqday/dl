@@ -5,13 +5,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   getBookmarkFoldersAPI,
   createBookmarkFolderAPI,
+} from "@/services/bookmark.service";
+import {
+  createReadingListAPI,
+  getMyReadingListsAPI as getReadingListsAPI,
+} from "@/services/library.service";
+import {
   getPinnedDocumentsAPI,
   getContinueReadingAPI,
   getReadingHistoryAPI,
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
-  getReadingListsAPI,
-  createReadingListAPI,
   getMySeriesAPI,
   createSeriesAPI,
 } from "@/services/read.service";
@@ -210,7 +214,7 @@ export default function LibraryPage() {
   const tabs = [
     { id: "overview", label: "Tổng quan" },
     { id: "history", label: "Lịch sử đọc" },
-    { id: "folders", label: "Thư mục lưu trữ" },
+    { id: "folders", label: "Thư mục dấu trang" },
     { id: "lists", label: "Danh sách đọc" },
     ...(canManageSeries ? [{ id: "series", label: "Chuỗi nội dung" }] : []),
   ];
@@ -648,7 +652,7 @@ export default function LibraryPage() {
                           {folder.bookmark_ids?.length || 0} tài liệu
                         </span>
                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                          Lưu trữ
+                          Dấu trang
                         </span>
                       </div>
                     </Link>

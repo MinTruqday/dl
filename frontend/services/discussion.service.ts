@@ -44,24 +44,4 @@ export async function replyDiscussionAPI(
   return data;
 }
 
-export async function getDocumentReviewsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/danh-gia/${documentId}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải đánh giá");
-  return data;
-}
 
-export async function createDocumentReviewAPI(
-  documentId: string,
-  rating: number,
-  text: string,
-) {
-  const res = await fetch(`${API_URL}/danh-gia/${documentId}`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ rating, comment: text }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đánh giá thất bại");
-  return data;
-}
