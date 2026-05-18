@@ -97,7 +97,7 @@ export default function RegisterPage() {
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function RegisterPage() {
                   required
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  className="flex-1 min-w-0 block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="flex-1 min-w-0 block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>
@@ -161,7 +161,7 @@ export default function RegisterPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>

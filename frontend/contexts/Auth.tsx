@@ -37,7 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setIsLoading(true);
+    if (!user) {
+      setIsLoading(true);
+    }
     try {
       const data = await getUserMe();
       if (data) {
@@ -49,8 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       clearAuth();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {

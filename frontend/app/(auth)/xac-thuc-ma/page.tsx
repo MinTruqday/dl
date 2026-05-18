@@ -71,7 +71,7 @@ export default function VerifyCodePage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setToken(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-black text-center text-2xl tracking-[0.25em] font-medium text-black uppercase"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none focus:outline-none focus:ring-0 focus:border-zinc-200 text-center text-2xl tracking-[0.25em] font-medium text-black uppercase"
                 />
               </div>
             </div>

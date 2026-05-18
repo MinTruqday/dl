@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Workspace from "@/components/Workspace";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import {
@@ -13,7 +12,8 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { getUserProfileAPI, followUserAPI } from "@/services/social.service";
+import { getUserProfileAPI } from "@/services/profile.service";
+import { followUserAPI } from "@/services/user.service";
 import { getDocumentsAPI } from "@/services/document.service";
 import { API_URL } from "@/services/authentication.service";
 
@@ -77,7 +77,7 @@ export default function AuthorProfilePage() {
 
   if (loading) {
     return (
-      <Workspace>
+      <>
         <div className="flex h-[80vh] items-center justify-center">
           <div className="flex flex-col items-center gap-6">
             <Loader2 className="w-10 h-10 animate-spin text-zinc-300" />
@@ -86,25 +86,25 @@ export default function AuthorProfilePage() {
             </p>
           </div>
         </div>
-      </Workspace>
+      </>
     );
   }
 
   if (error || !author) {
     return (
-      <Workspace>
+      <>
         <div className="flex h-[80vh] flex-col items-center justify-center gap-6 animate-in fade-in ">
           <AlertCircle className="w-16 h-16 text-zinc-300" />
           <p className="text-sm font-bold text-zinc-400">
             {error || "Tác giả không tồn tại"}
           </p>
         </div>
-      </Workspace>
+      </>
     );
   }
 
   return (
-    <Workspace>
+    <>
       <div
         className="max-w-5xl mx-auto px-4 py-12 md:py-20 font-sans"
         style={{
@@ -261,6 +261,6 @@ export default function AuthorProfilePage() {
           )}
         </div>
       </div>
-    </Workspace>
+    </>
   );
 }

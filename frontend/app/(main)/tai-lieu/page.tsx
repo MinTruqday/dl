@@ -41,7 +41,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { useToast } from "@/contexts/Toast";
-import Workspace from "@/components/Workspace";
 import { 
   Modal, 
   ModalHeader, 
@@ -304,7 +303,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <Workspace>
+    <>
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
         
         {/* Modals */}
@@ -882,6 +881,6 @@ export default function DocumentsPage() {
           </main>
         </div>
       </div>
-    </Workspace>
+    </>
   );
 }

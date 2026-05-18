@@ -24,7 +24,6 @@ import { toggleBookmarkAPI } from "@/services/bookmark.service";
 import Review from "@/components/Review";
 import Comment from "@/components/Comment";
 import Report from "@/components/Report";
-import Workspace from "@/components/Workspace";
 
 export default function DocumentDetailsPage() {
   const params = useParams();
@@ -140,7 +139,7 @@ export default function DocumentDetailsPage() {
   }
 
   return (
-    <Workspace>
+    <>
       <div className="w-full max-w-5xl mx-auto px-6 py-12 font-sans bg-white text-black selection:bg-black selection:text-white min-h-screen">
         {showReportModal && (
           <Report itemId={docData._id || docData.id} itemType="document" onClose={() => setShowReportModal(false)} />
@@ -390,6 +389,6 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
       </div>
-    </Workspace>
+    </>
   );
 }

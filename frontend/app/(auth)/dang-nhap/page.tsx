@@ -188,7 +188,7 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setEmail(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setPassword(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-black text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
                 <div className="mt-2 text-right">
                   <button

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import Workspace from "@/components/Workspace";
 import { getSocialRankingAPI } from "@/services/social.service";
 import { Search, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -41,7 +40,7 @@ export default function AuthorsPage() {
   });
 
   return (
-    <Workspace>
+    <>
       <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 font-sans opacity-100">
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-6">
           <div className="inline-flex items-center px-4 py-1.5 bg-white border border-zinc-100 text-zinc-400 text-[10px] font-bold">
@@ -141,6 +140,6 @@ export default function AuthorsPage() {
           </div>
         )}
       </div>
-    </Workspace>
+    </>
   );
 }
