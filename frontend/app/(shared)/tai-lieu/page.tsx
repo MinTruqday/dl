@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { 
   getDocumentsAPI, 
   getMyDocumentsAPI, 
-  uploadDocumentAPI, 
   createDocumentAPI, 
   deleteAuthorDocumentAPI, 
   deleteAdminDocumentAPI,
@@ -14,6 +13,7 @@ import {
   lockDocumentAPI,
   toggleStarDocumentAPI
 } from "@/services/document.service";
+import { uploadDocumentAPI } from "@/services/upload.service";
 import {
   AlertTriangle,
   FileText,

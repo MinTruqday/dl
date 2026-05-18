@@ -79,8 +79,8 @@ services:
       - minio
     volumes:
       - ./backend:/app
-      - ./backend/public/uploads:/app/public/uploads
-      - ./backend/public/feed_uploads:/app/public/feed_uploads
+      - ./backend/assets/document:/app/assets/document
+      - ./backend/assets/social:/app/assets/social
       - ./packages:/packages
     networks:
       - doclib_network

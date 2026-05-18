@@ -160,7 +160,6 @@ class PostService:
         
         match_query = {"user_id": str(current_user.id)}
         if cursor:
-            from datetime import datetime
             match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             
         pipeline = [
@@ -286,7 +285,6 @@ class PostService:
             query["is_hidden_by"] = {"$ne": str(current_user.id)}
             
         if cursor:
-            from datetime import datetime
             query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             
         pipeline = [
@@ -354,7 +352,6 @@ class PostService:
             query["item_type"] = item_type
             
         if cursor:
-            from datetime import datetime
             query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             
         if tab == "following" and current_user:

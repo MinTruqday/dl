@@ -175,6 +175,100 @@ class OperationService:
             "enabled": config.get("enabled", False),
             "message": config.get("message", "")
         }
+
+    @staticmethod
+    async def get_minio_stats() -> dict:
+        from core.storage import get_s3_client
+        try:
+            async with await get_s3_client() as s3:
+                buckets_resp = await s3.list_buckets()
+                buckets_list = buckets_resp.get("Buckets", [])
+                
+                total_size_bytes = 0
+                total_objects_count = 0
+                buckets_data = []
+                categories = {
+                    "CTAN": {"count": 0, "size": 0},
+                    "NXBGD": {"count": 0, "size": 0},
+                    "NXBST": {"count": 0, "size": 0},
+                    "Anna Archive": {"count": 0, "size": 0},
+                    "User Images": {"count": 0, "size": 0},
+                    "User Documents": {"count": 0, "size": 0},
+                    "Others": {"count": 0, "size": 0}
+                }
+                
+                for b in buckets_list:
+                    bucket_name = b["Name"]
+                    paginator = s3.get_paginator("list_objects_v2")
+                    obj_count = 0
+                    bucket_size = 0
+                    
+                    async for page in paginator.paginate(Bucket=bucket_name):
+                        for obj in page.get("Contents", []):
+                            size = obj["Size"]
+                            key = obj["Key"]
+                            
+                            bucket_size += size
+                            obj_count += 1
+                            total_size_bytes += size
+                            total_objects_count += 1
+                            
+                            if "ctan" in key.lower():
+                                categories["CTAN"]["count"] += 1
+                                categories["CTAN"]["size"] += size
+                            elif "nxbgd" in key.lower():
+                                categories["NXBGD"]["count"] += 1
+                                categories["NXBGD"]["size"] += size
+                            elif "nxbst" in key.lower():
+                                categories["NXBST"]["count"] += 1
+                                categories["NXBST"]["size"] += size
+                            elif "anna_archive" in key.lower():
+                                categories["Anna Archive"]["count"] += 1
+                                categories["Anna Archive"]["size"] += size
+                            elif key.startswith("images/"):
+                                categories["User Images"]["count"] += 1
+                                categories["User Images"]["size"] += size
+                            elif key.startswith("documents/"):
+                                categories["User Documents"]["count"] += 1
+                                categories["User Documents"]["size"] += size
+                            else:
+                                categories["Others"]["count"] += 1
+                                categories["Others"]["size"] += size
+                                
+                    buckets_data.append({
+                        "name": bucket_name,
+                        "created_at": b["CreationDate"].isoformat() if "CreationDate" in b else "",
+                        "size_bytes": bucket_size,
+                        "objects_count": obj_count
+                    })
+                
+                formatted_categories = []
+                for name, stats in categories.items():
+                    if stats["count"] > 0 or stats["size"] > 0:
+                        formatted_categories.append({
+                            "name": name,
+                            "count": stats["count"],
+                            "size_bytes": stats["size"]
+                        })
+                
+                return {
+                    "status": "healthy",
+                    "total_buckets": len(buckets_list),
+                    "total_size_bytes": total_size_bytes,
+                    "total_objects_count": total_objects_count,
+                    "buckets": buckets_data,
+                    "categories": formatted_categories
+                }
+        except Exception as e:
+            logger.error(f"Failed to fetch MinIO stats: {e}")
+            return {
+                "status": "unreachable",
+                "total_buckets": 0,
+                "total_size_bytes": 0,
+                "total_objects_count": 0,
+                "buckets": [],
+                "categories": []
+            }
     @staticmethod
     async def get_collector_stats() -> dict:
         db = db_client.mongodb.get_default_database()

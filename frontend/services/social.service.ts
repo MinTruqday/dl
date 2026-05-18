@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getAIFeedSummaryAPI() {
-  const res = await fetch(`${API_URL}/cong-dong/ai/tom-tat-bang-tin`, {
+  const res = await fetch(`${API_URL}/ai/cong-dong/tom-tat-bang-tin`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

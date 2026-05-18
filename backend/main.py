@@ -79,10 +79,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("public/feed_uploads", exist_ok=True)
-os.makedirs("public/uploads", exist_ok=True)
-app.mount("/feed_uploads", StaticFiles(directory="public/feed_uploads"), name="feed_uploads")
-app.mount("/uploads", StaticFiles(directory="public/uploads"), name="uploads")
+from fastapi.responses import Response, FileResponse
+from core.storage import get_s3_client
+
+@app.get("/social/{file_path:path}")
+async def serve_social_media(file_path: str):
+    local_path = os.path.join("assets/social", file_path)
+    if os.path.exists(local_path) and os.path.isfile(local_path):
+        return FileResponse(local_path)
+    try:
+        async with await get_s3_client() as s3:
+            object_key = f"social/{file_path}"
+            response = await s3.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)
+            content = await response["Body"].read()
+            return Response(content, media_type=response.get("ContentType", "image/png"))
+    except Exception as e:
+        logger.error(f"Error serving social media '{file_path}' from MinIO: {e}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+@app.get("/document/{file_path:path}")
+async def serve_document(file_path: str):
+    local_path = os.path.join("assets/document", file_path)
+    if os.path.exists(local_path) and os.path.isfile(local_path):
+        return FileResponse(local_path)
+    try:
+        async with await get_s3_client() as s3:
+            object_key = f"documents/{file_path}"
+            response = await s3.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)
+            content = await response["Body"].read()
+            return Response(content, media_type=response.get("ContentType", "application/pdf"))
+    except Exception as e:
+        logger.error(f"Error serving document '{file_path}' from MinIO: {e}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+os.makedirs("assets/social", exist_ok=True)
+os.makedirs("assets/document", exist_ok=True)
+app.mount("/social", StaticFiles(directory="assets/social"), name="social")
+app.mount("/document", StaticFiles(directory="assets/document"), name="document")
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

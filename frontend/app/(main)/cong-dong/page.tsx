@@ -474,13 +474,15 @@ export default function Feed() {
         );
       }
       if (part.match(/#[\w]+/)) {
+        const tagName = part.substring(1);
         return (
-          <span
+          <Link
             key={i}
-            className="text-black font-semibold cursor-pointer"
+            href={`/tim-kiem?q=${encodeURIComponent(tagName)}`}
+            className="text-black font-semibold hover:underline cursor-pointer transition-all"
           >
             {part}
-          </span>
+          </Link>
         );
       }
       if (part.match(/^\*\*(.*?)\*\*$/)) {
@@ -547,7 +549,13 @@ export default function Feed() {
         itemType,
         filter === "trending" ? "trending" : undefined
       );
-      const newData = json.data || json;
+      const rawData = json.data || json || [];
+      const newData = Array.isArray(rawData)
+        ? rawData.map((item: any) => ({
+            ...item,
+            id: item.id || item._id,
+          }))
+        : [];
       setPosts((prev) => (reset ? newData : [...prev, ...newData]));
       if (newData.length < limit) setHasMore(false);
       else setHasMore(true);
@@ -620,7 +628,7 @@ export default function Feed() {
   const fetchRanking = async () => {
     try {
       const json = await getSocialRankingAPI();
-      setRanking(json.data || json || []);
+      setRanking(json.data?.top_authors || json.top_authors || []);
     } catch (e) {
       showToast("Lỗi hệ thống", "error");
     }
@@ -1036,7 +1044,7 @@ export default function Feed() {
           <aside className="lg:col-span-3 space-y-8 order-2 lg:order-1 hidden lg:block">
             <div className="border border-zinc-200 bg-white rounded-none p-6">
               <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
-                <Trophy className="w-4 h-4" /> Bảng vinh danh tác giả
+                Bảng vinh danh tác giả
               </h3>
               {ranking.length === 0 ? (
                 <p className="text-xs font-medium text-zinc-500 text-center py-4">
@@ -1066,68 +1074,81 @@ export default function Feed() {
             {trendingTags.length > 0 && (
               <div className="border border-zinc-200 bg-white rounded-none p-6">
                 <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Xu hướng hashtag
+                  Xu hướng hashtag
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {trendingTags.map((tag: any, i: number) => (
-                    <Link
-                      key={i}
-                      href={`/search?q=${encodeURIComponent(tag.tag)}&type=posts`}
-                      className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-xs font-medium text-zinc-600"
-                    >
-                      #{tag.tag}
-                    </Link>
-                  ))}
+                   {trendingTags.map((tag: any, i: number) => (
+                     <Link
+                       key={i}
+                       href={`/tim-kiem?q=${encodeURIComponent(tag.tag)}`}
+                       className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-xs font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
+                     >
+                       #{tag.tag}
+                     </Link>
+                   ))}
                 </div>
               </div>
             )}
 
             <div className="border border-zinc-200 bg-white rounded-none p-6">
               <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
-                <Users className="w-4 h-4" /> Gợi ý kết nối
+                Gợi ý kết nối
               </h3>
-              {suggestions.length === 0 ? (
-                <p className="text-xs font-medium text-zinc-500 text-center py-4">
-                  Không có gợi ý
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {suggestions.map((s, i) => (
-                    <div key={i} className="flex gap-3 items-center">
-                      <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
-                        {s.full_name?.[0]?.toUpperCase() || "A"}
+              {(() => {
+                const filteredSuggestions = suggestions.filter((s: any) => {
+                  const n = (s.full_name || s.username || "").toLowerCase();
+                  return !(
+                    n.includes("moderator") ||
+                    n.includes("active reader") ||
+                    n.includes("doclib admin") ||
+                    n.includes("creative author") ||
+                    n.includes("potential author") ||
+                    n.includes("content mod")
+                  );
+                });
+                return filteredSuggestions.length === 0 ? (
+                  <p className="text-xs font-medium text-zinc-500 text-center py-4">
+                    Chưa có dữ liệu
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredSuggestions.map((s, i) => (
+                      <div key={i} className="flex gap-3 items-center">
+                        <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
+                          {s.full_name?.[0]?.toUpperCase() || "A"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-semibold text-black truncate">
+                            {s.full_name}
+                          </h4>
+                          <span className="text-[10px] text-zinc-500 font-medium truncate">
+                            {s.total_match || 0} điểm chung
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (currentUser) followUser(s._id);
+                            else showToast("Vui lòng đăng nhập.", "error");
+                          }}
+                          className="h-7 px-3 border border-zinc-200 text-[10px] font-medium"
+                        >
+                          Theo dõi
+                        </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-black truncate">
-                          {s.full_name}
-                        </h4>
-                        <span className="text-[10px] text-zinc-500 font-medium truncate">
-                          {s.total_match || 0} điểm chung
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (currentUser) followUser(s._id);
-                          else showToast("Vui lòng đăng nhập.", "error");
-                        }}
-                        className="h-7 px-3 border border-zinc-200 text-[10px] font-medium"
-                      >
-                        Theo dõi
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="border border-zinc-200 bg-white rounded-none p-6">
               <h3 className="text-xs font-semibold text-black mb-4 border-b border-zinc-200 pb-3 flex items-center gap-2">
-                <BookText className="w-4 h-4" /> Tài liệu đáng đọc
+                Tài liệu đáng đọc
               </h3>
               {documentSuggestions.length === 0 ? (
                 <p className="text-xs font-medium text-zinc-500 text-center py-4">
-                  Chưa có gợi ý
-                </p>
+                  Chưa có dữ liệu
+                  </p>
               ) : (
                 <div className="space-y-4">
                   {documentSuggestions.map((b, i) => (
@@ -1347,9 +1368,9 @@ export default function Feed() {
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-zinc-200 flex items-center justify-between">
-                    <div className="flex gap-2">
-                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500">
+                  <div className="pt-4 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 transition-colors">
                         <ImageIcon className="w-4 h-4" />
                         <input
                           type="file"
@@ -1361,30 +1382,31 @@ export default function Feed() {
                       </label>
                       <button
                         onClick={() => setShowExtras(!showExtras)}
-                        className={`h-10 w-10 border flex items-center justify-center  ${
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
                           showExtras
                             ? "bg-black border-black text-white"
-                            : "bg-white border-zinc-200 text-zinc-500"
+                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
                         }`}
                       >
                         <BarChart2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setIsQuoteMode(!isQuoteMode)}
-                        className={`h-10 w-10 border flex items-center justify-center  ${
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
                           isQuoteMode
                             ? "bg-black border-black text-white"
-                            : "bg-white border-zinc-200 text-zinc-500"
+                            : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
                         }`}
                       >
                         <Quote className="w-4 h-4" />
                       </button>
-                    </div>
 
-                    <div className="flex items-center gap-3">
+                      {/* Sleek Vertical Divider */}
+                      <div className="h-6 w-[1px] bg-zinc-200 mx-1" />
+
                       <select
                         id="post-privacy"
-                        className="h-10 px-3 bg-white border border-zinc-200 text-xs font-medium outline-none cursor-pointer"
+                        className="h-10 px-3 bg-white border border-zinc-200 text-xs font-medium outline-none cursor-pointer hover:bg-zinc-50 transition-colors"
                       >
                         <option value="public">Công khai</option>
                         <option value="following">Người theo dõi</option>
@@ -1393,7 +1415,7 @@ export default function Feed() {
                       <button
                         onClick={enhanceContent}
                         disabled={!content.trim() || isEnhancing}
-                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2"
+                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-zinc-50 transition-colors"
                       >
                         {isEnhancing ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -1405,19 +1427,20 @@ export default function Feed() {
                       <button
                         onClick={generatePostWithAI}
                         disabled={isEnhancing}
-                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2"
+                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-zinc-50 transition-colors"
                       >
                         <PenTool className="w-3 h-3" />
                         Soạn thảo AI
                       </button>
-                      <button
-                        onClick={createPost}
-                        disabled={!content.trim() && mediaUrls.length === 0}
-                        className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 "
-                      >
-                        Đăng bài
-                      </button>
                     </div>
+
+                    <button
+                      onClick={createPost}
+                      disabled={!content.trim() && mediaUrls.length === 0}
+                      className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 hover:bg-zinc-800 transition-colors"
+                    >
+                      Đăng bài
+                    </button>
                   </div>
                 </div>
               )}
@@ -1598,13 +1621,13 @@ export default function Feed() {
                               >
                                 {url.match(/\.(mp4|webm)$/i) ? (
                                   <video
-                                    src={`${API_URL}${url}`}
+                                    src={url.startsWith("http") ? url : `${API_URL}/${url.startsWith("/") ? url.substring(1) : url}`}
                                     className="w-full h-auto max-h-96 object-cover"
                                     controls
                                   />
                                 ) : (
                                   <img
-                                    src={`${API_URL}${url}`}
+                                    src={url.startsWith("http") ? url : `${API_URL}/${url.startsWith("/") ? url.substring(1) : url}`}
                                     className="w-full h-auto max-h-96 object-cover grayscale mix-blend-multiply"
                                   />
                                 )}
@@ -1869,12 +1892,12 @@ export default function Feed() {
                                       submitComment(post.id);
                                   }}
                                 />
-                                <Button
+                                <button
                                   onClick={() => submitComment(post.id)}
-                                  className="h-10 w-10 bg-black border border-black text-white rounded-none shrink-0"
+                                  className="h-10 w-10 bg-black border border-black text-white rounded-none shrink-0 flex items-center justify-center hover:bg-zinc-800 transition-colors"
                                 >
                                   <Send className="w-4 h-4" />
-                                </Button>
+                                </button>
                               </div>
                             </div>
                           ) : (

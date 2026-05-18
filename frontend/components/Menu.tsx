@@ -40,6 +40,9 @@ export default function Menu({
 }: MenuProps) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
+  const userRole = (user?.role || "").toLowerCase();
+  const isAuthorOrAdmin = ["author", "admin"].includes(userRole);
+  const isModOrAdmin = ["moderator", "admin"].includes(userRole);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -144,101 +147,105 @@ export default function Menu({
           />
           <NavLink icon={User} href="/ho-so" label="Hồ sơ" requireAuth />
           <NavLink icon={Wallet} href="/vi-tien" label="Ví" requireAuth />
+          <NavLink icon={Settings} href="/cai-dat" label="Cài đặt" requireAuth />
 
-          <div className="mt-4 mb-2 px-6">
-            <span className={`text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isOpen && "hidden"}`}>Tác giả & Quản lý</span>
-            {!isOpen && <div className="h-px w-6 mx-auto bg-zinc-200" />}
-          </div>
-          
-          <NavLink
-            href="/khoi-tao"
-            label="Sáng tác"
-            icon={PenTool}
-            roles={["author", "admin"]}
-          />
-          <NavLink
-            href="/ma-giam-gia"
-            label="Ưu đãi"
-            icon={Ticket}
-            roles={["author", "admin"]}
-          />
-          <NavLink
-            href="/cong-tac"
-            label="Hợp tác"
-            icon={Users}
-            roles={["author", "admin"]}
-          />
-          <NavLink
-            href="/luu-tru"
-            label="Kho lưu trữ"
-            icon={FolderOpen}
-            roles={["author", "admin"]}
-          />
-          <NavLink
-            href="/rut-tien"
-            label="Doanh thu"
-            icon={Wallet}
-            roles={["author", "admin"]}
-          />
+          {isAuthorOrAdmin && (
+            <>
+              <div className="my-2 px-6">
+                {isOpen ? (
+                  <div className="h-px bg-zinc-200 w-full" />
+                ) : (
+                  <div className="h-px w-6 mx-auto bg-zinc-200" />
+                )}
+              </div>
+              
+              <NavLink
+                href="/khoi-tao"
+                label="Sáng tác"
+                icon={PenTool}
+                roles={["author", "admin"]}
+              />
+              <NavLink
+                href="/ma-giam-gia"
+                label="Ưu đãi"
+                icon={Ticket}
+                roles={["author", "admin"]}
+              />
+              <NavLink
+                href="/cong-tac"
+                label="Hợp tác"
+                icon={Users}
+                roles={["author", "admin"]}
+              />
+              <NavLink
+                href="/luu-tru"
+                label="Kho lưu trữ"
+                icon={FolderOpen}
+                roles={["author", "admin"]}
+              />
+              <NavLink
+                href="/rut-tien"
+                label="Doanh thu"
+                icon={Wallet}
+                roles={["author", "admin"]}
+              />
+              <NavLink
+                href="/tai-lieu"
+                label="Kho tài liệu"
+                icon={Files}
+                roles={["admin", "author"]}
+              />
+            </>
+          )}
 
-          <NavLink
-            href="/tai-lieu"
-            label="Kho tài liệu"
-            icon={Files}
-            roles={["admin", "author"]}
-          />
+          {isModOrAdmin && (
+            <>
+              <div className="my-2 px-6">
+                {isOpen ? (
+                  <div className="h-px bg-zinc-200 w-full" />
+                ) : (
+                  <div className="h-px w-6 mx-auto bg-zinc-200" />
+                )}
+              </div>
 
-          <div className="mt-4 mb-2 px-6">
-            <span className={`text-[10px] font-bold text-zinc-400 uppercase tracking-wider ${!isOpen && "hidden"}`}>Quản trị</span>
-            {!isOpen && <div className="h-px w-6 mx-auto bg-zinc-200" />}
-          </div>
-
-          <NavLink
-            href="/nhat-ky"
-            label="Nhật ký hệ thống"
-            icon={Clock}
-            roles={["moderator", "admin"]}
-          />
-          <NavLink
-            href="/thu-thap"
-            label="Thu thập dữ liệu"
-            icon={Database}
-            roles={["admin"]}
-          />
-
-          <NavLink
-            href="/quan-ly-nguoi-dung"
-            label="Người dùng"
-            icon={Users}
-            roles={["admin"]}
-          />
-          <NavLink
-            href="/tac-gia-tiem-nang"
-            label="Tác giả tiềm năng"
-            icon={UserCheck}
-            roles={["admin", "moderator"]}
-          />
-          <NavLink
-            href="/bao-cao"
-            label="Báo cáo vi phạm"
-            icon={AlertTriangle}
-            roles={["admin", "moderator"]}
-          />
-          <NavLink
-            href="/van-hanh"
-            label="Quản trị hệ thống"
-            icon={Shield}
-            roles={["admin"]}
-          />
-
-          <div className="mt-auto pt-4 border-t border-zinc-200">
-            <NavLink
-              href="/cai-dat"
-              label="Cài đặt"
-              icon={Settings}
-              requireAuth
-            />
-          </div>
+              <NavLink
+                href="/nhat-ky"
+                label="Nhật ký hệ thống"
+                icon={Clock}
+                roles={["moderator", "admin"]}
+              />
+              <NavLink
+                href="/thu-thap"
+                label="Thu thập dữ liệu"
+                icon={Database}
+                roles={["admin"]}
+              />
+              <NavLink
+                href="/quan-ly-nguoi-dung"
+                label="Người dùng"
+                icon={Users}
+                roles={["admin"]}
+              />
+              <NavLink
+                href="/tac-gia-tiem-nang"
+                label="Tác giả tiềm năng"
+                icon={UserCheck}
+                roles={["admin", "moderator"]}
+              />
+              <NavLink
+                href="/bao-cao"
+                label="Báo cáo vi phạm"
+                icon={AlertTriangle}
+                roles={["admin", "moderator"]}
+              />
+              <NavLink
+                href="/van-hanh"
+                label="Quản trị hệ thống"
+                icon={Shield}
+                roles={["admin"]}
+              />
+            </>
+          )}
         </div>
       </aside>
     </>

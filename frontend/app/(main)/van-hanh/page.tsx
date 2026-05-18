@@ -6,6 +6,7 @@ import {
   getMaintenanceModeAPI,
   toggleMaintenanceModeAPI,
   triggerBackupAPI,
+  getMinioStatsAPI,
 } from "@/services/operation.service";
 import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/services/quota.service";
 import { Loader2, Save } from "lucide-react";
@@ -27,24 +28,40 @@ export default function OperationDashboard() {
   const [quotaLoading, setQuotaLoading] = useState(true);
   const [isSavingQuota, setIsSavingQuota] = useState<string | null>(null);
 
+  const [minioStats, setMinioStats] = useState<any>(null);
+  const [minioLoading, setMinioLoading] = useState(true);
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!bytes || bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  };
+
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
+    setMinioLoading(true);
     try {
-      const [hData, mData, qData] = await Promise.all([
+      const [hData, mData, qData, minioData] = await Promise.all([
         getSystemHealthAPI(),
         getMaintenanceModeAPI(),
-        getGlobalQuotaConfigAPI()
+        getGlobalQuotaConfigAPI(),
+        getMinioStatsAPI()
       ]);
 
       if (hData) setHealth(hData.data || hData);
       if (mData) setMaintenanceMode(mData.data?.enabled || mData.enabled || false);
       if (qData) setQuotaConfigs(qData);
+      if (minioData) setMinioStats(minioData.data || minioData);
     } catch (err: any) {
       showToast("Không thể tải dữ liệu hệ thống.", "error");
     } finally {
       setIsRefreshing(false);
       setIsLoading(false);
       setQuotaLoading(false);
+      setMinioLoading(false);
     }
   }, [showToast]);
 
@@ -199,6 +216,113 @@ export default function OperationDashboard() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section className="space-y-6">
+              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+                <h2 className="text-sm font-semibold text-black">Kho lưu trữ đối tượng (MinIO Storage)</h2>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${minioStats?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-black">
+                    {minioStats?.status === "healthy" ? "Đang kết nối" : "Mất kết nối"}
+                  </span>
+                </div>
+              </div>
+
+              {minioLoading ? (
+                <div className="py-12 flex justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* High level stats grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                      <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Tổng dung lượng</div>
+                      <div className="text-2xl font-bold tracking-tight text-black">
+                        {formatBytes(minioStats?.total_size_bytes || 0)}
+                      </div>
+                    </div>
+
+                    <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                      <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Tổng số tệp tin</div>
+                      <div className="text-2xl font-bold tracking-tight text-black">
+                        {minioStats?.total_objects_count || 0}
+                      </div>
+                    </div>
+
+                    <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                      <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Số lượng Buckets</div>
+                      <div className="text-2xl font-bold tracking-tight text-black">
+                        {minioStats?.total_buckets || 0}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Buckets details & categories */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Buckets list container */}
+                    <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                      <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase pb-2 border-b border-zinc-100">
+                        Danh sách Buckets
+                      </div>
+                      <div className="divide-y divide-zinc-100 max-h-[220px] overflow-y-auto pr-1">
+                        {minioStats?.buckets?.length > 0 ? (
+                          minioStats.buckets.map((b: any) => (
+                            <div key={b.name} className="py-3 flex items-center justify-between">
+                              <div>
+                                <span className="text-xs font-semibold text-black block">{b.name}</span>
+                                <span className="text-[9px] text-zinc-400 block mt-0.5">
+                                  Khởi tạo: {new Date(b.created_at).toLocaleDateString("vi-VN")}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs font-bold text-black block">{formatBytes(b.size_bytes)}</span>
+                                <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">
+                                  {b.objects_count} tệp tin
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-6 text-center text-xs text-zinc-400 font-medium">
+                            Không tìm thấy bucket nào
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Categories list container */}
+                    <div className="p-6 border border-zinc-200 bg-white space-y-4">
+                      <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase pb-2 border-b border-zinc-100">
+                        Phân loại dữ liệu lưu trữ
+                      </div>
+                      <div className="divide-y divide-zinc-100 max-h-[220px] overflow-y-auto pr-1">
+                        {minioStats?.categories?.length > 0 ? (
+                          minioStats.categories.map((c: any) => (
+                            <div key={c.name} className="py-3 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+                                <span className="text-xs font-semibold text-black">{c.name}</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs font-bold text-black block">{formatBytes(c.size_bytes)}</span>
+                                <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">
+                                  {c.count} tệp tin
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="py-6 text-center text-xs text-zinc-400 font-medium">
+                            Chưa phân loại được dữ liệu
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="space-y-6">

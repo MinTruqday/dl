@@ -112,3 +112,10 @@ async def verify_kyc(user_id: str, status: str, current_user: UserInDB = Depends
         message="Xử lý KYC thành công"
     )
 
+@router.get("/minio/thong-ke", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_minio_stats():
+    return APIResponse(
+        data=await OperationService.get_minio_stats(),
+        message="Lấy thông số lưu trữ MinIO thành công"
+    )
+

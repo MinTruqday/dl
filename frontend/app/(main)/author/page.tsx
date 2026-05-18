@@ -19,7 +19,7 @@ export default function AuthorsPage() {
     setLoading(true);
     try {
       const data = await getSocialRankingAPI();
-      setAuthors(data.data || data || []);
+      setAuthors(data.data?.top_authors || data.top_authors || []);
     } catch (err: any) {
       showToast("Lỗi tải danh sách tác giả", "error");
     } finally {

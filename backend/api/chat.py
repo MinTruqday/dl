@@ -46,11 +46,13 @@ class ConnectionManager:
             await pubsub.unsubscribe(channel_name)
 
     async def send_personal_message(self, message: dict, user_id: str):
+        from fastapi.encoders import jsonable_encoder
+        encoded_message = jsonable_encoder(message)
         if db_client.redis:
-            await db_client.redis.publish(f"chat_delivery:{user_id}", json.dumps(message))
+            await db_client.redis.publish(f"chat_delivery:{user_id}", json.dumps(encoded_message))
         else:
             if user_id in self.active_connections:
-                await self.active_connections[user_id].send_text(json.dumps(message))
+                await self.active_connections[user_id].send_text(json.dumps(encoded_message))
 
 manager = ConnectionManager()
 

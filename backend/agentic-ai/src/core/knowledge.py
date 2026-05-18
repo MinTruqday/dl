@@ -321,4 +321,4 @@ workflow.add_conditional_edges("grade_documents", decide_after_grade, {"generate
 workflow.add_edge("transform_query", "retrieve_db")
 workflow.add_conditional_edges("generate", lambda s: "grade_generation" if s.get("use_smart") else END, {"grade_generation": "grade_generation", END: END})
 workflow.add_conditional_edges("grade_generation", check_hallucination, {"transform_query": "transform_query", END: END})
-rag_agent_app = workflow.compile()
+knowledge_agent_app = workflow.compile()

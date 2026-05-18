@@ -6,7 +6,7 @@ import { getDocumentsAPI } from "@/services/document.service";
 import {
   Search,
   Filter,
-  DocumentOpen,
+  FileText,
   User,
   Clock,
   Star,
@@ -220,8 +220,8 @@ export default function SearchResultsPage() {
                 {history.map((h) => (
                   <div key={h} className="group/item relative">
                     <Link
-                      href={`/search?q=${h}`}
-                      className="block text-[9px] font-bold px-3 py-2 bg-white border border-zinc-100 pr-8 active:scale-95"
+                      href={`/tim-kiem?q=${h}`}
+                      className="block text-[9px] font-bold px-3 py-2 bg-white border border-zinc-100 pr-8 active:scale-95 hover:bg-zinc-50 transition-colors"
                     >
                       {h}
                     </Link>
@@ -299,7 +299,7 @@ export default function SearchResultsPage() {
                   <div className="flex-1 space-y-4">
                     <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-400">
                       <span className="flex items-center gap-1.5">
-                        <DocumentOpen className="w-3.5 h-3.5" />{" "}
+                        <FileText className="w-3.5 h-3.5" />{" "}
                         {document.categories?.[0] || "Tài liệu"}
                       </span>
                       <span className="w-1 h-1 bg-zinc-100" />

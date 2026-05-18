@@ -1,12 +1,13 @@
+import asyncio
 from loguru import logger
-from tavily import AsyncTavilyClient
+from tavily import TavilyClient
 from src.core.config import settings
 
 class SearchEngineAgent:
     def __init__(self):
         self.api_key_valid = settings.TAVILY_API_KEY is not None and len(settings.TAVILY_API_KEY) > 10
         if self.api_key_valid:
-            self.client = AsyncTavilyClient(api_key=settings.TAVILY_API_KEY)
+            self.client = TavilyClient(api_key=settings.TAVILY_API_KEY)
         else:
             self.client = None
 
@@ -18,7 +19,12 @@ class SearchEngineAgent:
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
         try:
-            response = await self.client.search(query=query, search_depth="advanced", max_results=3)
+            response = await asyncio.to_thread(
+                self.client.search,
+                query=query,
+                search_depth="advanced",
+                max_results=3
+            )
             results = response.get("results", [])
             
             if not results:

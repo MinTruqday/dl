@@ -64,7 +64,7 @@ export default function UsersManagementPage() {
     if (!confirmModal) return;
     setIsUpdating(true);
     try {
-      await updateUserRoleAPI(confirmModal.user.id, confirmModal.value);
+      await updateUserRoleAPI(confirmModal.user._id, confirmModal.value);
       showToast("Cập nhật quyền hạn thành công", "success");
       fetchData();
       setConfirmModal(null);
@@ -79,7 +79,7 @@ export default function UsersManagementPage() {
     if (!confirmModal) return;
     setIsUpdating(true);
     try {
-      await updateUserStatusAPI(confirmModal.user.id, confirmModal.value);
+      await updateUserStatusAPI(confirmModal.user._id, confirmModal.value);
       showToast(
         confirmModal.value ? "Đã kích hoạt tài khoản" : "Đã vô hiệu hóa tài khoản",
         "success",
@@ -174,7 +174,7 @@ export default function UsersManagementPage() {
               </thead>
               <tbody className="divide-y divide-zinc-200">
                 {filteredUsers.map((u: any) => (
-                  <tr key={u.id} className="group">
+                  <tr key={u._id} className="group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white flex items-center justify-center border border-zinc-200 text-zinc-500 font-medium rounded-none overflow-hidden shrink-0">

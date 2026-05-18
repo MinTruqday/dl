@@ -116,3 +116,14 @@ export async function getAdminReportsAPI() {
   if (!res.ok) throw new Error(data.message || "Không thể tải danh sách báo cáo");
   return data;
 }
+
+export async function getMinioStatsAPI() {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/van-hanh/minio/thong-ke`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải thông số lưu trữ MinIO");
+  return data;
+}

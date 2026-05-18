@@ -64,7 +64,7 @@ class ArchiveService:
         if ext not in ["jpg", "jpeg", "png", "gif", "webp", "mp4"]:
             raise HTTPException(status_code=400, detail="Hệ thống chỉ hỗ trợ các định dạng tệp ảnh hoặc video mp4")
         
-        filename = f"feed_uploads/{uuid.uuid4().hex}.{ext}"
+        filename = f"social/{uuid.uuid4().hex}.{ext}"
         content = await file.read()
         
         try:
