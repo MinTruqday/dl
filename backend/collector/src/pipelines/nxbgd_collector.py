@@ -19,7 +19,7 @@ from src.core.redis_client import dedup
 MIN_FILE_SIZE_BYTES = 20000
 
 class NXBGDCollector:
-    def __init__(self, target_class: str = "-1"):
+    def __init__(self, target_class: str):
         self.target_class = target_class
         self.page = None
         self.context = None
@@ -267,7 +267,7 @@ class NXBGDCollector:
         finally:
             await self.close()
 
-async def run_nxbgd_collector(target_class: str = "-1"):
-    logger.info(f"Starting NXBGD Collection queue for grade {target_class}")
+async def run_nxbgd_collector(target_class: str):
+    logger.info(f"Starting NXBGD Collection queue for grade All")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()
