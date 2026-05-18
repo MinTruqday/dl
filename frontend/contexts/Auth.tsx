@@ -14,7 +14,7 @@ interface User {
   wallet_balance: number;
 }
 
-interface AuthContextType {
+interface AuthProps {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -22,7 +22,7 @@ interface AuthContextType {
   logoutState: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const Auth = createContext<AuthProps | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
+    <Auth.Provider
       value={{
         user,
         isAuthenticated: !!user,
@@ -84,12 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </Auth.Provider>
   );
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(Auth);
   if (!context) {
     throw new Error("useAuth passed outside of AuthProvider");
   }

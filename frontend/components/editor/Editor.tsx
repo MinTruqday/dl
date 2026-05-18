@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import { 
     compilePreviewAPI, 
     globalFindReplaceAPI, 
@@ -15,15 +15,17 @@ import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
 import { API_URL, getAuthHeaders } from "@/services/authentication.service";
 import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network } from "lucide-react";
 
+interface EditorProps {
+  documentId?: string;
+  initialContent?: string;
+  onSave?: (data: string) => void;
+}
+
 export default function Editor({
   documentId,
   initialContent,
   onSave,
-}: {
-  documentId?: string;
-  initialContent?: string;
-  onSave?: (data: string) => void;
-}) {
+}: EditorProps) {
   const editorRef = useRef<EditorJS | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPreview, setIsPreview] = useState(false);

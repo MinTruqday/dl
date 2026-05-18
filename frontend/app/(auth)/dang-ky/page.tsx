@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { register } from "@/services/authentication.service";
 import Navigation from "@/components/Navigation";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import Passkey from "@/components/Passkey";
 import {
   Modal,

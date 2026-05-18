@@ -3,20 +3,20 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { X } from "lucide-react";
 
-export interface Toast {
+export interface ToastItem {
   id: string;
   message: string;
   type: "success" | "error" | "info";
 }
 
-interface ToastContextType {
+interface ToastProps {
   showToast: (message: string, type?: "success" | "error" | "info") => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
+const Toast = createContext<ToastProps | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <Toast.Provider value={{ showToast }}>
       {children}
       {isClient && (
         <div
@@ -84,12 +84,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           })}
         </div>
       )}
-    </ToastContext.Provider>
+    </Toast.Provider>
   );
 }
 
 export function useToast() {
-  const context = useContext(ToastContext);
+  const context = useContext(Toast);
   if (!context) {
     throw new Error("useToast must be used within a ToastProvider");
   }

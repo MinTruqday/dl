@@ -2,16 +2,16 @@
 import { useState, useEffect } from "react";
 import Navigation from "./Navigation";
 import Menu from "./Menu";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-interface AppShellProps {
+interface WorkspaceProps {
   children: React.ReactNode;
   requireAuth?: boolean;
 }
 
-export default function Workspace({ children, requireAuth = false }: AppShellProps) {
+export default function Workspace({ children, requireAuth = false }: WorkspaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

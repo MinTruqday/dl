@@ -1,6 +1,6 @@
 "use client";
 
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getToken, API_URL } from "@/services/authentication.service";

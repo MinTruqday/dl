@@ -6,7 +6,7 @@ import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
 } from "@/services/authentication.service";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,
@@ -15,7 +15,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 
-interface PasskeyPromptProps {
+interface PasskeyProps {
   email: string;
   onClose: () => void;
   onSuccess: () => void;
@@ -45,7 +45,7 @@ export default function Passkey({
   email,
   onClose,
   onSuccess,
-}: PasskeyPromptProps) {
+}: PasskeyProps) {
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
 

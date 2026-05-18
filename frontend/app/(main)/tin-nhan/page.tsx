@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import {
   getConversationsAPI,
   getMessagesAPI,
@@ -11,7 +11,7 @@ import {
 } from "@/services/chat.service";
 import { searchUsersAPI } from "@/services/social.service";
 import { API_URL, WS_URL, getToken } from "@/services/authentication.service";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,

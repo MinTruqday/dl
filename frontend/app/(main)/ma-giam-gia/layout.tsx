@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Ticket, Activity, Users } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import { useEffect, useState } from "react";
 import { getCouponsAPI } from "@/services/coupon.service";
 

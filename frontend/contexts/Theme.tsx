@@ -2,20 +2,20 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type Theme = "light" | "dark" | "gray";
+type ThemeType = "light" | "dark" | "gray";
 
-interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+interface ThemeProps {
+  theme: ThemeType;
+  setTheme: (theme: ThemeType) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const Theme = createContext<ThemeProps | undefined>(undefined);
 
-export function Theme({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState<ThemeType>("light");
 
   useEffect(() => {
-    const saved = localStorage.getItem("doclib_theme") as Theme;
+    const saved = localStorage.getItem("doclib_theme") as ThemeType;
     if (saved && (saved === "light" || saved === "dark" || saved === "gray")) {
       setThemeState(saved);
       document.documentElement.classList.add(saved);
@@ -27,7 +27,7 @@ export function Theme({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = (newTheme: ThemeType) => {
     document.documentElement.classList.remove(theme);
     setThemeState(newTheme);
     document.documentElement.classList.add(newTheme);
@@ -35,16 +35,16 @@ export function Theme({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <Theme.Provider value={{ theme, setTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </Theme.Provider>
   );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
+  const context = useContext(Theme);
   if (context === undefined) {
-    throw new Error("useTheme must be used within a Theme");
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }

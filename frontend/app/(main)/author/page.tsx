@@ -5,7 +5,7 @@ import Workspace from "@/components/Workspace";
 import { getSocialRankingAPI } from "@/services/social.service";
 import { Search, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 
 export default function AuthorsPage() {
   const { showToast } = useToast();

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import { API_URL } from "@/services/authentication.service";
 import { updateProfileAPI } from "@/services/setting.service";
 import { getDetailedHistoryAPI } from "@/services/wallet.service";
@@ -27,7 +27,7 @@ import {
   ArrowDownLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import Link from "next/link";
 
 export default function ProfilePage() {

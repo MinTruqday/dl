@@ -16,8 +16,8 @@ import {
   CheckCircle2,
   Flag,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/contexts/Toast";
 import { getDocumentBySlugAPI } from "@/services/document.service";
 import { purchaseDocumentAPI } from "@/services/wallet.service";
 import { toggleBookmarkAPI } from "@/services/bookmark.service";

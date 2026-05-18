@@ -9,8 +9,8 @@ import {
 } from "@/services/operation.service";
 import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/services/quota.service";
 import { Loader2, Save } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/contexts/Toast";
 
 export default function OperationDashboard() {
   const { user, isLoading: authLoading } = useAuth() as any;

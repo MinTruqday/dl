@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Send, Loader2, ShieldAlert } from "lucide-react";
 import { submitReportAPI } from "@/services/report.service";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,
@@ -13,7 +13,7 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 
-interface ReportModalProps {
+interface ReportProps {
   itemId: string;
   itemType: "document" | "comment" | "post" | "user";
   onClose: () => void;
@@ -23,7 +23,7 @@ export default function Report({
   itemId,
   itemType,
   onClose,
-}: ReportModalProps) {
+}: ReportProps) {
   const [reason, setReason] = useState("");
   const [detail, setDetail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

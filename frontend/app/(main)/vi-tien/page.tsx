@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import {
   History,
   CreditCard,
@@ -23,7 +23,7 @@ import {
 import { createDepositLinkAPI } from "@/services/deposit.service";
 import { requestWithdrawalAPI } from "@/services/withdrawal.service";
 import { getAuthorRevenueAPI } from "@/services/monetization.service";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,

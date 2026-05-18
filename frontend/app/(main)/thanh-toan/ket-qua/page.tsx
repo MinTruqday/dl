@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import { verifyDepositAPI } from "@/services/deposit.service";
 import { Loader2, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";

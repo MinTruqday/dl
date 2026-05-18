@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createDocumentAPI } from "@/services/document.service";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/contexts/ToastContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/contexts/Auth";
 
 export default function CreateDocumentPage() {
   const router = useRouter();

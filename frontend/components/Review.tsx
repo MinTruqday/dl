@@ -6,14 +6,14 @@ import {
   createDocumentReviewAPI,
 } from "@/services/review.service";
 import { Star, User, Send, Loader2, MessageCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/contexts/Toast";
 
-interface ReviewSectionProps {
+interface ReviewProps {
   documentId: string;
 }
 
-export default function Review({ documentId }: ReviewSectionProps) {
+export default function Review({ documentId }: ReviewProps) {
   const { user } = useAuth() as any;
   const { showToast } = useToast();
   const [reviews, setReviews] = useState<any[]>([]);

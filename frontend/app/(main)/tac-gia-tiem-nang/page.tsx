@@ -6,8 +6,8 @@ import {
   reviewAuthorApplicationAPI,
 } from "@/services/operation.service";
 import { Loader2, Search } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,

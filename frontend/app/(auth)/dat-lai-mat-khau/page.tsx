@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { resetPasswordAPI } from "@/services/authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import { Loader2 } from "lucide-react";
 
 export default function ResetPasswordPage() {

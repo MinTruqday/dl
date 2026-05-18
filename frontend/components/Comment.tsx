@@ -13,8 +13,8 @@ import {
   Loader2,
   User,
 } from "lucide-react";
-import { useToast } from "@/contexts/ToastContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/contexts/Auth";
 
 interface CommentUser {
   id: string;
@@ -31,7 +31,7 @@ interface Comment {
   created_at: string;
 }
 
-interface NestedCommentsProps {
+interface CommentProps {
   itemId: string;
   itemType?: "document" | "post";
 }
@@ -39,7 +39,7 @@ interface NestedCommentsProps {
 export default function Comment({
   itemId,
   itemType = "document",
-}: NestedCommentsProps) {
+}: CommentProps) {
   const { user } = useAuth() as any;
   const [comments, setComments] = useState<Comment[]>([]);
   const [newText, setNewText] = useState("");

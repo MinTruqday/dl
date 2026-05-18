@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getApprovalQueueAPI, moderateDocumentAPI } from "@/services/draft.service";
 import { Loader2, ShieldCheck, Eye } from "lucide-react";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
 
 export default function ApprovalPage() {

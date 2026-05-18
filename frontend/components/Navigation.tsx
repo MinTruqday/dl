@@ -14,14 +14,14 @@ import {
   Monitor,
 } from "lucide-react";
 import AiChat from "./AiChat";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications } from "@/contexts/NotificationContext";
+import { useAuth } from "@/contexts/Auth";
+import { useNotifications } from "@/contexts/Notification";
 
-interface NavbarProps {
+interface NavigationProps {
   onToggleSidebar?: () => void;
 }
 
-export default function Navigation({ onToggleSidebar }: NavbarProps) {
+export default function Navigation({ onToggleSidebar }: NavigationProps) {
   const { user, logoutState } = useAuth() as any;
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);

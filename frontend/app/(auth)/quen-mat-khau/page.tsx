@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { forgotPasswordAPI } from "@/services/authentication.service";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import { Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {

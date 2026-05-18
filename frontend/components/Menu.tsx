@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import {
   Search,
   FileText,
@@ -25,17 +25,19 @@ import {
   Files,
 } from "lucide-react";
 
+interface MenuProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  isMobileOverlay?: boolean;
+  onMobileClose?: () => void;
+}
+
 export default function Menu({
   isOpen,
   onToggle,
   isMobileOverlay = false,
   onMobileClose,
-}: {
-  isOpen: boolean;
-  onToggle: () => void;
-  isMobileOverlay?: boolean;
-  onMobileClose?: () => void;
-}) {
+}: MenuProps) {
   const pathname = usePathname();
   const { user } = useAuth() as any;
 

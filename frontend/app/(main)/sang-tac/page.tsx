@@ -12,8 +12,8 @@ import { requestWithdrawalAPI } from "@/services/withdrawal.service";
 import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
 import { API_URL } from "@/services/authentication.service";
 import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/services/wallet.service";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/contexts/Toast";
 import {
   Modal,
   ModalHeader,

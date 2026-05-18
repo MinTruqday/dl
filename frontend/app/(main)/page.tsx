@@ -2,9 +2,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/services/document.service";
 import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, smartSearchAPI } from "@/services/discovery.service";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import Link from "next/link";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 import {
   ChevronRight,
   LayoutGrid,

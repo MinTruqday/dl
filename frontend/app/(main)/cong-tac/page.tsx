@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/Auth";
 import { getMyDocumentsAPI } from "@/services/document.service";
 import {
   getCollaborationInvitesAPI,
@@ -16,7 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/contexts/ToastContext";
+import { useToast } from "@/contexts/Toast";
 
 export default function StudioCollabPage() {
   const { user, isLoading } = useAuth() as any;
