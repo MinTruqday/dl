@@ -12,7 +12,7 @@ from services.interaction import InteractionService
 from services.discussion import DiscussionService
 from services.feed import FeedService
 from services.rank import RankService
-from services.asset import AssetService
+from services.archive import ArchiveService
 
 router = APIRouter(prefix="/cong-dong")
 
@@ -60,9 +60,9 @@ async def hide_post(post_id: str, current_user: UserInDB = Depends(get_current_u
 async def toggle_follow(user_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await InteractionService.toggle_follow(user_id, current_user), message="Cập nhật trạng thái theo dõi thành công", status=status.HTTP_200_OK)
 
-@router.post("/tai-nguyen", response_model=APIResponse[Any])
+@router.post("/luu-tru", response_model=APIResponse[Any])
 async def upload_media(file: UploadFile = File(...), current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await AssetService.upload_media(file, current_user), message="Tải lên tệp đa phương tiện thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await ArchiveService.upload_media(file, current_user), message="Tải lên tệp đa phương tiện thành công", status=status.HTTP_200_OK)
 
 @router.get("/xep-hang", response_model=APIResponse[Any])
 async def get_ranking(limit: int = Query(5, ge=1, le=50)):

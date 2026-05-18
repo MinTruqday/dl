@@ -167,7 +167,7 @@ export default function Menu({
             roles={["author", "admin"]}
           />
           <NavLink
-            href="/tai-nguyen"
+            href="/luu-tru"
             label="Kho lưu trữ"
             icon={FolderOpen}
             roles={["author", "admin"]}

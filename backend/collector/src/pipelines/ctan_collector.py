@@ -170,7 +170,7 @@ class CTANCollector:
                         
                         minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
-                        logger.info(f"Extracting ZIP archive...")
+                        logger.info(f"Extracting ZIP archive")
                         os.makedirs(extracted_folder_path, exist_ok=True)
                         with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                             zip_ref.extractall(extracted_folder_path)

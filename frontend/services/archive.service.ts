@@ -1,20 +1,20 @@
 import { API_URL, getToken } from "./authentication.service";
 
-export async function getAuthorAssetsAPI(type: string = "all") {
+export async function getArchiveAPI(type: string = "all") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tai-nguyen?type=${type}`, {
+  const res = await fetch(`${API_URL}/luu-tru?type=${type}`, {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tài nguyên");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tệp tin");
   return data;
 }
 
-export async function uploadAuthorAssetAPI(data: any) {
+export async function uploadArchiveAPI(data: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tai-nguyen`, {
+  const res = await fetch(`${API_URL}/luu-tru`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,19 +23,19 @@ export async function uploadAuthorAssetAPI(data: any) {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể tải lên tài nguyên");
+  if (!res.ok) throw new Error(result.message || "Không thể lưu trữ tệp tin");
   return result;
 }
 
-export async function deleteAuthorAssetAPI(assetId: string) {
+export async function deleteArchiveAPI(archiveId: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tai-nguyen/${assetId}`, {
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}`, {
     method: "DELETE",
     headers: { Authorization: "Bearer " + token },
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể xóa tài nguyên");
+  if (!res.ok) throw new Error(result.message || "Không thể xóa tệp tin");
   return result;
 }
 
@@ -57,7 +57,7 @@ export async function uploadDocumentFileAPI(file: File) {
 export async function getFileDownloadUrlAPI(filePath: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tai-nguyen/${encodeURIComponent(filePath)}`, {
+  const res = await fetch(`${API_URL}/luu-tru/${encodeURIComponent(filePath)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();

@@ -6,20 +6,20 @@ from loguru import logger
 from models.user import UserInDB
 from typing import Any
 
-class AssetService:
+class ArchiveService:
     @staticmethod
-    async def get_assets(current_user, asset_type: str = "all", cursor: str = None, limit: int = 50) -> list:
+    async def get_archives(current_user, archive_type: str = "all", cursor: str = None, limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id)}
         
-        if asset_type != "all":
-            query["type"] = asset_type
+        if archive_type != "all":
+            query["type"] = archive_type
             
         if cursor:
             from bson import ObjectId
             query["_id"] = {"$lt": ObjectId(cursor)}
         
-        assets = await db["assets"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
+        archives = await db["archives"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
             {
                 "id": str(a["_id"]),
@@ -29,13 +29,13 @@ class AssetService:
                 "url": a.get("url", ""),
                 "created_at": a["created_at"].isoformat() if isinstance(a.get("created_at"), datetime) else a.get("created_at"),
             }
-            for a in assets
+            for a in archives
         ]
 
     @staticmethod
-    async def upload_asset(data: dict, current_user) -> dict:
+    async def upload_archive(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        asset = {
+        archive_item = {
             "_id": str(uuid.uuid4()),
             "author_id": str(current_user.id),
             "filename": data["filename"],
@@ -44,19 +44,19 @@ class AssetService:
             "url": data["url"],
             "created_at": datetime.now(timezone.utc),
         }
-        await db["assets"].insert_one(asset)
-        logger.info(f"Workspace: Author {current_user.id} uploaded asset {data['filename']}")
-        return {"message": "Tải lên tài nguyên thành công.", "asset": asset}
+        await db["archives"].insert_one(archive_item)
+        logger.info(f"Workspace: Author {current_user.id} uploaded archive {data['filename']}")
+        return {"message": "Tải lên tệp tin thành công.", "archive": archive_item}
 
     @staticmethod
-    async def delete_asset(asset_id: str, current_user) -> dict:
+    async def delete_archive(archive_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        res = await db["assets"].delete_one({"_id": asset_id, "author_id": str(current_user.id)})
+        res = await db["archives"].delete_one({"_id": archive_id, "author_id": str(current_user.id)})
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Tài nguyên không tồn tại.")
             
-        logger.info(f"Workspace: Asset {asset_id} deleted by author {current_user.id}")
-        return {"message": "Đã xóa tài nguyên thành công."}
+        logger.info(f"Workspace: Archive {archive_id} deleted by author {current_user.id}")
+        return {"message": "Đã xóa tệp tin thành công."}
 
     @staticmethod
     async def upload_media(file, current_user: UserInDB):
@@ -76,7 +76,7 @@ class AssetService:
             
         logger.info(f"Media uploaded by user {current_user.id}: {filename}")
         
-        await AssetService.upload_asset({
+        await ArchiveService.upload_archive({
             "filename": filename,
             "type": "image" if ext != "mp4" else "video",
             "size_bytes": len(content),

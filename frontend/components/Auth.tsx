@@ -13,7 +13,7 @@ const protectedRoutes: Record<string, string[]> = {
   "/thu-thap": ["admin"],
   "/khoi-tao": ["author", "admin", "moderator"],
   "/phan-tich": ["author", "admin"],
-  "/tai-nguyen": ["author", "admin"],
+  "/luu-tru": ["author", "admin"],
   "/cong-tac": ["author", "admin"],
   "/ma-giam-gia": ["author", "admin"],
   "/thu-vien": ["author", "admin"],

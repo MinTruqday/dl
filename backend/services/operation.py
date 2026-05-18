@@ -179,7 +179,7 @@ class OperationService:
     async def get_collector_stats() -> dict:
         db = db_client.mongodb.get_default_database()
         total_docs = await db["documents"].count_documents({})
-        total_assets = await db["assets"].count_documents({})
+        total_assets = await db["archives"].count_documents({})
         recent_crawls = await db["documents"].find({}, {"created_at": 1}).sort("created_at", -1).limit(1).to_list(length=1)
         last_crawl = recent_crawls[0]["created_at"].isoformat() if recent_crawls else datetime.now(timezone.utc).isoformat()
         

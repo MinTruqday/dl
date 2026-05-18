@@ -16,7 +16,7 @@ import sys
 import time
 
 from api.authentication import router as auth_router
-from api.asset import router as asset_router
+from api.archive import router as archive_router
 from api.comment import router as comment_router
 from api.document import router as document_router
 from api.upload import router as upload_router
@@ -149,7 +149,7 @@ async def shutdown_event():
     await close_db()
 
 app.include_router(auth_router)
-app.include_router(asset_router)
+app.include_router(archive_router)
 app.include_router(profile_router)
 app.include_router(wallet_router)
 app.include_router(payment_router)

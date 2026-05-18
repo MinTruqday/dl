@@ -45,7 +45,7 @@ class AnnaArchiveCollector:
 
                 content = await page.content()
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Search page blocked, trying FlareSolverr to bypass...")
+                    logger.info("Search page blocked, trying FlareSolverr to bypass")
                     FLARESOLVERR_URL = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
                     async with aiohttp.ClientSession() as session:
                         async with session.post(FLARESOLVERR_URL, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
@@ -89,7 +89,7 @@ class AnnaArchiveCollector:
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
-        logger.info("Using FlareSolverr to fetch clearance cookies and userAgent...")
+        logger.info("Using FlareSolverr to fetch clearance cookies and userAgent")
         try:
             flare_url = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
             async with aiohttp.ClientSession() as session:
@@ -132,7 +132,7 @@ class AnnaArchiveCollector:
                 content = await page.content()
                 
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Detail page blocked, applying FlareSolverr clearance cookies...")
+                    logger.info("Detail page blocked, applying FlareSolverr clearance cookies")
                     await page.close()
                     await context.close()
                     
@@ -174,7 +174,7 @@ class AnnaArchiveCollector:
                     content = await page.content()
                     
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Download page blocked, applying FlareSolverr clearance cookies...")
+                        logger.info("Download page blocked, applying FlareSolverr clearance cookies")
                         await page.close()
                         await context.close()
                         
@@ -189,7 +189,7 @@ class AnnaArchiveCollector:
                         xpath_selector = "xpath=/html/body/main/div/p[3]/a"
                         
 
-                        logger.info("Playwright natively polling for JS countdown to finish...")
+                        logger.info("Playwright natively polling for JS countdown to finish")
                         for _ in range(60):
                             try:
                                 link_el = await page.query_selector(xpath_selector)

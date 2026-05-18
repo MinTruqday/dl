@@ -3,16 +3,16 @@ from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
-class AssetBase(BaseModel):
+class ArchiveBase(BaseModel):
     filename: str
     type: str = "image"
     size_bytes: int = 0
     url: str = ""
 
-class AssetUploadRequest(AssetBase):
+class ArchiveUploadRequest(ArchiveBase):
     pass
 
-class AssetInDB(AssetBase):
+class ArchiveInDB(ArchiveBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
     user_id: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

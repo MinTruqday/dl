@@ -6,7 +6,7 @@ import { API_URL } from "@/services/authentication.service";
 import { updateProfileAPI } from "@/services/setting.service";
 import { depositDLAPI, getDetailedHistoryAPI } from "@/services/wallet.service";
 import { applyAuthorAPI, becomeAuthorAPI } from "@/services/setting.service";
-import { uploadMediaAPI } from "@/services/asset.service";
+import { uploadMediaAPI } from "@/services/archive.service";
 import { getBookmarksAPI } from "@/services/read.service";
 import {
   User,

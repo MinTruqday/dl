@@ -3,7 +3,7 @@ import json
 from loguru import logger
 from src.core.mq import mq_client
 from src.pipelines.anna_archive_collector import AnnaArchiveCollector
-from src.pipelines.nxbgd_collector import NXBGDCCollector
+from src.pipelines.nxbgd_collector import NXBGDCollector
 from src.pipelines.nxbst_collector import NXBSTCollector
 from src.pipelines.ctan_collector import CTANCollector
 from src.pipelines.format_converter import run_format_converter
@@ -59,7 +59,7 @@ async def main():
     await queue_download.consume(lambda m: process_msg(m, route_download_processor))
     await queue_format.consume(lambda m: process_msg(m, run_format_converter))
 
-    await queue_nxbgd.consume(lambda m: process_msg(m, lambda p: NXBGDCCollector(p.get("target_class", "10")).execute()))
+    await queue_nxbgd.consume(lambda m: process_msg(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
     
     logger.info("DocLib Collector 0.1a initialized - Listening to collector events from RabbitMQ")
     

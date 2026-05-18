@@ -19,7 +19,7 @@ from src.core.redis_client import dedup
 MIN_FILE_SIZE_BYTES = 20000
 
 class NXBGDCollector:
-    def __init__(self, target_class: str):
+    def __init__(self, target_class: str = "-1"):
         self.target_class = target_class
         self.page = None
         self.context = None
@@ -129,7 +129,7 @@ class NXBGDCollector:
                 images[0].save(pdf_path, save_all=True, append_images=images[1:])
                 logger.info(f"[NXBGD PDF SUCCESS] Created: {pdf_path}")
                 
-            logger.info(f"[NXBGD Storage] Uploading {final_pdf_name} to MinIO...")
+            logger.info(f"[NXBGD Storage] Uploading {final_pdf_name} to MinIO")
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
             
             if minio_url:
@@ -182,7 +182,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
                 
-                logger.info(f"Found {len(document_urls)} documents on current page for Grade {self.target_class}")
+                logger.info(f"Found {len(document_urls)} documents on current page for grade All.")
                 
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
@@ -267,7 +267,7 @@ class NXBGDCollector:
         finally:
             await self.close()
 
-async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Starting NXBGD Collection OLM queue for Grade {target_class}...")
+async def run_nxbgd_collector(target_class: str = "-1"):
+    logger.info(f"Starting NXBGD Collection queue for grade {target_class}")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

@@ -110,7 +110,7 @@ export async function toggleFollowUserAPI(userId: string) {
 }
 
 export async function uploadMediaAPI(formData: FormData) {
-  const res = await fetch(`${API_URL}/cong-dong/tai-nguyen`, {
+  const res = await fetch(`${API_URL}/cong-dong/luu-tru`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: formData,

@@ -2,14 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
-  getAuthorAssetsAPI,
-  deleteAuthorAssetAPI,
-  uploadAuthorAssetAPI,
-} from "@/services/asset.service";
-import {
+  getArchiveAPI,
+  deleteArchiveAPI,
+  uploadArchiveAPI,
   uploadDocumentFileAPI as uploadDocumentFile,
   getFileDownloadUrlAPI as getFileDownloadUrl,
-} from "@/services/asset.service";
+} from "@/services/archive.service";
 import {
   Loader2,
   Image as ImageIcon,
@@ -25,9 +23,9 @@ import {
   ModalFooter,
 } from "@/components/ui/Modal";
 
-export default function AuthorAssetsPage() {
+export default function ArchivePage() {
   const { showToast } = useToast();
-  const [assets, setAssets] = useState<any[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,21 +33,21 @@ export default function AuthorAssetsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const fetchAssets = useCallback(async () => {
+  const fetchArchive = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAuthorAssetsAPI();
-      setAssets(data.data || data || []);
+      const data = await getArchiveAPI();
+      setFiles(data.data || data || []);
     } catch (err: any) {
-      showToast("Không thể tải danh sách tài nguyên", "error");
+      showToast("Không thể tải danh sách tệp tin", "error");
     } finally {
       setLoading(false);
     }
   }, [showToast]);
 
   useEffect(() => {
-    fetchAssets();
-  }, [fetchAssets]);
+    fetchArchive();
+  }, [fetchArchive]);
 
   const processFileUpload = async (file: File) => {
     setUploading(true);
@@ -60,17 +58,17 @@ export default function AuthorAssetsPage() {
       const downloadUrlData = await getFileDownloadUrl(filePath);
       const url = downloadUrlData;
 
-      await uploadAuthorAssetAPI({
+      await uploadArchiveAPI({
         filename: file.name,
         type: file.type,
         size_bytes: file.size,
         url: url,
       });
 
-      showToast("Đã tải lên và đăng ký tài nguyên thành công.", "success");
-      fetchAssets();
+      showToast("Đã tải lên và lưu trữ tệp đính kèm thành công.", "success");
+      fetchArchive();
     } catch (err: any) {
-      showToast(err.message || "Tải lên tài nguyên thất bại.", "error");
+      showToast(err.message || "Tải lên tệp đính kèm thất bại.", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -105,11 +103,11 @@ export default function AuthorAssetsPage() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteAuthorAssetAPI(deleteId);
-      showToast("Đã xóa tài nguyên thành công.", "success");
-      fetchAssets();
+      await deleteArchiveAPI(deleteId);
+      showToast("Đã xóa tệp đính kèm thành công.", "success");
+      fetchArchive();
     } catch (err: any) {
-      showToast(err.message || "Xóa tài nguyên thất bại.", "error");
+      showToast(err.message || "Xóa tệp đính kèm thất bại.", "error");
     } finally {
       setDeleteId(null);
     }
@@ -128,7 +126,7 @@ export default function AuthorAssetsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
-  const filteredAssets = assets.filter(
+  const filteredFiles = files.filter(
     (a) =>
       a.filename?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.type?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -148,11 +146,11 @@ export default function AuthorAssetsPage() {
         <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="text-3xl font-semibold text-black">Kho lưu trữ</h1>
-            <p className="text-sm text-zinc-500 mt-1">Quản lý tài nguyên và tệp tin đa phương tiện</p>
+            <p className="text-sm text-zinc-500 mt-1">Quản lý hình ảnh và tệp tin đính kèm cho sáng tác</p>
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={fetchAssets}
+              onClick={fetchArchive}
               disabled={loading || uploading}
               className="text-sm font-medium text-zinc-500 disabled:opacity-50"
             >
@@ -181,7 +179,7 @@ export default function AuthorAssetsPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black"
               >
-                Tải lên tài nguyên
+                Tải lên tệp đính kèm
               </button>
             </div>
           )}
@@ -198,14 +196,14 @@ export default function AuthorAssetsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
-              placeholder="Tìm kiếm tài nguyên"
+              placeholder="Tìm kiếm tệp tin"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full border border-zinc-200 pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400"
             />
           </div>
           <div className="text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            {filteredAssets.length} TỆP TIN
+            {filteredFiles.length} TỆP TIN
           </div>
         </div>
 
@@ -222,14 +220,14 @@ export default function AuthorAssetsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredAssets.length === 0 ? (
+              {filteredFiles.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-24 text-center">
-                    <p className="text-sm font-medium text-zinc-500">Kho tài nguyên hiện đang trống</p>
+                    <p className="text-sm font-medium text-zinc-500">Thư viện ảnh và tệp đính kèm hiện đang trống</p>
                   </td>
                 </tr>
               ) : (
-                filteredAssets.map((a: any) => (
+                filteredFiles.map((a: any) => (
                   <tr key={a.id} className="border-b border-zinc-200 last:border-0">
                     <td className="py-4 px-6 align-middle">
                       <div className="w-8 h-8 bg-zinc-100 flex items-center justify-center rounded-none">
@@ -294,11 +292,11 @@ export default function AuthorAssetsPage() {
 
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} className="max-w-md">
         <ModalHeader>
-          <ModalTitle>Xác nhận xóa tài nguyên</ModalTitle>
+          <ModalTitle>Xác nhận xóa tệp đính kèm</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <p className="text-xs font-medium text-zinc-500 leading-relaxed">
-            Bạn có chắc chắn muốn xóa tài nguyên này vĩnh viễn? Hành động này không thể hoàn tác.
+            Bạn có chắc chắn muốn xóa tệp đính kèm này vĩnh viễn? Hành động này không thể hoàn tác.
           </p>
         </ModalContent>
         <ModalFooter>

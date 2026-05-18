@@ -33,57 +33,74 @@ class LatexService:
 
     @staticmethod
     async def compile_latex_preview(request, current_user):
+        latex_code = request.content
+        if request.is_fragment and "\\documentclass" not in latex_code:
+            latex_code = f"""
+\\documentclass{{article}}
+\\usepackage[utf8]{{inputenc}}
+\\usepackage{{amsmath, amssymb, xcolor, graphicx, tikz}}
+\\begin{{document}}
+{latex_code}
+\\end{{document}}
+            """
         job_id = str(uuid.uuid4())
-        content = request.content
-        if request.is_fragment and "\\documentclass" not in content:
-            content = f"\\documentclass{{article}}\n\\usepackage[utf8]{{inputenc}}\n\\usepackage{{amsmath, amssymb, xcolor, graphicx, tikz}}\n\\begin{{document}}\n{content}\n\\end{{document}}"
-            
-        payload = {
-            "job_id": job_id,
-            "type": "compile_preview",
-            "content": content,
-            "is_fragment": request.is_fragment
-        }
-        
-        from core.publication import publish_event
-        success = await publish_event("tectonic_queue", payload)
-        if not success:
-            raise HTTPException(status_code=500, detail="Không thể gửi yêu cầu biên dịch vào hàng đợi.")
-            
+        temp_dir = tempfile.gettempdir()
+        tex_path = os.path.join(temp_dir, f"{job_id}.tex")
+        pdf_path = os.path.join(temp_dir, f"{job_id}.pdf")
+        log_path = os.path.join(temp_dir, f"{job_id}.log")
+        with open(tex_path, "w", encoding="utf-8") as f:
+            f.write(latex_code)
         try:
-            redis_client = db_client.redis
-            if not redis_client:
-                raise HTTPException(status_code=503, detail="Dịch vụ Redis hiện không sẵn sàng.")
-                
-            result_tuple = await redis_client.blpop(f"job_result:{job_id}", timeout=30)
-            if not result_tuple:
-                raise HTTPException(status_code=504, detail="Quá thời gian xử lý công thức LaTeX. Máy chủ đang quá tải.")
-                
-            import json
-            import base64
-            
-            _, result_json = result_tuple
-            result = json.loads(result_json.decode('utf-8'))
-            
-            if result.get("status") == "error":
-                raise HTTPException(
-                    status_code=400, 
-                    detail={"error": result.get("message"), "logs": result.get("logs", ""), "parsed_errors": result.get("parsed_errors", [])}
-                )
-                
-            pdf_b64 = result.get("data")
-            if not pdf_b64:
-                raise HTTPException(status_code=500, detail="Lỗi hệ thống: Dữ liệu PDF trả về trống.")
-                
-            pdf_bytes = base64.b64decode(pdf_b64)
-            logger.info(f"LaTeX preview compiled via Compiler Service for user {current_user.id}")
+            process = await asyncio.create_subprocess_exec(
+                "tectonic", 
+                "--synctex", 
+                "--keep-logs", 
+                "-Z", "continue-on-errors",
+                "-Z", "shell-escape",
+                "--outdir", temp_dir,
+                tex_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
+            if not os.path.exists(pdf_path):
+                log_content = stdout.decode('utf-8', errors='ignore') + stderr.decode('utf-8', errors='ignore')
+                parsed_errors = []
+                if os.path.exists(log_path):
+                    with open(log_path, "r", encoding="utf-8", errors="ignore") as lf:
+                        log_content = lf.read()
+                    error_pattern = re.compile(r"!(.*?)l\.(\d+)(.*)", re.DOTALL)
+                    matches = error_pattern.findall(log_content)
+                    for match in matches:
+                        parsed_errors.append({
+                            "line": int(match[1]), 
+                            "message": match[0].strip(), 
+                            "context": match[2].strip().split("\n")[0][:100]
+                        })
+                raise HTTPException(status_code=400, detail={"error": "Không thể biên dịch LaTeX.", "logs": log_content[-2048:], "parsed_errors": parsed_errors})
+            with open(pdf_path, "rb") as f:
+                pdf_bytes = f.read()
+            logger.info(f"LaTeX preview compiled for user {current_user.id}")
             return pdf_bytes
-            
+        except asyncio.TimeoutError:
+            try:
+                process.kill()
+            except Exception as e:
+                logger.error(f"Failed to kill LaTeX process: {e}")
+            raise HTTPException(status_code=504, detail="Quá thời gian xử lý công thức LaTeX.")
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"LaTeX API error: {e}")
-            raise HTTPException(status_code=500, detail="Lỗi khi giao tiếp với dịch vụ biên dịch.")
+            logger.error(f"LaTeX compilation error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi trong quá trình biên dịch LaTeX.")
+        finally:
+            for ext in [".tex", ".pdf", ".aux", ".log", ".out"]:
+                path = os.path.join(temp_dir, f"{job_id}{ext}")
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                    except Exception as e:
+                        logger.warning(f"Failed to remove temp file {path}: {e}")
 
     @staticmethod
     async def format_latex(request):
@@ -108,51 +125,35 @@ class LatexService:
     async def export_latex(request, current_user):
         if request.format not in ["docx", "html"]:
             raise HTTPException(status_code=400, detail="Định dạng không được hỗ trợ.")
-            
         job_id = str(uuid.uuid4())
-        payload = {
-            "job_id": job_id,
-            "type": "export_document",
-            "content": request.content,
-            "format": request.format
-        }
-        
-        from core.publication import publish_event
-        success = await publish_event("tectonic_queue", payload)
-        if not success:
-            raise HTTPException(status_code=500, detail="Không thể gửi yêu cầu xuất bản vào hàng đợi.")
-            
+        temp_dir = tempfile.gettempdir()
+        tex_path = os.path.join(temp_dir, f"{job_id}.tex")
+        out_path = os.path.join(temp_dir, f"{job_id}.{request.format}")
+        with open(tex_path, "w", encoding="utf-8") as f:
+            f.write(request.content)
         try:
-            redis_client = db_client.redis
-            if not redis_client:
-                raise HTTPException(status_code=503, detail="Dịch vụ Redis hiện không sẵn sàng.")
-                
-            result_tuple = await redis_client.blpop(f"job_result:{job_id}", timeout=30)
-            if not result_tuple:
-                raise HTTPException(status_code=504, detail="Quá thời gian xử lý xuất bản. Máy chủ đang quá tải.")
-                
-            import json
-            import base64
-            
-            _, result_json = result_tuple
-            result = json.loads(result_json.decode('utf-8'))
-            
-            if result.get("status") == "error":
-                raise HTTPException(status_code=500, detail=result.get("message", "Lỗi hệ thống trong quá trình xuất bản tập tin."))
-                
-            file_b64 = result.get("data")
-            if not file_b64:
-                raise HTTPException(status_code=500, detail="Lỗi hệ thống: Dữ liệu xuất về trống.")
-                
-            file_bytes = base64.b64decode(file_b64)
-            logger.info(f"LaTeX exported to {request.format} via Compiler Service by user {current_user.id}")
+            process = await asyncio.create_subprocess_exec(
+                "pandoc", tex_path, "-o", out_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            await asyncio.wait_for(process.communicate(), timeout=30)
+            if not os.path.exists(out_path):
+                raise HTTPException(status_code=500, detail="Máy chủ không thể tạo tập tin xuất bản theo yêu cầu.")
+            with open(out_path, "rb") as f:
+                file_bytes = f.read()
+            logger.info(f"LaTeX exported to {request.format} by user {current_user.id}")
             return file_bytes
-            
-        except HTTPException:
-            raise
         except Exception as e:
-            logger.error(f"LaTeX export API error: {e}")
-            raise HTTPException(status_code=500, detail="Lỗi khi giao tiếp với dịch vụ biên dịch.")
+            logger.error(f"LaTeX export error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi hệ thống trong quá trình xuất bản tập tin.")
+        finally:
+            for p in [tex_path, out_path]:
+                if os.path.exists(p):
+                    try:
+                        os.remove(p)
+                    except Exception as e:
+                        logger.warning(f"Failed to remove temp file {p}: {e}")
 
     @staticmethod
     async def export_project_zip(request):
