@@ -15,7 +15,7 @@ class OperationService:
         users = await db["users"].find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
         return [
             {
-                "id": str(u["_id"]),
+                "_id": str(u["_id"]),
                 "email": u.get("email"),
                 "full_name": u.get("full_name"),
                 "role": u.get("role"),
@@ -48,7 +48,7 @@ class OperationService:
         db = db_client.mongodb.get_default_database()
         apps = await db["author_applications"].find({"status": status}).sort("created_at", -1).to_list(length=100)
         return [
-            {**a, "id": str(a["_id"]), "_id": str(a["_id"])} for a in apps
+            {**a, "_id": str(a["_id"])} for a in apps
         ]
 
     @staticmethod
@@ -56,7 +56,7 @@ class OperationService:
         db = db_client.mongodb.get_default_database()
         app = await db["author_applications"].find_one({"_id": application_id})
         if not app:
-            raise HTTPException(status_code=404, detail="Đơn ứng tuyển không tồn tại.")
+            raise HTTPException(status_code=404, detail="Yêu cầu đăng ký không tồn tại.")
         
         await db["author_applications"].update_one(
             {"_id": application_id},
@@ -64,10 +64,10 @@ class OperationService:
         )
         
         if status == "APPROVED":
-            await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.POTENTIAL_AUTHOR}})
+            await db["users"].update_one({"_id": app["user_id"]}, {"$set": {"role": RoleEnum.AUTHOR}})
             
-        logger.info(f"Administration: Author application {application_id} {status} by {reviewer_id}")
-        return {"message": f"Đã {status.lower()} đơn ứng tuyển thành công."}
+        logger.info(f"Administration: Author request {application_id} {status} by {reviewer_id}")
+        return {"message": f"Đã {status.lower()} yêu cầu đăng ký thành công."}
 
     @staticmethod
     async def toggle_maintenance_mode(enabled: bool, message: str = "") -> dict:
@@ -256,7 +256,7 @@ class OperationService:
         for a in apps:
             user = a.get("user", {})
             result.append({
-                "id": str(a["_id"]),
+                "_id": str(a["_id"]),
                 "user_id": a["user_id"],
                 "user_name": user.get("full_name") if user else "Unknown",
                 "user_email": user.get("email") if user else "",

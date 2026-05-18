@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import uuid
-# pyrefly: ignore [missing-import]
+
 from fastapi import HTTPException
 from core.database import db_client
 from models.user import AuthorStatusEnum, KYCStatusEnum, RoleEnum
@@ -31,17 +31,17 @@ class IdentityService:
         db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         
-        if current_user.role == RoleEnum.POTENTIAL_AUTHOR:
-            raise HTTPException(status_code=400, detail="Bạn đã là tác giả tiềm năng.")
+        if current_user.role == RoleEnum.AUTHOR:
+            raise HTTPException(status_code=400, detail="Bạn đã là tác giả.")
             
-        if current_user.role != RoleEnum.AUTHOR:
-            raise HTTPException(status_code=403, detail="Bạn cần là tác giả để ứng tuyển vị trí tác giả tiềm năng.")
-
+        if current_user.role != RoleEnum.READER:
+            raise HTTPException(status_code=403, detail="Chỉ độc giả mới có thể đăng ký làm tác giả.")
+            
         if current_user.author_status == AuthorStatusEnum.PENDING:
-            raise HTTPException(status_code=400, detail="Đơn ứng tuyển tác giả tiềm năng của bạn đang được xét duyệt.")
+            raise HTTPException(status_code=400, detail="Yêu cầu đăng ký làm tác giả của bạn đang được xét duyệt.")
             
         if current_user.author_status == AuthorStatusEnum.SUSPENDED:
-            raise HTTPException(status_code=403, detail="Tài khoản của bạn đã bị đình chỉ quyền ứng tuyển.")
+            raise HTTPException(status_code=403, detail="Tài khoản của bạn đã bị khóa quyền đăng ký làm tác giả.")
             
         application_data = {
             "_id": str(uuid.uuid4()),
@@ -60,8 +60,8 @@ class IdentityService:
                 "tos_accepted_at": datetime.now(timezone.utc)
             }}
         )
-        logger.info(f"Identity: Author {user_id} applied for potential author status")
-        return {"status": "success", "message": "Đã gửi đơn ứng tuyển tác giả tiềm năng."}
+        logger.info(f"Identity: Reader {user_id} requested author status")
+        return {"status": "success", "message": "Đã gửi yêu cầu đăng ký làm tác giả thành công."}
 
     @staticmethod
     async def upload_kyc(file, current_user):
@@ -106,7 +106,7 @@ class IdentityService:
         docs = await db["documents"].find({"author_id": author_id, "status": "PUBLISHED"}).sort("created_at", -1).limit(10).to_list(length=10)
         
         return {
-            "id": author_id,
+            "_id": author_id,
             "full_name": author.get("full_name", "Tác giả ẩn danh"),
             "avatar_url": author.get("avatar_url"),
             "bio": author.get("bio", ""),
@@ -114,7 +114,7 @@ class IdentityService:
             "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
             "custom_theme": author.get("author_profile", {}).get("custom_theme"),
             "recent_documents": [{
-                "id": str(d["_id"]),
+                "_id": str(d["_id"]),
                 "title": d.get("title"),
                 "slug": d.get("slug"),
                 "cover_url": d.get("cover_url")

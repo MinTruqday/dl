@@ -53,6 +53,13 @@ async def main():
         else:
             await AnnaArchiveCollector.run_download_processor(payload)
 
+    async def route_nxbst_collector(payload):
+        url = payload.get("url")
+        if url:
+            await NXBSTCollector.run_detail_collector(url)
+        else:
+            await NXBSTCollector.run_list_collector()
+
     await queue_list.consume(lambda m: process_msg(m, route_list_collector))
     await queue_detail.consume(lambda m: process_msg(m, route_detail_collector))
     
@@ -60,6 +67,7 @@ async def main():
     await queue_format.consume(lambda m: process_msg(m, run_format_converter))
 
     await queue_nxbgd.consume(lambda m: process_msg(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
+    await queue_nxbst.consume(lambda m: process_msg(m, route_nxbst_collector))
     
     logger.info("DocLib Collector 0.1a initialized - Listening to collector events from RabbitMQ")
     

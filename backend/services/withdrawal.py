@@ -112,7 +112,7 @@ class WithdrawalService:
         for p in withdrawals:
             user = p.get("user_info", {})
             result.append({
-                "id": str(p["_id"]),
+                "_id": str(p["_id"]),
                 "user_id": p.get("user_id"),
                 "user_name": user.get("full_name") if user else "Unknown",
                 "amount": p.get("amount"),

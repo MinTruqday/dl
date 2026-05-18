@@ -18,7 +18,7 @@ class UserService:
         users = await db["users"].find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(length=limit)
         return [
             {
-                "id": str(u["_id"]),
+                "_id": str(u["_id"]),
                 "email": u.get("email"),
                 "full_name": u.get("full_name"),
                 "role": u.get("role"),
@@ -129,7 +129,7 @@ class UserService:
         db = db_client.mongodb.get_default_database()
         notes = await db["moderator_notes"].find({"user_id": user_id}).sort("created_at", -1).to_list(length=100)
         return [{
-            "id": str(n["_id"]),
+            "_id": str(n["_id"]),
             "note": n.get("note", ""),
             "moderator_id": n.get("moderator_id"),
             "created_at": n["created_at"].isoformat() if isinstance(n.get("created_at"), datetime) else ""
@@ -149,16 +149,23 @@ class UserService:
         return {"message": "Đã thêm ghi chú điều hành."}
 
     @staticmethod
-    async def get_report_queue(status_filter: str = "pending", cursor: str = None, limit: int = 30) -> list:
+    async def get_report_queue(status_filter: str = "pending", cursor: str = None, limit: int = 30, skip: int = 0) -> list:
         db = db_client.mongodb.get_default_database()
         match_query = {"status": status_filter} if status_filter else {}
         if cursor:
-            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            try:
+                match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            except ValueError as e:
+                logger.warning(f"Invalid ISO format for cursor: {cursor}, error: {e}")
 
         pipeline = [
             {"$match": match_query},
-            {"$sort": {"created_at": -1}},
-            {"$limit": limit},
+            {"$sort": {"created_at": -1}}
+        ]
+        if skip > 0:
+            pipeline.append({"$skip": skip})
+        pipeline.append({"$limit": limit})
+        pipeline.extend([
             {
                 "$lookup": {
                     "from": "users",
@@ -168,13 +175,13 @@ class UserService:
                 }
             },
             {"$unwind": {"path": "$reporter", "preserveNullAndEmptyArrays": True}}
-        ]
+        ])
         reports = await db["reports"].aggregate(pipeline).to_list(length=limit)
         result = []
         for r in reports:
             reporter = r.get("reporter", {})
             result.append({
-                "id": str(r["_id"]),
+                "_id": str(r["_id"]),
                 "item_type": r.get("item_type", ""),
                 "item_id": r.get("item_id", ""),
                 "reason": r.get("reason", ""),

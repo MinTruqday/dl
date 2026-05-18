@@ -61,7 +61,7 @@ class ReviewService:
             {"document_id": document_id, "user_id": str(current_user.id)}
         ).sort("created_at", -1).to_list(length=50)
         return [{
-            "id": str(r["_id"]),
+            "_id": str(r["_id"]),
             "chapter_slug": r.get("chapter_slug", ""),
             "text_excerpt": r.get("text_excerpt", ""),
             "description": r.get("description", ""),

@@ -15,7 +15,6 @@ async def populate_author(doc: dict) -> dict:
     if author:
         doc["author"] = {
             "_id": str(author["_id"]),
-            "id": str(author["_id"]),
             "full_name": author.get("full_name") or author.get("username") or "Tác giả ẩn danh",
             "slug": author.get("slug", "")
         }

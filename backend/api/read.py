@@ -61,7 +61,7 @@ async def search_in_document(document_id: str, q: str = Query(...), current_user
         message="Tìm kiếm trong tài liệu thành công"
     )
 
-# Secondary router matching frontend history deletions
+
 reader_router = APIRouter(prefix="/reader")
 
 @reader_router.delete("/history", response_model=APIResponse[Any])

@@ -28,7 +28,7 @@ class RankService:
         ]
         results = await users_col.aggregate(pipeline).to_list(length=limit)
         return [{
-            "id": str(r["_id"]),
+            "_id": str(r["_id"]),
             "full_name": r.get("full_name", "Ẩn danh"),
             "avatar_url": r.get("avatar_url"),
             "role": r.get("role", "READER"),
@@ -71,7 +71,7 @@ class RankService:
         ]
         results = await users_col.aggregate(pipeline).to_list(length=limit)
         return [{
-            "id": str(r["_id"]),
+            "_id": str(r["_id"]),
             "full_name": r.get("full_name", "Độc giả ẩn danh"),
             "avatar_url": r.get("avatar_url"),
             "role": r.get("role", "READER"),
@@ -98,10 +98,11 @@ class RankService:
         ]
         authors = await db["users"].aggregate(pipeline).to_list(length=limit)
         return [{
-            "id": str(a["_id"]),
+            "_id": str(a["_id"]),
             "full_name": a.get("full_name", "Tác giả nổi bật"),
             "avatar_url": a.get("avatar_url"),
             "bio": a.get("bio", ""),
             "slug": a.get("slug", ""),
-            "popularity_score": a.get("total_views", 0)
+            "popularity_score": a.get("total_views", 0),
+            "followers_count": a.get("followers_count", len(a.get("followers", [])))
         } for a in authors]

@@ -13,7 +13,7 @@ class PrivacyService:
         
         takeout_payload = {
             "profile": current_user.model_dump(exclude={"password_hash"}),
-            "authored_documents": [{"id": str(b["_id"]), "title": b.get("title")} for b in documents],
+            "authored_documents": [{"_id": str(b["_id"]), "title": b.get("title")} for b in documents],
             "comments_written": len(comments),
             "reactions_given": len(reactions),
             "raw_comments": [{"document_id": c.get("document_id"), "content": c.get("content")} for c in comments]

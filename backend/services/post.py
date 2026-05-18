@@ -50,7 +50,7 @@ class PostService:
             font_style=request.font_style,
             repost_post_id=request.repost_post_id,
             scheduled_at=request.scheduled_at,
-            poll_options=[{"id": str(uuid.uuid4()), "text": opt, "votes": 0} for opt in request.poll_options] if request.poll_options else [],
+            poll_options=[{"_id": str(uuid.uuid4()), "text": opt, "votes": 0} for opt in request.poll_options] if request.poll_options else [],
             created_at=datetime.now(timezone.utc)
         )
         await db["status_updates"].insert_one(new_post.model_dump(by_alias=True))
@@ -194,12 +194,12 @@ class PostService:
             p = doc["post"]
             author = doc.get("author", {})
             result.append({
-                "id": str(p["_id"]),
+                "_id": str(p["_id"]),
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
                 "created_at": p.get("created_at", datetime.now(timezone.utc).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at")),
                 "user": {
-                    "id": str(author.get("_id") if author else p["user_id"]),
+                    "_id": str(author.get("_id") if author else p["user_id"]),
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                     "avatar_url": author.get("avatar_url") if author else None,
                 },
@@ -310,13 +310,13 @@ class PostService:
         for p in posts:
             author = p.get("author", {})
             result.append({
-                "id": str(p["_id"]),
+                "_id": str(p["_id"]),
                 "content": p.get("content", ""),
                 "item_type": p.get("item_type", "post"),
                 "tags": p.get("tags", []),
                 "created_at": p.get("created_at", datetime.now(timezone.utc).isoformat() if isinstance(p.get("created_at"), datetime) else p.get("created_at")),
                 "user": {
-                    "id": str(author.get("_id") if author else p["user_id"]),
+                    "_id": str(author.get("_id") if author else p["user_id"]),
                     "full_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                     "avatar_url": author.get("avatar_url") if author else None,
                 },
@@ -406,13 +406,13 @@ class PostService:
         for doc in results:
             user_doc = doc.get("user_details", {})
             user_info = {
-                "id": str(user_doc.get("_id")) if user_doc else doc["user_id"],
+                "_id": str(user_doc.get("_id")) if user_doc else doc["user_id"],
                 "full_name": user_doc.get("full_name", "Ẩn danh") if user_doc else "Ẩn danh",
                 "avatar_url": user_doc.get("avatar_url") if user_doc else None,
                 "role": user_doc.get("role", "READER") if user_doc else "READER"
             }
             item = {
-                "id": str(doc["_id"]),
+                "_id": str(doc["_id"]),
                 "user_id": doc["user_id"],
                 "content": doc.get("content", ""),
                 "item_type": doc.get("item_type", "post"),

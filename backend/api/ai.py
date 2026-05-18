@@ -13,7 +13,7 @@ from models.ai import (
 from core.response import APIResponse
 from services.ai import AIService
 
-router = APIRouter(prefix="/ai", tags=["AI"])
+router = APIRouter(prefix="/ai")
 
 @router.post("/tro-chuyen")
 async def chat_streaming(data: dict, current_user: UserInDB = Depends(check_quota)):

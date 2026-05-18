@@ -36,9 +36,10 @@ async def delete_highlight(highlight_id: str, current_user: UserInDB = Depends(g
 async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),
+    skip: int = Query(0, ge=0),
     current_user: UserInDB = Depends(get_current_user)
 ):
-    return APIResponse(data=await HighlightService.get_all_notes(current_user, cursor, limit), message="Lấy danh sách ghi chú thành công", status=200)
+    return APIResponse(data=await HighlightService.get_all_notes(current_user, cursor, limit, skip), message="Lấy danh sách ghi chú thành công", status=200)
 
 
 

@@ -71,7 +71,7 @@ class DiscussionService:
             filtered_replies = [r for r in all_replies if r.get("user_id") not in exclude_ids]
             
             result.append({
-                "id": d["_id"],
+                "_id": d["_id"],
                 "title": d.get("title", ""),
                 "content": d.get("content", ""),
                 "user_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
@@ -85,7 +85,7 @@ class DiscussionService:
     async def reply_discussion(discussion_id: str, data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         reply = {
-            "id": str(uuid.uuid4()),
+            "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
             "content": data["content"],
             "created_at": datetime.now(timezone.utc),

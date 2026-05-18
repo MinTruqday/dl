@@ -27,7 +27,7 @@ class ChapterService:
             
         order = len(document.get("chapters", [])) + 1
         new_chapter = {
-            "id": str(uuid.uuid4()),
+            "_id": str(uuid.uuid4()),
             "title": chapter_in.title,
             "content": chapter_in.content,
             "order": order,

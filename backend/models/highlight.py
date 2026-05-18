@@ -19,4 +19,5 @@ class ReadingPreferenceUpdate(BaseModel):
     font_size: Optional[int] = None
     line_height: Optional[float] = None
     font_family: Optional[str] = None
+    letter_spacing: Optional[float] = None
     is_dyslexic_mode: Optional[bool] = None

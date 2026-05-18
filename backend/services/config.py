@@ -25,7 +25,7 @@ class ConfigService:
     async def get_all_tags() -> list:
         db = db_client.mongodb.get_default_database()
         tags = await db["system_tags"].find().to_list(length=200)
-        return [{"id": t["_id"], "name": t.get("name", "")} for t in tags]
+        return [{"_id": t["_id"], "name": t.get("name", "")} for t in tags]
 
     @staticmethod
     async def manage_blacklist(action: str, keyword: str, current_moderator) -> dict:
@@ -48,7 +48,7 @@ class ConfigService:
     async def get_blacklist() -> list:
         db = db_client.mongodb.get_default_database()
         keywords = await db["blacklist_keywords"].find().to_list(length=500)
-        return [{"id": k["_id"], "keyword": k.get("keyword", "")} for k in keywords]
+        return [{"_id": k["_id"], "keyword": k.get("keyword", "")} for k in keywords]
 
     @staticmethod
     async def set_nsfw_sensitivity(level: str, current_moderator) -> dict:

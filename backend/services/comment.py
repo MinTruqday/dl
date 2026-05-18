@@ -22,7 +22,7 @@ class CommentService:
         }
         await db["comments"].insert_one(new_comment)
         logger.info(f"Social: User {current_user.id} commented on item {req.item_id}")
-        return {"id": comment_id, "message": "Bình luận thành công."}
+        return {"_id": comment_id, "message": "Bình luận thành công."}
 
     @staticmethod
     async def create_nested_comment(item_id: str, req: Any, current_user: UserInDB) -> dict:
@@ -38,7 +38,7 @@ class CommentService:
             "is_removed": False
         }
         await db["comments"].insert_one(new_comment)
-        return {"id": comment_id, "message": "Gửi bình luận thành công."}
+        return {"_id": comment_id, "message": "Gửi bình luận thành công."}
 
     @staticmethod
     async def get_nested_comments(item_id: str, current_user: Optional[UserInDB] = None) -> list:
@@ -77,11 +77,13 @@ class CommentService:
         
         comments = await db["comments"].aggregate(pipeline).to_list(length=100)
         return [{
-            "id": c["_id"],
+            "_id": c["_id"],
             "content": c["content"],
+            "parent_id": c.get("parent_id"),
+            "item_id": c.get("item_id"),
             "created_at": c["created_at"].isoformat() if isinstance(c["created_at"], datetime) else c["created_at"],
             "user": {
-                "id": c["user_id"],
+                "_id": c["user_id"],
                 "full_name": c.get("author", {}).get("full_name", "Ẩn danh"),
                 "avatar_url": c.get("author", {}).get("avatar_url")
             }

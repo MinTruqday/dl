@@ -29,23 +29,27 @@ class PreferenceService:
     @staticmethod
     async def update_preferences(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
+        existing = await db["reading_preferences"].find_one({"user_id": str(current_user.id)})
+        if not existing:
+            existing = {}
+
         allowed_themes = ["light", "dark", "gray", "sepia"]
-        theme = data.get("theme", "light")
+        theme = data.get("theme", existing.get("theme", "light"))
         if theme not in allowed_themes:
             theme = "light"
             
         allowed_fonts = ["Inter", "Roboto", "Outfit", "Noto Sans", "Source Sans Pro"]
-        font = data.get("font_family", "Inter")
+        font = data.get("font_family", existing.get("font_family", "Inter"))
         if font not in allowed_fonts:
             font = "Inter"
 
         update_data = {
             "theme": theme,
             "font_family": font,
-            "font_size": max(12, min(28, data.get("font_size", 16))),
-            "line_height": max(1.2, min(3.0, data.get("line_height", 1.8))),
-            "letter_spacing": max(-0.5, min(2.0, data.get("letter_spacing", 0))),
-            "is_dyslexic_mode": data.get("is_dyslexic_mode", False),
+            "font_size": max(12, min(28, data.get("font_size", existing.get("font_size", 16)))),
+            "line_height": max(1.2, min(3.0, data.get("line_height", existing.get("line_height", 1.8)))),
+            "letter_spacing": max(-0.5, min(2.0, data.get("letter_spacing", existing.get("letter_spacing", 0)))),
+            "is_dyslexic_mode": data.get("is_dyslexic_mode", existing.get("is_dyslexic_mode", False)),
             "updated_at": datetime.now(timezone.utc),
         }
         

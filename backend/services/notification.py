@@ -61,7 +61,7 @@ class NotificationService:
         db = db_client.mongodb.get_default_database()
         cursor = db["notifications"].find({
             "$or": [
-                {"target_user_id": current_user.id},
+                {"target_user_id": str(current_user.id)},
                 {"is_global": True}
             ]
         }).sort("created_at", -1).limit(20)
@@ -80,7 +80,7 @@ class NotificationService:
     async def mark_notification_read(notif_id: str, current_user):
         db = db_client.mongodb.get_default_database()
         res = await db["notifications"].update_one(
-            {"_id": notif_id, "$or": [{"target_user_id": current_user.id}, {"is_global": True}]},
+            {"_id": notif_id, "$or": [{"target_user_id": str(current_user.id)}, {"is_global": True}]},
             {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc)}}
         )
         if res.matched_count == 0:
@@ -155,7 +155,7 @@ class NotificationService:
         }).sort("created_at", -1).to_list(length=10)
         return [
             {
-                "id": str(n["_id"]),
+                "_id": str(n["_id"]),
                 "title": n.get("title", ""),
                 "content": n.get("content", ""),
                 "severity": n.get("severity", "info"),

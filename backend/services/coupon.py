@@ -47,7 +47,7 @@ class CouponService:
         
         return [
             {
-                "id": c["_id"],
+                "_id": c["_id"],
                 "code": c.get("code", ""),
                 "discount_percent": c.get("discount_percent", 0),
                 "max_uses": c.get("max_uses", 0),

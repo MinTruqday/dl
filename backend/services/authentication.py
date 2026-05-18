@@ -182,7 +182,7 @@ class AuthenticationService:
         cursor = db["users"].find({"role": RoleEnum.AUTHOR, "is_active": True}).limit(limit)
         authors = await cursor.to_list(length=limit)
         return [{
-            "id": str(a["_id"]),
+            "_id": str(a["_id"]),
             "full_name": a.get("full_name"),
             "slug": a.get("slug"),
             "avatar_url": a.get("avatar_url"),

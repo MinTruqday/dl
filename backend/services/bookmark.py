@@ -41,7 +41,7 @@ class BookmarkService:
         ).limit(limit).to_list(length=limit)
         
         return [{
-            "id": str(d["_id"]),
+            "_id": str(d["_id"]),
             "title": d.get("title", ""),
             "slug": d.get("slug", ""),
             "cover_url": d.get("cover_url"),
@@ -71,7 +71,7 @@ class BookmarkService:
             {"user_id": str(current_user.id)}
         ).sort("created_at", -1).to_list(length=50)
         return [{
-            "id": str(f["_id"]),
+            "_id": str(f["_id"]),
             "name": f.get("name", ""),
             "bookmark_ids": f.get("bookmark_ids", []),
             "created_at": f["created_at"].isoformat() if isinstance(f.get("created_at"), datetime) else None,

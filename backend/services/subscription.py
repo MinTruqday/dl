@@ -115,7 +115,7 @@ class SubscriptionService:
         for s in subscriptions:
             plan = plan_map.get(s.get("plan_id"), {})
             result.append({
-                "id": str(s["_id"]),
+                "_id": str(s["_id"]),
                 "plan_name": plan.get("name", "Gói hội viên"),
                 "status": s.get("status"),
                 "end_date": s.get("end_date").isoformat() if isinstance(s.get("end_date"), datetime) else s.get("end_date")

@@ -33,7 +33,7 @@ class PinService:
             if d_id in doc_map:
                 d = doc_map[d_id]
                 result.append({
-                    "id": str(d["_id"]),
+                    "_id": str(d["_id"]),
                     "title": d.get("title", ""),
                     "slug": d.get("slug", ""),
                     "cover_url": d.get("cover_url"),

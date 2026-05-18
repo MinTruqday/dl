@@ -52,7 +52,7 @@ class StoryService:
             user = user_map.get(s["user_id"], {})
             viewer_ids = [v["user_id"] for v in s.get("viewers", [])]
             stories.append({
-                "id": str(s["_id"]),
+                "_id": str(s["_id"]),
                 "user_id": s["user_id"],
                 "text_content": s.get("text_content"),
                 "media_url": s.get("media_url"),
@@ -69,7 +69,7 @@ class StoryService:
                 "created_at": s["created_at"].isoformat() if isinstance(s.get("created_at"), datetime) else s.get("created_at"),
                 "expires_at": s["expires_at"].isoformat() if isinstance(s.get("expires_at"), datetime) else s.get("expires_at"),
                 "user": {
-                    "id": s["user_id"],
+                    "_id": s["user_id"],
                     "name": user.get("full_name", "Ẩn danh") if user else "Ẩn danh",
                     "avatar_url": user.get("avatar_url") if user else None,
                 },
@@ -103,7 +103,7 @@ class StoryService:
                     "viewed_at": v["viewed_at"].isoformat() if isinstance(v.get("viewed_at"), datetime) else v.get("viewed_at"),
                 })
             stories.append({
-                "id": str(s["_id"]),
+                "_id": str(s["_id"]),
                 "text_content": s.get("text_content"),
                 "media_url": s.get("media_url"),
                 "background_color": s.get("background_color", "#18181b"),
@@ -263,7 +263,7 @@ class StoryService:
         stories = []
         for s in stories_raw:
             stories.append({
-                "id": str(s["_id"]),
+                "_id": str(s["_id"]),
                 "text_content": s.get("text_content"),
                 "media_url": s.get("media_url"),
                 "background_color": s.get("background_color", "#18181b"),
@@ -310,7 +310,7 @@ class StoryService:
         for s in stories:
             author = s.get("author", {})
             result.append({
-                "id": str(s["_id"]),
+                "_id": str(s["_id"]),
                 "user_name": author.get("full_name", "Ẩn danh") if author else "Ẩn danh",
                 "content": s.get("text_content", "")[:200],
                 "media_url": s.get("media_url"),

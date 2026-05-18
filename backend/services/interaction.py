@@ -131,7 +131,7 @@ class InteractionService:
         if not muted_ids:
             return []
         users = await db["users"].find({"_id": {"$in": muted_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=100)
-        return [{"id": str(u["_id"]), "full_name": u.get("full_name", "Ẩn danh"), "avatar_url": u.get("avatar_url")} for u in users]
+        return [{"_id": str(u["_id"]), "full_name": u.get("full_name", "Ẩn danh"), "avatar_url": u.get("avatar_url")} for u in users]
 
     @staticmethod
     async def block_user(target_user_id: str, current_user: UserInDB) -> dict:
@@ -168,7 +168,7 @@ class InteractionService:
         if not blocked_ids:
             return []
         users = await db["users"].find({"_id": {"$in": blocked_ids}}, {"full_name": 1, "avatar_url": 1}).to_list(length=100)
-        return [{"id": str(u["_id"]), "full_name": u.get("full_name", "Ẩn danh"), "avatar_url": u.get("avatar_url")} for u in users]
+        return [{"_id": str(u["_id"]), "full_name": u.get("full_name", "Ẩn danh"), "avatar_url": u.get("avatar_url")} for u in users]
 
     @staticmethod
     async def get_friend_suggestions_by_intersection(current_user: UserInDB) -> List[dict]:
@@ -203,7 +203,7 @@ class InteractionService:
         suggestions = []
         for doc in suggestions_cursor:
             suggestions.append({
-                "id": str(doc["_id"]),
+                "_id": str(doc["_id"]),
                 "full_name": doc.get("full_name", "Người dùng"),
                 "avatar_url": doc.get("avatar_url"),
                 "bio": doc.get("bio"),
@@ -243,7 +243,7 @@ class InteractionService:
         ).limit(limit).to_list(length=limit)
         
         return [{
-            "id": str(u["_id"]),
+            "_id": str(u["_id"]),
             "full_name": u.get("full_name", "Ẩn danh"),
             "slug": u.get("slug", ""),
             "avatar_url": u.get("avatar_url"),

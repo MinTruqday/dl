@@ -49,7 +49,16 @@ class PasskeyService:
         )
         
         if db_client.redis:
-            await db_client.redis.setex(f"passkey_reg_challenge:{email}", 300, options.challenge)
+            try:
+                await db_client.redis.setex(f"passkey_reg_challenge:{email}", 300, options.challenge)
+            except Exception as e:
+                logger.warning(f"Redis set challenge failed: {e}")
+        
+        await db["passkey_challenges"].update_one(
+            {"_id": f"reg:{email}"},
+            {"$set": {"challenge": options.challenge, "created_at": datetime.now(timezone.utc)}},
+            upsert=True
+        )
             
         return json.loads(options_to_json(options))
 
@@ -60,10 +69,20 @@ class PasskeyService:
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
         
-        if not db_client.redis:
-            raise HTTPException(status_code=500, detail="Hệ thống Redis chưa được cấu hình.")
-            
-        challenge = await db_client.redis.get(f"passkey_reg_challenge:{email}")
+        challenge = None
+        if db_client.redis:
+            try:
+                challenge = await db_client.redis.get(f"passkey_reg_challenge:{email}")
+            except Exception as e:
+                logger.warning(f"Redis get challenge failed: {e}")
+                
+        if not challenge:
+            chal_doc = await db["passkey_challenges"].find_one({"_id": f"reg:{email}"})
+            if chal_doc:
+                age = (datetime.now(timezone.utc) - chal_doc["created_at"].replace(tzinfo=timezone.utc)).total_seconds()
+                if age < 300:
+                    challenge = chal_doc["challenge"]
+                    
         if not challenge:
             raise HTTPException(status_code=400, detail="Challenge không hợp lệ hoặc đã hết hạn.")
         
@@ -90,6 +109,13 @@ class PasskeyService:
             {"$push": {"passkeys": new_passkey}}
         )
         
+        await db["passkey_challenges"].delete_one({"_id": f"reg:{email}"})
+        if db_client.redis:
+            try:
+                await db_client.redis.delete(f"passkey_reg_challenge:{email}")
+            except Exception as e:
+                logger.error(f"Failed to delete Redis reg challenge key for {email}: {e}")
+                
         return {"message": "Đăng ký Passkey thành công."}
 
     @staticmethod
@@ -114,7 +140,16 @@ class PasskeyService:
         )
         
         if db_client.redis:
-            await db_client.redis.setex(f"passkey_auth_challenge:{email}", 300, options.challenge)
+            try:
+                await db_client.redis.setex(f"passkey_auth_challenge:{email}", 300, options.challenge)
+            except Exception as e:
+                logger.warning(f"Redis set auth challenge failed: {e}")
+                
+        await db["passkey_challenges"].update_one(
+            {"_id": f"auth:{email}"},
+            {"$set": {"challenge": options.challenge, "created_at": datetime.now(timezone.utc)}},
+            upsert=True
+        )
             
         return json.loads(options_to_json(options))
 
@@ -125,10 +160,20 @@ class PasskeyService:
         if not user:
             raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
         
-        if not db_client.redis:
-            raise HTTPException(status_code=500, detail="Hệ thống Redis chưa được cấu hình.")
-            
-        challenge = await db_client.redis.get(f"passkey_auth_challenge:{email}")
+        challenge = None
+        if db_client.redis:
+            try:
+                challenge = await db_client.redis.get(f"passkey_auth_challenge:{email}")
+            except Exception as e:
+                logger.warning(f"Redis get auth challenge failed: {e}")
+                
+        if not challenge:
+            chal_doc = await db["passkey_challenges"].find_one({"_id": f"auth:{email}"})
+            if chal_doc:
+                age = (datetime.now(timezone.utc) - chal_doc["created_at"].replace(tzinfo=timezone.utc)).total_seconds()
+                if age < 300:
+                    challenge = chal_doc["challenge"]
+                    
         if not challenge:
             raise HTTPException(status_code=400, detail="Challenge không hợp lệ hoặc đã hết hạn.")
         
@@ -154,6 +199,13 @@ class PasskeyService:
             {"_id": user["_id"], "passkeys.credential_id": credential_id_b64},
             {"$set": {"passkeys.$.sign_count": verification.new_sign_count}}
         )
+        
+        await db["passkey_challenges"].delete_one({"_id": f"auth:{email}"})
+        if db_client.redis:
+            try:
+                await db_client.redis.delete(f"passkey_auth_challenge:{email}")
+            except Exception as e:
+                logger.error(f"Failed to delete Redis auth challenge key for {email}: {e}")
         
         from services.authentication import AuthenticationService
         return await AuthenticationService.issue_token_for_user(user, "passkey_login")

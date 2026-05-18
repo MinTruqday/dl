@@ -38,7 +38,7 @@ class HighlightService:
         ).sort("created_at", -1).to_list(length=200)
         return [
             {
-                "id": str(h["_id"]),
+                "_id": str(h["_id"]),
                 "chapter_slug": h.get("chapter_slug", ""),
                 "text": h.get("text", ""),
                 "color": h.get("color", "#e4e4e7"),
@@ -73,16 +73,23 @@ class HighlightService:
         return {"message": "Đã xóa ghi chú."}
 
     @staticmethod
-    async def get_all_notes(current_user, cursor: str = None, limit: int = 50) -> list:
+    async def get_all_notes(current_user, cursor: str = None, limit: int = 50, skip: int = 0) -> list:
         db = db_client.mongodb.get_default_database()
         match_query = {"user_id": str(current_user.id), "note": {"$ne": ""}}
         if cursor:
-            match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            try:
+                match_query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            except ValueError as e:
+                logger.warning(f"Invalid ISO format for cursor: {cursor}, error: {e}")
 
         pipeline = [
             {"$match": match_query},
-            {"$sort": {"created_at": -1}},
-            {"$limit": limit},
+            {"$sort": {"created_at": -1}}
+        ]
+        if skip > 0:
+            pipeline.append({"$skip": skip})
+        pipeline.append({"$limit": limit})
+        pipeline.extend([
             {
                 "$lookup": {
                     "from": "documents",
@@ -92,13 +99,13 @@ class HighlightService:
                 }
             },
             {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}}
-        ]
+        ])
         highlights = await db["highlights"].aggregate(pipeline).to_list(length=limit)
         result = []
         for h in highlights:
             document = h.get("doc", {})
             result.append({
-                "id": str(h["_id"]),
+                "_id": str(h["_id"]),
                 "document_id": h["document_id"],
                 "document_title": document.get("title", "") if document else "",
                 "document_slug": document.get("slug", "") if document else "",

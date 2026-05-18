@@ -21,7 +21,7 @@ class ArchiveService:
         archives = await db["archives"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
             {
-                "id": str(a["_id"]),
+                "_id": str(a["_id"]),
                 "filename": a.get("filename", ""),
                 "type": a.get("type", "unknown"),
                 "size_bytes": a.get("size_bytes", 0),

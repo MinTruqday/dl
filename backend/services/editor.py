@@ -238,7 +238,7 @@ class EditorService:
             "created_at": datetime.now(timezone.utc)
         }
         await db["editor_comments"].insert_one(comment)
-        return {"id": comment_id, "message": "Đã thêm nhận xét thành công."}
+        return {"_id": comment_id, "message": "Đã thêm nhận xét thành công."}
 
     @staticmethod
     async def get_inline_comments(document_id: str, current_user) -> List[dict]:
@@ -246,7 +246,7 @@ class EditorService:
         cursor = db["editor_comments"].find({"document_id": document_id, "status": "open"}).sort("created_at", -1)
         comments = await cursor.to_list(length=100)
         for c in comments:
-            c["id"] = c.pop("_id", str(uuid.uuid4()))
+            c["_id"] = str(c.get("_id", ""))
             if isinstance(c.get("created_at"), datetime):
                 c["created_at"] = c["created_at"].isoformat()
             elif not c.get("created_at"):

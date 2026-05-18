@@ -20,6 +20,9 @@ def serialize_document(document):
         document["_id"] = str(document["_id"])
     if "created_at" not in document:
         document["created_at"] = datetime.now(timezone.utc)
+    views = document.get("views", 0)
+    document["view_count"] = views
+    document["views_count"] = views
     return document
 
 class DocumentService:
@@ -95,7 +98,7 @@ class DocumentService:
         docs = await db["documents"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
             {
-                "id": str(b["_id"]),
+                "_id": str(b["_id"]),
                 "title": b.get("title", ""),
                 "slug": b.get("slug", ""),
                 "status": b.get("status", "draft"),
@@ -193,7 +196,7 @@ class DocumentService:
 
         if document.get("is_password_protected") and document.get("author_id") != user_id:
             if not password:
-                return {"id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
+                return {"_id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
             
             from passlib.context import CryptContext
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -241,7 +244,7 @@ class DocumentService:
         ).sort("deleted_at", -1).to_list(length=100)
         return [
             {
-                "id": str(b["_id"]),
+                "_id": str(b["_id"]),
                 "title": b.get("title", ""),
                 "deleted_at": b["deleted_at"].isoformat() if isinstance(b.get("deleted_at"), datetime) else b.get("deleted_at"),
             }
@@ -364,7 +367,7 @@ class DocumentService:
         logs = await db["audit_logs"].find({"document_id": document_id}).sort("timestamp", -1).limit(100).to_list(length=100)
         return [
             {
-                "id": str(log["_id"]),
+                "_id": str(log["_id"]),
                 "action": log.get("action"),
                 "actor_id": log.get("actor_id"),
                 "reason": log.get("reason"),
@@ -406,7 +409,7 @@ class DocumentService:
             return datetime.now(timezone.utc).isoformat()
             
         return [{
-            "id": str(b["_id"]),
+            "_id": str(b["_id"]),
             "_id": str(b["_id"]),
             "title": b.get("title", ""),
             "description": b.get("description", ""),
@@ -484,7 +487,7 @@ class DocumentService:
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [{
-            "id": str(b["_id"]),
+            "_id": str(b["_id"]),
             "slug": b.get("slug"),
             "title": b.get("title"),
             "author": b.get("author", "Unknown"),

@@ -12,7 +12,7 @@ class AuditService:
         logs = await db["audit_logs"].find(query).sort("timestamp", -1).limit(limit).to_list(length=limit)
         return [
             {
-                "id": str(l["_id"]) if "_id" in l else "",
+                "_id": str(l["_id"]) if "_id" in l else "",
                 "action": l.get("action"),
                 "actor_id": l.get("actor_id"),
                 "target_id": l.get("target_id") or l.get("target_user_id") or l.get("document_id"),
