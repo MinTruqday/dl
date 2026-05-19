@@ -31,4 +31,4 @@ class BannerService:
         db = db_client.mongodb.get_default_database()
         await db["banners"].delete_one({"_id": banner_id})
         logger.info(f"Marketing: Banner {banner_id} deleted.")
-        return {"message": "Đã xóa banner thành công."}
+        return {"message": "Xoá biểu ngữ thành công."}

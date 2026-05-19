@@ -202,4 +202,47 @@ export async function shareExcerptAPI(data: any) {
   return json;
 }
 
+export async function getNestedCommentsAPI(itemId: string) {
+  const res = await fetch(`${API_URL}/binh-luan/doi-tuong/${itemId}`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách bình luận");
+  return data;
+}
+
+export async function createNestedCommentAPI(
+  itemId: string,
+  payload: {
+    text: string;
+    parent_id?: string | null;
+    item_type: string;
+  }
+) {
+  const res = await fetch(`${API_URL}/binh-luan/doi-tuong/${itemId}`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      item_id: itemId,
+      item_type: payload.item_type,
+      content: payload.text,
+      parent_id: payload.parent_id || null,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gửi bình luận thất bại");
+  return data;
+}
+
+export async function updatePostAPI(postId: string, content: string) {
+  const res = await fetch(`${API_URL}/cong-dong/bai-viet/${postId}`, {
+    method: "PUT",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Cập nhật bài viết thất bại");
+  return data;
+}
+
 

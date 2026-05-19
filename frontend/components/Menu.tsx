@@ -23,6 +23,7 @@ import {
   Database,
   LayoutDashboard,
   Files,
+  Presentation,
 } from "lucide-react";
 
 interface MenuProps {
@@ -222,7 +223,7 @@ export default function Menu({
               />
               <NavLink
                 href="/quan-ly-nguoi-dung"
-                label="Người dùng"
+                label="Quản lý người dùng"
                 icon={Users}
                 roles={["admin"]}
               />
@@ -240,8 +241,14 @@ export default function Menu({
               />
               <NavLink
                 href="/van-hanh"
-                label="Quản trị hệ thống"
+                label="Vận hành hệ thống"
                 icon={Shield}
+                roles={["admin"]}
+              />
+              <NavLink
+                href="/quan-ly-bieu-ngu"
+                label="Quản lý biểu ngữ"
+                icon={Presentation}
                 roles={["admin"]}
               />
             </>

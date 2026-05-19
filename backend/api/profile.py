@@ -75,9 +75,9 @@ async def update_brand_page(data: BrandPageUpdate, current_user: UserInDB = Depe
 
 
 
-@router.get("/tac-gia/{slug}", response_model=APIResponse[Any])
-async def get_author_public_profile(slug: str):
+@router.get("/thanh-vien/{slug}", response_model=APIResponse[Any])
+async def get_public_profile(slug: str):
     return APIResponse(
-        data=await IdentityService.get_author_public_profile(slug),
-        message="Lấy thông tin trang tác giả thành công"
+        data=await IdentityService.get_public_profile(slug),
+        message="Lấy thông tin trang thành viên thành công"
     )

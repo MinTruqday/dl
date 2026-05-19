@@ -107,46 +107,53 @@ export default function SearchResultsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 md:py-24 animate-in fade-in font-sans">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-        <aside className="lg:col-span-3 space-y-12">
-          <div className="space-y-10">
-            <div className="flex items-center justify-between border-b border-black pb-4">
-              <h3 className="text-xs font-bold">Bộ lọc nội dung</h3>
-              <Filter className="w-3.5 h-3.5" />
+    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+      <div className="mb-8 border-b border-zinc-200 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-3">
+            <h1 className="text-3xl font-semibold text-black">Kết quả tìm kiếm</h1>
+            <p className="text-zinc-500 text-sm font-medium">
+              Từ khóa: "{query}" • Tìm thấy {results.length} tài liệu phù hợp
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <aside className="lg:col-span-3 space-y-12 animate-in fade-in duration-300">
+          <div className="space-y-6">
+            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2 flex items-center justify-between">
+              Bộ lọc nâng cao
+              <Filter className="w-4 h-4 text-zinc-500" />
             </div>
 
-            <div className="space-y-10">
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400">
-                  Sắp xếp theo
-                </label>
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-zinc-500">Sắp xếp theo</label>
                 <div className="flex flex-col gap-1">
                   {[
                     { id: "newest", label: "Mới nhất", icon: Clock },
-                    {
-                      id: "most_viewed",
-                      label: "Xem nhiều nhất",
-                      icon: ArrowUpDown,
-                    },
+                    { id: "most_viewed", label: "Xem nhiều nhất", icon: ArrowUpDown },
                     { id: "highest_rated", label: "Đánh giá cao", icon: Star },
                   ].map((s) => (
                     <button
                       key={s.id}
                       onClick={() => setFilters({ ...filters, sort: s.id })}
-                      className={`text-[10px] font-bold px-4 py-3 border text-left flex items-center justify-between active:scale-95 ${filters.sort === s.id ? "bg-black text-white border-black" : " border-zinc-100 text-zinc-400"}`}
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                        filters.sort === s.id
+                          ? "bg-zinc-100 text-black border-zinc-300"
+                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                      }`}
                     >
                       {s.label}
-                      <s.icon className="w-3 h-3" />
+                      <s.icon className="w-4 h-4" />
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400">
-                  Thời gian xuất bản
-                </label>
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-zinc-500">Thời gian xuất bản</label>
                 <div className="flex flex-col gap-1">
                   {[
                     { id: "all", label: "Tất cả thời gian" },
@@ -157,7 +164,11 @@ export default function SearchResultsPage() {
                     <button
                       key={t.id}
                       onClick={() => setFilters({ ...filters, time: t.id })}
-                      className={`text-[10px] font-bold px-4 py-3 border text-left active:scale-95 ${filters.time === t.id ? "bg-black text-white border-black" : " border-zinc-100 text-zinc-400"}`}
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                        filters.time === t.id
+                          ? "bg-zinc-100 text-black border-zinc-300"
+                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                      }`}
                     >
                       {t.label}
                     </button>
@@ -165,39 +176,48 @@ export default function SearchResultsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400">
-                  Giá tài liệu
-                </label>
-                <div className="flex gap-1">
-                  {["all", "free", "paid"].map((p) => (
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-zinc-500">Giá tài liệu</label>
+                <div className="flex flex-col gap-1">
+                  {[
+                    { id: "all", label: "Tất cả" },
+                    { id: "free", label: "Miễn phí" },
+                    { id: "paid", label: "Có phí" },
+                  ].map((p) => (
                     <button
-                      key={p}
-                      onClick={() => setFilters({ ...filters, price: p })}
-                      className={`flex-1 text-[9px] font-bold py-3 border active:scale-95 ${filters.price === p ? "bg-black text-white border-black" : " border-zinc-100 text-zinc-400"}`}
+                      key={p.id}
+                      onClick={() => setFilters({ ...filters, price: p.id })}
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                        filters.price === p.id
+                          ? "bg-zinc-100 text-black border-zinc-300"
+                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                      }`}
                     >
-                      {p === "all"
-                        ? "Tất cả"
-                        : p === "free"
-                          ? "Miễn phí"
-                          : "Có phí"}
+                      {p.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold text-zinc-400">
-                  Đánh giá tối thiểu
-                </label>
-                <div className="flex gap-1">
-                  {[0, 3, 4, 5].map((r) => (
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-zinc-500">Đánh giá tối thiểu</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 0, label: "Tất cả" },
+                    { id: 3, label: "Từ 3 sao" },
+                    { id: 4, label: "Từ 4 sao" },
+                    { id: 5, label: "5 sao" },
+                  ].map((r) => (
                     <button
-                      key={r}
-                      onClick={() => setFilters({ ...filters, rating: r })}
-                      className={`flex-1 py-3 border text-[10px] font-bold active:scale-95 ${filters.rating === r ? "bg-black text-white border-black" : " border-zinc-100 text-zinc-400"}`}
+                      key={r.id}
+                      onClick={() => setFilters({ ...filters, rating: r.id })}
+                      className={`text-center px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                        filters.rating === r.id
+                          ? "bg-zinc-100 text-black border-zinc-300"
+                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
+                      }`}
                     >
-                      {r === 0 ? "Tất cả" : `${r} sao`}
+                      {r.label}
                     </button>
                   ))}
                 </div>
@@ -206,14 +226,14 @@ export default function SearchResultsPage() {
           </div>
 
           {history.length > 0 && (
-            <div className="space-y-6 pt-12 border-t border-zinc-100">
+            <div className="space-y-4 pt-6 border-t border-zinc-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-[10px] font-bold">Gần đây</h3>
+                <h3 className="text-xs font-semibold text-zinc-500">Tìm kiếm gần đây</h3>
                 <button
                   onClick={clearHistory}
-                  className="text-[9px] font-bold text-zinc-300 transition-colors active:scale-95"
+                  className="text-xs font-medium text-zinc-400 hover:text-black transition-colors"
                 >
-                  Xóa sạch
+                  Xóa lịch sử
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -221,7 +241,7 @@ export default function SearchResultsPage() {
                   <div key={h} className="group/item relative">
                     <Link
                       href={`/tim-kiem?q=${h}`}
-                      className="block text-[9px] font-bold px-3 py-2 bg-white border border-zinc-100 pr-8 active:scale-95 hover:bg-zinc-50 transition-colors"
+                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-black transition-colors duration-200 rounded-none pr-8"
                     >
                       {h}
                     </Link>
@@ -230,12 +250,9 @@ export default function SearchResultsPage() {
                         e.preventDefault();
                         const newHistory = history.filter((item) => item !== h);
                         setHistory(newHistory);
-                        localStorage.setItem(
-                          "doclib_search_history",
-                          JSON.stringify(newHistory),
-                        );
+                        localStorage.setItem("doclib_search_history", JSON.stringify(newHistory));
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity active:scale-90"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -246,92 +263,91 @@ export default function SearchResultsPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-12 animate-in slide-in-from-bottom-4 ">
-          <div className="flex items-center gap-6 border-b border-zinc-100 pb-10">
-            <div className="w-16 h-16 bg-black flex items-center justify-center text-white">
-              <Search className="w-6 h-6" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tighter leading-none">
-                Kết quả tìm kiếm
-              </h1>
-              <p className="text-zinc-400 text-[10px] font-bold">
-                Từ khóa: "{query}" • Tìm thấy {results.length} tài liệu phù hợp
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8">
+        <main className="lg:col-span-9 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+          <div className="grid grid-cols-1 gap-6">
             {loading ? (
-              <div className="space-y-8">
-                {[1, 2, 3].map((i) => (
+              <div className="grid grid-cols-1 gap-6">
+                {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="h-48 bg-white animate-pulse border border-zinc-100 rounded-sm"
+                    className="h-40 bg-zinc-50 animate-pulse border border-zinc-200 rounded-none"
                   />
                 ))}
               </div>
             ) : results.length > 0 ? (
-              results.map((document) => (
+              results.map((document, i) => (
                 <Link
-                  key={document._id}
+                  key={`doc-${document._id || i}`}
                   href={`/tai-lieu/${document.slug}`}
-                  className="group p-8 bg-white border border-zinc-100 flex gap-10 rounded-sm active:scale-[0.99]"
+                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none hover:border-black transition-colors duration-300"
                 >
-                  <div className="w-32 h-44 bg-white border border-zinc-100 shrink-0 overflow-hidden relative rounded-sm">
+                  <div className="w-24 h-36 shrink-0 border border-zinc-200 bg-zinc-100 relative overflow-hidden">
                     {document.cover_url ? (
                       <img
                         src={document.cover_url}
                         alt={document.title}
-                        className="w-full h-full object-cover transition-transform grayscale  "
+                        className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-zinc-200 text-center p-6 tracking-tighter">
-                        {document.title}
+                      <div className="w-full h-full bg-zinc-100" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col flex-1 gap-2 py-1">
+                    {document.categories && document.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {document.categories.slice(0, 3).map((tag: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 border border-zinc-200 bg-white"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-white border border-zinc-100 text-[8px] font-bold">
-                      {document.price_dl > 0
-                        ? `${document.price_dl} dl`
-                        : "Miễn phí"}
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-400">
-                      <span className="flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5" />{" "}
-                        {document.categories?.[0] || "Tài liệu"}
-                      </span>
-                      <span className="w-1 h-1 bg-zinc-100" />
-                      <span className="flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5" />{" "}
-                        {document.author_name || "Tác giả DocLib"}
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-bold tracking-tight underline-offset-8 decoration-2 decoration-black ">
+
+                    <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug group-hover:underline underline-offset-2">
                       {document.title}
                     </h3>
-                    <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed max-w-4xl font-medium">
-                      {document.description}
-                    </p>
-                    <div className="pt-4 flex items-center gap-8">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-400">
-                        <Clock className="w-4 h-4" />{" "}
-                        {new Date(document.created_at).toLocaleDateString(
-                          "vi-VN",
-                        )}
+
+                    <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                      <span className="truncate text-black font-medium">
+                        {document.author_name || document.author?.full_name || document.author?.username || "Ẩn danh"}
+                      </span>
+                      <span>•</span>
+                      <span className="shrink-0">
+                        {document.created_at
+                          ? new Date(document.created_at).toLocaleDateString("vi-VN")
+                          : "Gần đây"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-zinc-500">
+                      <div className="flex items-center gap-1">
+                        <User className="w-3.5 h-3.5" />
+                        <span>{document.views_count?.toLocaleString("vi-VN") || document.views || 0} lượt xem</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-black">
-                        <Star className="w-4 h-4 fill-black" />{" "}
-                        {document.average_rating?.toFixed(1) || "0.0"}
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5" />
+                        <span>{document.average_rating?.toFixed(1) || "0.0"} sao</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-auto pt-3 flex items-center justify-between">
+                      <span className="text-xs font-semibold text-black">
+                        {document.price_dl > 0 ? `${document.price_dl} dl` : "Miễn phí"}
+                      </span>
+                      <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider group-hover:bg-black group-hover:text-white transition-colors duration-300">
+                        Xem
                       </div>
                     </div>
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
-                <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-none">
+                <p className="text-sm font-medium text-zinc-500">Chưa có kết quả nào phù hợp</p>
               </div>
             )}
           </div>

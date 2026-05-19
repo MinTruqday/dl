@@ -1,18 +1,18 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getActiveBannersAPI() {
-  const res = await fetch(`${API_URL}/anh-quang-cao`);
+  const res = await fetch(`${API_URL}/bieu-ngu`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách banner");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách biểu ngữ");
   return data;
 }
 
 export async function getAllBannersAPI() {
-  const res = await fetch(`${API_URL}/anh-quang-cao/tat-ca`, {
+  const res = await fetch(`${API_URL}/bieu-ngu/tat-ca`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải toàn bộ danh sách banner");
+  if (!res.ok) throw new Error(data.message || "Không thể tải toàn bộ danh sách biểu ngữ");
   return data;
 }
 
@@ -22,22 +22,22 @@ export async function createBannerAPI(data: {
   link_url?: string;
   priority?: number;
 }) {
-  const res = await fetch(`${API_URL}/anh-quang-cao`, {
+  const res = await fetch(`${API_URL}/bieu-ngu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Tạo banner thất bại");
+  if (!res.ok) throw new Error(result.message || "Tạo biểu ngữ thất bại");
   return result;
 }
 
 export async function deleteBannerAPI(id: string) {
-  const res = await fetch(`${API_URL}/anh-quang-cao/${id}`, {
+  const res = await fetch(`${API_URL}/bieu-ngu/${id}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa banner thất bại");
+  if (!res.ok) throw new Error(data.message || "Xoá biểu ngữ thất bại");
   return data;
 }

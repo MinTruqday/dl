@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/services/document.service";
 import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, smartSearchAPI } from "@/services/discovery.service";
+import { getActiveBannersAPI } from "@/services/banner.service";
 import { useAuth } from "@/contexts/Auth";
 import Link from "next/link";
 import { useToast } from "@/contexts/Toast";
@@ -25,17 +26,20 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [useSmart, setUseSmart] = useState(false);
+  const [banners, setBanners] = useState<any[]>([]);
 
   const loadInitialData = useCallback(async () => {
     try {
-      const [catData, trendData, recData] = await Promise.all([
+      const [catData, trendData, recData, bannerData] = await Promise.all([
         getTagsCategoriesAPI(),
         getTrendingDocumentsAPI(3),
         getAIRecommendationsAPI(4),
+        getActiveBannersAPI(),
       ]);
       setCategories(catData.data?.categories || catData.categories || []);
       setTrending(trendData.data || trendData || []);
       setRecommendations(recData.data || recData || []);
+      setBanners(bannerData.data || bannerData || []);
     } catch (err) {
       showToast("Lỗi tải dữ liệu khám phá", "error");
     }
@@ -77,11 +81,25 @@ export default function ExplorePage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none">
-        <p className="text-zinc-500 text-sm font-medium">
-          Liên hệ quảng cáo với DocLib
-        </p>
-      </div>
+      {banners.length > 0 ? (
+        <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden group">
+          <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
+            {banners[0].image_url ? (
+              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+                 <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>
+              </div>
+            )}
+          </a>
+        </div>
+      ) : (
+        <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none">
+          <p className="text-zinc-500 text-sm font-medium">
+            Liên hệ quảng cáo với DocLib
+          </p>
+        </div>
+      )}
 
       <div className="mb-8 border-b border-zinc-200 pb-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">

@@ -22,3 +22,27 @@ export async function resolveReportAPI(reportId: string, action: string) {
   if (!res.ok) throw new Error(data.message || "Xử lý báo cáo thất bại");
   return data;
 }
+
+export async function submitReportAPI(payload: {
+  item_id: string;
+  item_type: string;
+  reason: string;
+  detail: string;
+}) {
+  const res = await fetch(`${API_URL}/phan-hoi/bao-cao`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      item_id: payload.item_id,
+      item_type: payload.item_type,
+      reason: payload.reason,
+      description: payload.detail,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Gửi báo cáo thất bại");
+  return data;
+}

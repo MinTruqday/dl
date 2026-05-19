@@ -39,11 +39,11 @@ export async function applyAuthorAPI(data: any) {
 }
 
 export async function getUserProfileAPI(slug: string) {
-  const res = await fetch(`${API_URL}/ho-so/tac-gia/${slug}`, {
+  const res = await fetch(`${API_URL}/ho-so/thanh-vien/${slug}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin tác giả");
+  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin thành viên");
   return data;
 }
 

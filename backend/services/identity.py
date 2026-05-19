@@ -96,27 +96,52 @@ class IdentityService:
         return {"status": "success", "message": "Đã tải lên tài liệu KYC."}
 
     @staticmethod
-    async def get_author_public_profile(slug: str) -> dict:
+    async def get_public_profile(slug: str) -> dict:
         db = db_client.mongodb.get_default_database()
-        author = await db["users"].find_one({"slug": slug, "role": "AUTHOR", "is_active": True})
+        author = await db["users"].find_one({
+            "$or": [{"slug": slug}, {"username": slug}, {"_id": slug}],
+            "is_active": {"$ne": False}
+        })
         if not author:
-            raise HTTPException(status_code=404, detail="Không tìm thấy trang tác giả.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy trang thành viên.")
             
         author_id = str(author["_id"])
         docs = await db["documents"].find({"author_id": author_id, "status": "PUBLISHED"}).sort("created_at", -1).limit(10).to_list(length=10)
+        posts_cursor = db["status_updates"].find({"user_id": author_id, "is_deleted": {"$ne": True}, "is_shadowbanned": {"$ne": True}}).sort("created_at", -1).limit(10)
+        posts = await posts_cursor.to_list(length=10)
         
         return {
             "_id": author_id,
-            "full_name": author.get("full_name", "Tác giả ẩn danh"),
+            "full_name": author.get("full_name", "Ẩn danh"),
+            "slug": author.get("slug", ""),
+            "role": author.get("role", "READER"),
             "avatar_url": author.get("avatar_url"),
             "bio": author.get("bio", ""),
-            "cover_image_url": author.get("author_profile", {}).get("cover_image_url"),
+            "cover_image_url": author.get("author_profile", {}).get("cover_image_url") or author.get("brand_page", {}).get("banner_url") or author.get("cover_url", ""),
+            "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
+            "custom_theme": author.get("author_profile", {}).get("custom_theme"),
+            "followers_count": author.get("followers_count", 0),
+            "following_count": len(author.get("following", [])),
+            "social_links": author.get("social_links", {}),
+            "badges": author.get("badges", []),
+            "wallet_address": author.get("wallet_address", ""),
             "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
             "custom_theme": author.get("author_profile", {}).get("custom_theme"),
             "recent_documents": [{
                 "_id": str(d["_id"]),
                 "title": d.get("title"),
                 "slug": d.get("slug"),
-                "cover_url": d.get("cover_url")
-            } for d in docs]
+                "cover_url": d.get("cover_url") or d.get("cover_image"),
+                "category_name": d.get("category_name", ""),
+                "views_count": d.get("views_count", 0),
+                "price_dl": d.get("price_dl", 0)
+            } for d in docs],
+            "recent_posts": [{
+                "_id": str(p["_id"]),
+                "content": p.get("content", ""),
+                "created_at": p.get("created_at"),
+                "reactions": p.get("reactions", {}),
+                "media_urls": p.get("media_urls", []),
+                "item_type": p.get("item_type", "post")
+            } for p in posts]
         }

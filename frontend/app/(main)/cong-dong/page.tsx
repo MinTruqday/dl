@@ -21,6 +21,7 @@ import {
   uploadMediaAPI,
   getFriendSuggestionsAPI as getIntersectionFriendsAPI,
   getAIFeedSummaryAPI,
+  updatePostAPI,
 } from "@/services/social.service";
 import { suggestEngagementAPI, createPostAPI as createPostAI, createStoryAPI as createStoryAI } from "@/services/ai.service";
 import {
@@ -132,6 +133,43 @@ export default function Feed() {
   const [viewingStoryMode, setViewingStoryMode] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState(-1);
   const [storyProgress, setStoryProgress] = useState(0);
+  const [replyMessage, setReplyMessage] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
+  const [storyMentionsInput, setStoryMentionsInput] = useState("");
+  
+  const [aiDraftPost, setAiDraftPost] = useState("");
+  const [isAiDraftActive, setIsAiDraftActive] = useState(false);
+  const [aiDraftStory, setAiDraftStory] = useState("");
+  const [isAiDraftStoryActive, setIsAiDraftStoryActive] = useState(false);
+  const [wasAiAppliedPost, setWasAiAppliedPost] = useState(false);
+  const [wasAiAppliedStory, setWasAiAppliedStory] = useState(false);
+
+  const applyAiDraftPost = () => {
+    setContent(aiDraftPost);
+    setWasAiAppliedPost(true);
+    setAiDraftPost("");
+    setIsAiDraftActive(false);
+  };
+
+  const discardAiDraftPost = () => {
+    setAiDraftPost("");
+    setIsAiDraftActive(false);
+    setWasAiAppliedPost(false);
+  };
+
+  const applyAiDraftStory = () => {
+    setStoryText(aiDraftStory);
+    setWasAiAppliedStory(true);
+    setAiDraftStory("");
+    setIsAiDraftStoryActive(false);
+  };
+
+  const discardAiDraftStory = () => {
+    setAiDraftStory("");
+    setIsAiDraftStoryActive(false);
+    setWasAiAppliedStory(false);
+  };
+
   const [translationModal, setTranslationModal] = useState<{
     text: string;
   } | null>(null);
@@ -296,7 +334,7 @@ export default function Feed() {
     const match = val.match(/\/(book|document)\s+([^\n]+)$/);
     if (match && match[2].length > 1) {
       try {
-        const data = await getDocumentsAPI(match[2], 5);
+        const data = await getDocumentsAPI(match[2], undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, 5);
         setDocumentSuggestions(data.data || data);
       } catch (e) {
         showToast("Lỗi hệ thống", "error");
@@ -432,12 +470,12 @@ export default function Feed() {
     }
   };
 
-  const renderContentWithTags = (text: string) => {
-    if (!text) return null;
-    const parts = text.split(
-      /(#[\w]+|https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+|https?:\/\/open\.spotify\.com\/(?:track|album|playlist)\/[\w]+(?:.*)?|\*\*.*?\*\*|\*[^*]+\*|^> .*$)/gm
+  const parseInlineStyles = (text: string) => {
+    if (!text) return "";
+    const inlineParts = text.split(
+      /(https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+|https?:\/\/open\.spotify\.com\/(?:track|album|playlist)\/[\w]+(?:.*)?|\*\*.*?\*\*|\*[^*]+\*|#[\w]+)/g
     );
-    return parts.map((part, i) => {
+    return inlineParts.map((part, i) => {
       const ytMatch = part.match(
         /https?:\/\/(?:www\.youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
       );
@@ -445,7 +483,7 @@ export default function Feed() {
         return (
           <div
             key={i}
-            className="my-4 overflow-hidden border border-zinc-200 aspect-video"
+            className="my-3 overflow-hidden border border-zinc-200 aspect-video max-w-md"
           >
             <iframe
               width="100%"
@@ -462,7 +500,7 @@ export default function Feed() {
       );
       if (spotMatch) {
         return (
-          <div key={i} className="my-4">
+          <div key={i} className="my-2 max-w-md">
             <iframe
               src={`https://open.spotify.com/embed/${spotMatch[1]}/${spotMatch[2]}`}
               width="100%"
@@ -471,6 +509,27 @@ export default function Feed() {
               allow="encrypted-media"
             ></iframe>
           </div>
+        );
+      }
+      if (part.match(/^\*\*(.*?)\*\*$/)) {
+        return (
+          <strong key={i} className="font-semibold text-black">
+            {part.replace(/\*\*/g, "")}
+          </strong>
+        );
+      }
+      if (part === "*Nội dung được tạo bởi DocLib AI*") {
+        return (
+          <span key={i} className="block mt-2 text-[10px] text-zinc-400 italic leading-none">
+            Nội dung được tạo bởi DocLib AI
+          </span>
+        );
+      }
+      if (part.match(/^\*(.*?)\*$/)) {
+        return (
+          <em key={i} className="italic text-zinc-600">
+            {part.replace(/\*/g, "")}
+          </em>
         );
       }
       if (part.match(/#[\w]+/)) {
@@ -485,31 +544,74 @@ export default function Feed() {
           </Link>
         );
       }
-      if (part.match(/^\*\*(.*?)\*\*$/)) {
+      return part;
+    });
+  };
+
+  const renderContentWithTags = (text: string) => {
+    if (!text) return null;
+    const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    const lines = normalizedText.split("\n");
+    
+    const cleanLines: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed === "") {
+        if (cleanLines.length > 0 && cleanLines[cleanLines.length - 1] !== "") {
+          cleanLines.push("");
+        }
+      } else {
+        cleanLines.push(trimmed);
+      }
+    }
+    
+    if (cleanLines.length > 0 && cleanLines[cleanLines.length - 1] === "") {
+      cleanLines.pop();
+    }
+
+    return cleanLines.map((line, i) => {
+      if (line === "") {
+        return <div key={i} className="h-2 first:mt-0" />;
+      }
+      const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+      if (headingMatch) {
+        const level = headingMatch[1].length;
+        const headingText = headingMatch[2];
+        const className = "font-bold text-black block mt-3 mb-1 first:mt-0 " + (
+          level === 1 ? "text-xl font-bold" :
+          level === 2 ? "text-lg font-bold" :
+          level === 3 ? "text-base font-semibold" : "text-sm font-semibold"
+        );
         return (
-          <strong key={i} className="font-semibold text-black">
-            {part.replace(/\*\*/g, "")}
-          </strong>
+          <span key={i} className={className}>
+            {parseInlineStyles(headingText)}
+          </span>
         );
       }
-      if (part.match(/^\*(.*?)\*$/)) {
-        return (
-          <em key={i} className="italic text-zinc-600">
-            {part.replace(/\*/g, "")}
-          </em>
-        );
-      }
-      if (part.match(/^> (.*)$/)) {
+      if (line.startsWith("> ")) {
         return (
           <blockquote
             key={i}
-            className="border-l-2 border-black pl-4 italic text-zinc-600 my-3 bg-zinc-50 py-1"
+            className="border-l-2 border-black pl-4 italic text-zinc-600 my-2 bg-zinc-50 py-1 first:mt-0"
           >
-            {part.substring(2)}
+            {parseInlineStyles(line.substring(2))}
           </blockquote>
         );
       }
-      return <span key={i}>{part}</span>;
+      const listMatch = line.match(/^\s*[-*]\s+(.*)$/);
+      if (listMatch) {
+        return (
+          <span key={i} className="block pl-4 text-zinc-800 my-0.5 flex items-start gap-2 first:mt-0">
+            <span className="shrink-0 text-zinc-400">•</span>
+            <span>{parseInlineStyles(listMatch[1])}</span>
+          </span>
+        );
+      }
+      return (
+        <div key={i} className="leading-relaxed first:mt-0">
+          {parseInlineStyles(line)}
+        </div>
+      );
     });
   };
 
@@ -682,7 +784,9 @@ export default function Feed() {
 
     try {
       await createStoryAPI({
-        text_content: storyText || undefined,
+        text_content: wasAiAppliedStory && storyText
+          ? storyText + "\n\n*Nội dung được tạo bởi DocLib AI*"
+          : (storyText || undefined),
         media_url: storyMediaUrl || undefined,
         background_color: storyBgColor,
         text_color: storyTextColor,
@@ -694,6 +798,8 @@ export default function Feed() {
         mentions: parsedMentions.length > 0 ? parsedMentions : undefined,
       });
       setStoryText("");
+      discardAiDraftStory();
+      setWasAiAppliedStory(false);
       setStoryBgColor("#18181b");
       setStoryTextColor("#ffffff");
       setStoryFontStyle("sans");
@@ -716,11 +822,12 @@ export default function Feed() {
     }
   };
 
-  const deleteStory = async () => {
-    if (!deleteStoryConfirm) return;
+  const deleteStory = async (storyIdParam?: string) => {
+    const idToDelete = storyIdParam || deleteStoryConfirm;
+    if (!idToDelete) return;
     setIsProcessing(true);
     try {
-      await deleteStoryAPI(deleteStoryConfirm);
+      await deleteStoryAPI(idToDelete);
       showToast("Đã xóa tin thành công", "success");
       setViewingStoryMode(false);
       setDeleteStoryConfirm(null);
@@ -768,8 +875,9 @@ export default function Feed() {
     setIsGeneratingSuggestions(prev => ({ ...prev, [postId]: true }));
     try {
       const data = await suggestEngagementAPI(content);
-      if (data.suggestions) {
-        setEngagementSuggestions(prev => ({ ...prev, [postId]: data.suggestions }));
+      const suggestions = data.data?.suggestions || data.suggestions;
+      if (suggestions) {
+        setEngagementSuggestions(prev => ({ ...prev, [postId]: suggestions }));
       }
     } catch (err: any) {
       showToast(err.message || "Không thể lấy gợi ý", "error");
@@ -778,15 +886,40 @@ export default function Feed() {
     }
   };
 
+  const streamText = (
+    targetText: string,
+    setter: (val: string) => void,
+    onComplete?: () => void
+  ) => {
+    let currentText = "";
+    let index = 0;
+    const stepSize = Math.max(1, Math.ceil(targetText.length / 80));
+    const interval = setInterval(() => {
+      if (index >= targetText.length) {
+        clearInterval(interval);
+        setter(targetText);
+        if (onComplete) onComplete();
+      } else {
+        currentText += targetText.substring(index, index + stepSize);
+        index += stepSize;
+        setter(currentText);
+      }
+    }, 15);
+  };
+
   const generatePostWithAI = async () => {
     if (isEnhancing) return;
     setIsEnhancing(true);
     showToast("AI đang soạn thảo bài đăng...", "info");
     try {
       const data = await createPostAI(content, attachedDocumentTitle || "");
-      if (data.post) {
-        setContent(data.post);
-        showToast("Đã soạn thảo xong!", "success");
+      const postText = data.data?.post || data.post;
+      if (postText) {
+        setAiDraftPost("");
+        setIsAiDraftActive(true);
+        streamText(postText, setAiDraftPost, () => {
+          showToast("Đã soạn thảo xong bản thảo AI!", "success");
+        });
       }
     } catch (err: any) {
       showToast(err.message || "Lỗi khi tạo bài đăng", "error");
@@ -801,9 +934,13 @@ export default function Feed() {
     showToast("AI đang lên kịch bản story...", "info");
     try {
       const data = await createStoryAI(storyText);
-      if (data.story) {
-        setStoryText(data.story);
-        showToast("Đã xong kịch bản!", "success");
+      const storyResult = data.data?.story || data.story;
+      if (storyResult) {
+        setAiDraftStory("");
+        setIsAiDraftStoryActive(true);
+        streamText(storyResult, setAiDraftStory, () => {
+          showToast("Đã xong kịch bản bản thảo AI!", "success");
+        });
       }
     } catch (err: any) {
       showToast(err.message || "Lỗi khi tạo kịch bản", "error");
@@ -857,7 +994,9 @@ export default function Feed() {
       const privacy = privacyEl ? privacyEl.value : "public";
       const db_poll_opts = [pollText1, pollText2].filter((p) => p.trim());
       await createPostAPI({
-        content,
+        content: wasAiAppliedPost
+          ? content + "\n\n*Nội dung được tạo bởi DocLib AI*"
+          : content,
         privacy: privacy,
         comment_privacy: commentPrivacy,
         poll_options: db_poll_opts.length > 0 ? db_poll_opts : null,
@@ -873,6 +1012,8 @@ export default function Feed() {
         scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null,
       });
       setContent("");
+      discardAiDraftPost();
+      setWasAiAppliedPost(false);
       localStorage.removeItem("doclib_feed_draft");
       setPollText1("");
       setPollText2("");
@@ -895,7 +1036,7 @@ export default function Feed() {
     event?: React.MouseEvent
   ) => {
     try {
-      const data = await toggleReactionAPI(postId, "posts", reactionType);
+      const data = await toggleReactionAPI(postId, reactionType);
       if (data.message === "Đã thích" && event) {
       }
       fetchFeed(true);
@@ -1053,19 +1194,19 @@ export default function Feed() {
               ) : (
                 <div className="space-y-4">
                   {ranking.map((r, i) => (
-                    <div key={i} className="flex gap-3 items-center">
-                      <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0">
+                    <Link href={`/thanh-vien/${r.slug || r._id}`} key={i} className="flex gap-3 items-center group cursor-pointer hover:bg-zinc-50 p-1 -m-1 transition-colors">
+                      <div className="w-8 h-8 bg-zinc-100 text-black font-semibold flex items-center justify-center text-xs border border-zinc-200 shrink-0 group-hover:border-black transition-colors">
                         #{i + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-black truncate">
+                        <h4 className="text-xs font-semibold text-black truncate group-hover:underline">
                           {r.full_name || "Tác giả ẩn danh"}
                         </h4>
                         <span className="text-[10px] text-zinc-500 font-medium truncate">
                           {r.score.toLocaleString("vi-VN")} điểm
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -1241,16 +1382,43 @@ export default function Feed() {
                     </div>
                     <div className="flex-1">
                       <textarea
-                        className="w-full bg-transparent outline-none text-black resize-none min-h-[48px] text-sm font-medium placeholder:text-zinc-400"
+                        className="w-full bg-transparent outline-none text-black resize-none min-h-[32px] text-sm font-medium placeholder:text-zinc-400"
                         placeholder="Chia sẻ nội dung của bạn"
                         value={content}
                         rows={
                           isQuoteMode
                             ? 2
-                            : Math.max(1 + content.split("\n").length, 2)
+                            : Math.max(content.split("\n").length, 1)
                         }
                         onChange={handleContentChange}
                       />
+
+                      {isAiDraftActive && (
+                        <div className="mt-2 space-y-2">
+                          <div className="text-[10px] font-bold text-zinc-500">
+                            Gợi ý từ DocLib AI
+                          </div>
+                          <div className="w-full bg-zinc-50 border border-zinc-200 p-4 min-h-[80px] text-sm font-medium text-black leading-relaxed whitespace-pre-wrap select-text">
+                            {renderContentWithTags(aiDraftPost)}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={applyAiDraftPost}
+                              className="bg-black text-white hover:bg-zinc-800 text-xs font-bold px-4 py-2 border border-black transition-all"
+                            >
+                              Áp dụng
+                            </button>
+                            <button
+                              type="button"
+                              onClick={discardAiDraftPost}
+                              className="bg-white text-zinc-600 hover:text-black border border-zinc-200 hover:border-zinc-300 text-xs font-bold px-4 py-2 transition-all"
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {documentSuggestions.length > 0 && (
                         <div className="bg-white border border-zinc-200 mt-2 max-h-48 overflow-y-auto rounded-none">
@@ -1505,25 +1673,25 @@ export default function Feed() {
                     >
                       <div className="flex flex-row justify-between items-start">
                         <div className="flex gap-3 items-center">
-                          <div className="w-10 h-10 rounded-none border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0">
+                          <Link href={`/thanh-vien/${post.user?.slug || post.user?.username || post.user_id}`} className="w-10 h-10 rounded-none border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0 hover:border-black transition-colors block">
                             {post.user?.avatar_url ? (
                               <img
                                 src={post.user.avatar_url}
-                                className="w-full h-full object-cover grayscale mix-blend-multiply"
+                                className="w-full h-full object-cover grayscale mix-blend-multiply hover:grayscale-0 transition-all"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <UserIcon className="w-5 h-5 text-zinc-400 stroke-[1]" />
                               </div>
                             )}
-                          </div>
+                          </Link>
                           <div className="flex flex-col">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-semibold text-sm text-black cursor-pointer">
+                              <Link href={`/thanh-vien/${post.user?.slug || post.user?.username || post.user_id}`} className="font-semibold text-sm text-black cursor-pointer hover:underline">
                                 {post.user?.username ||
                                   post.user?.full_name ||
                                  "Ẩn danh"}
-                              </span>
+                              </Link>
                               {post.user?.role === "admin" && (
                                 <span className="px-1.5 py-0.5 border border-zinc-200 text-[10px] font-medium text-zinc-500">
                                   Admin
@@ -2087,6 +2255,33 @@ export default function Feed() {
                     }}
                   />
                 </div>
+
+                {isAiDraftStoryActive && (
+                  <div className="z-30 mt-2 space-y-2 w-full text-left max-w-xs">
+                    <div className="text-[10px] font-bold text-zinc-400">
+                      Gợi ý từ DocLib AI
+                    </div>
+                    <div className="w-full bg-black/60 border border-zinc-700 p-3 text-xs text-white leading-relaxed whitespace-pre-wrap select-text max-h-40 overflow-y-auto">
+                      {aiDraftStory}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={applyAiDraftStory}
+                        className="bg-white text-black hover:bg-zinc-200 text-[10px] font-bold px-3 py-1.5 transition-all"
+                      >
+                        Áp dụng
+                      </button>
+                      <button
+                        type="button"
+                        onClick={discardAiDraftStory}
+                        className="bg-transparent text-zinc-400 hover:text-white border border-zinc-700 text-[10px] font-bold px-3 py-1.5 transition-all"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {storyStickers.map((sticker) => (
                   <div
@@ -2776,7 +2971,7 @@ export default function Feed() {
             Hủy bỏ
           </button>
           <button
-            onClick={deleteStory}
+            onClick={() => deleteStory()}
             disabled={isProcessing}
             className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   flex items-center justify-center disabled:opacity-50"
           >
