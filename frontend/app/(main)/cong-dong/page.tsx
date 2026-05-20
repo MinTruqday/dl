@@ -37,7 +37,7 @@ import {
   deleteStoryAPI,
 } from "@/services/story.service";
 import { getSocialRankingAPI, getReaderRankingAPI } from "@/services/rank.service";
-import { createCommentAPI } from "@/services/comment.service";
+import { createCommentAPI, getCommentsByItemAPI } from "@/services/comment.service";
 import { getDocumentsAPI } from "@/services/document.service";
 import { translateTextAPI } from "@/services/inference.service";
 import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, voteItemAPI } from "@/services/wallet.service";
@@ -86,6 +86,7 @@ import {
   ArrowUpRight,
   ChevronRight,
   RotateCw,
+  Wand2,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -658,7 +659,16 @@ export default function Feed() {
             id: item.id || item._id,
           }))
         : [];
-      setPosts((prev) => (reset ? newData : [...prev, ...newData]));
+      setPosts((prev) => {
+        const merged = reset ? newData : [...prev, ...newData];
+        const seen = new Set();
+        return merged.filter((post) => {
+          const key = post.id;
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      });
       if (newData.length < limit) setHasMore(false);
       else setHasMore(true);
       if (!reset) setPage((p) => p + 1);
@@ -843,12 +853,30 @@ export default function Feed() {
   const repostPost = async (postId: string) => {
     if (!currentUser)
       return showToast("Vui lòng đăng nhập để thực hiện.", "error");
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post._id === postId || post.id === postId) {
+          return { ...post, reposted: !post.reposted };
+        }
+        return post;
+      })
+    );
+
     try {
-      await repostPostAPI(postId);
-      showToast("Đã chia sẻ lại bài viết thành công", "success");
+      const res = await repostPostAPI(postId);
+      showToast(res.message || "Thao tác thành công", "success");
       fetchFeed(true);
     } catch (e: any) {
-      showToast(e.message || "Không thể chia sẻ lại bài viết", "error");
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId || post.id === postId) {
+            return { ...post, reposted: !post.reposted };
+          }
+          return post;
+        })
+      );
+      showToast(e.message || "Không thể thực hiện chia sẻ lại bài viết", "error");
     }
   };
 
@@ -1035,13 +1063,81 @@ export default function Feed() {
     reactionType: string = "like",
     event?: React.MouseEvent
   ) => {
+    const currentUserId = currentUser?._id || "";
+    if (!currentUserId) {
+      return showToast("Vui lòng đăng nhập để thích bài viết.", "error");
+    }
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post._id === postId || post.id === postId) {
+          const isLiked = post.user_reaction === "like";
+          const newReaction = isLiked ? null : "like";
+          const currentLikesCount = post.reactions?.like || 0;
+          const newLikesCount = isLiked
+            ? Math.max(0, currentLikesCount - 1)
+            : currentLikesCount + 1;
+          return {
+            ...post,
+            user_reaction: newReaction,
+            reactions: {
+              ...post.reactions,
+              like: newLikesCount,
+            },
+          };
+        }
+        return post;
+      })
+    );
+
     try {
-      const data = await toggleReactionAPI(postId, reactionType);
-      if (data.message === "Đã thích" && event) {
-      }
-      fetchFeed(true);
+      await toggleReactionAPI(postId, reactionType);
     } catch (e) {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId || post.id === postId) {
+            const isLiked = post.user_reaction === "like";
+            const newReaction = isLiked ? null : "like";
+            const currentLikesCount = post.reactions?.like || 0;
+            const newLikesCount = isLiked
+              ? Math.max(0, currentLikesCount - 1)
+              : currentLikesCount + 1;
+            return {
+              ...post,
+              user_reaction: newReaction,
+              reactions: {
+                ...post.reactions,
+                like: newLikesCount,
+              },
+            };
+          }
+          return post;
+        })
+      );
       showToast("Lỗi kết nối khi thích bài viết.", "error");
+    }
+  };
+
+  const toggleComments = async (postId: string) => {
+    if (expandedComments === postId) {
+      setExpandedComments(null);
+      return;
+    }
+
+    setExpandedComments(postId);
+    try {
+      const res = await getCommentsByItemAPI(postId);
+      const commentsData = res.data || res || [];
+      setPosts((prevPosts) =>
+        prevPosts.map((p) => {
+          if (p.id === postId || p._id === postId) {
+            return { ...p, comments: commentsData };
+          }
+          return p;
+        })
+      );
+    } catch (e) {
+      showToast("Không thể tải danh sách bình luận.", "error");
     }
   };
 
@@ -1051,17 +1147,27 @@ export default function Feed() {
       const payload: any = {
         item_id: postId,
         item_type: "post",
-        text: commentText,
+        content: commentText,
       };
       if (replyToContext?.postId === postId) {
         payload.parent_id = replyToContext.commentId;
-        payload.text = `@${replyToContext.userName} ${commentText}`;
+        payload.content = `@${replyToContext.userName} ${commentText}`;
       }
       await createCommentAPI(payload);
-      showToast("Đã lưu tương tác thành công.", "success");
+      showToast("Đăng bình luận thành công.", "success");
       setCommentText("");
       setReplyToContext(null);
-      fetchFeed(true);
+      
+      const res = await getCommentsByItemAPI(postId);
+      const commentsData = res.data || res || [];
+      setPosts((prevPosts) =>
+        prevPosts.map((p) => {
+          if (p.id === postId || p._id === postId) {
+            return { ...p, comments: commentsData };
+          }
+          return p;
+        })
+      );
       setExpandedComments(postId);
     } catch (e) {
       showToast("Không thể gửi bình luận lúc này, vui lòng thử lại.", "error");
@@ -1069,10 +1175,26 @@ export default function Feed() {
   };
 
   const toggleSave = async (postId: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post._id === postId || post.id === postId) {
+          return { ...post, saved: !post.saved };
+        }
+        return post;
+      })
+    );
+
     try {
       await savePostAPI(postId);
-      fetchFeed(true);
     } catch (e) {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) => {
+          if (post._id === postId || post.id === postId) {
+            return { ...post, saved: !post.saved };
+          }
+          return post;
+        })
+      );
       showToast("Lỗi hệ thống", "error");
     }
   };
@@ -1152,8 +1274,8 @@ export default function Feed() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold text-black">Bảng tin</h1>
-              <p className="text-zinc-500 text-sm font-medium flex items-center gap-2">
-                Kết nối và chia sẻ nội dung <Sparkles className="w-4 h-4" />
+              <p className="text-zinc-500 text-sm font-medium">
+                Kết nối và chia sẻ nội dung
               </p>
             </div>
             <div className="flex border border-zinc-200 bg-white rounded-none">
@@ -1538,7 +1660,7 @@ export default function Feed() {
 
                   <div className="pt-4 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 transition-colors">
+                      <label className="cursor-pointer h-10 w-10 border border-zinc-200 flex items-center justify-center text-zinc-500 hover:bg-zinc-50 transition-colors rounded-none">
                         <ImageIcon className="w-4 h-4" />
                         <input
                           type="file"
@@ -1550,7 +1672,7 @@ export default function Feed() {
                       </label>
                       <button
                         onClick={() => setShowExtras(!showExtras)}
-                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors rounded-none ${
                           showExtras
                             ? "bg-black border-black text-white"
                             : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
@@ -1560,7 +1682,7 @@ export default function Feed() {
                       </button>
                       <button
                         onClick={() => setIsQuoteMode(!isQuoteMode)}
-                        className={`h-10 w-10 border flex items-center justify-center transition-colors ${
+                        className={`h-10 w-10 border flex items-center justify-center transition-colors rounded-none ${
                           isQuoteMode
                             ? "bg-black border-black text-white"
                             : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
@@ -1569,37 +1691,50 @@ export default function Feed() {
                         <Quote className="w-4 h-4" />
                       </button>
 
-                      {/* Sleek Vertical Divider */}
-                      <div className="h-6 w-[1px] bg-zinc-200 mx-1" />
+                      {/* AI Optimize Button (Always active for equal visual weight) */}
+                      <button
+                        onClick={() => {
+                          if (!content.trim()) {
+                            showToast("Vui lòng nhập nội dung bài viết trước khi tối ưu.", "error");
+                            return;
+                          }
+                          enhanceContent();
+                        }}
+                        className="h-10 w-10 border border-zinc-200 text-zinc-500 flex items-center justify-center hover:bg-zinc-50 transition-colors rounded-none"
+                        title="Tối ưu nội dung bằng AI"
+                      >
+                        {isEnhancing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="w-4 h-4" />
+                        )}
+                      </button>
 
+                      {/* AI Compose Button */}
+                      <button
+                        onClick={generatePostWithAI}
+                        disabled={isEnhancing}
+                        className="h-10 w-10 border border-zinc-200 text-zinc-500 flex items-center justify-center disabled:opacity-50 hover:bg-zinc-50 transition-colors rounded-none"
+                        title="Soạn thảo bài viết bằng AI"
+                      >
+                        <PenTool className="w-4 h-4" />
+                      </button>
+
+                      {/* Privacy Dropdown (Placed at the very end!) */}
                       <select
                         id="post-privacy"
-                        className="h-10 px-3 bg-white border border-zinc-200 text-xs font-medium outline-none cursor-pointer hover:bg-zinc-50 transition-colors"
+                        className="h-10 pl-3 pr-8 bg-white border border-zinc-200 text-xs font-medium outline-none cursor-pointer hover:bg-zinc-50 transition-colors rounded-none appearance-none"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2371717a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
+                          backgroundPosition: "right 0.6rem center",
+                          backgroundRepeat: "no-repeat",
+                          backgroundSize: "1.1em 1.1em"
+                        }}
                       >
                         <option value="public">Công khai</option>
                         <option value="following">Người theo dõi</option>
                         <option value="private">Chỉ mình tôi</option>
                       </select>
-                      <button
-                        onClick={enhanceContent}
-                        disabled={!content.trim() || isEnhancing}
-                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-zinc-50 transition-colors"
-                      >
-                        {isEnhancing ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Sparkles className="w-3 h-3" />
-                        )}
-                        Tối ưu AI
-                      </button>
-                      <button
-                        onClick={generatePostWithAI}
-                        disabled={isEnhancing}
-                        className="h-10 px-4 border border-zinc-200 text-black text-xs font-medium disabled:opacity-50 flex items-center gap-2 hover:bg-zinc-50 transition-colors"
-                      >
-                        <PenTool className="w-3 h-3" />
-                        Soạn thảo AI
-                      </button>
                     </div>
 
                     <button
@@ -1671,6 +1806,12 @@ export default function Feed() {
                       key={post.id}
                       className="border border-zinc-200 bg-white p-6 space-y-4"
                     >
+                      {post.repost_post_id && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-100 pb-3 mb-1">
+                          <RotateCw className="w-3 h-3 text-zinc-400" />
+                          <span>Được chia sẻ lại</span>
+                        </div>
+                      )}
                       <div className="flex flex-row justify-between items-start">
                         <div className="flex gap-3 items-center">
                           <Link href={`/thanh-vien/${post.user?.slug || post.user?.username || post.user_id}`} className="w-10 h-10 rounded-none border border-zinc-200 overflow-hidden bg-zinc-100 shrink-0 hover:border-black transition-colors block">
@@ -1718,9 +1859,10 @@ export default function Feed() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => translatePost(post.id, post.content)}
-                            className="p-2 text-zinc-400"
+                            className="p-2 text-zinc-400 hover:text-black transition-colors"
+                            title="Dịch bài viết"
                           >
-                            <Sparkles className="w-4 h-4" />
+                            <Globe className="w-4 h-4" />
                           </button>
                           {(currentUser?._id || "") &&
                           (currentUser?._id === post.author_id ||
@@ -1875,7 +2017,7 @@ export default function Feed() {
                         </div>
                       )}
 
-                      <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
+                      <div className="pt-3 mt-1 border-t border-zinc-100 flex items-center justify-between">
                         <div className="flex items-center gap-6">
                           <button
                             onClick={() => setGiftModal({ postId: post.id, authorId: post.user?._id || post.author_id, amount: 10 })}
@@ -1887,26 +2029,22 @@ export default function Feed() {
                           <button
                             onClick={(e) => toggleLike(post.id, "like", e)}
                             className={`flex items-center gap-2 text-xs font-medium  ${
-                              post.likes?.includes(currentUser?._id || "")
+                              post.user_reaction === "like"
                                 ? "text-black"
                                 : "text-zinc-500"
                             }`}
                           >
                             <Heart
                               className={`w-4 h-4 ${
-                                post.likes?.includes(currentUser?._id || "")
+                                post.user_reaction === "like"
                                   ? "fill-black text-black"
                                   : ""
                               }`}
                             />
-                            {post.likes?.length || 0}
+                            {post.reactions?.like || 0}
                           </button>
                           <button
-                            onClick={() =>
-                              setExpandedComments(
-                                expandedComments === post.id ? null : post.id
-                              )
-                            }
+                            onClick={() => toggleComments(post.id)}
                             className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
                           >
                             <MessageCircle className="w-4 h-4" />
@@ -1914,9 +2052,12 @@ export default function Feed() {
                           </button>
                           <button
                             onClick={() => repostPost(post.id)}
-                            className="flex items-center gap-2 text-xs font-medium text-zinc-500 "
+                            className={`flex items-center gap-2 text-xs font-medium ${
+                              post.reposted ? "text-black font-semibold" : "text-zinc-500"
+                            }`}
+                            title={post.reposted ? "Hủy chia sẻ lại" : "Chia sẻ lại"}
                           >
-                            <RotateCw className="w-4 h-4" />
+                            <RotateCw className={`w-4 h-4 ${post.reposted ? "stroke-[2.5px] text-black" : ""}`} />
                           </button>
                         </div>
                         <div className="flex items-center gap-6">

@@ -99,7 +99,7 @@ async def delete_session(session_id: str, current_user: UserInDB = Depends(get_c
 @router.get("/cong-dong/tom-tat-bang-tin", response_model=APIResponse[Any])
 async def get_social_feed_summary(current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
-        data={"summary": await AIService.generate_social_feed_summary(current_user)},
+        data={"summary": await AIService.generate_feed_summary(current_user)},
         message="Tạo tóm tắt bảng tin thành công"
     )
 

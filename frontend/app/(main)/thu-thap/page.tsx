@@ -145,7 +145,7 @@ export default function CollectorPage() {
                         type="text"
                         value={collectionForm.url}
                         onChange={(e) => setCollectionForm({ ...collectionForm, url: e.target.value })}
-                        placeholder="https://www.ctan.org/pkg/..."
+                        placeholder="https://www.ctan.org/pkg/"
                         className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-none bg-white"
                       />
                     </div>
@@ -175,7 +175,6 @@ export default function CollectorPage() {
                   />
                 </div>
               )}
-
 
               <button
                 onClick={() => setConfirmModal(true)}

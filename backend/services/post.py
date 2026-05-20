@@ -93,6 +93,19 @@ class PostService:
         if not original_post:
             raise HTTPException(status_code=404, detail="Bài viết không tồn tại.")
         
+        existing_repost = await db["status_updates"].find_one({
+            "user_id": str(current_user.id),
+            "repost_post_id": post_id,
+            "is_deleted": {"$ne": True}
+        })
+        
+        if existing_repost:
+            await db["status_updates"].update_one(
+                {"_id": existing_repost["_id"]},
+                {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
+            )
+            return {"message": "Đã hủy chia sẻ lại bài viết.", "reposted": False}
+        
         new_post = {
             "_id": str(uuid.uuid4()),
             "user_id": str(current_user.id),
@@ -104,7 +117,7 @@ class PostService:
             "created_at": datetime.now(timezone.utc)
         }
         await db["status_updates"].insert_one(new_post)
-        return {"message": "Đã chia sẻ lại bài viết thành công.", "post_id": new_post["_id"]}
+        return {"message": "Đã chia sẻ lại bài viết thành công.", "post_id": new_post["_id"], "reposted": True}
 
     @staticmethod
     async def toggle_pin_post(post_id: str, current_user: UserInDB) -> dict:
@@ -399,6 +412,16 @@ class PostService:
         cursor_res = updates_col.aggregate(pipeline)
         results = await cursor_res.to_list(length=limit)
         
+        reposted_post_ids = []
+        if current_user and results:
+            post_ids = [str(d["_id"]) for d in results]
+            reposts = await db["status_updates"].find({
+                "user_id": str(current_user.id),
+                "repost_post_id": {"$in": post_ids},
+                "is_deleted": {"$ne": True}
+            }).to_list(length=100)
+            reposted_post_ids = [r["repost_post_id"] for r in reposts]
+
         feed = []
         for doc in results:
             user_doc = doc.get("user_details", {})
@@ -428,6 +451,8 @@ class PostService:
                 "user_reaction": doc.get("reaction_users", {}).get(str(current_user.id)) if current_user else None,
                 "is_pinned": doc.get("is_pinned", False),
                 "saved": str(current_user.id) in doc.get("saved_by", []) if current_user else False,
+                "reposted": str(doc["_id"]) in reposted_post_ids,
+                "repost_post_id": doc.get("repost_post_id"),
                 "user": user_info
             }
             feed.append(item)

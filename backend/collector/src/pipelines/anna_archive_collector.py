@@ -25,14 +25,9 @@ USER_AGENTS = [
 class AnnaArchiveCollector:
     @staticmethod
     async def run_list_collector(search_query: str, index_type: str = ""):
-        logger.info(f"Starting search on Anna's Archive: {search_query} (Index: {index_type})")
-        
+        logger.info(f"Starting paginated search on Anna's Archive: {search_query}")
         encoded = urllib.parse.quote(search_query)
-        if index_type == "journals":
-            search_url = f"https://annas-archive.gl/search?index=journals&q={encoded}"
-        else:
-            search_url = f"https://annas-archive.gl/search?q={encoded}"
-            
+        
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'])
             context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
@@ -40,34 +35,37 @@ class AnnaArchiveCollector:
             await stealth_async(page)
             
             try:
-                await page.goto(search_url, timeout=60000, wait_until='domcontentloaded')
+                page_num = 1
                 
-
-                content = await page.content()
-                if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Search page blocked, trying FlareSolverr to bypass")
-                    FLARESOLVERR_URL = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(FLARESOLVERR_URL, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
-                            if resp.status == 200:
-                                data = await resp.json()
-                                content = data.get("solution", {}).get("response", "")
-                                if content:
-                                    await page.set_content(content)
-                        
-                list_selector = 'a[href*="/md5/"]'
-                try:
-                    await page.wait_for_selector(list_selector, timeout=30000)
-                except Exception as e:
-                    logger.error(f"Error waiting for md5 links in Anna Archive: {e}")
-                
-
-                html_content = await page.content()
-                if "DDoS-Guard" in html_content:
-                    logger.error("Still blocked by Cloudflare")
-                
-                document_nodes = await page.query_selector_all(list_selector)
-                if document_nodes:
+                while True:
+                    search_url = f"https://annas-archive.gl/search?index=&sort=&src=zlib&lang=en&lang=anti__zh&lang=anti__zh-Hant&lang=vi&display=&q={encoded}&page={page_num}"
+                    logger.info(f"Navigating to page {page_num}: {search_url}")
+                    
+                    await page.goto(search_url, timeout=60000, wait_until='domcontentloaded')
+                    content = await page.content()
+                    
+                    if "DDoS-Guard" in content or "cloudflare" in content.lower():
+                        logger.info("Search page blocked by security shield, attempting FlareSolverr bypass")
+                        flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
+                        async with aiohttp.ClientSession() as session:
+                            async with session.post(flaresolverr_url, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
+                                if resp.status == 200:
+                                    data = await resp.json()
+                                    resolved_content = data.get("solution", {}).get("response", "")
+                                    if resolved_content:
+                                        await page.set_content(resolved_content)
+                    
+                    list_selector = 'a[href*="/md5/"]'
+                    try:
+                        await page.wait_for_selector(list_selector, timeout=15000)
+                    except Exception as e:
+                        logger.error(f"Timeout or error waiting for MD5 links on page {page_num}: {e}")
+                    
+                    document_nodes = await page.query_selector_all(list_selector)
+                    if not document_nodes:
+                        logger.warning(f"No MD5 links found on page {page_num}, terminating pagination")
+                        break
+                    
                     document_urls = set()
                     for node in document_nodes:
                         href = await node.get_attribute("href")
@@ -75,15 +73,19 @@ class AnnaArchiveCollector:
                             full_url = "https://annas-archive.gl" + href if href.startswith("/") else href
                             document_urls.add(full_url)
                     
-                    logger.info(f"Found {len(document_urls)} md5 links")
+                    logger.info(f"Found {len(document_urls)} MD5 links on page {page_num}")
+                    new_urls_found = 0
+                    
                     for url in document_urls:
                         if not await dedup.is_collected("anna_url", url):
                             await mq_client.publish("collect_detail_queue", {"url": url})
                             await dedup.mark_collected("anna_url", url)
-                else:
-                    logger.warning("MD5 list container not found")
+                            new_urls_found += 1
+                    
+                    logger.info(f"Successfully published {new_urls_found} new items from page {page_num}")
+                    page_num += 1
             except Exception as e:
-                logger.error(f"[Anna List CCollector Error]: {e}")
+                logger.error(f"Error in Anna's Archive list collector pipeline: {e}")
             finally:
                 await browser.close()
 
