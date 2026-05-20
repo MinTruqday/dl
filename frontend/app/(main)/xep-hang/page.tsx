@@ -62,11 +62,10 @@ export default function LeaderboardPage() {
     const isTop3 = index < 3;
     return (
       <div
-        className={`w-8 h-8 shrink-0 flex items-center justify-center font-bold text-sm border ${
-          isTop3
+        className={`w-8 h-8 shrink-0 flex items-center justify-center font-bold text-sm border ${isTop3
             ? "border-black bg-black text-white"
             : "border-zinc-200 bg-zinc-50 text-zinc-500"
-        }`}
+          }`}
       >
         {String(index + 1).padStart(2, "0")}
       </div>
@@ -101,11 +100,10 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
-                    activeTab === tab.id
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeTab === tab.id
                       ? "bg-zinc-100 text-black border-zinc-300"
                       : "bg-white text-zinc-500 border-transparent"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                   {activeTab === tab.id && <ChevronRight className="w-4 h-4" />}
@@ -139,11 +137,10 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider border-r border-zinc-200 last:border-0 ${
-                    activeTab === tab.id
+                  className={`flex-1 px-4 py-2 text-[10px] font-bold uppercase tracking-wider border-r border-zinc-200 last:border-0 ${activeTab === tab.id
                       ? "bg-black text-white"
                       : "text-zinc-500"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -227,8 +224,8 @@ export default function LeaderboardPage() {
                             </div>
                           </div>
                           <div className="flex flex-col items-end shrink-0 pl-6 border-l border-zinc-100">
-                            <span className="text-base font-black text-black leading-none">{author.followers_count?.toLocaleString() || 0}</span>
-                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Độc giả</span>
+                            <span className="text-base font-black text-black leading-none">{author.popularity_score?.toLocaleString() || 0}</span>
+                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Lượt xem</span>
                           </div>
                         </Link>
                       ))

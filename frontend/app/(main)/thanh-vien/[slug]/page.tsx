@@ -13,7 +13,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { getUserProfileAPI } from "@/services/profile.service";
-import { followUserAPI } from "@/services/user.service";
 import { getDocumentsAPI } from "@/services/document.service";
 import { API_URL } from "@/services/authentication.service";
 
@@ -23,10 +22,8 @@ export default function UserProfilePage() {
   const router = useRouter();
   const [author, setAuthor] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isFollowing, setIsFollowing] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -42,10 +39,6 @@ export default function UserProfilePage() {
       const data = await getUserProfileAPI(slug);
       const profileData = data.data || data;
       setAuthor(profileData);
-      setPosts(profileData.recent_posts || []);
-      setIsFollowing(
-        data.is_following || (data.data && data.data.is_following) || false,
-      );
 
       const docData = await getDocumentsAPI(
         undefined,
@@ -63,19 +56,7 @@ export default function UserProfilePage() {
     }
   };
 
-  const toggleFollow = async () => {
-    if (!author) return;
-    try {
-      await followUserAPI(author._id || author.id || slug);
-      setIsFollowing(!isFollowing);
-      setAuthor((prev: any) => ({
-        ...prev,
-        followers_count: (prev.followers_count || 0) + (isFollowing ? -1 : 1),
-      }));
-    } catch (err: any) {
-      console.error("Thao tác thất bại:", err);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -139,27 +120,9 @@ export default function UserProfilePage() {
           
           <div className="flex flex-wrap items-center gap-6 md:gap-10 text-sm font-semibold text-zinc-600">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-zinc-400"/> 
-              <span className="text-black">{author.followers_count || 0}</span> người theo dõi
-            </div>
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-4 h-4 text-zinc-400"/> 
-              <span className="text-black">{author.following_count || 0}</span> đang theo dõi
-            </div>
-            <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-zinc-400"/> 
               <span className="text-black">{documents.length}</span> tài liệu
             </div>
-          </div>
-          
-          <div className="pt-4">
-            <Button
-              onClick={toggleFollow}
-              className={`h-12 px-8 text-xs font-semibold rounded-none transition-colors duration-200 border ${isFollowing ? "bg-white text-black border-zinc-300 hover:bg-zinc-50" : "bg-black text-white border-black hover:bg-zinc-800"}`}
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              {isFollowing ? "Đang theo dõi" : "Theo dõi thành viên"}
-            </Button>
           </div>
         </div>
       </div>
@@ -191,31 +154,7 @@ export default function UserProfilePage() {
 
         <div className="lg:col-span-9 space-y-16">
           
-          {posts.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3 mb-8">
-                <h3 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  Hoạt động gần đây
-                </h3>
-              </div>
-              <div className="space-y-6">
-                {posts.slice(0, 3).map((post) => (
-                  <div key={post._id} className="p-6 border border-zinc-200 bg-white">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Cập nhật trạng thái</span>
-                      <span className="text-xs font-medium text-zinc-400">
-                        {new Date(post.created_at).toLocaleDateString("vi-VN")}
-                      </span>
-                    </div>
-                    <p className="text-sm text-black leading-relaxed font-medium line-clamp-3">
-                      {post.content}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
 
           <div>
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3 mb-8">

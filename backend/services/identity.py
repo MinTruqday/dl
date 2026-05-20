@@ -107,8 +107,6 @@ class IdentityService:
             
         author_id = str(author["_id"])
         docs = await db["documents"].find({"author_id": author_id, "status": "PUBLISHED"}).sort("created_at", -1).limit(10).to_list(length=10)
-        posts_cursor = db["status_updates"].find({"user_id": author_id, "is_deleted": {"$ne": True}, "is_shadowbanned": {"$ne": True}}).sort("created_at", -1).limit(10)
-        posts = await posts_cursor.to_list(length=10)
         
         return {
             "_id": author_id,
@@ -120,13 +118,11 @@ class IdentityService:
             "cover_image_url": author.get("author_profile", {}).get("cover_image_url") or author.get("brand_page", {}).get("banner_url") or author.get("cover_url", ""),
             "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
             "custom_theme": author.get("author_profile", {}).get("custom_theme"),
-            "followers_count": author.get("followers_count", 0),
-            "following_count": len(author.get("following", [])),
+            "followers_count": 0,
+            "following_count": 0,
             "social_links": author.get("social_links", {}),
             "badges": author.get("badges", []),
             "wallet_address": author.get("wallet_address", ""),
-            "welcome_video_url": author.get("author_profile", {}).get("welcome_video_url"),
-            "custom_theme": author.get("author_profile", {}).get("custom_theme"),
             "recent_documents": [{
                 "_id": str(d["_id"]),
                 "title": d.get("title"),
@@ -136,12 +132,5 @@ class IdentityService:
                 "views_count": d.get("views_count", 0),
                 "price_dl": d.get("price_dl", 0)
             } for d in docs],
-            "recent_posts": [{
-                "_id": str(p["_id"]),
-                "content": p.get("content", ""),
-                "created_at": p.get("created_at"),
-                "reactions": p.get("reactions", {}),
-                "media_urls": p.get("media_urls", []),
-                "item_type": p.get("item_type", "post")
-            } for p in posts]
+            "recent_posts": []
         }

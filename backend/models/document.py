@@ -115,3 +115,28 @@ class CollaborationResponse(BaseModel):
 class ModerateDocumentRequest(BaseModel):
     action: str
     reason: str
+
+class TransferOwnershipRequest(BaseModel):
+    user_id: str
+
+class UpdateCollaboratorRoleRequest(BaseModel):
+    role: str
+
+class CollabMemoCreateRequest(BaseModel):
+    message: str
+
+class UpdateCollabAccessRequest(BaseModel):
+    access_level: str
+
+class CreateDraftSnapshotRequest(BaseModel):
+    version_name: str
+
+class CollabTaskCreateRequest(BaseModel):
+    task_desc: str
+    assigned_to: Optional[str] = None
+
+class UpdateTaskStatusRequest(BaseModel):
+    is_done: bool
+
+class TaskCommentCreateRequest(BaseModel):
+    comment_text: str

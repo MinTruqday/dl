@@ -68,7 +68,7 @@ export default function Review({ documentId }: ReviewProps) {
         <div className="flex items-center gap-4">
           <MessageCircle className="w-5 h-5 text-black" />
           <h2 className="text-sm font-bold text-black uppercase tracking-widest">
-            Đánh giá cộng đồng
+            Đánh giá độc giả
           </h2>
         </div>
         <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">

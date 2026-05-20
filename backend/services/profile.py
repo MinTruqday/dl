@@ -79,3 +79,17 @@ class ProfileService:
         await db["users"].update_one({"_id": str(current_user.id)}, {"$set": update_fields})
         logger.info(f"Profile: Author {current_user.id} updated their brand page")
         return {"message": "Cập nhật trang tác giả cá nhân thành công."}
+
+    @staticmethod
+    async def block_user(target_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        if str(current_user.id) == target_id:
+            raise HTTPException(status_code=400, detail="Bạn không thể tự chặn chính mình.")
+        target_user = await db["users"].find_one({"_id": target_id})
+        if not target_user:
+            raise HTTPException(status_code=404, detail="Người dùng không tồn tại.")
+        await db["users"].update_one(
+            {"_id": str(current_user.id)},
+            {"$addToSet": {"blocked_users": target_id}}
+        )
+        return {"status": "ok", "message": "Đã chặn người dùng."}

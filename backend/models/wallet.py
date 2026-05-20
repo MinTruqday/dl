@@ -66,15 +66,6 @@ class WithdrawalRequest(BaseModel):
 class RedeemVoucherRequest(BaseModel):
     code: str
 
-class UnlockRequest(BaseModel):
-    item_id: str
-    item_type: str = "chapter"
-
-class VoteRequest(BaseModel):
-    item_id: str
-    item_type: str
-    amount: int
-
 class PlanCreate(BaseModel):
     name: str
     description: str

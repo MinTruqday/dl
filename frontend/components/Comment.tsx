@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  getNestedCommentsAPI,
-  createNestedCommentAPI,
-} from "@/services/social.service";
+  getCommentsByItemAPI,
+  createCommentAPI,
+} from "@/services/comment.service";
 import {
   MessageSquare,
   CornerDownRight,
@@ -33,7 +33,7 @@ interface Comment {
 
 interface CommentProps {
   itemId: string;
-  itemType?: "document" | "post";
+  itemType?: "document";
 }
 
 export default function Comment({
@@ -51,8 +51,8 @@ export default function Comment({
   const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getNestedCommentsAPI(itemId);
-      setComments(Array.isArray(data.data) ? data.data : []);
+      const data = await getCommentsByItemAPI(itemId);
+      setComments(Array.isArray(data.data) ? data.data : data || []);
     } catch (err: any) {
       showToast("Không thể kết nối hệ thống thảo luận", "error");
     } finally {
@@ -74,8 +74,9 @@ export default function Comment({
 
     setSubmitting(true);
     try {
-      await createNestedCommentAPI(itemId, {
-        text: newText,
+      await createCommentAPI({
+        item_id: itemId,
+        content: newText,
         parent_id: replyTo,
         item_type: itemType,
       });
@@ -96,7 +97,7 @@ export default function Comment({
         <div className="flex items-center gap-4">
           <MessageSquare className="w-5 h-5 text-black" />
           <h3 className="text-sm font-bold text-black uppercase tracking-widest">
-            Thảo luận cộng đồng
+            Thảo luận tài liệu
           </h3>
         </div>
         <div className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">

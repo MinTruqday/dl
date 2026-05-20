@@ -323,8 +323,8 @@ export default function SettingsPage() {
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
                   className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeSection === section.id
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent"
+                    ? "bg-zinc-100 text-black border-zinc-300"
+                    : "bg-white text-zinc-500 border-transparent"
                     }`}
                 >
                   {section.label}
@@ -398,8 +398,8 @@ export default function SettingsPage() {
                           key={font}
                           onClick={() => setFontFamily(font)}
                           className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center rounded-none truncate ${fontFamily === font
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-500 border-zinc-200"
+                            ? "bg-black text-white border-black"
+                            : "bg-white text-zinc-500 border-zinc-200"
                             }`}
                           style={{ fontFamily: font }}
                         >
@@ -475,8 +475,8 @@ export default function SettingsPage() {
                         Chế độ đọc ẩn danh
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Không hiển thị lịch sử đọc và tương tác của bạn trên luồng
-                        cộng đồng.
+                        Không hiển thị lịch sử đọc và tương tác của bạn trên bảng
+                        xếp hạng và luồng chung.
                       </p>
                     </div>
                     <CustomSwitch
@@ -568,8 +568,8 @@ export default function SettingsPage() {
                             if (success) setDefaultVisibility(mode);
                           }}
                           className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none ${defaultVisibility === mode
-                              ? "bg-black text-white border-black"
-                              : "bg-zinc-50 text-zinc-500 border-zinc-200"
+                            ? "bg-black text-white border-black"
+                            : "bg-zinc-50 text-zinc-500 border-zinc-200"
                             }`}
                         >
                           {mode === "public" ? "Công khai" : "Riêng tư"}
@@ -626,7 +626,7 @@ export default function SettingsPage() {
                         Thông báo vi phạm thời gian thực
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm cộng đồng
+                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm quy chế
                         mới.
                       </p>
                     </div>
@@ -773,7 +773,7 @@ export default function SettingsPage() {
                       <div className="grid md:grid-cols-2 gap-4">
                         {[
                           "Xuất bản tài liệu không giới hạn",
-                          "Xây dựng cộng đồng độc giả riêng",
+                          "Xây dựng lượng độc giả trung thành",
                           "Nhận nhuận bút & đóng góp tài chính",
                           "Huy hiệu Tác giả xác minh",
                         ].map((item, i) => (

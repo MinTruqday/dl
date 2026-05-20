@@ -8,7 +8,6 @@ from services.profile import ProfileService
 from services.setting import SettingService
 from services.identity import IdentityService
 from services.privacy import PrivacyService
-from services.interaction import InteractionService
 from services.library import LibraryService
 from pydantic import BaseModel
 import json
@@ -64,7 +63,7 @@ async def get_badges(current_user: UserInDB = Depends(get_current_user)):
 
 @router.post("/chan/{target_id}", response_model=APIResponse[Any])
 async def block_user(target_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await InteractionService.block_user(target_id, current_user), message="Đã chặn người dùng này thành công", status=200)
+    return APIResponse(data=await ProfileService.block_user(target_id, current_user), message="Đã chặn người dùng này thành công", status=200)
 
 @router.put("/trang-thuong-hieu", response_model=APIResponse[Any])
 async def update_brand_page(data: BrandPageUpdate, current_user: UserInDB = Depends(get_current_user)):

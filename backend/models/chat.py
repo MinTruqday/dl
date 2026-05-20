@@ -8,16 +8,21 @@ class MessageBase(BaseModel):
     receiver_id: str
     content: Optional[str] = None
     image_url: Optional[str] = None
+    audio_url: Optional[str] = None
     reply_to_id: Optional[str] = None
     is_pinned: bool = False
     is_read: bool = False
     is_edited: bool = False
+    is_recalled: bool = False
+    reactions: List[dict] = []
+    self_destruct_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
 class MessageCreate(BaseModel):
     receiver_id: str
     content: Optional[str] = None
     image_url: Optional[str] = None
+    audio_url: Optional[str] = None
     reply_to_id: Optional[str] = None
 
 class MessageInDB(MessageBase):

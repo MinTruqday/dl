@@ -77,21 +77,21 @@ interface BookmarkFolder {
 export default function LibraryPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { showToast } = useToast();
-  
+
   const [pinnedDocs, setPinnedDocs] = useState<PinnedDocument[]>([]);
   const [continueDocs, setContinueDocs] = useState<ContinueReading[]>([]);
   const [folders, setFolders] = useState<BookmarkFolder[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [readingLists, setReadingLists] = useState<any[]>([]);
   const [series, setSeries] = useState<any[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState<
     "overview" | "history" | "folders" | "lists" | "series"
   >("overview");
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createType, setCreateType] = useState<"folder" | "list" | "series">("folder");
   const [newFolderName, setNewFolderName] = useState("");
@@ -100,7 +100,7 @@ export default function LibraryPage() {
     description: "",
     is_public: true,
   });
-  
+
   const [isCreating, setIsCreating] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -234,18 +234,16 @@ export default function LibraryPage() {
           <div className="flex border border-zinc-200 bg-white rounded-none">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 ${
-                viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500"
-              }`}
+              className={`p-2 ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500"
+                }`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <div className="w-[1px] bg-zinc-200" />
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 ${
-                viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-500"
-              }`}
+              className={`p-2 ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-500"
+                }`}
             >
               <ListIcon className="w-4 h-4" />
             </button>
@@ -264,11 +262,10 @@ export default function LibraryPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as any)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
-                    activeTab === t.id
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeTab === t.id
                       ? "bg-zinc-100 text-black border-zinc-300"
                       : "bg-white text-zinc-500 border-transparent"
-                  }`}
+                    }`}
                 >
                   {t.label}
                   {activeTab === t.id && <ChevronRight className="w-4 h-4" />}
@@ -362,18 +359,16 @@ export default function LibraryPage() {
                       <Link
                         key={doc.document_id}
                         href={`/tai-lieu/${doc.document_slug}`}
-                        className={`border border-zinc-200 bg-white group ${
-                          viewMode === "grid"
+                        className={`border border-zinc-200 bg-white group ${viewMode === "grid"
                             ? "flex flex-col"
                             : "flex items-start gap-6 p-4"
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`${
-                            viewMode === "grid"
+                          className={`${viewMode === "grid"
                               ? "aspect-[3/4] border-b border-zinc-200"
                               : "w-24 h-32 border border-zinc-200"
-                          } bg-zinc-50 overflow-hidden relative shrink-0`}
+                            } bg-zinc-50 overflow-hidden relative shrink-0`}
                         >
                           {doc.cover_url ? (
                             <img
@@ -398,11 +393,10 @@ export default function LibraryPage() {
                           </div>
                         </div>
                         <div
-                          className={`flex-1 min-w-0 ${
-                            viewMode === "grid"
+                          className={`flex-1 min-w-0 ${viewMode === "grid"
                               ? "p-4"
                               : "flex flex-col justify-center h-32"
-                          }`}
+                            }`}
                         >
                           <h4 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
                             {doc.document_title}
@@ -454,7 +448,7 @@ export default function LibraryPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[...folders.slice(0, 2), ...readingLists.slice(0, 2)].length >
-                  0 ? (
+                    0 ? (
                     [...folders.slice(0, 2), ...readingLists.slice(0, 2)].map(
                       (item) => (
                         <Link
@@ -490,8 +484,8 @@ export default function LibraryPage() {
                               {(item as any).is_public === undefined
                                 ? "Lưu trữ"
                                 : (item as any).is_public
-                                ? "Công khai"
-                                : "Riêng tư"}
+                                  ? "Công khai"
+                                  : "Riêng tư"}
                             </span>
                           </div>
                         </Link>
@@ -534,23 +528,20 @@ export default function LibraryPage() {
                   history.map((item, idx) => (
                     <div
                       key={item.document_id + idx}
-                      className={`border border-zinc-200 bg-white relative group ${
-                        isDeletingHistory === item.document_id
+                      className={`border border-zinc-200 bg-white relative group ${isDeletingHistory === item.document_id
                           ? "opacity-50"
                           : ""
-                      } ${
-                        viewMode === "grid"
+                        } ${viewMode === "grid"
                           ? "flex flex-col"
                           : "flex items-start gap-6 p-4"
-                      }`}
+                        }`}
                     >
                       <Link
                         href={`/tai-lieu/${item.document_slug}`}
-                        className={`block ${
-                          viewMode === "grid"
+                        className={`block ${viewMode === "grid"
                             ? "aspect-[3/4] border-b border-zinc-200"
                             : "w-24 h-32 border border-zinc-200"
-                        } bg-zinc-50 overflow-hidden relative shrink-0`}
+                          } bg-zinc-50 overflow-hidden relative shrink-0`}
                       >
                         {item.cover_url ? (
                           <img
@@ -577,9 +568,8 @@ export default function LibraryPage() {
                         </div>
                       </Link>
                       <div
-                        className={`flex-1 min-w-0 flex flex-col justify-between ${
-                          viewMode === "grid" ? "p-4" : "h-32"
-                        }`}
+                        className={`flex-1 min-w-0 flex flex-col justify-between ${viewMode === "grid" ? "p-4" : "h-32"
+                          }`}
                       >
                         <div>
                           <Link href={`/tai-lieu/${item.document_slug}`}>
@@ -847,10 +837,10 @@ export default function LibraryPage() {
           </button>
         </ModalFooter>
       </Modal>
-      <LibraryAISynthesisModal 
-        isOpen={isSynthesisOpen} 
-        onClose={() => setIsSynthesisOpen(false)} 
-        availableDocuments={[...pinnedDocs, ...continueDocs, ...history.slice(0, 20)]} 
+      <LibraryAISynthesisModal
+        isOpen={isSynthesisOpen}
+        onClose={() => setIsSynthesisOpen(false)}
+        availableDocuments={[...pinnedDocs, ...continueDocs, ...history.slice(0, 20)]}
       />
     </div>
   );
@@ -894,7 +884,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
   };
 
   const toggleDoc = (id: string) => {
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -927,11 +917,10 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
                 <button
                   key={doc.document_id || doc.id}
                   onClick={() => toggleDoc(doc.document_id || doc.id)}
-                  className={`w-full flex items-start gap-3 p-3 text-left transition-all border ${
-                    selectedIds.includes(doc.document_id || doc.id)
+                  className={`w-full flex items-start gap-3 p-3 text-left transition-all border ${selectedIds.includes(doc.document_id || doc.id)
                       ? "bg-black text-white border-black"
                       : "bg-white text-black border-zinc-200 hover:border-black"
-                  }`}
+                    }`}
                 >
                   <FileText className="w-4 h-4 mt-0.5 shrink-0 text-zinc-400" />
                   <span className="text-xs font-medium line-clamp-2 leading-tight">
@@ -971,8 +960,8 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
               {loading ? (
                 <div className="h-full flex flex-col items-center justify-center gap-6">
                   <div className="relative">
-                     <Combine className="w-12 h-12 text-black animate-pulse" />
-                     <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-zinc-300 animate-bounce" />
+                    <Combine className="w-12 h-12 text-black animate-pulse" />
+                    <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-zinc-300 animate-bounce" />
                   </div>
                   <div className="text-center space-y-2">
                     <p className="text-sm font-bold uppercase tracking-widest text-black">Đang liên kết dữ liệu</p>

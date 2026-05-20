@@ -32,7 +32,7 @@ export default function ApprovalPage() {
   const handleReview = async (documentId: string, status: string) => {
     setIsProcessing(true);
     try {
-      await moderateDocumentAPI(documentId, status, status === "PUBLISHED" ? "Đã phê duyệt dựa trên tiêu chuẩn nội dung." : "Nội dung không đáp ứng yêu cầu cộng đồng.");
+      await moderateDocumentAPI(documentId, status, status === "PUBLISHED" ? "Đã phê duyệt dựa trên tiêu chuẩn nội dung." : "Nội dung không đáp ứng yêu cầu hệ thống.");
       showToast(status === "PUBLISHED" ? "Đã phê duyệt tài liệu." : "Đã từ chối tài liệu.", "success");
       fetchPending();
       setConfirmModal(null);

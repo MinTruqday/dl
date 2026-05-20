@@ -3,10 +3,12 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
 from models.user import UserInDB, RoleEnum, NotificationSettingsUpdate
-from models.social import NewsletterRequest
 from api.dependency import get_current_user, get_current_user_token_param, require_role, RateLimiter
 from services.notification import NotificationService
 from pydantic import BaseModel
+
+class NewsletterRequest(BaseModel):
+    email: str
 
 router = APIRouter(prefix="/thong-bao")
 

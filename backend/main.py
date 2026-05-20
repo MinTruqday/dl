@@ -21,9 +21,6 @@ from api.comment import router as comment_router
 from api.document import router as document_router
 from api.upload import router as upload_router
 from api.profile import router as profile_router
-from api.social import router as social_router
-from api.post import router as post_router
-from api.discussion import router as discussion_router
 from api.editor import router as editor_router
 from api.version import router as version_router
 from api.review import router as review_router
@@ -35,7 +32,6 @@ from api.deposit import router as deposit_router
 from api.read import router as read_router, reader_router
 from api.monetization import router as monetization_router
 from api.withdrawal import router as withdrawal_router
-from api.story import router as story_router
 from api.rag import router as rag_router
 from api.inference import router as inference_router
 from api.chat import router as chat_router
@@ -190,10 +186,6 @@ app.include_router(wallet_router)
 app.include_router(deposit_router)
 app.include_router(export_router)
 app.include_router(upload_router)
-app.include_router(social_router)
-app.include_router(post_router)
-app.include_router(discussion_router)
-app.include_router(story_router)
 app.include_router(comment_router)
 app.include_router(document_router)
 app.include_router(review_router)

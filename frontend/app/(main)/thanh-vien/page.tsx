@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { getSocialRankingAPI } from "@/services/social.service";
+import { getSocialRankingAPI } from "@/services/rank.service";
 import { Search, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/contexts/Toast";
@@ -110,15 +110,6 @@ export default function AuthorsPage() {
                   {author.bio || "Chưa cập nhật nội dung giới thiệu cá nhân."}
                 </p>
                 <div className="flex items-center gap-6 text-[10px] font-bold text-zinc-300 w-full justify-center pt-8 border-t border-zinc-50">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-black text-[14px]">
-                      {author.followers_count || 0}
-                    </span>
-                    <span className="text-[9px] font-bold opacity-60">
-                      Theo dõi
-                    </span>
-                  </div>
-                  <div className="w-px h-8 bg-zinc-100"></div>
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-black text-[14px]">
                       {author.points || 0}

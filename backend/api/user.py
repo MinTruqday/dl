@@ -64,3 +64,10 @@ async def add_moderator_note(user_id: str, req: NoteRequest, current_user: UserI
         message="Thêm ghi chú thành công",
         status=201
     )
+
+@router.get("/tim-kiem", response_model=APIResponse[Any])
+async def search_users(q: str = "", limit: int = 10):
+    return APIResponse(
+        data=await UserService.search_users(q, limit),
+        message="Tìm kiếm người dùng thành công"
+    )

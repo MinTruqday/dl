@@ -43,47 +43,12 @@ export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   return data;
 }
 
-
-
-export const searchUsersAPI = async (query: string, limit: number = 10) => {
-  const res = await fetch(
-    `${API_URL}/cong-dong/tim-kiem-nguoi-dung?q=${encodeURIComponent(query)}&limit=${limit}`,
-  );
+export async function searchUsersAPI(query: string, limit: number = 10) {
+  const res = await fetch(`${API_URL}/nguoi-dung/tim-kiem?q=${encodeURIComponent(query)}&limit=${limit}`, {
+    headers: getAuthHeaders(),
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tìm kiếm người dùng");
   return data;
-};
-
-export async function followUserAPI(userId: string) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thực hiện thao tác này");
-  const res = await fetch(`${API_URL}/cong-dong/nguoi-dung/${userId}/nguoi-theo-doi`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Theo dõi người dùng thất bại");
-  return data;
 }
 
-export async function muteUserAPI(userId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/cong-dong/nguoi-dung/${userId}/tam-an`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạm ẩn người dùng thất bại");
-  return data;
-}
-
-export async function blockUserAPI(userId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/cong-dong/nguoi-dung/${userId}/chan`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Chặn người dùng thất bại");
-  return data;
-}

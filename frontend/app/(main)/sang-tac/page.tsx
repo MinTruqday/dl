@@ -733,7 +733,7 @@ function StudioContent() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
                       { label: "Tổng lượt xem", val: stats?.total_views || 0, icon: Eye },
-                      { label: "Người theo dõi", val: stats?.followers_count || 0, icon: Database },
+                      { label: "Kinh nghiệm", val: stats?.total_points || 0, icon: Database },
                       { label: "Doanh thu (dl)", val: revenue?.available_balance || 0, icon: Wallet },
                     ].map((s, i) => (
                       <div key={i} className="bg-white p-6 border border-zinc-200 flex flex-col justify-between h-32 rounded-none">

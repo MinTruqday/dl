@@ -227,14 +227,12 @@ class NotificationService:
         if not settings:
             return {
                 "enable_comment_notifications": True,
-                "enable_follow_notifications": True,
                 "enable_mention_notifications": True,
                 "enable_system_notifications": True,
                 "enable_email_digest": False,
             }
         return {
             "enable_comment_notifications": settings.get("enable_comment_notifications", True),
-            "enable_follow_notifications": settings.get("enable_follow_notifications", True),
             "enable_mention_notifications": settings.get("enable_mention_notifications", True),
             "enable_system_notifications": settings.get("enable_system_notifications", True),
             "enable_email_digest": settings.get("enable_email_digest", False),
@@ -247,7 +245,6 @@ class NotificationService:
             {"user_id": str(current_user.id)},
             {"$set": {
                 "enable_comment_notifications": data.get("enable_comment_notifications", True),
-                "enable_follow_notifications": data.get("enable_follow_notifications", True),
                 "enable_mention_notifications": data.get("enable_mention_notifications", True),
                 "enable_system_notifications": data.get("enable_system_notifications", True),
                 "enable_email_digest": data.get("enable_email_digest", False),

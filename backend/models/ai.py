@@ -37,13 +37,3 @@ class AIReviewRequest(BaseModel):
 class AISynthesisRequest(BaseModel):
     document_ids: List[str]
     query: str
-
-class AIPostRequest(BaseModel):
-    text: str
-    context: Optional[str] = ""
-
-class AIStoryRequest(BaseModel):
-    text: str
-
-class AIEngagementRequest(BaseModel):
-    content: str

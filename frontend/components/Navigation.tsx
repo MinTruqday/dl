@@ -79,11 +79,11 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
         <div className="h-full flex items-center justify-between px-6 max-w-[1440px] mx-auto w-full">
           <div className="flex items-center gap-6">
             {onToggleSidebar && (
-                <button
-                  onClick={onToggleSidebar}
-                  className="p-2 text-zinc-500 transition-colors"
-                  aria-label="Mở trình đơn"
-                >
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 text-zinc-500 transition-colors"
+                aria-label="Mở trình đơn"
+              >
                 <MenuIcon className="w-5 h-5" />
               </button>
             )}
@@ -91,7 +91,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
               href="/"
               className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 group transition-colors"
             >
-                <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
+              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
                 dl
               </div>
               <span className="hidden sm:block">DocLib</span>
@@ -129,9 +129,8 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-2 text-zinc-500 transition-colors ${
-                      showNotifications ? "bg-zinc-100 text-black" : ""
-                    }`}
+                    className={`relative p-2 text-zinc-500 transition-colors ${showNotifications ? "bg-zinc-100 text-black" : ""
+                      }`}
                     aria-label="Thông báo"
                   >
                     <Bell className="w-5 h-5" />
@@ -158,9 +157,8 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-5 py-4 cursor-pointer transition-colors ${
-                                  !notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
-                                }`}
+                                className={`px-5 py-4 cursor-pointer transition-colors ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
+                                  }`}
                                 onClick={() => {
                                   if (!notif.is_read) markAsRead(notif._id);
                                   if (notif.link) router.push(notif.link);
@@ -203,9 +201,8 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 transition-colors ${
-                      showUserMenu ? "bg-zinc-100 text-black" : ""
-                    }`}
+                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 transition-colors ${showUserMenu ? "bg-zinc-100 text-black" : ""
+                      }`}
                   >
                     <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-none overflow-hidden">
                       {user.avatar_url ? (
@@ -232,9 +229,8 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform ${
-                        showUserMenu ? "rotate-180 text-black" : ""
-                      }`}
+                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform ${showUserMenu ? "rotate-180 text-black" : ""
+                        }`}
                     />
                   </button>
 
@@ -278,10 +274,10 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                  <Link
-                    href="/dang-nhap"
-                    className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors"
-                  >
+                <Link
+                  href="/dang-nhap"
+                  className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors"
+                >
                   Đăng nhập
                 </Link>
                 <Link

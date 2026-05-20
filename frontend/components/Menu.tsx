@@ -78,27 +78,23 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`flex items-center text-[13px] tracking-tight transition-colors group relative w-full h-12 shrink-0 rounded-none ${
-          isOpen ? "px-6 gap-4" : "px-0 justify-center"
-        } ${
-          active
+        className={`flex items-center text-[13px] tracking-tight transition-colors group relative w-full h-12 shrink-0 rounded-none ${isOpen ? "px-6 gap-4" : "px-0 justify-center"
+          } ${active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
             : "font-medium text-zinc-500 border-l-2 border-transparent"
-        }`}
+          }`}
       >
         <div className="flex items-center justify-center shrink-0 w-6">
           <Icon
-            className={`w-[18px] h-[18px] ${
-              active
+            className={`w-[18px] h-[18px] ${active
                 ? "text-black"
                 : "text-zinc-400 transition-colors"
-            }`}
+              }`}
           />
         </div>
         <span
-          className={`whitespace-nowrap overflow-hidden transition-all duration-200 font-sans ${
-            isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
-          }`}
+          className={`whitespace-nowrap overflow-hidden transition-all duration-200 font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
+            }`}
         >
           {label}
         </span>
@@ -127,12 +123,6 @@ export default function Menu({
       >
         <div className="flex-1 overflow-y-auto py-4 scroll-smooth flex flex-col pb-20 no-scrollbar">
           <NavLink icon={Search} label="Khám phá" href="/" />
-          <NavLink
-            icon={Users}
-            label="Cộng đồng"
-            href="/cong-dong"
-            requireAuth
-          />
           <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />
           <NavLink
             icon={MessageSquare}
@@ -159,7 +149,7 @@ export default function Menu({
                   <div className="h-px w-6 mx-auto bg-zinc-200" />
                 )}
               </div>
-              
+
               <NavLink
                 href="/khoi-tao"
                 label="Sáng tác"

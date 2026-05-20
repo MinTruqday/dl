@@ -90,6 +90,7 @@ code {
   }
 
   @media (max-width: 768px) {
+
     .app-main,
     .app-main.sidebar-collapsed {
       margin-left: 0;

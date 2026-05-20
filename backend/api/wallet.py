@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from api.dependency import get_current_user
 from models.user import UserInDB
-from models.wallet import RedeemVoucherRequest, VoteRequest, UnlockRequest, TipRequest
+from models.wallet import RedeemVoucherRequest, TipRequest
 from services.wallet import WalletService
 from services.donation import DonationService
 from services.purchase import PurchaseService
@@ -28,14 +28,6 @@ async def get_history(
     current_user: UserInDB = Depends(get_current_user)
 ):
     return APIResponse(data=await WalletService.get_history(current_user, cursor, limit, tx_type, skip), message="Lấy lịch sử giao dịch thành công")
-
-@router.post("/binh-chon", response_model=APIResponse[Any])
-async def vote_item(req: VoteRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await DonationService.vote_item(req, current_user), message="Bình chọn thành công")
-
-@router.post("/mo-khoa", response_model=APIResponse[Any])
-async def unlock_post(req: UnlockRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await DonationService.unlock_post(req, current_user), message="Mở khóa bài viết thành công")
 
 @router.post("/tien-ung-ho/{target_user_id}", response_model=APIResponse[Any])
 async def virtual_tip(target_user_id: str, req: TipRequest, current_user: UserInDB = Depends(get_current_user)):

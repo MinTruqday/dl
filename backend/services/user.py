@@ -225,6 +225,30 @@ class UserService:
         return result
         
     @staticmethod
+    async def search_users(query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        db = db_client.mongodb.get_default_database()
+        search_query = {
+            "$or": [
+                {"full_name": {"$regex": query, "$options": "i"}},
+                {"username": {"$regex": query, "$options": "i"}},
+                {"slug": {"$regex": query, "$options": "i"}},
+            ],
+            "is_active": True,
+        }
+        users = await db["users"].find(search_query, {"full_name": 1, "username": 1, "slug": 1, "avatar_url": 1, "role": 1}).limit(limit).to_list(length=limit)
+        return [
+            {
+                "_id": str(u["_id"]),
+                "full_name": u.get("full_name") or u.get("username") or "Người dùng",
+                "username": u.get("username", ""),
+                "slug": u.get("slug", ""),
+                "avatar_url": u.get("avatar_url"),
+                "role": u.get("role", "READER")
+            }
+            for u in users
+        ]
+
+    @staticmethod
     async def unlock_accounts_task():
         db = db_client.mongodb.get_default_database()
         now = datetime.now(timezone.utc)

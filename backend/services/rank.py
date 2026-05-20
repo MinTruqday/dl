@@ -47,24 +47,14 @@ class RankService:
                 "foreignField": "user_id",
                 "as": "user_comments"
             }},
-            {"$lookup": {
-                "from": "status_updates",
-                "localField": "_id",
-                "foreignField": "user_id",
-                "as": "user_posts"
-            }},
             {"$project": {
                 "full_name": 1,
                 "avatar_url": 1,
                 "role": 1,
-                "comment_count": {"$size": "$user_comments"},
-                "post_count": {"$size": "$user_posts"}
+                "comment_count": {"$size": "$user_comments"}
             }},
             {"$addFields": {
-                "score": {"$add": [
-                    {"$multiply": ["$comment_count", 5]},
-                    {"$multiply": ["$post_count", 10]}
-                ]}
+                "score": {"$multiply": ["$comment_count", 5]}
             }},
             {"$sort": {"score": -1}},
             {"$limit": limit}
@@ -104,5 +94,5 @@ class RankService:
             "bio": a.get("bio", ""),
             "slug": a.get("slug", ""),
             "popularity_score": a.get("total_views", 0),
-            "followers_count": a.get("followers_count", len(a.get("followers", [])))
+            "followers_count": 0
         } for a in authors]

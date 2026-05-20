@@ -7,8 +7,7 @@ from models.user import UserInDB
 from models.ai import (
     AITextRequest, FlashcardRequest, FlashcardReviewRequest,
     AIMindmapRequest, AICitationRequest, AIToneRequest,
-    AIReviewRequest, AISynthesisRequest, AIPostRequest,
-    AIStoryRequest, AIEngagementRequest
+    AIReviewRequest, AISynthesisRequest
 )
 from core.response import APIResponse
 from services.ai import AIService
@@ -96,13 +95,6 @@ async def delete_session(session_id: str, current_user: UserInDB = Depends(get_c
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return APIResponse(data={}, message="Xóa hội thoại thành công")
 
-@router.get("/cong-dong/tom-tat-bang-tin", response_model=APIResponse[Any])
-async def get_social_feed_summary(current_user: UserInDB = Depends(check_quota)):
-    return APIResponse(
-        data={"summary": await AIService.generate_feed_summary(current_user)},
-        message="Tạo tóm tắt bảng tin thành công"
-    )
-
 @router.get("/tai-lieu/{document_id}/cam-quan", response_model=APIResponse[Any])
 async def get_reader_sentiment(document_id: str, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
@@ -143,25 +135,4 @@ async def multi_doc_synthesis(req: AISynthesisRequest, current_user: UserInDB = 
     return APIResponse(
         data=await AIService.multi_doc_synthesis(req.document_ids, req.query, current_user),
         message="Tổng hợp đa tài liệu thành công"
-    )
-
-@router.post("/tao-bai-dang-mang-xa-hoi", response_model=APIResponse[Any])
-async def create_post(req: AIPostRequest, current_user: UserInDB = Depends(check_quota)):
-    return APIResponse(
-        data=await AIService.create_post(req.text, req.context, current_user),
-        message="Tạo bài đăng thành công"
-    )
-
-@router.post("/tao-tin-mang-xa-hoi", response_model=APIResponse[Any])
-async def create_story(req: AIStoryRequest, current_user: UserInDB = Depends(check_quota)):
-    return APIResponse(
-        data=await AIService.create_story(req.text, current_user),
-        message="Tạo tin thành công"
-    )
-
-@router.post("/goi-y-tuong-tac", response_model=APIResponse[Any])
-async def suggest_engagement(req: AIEngagementRequest, current_user: UserInDB = Depends(check_quota)):
-    return APIResponse(
-        data=await AIService.suggest_engagement(req.content, current_user),
-        message="Gợi ý tương tác thành công"
     )

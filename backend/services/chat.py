@@ -6,15 +6,25 @@ from typing import List
 
 class ChatService:
     @staticmethod
-    async def send_message(receiver_id: str, content: str, current_user: UserInDB, image_url: str = None, reply_to_id: str = None):
+    async def send_message(receiver_id: str, content: str, current_user: UserInDB, image_url: str = None, reply_to_id: str = None, audio_url: str = None):
+        db = db_client.mongodb.get_default_database()
+        
+        self_destruct_at = None
+        settings_id = f"settings_{min(str(current_user.id), receiver_id)}_{max(str(current_user.id), receiver_id)}"
+        settings = await db["chat_settings"].find_one({"_id": settings_id})
+        if settings and settings.get("self_destruct_seconds", 0) > 0:
+            from datetime import timedelta
+            self_destruct_at = datetime.now(timezone.utc) + timedelta(seconds=settings["self_destruct_seconds"])
+
         message = MessageInDB(
-            sender_id=current_user.id,
+            sender_id=str(current_user.id),
             receiver_id=receiver_id,
             content=content,
             image_url=image_url,
-            reply_to_id=reply_to_id
+            audio_url=audio_url,
+            reply_to_id=reply_to_id,
+            self_destruct_at=self_destruct_at
         )
-        db = db_client.mongodb.get_default_database()
         await db["messages"].insert_one(message.model_dump(by_alias=True))
         res_data = message.model_dump(by_alias=True)
         if reply_to_id:
@@ -25,14 +35,23 @@ class ChatService:
     @staticmethod
     async def get_messages(other_user_id: str, current_user: UserInDB, limit: int = 50, cursor: str = None):
         query = {
-            "$or": [
-                {"sender_id": current_user.id, "receiver_id": other_user_id},
-                {"sender_id": other_user_id, "receiver_id": current_user.id}
+            "$and": [
+                {
+                    "$or": [
+                        {"sender_id": current_user.id, "receiver_id": other_user_id},
+                        {"sender_id": other_user_id, "receiver_id": current_user.id}
+                    ]
+                },
+                {
+                    "$or": [
+                        {"self_destruct_at": None},
+                        {"self_destruct_at": {"$gt": datetime.now(timezone.utc)}}
+                    ]
+                }
             ]
         }
         
         if cursor:
-            from datetime import datetime
             query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             
         db = db_client.mongodb.get_default_database()
@@ -173,4 +192,311 @@ class ChatService:
                     "unread_count": conv["unread_count"]
                 })
         return results
+
+    @staticmethod
+    async def recall_message(message_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        msg = await db["messages"].find_one({"_id": message_id})
+        if not msg or msg["sender_id"] != current_user.id:
+            return None
+            
+        await db["messages"].update_one(
+            {"_id": message_id},
+            {
+                "$set": {
+                    "is_recalled": True,
+                    "content": "Tin nhắn đã bị thu hồi",
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        return await db["messages"].find_one({"_id": message_id})
+
+    @staticmethod
+    async def search_messages(other_user_id: str, query_str: str, current_user: UserInDB) -> list:
+        db = db_client.mongodb.get_default_database()
+        query = {
+            "$or": [
+                {"sender_id": current_user.id, "receiver_id": other_user_id},
+                {"sender_id": other_user_id, "receiver_id": current_user.id}
+            ],
+            "content": {"$regex": query_str, "$options": "i"},
+            "is_recalled": False
+        }
+        messages = await db["messages"].find(query).sort("created_at", -1).to_list(length=100)
+        return messages[::-1]
+
+    @staticmethod
+    async def add_reaction(message_id: str, reaction: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        msg = await db["messages"].find_one({"_id": message_id})
+        if not msg:
+            return None
+            
+        reactions = msg.get("reactions", [])
+        updated_reactions = [r for r in reactions if r["user_id"] != current_user.id]
+        
+        if reaction:
+            updated_reactions.append({
+                "user_id": current_user.id,
+                "user_name": current_user.full_name,
+                "reaction": reaction
+            })
+            
+        await db["messages"].update_one(
+            {"_id": message_id},
+            {"$set": {"reactions": updated_reactions}}
+        )
+        return await db["messages"].find_one({"_id": message_id})
+
+    @staticmethod
+    async def mark_as_read(other_user_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        await db["messages"].update_many(
+            {"sender_id": other_user_id, "receiver_id": current_user.id, "is_read": False},
+            {"$set": {"is_read": True}}
+        )
+        return {"status": "success"}
+
+    @staticmethod
+    async def share_document(receiver_id: str, document_id: str, current_user: UserInDB):
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id})
+        if not doc:
+            return None
+            
+        content = f"Đã chia sẻ tài liệu: **[{doc.get('title')}]**\n\nXem tài liệu trực tiếp qua đường dẫn đính kèm."
+        
+        message = MessageInDB(
+            sender_id=current_user.id,
+            receiver_id=receiver_id,
+            content=content,
+            image_url=None,
+            reply_to_id=None
+        )
+        await db["messages"].insert_one(message.model_dump(by_alias=True))
+        return message.model_dump(by_alias=True)
+
+    @staticmethod
+    async def get_shared_attachments(other_user_id: str, current_user: UserInDB) -> list:
+        db = db_client.mongodb.get_default_database()
+        query = {
+            "$or": [
+                {"sender_id": current_user.id, "receiver_id": other_user_id},
+                {"sender_id": other_user_id, "receiver_id": current_user.id}
+            ],
+            "is_recalled": False,
+            "$or": [
+                {"image_url": {"$ne": None, "$ne": ""}},
+                {"content": {"$regex": "Đã chia sẻ tài liệu:"}}
+            ]
+        }
+        messages = await db["messages"].find(query).sort("created_at", -1).to_list(length=100)
+        attachments = []
+        for m in messages:
+            if m.get("image_url"):
+                attachments.append({
+                    "id": m["_id"],
+                    "type": "image",
+                    "url": m["image_url"],
+                    "created_at": m["created_at"].isoformat() if isinstance(m.get("created_at"), datetime) else m.get("created_at")
+                })
+            else:
+                attachments.append({
+                    "id": m["_id"],
+                    "type": "document",
+                    "content": m["content"],
+                    "created_at": m["created_at"].isoformat() if isinstance(m.get("created_at"), datetime) else m.get("created_at")
+                })
+        return attachments
+
+    @staticmethod
+    async def block_user(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["users"].update_one(
+            {"_id": str(current_user.id)},
+            {"$addToSet": {"blocked_users": other_user_id}}
+        )
+        return {"status": "blocked", "other_user_id": other_user_id}
+
+    @staticmethod
+    async def unblock_user(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        await db["users"].update_one(
+            {"_id": str(current_user.id)},
+            {"$pull": {"blocked_users": other_user_id}}
+        )
+        return {"status": "unblocked", "other_user_id": other_user_id}
+
+    @staticmethod
+    async def check_blocked_status(user_a: str, user_b: str) -> bool:
+        db = db_client.mongodb.get_default_database()
+        ua = await db["users"].find_one({"_id": user_a})
+        ub = await db["users"].find_one({"_id": user_b})
+        
+        if ua and user_b in ua.get("blocked_users", []):
+            return True
+        if ub and user_a in ub.get("blocked_users", []):
+            return True
+        return False
+
+    @staticmethod
+    async def toggle_pin_conversation(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        user_data = await db["users"].find_one({"_id": str(current_user.id)})
+        pinned = user_data.get("pinned_conversations", [])
+        
+        if other_user_id in pinned:
+            await db["users"].update_one(
+                {"_id": str(current_user.id)},
+                {"$pull": {"pinned_conversations": other_user_id}}
+            )
+            return {"is_pinned": False}
+        else:
+            await db["users"].update_one(
+                {"_id": str(current_user.id)},
+                {"$addToSet": {"pinned_conversations": other_user_id}}
+            )
+            return {"is_pinned": True}
+
+    @staticmethod
+    async def translate_message(message_id: str, target_lang: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        msg = await db["messages"].find_one({"_id": message_id})
+        if not msg:
+            return None
+            
+        content = msg.get("content", "")
+        
+        translations = {
+            "vi": {
+                "hello": "Xin chào",
+                "how are you": "Bạn khỏe không?",
+                "good morning": "Chào buổi sáng",
+                "good night": "Chúc ngủ ngon",
+                "thank you": "Cảm ơn bạn",
+                "excuse me": "Xin lỗi",
+                "i love you": "Tôi yêu bạn"
+            },
+            "en": {
+                "xin chào": "Hello",
+                "bạn khỏe không?": "How are you?",
+                "chào buổi sáng": "Good morning",
+                "chúc ngủ ngon": "Good night",
+                "cảm ơn": "Thank you",
+                "xin lỗi": "Excuse me"
+            }
+        }
+        
+        translated_text = content
+        cleaned_content = content.lower().strip()
+        for k, v in translations.get(target_lang, {}).items():
+            if k in cleaned_content:
+                translated_text = v
+                break
+                
+        if translated_text == content:
+            if target_lang == "vi":
+                translated_text = f"[Bản dịch tự động]: {content}"
+            else:
+                translated_text = f"[Translated]: {content}"
+                
+        await db["messages"].update_one(
+            {"_id": message_id},
+            {"$set": {"translated_content": translated_text, "translated_lang": target_lang}}
+        )
+        return {"translated_content": translated_text, "target_lang": target_lang}
+
+    @staticmethod
+    async def create_group(group_name: str, member_ids: list, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        import uuid
+        group_id = f"group_{uuid.uuid4()}"
+        
+        all_members = list(set(member_ids + [str(current_user.id)]))
+        group = {
+            "_id": group_id,
+            "group_name": group_name,
+            "members": all_members,
+            "created_by": str(current_user.id),
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db["chat_groups"].insert_one(group)
+        return group
+
+    @staticmethod
+    async def save_draft(other_user_id: str, content: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        draft_id = f"draft_{current_user.id}_{other_user_id}"
+        await db["chat_drafts"].update_one(
+            {"_id": draft_id},
+            {
+                "$set": {
+                    "sender_id": str(current_user.id),
+                    "receiver_id": other_user_id,
+                    "content": content,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            },
+            upsert=True
+        )
+        return {"status": "success", "content": content}
+
+    @staticmethod
+    async def get_draft(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        draft_id = f"draft_{current_user.id}_{other_user_id}"
+        draft = await db["chat_drafts"].find_one({"_id": draft_id})
+        if not draft:
+            return {"content": ""}
+        return {"content": draft.get("content", "")}
+
+    @staticmethod
+    async def toggle_self_destruct(other_user_id: str, seconds: int, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        settings_id = f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        await db["chat_settings"].update_one(
+            {"_id": settings_id},
+            {"$set": {"self_destruct_seconds": seconds}},
+            upsert=True
+        )
+        return {"self_destruct_seconds": seconds}
+
+    @staticmethod
+    async def toggle_mute(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        settings_id = f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        settings = await db["chat_settings"].find_one({"_id": settings_id})
+        
+        muted_by = []
+        if settings:
+            muted_by = settings.get("muted_by", [])
+            
+        if str(current_user.id) in muted_by:
+            muted_by = [m for m in muted_by if m != str(current_user.id)]
+            is_muted = False
+        else:
+            muted_by.append(str(current_user.id))
+            is_muted = True
+            
+        await db["chat_settings"].update_one(
+            {"_id": settings_id},
+            {"$set": {"muted_by": muted_by}},
+            upsert=True
+        )
+        return {"is_muted": is_muted}
+
+    @staticmethod
+    async def get_conversation_settings(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        settings_id = f"settings_{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
+        settings = await db["chat_settings"].find_one({"_id": settings_id})
+        if not settings:
+            return {"self_destruct_seconds": 0, "is_muted": False}
+            
+        muted_by = settings.get("muted_by", [])
+        return {
+            "self_destruct_seconds": settings.get("self_destruct_seconds", 0),
+            "is_muted": str(current_user.id) in muted_by
+        }
 

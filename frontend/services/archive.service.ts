@@ -39,6 +39,118 @@ export async function deleteArchiveAPI(archiveId: string) {
   return result;
 }
 
+export async function renameArchiveAPI(archiveId: string, filename: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/doi-ten`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({ filename }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể đổi tên tệp tin");
+  return result;
+}
+
+export async function togglePinArchiveAPI(archiveId: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/ghim`, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + token },
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể thay đổi trạng thái ghim");
+  return result;
+}
+
+export async function restoreArchiveAPI(archiveId: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/khoi-phuc`, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + token },
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể khôi phục tệp tin");
+  return result;
+}
+
+export async function permanentlyDeleteArchiveAPI(archiveId: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/vinh-vien`, {
+    method: "DELETE",
+    headers: { Authorization: "Bearer " + token },
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể xóa vĩnh viễn tệp tin");
+  return result;
+}
+
+export async function updateArchiveDescriptionAPI(archiveId: string, description: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/mo-ta`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({ description }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể cập nhật mô tả tệp tin");
+  return result;
+}
+
+export async function toggleArchiveVisibilityAPI(archiveId: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/rieng-tu`, {
+    method: "PATCH",
+    headers: { Authorization: "Bearer " + token },
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể thay đổi trạng thái hiển thị");
+  return result;
+}
+
+export async function shareArchiveAPI(archiveId: string, email: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/chia-se`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({ email }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể chia sẻ tệp tin");
+  return result;
+}
+
+export async function updateArchiveTagsAPI(archiveId: string, tags: string[]) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/luu-tru/${archiveId}/nhan`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token,
+    },
+    body: JSON.stringify({ tags }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Không thể cập nhật danh sách nhãn");
+  return result;
+}
+
 export async function uploadDocumentFileAPI(file: File) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");

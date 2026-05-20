@@ -518,7 +518,7 @@ export default function DocumentsPage() {
               </div>
               <div>
                 <ModalTitle className="text-sm font-semibold text-black">Giao thức chia sẻ</ModalTitle>
-                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Thiết lập quyền truy cập cho cộng đồng</ModalDescription>
+                <ModalDescription className="text-xs font-medium text-zinc-500 mt-1">Thiết lập quyền truy cập công khai</ModalDescription>
               </div>
             </div>
           </ModalHeader>

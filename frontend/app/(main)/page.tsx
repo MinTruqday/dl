@@ -88,7 +88,7 @@ export default function ExplorePage() {
               <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-100">
-                 <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>
+                <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>
               </div>
             )}
           </a>
@@ -114,22 +114,20 @@ export default function ExplorePage() {
             <div className="flex border border-zinc-200 bg-white rounded-none">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 ${
-                  viewMode === "grid"
-                    ? "bg-zinc-100 text-black"
-                    : "bg-transparent text-zinc-500"
-                }`}
+                className={`p-2 ${viewMode === "grid"
+                  ? "bg-zinc-100 text-black"
+                  : "bg-transparent text-zinc-500"
+                  }`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <div className="w-[1px] bg-zinc-200" />
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 ${
-                  viewMode === "list"
-                    ? "bg-zinc-100 text-black"
-                    : "bg-transparent text-zinc-500"
-                }`}
+                className={`p-2 ${viewMode === "list"
+                  ? "bg-zinc-100 text-black"
+                  : "bg-transparent text-zinc-500"
+                  }`}
               >
                 <ListIcon className="w-4 h-4" />
               </button>
@@ -147,11 +145,10 @@ export default function ExplorePage() {
             <nav className="flex flex-col gap-1">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
-                  !selectedCategory
-                    ? "bg-zinc-100 text-black border-zinc-300"
-                    : "bg-white text-zinc-500 border-transparent"
-                }`}
+                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${!selectedCategory
+                  ? "bg-zinc-100 text-black border-zinc-300"
+                  : "bg-white text-zinc-500 border-transparent"
+                  }`}
               >
                 Tất cả tài liệu
                 {!selectedCategory && <ChevronRight className="w-4 h-4" />}
@@ -162,11 +159,10 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
-                    selectedCategory === cat
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent"
-                  }`}
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${selectedCategory === cat
+                    ? "bg-zinc-100 text-black border-zinc-300"
+                    : "bg-white text-zinc-500 border-transparent"
+                    }`}
                 >
                   {cat}
                   {selectedCategory === cat && (
@@ -270,45 +266,40 @@ export default function ExplorePage() {
 
             {loading ? (
               <div
-                className={`grid gap-6 ${
-                  viewMode === "grid"
-                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                    : "grid-cols-1"
-                }`}
+                className={`grid gap-6 ${viewMode === "grid"
+                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                  : "grid-cols-1"
+                  }`}
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div
                     key={i}
-                    className={`bg-zinc-50 border border-zinc-200 ${
-                      viewMode === "grid" ? "aspect-[2/3]" : "h-32"
-                    }`}
+                    className={`bg-zinc-50 border border-zinc-200 ${viewMode === "grid" ? "aspect-[2/3]" : "h-32"
+                      }`}
                   />
                 ))}
               </div>
             ) : documents.length > 0 ? (
               <div
-                className={`grid gap-6 ${
-                  viewMode === "grid"
-                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                    : "grid-cols-1"
-                }`}
+                className={`grid gap-6 ${viewMode === "grid"
+                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                  : "grid-cols-1"
+                  }`}
               >
                 {documents.map((document, i) => (
                   <Link
                     key={`doc-${document._id || i}`}
                     href={`/tai-lieu/${document.slug}`}
-                    className={`group flex ${
-                      viewMode === "grid"
-                        ? "flex-col"
-                        : "flex-row gap-6 p-4"
-                    } border border-zinc-200 bg-white rounded-none`}
+                    className={`group flex ${viewMode === "grid"
+                      ? "flex-col"
+                      : "flex-row gap-6 p-4"
+                      } border border-zinc-200 bg-white rounded-none`}
                   >
                     <div
-                      className={`${
-                        viewMode === "grid"
-                          ? "aspect-[2/3] w-full border-b"
-                          : "w-24 h-36 shrink-0 border"
-                      } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
+                      className={`${viewMode === "grid"
+                        ? "aspect-[2/3] w-full border-b"
+                        : "w-24 h-36 shrink-0 border"
+                        } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
                     >
                       {document.cover_url ? (
                         <img
@@ -322,9 +313,8 @@ export default function ExplorePage() {
                     </div>
 
                     <div
-                      className={`${
-                        viewMode === "grid" ? "p-3" : "flex-1 py-1"
-                      } flex flex-col flex-1 gap-2`}
+                      className={`${viewMode === "grid" ? "p-3" : "flex-1 py-1"
+                        } flex flex-col flex-1 gap-2`}
                     >
                       {document.categories && document.categories.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
@@ -342,9 +332,8 @@ export default function ExplorePage() {
                       )}
 
                       <h3
-                        className={`${
-                          viewMode === "grid" ? "text-sm" : "text-base"
-                        } font-semibold text-black line-clamp-2 leading-snug`}
+                        className={`${viewMode === "grid" ? "text-sm" : "text-base"
+                          } font-semibold text-black line-clamp-2 leading-snug`}
                       >
                         {document.title}
                       </h3>
@@ -359,8 +348,8 @@ export default function ExplorePage() {
                         <span className="shrink-0">
                           {document.created_at
                             ? new Date(document.created_at).toLocaleDateString(
-                                "vi-VN"
-                              )
+                              "vi-VN"
+                            )
                             : "Gần đây"}
                         </span>
                       </div>
@@ -385,9 +374,8 @@ export default function ExplorePage() {
                       </div>
 
                       <div
-                        className={`mt-auto pt-3 flex items-center justify-between ${
-                          viewMode === "grid" ? "border-t border-zinc-100" : ""
-                        }`}
+                        className={`mt-auto pt-3 flex items-center justify-between ${viewMode === "grid" ? "border-t border-zinc-100" : ""
+                          }`}
                       >
                         <span className="text-xs font-semibold text-black">
                           {document.is_premium

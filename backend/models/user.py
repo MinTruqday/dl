@@ -35,8 +35,6 @@ class UserBase(BaseModel):
     social_links: Optional[Dict[str, str]] = {}
     pinned_documents: List[str] = []
     bookmarks: List[str] = []
-    following: List[str] = []
-    followers_count: int = 0
     badges: List[str] = []
     is_premium: bool = False
     wallet_balance: int = 0
@@ -116,7 +114,6 @@ class VerifyCodeRequest(BaseModel):
 
 class NotificationSettingsUpdate(BaseModel):
     enable_comment_notifications: bool = True
-    enable_follow_notifications: bool = True
     enable_mention_notifications: bool = True
     enable_system_notifications: bool = True
     enable_email_digest: bool = False
