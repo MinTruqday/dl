@@ -346,5 +346,92 @@ export async function getAcademicMetricsAPI(id: string) {
 }
 
 
+export async function updateAuthorNoteAPI(documentId: string, chapterIndex: number, note: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/ghi-chu-tac-gia`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ chapter_index: chapterIndex, note })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Cập nhật ghi chú thất bại");
+  return data;
+}
 
+export async function updateDRMSettingsAPI(documentId: string, settings: { disable_copy: boolean; hide_from_search: boolean }) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/drm`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(settings)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Cập nhật DRM thất bại");
+  return data;
+}
 
+export async function updateTagsAPI(documentId: string, tags: string[]) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/tags`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ tags })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Cập nhật thẻ thất bại");
+  return data;
+}
+
+export async function schedulePublishAPI(documentId: string, publishAt: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/hen-gio`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ publish_at: publishAt })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Lên lịch xuất bản thất bại");
+  return data;
+}
+
+export async function updateChapterPaywallAPI(documentId: string, chapterIndex: number, isPremium: boolean) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/chuong/${chapterIndex}/tra-phi`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ is_premium: isPremium })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Cập nhật trả phí thất bại");
+  return data;
+}
+
+export async function updateNSFWAPI(documentId: string, isNsfw: boolean) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/nsfw`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ is_nsfw: isNsfw })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Cập nhật giới hạn độ tuổi thất bại");
+  return data;
+}
+
+export async function broadcastNotificationAPI(documentId: string, message: string) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/thong-bao`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Gửi thông báo thất bại");
+  return data;
+}

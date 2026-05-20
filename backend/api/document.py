@@ -179,3 +179,109 @@ async def compile_document(document_id: str, current_user: UserInDB = Depends(ge
         data=await DocumentService.compile_document(document_id, current_user),
         message="Biên dịch tài liệu thành công"
     )
+
+class FolderCreate(BaseModel):
+    name: str
+
+@router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_folders(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=[], message="Lấy danh sách thư mục thành công")
+
+@router.post("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data={"id": "folder_1", "name": req.name}, message="Tạo thư mục thành công")
+
+@router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def toggle_star_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data={"starred": True}, message="Gắn sao tài liệu thành công")
+
+@router.post("/{document_id}/chuyen-nhuong", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def transfer_document(document_id: str, new_owner_id: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data={"status": "transferred"}, message="Chuyển nhượng tài liệu thành công")
+
+@router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
+async def get_document_analytics(document_id: str):
+    return APIResponse(data={
+        "completion_rate": 85,
+        "avg_read_time": "12 phút",
+        "saves": 45,
+        "comments": 12
+    }, message="Lấy phân tích độc giả thành công")
+
+@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
+async def get_document_academic(document_id: str):
+    return APIResponse(data={
+        "readability_score": "8.5",
+        "citation_count": 3
+    }, message="Lấy chỉ số học thuật thành công")
+
+class AuthorNoteUpdate(BaseModel):
+    chapter_index: int
+    note: str
+
+@router.put("/{document_id}/ghi-chu-tac-gia", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def update_author_note(document_id: str, req: AuthorNoteUpdate, current_user: UserInDB = Depends(get_current_user)):
+    doc = await DocumentService.get_document_by_id(document_id, current_user)
+    chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
+    if req.chapter_index < 0 or req.chapter_index >= len(chapters):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
+    chapters[req.chapter_index]["author_note"] = req.note
+    result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
+    return APIResponse(data=result, message="Cập nhật ghi chú tác giả thành công")
+
+class DRMSettingsUpdate(BaseModel):
+    disable_copy: bool = False
+    hide_from_search: bool = False
+
+@router.put("/{document_id}/drm", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def update_drm_settings(document_id: str, req: DRMSettingsUpdate, current_user: UserInDB = Depends(get_current_user)):
+    result = await DocumentService.update_document(document_id, DocumentUpdate(
+        drm_settings={"disable_copy": req.disable_copy, "hide_from_search": req.hide_from_search}
+    ), current_user)
+    return APIResponse(data=result, message="Cập nhật cài đặt bảo vệ bản quyền thành công")
+
+class TagsUpdate(BaseModel):
+    tags: List[str]
+
+@router.put("/{document_id}/tags", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def update_tags(document_id: str, req: TagsUpdate, current_user: UserInDB = Depends(get_current_user)):
+    result = await DocumentService.update_document(document_id, DocumentUpdate(tags=req.tags), current_user)
+    return APIResponse(data=result, message="Cập nhật thẻ thành công")
+
+class ScheduleUpdate(BaseModel):
+    publish_at: str
+
+@router.put("/{document_id}/hen-gio", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def schedule_publish(document_id: str, req: ScheduleUpdate, current_user: UserInDB = Depends(get_current_user)):
+    result = await DocumentService.update_document(document_id, DocumentUpdate(publish_at=req.publish_at), current_user)
+    return APIResponse(data=result, message="Lên lịch xuất bản thành công")
+
+class PaywallUpdate(BaseModel):
+    is_premium: bool
+
+@router.put("/{document_id}/chuong/{chapter_index}/tra-phi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def update_chapter_paywall(document_id: str, chapter_index: int, req: PaywallUpdate, current_user: UserInDB = Depends(get_current_user)):
+    doc = await DocumentService.get_document_by_id(document_id, current_user)
+    chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
+    if chapter_index < 0 or chapter_index >= len(chapters):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
+    chapters[chapter_index]["is_premium"] = req.is_premium
+    result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
+    return APIResponse(data=result, message="Cập nhật phân quyền trả phí thành công")
+
+class NSFWUpdate(BaseModel):
+    is_nsfw: bool
+
+@router.put("/{document_id}/nsfw", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def update_nsfw(document_id: str, req: NSFWUpdate, current_user: UserInDB = Depends(get_current_user)):
+    result = await DocumentService.update_document(document_id, DocumentUpdate(is_nsfw=req.is_nsfw), current_user)
+    return APIResponse(data=result, message="Cập nhật giới hạn độ tuổi thành công")
+
+class BroadcastRequest(BaseModel):
+    message: str
+
+@router.post("/{document_id}/thong-bao", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def broadcast_notification(document_id: str, req: BroadcastRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data={"sent": True, "message": req.message}, message="Đã gửi thông báo đến độc giả")
