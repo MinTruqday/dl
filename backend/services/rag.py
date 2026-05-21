@@ -4,6 +4,7 @@ from fastapi import HTTPException
 import uuid
 from typing import Dict, Any, List, Optional
 from loguru import logger
+from core.http_client import make_ai_request, ai_http_client, ai_circuit_breaker
 from core.config import settings
 from services.quota import QuotaService
 
@@ -26,10 +27,8 @@ class RagService:
             session_id = payload.get("session_id")
             user_query = payload.get("query", "")
             
-            async with httpx.AsyncClient() as client:
-                response = await client.post(rag_url, json=payload, headers=headers, timeout=60.0)
-                
-            if response.status_code == 200:
+            response = await make_ai_request(rag_url, payload, timeout=60.0)
+            if True:
                 result = response.json()
                 if session_id and current_user:
                     await RagService.add_message(session_id, "user", user_query, str(current_user.id))
@@ -76,27 +75,28 @@ class RagService:
                 if session_id and current_user:
                     await RagService.add_message(session_id, "user", user_query, str(current_user.id))
 
-                async with httpx.AsyncClient() as client:
-                    async with client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
-                        if response.status_code != 200:
-                            logger.error(f"RAG Stream error: {response.status_code}")
-                            yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
-                            return
+                ai_circuit_breaker.check()
+                async with ai_http_client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
+                    ai_circuit_breaker.on_success()
+                    if response.status_code != 200:
+                        logger.error(f"RAG Stream error: {response.status_code}")
+                        yield f'data: {{"error": "Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau."}}\n\n'.encode('utf-8')
+                        return
                         
-                        async for chunk in response.aiter_bytes():
-                            chunk_str = chunk.decode('utf-8')
-                            lines = chunk_str.split("\n\n")
-                            for line in lines:
-                                if line.startswith("data: "):
-                                    try:
-                                        data = line.replace("data: ", "").strip()
-                                        if data != "[DONE]":
-                                            parsed = json_mod.loads(data)
-                                            if "chunk" in parsed:
-                                                full_response += parsed["chunk"]
-                                    except Exception as parse_error:
-                                        logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
-                            yield chunk
+                    async for chunk in response.aiter_bytes():
+                        chunk_str = chunk.decode('utf-8')
+                        lines = chunk_str.split("\n\n")
+                        for line in lines:
+                            if line.startswith("data: "):
+                                try:
+                                    data = line.replace("data: ", "").strip()
+                                    if data != "[DONE]":
+                                        parsed = json_mod.loads(data)
+                                        if "chunk" in parsed:
+                                            full_response += parsed["chunk"]
+                                except Exception as parse_error:
+                                    logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
+                        yield chunk
 
                 if session_id and current_user and full_response:
                     await RagService.add_message(session_id, "assistant", full_response, str(current_user.id))
@@ -133,10 +133,8 @@ class RagService:
         payload = {"document_id": document_id}
         
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(rag_url, json=payload, timeout=300.0)
-                
-            if response.status_code == 200:
+            response = await make_ai_request(rag_url, payload, timeout=300.0)
+            if True:
                 await db["documents"].update_one(
                     {"_id": document_id},
                     {"$set": {"rag_status": "indexed"}}

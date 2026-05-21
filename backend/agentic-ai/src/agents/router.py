@@ -16,33 +16,51 @@ class RouterAgent:
         )
         self.router_llm = HFInferenceChat(client=self.llama_client, model=settings.LLAMA_MODEL)
 
-    async def execute(self, query: str) -> str:
+    async def execute(self, query: str) -> dict:
         prompt = PromptTemplate(
-            template="""Bạn là Cổng kiểm duyệt (Router) của hệ thống DocLib. Phân tích ý định câu hỏi và chuyển hướng.
+            template="""Bạn là Router của hệ thống DocLib. Phân tích câu hỏi.
             
-            Quy tắc định tuyến:
-            - "knowledge": Các yêu cầu về tra cứu kiến thức, xử lý thông tin, phân tích và suy luận nội dung.
-            - "action": Các yêu cầu thao tác thực thi nghiệp vụ, thay đổi dữ liệu hoặc điều khiển hệ thống.
-            - "chat": Các câu giao tiếp thông thường mang tính chất trò chuyện, hỏi đáp cơ bản không liên quan đến nghiệp vụ sâu.
-
-            Trả lời duy nhất "knowledge", "action" hoặc "chat":""",
+            Nếu đây là một câu giao tiếp thông thường, hãy trả lời ngay lập tức theo định dạng JSON:
+            {{"route": "chat", "answer": "<câu trả lời của bạn>"}}
+            
+            Nếu là yêu cầu nghiệp vụ, trả về JSON:
+            {{"route": "knowledge"}} hoặc {{"route": "action"}}
+            
+            Chỉ trả về chuỗi JSON hợp lệ, không giải thích.""",
             input_variables=["question"]
         )
         try:
             from src.core.brain import llm
+            import json
+            
             res = await llm.ainvoke(prompt.format(question=query))
-            decision = res.content.strip().lower()
-            if "action" in decision:
-                route = "action"
-            elif "chat" in decision:
-                route = "chat"
-            else:
+            content = res.content.strip()
+            
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].strip()
+                
+            try:
+                decision = json.loads(content)
+            except Exception:
+                decision = {"route": "knowledge"}
+                if "action" in content.lower():
+                    decision["route"] = "action"
+                elif "chat" in content.lower():
+                    decision["route"] = "chat"
+                    
+            route = decision.get("route", "knowledge").lower()
+            answer = decision.get("answer", "")
+            
+            if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
+                
+            logger.info(f"RouterAgent: Classified request as route='{route}'")
+            return {"route": route, "answer": answer}
+            
         except Exception as e:
             logger.error(f"RouterAgent: Routing failed: {e}")
-            route = "knowledge"
-            
-        logger.info(f"RouterAgent: Classified request as route='{route}'")
-        return route
+            return {"route": "knowledge", "answer": ""}
 
 router_agent = RouterAgent()

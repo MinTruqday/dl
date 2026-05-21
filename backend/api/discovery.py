@@ -37,7 +37,7 @@ async def smart_search(query: str, limit: int = 10, current_user: UserInDB = Dep
 @router.get("/goi-y/ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(limit: int = 10, current_user: UserInDB = Depends(get_current_user_optional)):
     return APIResponse(
-        data=await AIService.get_ai_recommendations(limit), 
+        data=await AIService.get_ai_recommendations(limit, current_user), 
         message="Lấy gợi ý tài liệu từ AI thành công"
     )
 

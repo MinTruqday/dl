@@ -1,24 +1,25 @@
 import os
-from fastapi import FastAPI, HTTPException
-import redis
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+import redis.asyncio as redis
 from pydantic import BaseModel
-from src.tasks import convert_and_send_to_kindle
+
+from core.config import settings
 
 app = FastAPI(title="Hệ thống tác vụ biên dịch AI", version="2.0.26")
-redis_client = redis.from_url(os.environ.get("REDIS_URI"))
+redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
 
-class KindleRequest(BaseModel):
-    document_id: str
-    kindle_email: str
-    original_format: str
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Bạn không thể thực hiện thao tác này ngay lúc này. Vui lòng thử lại sau."}
+    )
 
 @app.get("/health")
-def read_health():
-    try:
-        redis_client.ping()
-        return {"status": "Hệ thống hoạt động bình thường."}
-    except Exception as e:
-        raise HTTPException(status_code=503, detail="Bạn không thể thực hiện thao tác này ngay lúc này. Vui lòng thử lại sau.")
+async def read_health():
+    await redis_client.ping()
+    return {"status": "Hệ thống hoạt động bình thường."}
 
 @app.post("/tasks/tectonic/compile")
 def compile_document(payload: dict):
@@ -29,12 +30,3 @@ def compile_document(payload: dict):
     from src.tasks import compile_document_tectonic
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
     return {"message": "Đã tiếp nhận yêu cầu biên dịch Tectonic vào hàng đợi.", "task_id": task.id}
-
-@app.post("/tasks/device/send-to-kindle")
-def trigger_send_to_kindle(req: KindleRequest):
-    task = convert_and_send_to_kindle.delay(req.document_id, req.kindle_email, req.original_format)
-    
-    return {
-        "message": "Tài liệu đang được biên dịch ở hệ thống nội vi để truyền đến thiết bị đọc.", 
-        "celery_task_id": task.id
-    }

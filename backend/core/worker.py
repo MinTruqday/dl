@@ -136,6 +136,34 @@ async def process_document_publish(message: AbstractIncomingMessage):
         except Exception as e:
             logger.error(f"Worker: Document Publish queue error: {str(e)}")
 
+async def process_user_interaction(message: AbstractIncomingMessage):
+    async with message.process():
+        try:
+            payload = json.loads(message.body.decode("utf-8"))
+            user_id = payload.get("user_id")
+            action = payload.get("action")
+            document_id = payload.get("document_id")
+            
+            if not user_id or not document_id:
+                return
+                
+            from core.config import settings
+            import httpx
+            rag_url = getattr(settings, "AGENTIC_AI_URL", None)
+            
+            if rag_url:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    resp = await client.post(
+                        f"{rag_url}/inference/cap-nhat-hanh-vi",
+                        json={"user_id": user_id, "document_id": document_id, "action": action}
+                    )
+                    if resp.status_code == 200:
+                        logger.info(f"Worker: Event-Driven AI successfully updated Vector DB for user {user_id}")
+                    else:
+                        logger.warning(f"Worker: AI Vector DB update failed: {resp.status_code}")
+        except Exception as e:
+            logger.error(f"Worker: User Interaction queue error: {str(e)}")
+
 async def start_workers():
     if not db_client.rabbitmq:
         logger.warning("Worker: RabbitMQ not active, waiting")
@@ -151,6 +179,9 @@ async def start_workers():
         queue_publish = await channel.declare_queue("document_publish_queue", durable=True)
         await queue_publish.consume(process_document_publish)
         
-        logger.info("Worker: All background workers (Tectonic, Publish) are active.")
+        queue_interaction = await channel.declare_queue("user_interaction_queue", durable=True)
+        await queue_interaction.consume(process_user_interaction)
+        
+        logger.info("Worker: All background workers are active.")
     except Exception as e:
         logger.error(f"Worker: Startup error: {str(e)}")

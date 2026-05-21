@@ -40,5 +40,4 @@ class Settings(BaseModel):
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL")
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
 
-
 settings = Settings()
