@@ -11,7 +11,7 @@ class ReasoningAgent:
         logger.info(f"ReasoningAgent: Initialized with model={self._model}")
 
     async def execute(self, task: str) -> str:
-        logger.info(f"ReasoningAgent: Executing logic task: {task[:50]}...")
+        logger.info(f"ReasoningAgent: Executing logic task: {task[:50]}")
         prompt = f"""Bạn là một chuyên gia phân tích logic và suy luận (Reasoning Agent). Nhiệm vụ của bạn là giải quyết vấn đề phức tạp, đánh giá thông tin, phân tích nguyên nhân - kết quả và đưa ra kết luận mạch lạc.
 
 Nhiệm vụ: {task}
