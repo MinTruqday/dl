@@ -33,7 +33,7 @@ export function ToastContainer({
           <p>{t.message}</p>
           <button
             onClick={() => removeToast(t.id)}
-            className="ml-auto opacity-70 transition-opacity"
+            className="ml-auto opacity-70 "
           >
             <X className="w-4 h-4" />
           </button>

@@ -39,7 +39,38 @@ async def get_top_donators():
 
 @router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_revenue(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=await WithdrawalService.get_revenue(current_user), message="Lấy số liệu doanh thu thành công")
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    revenue_data = await WithdrawalService.get_revenue(current_user)
+    author_id = str(current_user.id)
+    docs = await db["documents"].find(
+        {"author_id": author_id, "is_deleted": {"$ne": True}}
+    ).sort("views", -1).to_list(length=50)
+    total_views = 0
+    doc_list = []
+    for d in docs:
+        views = d.get("views", 0)
+        total_views += views
+        review_pipeline = [
+            {"$match": {"document_id": str(d["_id"])}},
+            {"$group": {"_id": None, "avg": {"$avg": "$rating"}}}
+        ]
+        rev = await db["reviews"].aggregate(review_pipeline).to_list(length=1)
+        avg_rating = rev[0]["avg"] if rev else 0
+        doc_list.append({
+            "id": str(d["_id"]),
+            "title": d.get("title", ""),
+            "views": views,
+            "rating": round(avg_rating, 1) if avg_rating else 0,
+            "status": d.get("status", "draft"),
+        })
+    user_doc = await db["users"].find_one({"_id": author_id})
+    total_points = user_doc.get("points", 0) if user_doc else 0
+    revenue_data["total_views"] = total_views
+    revenue_data["total_points"] = total_points
+    revenue_data["documents"] = doc_list
+    revenue_data["available_balance"] = user_doc.get("wallet_balance", 0) if user_doc else 0
+    return APIResponse(data=revenue_data, message="Lấy số liệu doanh thu thành công")
 
 @router.post("/giao-dich-mua/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def purchase_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):

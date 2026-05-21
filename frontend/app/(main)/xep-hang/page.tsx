@@ -159,7 +159,7 @@ export default function LeaderboardPage() {
                   <>
                     {activeTab === "views" || activeTab === "rating" ? (
                       ((activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).map((document, index) => (
-                        <div key={`${document._id}-${index}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white hover:border-black transition-colors duration-300 rounded-none">
+                        <div key={`${document._id}-${index}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white    rounded-none">
                           <div className="flex items-center gap-6">
                             <div className="relative">
                               {renderRankNumber(index)}
@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
                               {document.cover_image ? (
                                 <img
                                   src={document.cover_image.startsWith("http") ? document.cover_image : `${API_URL}/storage/${document.cover_image}`}
-                                  className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-500"
+                                  className="w-full h-full object-cover grayscale mix-blend-multiply group-  "
                                   alt={document.title}
                                 />
                               ) : (
@@ -179,7 +179,7 @@ export default function LeaderboardPage() {
                               <div className="flex flex-wrap gap-1">
                                 <span className="px-1.5 py-0.5 border border-zinc-200 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">Tài liệu</span>
                               </div>
-                              <Link href={`/tai-lieu/${document.slug}`} className="text-sm font-bold text-black line-clamp-1 hover:underline decoration-2">
+                              <Link href={`/tai-lieu/${document.slug}`} className="text-sm font-bold text-black line-clamp-1  decoration-2">
                                 {document.title}
                               </Link>
                               <span className="text-[11px] font-medium text-zinc-500">
@@ -204,14 +204,14 @@ export default function LeaderboardPage() {
                       ))
                     ) : (
                       (data?.top_authors || []).map((author, index) => (
-                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white hover:border-black transition-colors duration-300 rounded-none">
+                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white    rounded-none">
                           <div className="flex items-center gap-6">
                             {renderRankNumber(index)}
                             <div className="w-12 h-12 rounded-none bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
                               {author.avatar_url ? (
                                 <img
                                   src={author.avatar_url.startsWith("http") ? author.avatar_url : `${API_URL}/storage/${author.avatar_url}`}
-                                  className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-500"
+                                  className="w-full h-full object-cover grayscale mix-blend-multiply group-  "
                                   alt={author.full_name}
                                 />
                               ) : (
@@ -219,7 +219,7 @@ export default function LeaderboardPage() {
                               )}
                             </div>
                             <div className="flex flex-col gap-1">
-                              <span className="text-sm font-bold text-black group-hover:underline decoration-2">{author.full_name}</span>
+                              <span className="text-sm font-bold text-black group- decoration-2">{author.full_name}</span>
                               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Tác giả nổi bật</span>
                             </div>
                           </div>

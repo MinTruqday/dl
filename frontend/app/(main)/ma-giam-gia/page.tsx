@@ -129,7 +129,7 @@ export default function ManageCouponsPage() {
             <div className="w-[1px] bg-zinc-200" />
             <button onClick={() => setViewMode("list")} className={`p-2 ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-400"}`}><ListIcon className="w-4 h-4" /></button>
           </div>
-          <button onClick={() => setShowCreate(true)} className="h-10 px-6 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 border border-black hover:bg-zinc-800 transition-colors">
+          <button onClick={() => setShowCreate(true)} className="h-10 px-6 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center gap-2 border border-black  ">
             <Plus className="w-4 h-4" /> Tạo mã mới
           </button>
         </div>
@@ -142,15 +142,15 @@ export default function ManageCouponsPage() {
       ) : coupons.length > 0 ? (
         <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
           {coupons.map((c: any) => (
-            <div key={c.id} className={`border border-zinc-200 bg-white flex ${viewMode === "grid" ? "flex-col" : "flex-row"} hover:border-black transition-all group`}>
+            <div key={c.id} className={`border border-zinc-200 bg-white flex ${viewMode === "grid" ? "flex-col" : "flex-row"}   group`}>
               <div className={`p-6 bg-zinc-50 flex justify-between items-start ${viewMode === "grid" ? "border-b border-zinc-200" : "border-r border-zinc-200 w-64"}`}>
                 <div>
                   <span className="text-xl font-mono font-bold text-black block">{c.code}</span>
                   <p className="text-xs font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block">-{c.discount_percent}%</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => toggleStatus(c.id)} className={`px-2 py-1 text-[9px] font-bold uppercase border ${c.is_active ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-200 hover:border-black"}`}>{c.is_active ? "Active" : "Paused"}</button>
-                  <button onClick={() => setDeleteConfirm(c)} className="p-1 border border-zinc-200 bg-white text-zinc-400 hover:text-red-500 hover:border-red-500 transition-colors"><Trash2 className="w-3 h-3" /></button>
+                  <button onClick={() => toggleStatus(c.id)} className={`px-2 py-1 text-[9px] font-bold uppercase border ${c.is_active ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-200 "}`}>{c.is_active ? "Active" : "Paused"}</button>
+                  <button onClick={() => setDeleteConfirm(c)} className="p-1 border border-zinc-200 bg-white text-zinc-400   "><Trash2 className="w-3 h-3" /></button>
                 </div>
               </div>
 
@@ -176,7 +176,7 @@ export default function ManageCouponsPage() {
                       <span>Redemption</span>
                       <span className="text-black font-mono">{c.used_count} / {c.max_uses}</span>
                     </div>
-                    <div className="w-full h-1 bg-zinc-100"><div className="bg-black h-full transition-all" style={{ width: `${(c.used_count / (c.max_uses || 1)) * 100}%` }} /></div>
+                    <div className="w-full h-1 bg-zinc-100"><div className="bg-black h-full " style={{ width: `${(c.used_count / (c.max_uses || 1)) * 100}%` }} /></div>
                   </div>
                 </div>
               </div>
@@ -220,8 +220,8 @@ export default function ManageCouponsPage() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowCreate(false)} className="flex-1 h-10 border border-zinc-200 bg-white text-xs font-semibold uppercase tracking-wider hover:bg-zinc-50 transition-colors rounded-none">Hủy bỏ</button>
-          <button onClick={handleCreate} disabled={creating} className="flex-1 h-10 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-zinc-800 transition-colors rounded-none border border-black">{creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Phát hành"}</button>
+          <button onClick={() => setShowCreate(false)} className="flex-1 h-10 border border-zinc-200 bg-white text-xs font-semibold uppercase tracking-wider   rounded-none">Hủy bỏ</button>
+          <button onClick={handleCreate} disabled={creating} className="flex-1 h-10 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50   rounded-none border border-black">{creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Phát hành"}</button>
         </ModalFooter>
       </Modal>
 

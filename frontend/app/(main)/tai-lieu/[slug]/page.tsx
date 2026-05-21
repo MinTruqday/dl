@@ -61,6 +61,32 @@ export default function DocumentDetailsPage() {
     fetchDocument();
   }, [fetchDocument]);
 
+  useEffect(() => {
+    if (!docData?.drm_settings?.disable_copy) return;
+    const preventAction = (e: Event) => e.preventDefault();
+    document.addEventListener("contextmenu", preventAction);
+    document.addEventListener("copy", preventAction);
+    document.addEventListener("selectstart", preventAction);
+    return () => {
+      document.removeEventListener("contextmenu", preventAction);
+      document.removeEventListener("copy", preventAction);
+      document.removeEventListener("selectstart", preventAction);
+    };
+  }, [docData]);
+
+  useEffect(() => {
+    if (!docData?.drm_settings?.hide_from_search) return;
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex";
+    document.head.appendChild(meta);
+    return () => {
+      try {
+        document.head.removeChild(meta);
+      } catch (err) {}
+    };
+  }, [docData]);
+
   const handleRead = () => {
     if (!docData) return;
     router.push(`/tai-lieu/viewer/${docData._id || docData.id}`);
@@ -131,7 +157,7 @@ export default function DocumentDetailsPage() {
       <div className="flex h-[80vh] flex-col items-center justify-center gap-6 font-sans bg-white">
         <AlertCircle className="w-12 h-12 text-zinc-300" />
         <p className="text-sm font-medium text-zinc-500">{error || "Thực thể không tồn tại"}</p>
-        <button onClick={() => router.back()} className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none hover:bg-zinc-800 transition-colors">
+        <button onClick={() => router.back()} className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none  ">
           Quay lại
         </button>
       </div>
@@ -178,7 +204,7 @@ export default function DocumentDetailsPage() {
               </h1>
 
               <div className="flex flex-wrap items-center gap-8 text-sm text-zinc-600 pt-2">
-                <button onClick={() => router.push(`/authors/${docData.author?.slug || docData.author_id}`)} className="flex items-center gap-3 hover:text-black transition-colors group">
+                <button onClick={() => router.push(`/authors/${docData.author?.slug || docData.author_id}`)} className="flex items-center gap-3   group">
                   <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center overflow-hidden rounded-none">
                     {docData.author?.avatar_url ? (
                       <img src={docData.author.avatar_url} className="w-full h-full object-cover grayscale" alt="" />
@@ -188,7 +214,7 @@ export default function DocumentDetailsPage() {
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-xs text-zinc-500">Tác giả</span>
-                    <span className="font-medium text-black group-hover:underline">
+                    <span className="font-medium text-black group-">
                       {docData.author?.full_name || docData.author?.username || "Cộng tác viên"}
                     </span>
                   </div>
@@ -208,28 +234,28 @@ export default function DocumentDetailsPage() {
             </div>
 
             <div className="flex flex-wrap gap-4 border-t border-zinc-200 pt-8">
-              <button onClick={handleRead} className="h-12 px-6 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 rounded-none hover:bg-zinc-800 transition-colors">
+              <button onClick={handleRead} className="h-12 px-6 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 rounded-none  ">
                 <BookOpen className="w-4 h-4" /> Đọc ngay
               </button>
-              <button onClick={handleBookmark} className={`h-12 px-6 border flex items-center justify-center gap-2 text-sm font-medium transition-colors rounded-none ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 hover:bg-zinc-50"}`}>
+              <button onClick={handleBookmark} className={`h-12 px-6 border flex items-center justify-center gap-2 text-sm font-medium  rounded-none ${isBookmarked ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 "}`}>
                 <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} /> {isBookmarked ? "Đã lưu" : "Lưu"}
               </button>
               {docData.is_premium && (
-                <button onClick={handlePurchase} className="h-12 px-6 bg-white text-black border border-zinc-200 text-sm font-medium flex items-center justify-center gap-2 rounded-none hover:bg-zinc-50 transition-colors">
+                <button onClick={handlePurchase} className="h-12 px-6 bg-white text-black border border-zinc-200 text-sm font-medium flex items-center justify-center gap-2 rounded-none  ">
                   <ShoppingCart className="w-4 h-4" /> Mua tài liệu
                 </button>
               )}
-              <button onClick={() => setActiveTab("reviews")} className="h-12 px-6 border border-zinc-200 bg-white text-black text-sm font-medium flex items-center justify-center gap-2 rounded-none hover:bg-zinc-50 transition-colors">
+              <button onClick={() => setActiveTab("reviews")} className="h-12 px-6 border border-zinc-200 bg-white text-black text-sm font-medium flex items-center justify-center gap-2 rounded-none  ">
                 <Star className="w-4 h-4" /> Đánh giá
               </button>
             </div>
             
             <div className="flex items-center gap-4 text-sm font-medium text-zinc-500 pt-4">
-               <button onClick={handleShare} className="flex items-center gap-2 hover:text-black transition-colors">
+               <button onClick={handleShare} className="flex items-center gap-2  ">
                  <Share2 className="w-4 h-4" /> Chia sẻ
                </button>
                <span className="text-zinc-300">|</span>
-               <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2 hover:text-black transition-colors">
+               <button onClick={() => setShowReportModal(true)} className="flex items-center gap-2  ">
                  <Flag className="w-4 h-4" /> Báo cáo
                </button>
             </div>
@@ -257,7 +283,7 @@ export default function DocumentDetailsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`pb-4 text-sm font-medium relative shrink-0 transition-colors ${activeTab === tab.id ? "text-black" : "text-zinc-500 hover:text-black"}`}
+                  className={`pb-4 text-sm font-medium relative shrink-0  ${activeTab === tab.id ? "text-black" : "text-zinc-500 "}`}
                 >
                   {tab.label}
                   {activeTab === tab.id && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-black" />}
@@ -284,7 +310,7 @@ export default function DocumentDetailsPage() {
                       <h4 className="text-sm font-medium text-zinc-500">Từ khóa liên kết</h4>
                       <div className="flex flex-wrap gap-2">
                         {docData.tags.map((tag: string, i: number) => (
-                          <span key={i} className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-none cursor-pointer hover:bg-zinc-100 transition-colors">#{tag}</span>
+                          <span key={i} className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-sm font-medium text-zinc-600 rounded-none cursor-pointer  ">#{tag}</span>
                         ))}
                       </div>
                     </div>
@@ -305,7 +331,7 @@ export default function DocumentDetailsPage() {
                       </thead>
                       <tbody className="divide-y divide-zinc-200">
                         {docData.chapters.map((chapter: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-zinc-50 transition-colors">
+                          <tr key={idx} className=" ">
                             <td className="px-6 py-4 font-medium text-black">{chapter.title || `Chương ${idx + 1}`}</td>
                             <td className="px-6 py-4 text-zinc-600">{chapter.word_count?.toLocaleString() || "---"}</td>
                             <td className="px-6 py-4 text-right">
@@ -364,7 +390,7 @@ export default function DocumentDetailsPage() {
                                   <h3 className="text-xl font-bold text-black">Giới hạn xem trước</h3>
                                   <p className="text-sm text-zinc-500 max-w-md mx-auto">Bạn đã đọc hết phần xem trước. Mở khóa để khám phá toàn bộ nội dung.</p>
                                 </div>
-                                <button onClick={handlePurchase} className="h-12 px-8 bg-black text-white text-sm font-medium rounded-none hover:bg-zinc-800 transition-colors">Sở hữu tài liệu</button>
+                                <button onClick={handlePurchase} className="h-12 px-8 bg-black text-white text-sm font-medium rounded-none  ">Sở hữu tài liệu</button>
                               </div>
                             </div>
                           )}

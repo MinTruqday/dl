@@ -275,7 +275,7 @@ export default function UsersManagementPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !isUpdating && setConfirmModal(null)}
-        className="max-w-md rounded-none shadow-none"
+        className="max-w-md rounded-none "
       >
         <ModalHeader className="border-b border-zinc-200 pb-4">
           <ModalTitle className="text-lg font-medium text-black">Xác nhận thay đổi</ModalTitle>

@@ -232,7 +232,7 @@ export default function WalletPage() {
                 type="number"
                 value={topupAmount}
                 onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">VNĐ</span>
             </div>
@@ -329,7 +329,7 @@ export default function WalletPage() {
       </Modal>
 
       <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  "
         style={{ opacity: visible ? 1 : 0 }}
       >
         <div className="space-y-2">
@@ -341,14 +341,14 @@ export default function WalletPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowTopupModal(true)}
-            className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none border border-black hover:bg-zinc-900 transition-colors"
+            className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none border border-black  "
           >
             <Plus className="w-4 h-4" /> Nạp tiền
           </button>
           {(user?.role === "author" || user?.role === "admin") && (
             <button
               onClick={() => setShowWithdrawModal(true)}
-              className="h-10 px-6 bg-white text-black text-xs font-medium flex items-center gap-2 rounded-none border border-zinc-200 hover:border-black transition-colors"
+              className="h-10 px-6 bg-white text-black text-xs font-medium flex items-center gap-2 rounded-none border border-zinc-200  "
             >
               <ArrowDownLeft className="w-4 h-4 rotate-180" /> Rút tiền
             </button>
@@ -356,7 +356,7 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
+      <div className="grid lg:grid-cols-12 gap-12  " style={{ opacity: visible ? 1 : 0 }}>
         <aside className="lg:col-span-4 space-y-6">
           <div className="border border-zinc-200 bg-white p-6 space-y-6">
             <div>
@@ -405,7 +405,7 @@ export default function WalletPage() {
                 value={voucherCode}
                 onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                 placeholder="Nhập mã"
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium text-center focus:outline-none focus:border-black transition-colors rounded-none"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium text-center focus:outline-none focus:border-black  rounded-none"
               />
               <button
                 type="submit"

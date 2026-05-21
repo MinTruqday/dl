@@ -1,5 +1,24 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
+export async function compilePreviewAPI(content: string, isFragment: boolean = false) {
+  const res = await fetch(`${API_URL}/soan-thao-latex/bien-dich-xem-truoc`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ content, is_fragment: isFragment }),
+  });
+  if (!res.ok) {
+    let errMsg = "Biên dịch LaTeX thất bại";
+    try {
+      const data = await res.json();
+      errMsg = data.detail?.error || data.detail || errMsg;
+    } catch {
+      // ignore
+    }
+    throw new Error(errMsg);
+  }
+  return await res.blob();
+}
+
 export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
   const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van`, {
     method: "POST",

@@ -95,7 +95,7 @@ export default function PaymentResultPage() {
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="flex flex-col items-center justify-center min-h-[60vh] gap-8 transition-opacity duration-500"
+        className="flex flex-col items-center justify-center min-h-[60vh] gap-8  "
         style={{ opacity: visible ? 1 : 0 }}
       >
         <div
@@ -149,14 +149,14 @@ export default function PaymentResultPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/vi-tien"
-            className="h-11 px-8 bg-black text-white text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none transition-transform active:scale-[0.98]"
+            className="h-11 px-8 bg-black text-white text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none  active:scale-[0.98]"
           >
             <ArrowLeft className="w-4 h-4" /> Về ví tiền
           </Link>
           {(status === "failed" || status === "cancelled") && (
             <button
               onClick={verifyPayment}
-              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none transition-transform active:scale-[0.98]"
+              className="h-11 px-8 border border-zinc-200 bg-white text-black text-[11px] font-semibold uppercase tracking-widest flex items-center gap-2 rounded-none  active:scale-[0.98]"
             >
               Thử lại
             </button>

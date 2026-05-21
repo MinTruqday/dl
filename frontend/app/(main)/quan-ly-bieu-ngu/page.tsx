@@ -81,14 +81,14 @@ export default function BannerManagementPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={fetchBanners}
-              className="text-sm font-medium text-zinc-500 hover:text-black transition-colors"
+              className="text-sm font-medium text-zinc-500  "
             >
               Đồng bộ dữ liệu
             </button>
           </div>
         </header>
 
-        <div className="space-y-12 animate-in fade-in duration-300">
+        <div className="space-y-12 animate-in fade-in ">
           <section>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1 space-y-4 p-6 border border-zinc-200 bg-white">
@@ -110,7 +110,7 @@ export default function BannerManagementPage() {
                     <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Độ ưu tiên</label>
                     <input type="number" value={newBanner.priority} onChange={e => setNewBanner({...newBanner, priority: parseInt(e.target.value) || 0})} className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black rounded-none" />
                   </div>
-                  <button onClick={handleAddBanner} disabled={isAddingBanner} className="w-full mt-2 h-10 bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-all disabled:opacity-50 flex justify-center items-center gap-2 rounded-none">
+                  <button onClick={handleAddBanner} disabled={isAddingBanner} className="w-full mt-2 h-10 bg-black text-white text-xs font-semibold   disabled:opacity-50 flex justify-center items-center gap-2 rounded-none">
                     {isAddingBanner ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Thêm Biểu ngữ
                   </button>
                 </div>
@@ -120,7 +120,7 @@ export default function BannerManagementPage() {
                 <div className="border border-zinc-200 bg-white">
                   <div className="divide-y divide-zinc-100 max-h-[600px] overflow-y-auto">
                     {banners.length > 0 ? banners.map((banner) => (
-                      <div key={banner._id} className="p-4 flex gap-4 items-center group hover:bg-zinc-50 transition-colors">
+                      <div key={banner._id} className="p-4 flex gap-4 items-center group  ">
                         <div className="w-32 h-16 shrink-0 bg-zinc-100 border border-zinc-200">
                           {banner.image_url && <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />}
                         </div>
@@ -129,7 +129,7 @@ export default function BannerManagementPage() {
                           <p className="text-xs text-zinc-500 truncate mt-1">Link: {banner.link_url || "Không có"}</p>
                           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mt-1 block">Ưu tiên: {banner.priority}</span>
                         </div>
-                        <button onClick={() => handleDeleteBanner(banner._id)} className="p-2 text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 rounded-none shrink-0" title="Xoá biểu ngữ">
+                        <button onClick={() => handleDeleteBanner(banner._id)} className="p-2 text-red-500   opacity-0 group- rounded-none shrink-0" title="Xoá biểu ngữ">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

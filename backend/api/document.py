@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from core.response import APIResponse
 from api.dependency import get_current_user_optional, get_current_user, require_role
-from fastapi import APIRouter, Depends, Response, Query, status
+from fastapi import APIRouter, Depends, Response, Query, status, HTTPException
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
@@ -182,37 +182,138 @@ async def compile_document(document_id: str, current_user: UserInDB = Depends(ge
 
 class FolderCreate(BaseModel):
     name: str
+    parent_id: Optional[str] = None
 
 @router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_folders(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data=[], message="Lấy danh sách thư mục thành công")
+async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    query = {"author_id": str(current_user.id)}
+    if parent_id:
+        query["parent_id"] = parent_id
+    cursor = db["workspace_folders"].find(query).sort("created_at", 1)
+    folders = await cursor.to_list(length=100)
+    for f in folders:
+        f["_id"] = str(f["_id"])
+    return APIResponse(data=folders, message="Lấy danh sách thư mục thành công")
 
 @router.post("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data={"id": "folder_1", "name": req.name}, message="Tạo thư mục thành công")
+    from core.database import db_client
+    from datetime import datetime, timezone
+    db = db_client.mongodb.get_default_database()
+    folder_doc = {
+        "name": req.name,
+        "parent_id": req.parent_id,
+        "author_id": str(current_user.id),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    res = await db["workspace_folders"].insert_one(folder_doc)
+    folder_doc["_id"] = str(res.inserted_id)
+    return APIResponse(data=folder_doc, message="Tạo thư mục thành công")
+
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    from bson import ObjectId
+    db = db_client.mongodb.get_default_database()
+    folder = await db["workspace_folders"].find_one({"_id": ObjectId(folder_id), "author_id": str(current_user.id)})
+    if not folder:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục")
+    await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
+    await db["documents"].update_many(
+        {"folder_id": folder_id},
+        {"$unset": {"folder_id": ""}}
+    )
+    return APIResponse(data={"deleted": True}, message="Xóa thư mục thành công")
 
 @router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def toggle_star_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data={"starred": True}, message="Gắn sao tài liệu thành công")
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    current_starred = doc.get("is_starred", False)
+    await db["documents"].update_one(
+        {"_id": document_id},
+        {"$set": {"is_starred": not current_starred}}
+    )
+    return APIResponse(data={"starred": not current_starred}, message="Cập nhật gắn sao thành công")
 
 @router.post("/{document_id}/chuyen-nhuong", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def transfer_document(document_id: str, new_owner_id: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(data={"status": "transferred"}, message="Chuyển nhượng tài liệu thành công")
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền")
+    target = await db["users"].find_one({"_id": new_owner_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người nhận chuyển nhượng")
+    from datetime import datetime, timezone
+    await db["documents"].update_one(
+        {"_id": document_id},
+        {"$set": {"author_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}}
+    )
+    return APIResponse(data={"status": "transferred", "new_owner_id": new_owner_id}, message="Chuyển nhượng tài liệu thành công")
 
 @router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
-async def get_document_analytics(document_id: str):
+async def get_document_analytics(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    doc = await db["documents"].find_one({"_id": document_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    views = doc.get("views", 0)
+    chapters = doc.get("chapters", [])
+    total_words = sum(ch.get("word_count", 0) for ch in chapters) if chapters else 0
+    avg_read_time_min = max(1, total_words // 200)
+    comment_count = await db["comments"].count_documents({"item_id": document_id, "item_type": "document"})
+    bookmark_count = await db["bookmarks"].count_documents({"document_id": document_id})
+    review_pipeline = [
+        {"$match": {"document_id": document_id}},
+        {"$group": {"_id": None, "avg_rating": {"$avg": "$rating"}, "count": {"$sum": 1}}}
+    ]
+    review_stats = await db["reviews"].aggregate(review_pipeline).to_list(length=1)
+    avg_rating = review_stats[0]["avg_rating"] if review_stats else 0
+    review_count = review_stats[0]["count"] if review_stats else 0
+    purchase_count = await db["transactions"].count_documents({
+        "reference_id": document_id,
+        "type": {"$in": ["purchase", "receive"]}
+    })
     return APIResponse(data={
-        "completion_rate": 85,
-        "avg_read_time": "12 phút",
-        "saves": 45,
-        "comments": 12
+        "views": views,
+        "avg_read_time": f"{avg_read_time_min} phút",
+        "avg_read_time_min": avg_read_time_min,
+        "total_words": total_words,
+        "saves": bookmark_count,
+        "comments": comment_count,
+        "reviews": review_count,
+        "avg_rating": round(avg_rating, 1) if avg_rating else 0,
+        "purchases": purchase_count,
+        "chapter_count": len(chapters),
     }, message="Lấy phân tích độc giả thành công")
 
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
-async def get_document_academic(document_id: str):
+async def get_document_academic(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    doc = await db["documents"].find_one({"_id": document_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    content = doc.get("content", "")
+    word_count = len(content.split()) if content else 0
+    sentences = content.count(".") + content.count("!") + content.count("?") if content else 0
+    avg_sentence_len = round(word_count / max(sentences, 1), 1)
+    readability_score = max(0, min(100, 100 - (avg_sentence_len - 15) * 3))
     return APIResponse(data={
-        "readability_score": "8.5",
-        "citation_count": 3
+        "word_count": word_count,
+        "sentence_count": sentences,
+        "avg_sentence_length": avg_sentence_len,
+        "readability_score": round(readability_score, 1),
+        "content_format": doc.get("content_format", "html"),
     }, message="Lấy chỉ số học thuật thành công")
 
 class AuthorNoteUpdate(BaseModel):
@@ -254,7 +355,10 @@ class ScheduleUpdate(BaseModel):
 
 @router.put("/{document_id}/hen-gio", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def schedule_publish(document_id: str, req: ScheduleUpdate, current_user: UserInDB = Depends(get_current_user)):
-    result = await DocumentService.update_document(document_id, DocumentUpdate(publish_at=req.publish_at), current_user)
+    result = await DocumentService.update_document(document_id, DocumentUpdate(
+        publish_at=req.publish_at,
+        scheduled_publish_at=req.publish_at
+    ), current_user)
     return APIResponse(data=result, message="Lên lịch xuất bản thành công")
 
 class PaywallUpdate(BaseModel):

@@ -55,7 +55,7 @@ function QuotaIndicator() {
   const tokenPercent = Math.min(100, (usage.used_tokens / usage.limit_tokens) * 100);
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-none animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="flex flex-col gap-3 p-4 bg-zinc-50 border border-zinc-200 rounded-none animate-in fade-in slide-in-from-top-2 ">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="w-3.5 h-3.5 text-black" />
@@ -73,7 +73,7 @@ function QuotaIndicator() {
           </div>
           <div className="h-1 w-full bg-zinc-200 rounded-none overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ${reqPercent > 90 ? 'bg-black' : 'bg-zinc-800'}`}
+              className={`h-full   ${reqPercent > 90 ? 'bg-black' : 'bg-zinc-800'}`}
               style={{ width: `${reqPercent}%` }}
             />
           </div>
@@ -86,7 +86,7 @@ function QuotaIndicator() {
           </div>
           <div className="h-1 w-full bg-zinc-200 rounded-none overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 ${tokenPercent > 90 ? 'bg-black' : 'bg-zinc-800'}`}
+              className={`h-full   ${tokenPercent > 90 ? 'bg-black' : 'bg-zinc-800'}`}
               style={{ width: `${tokenPercent}%` }}
             />
           </div>
@@ -484,7 +484,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           className={
             standalone
               ? "w-full h-full bg-white flex flex-col overflow-hidden animate-in fade-in"
-              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none shadow-none`
+              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none `
           }
         >
           <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
@@ -509,21 +509,21 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     setMessages([]);
                     setView("chat");
                   }}
-                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
+                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
                   title="Cuộc hội thoại mới"
                 >
                   <PlusIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
-                  className={`p-2 transition-colors rounded-none border ${view === "history" ? "bg-black text-white border-black" : "text-zinc-500 hover:text-black border-zinc-100 hover:border-zinc-200"}`}
+                  className={`p-2  rounded-none border ${view === "history" ? "bg-black text-white border-black" : "text-zinc-500  border-zinc-100 "}`}
                   title="Lịch sử nghiên cứu"
                 >
                   <HistoryIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
+                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
                   title={isExpanded ? "Thu nhỏ" : "Mở rộng"}
                 >
                   {isExpanded ? (
@@ -534,7 +534,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-zinc-500 hover:text-black transition-colors rounded-none border border-zinc-100 hover:border-zinc-200"
+                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -548,13 +548,13 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     setMessages([]);
                     setView("chat");
                   }}
-                  className="px-4 py-2 text-xs font-bold transition-all border bg-white text-black border-zinc-200 hover:bg-zinc-50"
+                  className="px-4 py-2 text-xs font-bold  border bg-white text-black border-zinc-200 "
                 >
                   Cuộc hội thoại mới
                 </button>
                 <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
-                  className={`px-4 py-2 text-xs font-bold transition-all border ${view === "history" ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 hover:bg-zinc-50"}`}
+                  className={`px-4 py-2 text-xs font-bold  border ${view === "history" ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 "}`}
                 >
                   {view === "history" ? "Quay lại" : "Lịch sử nghiên cứu"}
                 </button>
@@ -581,7 +581,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   sessions.map((s) => (
                     <div
                       key={s._id}
-                      className={`p-5 border bg-white cursor-pointer group relative rounded-none transition-colors ${currentSessionId === s._id ? "border-black" : "border-zinc-200 hover:border-black"}`}
+                      className={`p-5 border bg-white cursor-pointer group relative rounded-none  ${currentSessionId === s._id ? "border-black" : "border-zinc-200 "}`}
                     >
                       <div
                         onClick={async () => {
@@ -645,7 +645,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                             console.error("Delete session error", err);
                           }
                         }}
-                        className="absolute top-5 right-5 p-1 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-black transition-all rounded-none"
+                        className="absolute top-5 right-5 p-1 text-zinc-400 opacity-0 group-   rounded-none"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -738,7 +738,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                     key={tidx}
                                     className="flex items-center gap-3 text-zinc-400 group"
                                   >
-                                    <div className="w-1 h-1 bg-zinc-300 group-hover:bg-black transition-colors" />
+                                    <div className="w-1 h-1 bg-zinc-300 group- " />
                                     <span className="text-[11px] font-medium tracking-tight">
                                       {nodeDescriptions[thought] || thought}
                                     </span>
@@ -748,13 +748,13 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                             )}
 
                             <div className="bg-white border border-zinc-200 p-0 rounded-none overflow-hidden relative group">
-                              <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-  z-10">
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(msg.content);
                                     showToast("Đã sao chép vào bộ nhớ tạm");
                                   }}
-                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-none"
+                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center    rounded-none"
                                   title="Sao chép"
                                 >
                                   <div className="w-3 h-3 border-2 border-current" />
@@ -770,7 +770,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                       ta.style.height = ta.scrollHeight + "px";
                                     }
                                   }}
-                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center hover:bg-black hover:text-white transition-colors rounded-none"
+                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center    rounded-none"
                                   title="Phóng to"
                                 >
                                   <Maximize2 className="w-3 h-3" />
@@ -803,7 +803,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                   components={{
                                     pre: ({ children }) => (
                                       <pre className="relative group bg-zinc-950 p-6 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 rounded-none">
-                                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute top-4 right-4 opacity-0 group- ">
                                           <button
                                             onClick={() => {
                                               const code = (
@@ -816,7 +816,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                                 showToast("Đã sao chép mã nguồn");
                                               }
                                             }}
-                                            className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest hover:text-white hover:bg-black transition-colors rounded-none"
+                                            className="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase tracking-widest    rounded-none"
                                           >
                                             Sao chép
                                           </button>
@@ -894,7 +894,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                       />
                       <button
                         onClick={() => setSelectedImage(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center transition-colors rounded-none"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-none"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -908,7 +908,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                       </span>
                       <button
                         onClick={() => setSelectedFile(null)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center transition-colors rounded-none"
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white flex items-center justify-center  rounded-none"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -918,7 +918,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               )}
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-none shadow-none">
+                <div className="absolute bottom-full left-0 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-none ">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -935,7 +935,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-200"
+                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none   border border-transparent "
                   >
                     <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
                       <FileText className="w-5 h-5 text-black" />
@@ -946,7 +946,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   </button>
                   <button
                     onClick={() => imageInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none hover:bg-zinc-50 transition-colors border border-transparent hover:border-zinc-200"
+                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none   border border-transparent "
                   >
                     <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
                       <ImageIcon className="w-5 h-5 text-black" />
@@ -967,9 +967,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                       onChange={handleToggleSmart}
                       className="sr-only peer"
                     />
-                    <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after: peer-checked:after:translate-x-4 peer-checked:bg-black rounded-none transition-all"></div>
+                    <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after: peer-checked:after:translate-x-4 peer-checked:bg-black rounded-none "></div>
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-black">
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400  group-">
                     Chuyên sâu
                   </span>
                 </label>
@@ -984,11 +984,11 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               </div>
 
               <form onSubmit={handleSubmit} className="flex gap-3">
-                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black rounded-none transition-colors">
+                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black rounded-none ">
                   <button
                     type="button"
                     onClick={handleAttach}
-                    className="text-zinc-400 hover:text-black transition-colors shrink-0 rounded-none p-1"
+                    className="text-zinc-400   shrink-0 rounded-none p-1"
                   >
                     <Paperclip className="w-5 h-5" />
                   </button>
@@ -1008,7 +1008,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     !input.trim() ||
                     (useSmart && (user?.wallet_balance || 0) < 20)
                   }
-                  className="w-14 shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-none"
+                  className="w-14 shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed  rounded-none"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

@@ -322,13 +322,13 @@ export default function DocumentsPage() {
           <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
             <button
               onClick={() => setConfirmModal(null)}
-              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none"
+              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
             >
               Hủy bỏ
             </button>
             <button
               onClick={executeDelete}
-              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none"
+              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none"
             >
               Xác nhận
             </button>
@@ -348,7 +348,7 @@ export default function DocumentsPage() {
                   type="text" 
                   value={newDoc.title}
                   onChange={(e) => setNewDoc({...newDoc, title: e.target.value})}
-                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none" 
+                  className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none" 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -357,7 +357,7 @@ export default function DocumentsPage() {
                   <select 
                     value={newDoc.category}
                     onChange={(e) => setNewDoc({...newDoc, category: e.target.value})}
-                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
                   >
                     <option value="Chưa phân loại">Chưa phân loại</option>
                     <option value="Giáo trình">Giáo trình</option>
@@ -369,7 +369,7 @@ export default function DocumentsPage() {
                   <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Giá (dl)</label>
                   <input 
                     type="number" 
-                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
                     value={newDoc.price_dl}
                     onChange={(e) => setNewDoc({ ...newDoc, price_dl: parseInt(e.target.value) || 0 })}
                   />
@@ -380,7 +380,7 @@ export default function DocumentsPage() {
                 <textarea 
                   value={newDoc.description}
                   onChange={(e) => setNewDoc({...newDoc, description: e.target.value})}
-                  className="w-full h-24 p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors resize-none rounded-none" 
+                  className="w-full h-24 p-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  resize-none rounded-none" 
                 />
               </div>
             </div>
@@ -391,7 +391,7 @@ export default function DocumentsPage() {
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.epub,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip,.csv,.json,.md" />
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className="border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:border-black p-6 flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer rounded-none"
+                  className="border border-zinc-200 bg-zinc-50   p-6 flex flex-col items-center justify-center gap-3  cursor-pointer rounded-none"
                 >
                   <div className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 text-black rounded-none">
                     {file ? <FileCheck className="w-5 h-5" /> : <Upload className="w-5 h-5" />}
@@ -413,7 +413,7 @@ export default function DocumentsPage() {
                   <select 
                     value={newDoc.visibility}
                     onChange={(e) => setNewDoc({...newDoc, visibility: e.target.value})}
-                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
                   >
                     <option value="public">Công khai</option>
                     <option value="private">Riêng tư</option>
@@ -424,7 +424,7 @@ export default function DocumentsPage() {
                   <select 
                     value={newDoc.status}
                     onChange={(e) => setNewDoc({...newDoc, status: e.target.value})}
-                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none transition-colors rounded-none"
+                    className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black appearance-none  rounded-none"
                   >
                     <option value="published">Xuất bản</option>
                     <option value="draft">Bản nháp</option>
@@ -437,7 +437,7 @@ export default function DocumentsPage() {
             <button 
               onClick={handleCreateDocument}
               disabled={isCreating || !file || !newDoc.title}
-              className="w-full py-2 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 rounded-none disabled:opacity-50"
+              className="w-full py-2 bg-black text-white text-xs font-medium   flex items-center justify-center gap-2 rounded-none disabled:opacity-50"
             >
               {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Kích hoạt lưu trữ
@@ -458,21 +458,21 @@ export default function DocumentsPage() {
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
                 autoFocus
-                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none" 
+                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none" 
               />
             </div>
           </ModalContent>
           <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
             <button
               onClick={() => setCreateFolderModal(false)}
-              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none"
+              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none"
             >
               Hủy bỏ
             </button>
             <button 
               onClick={handleCreateFolder}
               disabled={!folderName}
-              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none disabled:opacity-50"
+              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none disabled:opacity-50"
             >
               Tạo thư mục
             </button>
@@ -497,7 +497,7 @@ export default function DocumentsPage() {
               <input 
                 type="password" 
                 autoFocus
-                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
                 value={lockPassword}
                 onChange={(e) => setLockPassword(e.target.value)}
                 required
@@ -505,8 +505,8 @@ export default function DocumentsPage() {
             </form>
           </ModalContent>
           <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
-            <button type="button" onClick={() => setLockModal(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none">Hủy bỏ</button>
-            <button type="submit" form="lock-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none">Kích hoạt khóa</button>
+            <button type="button" onClick={() => setLockModal(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none">Hủy bỏ</button>
+            <button type="submit" form="lock-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none">Kích hoạt khóa</button>
           </ModalFooter>
         </Modal>
 
@@ -531,11 +531,11 @@ export default function DocumentsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Mật mã truy cập</label>
-                  <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-none transition-colors" />
+                  <input type="password" value={sharePassword} onChange={e=>setSharePassword(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black rounded-none " />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thời hạn hiệu lực</label>
-                  <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium uppercase tracking-widest focus:outline-none focus:border-black rounded-none transition-colors appearance-none">
+                  <select value={shareExpires} onChange={e=>setShareExpires(e.target.value)} className="w-full h-10 px-3 bg-zinc-50 border border-zinc-200 text-xs font-medium uppercase tracking-widest focus:outline-none focus:border-black rounded-none  appearance-none">
                     <option value="1">24 giờ</option>
                     <option value="7">07 ngày</option>
                     <option value="30">30 ngày</option>
@@ -554,14 +554,14 @@ export default function DocumentsPage() {
             </form>
           </ModalContent>
           <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">
-            <button type="button" onClick={() => { setShareModal(null); setPublicUrl(""); }} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black hover:bg-zinc-50 transition-colors rounded-none">Đóng</button>
-            <button type="submit" form="share-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors rounded-none">Cập nhật giao thức</button>
+            <button type="button" onClick={() => { setShareModal(null); setPublicUrl(""); }} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black   rounded-none">Đóng</button>
+            <button type="submit" form="share-form" className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium   rounded-none">Cập nhật giao thức</button>
           </ModalFooter>
         </Modal>
 
         {/* Header Section */}
         <div 
-          className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500" 
+          className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  " 
           style={{ opacity: visible ? 1 : 0 }}
         >
           <div className="space-y-2">
@@ -575,14 +575,14 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setCreateFolderModal(true)}
-              className="h-10 px-6 border border-zinc-200 bg-white text-black text-xs font-medium hover:bg-zinc-50 transition-colors flex items-center gap-2 rounded-none"
+              className="h-10 px-6 border border-zinc-200 bg-white text-black text-xs font-medium   flex items-center gap-2 rounded-none"
             >
               <FolderPlus className="w-4 h-4" />
               Thư mục
             </button>
             <button 
               onClick={() => setCreateDocModal(true)}
-              className="h-10 px-6 bg-black text-white text-xs font-medium hover:bg-zinc-800 transition-colors flex items-center gap-2 rounded-none"
+              className="h-10 px-6 bg-black text-white text-xs font-medium   flex items-center gap-2 rounded-none"
             >
               <Plus className="w-4 h-4" />
               Thêm tài liệu
@@ -591,7 +591,7 @@ export default function DocumentsPage() {
         </div>
 
         {/* Main Grid Layout */}
-        <div className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500" style={{ opacity: visible ? 1 : 0 }}>
+        <div className="grid lg:grid-cols-12 gap-12  " style={{ opacity: visible ? 1 : 0 }}>
           {/* Sidebar Filters */}
           <aside className="lg:col-span-3 space-y-6">
             {/* Search */}
@@ -604,7 +604,7 @@ export default function DocumentsPage() {
                 placeholder="Nhập từ khóa"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none placeholder:text-zinc-400"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none placeholder:text-zinc-400"
               />
             </div>
 
@@ -616,8 +616,8 @@ export default function DocumentsPage() {
               <div className="space-y-3">
                 <button 
                   onClick={() => setFilterStar(!filterStar)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium border transition-colors rounded-none ${
-                    filterStar ? 'bg-black text-white border-black' : 'bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50 hover:text-black'
+                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium border  rounded-none ${
+                    filterStar ? 'bg-black text-white border-black' : 'bg-white text-zinc-500 border-zinc-200  '
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -632,7 +632,7 @@ export default function DocumentsPage() {
                     <select 
                       value={filterFormat} 
                       onChange={(e) => setFilterFormat(e.target.value)}
-                      className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium outline-none focus:border-black transition-colors rounded-none appearance-none"
+                      className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium outline-none focus:border-black  rounded-none appearance-none"
                     >
                       <option value="all">Mọi định dạng</option>
                       <option value="pdf">Tài liệu PDF</option>
@@ -662,7 +662,7 @@ export default function DocumentsPage() {
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <button 
                   onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium transition-colors rounded-none border ${!currentFolder ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200 hover:text-black'}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium  rounded-none border ${!currentFolder ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent   '}`}
                 >
                   <Home className="w-3.5 h-3.5" />
                   Gốc
@@ -676,7 +676,7 @@ export default function DocumentsPage() {
                         setBreadcrumbs(newBread);
                         setCurrentFolder(newBread[newBread.length - 1]);
                       }}
-                      className={`px-3 py-1.5 text-xs font-medium transition-colors rounded-none border ${idx === breadcrumbs.length - 1 ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50 hover:border-zinc-200 hover:text-black'}`}
+                      className={`px-3 py-1.5 text-xs font-medium  rounded-none border ${idx === breadcrumbs.length - 1 ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent   '}`}
                     >
                       {b.name}
                     </button>
@@ -686,12 +686,12 @@ export default function DocumentsPage() {
 
               <div className="flex items-center gap-3">
                 <div className="flex bg-zinc-50 border border-zinc-200 p-0.5">
-                  <button onClick={() => setViewMode("grid")} className={`p-1.5 transition-colors rounded-none ${viewMode === 'grid' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 hover:text-black'}`}><LayoutGrid className="w-4 h-4"/></button>
-                  <button onClick={() => setViewMode("list")} className={`p-1.5 transition-colors rounded-none ${viewMode === 'list' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 hover:text-black'}`}><List className="w-4 h-4"/></button>
+                  <button onClick={() => setViewMode("grid")} className={`p-1.5  rounded-none ${viewMode === 'grid' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 '}`}><LayoutGrid className="w-4 h-4"/></button>
+                  <button onClick={() => setViewMode("list")} className={`p-1.5  rounded-none ${viewMode === 'list' ? 'bg-white border border-zinc-200 text-black' : 'text-zinc-500 '}`}><List className="w-4 h-4"/></button>
                 </div>
                 <button 
                   onClick={fetchData}
-                  className="h-8 w-8 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 hover:text-black hover:bg-zinc-50 transition-colors rounded-none"
+                  className="h-8 w-8 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500    rounded-none"
                 >
                   {isRefreshing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCcw className="w-3.5 h-3.5" />}
                 </button>
@@ -714,7 +714,7 @@ export default function DocumentsPage() {
                     {folders.map((folder: any) => (
                       <tr 
                         key={folder._id} 
-                        className="hover:bg-zinc-50 transition-colors cursor-pointer group"
+                        className="  cursor-pointer group"
                         onClick={() => {
                           setCurrentFolder(folder);
                           setBreadcrumbs([...breadcrumbs, folder]);
@@ -722,7 +722,7 @@ export default function DocumentsPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group-hover:text-black group-hover:bg-white transition-colors">
+                            <div className="w-8 h-8 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group- group- ">
                               <Folder className="w-4 h-4" />
                             </div>
                             <span className="font-semibold text-black">{folder.name}</span>
@@ -736,7 +736,7 @@ export default function DocumentsPage() {
                               e.stopPropagation();
                               setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" });
                             }}
-                            className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
+                            className="p-2 text-zinc-400    rounded-none inline-flex"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -744,10 +744,10 @@ export default function DocumentsPage() {
                       </tr>
                     ))}
                     {documents.map((doc: any) => (
-                      <tr key={doc._id || doc.id} className="hover:bg-zinc-50 transition-colors group">
+                      <tr key={doc._id || doc.id} className="  group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-8 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group-hover:text-black group-hover:bg-white transition-colors">
+                            <div className="w-8 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group- group- ">
                               <FileText className="w-4 h-4" />
                             </div>
                             <div className="flex flex-col gap-1 min-w-0">
@@ -776,34 +776,34 @@ export default function DocumentsPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end gap-1 opacity-0 group- ">
                             <button 
                               onClick={() => toggleStar(doc._id || doc.id)}
-                              className={`p-2 transition-colors rounded-none inline-flex ${doc.is_starred ? 'text-black bg-zinc-100' : 'text-zinc-400 hover:text-black hover:bg-zinc-100'}`}
+                              className={`p-2  rounded-none inline-flex ${doc.is_starred ? 'text-black bg-zinc-100' : 'text-zinc-400  '}`}
                             >
                               <Star className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })}
-                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
+                              className="p-2 text-zinc-400    rounded-none inline-flex"
                             >
                               <Lock className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })}
-                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
+                              className="p-2 text-zinc-400    rounded-none inline-flex"
                             >
                               <Share2 className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')}
-                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
+                              className="p-2 text-zinc-400    rounded-none inline-flex"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })}
-                              className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 transition-colors rounded-none inline-flex"
+                              className="p-2 text-zinc-400    rounded-none inline-flex"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -823,9 +823,9 @@ export default function DocumentsPage() {
                       setCurrentFolder(folder);
                       setBreadcrumbs([...breadcrumbs, folder]);
                     }}
-                    className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4 hover:border-black transition-colors cursor-pointer rounded-none group"
+                    className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4   cursor-pointer rounded-none group"
                   >
-                    <div className="w-12 h-12 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-white group-hover:text-black transition-colors rounded-none">
+                    <div className="w-12 h-12 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group- group-  rounded-none">
                       <Folder className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-semibold text-black text-center">{folder.name}</span>
@@ -834,14 +834,14 @@ export default function DocumentsPage() {
                 {documents.map((doc: any) => (
                   <div 
                     key={doc._id || doc.id}
-                    className="bg-white border border-zinc-200 p-4 flex flex-col group hover:border-black transition-colors rounded-none relative"
+                    className="bg-white border border-zinc-200 p-4 flex flex-col group   rounded-none relative"
                   >
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-1.5 transition-colors bg-white border border-zinc-200 rounded-none ${doc.is_starred ? 'text-black' : 'text-zinc-400 hover:text-black'}`}><Star className="w-3.5 h-3.5" /></button>
+                    <div className="absolute top-2 right-2 opacity-0 group-  z-10">
+                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-1.5  bg-white border border-zinc-200 rounded-none ${doc.is_starred ? 'text-black' : 'text-zinc-400 '}`}><Star className="w-3.5 h-3.5" /></button>
                     </div>
                     
                     <div className="flex flex-col items-center gap-4 mb-4">
-                      <div className="w-16 h-20 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group-hover:bg-white group-hover:text-black transition-colors rounded-none mt-2">
+                      <div className="w-16 h-20 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group- group-  rounded-none mt-2">
                         <FileText className="w-6 h-6" />
                       </div>
                       <div className="text-center w-full">
@@ -850,11 +850,11 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                     
-                    <div className="mt-auto border-t border-zinc-200 pt-3 flex justify-between gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                       <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Eye className="w-4 h-4"/></button>
-                       <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Lock className="w-4 h-4"/></button>
-                       <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Share2 className="w-4 h-4"/></button>
-                       <button onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })} className="flex-1 py-1.5 text-zinc-400 hover:text-black hover:bg-zinc-50 transition-colors flex justify-center rounded-none"><Trash2 className="w-4 h-4"/></button>
+                    <div className="mt-auto border-t border-zinc-200 pt-3 flex justify-between gap-1 opacity-0 group- ">
+                       <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Eye className="w-4 h-4"/></button>
+                       <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Lock className="w-4 h-4"/></button>
+                       <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Share2 className="w-4 h-4"/></button>
+                       <button onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Trash2 className="w-4 h-4"/></button>
                     </div>
                   </div>
                 ))}

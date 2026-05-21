@@ -38,17 +38,17 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in duration-300 backdrop-blur-sm bg-black/40">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in  backdrop-blur-sm bg-black/40">
       <div
         className={cn(
-          "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95 duration-300 rounded-none relative p-0",
+          "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95  rounded-none relative p-0",
           className
         )}
       >
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-zinc-400 transition-colors"
+            className="absolute top-6 right-6 text-zinc-400 "
           >
             <X className="w-4 h-4" />
           </button>

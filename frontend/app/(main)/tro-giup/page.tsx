@@ -58,7 +58,7 @@ export default function HelpPage() {
             Giải đáp các thắc mắc về trải nghiệm sử dụng hệ thống DocLib
           </p>
           <div className="relative max-w-md mx-auto group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-black transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-black " />
             <input
               type="text"
               placeholder=""
@@ -91,7 +91,7 @@ export default function HelpPage() {
               key={idx}
               className="p-8 border border-zinc-200 rounded-none group cursor-pointer active:scale-[0.98]"
             >
-              <item.icon className="w-8 h-8 mb-6 text-zinc-200 transition-colors" />
+              <item.icon className="w-8 h-8 mb-6 text-zinc-200 " />
               <h3 className="font-bold text-black mb-3">{item.title}</h3>
               <p className="text-[11px] text-zinc-400 leading-relaxed font-bold">
                 {item.desc}

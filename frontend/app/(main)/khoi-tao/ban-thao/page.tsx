@@ -46,7 +46,7 @@ export default function DraftsPage() {
             <button
               key={draft._id || draft.id}
               onClick={() => router.push(`/sang-tac?tai-lieu=${draft._id || draft.id}`)}
-              className="group flex items-center justify-between p-4 border border-zinc-200 bg-white text-left rounded-none hover:border-black transition-colors"
+              className="group flex items-center justify-between p-4 border border-zinc-200 bg-white text-left rounded-none  "
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none">
@@ -57,7 +57,7 @@ export default function DraftsPage() {
                   <p className="text-xs font-medium text-zinc-500">Lần cuối: {new Date(draft.updated_at || draft.created_at).toLocaleDateString("vi-VN")}</p>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-black transition-colors" />
+              <ArrowRight className="w-4 h-4 text-zinc-400 group- " />
             </button>
           ))}
         </div>

@@ -78,7 +78,7 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`flex items-center text-[13px] tracking-tight transition-colors group relative w-full h-12 shrink-0 rounded-none ${isOpen ? "px-6 gap-4" : "px-0 justify-center"
+        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-none ${isOpen ? "px-6 gap-4" : "px-0 justify-center"
           } ${active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
             : "font-medium text-zinc-500 border-l-2 border-transparent"
@@ -88,12 +88,12 @@ export default function Menu({
           <Icon
             className={`w-[18px] h-[18px] ${active
                 ? "text-black"
-                : "text-zinc-400 transition-colors"
+                : "text-zinc-400 "
               }`}
           />
         </div>
         <span
-          className={`whitespace-nowrap overflow-hidden transition-all duration-200 font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
+          className={`whitespace-nowrap overflow-hidden   font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
             }`}
         >
           {label}
@@ -116,7 +116,7 @@ export default function Menu({
       <aside
         className={`
           fixed left-0 top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))]
-          bg-white border-r border-zinc-200 transition-all duration-200 z-40
+          bg-white border-r border-zinc-200   z-40
           flex flex-col overflow-hidden font-sans
           ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
         `}

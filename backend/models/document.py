@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import datetime, timezone
 import uuid
 from enum import Enum
@@ -48,6 +48,10 @@ class DocumentBase(BaseModel):
     deleted_at: Optional[datetime] = None
     flash_sale: Optional[dict] = None
     publisher_name: Optional[str] = None
+    folder_id: Optional[str] = None
+    drm_settings: Optional[dict] = None
+    publish_at: Optional[datetime] = None
+    is_nsfw: Optional[bool] = None
 
 class DocumentContentUpdate(BaseModel):
     content: str
@@ -61,6 +65,12 @@ class DocumentUpdate(BaseModel):
     tags: Optional[List[str]] = None
     category: Optional[str] = None
     price_dl: Optional[int] = None
+    folder_id: Optional[str] = None
+    drm_settings: Optional[dict] = None
+    chapters: Optional[List[Any]] = None
+    publish_at: Optional[datetime] = None
+    scheduled_publish_at: Optional[datetime] = None
+    is_nsfw: Optional[bool] = None
 
 class DocumentCreate(DocumentBase):
     pass

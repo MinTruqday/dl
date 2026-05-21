@@ -85,7 +85,7 @@ export default function ExplorePage() {
         <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden group">
           <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
             {banners[0].image_url ? (
-              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300" />
+              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply group-  " />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-100">
                 <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>

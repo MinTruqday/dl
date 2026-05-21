@@ -795,7 +795,7 @@ export default function SettingsPage() {
                         <textarea
                           value={motivation}
                           onChange={(e) => setMotivation(e.target.value)}
-                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none transition-colors rounded-none"
+                          className="w-full min-h-[140px] p-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none resize-none  rounded-none"
                         />
                       </div>
                       <div className="space-y-2">
@@ -806,7 +806,7 @@ export default function SettingsPage() {
                           type="text"
                           value={portfolio}
                           onChange={(e) => setPortfolio(e.target.value)}
-                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none transition-colors rounded-none"
+                          className="w-full h-10 px-4 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-medium outline-none  rounded-none"
                         />
                       </div>
                     </div>

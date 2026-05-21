@@ -61,10 +61,10 @@ export const SuggestionList = forwardRef((props: any, ref) => {
             <button
               key={index}
               onClick={() => selectItem(index)}
-              className={`w-full text-left px-3 py-2 border-b border-zinc-100 last:border-b-0 transition-colors duration-150 ${
+              className={`w-full text-left px-3 py-2 border-b border-zinc-100 last:border-b-0   ${
                 index === selectedIndex
                   ? "bg-zinc-100"
-                  : "bg-white hover:bg-zinc-50"
+                  : "bg-white "
               }`}
             >
               <div className="flex flex-col gap-1 min-w-0">

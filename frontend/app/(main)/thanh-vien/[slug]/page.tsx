@@ -85,7 +85,7 @@ export default function UserProfilePage() {
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(12px)",
-          transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)"
+          : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)"
         }}
       >
         <div className="w-32 h-32 md:w-48 md:h-48 border border-zinc-200 bg-zinc-50 shrink-0 p-1.5 group">
@@ -94,7 +94,7 @@ export default function UserProfilePage() {
               <img 
                 src={author.avatar_url} 
                 alt="Avatar" 
-                className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300" 
+                className="w-full h-full object-cover grayscale mix-blend-multiply group-  " 
               />
             ) : (
               <User className="w-full h-full p-8 text-zinc-300" />
@@ -133,7 +133,7 @@ export default function UserProfilePage() {
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(12px)",
-          transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s"
+          : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s"
         }}
       >
         <aside className="lg:col-span-3 space-y-8">
@@ -178,7 +178,7 @@ export default function UserProfilePage() {
                         {doc.cover_image || doc.cover_url ? (
                           <img
                             src={doc.cover_image || doc.cover_url}
-                            className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300"
+                            className="w-full h-full object-cover grayscale mix-blend-multiply group-  "
                             alt={doc.title}
                           />
                         ) : (
@@ -188,7 +188,7 @@ export default function UserProfilePage() {
                         )}
                       </div>
                       {doc.price_dl > 0 && (
-                        <div className="absolute top-3 right-3 bg-white text-black text-[10px] font-bold px-2 py-1 border border-zinc-200 shadow-sm">
+                        <div className="absolute top-3 right-3 bg-white text-black text-[10px] font-bold px-2 py-1 border border-zinc-200 ">
                           {doc.price_dl} dl
                         </div>
                       )}
@@ -198,7 +198,7 @@ export default function UserProfilePage() {
                         <span>{doc.category_name || "Tài liệu"}</span>
                         <span>{doc.views_count || 0} xem</span>
                       </div>
-                      <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug group-hover:underline underline-offset-4 decoration-1">
+                      <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug group- underline-offset-4 decoration-1">
                         {doc.title}
                       </h3>
                     </div>

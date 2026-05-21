@@ -99,7 +99,7 @@ export default function Report({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.4em] active:scale-95 flex items-center justify-center gap-4 rounded-sm disabled:opacity-50 transition-transform"
+            className="w-full h-16 bg-black text-white text-[11px] font-bold uppercase tracking-[0.4em] active:scale-95 flex items-center justify-center gap-4 rounded-sm disabled:opacity-50 "
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />

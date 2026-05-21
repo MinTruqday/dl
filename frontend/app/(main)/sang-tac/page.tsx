@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/services/document.service";
+import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, deleteFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/services/document.service";
 import { compileDocumentAPI } from "@/services/compilation.service";
 import { exportDocumentPdfAPI, exportDocumentEpubAPI } from "@/services/export.service";
 import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/services/comment.service";
@@ -85,11 +85,70 @@ type StudioDocument = {
   drm_settings?: { disable_copy?: boolean; hide_from_search?: boolean };
   tags?: string[];
   publish_at?: string;
+  scheduled_publish_at?: string;
   is_nsfw?: boolean;
 };
 
 type ViewMode = "edit" | "stats" | "config" | "versions" | "trash" | "comments";
 type EditorMode = "edit" | "preview" | "raw";
+
+function renderLineDiff(textA: string, textB: string) {
+  const cleanText = (txt: string) => {
+    if (!txt) return "";
+    try {
+      const parsed = JSON.parse(txt);
+      if (parsed.blocks) {
+        return parsed.blocks.map((b: any) => b.data?.text || b.data?.code || b.data?.html || "").join("\n");
+      }
+    } catch {
+      // ignore
+    }
+    return txt.replace(/<[^>]*>/g, "");
+  };
+
+  const aClean = cleanText(textA);
+  const bClean = cleanText(textB);
+
+  const linesA = aClean.split("\n");
+  const linesB = bClean.split("\n");
+
+  const maxLength = Math.max(linesA.length, linesB.length);
+  const diffRows = [];
+
+  for (let i = 0; i < maxLength; i++) {
+    const lineA = linesA[i] || "";
+    const lineB = linesB[i] || "";
+
+    if (lineA === lineB) {
+      diffRows.push({
+        type: "equal",
+        a: lineA,
+        b: lineB,
+      });
+    } else {
+      diffRows.push({
+        type: "diff",
+        a: lineA,
+        b: lineB,
+      });
+    }
+  }
+
+  return (
+    <div className="flex flex-col font-mono text-xs divide-y divide-zinc-100 w-full overflow-x-auto">
+      {diffRows.map((row, idx) => (
+        <div key={idx} className="flex min-h-[28px] border-l-4 border-transparent  ">
+          <div className={`flex-1 p-3 border-r border-zinc-200 whitespace-pre-wrap break-all ${row.type === "diff" && row.a ? "bg-red-50 text-red-800 border-l-4 border-red-500 font-semibold" : "text-zinc-600"}`}>
+            {row.type === "diff" && row.a ? `- ${row.a}` : row.a}
+          </div>
+          <div className={`flex-1 p-3 whitespace-pre-wrap break-all ${row.type === "diff" && row.b ? "bg-green-50 text-green-800 border-l-4 border-green-500 font-semibold" : "text-zinc-600"}`}>
+            {row.type === "diff" && row.b ? `+ ${row.b}` : row.b}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function StudioContent() {
   const searchParams = useSearchParams();
@@ -243,12 +302,10 @@ function StudioContent() {
 
   const fetchStatsData = useCallback(async () => {
     try {
-      const [sRes, rRes] = await Promise.all([
-        getAuthorStatsAPI(),
-        getRevenueAPI(),
-      ]);
-      setStats(sRes.data || sRes);
-      setRevenue(rRes.data || rRes);
+      const sRes = await getAuthorStatsAPI();
+      const data = sRes.data || sRes;
+      setStats(data);
+      setRevenue(data);
     } catch (err: any) {
       showToast("Không thể tải số liệu thống kê", "error");
     }
@@ -282,6 +339,28 @@ function StudioContent() {
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  useEffect(() => {
+    if (!selectedDocumentId) return;
+
+    const timer = setTimeout(async () => {
+      setStatusMsg("Đang lưu bản nháp");
+      try {
+        if (selectedChapterIndex !== null && selectedDocument) {
+          const newChapters = [...(selectedDocument.chapters || [])];
+          await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
+        } else if (content) {
+          await saveDocumentDraftAPI(selectedDocumentId, content, "html");
+        }
+        setStatusMsg("Đã lưu bản nháp");
+        setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
+      } catch (err) {
+        setStatusMsg("Lỗi lưu bản thảo");
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [content, selectedChapterIndex, selectedDocumentId, selectedDocument?.chapters]);
 
   useEffect(() => {
     if (selectedDocumentId) {
@@ -914,10 +993,10 @@ function StudioContent() {
           <p className="text-xs font-medium text-zinc-500 leading-relaxed">{confirmAction?.text}</p>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
             Bỏ qua
           </button>
-          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center">
+          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
             Xác nhận
           </button>
         </ModalFooter>
@@ -934,7 +1013,7 @@ function StudioContent() {
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Nhập tên thư mục"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
@@ -965,8 +1044,8 @@ function StudioContent() {
                   <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">Tương tác độc giả</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt đọc hoàn thành</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.completion_rate || 0}%</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt xem</p>
+                      <p className="text-lg font-medium text-black">{(selectedAnalytics?.views || 0).toLocaleString()}</p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Thời gian đọc TB</p>
@@ -980,6 +1059,14 @@ function StudioContent() {
                       <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Bình luận</p>
                       <p className="text-lg font-medium text-black">{selectedAnalytics?.comments || 0}</p>
                     </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Đánh giá</p>
+                      <p className="text-lg font-medium text-black">{selectedAnalytics?.reviews || 0} ({selectedAnalytics?.avg_rating || 0}/5)</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt mua</p>
+                      <p className="text-lg font-medium text-black">{selectedAnalytics?.purchases || 0}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -987,12 +1074,20 @@ function StudioContent() {
                   <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">Chỉ số học thuật</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Độ khó từ vựng (Gunning Fog)</p>
-                      <p className="text-lg font-medium text-black">{selectedAcademic?.readability_score || "N/A"}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tổng số từ</p>
+                      <p className="text-lg font-medium text-black">{(selectedAcademic?.word_count || 0).toLocaleString()}</p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Trích dẫn (Citations)</p>
-                      <p className="text-lg font-medium text-black">{selectedAcademic?.citation_count || 0}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Độ đọc hiểu</p>
+                      <p className="text-lg font-medium text-black">{selectedAcademic?.readability_score || 0}/100</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Số câu</p>
+                      <p className="text-lg font-medium text-black">{selectedAcademic?.sentence_count || 0}</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Độ dài câu TB</p>
+                      <p className="text-lg font-medium text-black">{selectedAcademic?.avg_sentence_length || 0} từ</p>
                     </div>
                   </div>
                 </div>
@@ -1013,16 +1108,16 @@ function StudioContent() {
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
               placeholder="Nhập tiêu đề"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
             Hủy
           </button>
-          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center">
+          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
             Lưu chương
           </button>
         </ModalFooter>
@@ -1040,7 +1135,7 @@ function StudioContent() {
                  type="number"
                  value={withdrawalAmount}
                  onChange={(e) => setWithdrawalAmount(parseInt(e.target.value) || 0)}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
                />
              </div>
              <div className="space-y-1.5">
@@ -1048,7 +1143,7 @@ function StudioContent() {
                <input
                  value={bankInfo.bank_name}
                  onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
                />
              </div>
              <div className="space-y-1.5">
@@ -1056,7 +1151,7 @@ function StudioContent() {
                <input
                  value={bankInfo.account_number}
                  onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
                />
              </div>
              <div className="space-y-1.5">
@@ -1064,19 +1159,19 @@ function StudioContent() {
                <input
                  value={bankInfo.account_name}
                  onChange={(e) => setBankInfo({ ...bankInfo, account_name: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
                />
              </div>
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowWithdrawalModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setShowWithdrawalModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
             Hủy
           </button>
           <button 
             onClick={handleWithdrawal} 
             disabled={requestingWithdrawal}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center gap-2"
           >
             {requestingWithdrawal ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
           </button>
@@ -1095,7 +1190,7 @@ function StudioContent() {
                 value={newDocTitle}
                 onChange={(e) => setNewDocTitle(e.target.value)}
                 placeholder="Nhập tiêu đề"
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
                 autoFocus
               />
             </div>
@@ -1106,7 +1201,7 @@ function StudioContent() {
                 onChange={(e) => setNewDocDescription(e.target.value)}
                 placeholder="Giới thiệu ngắn về tác phẩm"
                 rows={3}
-                className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400 resize-none"
+                className="w-full border border-zinc-200 px-3 py-2 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -1115,19 +1210,19 @@ function StudioContent() {
                 type="number"
                 value={newDocPrice}
                 onChange={(e) => setNewDocPrice(parseInt(e.target.value) || 0)}
-                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
               />
             </div>
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowCreateDocModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setShowCreateDocModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
             Hủy
           </button>
           <button
             onClick={handleCreateDocument}
             disabled={isCreatingDoc}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center gap-2"
           >
             {isCreatingDoc ? <Loader2 className="w-3 h-3 animate-spin" /> : "Tạo tác phẩm"}
           </button>
@@ -1145,23 +1240,23 @@ function StudioContent() {
               value={editingChapterTitle}
               onChange={(e) => setEditingChapterTitle(e.target.value)}
               placeholder="Nhập tiêu đề chương"
-              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400"
+              className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400"
               autoFocus
             />
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowEditChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black transition-colors flex items-center justify-center">
+          <button onClick={() => setShowEditChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
             Hủy
           </button>
-          <button onClick={handleSaveChapterTitle} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black transition-colors flex items-center justify-center">
+          <button onClick={handleSaveChapterTitle} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
             Lưu tiêu đề
           </button>
         </ModalFooter>
       </Modal>
 
       <div 
-        className="h-14 border-b border-zinc-200 px-6 flex items-center justify-between bg-white shrink-0 z-30 transition-all duration-300"
+        className="h-14 border-b border-zinc-200 px-6 flex items-center justify-between bg-white shrink-0 z-30  "
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="flex items-center gap-6">
@@ -1183,31 +1278,31 @@ function StudioContent() {
             <button
               onClick={handleExportPDF}
               disabled={!selectedDocumentId || isExporting}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
+              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
             >
               <Download className="w-3.5 h-3.5" /> PDF
             </button>
             <button
               onClick={handleExportEPUB}
               disabled={!selectedDocumentId || isExporting}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
+              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
             >
               <Download className="w-3.5 h-3.5" /> EPUB
             </button>
             <div className="flex items-center bg-zinc-50 border border-zinc-200 h-9 px-2">
               <CalendarClock className="w-3.5 h-3.5 text-zinc-400 mr-2" />
               <input
-                type="date"
+                type="datetime-local"
                 value={scheduleDate}
                 onChange={(e) => setScheduleDate(e.target.value)}
-                className="bg-transparent text-xs outline-none w-[110px]"
+                className="bg-transparent text-xs outline-none w-auto"
               />
-              <button onClick={handleSchedulePublish} className="ml-2 text-xs font-semibold hover:underline">Hẹn giờ</button>
+              <button onClick={handleSchedulePublish} className="ml-2 text-xs font-semibold ">Hẹn giờ</button>
             </div>
             <button
               onClick={handleSave}
               disabled={!selectedDocumentId || isSaving}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 transition-colors disabled:opacity-50 flex items-center gap-2 rounded-none bg-white ml-2"
+              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white ml-2"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Lưu bản nháp
@@ -1215,7 +1310,7 @@ function StudioContent() {
             <button
               onClick={handlePublish}
               disabled={!selectedDocumentId}
-              className="h-9 px-4 bg-black text-white text-sm font-medium transition-colors disabled:opacity-50 rounded-none"
+              className="h-9 px-4 bg-black text-white text-sm font-medium  disabled:opacity-50 rounded-none"
             >
               Công bố tác phẩm
             </button>
@@ -1224,7 +1319,7 @@ function StudioContent() {
       </div>
 
       <div 
-        className="flex flex-1 overflow-hidden transition-all duration-300 delay-75"
+        className="flex flex-1 overflow-hidden   delay-75"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <nav className="w-16 border-r border-zinc-200 flex flex-col items-center py-6 gap-4 shrink-0 bg-white">
@@ -1239,20 +1334,20 @@ function StudioContent() {
             <button
               key={item.mode}
               onClick={() => setViewMode(item.mode as ViewMode)}
-              className={`p-3 transition-colors relative group rounded-none flex items-center justify-center w-12 h-12 ${
+              className={`p-3  relative group rounded-none flex items-center justify-center w-12 h-12 ${
                 viewMode === item.mode ? "bg-black text-white" : "text-zinc-500"
               }`}
               title={item.label}
             >
               <item.icon className="w-5 h-5" />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none transition-all z-50 rounded-none">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none  z-50 rounded-none">
                 {item.label}
               </div>
             </button>
           ))}
         </nav>
 
-        <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left duration-300 p-6 space-y-12 overflow-y-auto no-scrollbar">
+        <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left  p-6 space-y-12 overflow-y-auto no-scrollbar">
            {viewMode === "edit" ? (
              <>
                 <div className="space-y-4">
@@ -1265,8 +1360,8 @@ function StudioContent() {
                          onClick={() => setShowChapterModal(true)}
                          className="py-8 text-center border border-zinc-200 flex flex-col items-center justify-center gap-2 rounded-none bg-zinc-50 w-full"
                        >
-                          <Plus className="w-4 h-4 text-zinc-400 transition-colors" />
-                          <p className="text-xs font-medium text-zinc-500 transition-colors">Chưa có chương</p>
+                          <Plus className="w-4 h-4 text-zinc-400 " />
+                          <p className="text-xs font-medium text-zinc-500 ">Chưa có chương</p>
                        </button>
                      ) : (
                        <>
@@ -1285,7 +1380,7 @@ function StudioContent() {
                               <span className="text-sm truncate">{ch.title}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <button onClick={(e) => handleToggleChapterPaywall(e, idx, ch.is_premium)} className={`p-0.5 rounded-none flex items-center justify-center ${ch.is_premium ? 'text-black' : 'text-zinc-300 hover:text-black'}`} title="Khóa chương (Trả phí)">
+                              <button onClick={(e) => handleToggleChapterPaywall(e, idx, ch.is_premium)} className={`p-0.5 rounded-none flex items-center justify-center ${ch.is_premium ? 'text-black' : 'text-zinc-300 '}`} title="Khóa chương (Trả phí)">
                                 <Lock className="w-3 h-3" />
                               </button>
                               <button onClick={(e) => { e.stopPropagation(); handleEditChapter(idx); }} className="p-0.5 rounded-none flex items-center justify-center"><Pencil className="w-3 h-3 text-zinc-400" /></button>
@@ -1297,7 +1392,7 @@ function StudioContent() {
                         ))}
                         <button
                           onClick={() => setShowChapterModal(true)}
-                          className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400 transition-colors rounded-none"
+                          className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400  rounded-none"
                         >
                           <Plus className="w-3.5 h-3.5 mr-2" />
                           <span className="text-xs font-medium">Chương mới</span>
@@ -1315,7 +1410,7 @@ function StudioContent() {
                     </button>
                   </div>
                   <nav className="flex flex-col gap-1">
-                    {/* Folders */}
+
                     {folders.map(folder => {
                       const isExpanded = expandedFolders[folder._id || folder.id];
                       const folderDocs = documents.filter(d => d.folder_id === (folder._id || folder.id) && (d.id || d._id) !== selectedDocumentId);
@@ -1330,7 +1425,27 @@ function StudioContent() {
                               <Folder className="w-3.5 h-3.5 text-zinc-500" />
                               <span className="truncate">{folder.name}</span>
                             </div>
-                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />}
+                            <div className="flex items-center gap-1.5">
+                              <span 
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Bạn có chắc chắn muốn xóa thư mục "${folder.name}"? Các tác phẩm bên trong sẽ được đưa ra thư mục gốc.`)) {
+                                    try {
+                                      await deleteFolderAPI(folder._id || folder.id);
+                                      showToast("Đã xóa thư mục", "success");
+                                      fetchDocuments();
+                                    } catch (err: any) {
+                                      showToast(err.message || "Không thể xóa thư mục", "error");
+                                    }
+                                  }
+                                }}
+                                className="p-0.5 text-zinc-400"
+                                title="Xóa thư mục"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </span>
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-zinc-400" /> : <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />}
+                            </div>
                           </button>
                           {isExpanded && (
                             <div className="pl-4 flex flex-col gap-1 mt-1 border-l border-zinc-200 ml-2">
@@ -1339,10 +1454,13 @@ function StudioContent() {
                                 <button
                                   key={doc._id || doc.id}
                                   onClick={() => setSelectedDocumentId(doc._id || doc.id)}
-                                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none group/item"
+                                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none"
                                 >
-                                  <span className="truncate">{doc.title}</span>
-                                  <div onClick={(e) => handleToggleStar(doc._id || doc.id, e)} className="p-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                  <div className="flex items-center gap-2 truncate">
+                                    <span className="truncate">{doc.title}</span>
+                                    {doc.scheduled_publish_at && <CalendarClock className="w-3.5 h-3.5 text-zinc-400 shrink-0" title={`Hẹn giờ: ${new Date(doc.scheduled_publish_at).toLocaleString('vi-VN')}`} />}
+                                  </div>
+                                  <div onClick={(e) => handleToggleStar(doc._id || doc.id, e)} className="p-0.5">
                                     <Star className={`w-3.5 h-3.5 ${doc.is_starred ? "fill-black text-black" : "text-zinc-300"}`} />
                                   </div>
                                 </button>
@@ -1353,15 +1471,18 @@ function StudioContent() {
                       );
                     })}
 
-                    {/* Uncategorized Documents */}
+
                     {documents.filter((d: any) => !d.folder_id && (d.id || d._id) !== selectedDocumentId).map((doc: any, idx) => (
                       <button
                         key={doc._id || doc.id || `other-doc-${idx}`}
                         onClick={() => setSelectedDocumentId(doc._id || doc.id)}
-                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none group/item"
+                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none"
                       >
-                        <span className="truncate">{doc.title}</span>
-                        <div onClick={(e) => handleToggleStar(doc._id || doc.id, e)} className="p-0.5 transition-opacity">
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="truncate">{doc.title}</span>
+                          {doc.scheduled_publish_at && <CalendarClock className="w-3.5 h-3.5 text-zinc-400 shrink-0" title={`Hẹn giờ: ${new Date(doc.scheduled_publish_at).toLocaleString('vi-VN')}`} />}
+                        </div>
+                        <div onClick={(e) => handleToggleStar(doc._id || doc.id, e)} className="p-0.5 ">
                           <Star className={`w-3.5 h-3.5 ${doc.is_starred ? "fill-black text-black" : "text-zinc-300"}`} />
                         </div>
                       </button>
@@ -1382,13 +1503,16 @@ function StudioContent() {
                         setSelectedDocumentId(doc._id || doc.id);
                         setViewMode("edit");
                       }}
-                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-150 ${
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none   ${
                         selectedDocumentId === (doc._id || doc.id) 
                           ? "bg-zinc-100 text-black border-zinc-300" 
                           : "bg-white text-zinc-500 border-transparent"
                       }`}
                     >
-                      <span className="truncate">{doc.title}</span>
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="truncate">{doc.title}</span>
+                        {doc.scheduled_publish_at && <CalendarClock className="w-3.5 h-3.5 text-zinc-400 shrink-0" title={`Hẹn giờ: ${new Date(doc.scheduled_publish_at).toLocaleString('vi-VN')}`} />}
+                      </div>
                       {selectedDocumentId === (doc._id || doc.id) && <ChevronRight className="w-4 h-4" />}
                     </button>
                   ))}
@@ -1399,14 +1523,14 @@ function StudioContent() {
 
         <main className="flex-1 bg-white overflow-hidden relative border-l border-zinc-200">
            {viewMode === "edit" && (
-             <div className="h-full flex flex-col animate-in fade-in duration-300">
+             <div className="h-full flex flex-col animate-in fade-in ">
                 <div className="h-12 border-b border-zinc-200 bg-white px-6 flex items-center justify-between shrink-0">
                    <div className="flex h-full gap-6">
                       {(["edit", "preview", "raw"] as const).map((m) => (
                         <button
                           key={m}
                           onClick={() => setEditorMode(m)}
-                          className={`h-full text-sm font-medium transition-colors border-b-2 flex items-center ${
+                          className={`h-full text-sm font-medium  border-b-2 flex items-center ${
                             editorMode === m ? "border-black text-black" : "border-transparent text-zinc-500"
                           }`}
                         >
@@ -1416,7 +1540,7 @@ function StudioContent() {
                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-                   <div className="w-full h-full animate-in fade-in duration-300">
+                   <div className="w-full h-full animate-in fade-in ">
                       {editorMode === "edit" ? (
                         <div className="flex flex-col h-full">
                           {selectedChapterIndex !== null && (
@@ -1428,14 +1552,14 @@ function StudioContent() {
                                 <textarea
                                   value={authorNote}
                                   onChange={(e) => setAuthorNote(e.target.value)}
-                                  placeholder="Ghi chú dành cho độc giả ở đầu chương..."
+                                  placeholder="Ghi chú dành cho độc giả ở đầu chương"
                                   rows={2}
-                                  className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black transition-colors rounded-none bg-white placeholder:text-zinc-400 resize-none"
+                                  className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
                                 />
                                 <button
                                   onClick={handleSaveAuthorNote}
                                   disabled={savingNote}
-                                  className="h-full px-4 bg-black text-white text-xs font-medium transition-colors disabled:opacity-50 rounded-none shrink-0"
+                                  className="h-full px-4 bg-black text-white text-xs font-medium  disabled:opacity-50 rounded-none shrink-0"
                                 >
                                   {savingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : "Lưu"}
                                 </button>
@@ -1482,7 +1606,7 @@ function StudioContent() {
            )}
 
            {viewMode === "stats" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
+             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in  no-scrollbar">
                 <div className="max-w-5xl mx-auto space-y-12">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {[
@@ -1533,7 +1657,7 @@ function StudioContent() {
                       <h3 className="text-base font-medium text-black">Tác phẩm gần đây</h3>
                       <button 
                         onClick={() => setShowWithdrawalModal(true)}
-                        className="h-9 px-4 bg-black text-white text-sm font-medium transition-colors rounded-none flex items-center gap-2"
+                        className="h-9 px-4 bg-black text-white text-sm font-medium  rounded-none flex items-center gap-2"
                       >
                         <Banknote className="w-4 h-4" /> Rút tiền doanh thu
                       </button>
@@ -1550,7 +1674,7 @@ function StudioContent() {
                         </thead>
                         <tbody className="divide-y divide-zinc-200">
                           {(stats?.documents || []).map((doc: any, idx: number) => (
-                            <tr key={doc.id || `stats-doc-${idx}`} onClick={(e) => handleViewDeepAnalytics(doc.id, e)} className="transition-colors group cursor-pointer hover:bg-zinc-50">
+                            <tr key={doc.id || `stats-doc-${idx}`} onClick={(e) => handleViewDeepAnalytics(doc.id, e)} className="cursor-pointer">
                               <td className="px-6 py-4 font-medium text-black">{doc.title}</td>
                               <td className="px-6 py-4 text-zinc-600">{doc.views.toLocaleString()}</td>
                               <td className="px-6 py-4">
@@ -1558,7 +1682,7 @@ function StudioContent() {
                                   <span className="text-zinc-600 font-medium">{doc.rating.toFixed(1)}</span>
                                 </div>
                               </td>
-                              <td className="px-6 py-4 text-right"><ChevronRight className="w-4 h-4 ml-auto text-zinc-400 transition-colors" /></td>
+                              <td className="px-6 py-4 text-right"><ChevronRight className="w-4 h-4 ml-auto text-zinc-400 " /></td>
                             </tr>
                           ))}
                         </tbody>
@@ -1600,10 +1724,10 @@ function StudioContent() {
            )}
 
            {viewMode === "config" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
+             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in  no-scrollbar">
                 <div className="max-w-3xl mx-auto bg-white border border-zinc-200 p-10 space-y-10 rounded-none">
                   
-                  {/* Tags */}
+
                   <div className="space-y-4">
                     <h2 className="text-xl font-medium text-black flex items-center gap-2"><Hash className="w-5 h-5" /> Phân loại & Thẻ (Tags)</h2>
                     <p className="text-sm font-medium text-zinc-500 leading-relaxed">
@@ -1613,7 +1737,7 @@ function StudioContent() {
                       {docTags.map(tag => (
                         <span key={tag} className="flex items-center gap-1 border border-zinc-200 bg-zinc-50 px-2 py-1 text-xs font-semibold text-black">
                           {tag}
-                          <button onClick={() => handleRemoveTag(tag)} className="text-zinc-400 hover:text-black"><X className="w-3 h-3" /></button>
+                          <button onClick={() => handleRemoveTag(tag)} className="text-zinc-400 "><X className="w-3 h-3" /></button>
                         </span>
                       ))}
                     </div>
@@ -1622,9 +1746,39 @@ function StudioContent() {
                       value={newTagInput}
                       onChange={(e) => setNewTagInput(e.target.value)}
                       onKeyDown={handleAddTag}
-                      placeholder="Nhập tên thẻ và nhấn Enter (VD: TienHiep, HuyenHuyen...)"
-                      className="w-full max-w-md h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white placeholder:text-zinc-400"
+                      placeholder="Nhập tên thẻ và nhấn Enter (VD: TienHiep, HuyenHuyen)"
+                      className="w-full max-w-md h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white placeholder:text-zinc-400"
                     />
+                  </div>
+                  <div className="h-px bg-zinc-200" />
+
+
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-medium text-black flex items-center gap-2"><Folder className="w-5 h-5" /> Thư mục làm việc (Workspace Folder)</h2>
+                    <p className="text-sm font-medium text-zinc-500 leading-relaxed">
+                      Di chuyển tác phẩm này vào thư mục làm việc để quản lý tài liệu tốt hơn.
+                    </p>
+                    <div className="flex gap-3 max-w-md">
+                      <select
+                        value={selectedDocument?.folder_id || ""}
+                        onChange={async (e) => {
+                          const fId = e.target.value;
+                          try {
+                            await updateDocumentAPI(selectedDocumentId, { folder_id: fId || null });
+                            showToast("Đã di chuyển tác phẩm thành công", "success");
+                            fetchDocuments();
+                          } catch (err: any) {
+                            showToast(err.message || "Không thể di chuyển tác phẩm", "error");
+                          }
+                        }}
+                        className="flex-1 h-10 border border-zinc-200 px-3 text-xs font-semibold rounded-none outline-none bg-white text-black focus:border-black"
+                      >
+                        <option value="">(Thư mục gốc)</option>
+                        {folders.map(f => (
+                          <option key={f._id || f.id} value={f._id || f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <div className="h-px bg-zinc-200" />
 
@@ -1636,7 +1790,7 @@ function StudioContent() {
                     <button
                       onClick={handleIngestAI}
                       disabled={isIngesting || !selectedDocumentId}
-                      className="h-10 bg-black text-white px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 w-fit"
+                      className="h-10 bg-black text-white px-6 text-sm font-medium  flex items-center gap-2 rounded-none disabled:opacity-50 w-fit"
                     >
                       {isIngesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
                       Kích hoạt đồng bộ dữ liệu AI
@@ -1655,20 +1809,20 @@ function StudioContent() {
                       <button
                         onClick={handleGenerateAICover}
                         disabled={generatingCover || !selectedDocumentId}
-                        className="h-10 border border-zinc-200 text-black px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none disabled:opacity-50 whitespace-nowrap"
+                        className="h-10 border border-zinc-200 text-black px-6 text-sm font-medium  flex items-center gap-2 rounded-none disabled:opacity-50 whitespace-nowrap"
                       >
                         {generatingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         {selectedDocument?.cover_url ? "Tái tạo ảnh bìa" : "Tạo ảnh bìa AI"}
                       </button>
                     </div>
 
-                    <div className="relative group max-w-[280px] rounded-none overflow-hidden">
-                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-200 relative overflow-hidden transition-colors rounded-none flex items-center justify-center">
+                    <div className="relative max-w-[280px] rounded-none overflow-hidden">
+                       <div className="aspect-[3/4] bg-zinc-50 border border-zinc-200 relative overflow-hidden  rounded-none flex items-center justify-center">
                           {selectedDocument?.cover_url ? (
                             <img
                               src={selectedDocument.cover_url.startsWith("http") ? selectedDocument.cover_url : `${API_URL}/storage/${selectedDocument.cover_url}`}
                               alt={selectedDocument.title}
-                              className="w-full h-full object-cover grayscale transition-all duration-500"
+                              className="w-full h-full object-cover grayscale  "
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-3">
@@ -1706,7 +1860,7 @@ function StudioContent() {
                             value={unlockPassword}
                             onChange={(e) => setUnlockPassword(e.target.value)}
                             placeholder="Mật mã hiện tại"
-                            className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white placeholder:text-zinc-400"
+                            className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white placeholder:text-zinc-400"
                           />
                         </div>
                         <button
@@ -1731,7 +1885,7 @@ function StudioContent() {
                             value={lockPassword}
                             onChange={(e) => setLockPassword(e.target.value)}
                             placeholder="Nhập mật mã"
-                            className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white placeholder:text-zinc-400"
+                            className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white placeholder:text-zinc-400"
                           />
                         </div>
                         <button
@@ -1761,7 +1915,7 @@ function StudioContent() {
                           value={transferUserId}
                           onChange={(e) => setTransferUserId(e.target.value)}
                           placeholder="Ví dụ: 60a1b2c3d4e5f6g7h8i9j0k"
-                          className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white placeholder:text-zinc-400"
+                          className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white placeholder:text-zinc-400"
                         />
                       </div>
                       <button
@@ -1789,19 +1943,19 @@ function StudioContent() {
                       </p>
                     </div>
                     <div className="space-y-4">
-                      <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-10 h-5 border flex items-center p-0.5 transition-colors ${drmCopy ? 'bg-black border-black' : 'bg-white border-zinc-300'}`}>
-                          <div className={`w-4 h-4 bg-white border ${drmCopy ? 'border-black translate-x-5' : 'border-zinc-300 translate-x-0'} transition-transform shadow-sm`} />
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <div className={`w-10 h-5 border flex items-center p-0.5  ${drmCopy ? 'bg-black border-black' : 'bg-white border-zinc-300'}`}>
+                          <div className={`w-4 h-4 bg-white border ${drmCopy ? 'border-black translate-x-5' : 'border-zinc-300 translate-x-0'}  `} />
                         </div>
                         <input type="checkbox" className="hidden" checked={drmCopy} onChange={(e) => setDrmCopy(e.target.checked)} />
-                        <span className="text-sm font-medium text-black group-hover:text-zinc-600 transition-colors">Chống bôi đen & Copy</span>
+                        <span className="text-sm font-medium text-black">Chống bôi đen & Copy</span>
                       </label>
-                      <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-10 h-5 border flex items-center p-0.5 transition-colors ${drmSearch ? 'bg-black border-black' : 'bg-white border-zinc-300'}`}>
-                          <div className={`w-4 h-4 bg-white border ${drmSearch ? 'border-black translate-x-5' : 'border-zinc-300 translate-x-0'} transition-transform shadow-sm`} />
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <div className={`w-10 h-5 border flex items-center p-0.5  ${drmSearch ? 'bg-black border-black' : 'bg-white border-zinc-300'}`}>
+                          <div className={`w-4 h-4 bg-white border ${drmSearch ? 'border-black translate-x-5' : 'border-zinc-300 translate-x-0'}  `} />
                         </div>
                         <input type="checkbox" className="hidden" checked={drmSearch} onChange={(e) => setDrmSearch(e.target.checked)} />
-                        <span className="text-sm font-medium text-black group-hover:text-zinc-600 transition-colors">Ẩn khỏi công cụ tìm kiếm (SEO)</span>
+                        <span className="text-sm font-medium text-black">Ẩn khỏi công cụ tìm kiếm (SEO)</span>
                       </label>
                       <button onClick={handleSaveDRM} disabled={savingDrm || !selectedDocumentId} className="h-10 bg-black text-white px-6 text-sm font-medium flex items-center gap-2 rounded-none disabled:opacity-50 w-fit">
                         {savingDrm ? <Loader2 className="w-4 h-4 animate-spin" /> : "Lưu cài đặt DRM"}
@@ -1819,12 +1973,12 @@ function StudioContent() {
                       </p>
                     </div>
                     <div className="space-y-4">
-                      <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-10 h-5 border flex items-center p-0.5 transition-colors ${isNsfw ? 'bg-red-500 border-red-500' : 'bg-white border-zinc-300'}`}>
-                          <div className={`w-4 h-4 bg-white border ${isNsfw ? 'border-red-500 translate-x-5' : 'border-zinc-300 translate-x-0'} transition-transform shadow-sm`} />
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <div className={`w-10 h-5 border flex items-center p-0.5  ${isNsfw ? 'bg-red-500 border-red-500' : 'bg-white border-zinc-300'}`}>
+                          <div className={`w-4 h-4 bg-white border ${isNsfw ? 'border-red-500 translate-x-5' : 'border-zinc-300 translate-x-0'}  `} />
                         </div>
                         <input type="checkbox" className="hidden" checked={isNsfw} onChange={handleToggleNSFW} />
-                        <span className="text-sm font-medium text-black group-hover:text-zinc-600 transition-colors">Yêu cầu xác nhận độ tuổi trước khi đọc</span>
+                        <span className="text-sm font-medium text-black">Yêu cầu xác nhận độ tuổi trước khi đọc</span>
                       </label>
                     </div>
                   </div>
@@ -1845,7 +1999,7 @@ function StudioContent() {
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
                           placeholder="Email người cộng tác"
-                          className="flex-1 h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors bg-white"
+                          className="flex-1 h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
                         />
                         <button onClick={handleInviteCollab} className="h-10 bg-black text-white px-4 text-sm font-medium flex items-center rounded-none whitespace-nowrap">
                           Gửi lời mời
@@ -1858,7 +2012,7 @@ function StudioContent() {
                           {collaborators.map((c: any) => (
                             <li key={c.id} className="flex justify-between items-center text-sm font-medium">
                               <span className="text-black">{c.email || c.user_id} <span className="text-zinc-500 text-xs">({c.role})</span></span>
-                              <button onClick={() => handleRemoveCollab(c.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleRemoveCollab(c.id)} className="text-red-500  p-1"><Trash2 className="w-3.5 h-3.5" /></button>
                             </li>
                           ))}
                         </ul>
@@ -1872,7 +2026,7 @@ function StudioContent() {
            )}
 
            {viewMode === "comments" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
+             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in  no-scrollbar">
                 <div className="max-w-3xl mx-auto space-y-8">
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
@@ -1899,7 +2053,7 @@ function StudioContent() {
                                 <span className="font-semibold text-sm text-black">{comment.author?.username || "Ẩn danh"}</span>
                                 <span className="text-xs text-zinc-400 ml-2">{new Date(comment.created_at).toLocaleDateString("vi-VN")}</span>
                               </div>
-                              <button onClick={() => handleDeleteComment(comment.id || comment._id)} className="text-zinc-400 hover:text-red-500 transition-colors">
+                              <button onClick={() => handleDeleteComment(comment.id || comment._id)} className="text-zinc-400  ">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -1911,15 +2065,15 @@ function StudioContent() {
                                   type="text"
                                   value={replyContent}
                                   onChange={(e) => setReplyContent(e.target.value)}
-                                  placeholder="Nhập phản hồi..."
-                                  className="flex-1 h-9 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black transition-colors"
+                                  placeholder="Nhập phản hồi"
+                                  className="flex-1 h-9 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black "
                                   autoFocus
                                 />
-                                <button onClick={() => setReplyingTo(null)} className="px-3 border border-zinc-200 text-xs font-medium hover:bg-zinc-50">Hủy</button>
+                                <button onClick={() => setReplyingTo(null)} className="px-3 border border-zinc-200 text-xs font-medium ">Hủy</button>
                                 <button onClick={handleReplyComment} className="px-4 bg-black text-white text-xs font-medium">Gửi</button>
                               </div>
                             ) : (
-                              <button onClick={() => setReplyingTo(comment.id || comment._id)} className="text-xs font-semibold text-black hover:underline mt-2">Phản hồi</button>
+                              <button onClick={() => setReplyingTo(comment.id || comment._id)} className="text-xs font-semibold text-black  mt-2">Phản hồi</button>
                             )}
                           </div>
                         ))}
@@ -1930,7 +2084,7 @@ function StudioContent() {
            )}
 
            {viewMode === "versions" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
+             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in  no-scrollbar">
                 <div className="max-w-3xl mx-auto space-y-8">
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
@@ -1944,7 +2098,7 @@ function StudioContent() {
                           <button 
                             onClick={handleCompareVersions}
                             disabled={isComparing}
-                            className="h-10 bg-black text-white px-6 text-sm font-medium transition-colors flex items-center gap-2 rounded-none"
+                            className="h-10 bg-black text-white px-6 text-sm font-medium  flex items-center gap-2 rounded-none"
                           >
                             {isComparing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                             So sánh ngay
@@ -1967,7 +2121,7 @@ function StudioContent() {
                           <div 
                             key={v.id} 
                             onClick={() => toggleVersionSelection(v.id)}
-                            className={`bg-white border p-6 flex items-center justify-between transition-all duration-150 rounded-none cursor-pointer ${
+                            className={`bg-white border p-6 flex items-center justify-between   rounded-none cursor-pointer ${
                               selectedVersions.includes(v.id) ? "border-black ring-1 ring-black" : "border-zinc-200"
                             }`}
                           >
@@ -1983,7 +2137,7 @@ function StudioContent() {
                              <div className="flex gap-3">
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); handleRestoreVersion(v.id); }}
-                                  className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none bg-white"
+                                  className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black  rounded-none bg-white"
                                 >
                                    Khôi phục
                                 </button>
@@ -1997,7 +2151,7 @@ function StudioContent() {
            )}
 
            {viewMode === "trash" && (
-             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in duration-300 no-scrollbar">
+             <div className="h-full overflow-y-auto p-8 md:p-12 animate-in fade-in  no-scrollbar">
                 <div className="max-w-3xl mx-auto space-y-8">
                    <div className="bg-white border border-zinc-200 p-8 rounded-none flex items-center justify-between">
                       <div className="space-y-1">
@@ -2017,7 +2171,7 @@ function StudioContent() {
                         </div>
                       ) : (
                         trash.map((doc: any) => (
-                          <div key={doc._id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between transition-colors rounded-none">
+                          <div key={doc._id} className="bg-white border border-zinc-200 p-6 flex items-center justify-between  rounded-none">
                              <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-zinc-50 flex items-center justify-center rounded-none border border-zinc-200">
                                    <FileText className="w-4 h-4 text-zinc-500" />
@@ -2029,7 +2183,7 @@ function StudioContent() {
                              </div>
                              <button 
                                 onClick={() => handleRestoreDocument(doc._id || doc.id)}
-                                className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black transition-colors rounded-none flex items-center gap-2"
+                                className="h-9 px-4 border border-zinc-200 text-sm font-medium text-black  rounded-none flex items-center gap-2"
                              >
                                 <RotateCcw className="w-4 h-4" /> Khôi phục
                              </button>
@@ -2045,24 +2199,19 @@ function StudioContent() {
               <ModalHeader>
                 <ModalTitle>So sánh sự khác biệt</ModalTitle>
               </ModalHeader>
-              <ModalContent className="flex-1 overflow-hidden p-0">
-                 <div className="flex h-full divide-x divide-zinc-200">
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                       <div className="p-3 bg-zinc-50 border-b border-zinc-200 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản A</div>
-                       <div className="flex-1 overflow-y-auto p-6 bg-white prose prose-zinc max-w-none text-xs font-mono">
-                          {diffData?.version_a || "Nội dung trống"}
-                       </div>
-                    </div>
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                       <div className="p-3 bg-zinc-50 border-b border-zinc-200 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản B</div>
-                       <div className="flex-1 overflow-y-auto p-6 bg-white prose prose-zinc max-w-none text-xs font-mono">
-                          {diffData?.version_b || "Nội dung trống"}
-                       </div>
-                    </div>
+              <ModalContent className="flex-1 overflow-hidden p-0 flex flex-col">
+                 <div className="flex bg-zinc-50 border-b border-zinc-200 divide-x divide-zinc-200">
+                    <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản A (Cũ)</div>
+                    <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản B (Mới)</div>
+                 </div>
+                 <div className="flex-1 overflow-y-auto bg-white p-0">
+                    {diffData ? renderLineDiff(diffData.version_a || "", diffData.version_b || "") : (
+                      <div className="p-8 text-center text-zinc-500 text-sm italic">Không có dữ liệu so sánh</div>
+                    )}
                  </div>
               </ModalContent>
               <ModalFooter>
-                 <button onClick={() => setDiffData(null)} className="px-6 py-2 bg-black text-white text-xs font-medium border border-black transition-colors">Đóng cửa sổ</button>
+                 <button onClick={() => setDiffData(null)} className="px-6 py-2 bg-black text-white text-xs font-medium border border-black ">Đóng cửa sổ</button>
               </ModalFooter>
             </Modal>
         </main>

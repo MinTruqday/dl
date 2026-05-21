@@ -57,7 +57,7 @@ export default function ApprovalPage() {
       ) : (
         <div className="space-y-6">
           {pendingDocs.map((doc: any) => (
-            <div key={doc._id} className="p-6 border border-zinc-200 bg-white space-y-4 hover:border-black transition-colors">
+            <div key={doc._id} className="p-6 border border-zinc-200 bg-white space-y-4  ">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <h4 className="font-semibold text-base text-black">{doc.title}</h4>
@@ -69,7 +69,7 @@ export default function ApprovalPage() {
                 </div>
                 <button
                   onClick={() => window.open(`/tai-lieu/viewer/${doc._id}`, "_blank")}
-                  className="p-2 border border-zinc-200 text-zinc-400 hover:text-black hover:border-black transition-colors"
+                  className="p-2 border border-zinc-200 text-zinc-400   "
                 >
                   <Eye className="w-4 h-4" />
                 </button>
@@ -80,13 +80,13 @@ export default function ApprovalPage() {
               <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
                 <button
                   onClick={() => setConfirmModal({ type: "reject", data: doc })}
-                  className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-red-500 transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-zinc-400  "
                 >
                   Từ chối
                 </button>
                 <button
                   onClick={() => setConfirmModal({ type: "approve", data: doc })}
-                  className="px-4 py-2 bg-black text-white text-xs font-semibold border border-black hover:bg-zinc-800 transition-colors"
+                  className="px-4 py-2 bg-black text-white text-xs font-semibold border border-black  "
                 >
                   Phê duyệt
                 </button>

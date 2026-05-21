@@ -157,7 +157,7 @@ export default function OperationDashboard() {
           </div>
         </header>
 
-        <div className="space-y-12 mb-16 animate-in fade-in duration-300">
+        <div className="space-y-12 mb-16 animate-in fade-in ">
           <div className="space-y-12">
             <section className="space-y-6">
               <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">Sức khỏe hệ thống</h2>
@@ -166,7 +166,7 @@ export default function OperationDashboard() {
                   <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Máy chủ chính</div>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${health?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <div className={`w-2 h-2 rounded-md ${health?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
                       <span className="text-xs font-medium text-black">
                         {health?.status === "healthy" ? "Hoạt động" : "Gặp sự cố"}
                       </span>
@@ -181,7 +181,7 @@ export default function OperationDashboard() {
                   <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Cơ sở dữ liệu</div>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${health?.services?.database === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <div className={`w-2 h-2 rounded-md ${health?.services?.database === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
                       <span className="text-xs font-medium text-black">
                         {health?.services?.database === "connected" ? "Đã kết nối" : "Mất kết nối"}
                       </span>
@@ -194,7 +194,7 @@ export default function OperationDashboard() {
                   <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Bộ nhớ đệm</div>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${health?.services?.cache === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <div className={`w-2 h-2 rounded-md ${health?.services?.cache === 'connected' ? 'bg-black' : 'bg-red-500'}`}></div>
                       <span className="text-xs font-medium text-black">
                         {health?.services?.cache === "connected" ? "Đã kết nối" : "Lỗi kết nối"}
                       </span>
@@ -207,7 +207,7 @@ export default function OperationDashboard() {
                   <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Trí tuệ nhân tạo</div>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${health?.services?.ai_agent === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                      <div className={`w-2 h-2 rounded-md ${health?.services?.ai_agent === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
                       <span className="text-xs font-medium text-black">
                         {health?.services?.ai_agent === "healthy" ? "Sẵn sàng" : "Chưa sẵn sàng"}
                       </span>
@@ -222,7 +222,7 @@ export default function OperationDashboard() {
               <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
                 <h2 className="text-sm font-semibold text-black">Kho lưu trữ đối tượng (MinIO Storage)</h2>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${minioStats?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
+                  <div className={`w-2 h-2 rounded-md ${minioStats?.status === 'healthy' ? 'bg-black' : 'bg-red-500'}`}></div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-black">
                     {minioStats?.status === "healthy" ? "Đang kết nối" : "Mất kết nối"}
                   </span>
@@ -336,10 +336,10 @@ export default function OperationDashboard() {
                   <button
                     onClick={toggleMaintenance}
                     disabled={isProcessing}
-                    className={`h-10 px-6 text-xs font-semibold border transition-all duration-200 disabled:opacity-50 rounded-none ${
+                    className={`h-10 px-6 text-xs font-semibold border   disabled:opacity-50 rounded-none ${
                       maintenanceMode 
                         ? "bg-black text-white border-black" 
-                        : "bg-white text-black border-zinc-200 hover:border-black"
+                        : "bg-white text-black border-zinc-200 "
                     }`}
                   >
                     {maintenanceMode ? "Tắt bảo trì" : "Bật bảo trì"}
@@ -354,7 +354,7 @@ export default function OperationDashboard() {
                   <button
                     onClick={triggerBackup}
                     disabled={isProcessing}
-                    className="h-10 px-6 bg-white text-black text-xs font-semibold border border-black hover:bg-black hover:text-white transition-all duration-200 disabled:opacity-50 rounded-none"
+                    className="h-10 px-6 bg-white text-black text-xs font-semibold border border-black     disabled:opacity-50 rounded-none"
                   >
                     Tiến hành sao lưu
                   </button>
@@ -364,7 +364,7 @@ export default function OperationDashboard() {
           </div>
         </div>
 
-        <div className="space-y-12 animate-in fade-in duration-300">
+        <div className="space-y-12 animate-in fade-in ">
           <section>
             <div className="flex flex-col gap-1 mb-6">
               <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 w-full">Hạn mức Trí tuệ nhân tạo (AI Quota)</h2>
@@ -396,7 +396,7 @@ export default function OperationDashboard() {
                               <button
                                 onClick={() => handleUpdateQuota(role)}
                                 disabled={!!isSavingQuota}
-                                className="p-1 text-zinc-400 hover:text-black transition-all duration-200 rounded-none disabled:opacity-50"
+                                className="p-1 text-zinc-400    rounded-none disabled:opacity-50"
                               >
                                 {isSavingQuota === role ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                               </button>
@@ -413,7 +413,7 @@ export default function OperationDashboard() {
                                 value={isAdmin ? "Không giới hạn" : quotaConfigs[role].daily_requests}
                                 readOnly={isAdmin}
                                 onChange={(e) => !isAdmin && handleQuotaChange(role, "daily_requests", e.target.value)}
-                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none transition-all duration-200 rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
                               />
                             </div>
 
@@ -426,7 +426,7 @@ export default function OperationDashboard() {
                                 value={isAdmin ? "Không giới hạn" : quotaConfigs[role].daily_tokens}
                                 readOnly={isAdmin}
                                 onChange={(e) => !isAdmin && handleQuotaChange(role, "daily_tokens", e.target.value)}
-                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none transition-all duration-200 rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
+                                className={`w-full border px-3 py-2 text-xs font-medium focus:outline-none   rounded-none ${isAdmin ? 'bg-zinc-100 border-transparent text-zinc-400' : 'bg-zinc-50 border-zinc-200 focus:border-black'}`}
                               />
                             </div>
                           </div>

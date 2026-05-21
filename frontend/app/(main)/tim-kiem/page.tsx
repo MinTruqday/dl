@@ -120,7 +120,7 @@ export default function SearchResultsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 animate-in fade-in duration-300">
+        <aside className="lg:col-span-3 space-y-12 animate-in fade-in ">
           <div className="space-y-6">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2 flex items-center justify-between">
               Bộ lọc nâng cao
@@ -139,10 +139,10 @@ export default function SearchResultsPage() {
                     <button
                       key={s.id}
                       onClick={() => setFilters({ ...filters, sort: s.id })}
-                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none   ${
                         filters.sort === s.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                          : "bg-white text-zinc-500 border-transparent "
                       }`}
                     >
                       {s.label}
@@ -164,10 +164,10 @@ export default function SearchResultsPage() {
                     <button
                       key={t.id}
                       onClick={() => setFilters({ ...filters, time: t.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none   ${
                         filters.time === t.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                          : "bg-white text-zinc-500 border-transparent "
                       }`}
                     >
                       {t.label}
@@ -187,10 +187,10 @@ export default function SearchResultsPage() {
                     <button
                       key={p.id}
                       onClick={() => setFilters({ ...filters, price: p.id })}
-                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                      className={`text-left px-3 py-2 text-sm font-medium border rounded-none   ${
                         filters.price === p.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-transparent hover:border-zinc-200"
+                          : "bg-white text-zinc-500 border-transparent "
                       }`}
                     >
                       {p.label}
@@ -211,10 +211,10 @@ export default function SearchResultsPage() {
                     <button
                       key={r.id}
                       onClick={() => setFilters({ ...filters, rating: r.id })}
-                      className={`text-center px-3 py-2 text-sm font-medium border rounded-none transition-colors duration-200 ${
+                      className={`text-center px-3 py-2 text-sm font-medium border rounded-none   ${
                         filters.rating === r.id
                           ? "bg-zinc-100 text-black border-zinc-300"
-                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
+                          : "bg-white text-zinc-500 border-zinc-200 "
                       }`}
                     >
                       {r.label}
@@ -231,7 +231,7 @@ export default function SearchResultsPage() {
                 <h3 className="text-xs font-semibold text-zinc-500">Tìm kiếm gần đây</h3>
                 <button
                   onClick={clearHistory}
-                  className="text-xs font-medium text-zinc-400 hover:text-black transition-colors"
+                  className="text-xs font-medium text-zinc-400  "
                 >
                   Xóa lịch sử
                 </button>
@@ -241,7 +241,7 @@ export default function SearchResultsPage() {
                   <div key={h} className="group/item relative">
                     <Link
                       href={`/tim-kiem?q=${h}`}
-                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200 hover:bg-zinc-50 hover:border-black transition-colors duration-200 rounded-none pr-8"
+                      className="block text-xs font-medium px-3 py-1.5 bg-white border border-zinc-200     rounded-none pr-8"
                     >
                       {h}
                     </Link>
@@ -252,7 +252,7 @@ export default function SearchResultsPage() {
                         setHistory(newHistory);
                         localStorage.setItem("doclib_search_history", JSON.stringify(newHistory));
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400  opacity-0 group-hover/item:opacity-100 "
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -263,7 +263,7 @@ export default function SearchResultsPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+        <main className="lg:col-span-9 space-y-6 animate-in slide-in-from-bottom-4 ">
           <div className="grid grid-cols-1 gap-6">
             {loading ? (
               <div className="grid grid-cols-1 gap-6">
@@ -279,14 +279,14 @@ export default function SearchResultsPage() {
                 <Link
                   key={`doc-${document._id || i}`}
                   href={`/tai-lieu/${document.slug}`}
-                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none hover:border-black transition-colors duration-300"
+                  className="group flex flex-row gap-6 p-4 border border-zinc-200 bg-white rounded-none   "
                 >
                   <div className="w-24 h-36 shrink-0 border border-zinc-200 bg-zinc-100 relative overflow-hidden">
                     {document.cover_url ? (
                       <img
                         src={document.cover_url}
                         alt={document.title}
-                        className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:grayscale-0 transition-all duration-300"
+                        className="w-full h-full object-cover grayscale mix-blend-multiply group-  "
                       />
                     ) : (
                       <div className="w-full h-full bg-zinc-100" />
@@ -307,7 +307,7 @@ export default function SearchResultsPage() {
                       </div>
                     )}
 
-                    <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug group-hover:underline underline-offset-2">
+                    <h3 className="text-base font-semibold text-black line-clamp-2 leading-snug group- underline-offset-2">
                       {document.title}
                     </h3>
 
@@ -338,7 +338,7 @@ export default function SearchResultsPage() {
                       <span className="text-xs font-semibold text-black">
                         {document.price_dl > 0 ? `${document.price_dl} dl` : "Miễn phí"}
                       </span>
-                      <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider group-hover:bg-black group-hover:text-white transition-colors duration-300">
+                      <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider group- group-  ">
                         Xem
                       </div>
                     </div>

@@ -722,7 +722,7 @@ export default function MessagesPage() {
                 </div>
               ) : allUsersForGroup.length > 0 ? (
                 allUsersForGroup.map((u) => (
-                  <div key={u._id || u.id} className="flex items-center gap-2 p-1.5 hover:bg-zinc-50">
+                  <div key={u._id || u.id} className="flex items-center gap-2 p-1.5 ">
                     <input
                       type="checkbox"
                       checked={selectedMembers.includes(u._id || u.id)}
@@ -800,7 +800,7 @@ export default function MessagesPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={openGroupModal}
-            className="h-10 px-6 border border-zinc-200 bg-white hover:bg-zinc-50 text-black text-xs font-medium flex items-center gap-2 rounded-none"
+            className="h-10 px-6 border border-zinc-200 bg-white  text-black text-xs font-medium flex items-center gap-2 rounded-none"
           >
             <Users className="w-4 h-4" /> Tạo nhóm thảo luận
           </button>
@@ -875,7 +875,7 @@ export default function MessagesPage() {
                               e.stopPropagation();
                               handleTogglePinConv(conv.other_user_id);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 bg-white border border-zinc-200 text-zinc-400 hover:text-black shrink-0"
+                            className="opacity-0 group- p-1 bg-white border border-zinc-200 text-zinc-400  shrink-0"
                           >
                             <Pin className="w-3 h-3" />
                           </button>
@@ -931,11 +931,11 @@ export default function MessagesPage() {
                     >
                       <Flame className="w-4 h-4" />
                       {showSelfDestructMenu && (
-                        <div className="absolute right-0 top-full mt-1.5 z-20 w-36 bg-white border border-zinc-200 shadow-xl flex flex-col text-left">
-                          <button onClick={() => handleUpdateSelfDestruct(0)} className="px-3 py-2 text-[10px] font-semibold text-black hover:bg-zinc-50 border-b border-zinc-100">Tắt tự hủy</button>
-                          <button onClick={() => handleUpdateSelfDestruct(5)} className="px-3 py-2 text-[10px] font-semibold text-black hover:bg-zinc-50 border-b border-zinc-100">5 giây</button>
-                          <button onClick={() => handleUpdateSelfDestruct(60)} className="px-3 py-2 text-[10px] font-semibold text-black hover:bg-zinc-50 border-b border-zinc-100">1 phút</button>
-                          <button onClick={() => handleUpdateSelfDestruct(3600)} className="px-3 py-2 text-[10px] font-semibold text-black hover:bg-zinc-50">1 giờ</button>
+                        <div className="absolute right-0 top-full mt-1.5 z-20 w-36 bg-white border border-zinc-200  flex flex-col text-left">
+                          <button onClick={() => handleUpdateSelfDestruct(0)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">Tắt tự hủy</button>
+                          <button onClick={() => handleUpdateSelfDestruct(5)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">5 giây</button>
+                          <button onClick={() => handleUpdateSelfDestruct(60)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">1 phút</button>
+                          <button onClick={() => handleUpdateSelfDestruct(3600)} className="px-3 py-2 text-[10px] font-semibold text-black ">1 giờ</button>
                         </div>
                       )}
                     </button>
@@ -989,7 +989,7 @@ export default function MessagesPage() {
                           <div
                             key={sm._id || sm.id}
                             onClick={() => scrollToMessage(sm._id || sm.id)}
-                            className="p-1.5 hover:bg-zinc-100 text-[10px] text-zinc-500 flex justify-between cursor-pointer border border-zinc-100 bg-white"
+                            className="p-1.5  text-[10px] text-zinc-500 flex justify-between cursor-pointer border border-zinc-100 bg-white"
                           >
                             <span className="font-semibold text-black truncate max-w-[70%]">{sm.content}</span>
                             <span className="font-mono text-[8px] text-zinc-400">
@@ -1015,7 +1015,7 @@ export default function MessagesPage() {
                           <div
                             key={pm._id || pm.id}
                             onClick={() => scrollToMessage(pm._id || pm.id)}
-                            className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2 py-1.5 border-l-2 border-black cursor-pointer hover:bg-zinc-100"
+                            className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2 py-1.5 border-l-2 border-black cursor-pointer "
                           >
                             {pm.content || "Hình ảnh"}
                           </div>
@@ -1039,7 +1039,7 @@ export default function MessagesPage() {
                           <div
                             key={i}
                             ref={(el) => (messageRefs.current[msg._id || msg.id] = el)}
-                            className={`flex flex-col transition-colors duration-500 ${isSender ? "items-end" : "items-start"}`}
+                            className={`flex flex-col   ${isSender ? "items-end" : "items-start"}`}
                           >
                             <div className="group relative max-w-[85%] sm:max-w-[70%]">
                               {msg.replied_message && (
@@ -1049,7 +1049,7 @@ export default function MessagesPage() {
                                 </div>
                               )}
 
-                              <div className={`px-4 py-3 text-sm leading-relaxed border transition-colors ${
+                              <div className={`px-4 py-3 text-sm leading-relaxed border  ${
                                 msg.is_recalled 
                                   ? "bg-zinc-50 border-zinc-200 text-zinc-400 italic" 
                                   : isSender 
@@ -1096,17 +1096,17 @@ export default function MessagesPage() {
                               )}
 
                               {!msg.is_recalled && (
-                                <div className={`absolute top-0 ${isSender ? "-left-[120px]" : "-right-[120px]"} opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
+                                <div className={`absolute top-0 ${isSender ? "-left-[120px]" : "-right-[120px]"} opacity-0 group-  flex items-center gap-1`}>
                                   <div className="relative flex items-center gap-1 bg-white border border-zinc-200 p-1">
                                     <button
                                       onClick={() => handleAddReaction(msg._id || msg.id, "👍")}
-                                      className="hover:scale-125 transition-transform text-[11px]"
+                                      className="  text-[11px]"
                                     >
                                       👍
                                     </button>
                                     <button
                                       onClick={() => handleAddReaction(msg._id || msg.id, "❤️")}
-                                      className="hover:scale-125 transition-transform text-[11px]"
+                                      className="  text-[11px]"
                                     >
                                       ❤️
                                     </button>
@@ -1114,28 +1114,28 @@ export default function MessagesPage() {
                                   <div className="relative flex items-center gap-0.5">
                                     <button
                                       onClick={() => handleTranslate(msg._id || msg.id, "vi")}
-                                      className="p-1 bg-white border border-zinc-200 text-zinc-400 hover:text-black"
+                                      className="p-1 bg-white border border-zinc-200 text-zinc-400 "
                                       title="Dịch sang tiếng Việt"
                                     >
                                       <Languages className="w-3.5 h-3.5" />
                                     </button>
                                     <button
                                       onClick={() => setShowMsgMenu(showMsgMenu === (msg._id || msg.id) ? null : (msg._id || msg.id))}
-                                      className="p-1.5 bg-white border border-zinc-200 text-zinc-400 hover:text-black transition-colors"
+                                      className="p-1.5 bg-white border border-zinc-200 text-zinc-400  "
                                     >
                                       <MoreVertical className="w-4 h-4" />
                                     </button>
                                     {showMsgMenu === (msg._id || msg.id) && (
-                                      <div className={`absolute z-10 w-32 bg-white border border-zinc-200 shadow-xl ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
+                                      <div className={`absolute z-10 w-32 bg-white border border-zinc-200  ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
                                         <button
                                           onClick={() => { setReplyingTo(msg); setShowMsgMenu(null); }}
-                                          className="w-full text-left px-3 py-2 text-[11px] font-medium hover:bg-zinc-50"
+                                          className="w-full text-left px-3 py-2 text-[11px] font-medium "
                                         >
                                           Trả lời
                                         </button>
                                         <button
                                           onClick={() => { handlePin(msg._id || msg.id); setShowMsgMenu(null); }}
-                                          className="w-full text-left px-3 py-2 text-[11px] font-medium hover:bg-zinc-50"
+                                          className="w-full text-left px-3 py-2 text-[11px] font-medium "
                                         >
                                           {msg.is_pinned ? "Bỏ ghim" : "Ghim"}
                                         </button>
@@ -1143,13 +1143,13 @@ export default function MessagesPage() {
                                           <>
                                             <button
                                               onClick={() => { setEditingMsg(msg); setNewMessage(msg.content); setShowMsgMenu(null); }}
-                                              className="w-full text-left px-3 py-2 text-[11px] font-medium hover:bg-zinc-50"
+                                              className="w-full text-left px-3 py-2 text-[11px] font-medium "
                                             >
                                               Chỉnh sửa
                                             </button>
                                             <button
                                               onClick={() => { handleRecall(msg._id || msg.id); setShowMsgMenu(null); }}
-                                              className="w-full text-left px-3 py-2 text-[11px] font-medium hover:bg-zinc-50 text-black font-semibold"
+                                              className="w-full text-left px-3 py-2 text-[11px] font-medium  text-black font-semibold"
                                             >
                                               Thu hồi
                                             </button>
@@ -1248,13 +1248,13 @@ export default function MessagesPage() {
 
                 <div className="flex gap-3">
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />
-                  <button onClick={() => fileInputRef.current?.click()} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-black transition-colors shrink-0 disabled:opacity-50">
+                  <button onClick={() => fileInputRef.current?.click()} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
                     <Plus className="w-5 h-5" />
                   </button>
-                  <button onClick={openShareDoc} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-black transition-colors shrink-0 disabled:opacity-50">
+                  <button onClick={openShareDoc} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
                     <Book className="w-5 h-5" />
                   </button>
-                  <button onClick={handleStartRecording} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-black transition-colors shrink-0 disabled:opacity-50">
+                  <button onClick={handleStartRecording} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
                     <Mic className="w-5 h-5" />
                   </button>
                   <input

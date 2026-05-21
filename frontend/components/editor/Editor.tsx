@@ -192,6 +192,41 @@ export default function Editor({
     }
   };
 
+  const handleCompilePreview = async () => {
+    if (!editorRef.current) return;
+    setIsCompiling(true);
+    showToast("Đang biên dịch mã nguồn LaTeX", "info");
+    try {
+      const data = await editorRef.current.save();
+      let latexCode = "";
+      data.blocks.forEach((b: any) => {
+        if (b.type === "paragraph" || b.type === "header") {
+          latexCode += (b.data?.text || "") + "\n\n";
+        } else if (b.type === "code") {
+          latexCode += (b.data?.code || "") + "\n\n";
+        } else if (b.type === "raw") {
+          latexCode += (b.data?.html || "") + "\n\n";
+        }
+      });
+      
+      if (!latexCode.trim()) {
+        showToast("Vui lòng nhập nội dung để biên dịch", "info");
+        setIsCompiling(false);
+        return;
+      }
+      
+      const pdfBlob = await compilePreviewAPI(latexCode, true);
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      setPreviewPdfUrl(pdfUrl);
+      setIsPreview(true);
+      showToast("Biên dịch LaTeX thành công", "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi khi biên dịch LaTeX", "error");
+    } finally {
+      setIsCompiling(false);
+    }
+  };
+
   const handleSynonyms = async () => {
     if (!editorRef.current) return;
     setIsSuggesting(true);
@@ -304,54 +339,69 @@ export default function Editor({
   return (
     <div className={`flex flex-col w-full h-full bg-white relative font-sans ${isZenMode ? "fixed inset-0 z-50" : ""}`}>
       {!isZenMode && (
-        <div className="flex justify-between items-center border-b border-zinc-200 p-3 animate-in fade-in duration-300">
+        <div className="flex justify-between items-center border-b border-zinc-200 p-3 animate-in fade-in ">
           <div className="flex flex-wrap gap-2 items-center">
             <div className="flex gap-2 ml-2">
               <button
                 onClick={handleSynonyms}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
               >
                 Gợi ý từ ngữ
               </button>
               <button
                 onClick={handleAiWritingPartner}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
               >
                 Trợ lý AI
               </button>
               <button
                 onClick={handleConsistencyCheck}
                 disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
               >
                 Kiểm tra tính logic
               </button>
               <button
                 onClick={handleGrammarCheck}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] hover:bg-zinc-50 transition-colors"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
               >
                 Kiểm tra ngữ pháp
+              </button>
+              <button
+                onClick={handleCompilePreview}
+                disabled={isCompiling}
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]   flex items-center gap-1.5"
+              >
+                {isCompiling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Binary className="w-3.5 h-3.5" />}
+                Biên dịch LaTeX
               </button>
             </div>
           </div>
           <div className="flex gap-2">
             <button
+              onClick={() => setIsPreview(!isPreview)}
+              className={`p-1.5 border ${isPreview ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
+              title="Bật/Tắt bản xem trước PDF"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setActiveSidebar(activeSidebar === "comments" ? "none" : "comments")}
-              className={`p-1.5 border ${activeSidebar === "comments" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"} transition-colors duration-150`}
+              className={`p-1.5 border ${activeSidebar === "comments" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
             >
               <MessageSquare className="w-4 h-4" />
             </button>
             <button
               onClick={() => setActiveSidebar(activeSidebar === "history" ? "none" : "history")}
-              className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"} transition-colors duration-150`}
+              className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
             >
               <History className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsZenMode(true)}
-              className="p-1.5 border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors duration-150"
+              className="p-1.5 border border-zinc-200 text-zinc-600   "
             >
               <Maximize2 className="w-4 h-4" />
             </button>
@@ -362,24 +412,24 @@ export default function Editor({
       {isZenMode && (
         <button
           onClick={() => setIsZenMode(false)}
-          className="fixed top-4 right-4 p-2 bg-white/80 backdrop-blur border border-zinc-200 text-zinc-400 hover:text-black z-[60] rounded-md transition-all duration-300"
+          className="fixed top-4 right-4 p-2 bg-white/80 backdrop-blur border border-zinc-200 text-zinc-400  z-[60] rounded-md  "
         >
           <Minimize2 className="w-5 h-5" />
         </button>
       )}
 
       <div className="flex-1 w-full flex overflow-hidden relative bg-white">
-        <div className={`h-full overflow-y-auto transition-all duration-300 ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"} p-12`}>
+        <div className={`h-full overflow-y-auto   ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"} p-12`}>
           <div ref={containerRef} />
         </div>
         
         {activeSidebar !== "none" && (
-          <div className="w-1/3 h-full border-l border-zinc-200 bg-zinc-50 flex flex-col animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className="w-1/3 h-full border-l border-zinc-200 bg-zinc-50 flex flex-col animate-in slide-in-from-right-8 fade-in ">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
               <span className="text-xs font-bold uppercase tracking-tight">
                 {activeSidebar === "comments" ? "Nhận xét nội dòng" : "Lịch sử phiên bản"}
               </span>
-              <button onClick={() => setActiveSidebar("none")} className="p-1 text-zinc-400 hover:text-black"><X className="w-4 h-4" /></button>
+              <button onClick={() => setActiveSidebar("none")} className="p-1 text-zinc-400 "><X className="w-4 h-4" /></button>
             </div>
             <div className="flex-1 p-4 overflow-y-auto no-scrollbar">
               <div className="flex flex-col gap-3">
@@ -403,7 +453,7 @@ export default function Editor({
                     sidebarData.map((c, idx) => (
                         <div 
                            key={c.id || `comment-${idx}`} 
-                           className="p-4 border border-zinc-200 bg-white space-y-2 cursor-pointer hover:border-black transition-colors"
+                           className="p-4 border border-zinc-200 bg-white space-y-2 cursor-pointer  "
                            onClick={() => {
                              if (c.selected_text || c.content) {
                                 const searchText = c.selected_text || c.content;
@@ -411,7 +461,7 @@ export default function Editor({
                                 for (let i = 0; i < elements.length; i++) {
                                    if (elements[i].textContent?.includes(searchText)) {
                                       elements[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                      elements[i].classList.add('bg-zinc-100', 'transition-colors', 'duration-500');
+                                      elements[i].classList.add('bg-zinc-100', '', '');
                                       setTimeout(() => elements[i].classList.remove('bg-zinc-100'), 2000);
                                       break;
                                    }
@@ -426,7 +476,7 @@ export default function Editor({
                            <p className="text-xs font-bold text-black border-b border-zinc-100 pb-1">{c.user_name || "Khách"}</p>
                            <p className="text-xs font-medium text-black">{c.text || c.content}</p>
                            <div className="pt-2 flex justify-end">
-                              <button className="text-[10px] font-bold text-zinc-400 hover:text-black uppercase">Giải quyết</button>
+                              <button className="text-[10px] font-bold text-zinc-400  uppercase">Giải quyết</button>
                            </div>
                         </div>
                     ))
@@ -437,10 +487,10 @@ export default function Editor({
         )}
 
         {isPreview && previewPdfUrl && (
-          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className="w-1/2 h-full border-l border-zinc-200 overflow-hidden bg-white flex flex-col relative animate-in slide-in-from-right-8 fade-in ">
             <div className="px-4 py-3 bg-black text-white text-xs flex justify-between items-center">
               <span className="font-bold uppercase tracking-tight">Bản in PDF</span>
-              <a href={previewPdfUrl} download="doclib-preview.pdf" className="p-1.5 text-zinc-300 hover:text-white"><Download className="w-4 h-4" /></a>
+              <a href={previewPdfUrl} download="doclib-preview.pdf" className="p-1.5 text-zinc-300 "><Download className="w-4 h-4" /></a>
             </div>
             <div className="flex-1 bg-zinc-100 p-4">
               <iframe src={previewPdfUrl} className="w-full h-full bg-white border border-zinc-200" />
@@ -463,7 +513,7 @@ export default function Editor({
           <div className="flex items-center gap-4">
              <div className="w-32 h-1 bg-zinc-100 relative">
                 <div 
-                  className="absolute top-0 left-0 h-full bg-black transition-all duration-500" 
+                  className="absolute top-0 left-0 h-full bg-black  " 
                   style={{ width: `${Math.min(100, (stats.charCount / (parseInt(typeof window !== 'undefined' ? localStorage.getItem("doclib_daily_goal") || "5000" : "5000"))) * 100)}%` }}
                 />
              </div>

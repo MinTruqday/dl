@@ -204,7 +204,7 @@ export default function ProfilePage() {
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 transition-opacity duration-500"
+        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  "
         style={{ opacity: visible ? 1 : 0 }}
       >
         <div className="space-y-2">
@@ -222,7 +222,7 @@ export default function ProfilePage() {
       </div>
 
       <div
-        className="grid lg:grid-cols-12 gap-12 transition-opacity duration-500"
+        className="grid lg:grid-cols-12 gap-12  "
         style={{ opacity: visible ? 1 : 0 }}
       >
         <aside className="lg:col-span-4 space-y-8">
@@ -341,7 +341,7 @@ export default function ProfilePage() {
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 placeholder="Nhập số tiền"
-                className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
               />
               <button
                 onClick={handleDeposit}
@@ -386,7 +386,7 @@ export default function ProfilePage() {
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
                   />
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function ProfilePage() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Nhập thông tin giới thiệu ngắn gọn"
-                  className="w-full min-h-[160px] bg-white border border-zinc-200 p-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none resize-none placeholder:text-zinc-400"
+                  className="w-full min-h-[160px] bg-white border border-zinc-200 p-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none resize-none placeholder:text-zinc-400"
                 />
               </div>
 
@@ -449,7 +449,7 @@ export default function ProfilePage() {
                       value={motivation}
                       onChange={(e) => setMotivation(e.target.value)}
                       placeholder="Lý do ứng tuyển tác giả tiềm năng"
-                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black transition-colors rounded-none"
+                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
                     />
                     <button
                       onClick={handleApplyAuthor}

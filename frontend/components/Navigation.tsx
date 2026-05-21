@@ -81,7 +81,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
             {onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className="p-2 text-zinc-500 transition-colors"
+                className="p-2 text-zinc-500 "
                 aria-label="Mở trình đơn"
               >
                 <MenuIcon className="w-5 h-5" />
@@ -89,7 +89,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
             )}
             <Link
               href="/"
-              className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 group transition-colors"
+              className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 group "
             >
               <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
                 dl
@@ -103,19 +103,19 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
             className="flex-1 max-w-xl hidden lg:block mx-12 group"
           >
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-black transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-black " />
               <input
                 type="text"
                 placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-none pl-12 pr-12 py-2 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 transition-colors"
+                className="w-full bg-white border border-zinc-200 rounded-none pl-12 pr-12 py-2 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 "
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-zinc-400 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-zinc-400 "
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -129,7 +129,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-2 text-zinc-500 transition-colors ${showNotifications ? "bg-zinc-100 text-black" : ""
+                    className={`relative p-2 text-zinc-500  ${showNotifications ? "bg-zinc-100 text-black" : ""
                       }`}
                     aria-label="Thông báo"
                   >
@@ -140,7 +140,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                   </button>
 
                   {showNotifications && (
-                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-200 shadow-none z-[200] rounded-none">
+                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-200  z-[200] rounded-none">
                       <div className="px-5 py-4 border-b border-zinc-200 flex items-center justify-between">
                         <span className="text-sm font-semibold text-black">
                           Thông báo
@@ -157,7 +157,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-5 py-4 cursor-pointer transition-colors ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
+                                className={`px-5 py-4 cursor-pointer  ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
                                   }`}
                                 onClick={() => {
                                   if (!notif.is_read) markAsRead(notif._id);
@@ -190,7 +190,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/thong-bao"
                         onClick={() => setShowNotifications(false)}
-                        className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200 transition-colors bg-zinc-50"
+                        className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200  bg-zinc-50"
                       >
                         Xem tất cả thông báo
                       </Link>
@@ -201,7 +201,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 transition-colors ${showUserMenu ? "bg-zinc-100 text-black" : ""
+                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500  ${showUserMenu ? "bg-zinc-100 text-black" : ""
                       }`}
                   >
                     <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-none overflow-hidden">
@@ -229,13 +229,13 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform ${showUserMenu ? "rotate-180 text-black" : ""
+                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block  ${showUserMenu ? "rotate-180 text-black" : ""
                         }`}
                     />
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white border border-zinc-200 shadow-none z-[200] py-2 rounded-none">
+                    <div className="absolute right-0 mt-3 w-56 bg-white border border-zinc-200  z-[200] py-2 rounded-none">
                       <div className="px-5 py-3 border-b border-zinc-200 mb-2">
                         <p className="text-[10px] font-semibold text-zinc-400 mb-1 uppercase tracking-wider">
                           Tài khoản
@@ -247,7 +247,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/ho-so"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 "
                       >
                         <User className="w-4 h-4" />
                         Hồ sơ cá nhân
@@ -255,7 +255,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/cai-dat"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 "
                       >
                         <Monitor className="w-4 h-4" />
                         Cài đặt hệ thống
@@ -263,7 +263,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <div className="border-t border-zinc-200 my-2" />
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 transition-colors w-full text-left"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600  w-full text-left"
                       >
                         <LogOut className="w-4 h-4" />
                         Đăng xuất
@@ -276,13 +276,13 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
               <div className="flex items-center gap-2">
                 <Link
                   href="/dang-nhap"
-                  className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-zinc-600 "
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/dang-ky"
-                  className="px-4 py-2 text-sm font-medium text-white bg-black transition-colors rounded-none"
+                  className="px-4 py-2 text-sm font-medium text-white bg-black  rounded-none"
                 >
                   Đăng ký
                 </Link>

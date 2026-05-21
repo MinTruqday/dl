@@ -65,10 +65,10 @@ export default function MaGiamGiaLayout({
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium border rounded-none transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium border rounded-none  ${
                     isActive(item.href)
                       ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50"
+                      : "bg-white text-zinc-500 border-transparent "
                   }`}
                 >
                   <div className="flex items-center gap-2">

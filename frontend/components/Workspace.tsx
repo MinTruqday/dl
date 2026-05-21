@@ -79,7 +79,7 @@ export default function Workspace({ children, requireAuth = false }: WorkspacePr
       />
 
       <main
-        className="relative transition-all duration-200"
+        className="relative  "
         style={{
           paddingTop: "var(--navbar-height)",
           marginLeft: !mounted

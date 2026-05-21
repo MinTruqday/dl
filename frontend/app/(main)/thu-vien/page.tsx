@@ -273,7 +273,7 @@ export default function LibraryPage() {
               ))}
               <button
                 onClick={() => setIsSynthesisOpen(true)}
-                className="flex items-center gap-3 px-3 py-3 mt-4 text-[10px] font-bold uppercase tracking-widest border border-black bg-black text-white hover:bg-zinc-800 transition-all active:scale-95"
+                className="flex items-center gap-3 px-3 py-3 mt-4 text-[10px] font-bold uppercase tracking-widest border border-black bg-black text-white   active:scale-95"
               >
                 <Combine className="w-4 h-4" />
                 Tổng hợp đa tài liệu AI
@@ -465,7 +465,7 @@ export default function LibraryPage() {
                               <h4 className="text-base font-semibold text-black line-clamp-1">
                                 {item.name}
                               </h4>
-                              <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                              <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
                             </div>
                             {(item as any).description && (
                               <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
@@ -573,7 +573,7 @@ export default function LibraryPage() {
                       >
                         <div>
                           <Link href={`/tai-lieu/${item.document_slug}`}>
-                            <h4 className="text-sm font-semibold text-black line-clamp-2 leading-snug group-hover:underline">
+                            <h4 className="text-sm font-semibold text-black line-clamp-2 leading-snug group-">
                               {item.document_title}
                             </h4>
                           </Link>
@@ -590,7 +590,7 @@ export default function LibraryPage() {
                       </div>
                       <button
                         onClick={() => handleDeleteHistoryItem(item.document_id)}
-                        className="absolute top-2 right-2 p-2 bg-white border border-zinc-200 text-zinc-400 hover:text-black hover:border-black transition-colors"
+                        className="absolute top-2 right-2 p-2 bg-white border border-zinc-200 text-zinc-400   "
                         title="Xóa khỏi lịch sử"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -637,7 +637,7 @@ export default function LibraryPage() {
                         <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
                           {folder.name}
                         </h4>
-                        <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                        <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
                       </div>
                       <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-auto">
                         <span className="text-xs font-medium text-zinc-500">
@@ -690,7 +690,7 @@ export default function LibraryPage() {
                           <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
                             {list.name}
                           </h4>
-                          <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                          <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
                         </div>
                         {list.description && (
                           <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
@@ -749,7 +749,7 @@ export default function LibraryPage() {
                           <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
                             {s.title}
                           </h4>
-                          <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-black transition-colors" />
+                          <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
                         </div>
                         {s.description && (
                           <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
@@ -890,8 +890,8 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-5xl h-[85vh] border border-zinc-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 rounded-none shadow-none">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in ">
+      <div className="bg-white w-full max-w-5xl h-[85vh] border border-zinc-200 flex flex-col overflow-hidden animate-in zoom-in-95  rounded-none ">
         <div className="flex items-center justify-between px-8 py-5 border-b border-zinc-200 bg-white">
           <div className="flex items-center gap-3">
             <Combine className="w-6 h-6 text-black" />
@@ -902,7 +902,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
               <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tighter mt-0.5">Phân tích chéo dữ liệu từ thư viện cá nhân</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-black transition-colors">
+          <button onClick={onClose} className="p-2 text-zinc-400  ">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -917,9 +917,9 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
                 <button
                   key={doc.document_id || doc.id}
                   onClick={() => toggleDoc(doc.document_id || doc.id)}
-                  className={`w-full flex items-start gap-3 p-3 text-left transition-all border ${selectedIds.includes(doc.document_id || doc.id)
+                  className={`w-full flex items-start gap-3 p-3 text-left  border ${selectedIds.includes(doc.document_id || doc.id)
                       ? "bg-black text-white border-black"
-                      : "bg-white text-black border-zinc-200 hover:border-black"
+                      : "bg-white text-black border-zinc-200 "
                     }`}
                 >
                   <FileText className="w-4 h-4 mt-0.5 shrink-0 text-zinc-400" />
@@ -942,14 +942,14 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Nhập câu hỏi tổng hợp (ví dụ: 'Tìm điểm chung về phương pháp luận giữa các bài viết này')"
-                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 focus:outline-none focus:border-black text-sm font-medium transition-all rounded-none"
+                  className="w-full h-14 pl-12 pr-4 bg-zinc-50 border border-zinc-200 focus:outline-none focus:border-black text-sm font-medium  rounded-none"
                   onKeyDown={(e) => e.key === "Enter" && handleSynthesize()}
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                 <button
                   onClick={handleSynthesize}
                   disabled={loading || selectedIds.length === 0}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-black text-white text-xs font-bold uppercase tracking-widest disabled:opacity-30 transition-all active:scale-95"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-black text-white text-xs font-bold uppercase tracking-widest disabled:opacity-30  active:scale-95"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Tổng hợp"}
                 </button>
@@ -969,7 +969,7 @@ function LibraryAISynthesisModal({ isOpen, onClose, availableDocuments }: Librar
                   </div>
                 </div>
               ) : result ? (
-                <div className="animate-in fade-in duration-700 prose prose-zinc max-w-none text-sm leading-relaxed">
+                <div className="animate-in fade-in  prose prose-zinc max-w-none text-sm leading-relaxed">
                   <div className="flex items-center gap-3 mb-8 pb-4 border-b border-zinc-100">
                     <div className="w-8 h-8 bg-black flex items-center justify-center">
                       <Sparkles className="w-4 h-4 text-white" />
