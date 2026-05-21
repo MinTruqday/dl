@@ -423,7 +423,9 @@ export default function MessagesPage() {
     try {
       const res = await searchMessagesAPI(selectedConv.other_user_id, q);
       setSearchedMsgResults(res.data || res || []);
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to search messages", err.message || err);
+    }
   };
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
@@ -446,7 +448,9 @@ export default function MessagesPage() {
     try {
       const docsRes = await getMyDocumentsAPI();
       setMyDocsForShare(docsRes.data || docsRes || []);
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to load documents for sharing", err.message || err);
+    }
     setLoadingShareDocs(false);
   };
 
@@ -536,7 +540,9 @@ export default function MessagesPage() {
     try {
       const res = await searchUsersAPI("a");
       setAllUsersForGroup(res.data || res || []);
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to load users for group", err.message || err);
+    }
     setLoadingGroupUsers(false);
   };
 

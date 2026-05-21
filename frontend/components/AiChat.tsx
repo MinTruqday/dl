@@ -37,7 +37,7 @@ function QuotaIndicator() {
       const data = await getMyQuotaAPI();
       setUsage(data);
     } catch (err) {
-      console.error("Lỗi lấy thông tin hạn mức:", err);
+      console.error("Error loading quota info:", err);
     } finally {
       setLoading(false);
     }
@@ -176,7 +176,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
         setSessions(data.data || []);
       }
     } catch (err) {
-      console.error("Lỗi tải lịch sử hội thoại:", err);
+      console.error("Error loading chat history:", err);
     }
   };
 
@@ -263,7 +263,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           fetchHistory();
         }
       } catch (err) {
-        console.error("Lỗi khởi tạo phiên hội thoại:", err);
+        console.error("Error creating chat session:", err);
       }
     }
 
@@ -611,7 +611,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                               setMessages(mapped);
                             }
                           } catch (e) {
-                             console.error("Lỗi tải chi tiết lịch sử", e);
+                             console.error("Error loading history details", e);
                           }
                         }}
                       >

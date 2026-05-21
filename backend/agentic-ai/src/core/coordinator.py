@@ -8,6 +8,7 @@ from src.integrations.search_engine import search_engine_agent
 from src.tools.internal_api import internal_api_agent
 from src.agents.draft_generator import draft_generator_agent
 from src.agents.knowledge import knowledge_agent
+from src.agents.reasoning import reasoning_agent
 from src.core.aggregator import aggregator_agent
 
 from src.models.state import CoordinatorState
@@ -32,7 +33,8 @@ async def supervisor_node(state: CoordinatorState):
         "ActionAgent": "action_agent",
         "InternalAPI": "action_agent",
         "DraftGenerator": "draft_generator",
-        "KnowledgeAgent": "knowledge_agent"
+        "KnowledgeAgent": "knowledge_agent",
+        "ReasoningAgent": "reasoning_agent"
     }
     
     next_node = route_map.get(agent_name, "action_agent")
@@ -86,6 +88,9 @@ async def draft_generator_node(state: CoordinatorState):
 async def knowledge_agent_node(state: CoordinatorState):
     return await execute_tool_node(state, knowledge_agent, "KnowledgeAgent")
 
+async def reasoning_agent_node(state: CoordinatorState):
+    return await execute_tool_node(state, reasoning_agent, "ReasoningAgent")
+
 async def aggregator_node(state: CoordinatorState):
     req = state.get("req")
     results = state.get("consolidated_results", [])
@@ -102,6 +107,7 @@ workflow.add_node("search_engine", search_engine_node)
 workflow.add_node("action_agent", action_agent_node)
 workflow.add_node("draft_generator", draft_generator_node)
 workflow.add_node("knowledge_agent", knowledge_agent_node)
+workflow.add_node("reasoning_agent", reasoning_agent_node)
 workflow.add_node("aggregator", aggregator_node)
 
 workflow.set_entry_point("supervisor")
@@ -112,10 +118,11 @@ workflow.add_conditional_edges("supervisor", router, {
     "action_agent": "action_agent",
     "draft_generator": "draft_generator",
     "knowledge_agent": "knowledge_agent",
+    "reasoning_agent": "reasoning_agent",
     "aggregator": "aggregator"
 })
 
-for node in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent"]:
+for node in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent", "reasoning_agent"]:
     workflow.add_edge(node, "supervisor")
 
 workflow.add_edge("aggregator", END)
@@ -145,7 +152,7 @@ class CoordinatorAgent:
                     steps = state_update.get("steps")
                     if steps and state_update.get("current_step_index") == 0:
                         yield {"type": "plan", "steps": steps}
-                elif node_name in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent"]:
+                elif node_name in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent", "reasoning_agent"]:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
                     else:

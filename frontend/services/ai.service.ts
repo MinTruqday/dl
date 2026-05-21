@@ -166,36 +166,3 @@ export async function multiDocSynthesisAPI(documentIds: string[], query: string)
   if (!res.ok) throw new Error(data.message || "Tổng hợp đa tài liệu thất bại");
   return data;
 }
-
-export async function createPostAPI(text: string, context: string = "") {
-  const res = await fetch(`${API_URL}/ai/tao-bai-dang-mang-xa-hoi`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, context }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo bài đăng thất bại");
-  return data;
-}
-
-export async function createStoryAPI(text: string) {
-  const res = await fetch(`${API_URL}/ai/tao-tin-mang-xa-hoi`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo tin thất bại");
-  return data;
-}
-
-export async function suggestEngagementAPI(content: string) {
-  const res = await fetch(`${API_URL}/ai/goi-y-tuong-tac`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ content }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gợi ý tương tác thất bại");
-  return data;
-}

@@ -83,7 +83,9 @@ export default function DocumentDetailsPage() {
     return () => {
       try {
         document.head.removeChild(meta);
-      } catch (err) {}
+      } catch (err: any) {
+        console.warn("Could not remove head meta", err.message || err);
+      }
     };
   }, [docData]);
 

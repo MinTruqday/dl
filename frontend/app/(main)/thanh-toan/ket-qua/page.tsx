@@ -46,7 +46,8 @@ export default function PaymentResultPage() {
       } else {
         setStatus("failed");
       }
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       setStatus("failed");
     } finally {
       requestAnimationFrame(() => setVisible(true));

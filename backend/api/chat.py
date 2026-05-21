@@ -39,7 +39,7 @@ class ConnectionManager:
                     await websocket.send_text(message["data"].decode("utf-8"))
                 await asyncio.sleep(0.1)
         except Exception as e:
-            pass
+            logger.warning(f"WebSocket error for user {user_id}: {e}")
         finally:
             await pubsub.unsubscribe(channel_name)
 

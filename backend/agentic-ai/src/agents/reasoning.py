@@ -10,6 +10,26 @@ class ReasoningAgent:
         self._hf_token = settings.HF_TOKEN
         logger.info(f"ReasoningAgent: Initialized with model={self._model}")
 
+    async def execute(self, task: str) -> str:
+        logger.info(f"ReasoningAgent: Executing logic task: {task[:50]}...")
+        prompt = f"""Bạn là một chuyên gia phân tích logic và suy luận (Reasoning Agent). Nhiệm vụ của bạn là giải quyết vấn đề phức tạp, đánh giá thông tin, phân tích nguyên nhân - kết quả và đưa ra kết luận mạch lạc.
+
+Nhiệm vụ: {task}
+
+Hãy phân tích từng bước (step-by-step) và đưa ra câu trả lời cuối cùng:"""
+        try:
+            llm = HuggingFaceEndpoint(
+                repo_id=self._model,
+                huggingfacehub_api_token=self._hf_token,
+                temperature=0.2,
+                max_new_tokens=1000
+            )
+            result = await llm.ainvoke(prompt)
+            return result.strip()
+        except Exception as e:
+            logger.error(f"ReasoningAgent: Execution failed: {e}")
+            return f"Lỗi suy luận: {str(e)}"
+
     async def evaluate_quality(self, query: str, answer: str, context_docs: List[Dict]) -> Dict:
         context_str = self._build_context(context_docs[:3])
 

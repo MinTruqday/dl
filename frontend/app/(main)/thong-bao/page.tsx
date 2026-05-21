@@ -94,7 +94,8 @@ export default function NotificationsPage() {
       const newSettings = { ...settings, [key]: value };
       setSettings(newSettings);
       await updateNotificationSettingsAPI(newSettings);
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Không thể cập nhật cài đặt", "error");
       setSettings(settings);
     }

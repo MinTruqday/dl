@@ -163,7 +163,8 @@ export default function DocumentViewer() {
         const data = await res.json();
         setSessions(data.data || []);
       }
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Không thể đồng bộ lịch sử", "error");
     }
   }, [id, showToast]);
@@ -221,7 +222,8 @@ export default function DocumentViewer() {
           setCurrentSessionId(sessionId);
           fetchSessions();
         }
-      } catch {
+      } catch (err: any) {
+        console.error(err.message || err);
         showToast("Không thể khởi tạo phiên làm việc", "error");
         setAsking(false);
         return;

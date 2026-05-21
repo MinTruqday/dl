@@ -205,6 +205,37 @@ async def restore_document(document_id: str) -> str:
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
+async def create_document(title: str, content: str) -> str:
+    """Tạo mới một tài liệu với tiêu đề và nội dung được cung cấp."""
+    token = auth_token_var.get()
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập"
+    headers = {"Authorization": token}
+    
+    import re
+    import unicodedata
+    slug = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
+    slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
+    slug = re.sub(r'[-\s]+', '-', slug)
+    
+    payload = {
+        "title": title,
+        "slug": slug,
+        "content": content,
+        "content_format": "html"
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{INTERNAL_API_URL}/tai-lieu/", json=payload, headers=headers, timeout=10)
+        if response.status_code == 201:
+            data = response.json().get("data", {})
+            return f"Đã tạo tài liệu/bài đăng thành công! ID tài liệu: {data.get('_id', data.get('id'))}"
+        return f"Tạo tài liệu thất bại: {response.text}"
+    except Exception as e:
+        logger.error(f"Error creating document: {e}")
+        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
+
+@tool
 async def get_document_analytics(document_id: str) -> str:
     """Xem thống kê chi tiết về lượt đọc và tỉ lệ bỏ dở của tài liệu."""
     token = auth_token_var.get()
@@ -300,22 +331,6 @@ async def agent_transform_tone(document_id: str, tone: str) -> str:
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
     return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-@tool
-async def agent_create_social_post(document_id: str) -> str:
-    """Tạo bài đăng mạng xã hội và story từ tài liệu."""
-    token = auth_token_var.get()
-    text = await _get_doc_text(document_id, token)
-    if not text: return "Không tìm thấy nội dung tài liệu."
-    try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp1 = await client.post(f"{settings.AGENTIC_AI_URL}/inference/tao-bai-dang-mang-xa-hoi", json={"text": text[:1500], "context": ""})
-            resp2 = await client.post(f"{settings.AGENTIC_AI_URL}/inference/tao-tin-mang-xa-hoi", json={"text": text[:1500]})
-            post = resp1.json().get("post", "") if resp1.status_code == 200 else ""
-            story = resp2.json().get("story", "") if resp2.status_code == 200 else ""
-            return f"**Bài đăng Facebook/LinkedIn:**\n{post}\n\n**Kịch bản Story:**\n{story}"
-    except Exception as e:
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
-    return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 tools = [
     get_user_balance,
@@ -332,7 +347,7 @@ tools = [
     agent_suggest_citations,
     agent_peer_review,
     agent_transform_tone,
-    agent_create_social_post
+    create_document
 ]
 
 llama_model = settings.LLAMA_MODEL

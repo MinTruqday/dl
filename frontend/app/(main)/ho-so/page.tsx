@@ -184,7 +184,8 @@ export default function ProfilePage() {
         );
         showToast("Đã tích hợp ảnh định danh mới", "success");
       }
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Lỗi kết nối khi tải ảnh định danh", "error");
     } finally {
       setIsSaving(false);

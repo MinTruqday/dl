@@ -49,7 +49,7 @@ export default function UserProfilePage() {
       );
       setDocuments(docData.data || docData || []);
     } catch (err: any) {
-      console.error("Lỗi tải thông tin thành viên:", err);
+      console.error("Error loading member details:", err);
       setError(err.message || "Không thể tải thông tin thành viên");
     } finally {
       setLoading(false);

@@ -11,8 +11,8 @@ export async function compilePreviewAPI(content: string, isFragment: boolean = f
     try {
       const data = await res.json();
       errMsg = data.detail?.error || data.detail || errMsg;
-    } catch {
-      // ignore
+    } catch (err: any) {
+      console.warn("Could not parse error JSON:", err.message || err);
     }
     throw new Error(errMsg);
   }

@@ -161,7 +161,9 @@ export default function StudioCollabPage() {
       ]);
       setOnlineCollaborators(onlineRes.data || onlineRes || []);
       setLockStatus(lockRes.data || lockRes || { is_locked: false });
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to load active status for document", err.message || err);
+    }
   };
 
   useEffect(() => {
@@ -397,7 +399,9 @@ export default function StudioCollabPage() {
     try {
       const cRes = await getTaskCommentsAPI(taskId);
       setActiveTaskComments(cRes.data || cRes || []);
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to load task comments", err.message || err);
+    }
   };
 
   const handleSendTaskComment = async () => {
@@ -407,7 +411,9 @@ export default function StudioCollabPage() {
       setActiveTaskCommentText("");
       const cRes = await getTaskCommentsAPI(activeTaskId);
       setActiveTaskComments(cRes.data || cRes || []);
-    } catch (err) {}
+    } catch (err: any) {
+      console.warn("Failed to load task comments", err.message || err);
+    }
   };
 
   const getOnlineStatus = (userId: string) => {

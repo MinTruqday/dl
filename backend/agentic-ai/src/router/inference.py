@@ -6,8 +6,7 @@ from src.models.inference import (
     GenerationRequest, TranslationRequest, SentimentRequest,
     CoverRequest, CodeRequest, GrammarRequest, FlashcardRequest,
     SummarizeRequest, ActionRequest, MindmapRequest, CitationRequest,
-    ToneRequest, ReviewRequest, SynthesisRequest, PostRequest,
-    StoryRequest, EngagementRequest
+    ToneRequest, ReviewRequest, SynthesisRequest
 )
 from huggingface_hub import AsyncInferenceClient
 import httpx
@@ -196,8 +195,8 @@ async def generate_flashcard(req: FlashcardRequest):
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except:
-            pass
+        except Exception as err:
+            logger.warning(f"Failed to parse JSON for flashcard: {err}")
         if ":" in result:
             parts = result.split(":", 1)
             return {"front": parts[0].strip(), "back": parts[1].strip()}
@@ -264,8 +263,8 @@ Nhiệm vụ của bạn:
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except:
-            pass
+        except Exception as err:
+            logger.warning(f"Failed to parse JSON for plagiarism check: {err}")
             
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -285,7 +284,6 @@ async def unified_action(req: ActionRequest):
             "autocomplete": f"Viết tiếp một câu hợp lý cho đoạn văn này mà không lặp lại nội dung cũ. Context: {req.context}. Text: {req.text}",
             "grammar": f"Sửa tất cả lỗi ngữ pháp và chính tả trong đoạn văn sau. Chỉ trả về văn bản đã sửa: {req.text}",
             "summarize": f"Tóm tắt ngắn gọn nội dung sau: {req.text}",
-            "enhance_social": f"Là một chuyên gia mạng xã hội, hãy trau chuốt nội dung sau để thu hút hơn (phong cách Swiss-Brutalist: trực diện, tối giản, táo bạo). Gợi ý thêm 3-5 hashtag. Văn bản: {req.text}",
             "ai_suggestions": f"Dựa trên bối cảnh '{req.context}', hãy gợi ý 3 hướng phát triển tiếp theo cho nội dung này: {req.text}",
             "check_logic": f"Kiểm tra sự mâu thuẫn về logic, cốt truyện hoặc nhân vật trong nội dung sau, dựa trên bối cảnh: {req.context}. Nội dung: {req.text}"
         }
@@ -332,8 +330,8 @@ async def generate_mindmap(req: MindmapRequest):
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except:
-            pass
+        except Exception as err:
+            logger.warning(f"Failed to parse JSON for mindmap: {err}")
         return {"error": "Không thể tạo cấu trúc bản đồ tư duy"}
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
@@ -414,43 +412,4 @@ async def multi_doc_synthesis(req: SynthesisRequest):
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
-@router.post("/tao-bai-dang-mang-xa-hoi")
-async def create_social_post(req: PostRequest):
-    try:
-        prompt = f"Dựa trên tài liệu/nội dung sau, hãy soạn một bài đăng mạng xã hội thu hút, bao gồm cả tiêu đề, nội dung chính và các hashtag phù hợp. Văn phong cần tự nhiên và lôi cuốn:\n\nNội dung: {req.text[:2000]}\nBối cảnh: {req.context}"
-        result = await _chat_direct(
-            messages=[{"role": "system", "content": "Bạn là chuyên gia sáng tạo nội dung mạng xã hội."}, {"role": "user", "content": prompt}],
-            max_tokens=800,
-            temperature=0.7
-        )
-        return {"post": result.strip()}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
-
-@router.post("/tao-tin-mang-xa-hoi")
-async def create_social_story(req: StoryRequest):
-    try:
-        prompt = f"Chuyển đổi văn bản sau thành kịch bản cho chuỗi 3-5 tin (stories) ngắn gọn. Mỗi tin bao gồm nội dung hiển thị và gợi ý hình ảnh minh họa. Định dạng: Tin 1: [Nội dung] - [Hình ảnh], Tin 2: ...\n\nVăn bản: {req.text[:2000]}"
-        result = await _chat_direct(
-            messages=[{"role": "system", "content": "Bạn là chuyên gia thiết kế câu chuyện thị giác."}, {"role": "user", "content": prompt}],
-            max_tokens=800,
-            temperature=0.7
-        )
-        return {"story": result.strip()}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
-
-@router.post("/goi-y-tuong-tac")
-async def suggest_engagement(req: EngagementRequest):
-    try:
-        prompt = f"Phân tích bài đăng sau và gợi ý 3 cách phản hồi khác nhau (ví dụ: đặt câu hỏi, phản biện, hoặc khen ngợi). Trả về danh sách phân cách bằng dấu '|'.\n\nBài đăng: {req.content[:1500]}"
-        result = await _chat_direct(
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.6
-        )
-        options = [opt.strip() for opt in result.split("|") if opt.strip()]
-        return {"suggestions": options}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 

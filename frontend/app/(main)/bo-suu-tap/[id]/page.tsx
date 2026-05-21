@@ -34,7 +34,7 @@ export default function SeriesDetailPage() {
       const data = res.data || res;
       setSeries(data);
     } catch (err: any) {
-      console.error("Lỗi tải chi tiết chuỗi nội dung:", err);
+      console.error("Error loading series details:", err);
       router.push("/collection");
     } finally {
       setLoading(false);

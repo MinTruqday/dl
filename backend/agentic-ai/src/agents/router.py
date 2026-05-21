@@ -21,9 +21,9 @@ class RouterAgent:
             template="""Bạn là Cổng kiểm duyệt (Router) của hệ thống DocLib. Phân tích ý định câu hỏi và chuyển hướng.
             
             Quy tắc định tuyến:
-            - "knowledge": Câu hỏi liên quan đến nội dung tài liệu, giải thích đoạn văn, tóm tắt.
-            - "action": Câu hỏi hoặc yêu cầu tương tác với hệ thống (Rút tiền, xóa tài liệu, nạp tiền, v.v.).
-            - "chat": Các câu giao tiếp thông thường, hỏi han (Chào hỏi, cảm ơn, bạn là ai).
+            - "knowledge": Các yêu cầu về tra cứu kiến thức, xử lý thông tin, phân tích và suy luận nội dung.
+            - "action": Các yêu cầu thao tác thực thi nghiệp vụ, thay đổi dữ liệu hoặc điều khiển hệ thống.
+            - "chat": Các câu giao tiếp thông thường mang tính chất trò chuyện, hỏi đáp cơ bản không liên quan đến nghiệp vụ sâu.
 
             Trả lời duy nhất "knowledge", "action" hoặc "chat":""",
             input_variables=["question"]

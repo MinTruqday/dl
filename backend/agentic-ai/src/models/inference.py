@@ -59,13 +59,3 @@ class ReviewRequest(BaseModel):
 class SynthesisRequest(BaseModel):
     document_ids: List[str]
     query: str
-
-class PostRequest(BaseModel):
-    text: str
-    context: Optional[str] = ""
-
-class StoryRequest(BaseModel):
-    text: str
-
-class EngagementRequest(BaseModel):
-    content: str

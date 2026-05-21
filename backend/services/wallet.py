@@ -77,8 +77,8 @@ class WalletService:
             if db_client.redis and is_locked:
                 try:
                     await db_client.redis.delete(lock_key)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Failed to release Redis lock: {e}")
 
     @staticmethod
     async def get_history(current_user, cursor: str = None, limit: int = 30, tx_type: str = None, skip: int = 0):
@@ -89,8 +89,8 @@ class WalletService:
         if cursor:
             try:
                 query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Invalid cursor format: {e}")
             
         tx_cursor = db["transactions"].find(query).sort("created_at", -1)
         if skip > 0:

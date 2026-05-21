@@ -100,8 +100,8 @@ function renderLineDiff(textA: string, textB: string) {
       if (parsed.blocks) {
         return parsed.blocks.map((b: any) => b.data?.text || b.data?.code || b.data?.html || "").join("\n");
       }
-    } catch {
-      // ignore
+    } catch (err: any) {
+      console.warn("Could not extract plain text", err.message || err);
     }
     return txt.replace(/<[^>]*>/g, "");
   };
@@ -273,7 +273,8 @@ function StudioContent() {
           setSelectedDocumentId(list[0]._id || list[0].id);
         }
       }
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Lỗi tải danh sách tài liệu", "error");
     } finally {
       setIsLoading(false);
@@ -498,7 +499,8 @@ function StudioContent() {
     try {
       await saveDocumentDraftAPI(selectedDocumentId, content, "html");
       showToast("Đã lưu bản nháp thành công", "success");
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Không thể lưu bản nháp", "error");
     } finally {
       setIsSaving(false);
@@ -514,7 +516,8 @@ function StudioContent() {
       await publishDocumentAPI(selectedDocumentId);
       showToast("Tài liệu đã được công bố thành công", "success");
       fetchDocuments();
-    } catch {
+    } catch (err: any) {
+      console.error(err.message || err);
       showToast("Xuất bản thất bại", "error");
       setStatusMsg("Sẵn sàng");
     }
@@ -623,7 +626,10 @@ function StudioContent() {
     try {
       const data = await getCommentsByItemAPI(selectedDocumentId);
       setComments(data.data || data || []);
-    } catch { setComments([]); }
+    } catch (err: any) { 
+      console.warn("Failed to load comments:", err.message || err);
+      setComments([]); 
+    }
     finally { setLoadingComments(false); }
   };
 
@@ -661,7 +667,10 @@ function StudioContent() {
     try {
       const data = await getCollaboratorsAPI(selectedDocumentId);
       setCollaborators(data.data || data || []);
-    } catch { setCollaborators([]); }
+    } catch (err: any) { 
+      console.warn("Failed to load collabs:", err.message || err);
+      setCollaborators([]); 
+    }
     finally { setLoadingCollabs(false); }
   };
 
@@ -691,7 +700,10 @@ function StudioContent() {
     try {
       const data = await getCouponsAPI();
       setCoupons(data.data || data || []);
-    } catch { setCoupons([]); }
+    } catch (err: any) { 
+      console.warn("Failed to load coupons:", err.message || err);
+      setCoupons([]); 
+    }
   };
 
   const handleCreateCoupon = async () => {

@@ -100,7 +100,7 @@ export default function SearchResultsPage() {
 
       setResults(filtered);
     } catch (err: any) {
-      console.error("Tìm kiếm thất bại:", err);
+      console.error("Search failed:", err);
     } finally {
       setLoading(false);
     }

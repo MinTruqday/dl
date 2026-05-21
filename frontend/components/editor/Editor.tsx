@@ -78,7 +78,8 @@ export default function Editor({
         try {
           const parsed = JSON.parse(initialContent);
           if (parsed.blocks && parsed.blocks.length > 0) data = parsed;
-        } catch {
+        } catch (err: any) {
+          console.warn("Error parsing initial content JSON:", err.message || err);
           data = { blocks: [{ type: "paragraph", data: { text: initialContent } }] };
         }
       }
@@ -160,7 +161,8 @@ export default function Editor({
                 return b;
             });
         }
-      } catch {
+      } catch (err: any) {
+        console.warn("Error parsing JSON when rendering Editor:", err.message || err);
         data = { blocks: [{ type: "paragraph", data: { text: initialContent } }] };
       }
       editorRef.current?.render(data);
