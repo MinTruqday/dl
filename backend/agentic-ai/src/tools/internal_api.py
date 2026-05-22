@@ -10,9 +10,8 @@ class InternalAPIAgent:
         self.base_url = settings.INTERNAL_API_URL
 
     async def execute(self, action: str, params: dict, user_id: str) -> str:
-        logger.info(f"InternalAPI: Executing action '{action}' for user {user_id}")
-        
         token = auth_token_var.get()
+        logger.info(f"InternalAPI: Executing action {action} for user {user_id} with token {token}")
         if not token and action != "public_query":
             return "Lỗi xác thực: Vui lòng đăng nhập để thực hiện thao tác với hệ thống."
             

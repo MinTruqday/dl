@@ -13,7 +13,7 @@ class AggregatorAgent:
             from src.core.brain import llm
             from langchain_core.messages import HumanMessage
             
-            final_prompt = f"Bạn là một chuyên gia tổng hợp thông tin. Hãy dựa vào các dữ liệu dưới đây để viết câu trả lời hoàn chỉnh, tự nhiên và chính xác cho yêu cầu ban đầu.\nYêu cầu: {query}\n\nDữ liệu:\n" + "\n\n".join(consolidated_results)
+            final_prompt = f"Bạn là một chuyên gia tổng hợp thông tin. Hãy dựa vào các dữ liệu dưới đây để viết câu trả lời hoàn chỉnh, tự nhiên và chính xác cho yêu cầu ban đầu. Đặc biệt: Tuyệt đối giữ nguyên vẹn mọi đường dẫn/link (dạng [Text](url) hoặc https://...) có trong dữ liệu và trả về cho người dùng.\nYêu cầu: {query}\n\nDữ liệu:\n" + "\n\n".join(consolidated_results)
             
             start_time = time.time()
             final_response = await llm.ainvoke([HumanMessage(content=final_prompt)])

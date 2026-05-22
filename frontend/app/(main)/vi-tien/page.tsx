@@ -32,6 +32,7 @@ import {
   ModalContent,
   ModalFooter,
 } from "@/components/ui/Modal";
+import { usePayOS } from "@payos/payos-checkout";
 
 interface Transaction {
   _id: string;
@@ -41,6 +42,42 @@ interface Transaction {
   note: string;
   created_at: string;
 }
+
+const PayOSEmbedded = ({
+  checkoutUrl,
+  onSuccess,
+  onCancel,
+  onExit,
+}: {
+  checkoutUrl: string;
+  onSuccess?: (event: any) => void;
+  onCancel?: (event: any) => void;
+  onExit?: (event: any) => void;
+}) => {
+  const { open, exit } = usePayOS({
+    RETURN_URL: window.location.origin + "/vi-tien",
+    ELEMENT_ID: "payos-checkout-container",
+    CHECKOUT_URL: checkoutUrl,
+    embedded: true,
+    onSuccess: (event: any) => onSuccess?.(event),
+    onCancel: (event: any) => onCancel?.(event),
+    onExit: (event: any) => onExit?.(event),
+  } as any);
+
+  useEffect(() => {
+    open();
+    return () => {
+      if (exit) exit();
+    };
+  }, [open, exit]);
+
+  return (
+    <div
+      id="payos-checkout-container"
+      className="w-full min-h-[450px] border border-zinc-200"
+    ></div>
+  );
+};
 
 export default function WalletPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -55,6 +92,7 @@ export default function WalletPage() {
   const [showTopupModal, setShowTopupModal] = useState(false);
   const [topupAmount, setTopupAmount] = useState(50000);
   const [topupLoading, setTopupLoading] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const [revenue, setRevenue] = useState<any>(null);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -102,7 +140,7 @@ export default function WalletPage() {
       const res = await redeemVoucherAPI(voucherCode.trim());
       if (res) {
         showToast(
-          "Kích hoạt voucher thành công. Số dư đã được cập nhật.",
+          "Kích hoạt voucher thành công. Số dư đã được cập nhật",
           "success"
         );
         setVoucherCode("");
@@ -110,7 +148,7 @@ export default function WalletPage() {
       }
     } catch (error: any) {
       showToast(
-        error.message || "Voucher không hợp lệ hoặc đã hết hạn.",
+        error.message || "Voucher không hợp lệ hoặc đã hết hạn",
         "error"
       );
     } finally {
@@ -120,20 +158,20 @@ export default function WalletPage() {
 
   const handleTopup = async () => {
     if (topupAmount < 10000) {
-      showToast("Số tiền nạp tối thiểu là 10.000 VNĐ.", "error");
+      showToast("Số tiền nạp tối thiểu là 10.000 VNĐ", "error");
       return;
     }
     setTopupLoading(true);
     try {
       const res = await createDepositLinkAPI(topupAmount);
-      const checkoutUrl = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+      const url = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
+      if (url) {
+        setCheckoutUrl(url);
       } else {
-        showToast("Không thể khởi tạo thanh toán lúc này.", "error");
+        showToast("Không thể khởi tạo thanh toán lúc này", "error");
       }
     } catch (e: any) {
-      showToast(e.message || "Lỗi hệ thống khi nạp tiền.", "error");
+      showToast(e.message || "Lỗi hệ thống khi nạp tiền", "error");
     } finally {
       setTopupLoading(false);
     }
@@ -142,23 +180,23 @@ export default function WalletPage() {
   const handleWithdrawal = async () => {
     const amount = parseInt(withdrawalAmount);
     if (!amount || amount < 50000) {
-      showToast("Số tiền tối thiểu để rút là 50.000 dl.", "error");
+      showToast("Số tiền tối thiểu để rút là 50.000 dl", "error");
       return;
     }
     if (!bankInfo.trim()) {
-      showToast("Vui lòng nhập thông tin ngân hàng.", "error");
+      showToast("Vui lòng nhập thông tin ngân hàng", "error");
       return;
     }
     setWithdrawLoading(true);
     try {
       await requestWithdrawalAPI(amount, bankInfo);
-      showToast("Yêu cầu rút tiền đã được gửi thành công.", "success");
+      showToast("Yêu cầu rút tiền đã được gửi thành công", "success");
       setWithdrawalAmount("");
       setBankInfo("");
       setShowWithdrawModal(false);
       fetchWalletData();
     } catch (e: any) {
-      showToast(e.message || "Yêu cầu rút tiền thất bại.", "error");
+      showToast(e.message || "Yêu cầu rút tiền thất bại", "error");
     } finally {
       setWithdrawLoading(false);
     }
@@ -200,66 +238,92 @@ export default function WalletPage() {
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showTopupModal}
-        onClose={() => setShowTopupModal(false)}
-        className="max-w-md"
+        onClose={() => {
+          setShowTopupModal(false);
+          setCheckoutUrl(null);
+        }}
+        className={checkoutUrl ? "max-w-2xl" : "max-w-md"}
       >
         <ModalHeader>
-          <ModalTitle>Nạp tiền (VNĐ)</ModalTitle>
-          <ModalDescription>Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>
+          <ModalTitle>{checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền (VNĐ)"}</ModalTitle>
+          {!checkoutUrl && <ModalDescription>Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>}
         </ModalHeader>
 
         <ModalContent>
-          <div className="grid grid-cols-2 gap-3">
-            {[50000, 100000, 200000, 500000].map((amt) => (
-              <button
-                key={amt}
-                onClick={() => setTopupAmount(amt)}
-                className={`py-3 text-xs font-medium border rounded-none ${
-                  topupAmount === amt
-                    ? "bg-zinc-100 border-zinc-200 text-black font-semibold"
-                    : "bg-white border-zinc-200 text-zinc-500"
-                }`}
-              >
-                {amt.toLocaleString()} VNĐ
-              </button>
-            ))}
-          </div>
+          {checkoutUrl ? (
+            <PayOSEmbedded
+              checkoutUrl={checkoutUrl}
+              onSuccess={() => {
+                showToast("Nạp tiền thành công", "success");
+                setCheckoutUrl(null);
+                setShowTopupModal(false);
+                fetchWalletData();
+              }}
+              onCancel={() => {
+                showToast("Đã hủy thanh toán", "error");
+                setCheckoutUrl(null);
+              }}
+              onExit={() => {
+                setCheckoutUrl(null);
+              }}
+            />
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {[50000, 100000, 200000, 500000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => setTopupAmount(amt)}
+                    className={`py-3 text-xs font-medium border rounded-none ${
+                      topupAmount === amt
+                        ? "bg-zinc-100 border-zinc-200 text-black font-semibold"
+                        : "bg-white border-zinc-200 text-zinc-500"
+                    }`}
+                  >
+                    {amt.toLocaleString()} VNĐ
+                  </button>
+                ))}
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền khác</label>
-            <div className="relative">
-              <input
-                type="number"
-                value={topupAmount}
-                onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">VNĐ</span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền khác</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={topupAmount}
+                    onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
+                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">VNĐ</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-3 border-t border-zinc-200">
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tỷ giá</span>
+                <span className="text-xs font-medium text-black">1.000 VNĐ = 1 dl</span>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between py-3 border-t border-zinc-200">
-            <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tỷ giá</span>
-            <span className="text-xs font-medium text-black">1.000 VNĐ = 1 dl</span>
-          </div>
+          )}
         </ModalContent>
 
-        <ModalFooter>
-          <button
-            onClick={() => setShowTopupModal(false)}
-            disabled={topupLoading}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            onClick={handleTopup}
-            disabled={topupLoading || topupAmount < 10000}
-            className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {topupLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận nạp"}
-          </button>
-        </ModalFooter>
+        {!checkoutUrl && (
+          <ModalFooter>
+            <button
+              onClick={() => setShowTopupModal(false)}
+              disabled={topupLoading}
+              className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              onClick={handleTopup}
+              disabled={topupLoading || topupAmount < 10000}
+              className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {topupLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận nạp"}
+            </button>
+          </ModalFooter>
+        )}
       </Modal>
 
       <Modal

@@ -18,11 +18,11 @@ async def supervisor_node(state: CoordinatorState):
     idx = state.get("current_step_index", 0)
     
     if not steps:
-        new_steps = await brain.create_plan(state["req"])
-        return {"steps": new_steps, "current_step_index": 0}
+        steps = await brain.create_plan(state["req"])
+        idx = 0
         
     if idx >= len(steps):
-        return {"next_node": "aggregator"}
+        return {"steps": steps, "current_step_index": idx, "next_node": "aggregator"}
         
     current_step = steps[idx]
     agent_name = current_step.get("agent", "ActionAgent")
@@ -38,7 +38,7 @@ async def supervisor_node(state: CoordinatorState):
     }
     
     next_node = route_map.get(agent_name, "action_agent")
-    return {"next_node": next_node}
+    return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
 async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
@@ -98,7 +98,10 @@ async def aggregator_node(state: CoordinatorState):
     return {"final_answer": final_answer}
 
 def router(state: CoordinatorState):
-    return state.get("next_node", "aggregator")
+    next_node = state.get("next_node")
+    if not next_node:
+        return "aggregator"
+    return next_node
 
 workflow = StateGraph(CoordinatorState)
 workflow.add_node("supervisor", supervisor_node)

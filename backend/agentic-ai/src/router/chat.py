@@ -93,7 +93,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         yield f"event: message\ndata: {json.dumps({'chunk': event['message']})}\n\n"
                     
         except Exception as e:
-            logger.error(f"Stream execution error: {e}")
+            logger.exception(f"Stream execution error: {e}")
             yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống đang gặp sự cố, vui lòng thử lại sau.'})}\n\n"
             
         yield "event: done\ndata: [DONE]\n\n"

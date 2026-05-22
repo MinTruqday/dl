@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 import json
 import asyncio
 from api.dependency import get_current_user, check_quota
@@ -15,9 +15,10 @@ from services.ai import AIService
 router = APIRouter(prefix="/ai")
 
 @router.post("/tro-chuyen")
-async def chat_streaming(data: dict, current_user: UserInDB = Depends(check_quota)):
+async def chat_streaming(data: dict, request: Request, current_user: UserInDB = Depends(check_quota)):
     from services.rag import RagService
-    return await RagService.proxy_rag_stream(data, None, current_user)
+    auth_header = request.headers.get("Authorization")
+    return await RagService.proxy_rag_stream(data, auth_header, current_user)
 
 @router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
 async def smart_search(q: str = Query(), current_user: UserInDB = Depends(check_quota)):

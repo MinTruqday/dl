@@ -109,6 +109,36 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
+import { usePayOS } from "@payos/payos-checkout";
+
+const PayOSEmbedded = ({
+  checkoutUrl,
+}: {
+  checkoutUrl: string;
+}) => {
+  const elementId = useRef("payos-" + Math.random().toString(36).substring(7));
+  const { open, exit } = usePayOS({
+    RETURN_URL: window.location.origin + "/vi-tien",
+    ELEMENT_ID: elementId.current,
+    CHECKOUT_URL: checkoutUrl,
+    embedded: true,
+  } as any);
+
+  useEffect(() => {
+    open();
+    return () => {
+      if (exit) exit();
+    };
+  }, [open, exit]);
+
+  return (
+    <div
+      id={elementId.current}
+      className="w-full min-h-[450px] border border-zinc-200 my-4 bg-white"
+    ></div>
+  );
+};
+
 
 const nodeDescriptions: Record<string, string> = {
   contextualize_question: "Đang phân tích bối cảnh hội thoại",
@@ -845,6 +875,16 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                         <code className={className} {...props}>
                                           {children}
                                         </code>
+                                      );
+                                    },
+                                    a: ({ href, children, ...props }) => {
+                                      if (href && (href.includes("payos.vn") || href.includes("pay.payos.vn"))) {
+                                        return <PayOSEmbedded checkoutUrl={href} />;
+                                      }
+                                      return (
+                                        <a href={href} className="text-black font-semibold underline" target="_blank" rel="noreferrer" {...props}>
+                                          {children}
+                                        </a>
                                       );
                                     },
                                     table: ({ children }) => (

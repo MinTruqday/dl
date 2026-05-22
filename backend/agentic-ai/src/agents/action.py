@@ -332,6 +332,33 @@ async def agent_transform_tone(document_id: str, tone: str) -> str:
     return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 
+@tool
+async def create_deposit_link(amount: int) -> str:
+    """Tạo liên kết nạp tiền (topup) vào ví dl (Đơn vị VNĐ, ví dụ: 50000). Trả về URL để thanh toán."""
+    token = auth_token_var.get()
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập để nạp tiền"
+    headers = {"Authorization": token}
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{INTERNAL_API_URL}/nap-tien/tao-link", 
+                json={"amount": amount}, 
+                headers=headers, 
+                timeout=10
+            )
+        if response.status_code in [200, 201]:
+            data = response.json().get("data", {})
+            checkout_url = data.get("checkout_url") or data.get("payment_url")
+            if checkout_url:
+                return f"Đã tạo yêu cầu nạp {amount} VNĐ thành công. Vui lòng truy cập đường dẫn sau để thanh toán: [Thanh toán tại đây]({checkout_url})"
+            return "Không thể lấy đường dẫn thanh toán từ hệ thống"
+        return "Lỗi khởi tạo thanh toán"
+    except Exception as e:
+        logger.error(f"Error calling deposit API: {e}")
+        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
+
+
 tools = [
     get_user_balance,
     get_transaction_history,
@@ -347,7 +374,8 @@ tools = [
     agent_suggest_citations,
     agent_peer_review,
     agent_transform_tone,
-    create_document
+    create_document,
+    create_deposit_link
 ]
 
 llama_model = settings.LLAMA_MODEL
