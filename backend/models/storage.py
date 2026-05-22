@@ -16,6 +16,12 @@ class StorageItemBase(BaseModel):
     shared_with: List[ShareAccess] = []
     is_shortcut: bool = False
     target_id: Optional[str] = None
+    is_duplicate: Optional[bool] = False
+    duplicate_of: Optional[str] = None
+    environment_ready: Optional[bool] = False
+    ai_processed: Optional[bool] = False
+    entities: Optional[dict] = {}
+    broken_links: Optional[List[str]] = []
 
 class StorageItemCreate(StorageItemBase):
     is_folder: bool = False
@@ -33,6 +39,12 @@ class StorageItemUpdate(BaseModel):
     is_starred: Optional[bool] = None
     is_public: Optional[bool] = None
     shared_with: Optional[List[ShareAccess]] = None
+    is_duplicate: Optional[bool] = None
+    duplicate_of: Optional[str] = None
+    environment_ready: Optional[bool] = None
+    ai_processed: Optional[bool] = None
+    entities: Optional[dict] = None
+    broken_links: Optional[List[str]] = None
 
 class FileVersion(BaseModel):
     version_id: str = Field(default_factory=lambda: str(uuid.uuid4()))

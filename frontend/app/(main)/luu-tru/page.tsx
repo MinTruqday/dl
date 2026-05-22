@@ -426,7 +426,7 @@ export default function StoragePage() {
 
   const handleZipDownload = async () => {
     if (selectedIds.size === 0) return;
-    showToast("Đang chuẩn bị file Zip...", "success");
+    showToast("Đang chuẩn bị file Zip", "success");
     try {
       await downloadZipAPI(Array.from(selectedIds));
       setSelectedIds(new Set());
@@ -557,7 +557,7 @@ export default function StoragePage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input 
                 type="text" 
-                placeholder={useAISearch ? "Hỏi AI tìm tài liệu..." : "Tìm kiếm theo tên..."}
+                placeholder={useAISearch ? "Hỏi AI tìm tài liệu" : "Tìm kiếm theo tên"}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full border border-zinc-200 pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-black font-sans"
@@ -919,7 +919,7 @@ export default function StoragePage() {
                 type="email" 
                 value={shareEmail}
                 onChange={(e) => setShareEmail(e.target.value)}
-                placeholder="Nhập email người dùng..."
+                placeholder="Nhập email người dùng"
                 className="flex-1 border border-zinc-200 p-2 text-sm focus:outline-none focus:border-black font-sans"
               />
               <select 
@@ -982,7 +982,7 @@ export default function StoragePage() {
           <textarea 
             value={descValue}
             onChange={(e) => setDescValue(e.target.value)}
-            placeholder="Nhập ghi chú..."
+            placeholder="Nhập ghi chú"
             className="w-full border border-zinc-200 p-3 text-sm focus:outline-none focus:border-black font-sans min-h-[100px]"
             autoFocus
           />
@@ -1118,9 +1118,22 @@ export default function StoragePage() {
                   ) : <File className="w-10 h-10 text-zinc-500" />}
                 </div>
                 <h3 className="font-semibold text-center break-all">{detailsItem.name}</h3>
+                {detailsItem.is_duplicate && (
+                  <span className="mt-2 inline-block px-2 py-1 bg-zinc-100 text-black text-[10px] font-bold uppercase border border-black">
+                    Phát hiện trùng lặp
+                  </span>
+                )}
               </div>
 
               <div className="p-6 flex flex-col gap-4 text-sm">
+                <div className="flex justify-between items-center bg-zinc-50 p-2 border border-zinc-200">
+                  <span className="text-xs font-semibold text-zinc-600">Trạng thái AI</span>
+                  {detailsItem.ai_processed ? (
+                    <span className="text-[10px] bg-black text-white px-2 py-1 uppercase font-semibold">Đã xử lý</span>
+                  ) : (
+                    <span className="text-[10px] bg-zinc-200 text-zinc-600 px-2 py-1 uppercase font-semibold">Đang chờ</span>
+                  )}
+                </div>
                 <div>
                   <span className="block text-xs font-semibold text-zinc-500 mb-1">Loại</span>
                   <span className="font-mono bg-zinc-200 px-2 py-1 text-xs">
@@ -1149,16 +1162,68 @@ export default function StoragePage() {
                   </div>
                 )}
                 
+                {detailsItem.environment_ready && (
+                  <div>
+                    <span className="block text-xs font-semibold text-zinc-500 mb-1">Môi trường biên dịch (AI)</span>
+                    <span className="font-mono text-black bg-zinc-100 px-2 py-1 border border-zinc-300 text-xs font-semibold inline-block">
+                      SẴN SÀNG
+                    </span>
+                  </div>
+                )}
+                
                 {detailsItem.tags && detailsItem.tags.length > 0 && (
                   <div>
-                    <span className="block text-xs font-semibold text-zinc-500 mb-1">Nhãn (AI Đề xuất)</span>
+                    <span className="block text-xs font-semibold text-zinc-500 mb-1">Nhãn (AI đề xuất)</span>
                     <div className="flex gap-2 flex-wrap">
                       {detailsItem.tags.map(t => (
-                        <span key={t} className={`text-[10px] px-2 py-1 font-mono border ${t === 'VIOLATION_FLAGGED' ? 'bg-red-100 border-red-500 text-red-600 font-bold' : 'bg-zinc-100 border-zinc-300 text-zinc-600'}`}>
+                        <span key={t} className={`text-[10px] px-2 py-1 font-mono border ${t === 'VIOLATION_FLAGGED' ? 'bg-black border-black text-white font-bold' : 'bg-zinc-100 border-zinc-300 text-zinc-600'}`}>
                           {t}
                         </span>
                       ))}
                     </div>
+                  </div>
+                )}
+                
+                {detailsItem.entities && (Object.keys(detailsItem.entities).length > 0) && (
+                  <div className="border border-zinc-200 bg-zinc-50 p-3 mt-2">
+                    <span className="block text-xs font-semibold text-black mb-2 uppercase">Thực thể (AI trích xuất)</span>
+                    <div className="flex flex-col gap-2">
+                      {detailsItem.entities.people && detailsItem.entities.people.length > 0 && (
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase font-semibold">Nhân vật / Người: </span>
+                          <span className="text-xs font-mono">{detailsItem.entities.people.join(", ")}</span>
+                        </div>
+                      )}
+                      {detailsItem.entities.organizations && detailsItem.entities.organizations.length > 0 && (
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase font-semibold">Tổ chức: </span>
+                          <span className="text-xs font-mono">{detailsItem.entities.organizations.join(", ")}</span>
+                        </div>
+                      )}
+                      {detailsItem.entities.dates && detailsItem.entities.dates.length > 0 && (
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase font-semibold">Ngày tháng: </span>
+                          <span className="text-xs font-mono">{detailsItem.entities.dates.join(", ")}</span>
+                        </div>
+                      )}
+                      {detailsItem.entities.amounts && detailsItem.entities.amounts.length > 0 && (
+                        <div>
+                          <span className="text-[10px] text-zinc-500 uppercase font-semibold">Số tiền: </span>
+                          <span className="text-xs font-mono">{detailsItem.entities.amounts.join(", ")}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {detailsItem.broken_links && detailsItem.broken_links.length > 0 && (
+                  <div className="border border-black bg-zinc-100 p-3 mt-2">
+                    <span className="block text-xs font-bold text-black mb-2 uppercase">Cảnh báo liên kết hỏng</span>
+                    <ul className="list-disc pl-4 text-xs font-mono text-black">
+                      {detailsItem.broken_links.map((link, idx) => (
+                        <li key={idx}>{link}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
@@ -1271,7 +1336,7 @@ export default function StoragePage() {
                     type="text" 
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Nhập câu hỏi..." 
+                    placeholder="Nhập câu hỏi" 
                     className="flex-1 border border-zinc-200 p-2 text-sm focus:outline-none focus:border-black"
                   />
                   <button type="submit" className="bg-black text-white px-3 py-2 text-sm font-semibold border border-black">Gửi</button>

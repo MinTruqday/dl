@@ -20,6 +20,17 @@ export interface StorageItem {
   is_shortcut?: boolean;
   target_id?: string;
   color?: string;
+  is_duplicate?: boolean;
+  duplicate_of?: string;
+  environment_ready?: boolean;
+  ai_processed?: boolean;
+  entities?: {
+    people?: string[];
+    organizations?: string[];
+    dates?: string[];
+    amounts?: string[];
+  };
+  broken_links?: string[];
   created_at: string;
   updated_at: string;
 }

@@ -301,6 +301,16 @@ class AIService:
             if len(tags) > 5:
                 tags = tags[:3]
 
+            entities = {}
+            try:
+                entities_prompt = f"Trích xuất thông tin từ văn bản sau thành JSON: {{'people': [], 'organizations': [], 'dates': [], 'amounts': []}}. Trả về DUY NHẤT JSON:\n\n{context_text[:1500]}"
+                entities_res = await AIService.generate_text_completion(entities_prompt, max_tokens=150)
+                entities_res = entities_res.replace('```json', '').replace('```', '').strip()
+                import json
+                entities = json.loads(entities_res)
+            except Exception as e:
+                logger.warning(f"Entity extraction failed: {e}")
+
             mod_prompt = f"Bạn là một bộ lọc nội dung. Hãy kiểm tra xem văn bản sau có chứa nội dung bạo lực, 18+, hoặc vi phạm pháp luật không? Chỉ trả lời 'SAFE' hoặc 'UNSAFE':\n\n{context_text}"
             mod_res = await AIService.generate_text_completion(mod_prompt, max_tokens=5)
             is_flagged = "UNSAFE" in mod_res.upper()
@@ -316,11 +326,49 @@ class AIService:
                 if route_res != "NONE" and any(str(f.id) == route_res for f in folder_options):
                     target_parent_id = route_res
                 
+            environment_ready = False
+            if ext in ["tex", "md"]:
+                try:
+                    await make_ai_request(f"{rag_url}/inference/chuan-bi-moi-truong", {"file_ext": ext, "document_id": item_id}, timeout=30.0)
+                    environment_ready = True
+                except:
+                    pass
+
+            is_duplicate = False
+            duplicate_of = None
+            try:
+                dup_res = await make_ai_request(f"{rag_url}/inference/kiem-tra-trung-lap", {"text": context_text, "item_id": item_id}, timeout=30.0)
+                if dup_res.status_code == 200:
+                    dup_data = dup_res.json()
+                    is_duplicate = dup_data.get("is_duplicate", False)
+                    duplicate_of = dup_data.get("duplicate_of", None)
+            except Exception as ex:
+                logger.warning(f"Duplicate check failed: {ex}")
+
+            try:
+                await make_ai_request(f"{rag_url}/inference/tao-chi-muc", {"document_id": item_id, "text": extracted_text}, timeout=60.0)
+            except Exception as ex:
+                logger.warning(f"Vector indexing failed: {ex}")
+
+            try:
+                lang_prompt = f"Văn bản này được viết bằng ngôn ngữ nào? Chỉ trả lời 'vi' nếu tiếng Việt, 'en' nếu tiếng Anh, v.v:\n\n{context_text[:500]}"
+                lang_res = await AIService.generate_text_completion(lang_prompt, max_tokens=5)
+                lang_res = lang_res.strip().lower()
+                if "vi" not in lang_res and len(lang_res) == 2:
+                    await AIService.translate_storage_document(item_id, "vi", owner_id)
+            except Exception as e:
+                logger.warning(f"Auto translation failed: {e}")
+
             update_data_dict = {
                 "description": summary.strip(),
                 "name": suggested_name.replace('"', '').strip(),
                 "tags": tags,
-                "parent_id": target_parent_id
+                "parent_id": target_parent_id,
+                "environment_ready": environment_ready,
+                "is_duplicate": is_duplicate,
+                "duplicate_of": duplicate_of,
+                "entities": entities,
+                "ai_processed": True
             }
             
             if is_flagged:
