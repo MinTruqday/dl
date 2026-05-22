@@ -126,7 +126,6 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      {/* Content Section */}
       <div 
         className="grid grid-cols-1 lg:grid-cols-12 gap-16"
         style={{

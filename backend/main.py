@@ -16,7 +16,6 @@ import sys
 import time
 
 from api.authentication import router as auth_router
-from api.archive import router as archive_router
 from api.comment import router as comment_router
 from api.document import router as document_router
 from api.upload import router as upload_router
@@ -58,6 +57,7 @@ from api.pin import router as pin_router
 from api.preference import router as preference_router
 from api.quota import router as quota_router
 from api.rank import router as rank_router
+from api.storage import router as storage_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -76,7 +76,7 @@ app.add_middleware(
 )
 
 from fastapi.responses import Response, FileResponse
-from core.storage import get_s3_client
+from core.storage import get_storage_client
 
 @app.get("/social/{file_path:path}")
 async def serve_social_media(file_path: str):
@@ -84,9 +84,9 @@ async def serve_social_media(file_path: str):
     if os.path.exists(local_path) and os.path.isfile(local_path):
         return FileResponse(local_path)
     try:
-        async with await get_s3_client() as s3:
+        async with await get_storage_client() as storage_client:
             object_key = f"social/{file_path}"
-            response = await s3.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)
+            response = await storage_client.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)
             content = await response["Body"].read()
             return Response(content, media_type=response.get("ContentType", "image/png"))
     except Exception as e:
@@ -180,7 +180,6 @@ async def shutdown_event():
     await close_db()
 
 app.include_router(auth_router)
-app.include_router(archive_router)
 app.include_router(profile_router)
 app.include_router(wallet_router)
 app.include_router(deposit_router)
@@ -223,6 +222,7 @@ app.include_router(pin_router)
 app.include_router(preference_router)
 app.include_router(quota_router)
 app.include_router(rank_router)
+app.include_router(storage_router)
 
 @app.get("/health")
 async def health_check():

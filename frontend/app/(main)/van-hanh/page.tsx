@@ -235,7 +235,6 @@ export default function OperationDashboard() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* High level stats grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="p-6 border border-zinc-200 bg-white space-y-4">
                       <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">Tổng dung lượng</div>
@@ -259,9 +258,7 @@ export default function OperationDashboard() {
                     </div>
                   </div>
 
-                  {/* Buckets details & categories */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Buckets list container */}
                     <div className="p-6 border border-zinc-200 bg-white space-y-4">
                       <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase pb-2 border-b border-zinc-100">
                         Danh sách Buckets
@@ -292,7 +289,6 @@ export default function OperationDashboard() {
                       </div>
                     </div>
 
-                    {/* Categories list container */}
                     <div className="p-6 border border-zinc-200 bg-white space-y-4">
                       <div className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase pb-2 border-b border-zinc-100">
                         Phân loại dữ liệu lưu trữ

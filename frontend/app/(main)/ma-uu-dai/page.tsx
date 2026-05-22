@@ -190,7 +190,6 @@ export default function ManageCouponsPage() {
         </div>
       )}
 
-      {/* Modals same as before */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} className="max-w-2xl">
         <ModalHeader><ModalTitle>Thiết lập ưu đãi mới</ModalTitle></ModalHeader>
         <ModalContent className="space-y-6">

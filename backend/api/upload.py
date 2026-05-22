@@ -26,6 +26,14 @@ async def upload_asset(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
+    from fastapi import HTTPException
+    from services.storage import StorageService
+    quota = await StorageService.get_storage_quota(current_user.id)
+    # Estimate size (file.size might not be populated until read, but for FastAPI UploadFile we can check later)
+    # However, to be safe, just check if already exceeded:
+    if quota["used"] >= quota["limit"]:
+        raise HTTPException(status_code=400, detail="Đã vượt quá hạn mức lưu trữ (1GB). Vui lòng dọn dẹp bớt tệp tin.")
+        
     return APIResponse(data=await UploadService.upload_document(file), message="Tải tập tin lên thành công", status=201)
 
 @router.get("/luu-tru/{file_path:path}", response_model=APIResponse[Any])

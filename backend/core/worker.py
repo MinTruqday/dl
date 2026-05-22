@@ -42,16 +42,16 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                     
                     from core.storage import upload_file
                     import uuid
-                    s3_key = f"documents/{document_id}/tectonic_{uuid.uuid4().hex[:8]}.pdf"
+                    file_key = f"documents/{document_id}/tectonic_{uuid.uuid4().hex[:8]}.pdf"
                     
                     if os.path.exists(pdf_file_path):
                         with open(pdf_file_path, "rb") as bf:
-                            await upload_file(bf.read(), s3_key, "application/pdf")
-                        logger.info(f"Worker: Uploaded {pdf_file_path} to MinIO successfully: {s3_key}")
+                            await upload_file(bf.read(), file_key, "application/pdf")
+                        logger.info(f"Worker: Uploaded {pdf_file_path} to MinIO successfully: {file_key}")
                     
                     await documents_collection.update_one(
                         {"_id": document_id},
-                        {"$set": {"status": "published", "file_url": s3_key}}
+                        {"$set": {"status": "published", "file_url": file_key}}
                     )
                     
                     if author_id and db_client.redis:

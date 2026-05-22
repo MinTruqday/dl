@@ -412,4 +412,17 @@ async def multi_doc_synthesis(req: SynthesisRequest):
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
-
+@router.post("/trich-xuat-van-ban")
+async def extract_text(req: dict):
+    try:
+        file_url = req.get("file_url")
+        if not file_url:
+            raise HTTPException(status_code=400, detail="Thiếu file_url")
+            
+        from src.ingestion.pipeline import ingestion_pipeline
+        extracted_text = await ingestion_pipeline._extract_text(file_url)
+        
+        return {"extracted_text": extracted_text}
+    except Exception as e:
+        logger.error(f"Inference: Extraction failed: {e}")
+        raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này.")

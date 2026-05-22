@@ -257,3 +257,118 @@ class AIService:
         except Exception as e:
             logger.error(f"AI: Multi-doc synthesis failed: {e}")
         return {"error": "Không thể tổng hợp đa tài liệu vào lúc này."}
+
+    @staticmethod
+    async def process_storage_file(item_id: str, owner_id: str):
+        from services.storage import StorageService
+        from models.storage import StorageItemUpdate
+        
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or item.is_folder or not item.url:
+            return
+            
+        ext = item.name.split(".")[-1].lower()
+        extracted_text = ""
+        rag_url = getattr(settings, "AGENTIC_AI_URL", None)
+        
+        try:
+            resp = await make_ai_request(f"{rag_url}/inference/trich-xuat-van-ban", {"file_url": item.url}, timeout=120.0)
+            if resp.status_code == 200:
+                data = resp.json()
+                extracted_text = data.get("extracted_text", "")
+            else:
+                logger.error(f"Inference extraction failed: {resp.text}")
+
+            if not extracted_text or len(extracted_text.strip()) < 10:
+                return
+
+            context_text = extracted_text[:3000]
+            
+            summary_prompt = f"Bạn là một trợ lý AI. Hãy tóm tắt nội dung văn bản sau bằng tiếng Việt trong đúng 2-3 câu ngắn gọn:\n\n{context_text}"
+            summary = await AIService.generate_text_completion(summary_prompt, max_tokens=150)
+            
+            rename_prompt = f"Bạn là một trợ lý AI. Dựa vào nội dung sau, hãy đề xuất 1 tên tệp tin ngắn gọn, đúng trọng tâm (giữ nguyên đuôi .{ext}). Chỉ trả lời đúng 1 tên tệp tin:\n\n{context_text}"
+            suggested_name = await AIService.generate_text_completion(rename_prompt, max_tokens=20)
+            suggested_name = suggested_name.strip()
+            if "\n" in suggested_name:
+                suggested_name = suggested_name.split("\n")[0]
+            if not suggested_name.endswith(f".{ext}"):
+                suggested_name += f".{ext}"
+                
+            tags_prompt = f"Bạn là một trợ lý AI. Hãy đề xuất đúng 3 từ khóa tiếng Việt ngắn gọn mô tả nội dung văn bản sau. Trả về định dạng chuỗi cách nhau bởi dấu phẩy:\n\n{context_text}"
+            tags_res = await AIService.generate_text_completion(tags_prompt, max_tokens=30)
+            tags = [t.strip() for t in tags_res.replace('"', '').split(",") if t.strip()]
+            if len(tags) > 5:
+                tags = tags[:3]
+
+            mod_prompt = f"Bạn là một bộ lọc nội dung. Hãy kiểm tra xem văn bản sau có chứa nội dung bạo lực, 18+, hoặc vi phạm pháp luật không? Chỉ trả lời 'SAFE' hoặc 'UNSAFE':\n\n{context_text}"
+            mod_res = await AIService.generate_text_completion(mod_prompt, max_tokens=5)
+            is_flagged = "UNSAFE" in mod_res.upper()
+            
+            target_parent_id = item.parent_id
+            folders = await StorageService.get_items_by_parent(None, owner_id)
+            folder_options = [f for f in folders if f.is_folder]
+            if folder_options:
+                folder_str = ", ".join([f"ID: {f.id} - Tên: {f.name}" for f in folder_options])
+                route_prompt = f"Dựa vào nội dung tài liệu '{suggested_name}', hãy chọn ra ID của thư mục phù hợp nhất từ danh sách sau: {folder_str}. Nếu không có thư mục nào phù hợp, trả lời 'NONE'. Chỉ trả về ID hoặc 'NONE'.\n\nNội dung:\n{context_text[:1000]}"
+                route_res = await AIService.generate_text_completion(route_prompt, max_tokens=10)
+                route_res = route_res.strip()
+                if route_res != "NONE" and any(str(f.id) == route_res for f in folder_options):
+                    target_parent_id = route_res
+                
+            update_data_dict = {
+                "description": summary.strip(),
+                "name": suggested_name.replace('"', '').strip(),
+                "tags": tags,
+                "parent_id": target_parent_id
+            }
+            
+            if is_flagged:
+                update_data_dict["tags"].append("VIOLATION_FLAGGED")
+                
+            await StorageService.update_item(item_id, owner_id, StorageItemUpdate(**update_data_dict))
+
+        except Exception as e:
+            logger.error(f"AI Processing background task failed for {item_id}: {e}")
+
+    @staticmethod
+    async def translate_storage_document(item_id: str, target_lang: str, owner_id: str):
+        from services.storage import StorageService
+        from models.storage import StorageItemUpdate
+        
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or item.is_folder:
+            raise HTTPException(status_code=400, detail="Tệp tin không hợp lệ")
+            
+        new_item = await StorageService.copy_item(item_id, owner_id, item.parent_id)
+        if not new_item:
+            raise HTTPException(status_code=500, detail="Lỗi khi tạo bản sao tài liệu")
+            
+        lang_suffix = "Tiếng Việt" if target_lang == "vi" else "English"
+        new_name = item.name
+        ext = new_name.split(".")[-1]
+        name_no_ext = ".".join(new_name.split(".")[:-1])
+        new_name = f"{name_no_ext} ({lang_suffix}).{ext}"
+        
+        await StorageService.update_item(str(new_item.id), owner_id, StorageItemUpdate(name=new_name))
+        return new_item
+
+    @staticmethod
+    async def get_related_storage_items(item_id: str, owner_id: str) -> list:
+        from services.storage import StorageService
+        
+        item = await StorageService.get_item(item_id, owner_id)
+        if not item or not item.tags:
+            return []
+            
+        all_items = await StorageService.get_items_by_parent(None, owner_id)
+        related = []
+        for other in all_items:
+            if str(other.id) == item_id or other.is_folder or not other.tags:
+                continue
+            common_tags = set(item.tags).intersection(set(other.tags))
+            if common_tags:
+                related.append(other)
+                
+        related.sort(key=lambda x: len(set(x.tags).intersection(set(item.tags))), reverse=True)
+        return [r.dict() for r in related[:5]]

@@ -13,7 +13,7 @@ MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 
 session = aioboto3.Session()
 
-async def get_s3_client():
+async def get_storage_client():
     return session.client(
         "s3",
         endpoint_url=MINIO_ENDPOINT,
@@ -22,17 +22,17 @@ async def get_s3_client():
     )
 
 async def initialize_bucket():
-    async with await get_s3_client() as s3:
+    async with await get_storage_client() as storage_client:
         try:
-            await s3.head_bucket(Bucket=MINIO_BUCKET_NAME)
+            await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
         except ClientError:
             logger.info(f"Bucket {MINIO_BUCKET_NAME} not found. Creating")
-            await s3.create_bucket(Bucket=MINIO_BUCKET_NAME)
+            await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
             logger.info(f"Bucket {MINIO_BUCKET_NAME} created successfully.")
 
 async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf") -> str:
-    async with await get_s3_client() as s3:
-        await s3.put_object(
+    async with await get_storage_client() as storage_client:
+        await storage_client.put_object(
             Bucket=MINIO_BUCKET_NAME,
             Key=object_name,
             Body=file_content,
@@ -41,8 +41,8 @@ async def upload_file(file_content: bytes, object_name: str, content_type: str =
     return object_name
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
-    async with await get_s3_client() as s3:
-        response = await s3.generate_presigned_url(
+    async with await get_storage_client() as storage_client:
+        response = await storage_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": MINIO_BUCKET_NAME, "Key": object_name},
             ExpiresIn=expiration

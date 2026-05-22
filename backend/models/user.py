@@ -44,6 +44,7 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
     is_verified: bool = False
+    storage_limit: int
 
     @field_validator("kyc_status", "author_status", mode="before")
     @classmethod

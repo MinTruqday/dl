@@ -137,3 +137,20 @@ async def multi_doc_synthesis(req: AISynthesisRequest, current_user: UserInDB = 
         data=await AIService.multi_doc_synthesis(req.document_ids, req.query, current_user),
         message="Tổng hợp đa tài liệu thành công"
     )
+
+@router.post("/tai-lieu-luu-tru/{item_id}/dich", response_model=APIResponse[Any])
+async def translate_storage_doc(item_id: str, data: dict, current_user: UserInDB = Depends(check_quota)):
+    target_lang = data.get("target_lang", "vi")
+    new_item = await AIService.translate_storage_document(item_id, target_lang, current_user.id)
+    return APIResponse(
+        data=new_item.dict() if new_item else {},
+        message="Dịch tài liệu thành công"
+    )
+
+@router.get("/tai-lieu-luu-tru/{item_id}/lien-quan", response_model=APIResponse[Any])
+async def get_related_storage_items(item_id: str, current_user: UserInDB = Depends(check_quota)):
+    related = await AIService.get_related_storage_items(item_id, current_user.id)
+    return APIResponse(
+        data=related,
+        message="Lấy tài liệu liên quan thành công"
+    )

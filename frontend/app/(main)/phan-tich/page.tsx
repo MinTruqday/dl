@@ -76,7 +76,6 @@ export default function AuthorAnalyticsPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      {/* Header */}
       <div
         className="mb-16 border-b border-zinc-100 pb-12 "
         style={{
@@ -95,7 +94,6 @@ export default function AuthorAnalyticsPage() {
         </div>
       </div>
 
-      {/* Global Stats Grid */}
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 delay-150"
         style={{
@@ -152,7 +150,6 @@ export default function AuthorAnalyticsPage() {
           transform: visible ? "translateY(0)" : "translateY(10px)",
         }}
       >
-        {/* Left Column - Configuration */}
         <div className="lg:col-span-5 space-y-12">
           <div className="border border-zinc-100 p-10 bg-white space-y-10">
             <div className="space-y-6">
@@ -204,7 +201,6 @@ export default function AuthorAnalyticsPage() {
           </div>
         </div>
 
-        {/* Right Column - Results */}
         <div className="lg:col-span-7">
           {sentiment ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-8 ">

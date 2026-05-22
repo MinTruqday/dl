@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/Auth";
 import { useEffect, useState } from "react";
 import { getCouponsAPI } from "@/services/coupon.service";
 
-export default function MaUuDaiLayout({
+export default function PromotionLayout({
   children,
 }: {
   children: React.ReactNode;

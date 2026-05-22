@@ -178,10 +178,10 @@ class OperationService:
 
     @staticmethod
     async def get_minio_stats() -> dict:
-        from core.storage import get_s3_client
+        from core.storage import get_storage_client
         try:
-            async with await get_s3_client() as s3:
-                buckets_resp = await s3.list_buckets()
+            async with await get_storage_client() as storage_client:
+                buckets_resp = await storage_client.list_buckets()
                 buckets_list = buckets_resp.get("Buckets", [])
                 
                 total_size_bytes = 0
@@ -199,7 +199,7 @@ class OperationService:
                 
                 for b in buckets_list:
                     bucket_name = b["Name"]
-                    paginator = s3.get_paginator("list_objects_v2")
+                    paginator = storage_client.get_paginator("list_objects_v2")
                     obj_count = 0
                     bucket_size = 0
                     

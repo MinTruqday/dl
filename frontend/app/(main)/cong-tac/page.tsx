@@ -148,7 +148,7 @@ export default function StudioCollabPage() {
       setLockStatus(lockRes.data || lockRes || { is_locked: false });
       setTasks(tasksRes.data || tasksRes || []);
     } catch (err: any) {
-      // Fail silently or log
+      showToast(err.message || "Lỗi tải chi tiết cộng tác", "error");
     }
   };
 
@@ -162,7 +162,7 @@ export default function StudioCollabPage() {
       setOnlineCollaborators(onlineRes.data || onlineRes || []);
       setLockStatus(lockRes.data || lockRes || { is_locked: false });
     } catch (err: any) {
-      console.warn("Failed to load active status for document", err.message || err);
+      showToast("Không thể tải trạng thái hoạt động: " + (err.message || err), "error");
     }
   };
 
@@ -400,7 +400,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(taskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err: any) {
-      console.warn("Failed to load task comments", err.message || err);
+      showToast("Lỗi tải bình luận nhiệm vụ: " + (err.message || err), "error");
     }
   };
 
@@ -412,7 +412,7 @@ export default function StudioCollabPage() {
       const cRes = await getTaskCommentsAPI(activeTaskId);
       setActiveTaskComments(cRes.data || cRes || []);
     } catch (err: any) {
-      console.warn("Failed to load task comments", err.message || err);
+      showToast("Lỗi gửi bình luận nhiệm vụ: " + (err.message || err), "error");
     }
   };
 

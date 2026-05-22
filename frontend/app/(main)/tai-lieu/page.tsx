@@ -306,7 +306,6 @@ export default function DocumentsPage() {
     <>
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
         
-        {/* Modals */}
         <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
           <ModalHeader className="border-b border-zinc-200 p-6">
             <div className="flex items-center gap-4">
@@ -559,7 +558,6 @@ export default function DocumentsPage() {
           </ModalFooter>
         </Modal>
 
-        {/* Header Section */}
         <div 
           className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  " 
           style={{ opacity: visible ? 1 : 0 }}
@@ -590,11 +588,8 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        {/* Main Grid Layout */}
         <div className="grid lg:grid-cols-12 gap-12  " style={{ opacity: visible ? 1 : 0 }}>
-          {/* Sidebar Filters */}
           <aside className="lg:col-span-3 space-y-6">
-            {/* Search */}
             <div className="border border-zinc-200 bg-white p-6 space-y-4">
               <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
                 <Search className="w-4 h-4" /> Tìm kiếm tài liệu
@@ -608,7 +603,6 @@ export default function DocumentsPage() {
               />
             </div>
 
-            {/* Filters */}
             <div className="border border-zinc-200 bg-white p-6 space-y-4">
               <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
                 <Database className="w-4 h-4" /> Lọc dữ liệu
@@ -655,9 +649,7 @@ export default function DocumentsPage() {
             </div>
           </aside>
 
-          {/* Main Content Area */}
           <main className="lg:col-span-9 space-y-6">
-            {/* Toolbar: Breadcrumbs & View Options */}
             <div className="border border-zinc-200 bg-white p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <button 
@@ -698,7 +690,6 @@ export default function DocumentsPage() {
               </div>
             </div>
 
-            {/* List/Grid Content */}
             {viewMode === "list" ? (
               <div className="bg-white border border-zinc-200">
                 <table className="w-full text-left text-xs">

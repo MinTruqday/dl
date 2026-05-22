@@ -9,9 +9,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/doc")
 
-
-
-
 @router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(cursor: str = None, limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
