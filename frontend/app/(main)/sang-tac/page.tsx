@@ -708,7 +708,7 @@ function StudioContent() {
 
   const handleCreateCoupon = async () => {
     if (!newCouponCode.trim()) {
-      showToast("Vui lòng nhập mã giảm giá", "error");
+      showToast("Vui lòng nhập mã ưu đãi", "error");
       return;
     }
     try {
@@ -718,11 +718,11 @@ function StudioContent() {
         max_uses: newCouponQuantity,
         document_id: selectedDocumentId || undefined
       });
-      showToast("Đã tạo mã giảm giá", "success");
+      showToast("Đã tạo mã ưu đãi", "success");
       setNewCouponCode("");
       fetchCoupons();
     } catch (e: any) {
-      showToast(e.message || "Tạo mã giảm giá thất bại", "error");
+      showToast(e.message || "Tạo mã ưu đãi thất bại", "error");
     }
   };
 
@@ -1590,6 +1590,7 @@ function StudioContent() {
                             }
                           }} 
                         />
+                        </div>
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 border border-zinc-200 rounded-none">
                           <div 
@@ -1705,8 +1706,8 @@ function StudioContent() {
                   <div className="bg-white border border-zinc-200 rounded-none mt-6">
                     <div className="p-6 border-b border-zinc-200 flex justify-between items-center">
                       <div className="space-y-1">
-                        <h3 className="text-base font-medium text-black flex items-center gap-2"><Tag className="w-4 h-4" /> Mã giảm giá (Coupons)</h3>
-                        <p className="text-xs font-medium text-zinc-500">Tạo mã giảm giá để thúc đẩy doanh thu cho tài liệu có phí.</p>
+                        <h3 className="text-base font-medium text-black flex items-center gap-2"><Tag className="w-4 h-4" /> Mã ưu đãi (Coupons)</h3>
+                        <p className="text-xs font-medium text-zinc-500">Tạo mã ưu đãi để thúc đẩy doanh thu cho tài liệu có phí.</p>
                       </div>
                     </div>
                     <div className="p-6 border-b border-zinc-200 bg-zinc-50 flex gap-4">
@@ -1717,7 +1718,7 @@ function StudioContent() {
                     </div>
                     <div className="p-6">
                       {coupons.length === 0 ? (
-                        <p className="text-xs text-zinc-500 italic">Chưa có mã giảm giá nào.</p>
+                        <p className="text-xs text-zinc-500 italic">Chưa có mã ưu đãi nào.</p>
                       ) : (
                         <div className="flex flex-wrap gap-3">
                           {coupons.map((c: any) => (
@@ -1941,7 +1942,6 @@ function StudioContent() {
                       >
                         {isTransferring ? <Loader2 className="w-4 h-4 animate-spin" /> : "Chuyển nhượng"}
                       </button>
-                    </div>
                     </div>
                   </div>
                   

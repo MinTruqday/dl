@@ -13,7 +13,7 @@ import {
 } from "@/services/editor.service";
 import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
 import { API_URL, getAuthHeaders } from "@/services/authentication.service";
-import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network } from "lucide-react";
+import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock } from "lucide-react";
 
 interface EditorProps {
   documentId?: string;

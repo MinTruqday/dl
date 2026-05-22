@@ -92,3 +92,5 @@ export const SuggestionList = forwardRef((props: any, ref) => {
     </div>
   );
 });
+
+SuggestionList.displayName = "SuggestionList";

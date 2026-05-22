@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/Auth";
 import { useEffect, useState } from "react";
 import { getCouponsAPI } from "@/services/coupon.service";
 
-export default function MaGiamGiaLayout({
+export default function MaUuDaiLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -34,12 +34,12 @@ export default function MaGiamGiaLayout({
   };
 
   const navItems = [
-    { id: "all", label: "Tất cả mã ưu đãi", href: "/ma-giam-gia" },
-    ...(isAdmin ? [{ id: "pending", label: "Duyệt mã giảm giá", href: "/ma-giam-gia/duyet-ma-giam-gia", badge: stats.pendingCount }] : []),
+    { id: "all", label: "Tất cả mã ưu đãi", href: "/ma-uu-dai" },
+    ...(isAdmin ? [{ id: "pending", label: "Duyệt mã ưu đãi", href: "/ma-uu-dai/duyet-ma-uu-dai", badge: stats.pendingCount }] : []),
   ];
 
   const isActive = (href: string) => {
-    if (href === "/ma-giam-gia") return pathname === "/ma-giam-gia";
+    if (href === "/ma-uu-dai") return pathname === "/ma-uu-dai";
     return pathname === href;
   };
 

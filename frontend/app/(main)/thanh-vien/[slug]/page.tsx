@@ -79,13 +79,12 @@ export default function UserProfilePage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-10 pb-24 font-sans text-black selection:bg-black selection:text-white">
-      {/* Header Section */}
       <div 
         className="flex flex-col md:flex-row gap-10 md:gap-16 items-start border-b border-zinc-200 pb-12 mb-12"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(12px)",
-          : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)"
+          transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)"
         }}
       >
         <div className="w-32 h-32 md:w-48 md:h-48 border border-zinc-200 bg-zinc-50 shrink-0 p-1.5 group">
@@ -133,7 +132,7 @@ export default function UserProfilePage() {
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(12px)",
-          : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s"
+          transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s"
         }}
       >
         <aside className="lg:col-span-3 space-y-8">

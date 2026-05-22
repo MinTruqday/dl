@@ -157,7 +157,7 @@ export default function Menu({
                 roles={["author", "admin"]}
               />
               <NavLink
-                href="/ma-giam-gia"
+                href="/ma-uu-dai"
                 label="Ưu đãi"
                 icon={Ticket}
                 roles={["author", "admin"]}
@@ -172,12 +172,6 @@ export default function Menu({
                 href="/luu-tru"
                 label="Kho lưu trữ"
                 icon={FolderOpen}
-                roles={["author", "admin"]}
-              />
-              <NavLink
-                href="/rut-tien"
-                label="Doanh thu"
-                icon={Wallet}
                 roles={["author", "admin"]}
               />
               <NavLink
@@ -212,7 +206,7 @@ export default function Menu({
                 roles={["admin"]}
               />
               <NavLink
-                href="/quan-ly-nguoi-dung"
+                href="/nguoi-dung"
                 label="Quản lý người dùng"
                 icon={Users}
                 roles={["admin"]}
@@ -236,7 +230,7 @@ export default function Menu({
                 roles={["admin"]}
               />
               <NavLink
-                href="/quan-ly-bieu-ngu"
+                href="/bieu-ngu"
                 label="Quản lý biểu ngữ"
                 icon={Presentation}
                 roles={["admin"]}

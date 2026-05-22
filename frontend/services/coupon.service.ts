@@ -1,37 +1,37 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function validateCouponAPI(code: string, documentId?: string) {
-  const url = `${API_URL}/ma-giam-gia/kiem-tra?code=${encodeURIComponent(code)}` + (documentId ? `&document_id=${documentId}` : "");
+  const url = `${API_URL}/ma-uu-dai/kiem-tra?code=${encodeURIComponent(code)}` + (documentId ? `&document_id=${documentId}` : "");
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Mã giảm giá không hợp lệ");
+  if (!res.ok) throw new Error(data.message || "Mã ưu đãi không hợp lệ");
   return data;
 }
 
 export async function getCouponsAPI() {
-  const res = await fetch(`${API_URL}/ma-giam-gia`, {
+  const res = await fetch(`${API_URL}/ma-uu-dai`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách mã giảm giá");
+  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách mã ưu đãi");
   return data;
 }
 
 export async function createCouponAPI(payload: any) {
-  const res = await fetch(`${API_URL}/ma-giam-gia`, {
+  const res = await fetch(`${API_URL}/ma-uu-dai`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo mã giảm giá thất bại");
+  if (!res.ok) throw new Error(data.message || "Tạo mã ưu đãi thất bại");
   return data;
 }
 
 export async function approveCouponAPI(couponId: string, action: "approve" | "reject") {
-  const res = await fetch(`${API_URL}/ma-giam-gia/${couponId}/phe-duyet?action=${action}`, {
+  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}/phe-duyet?action=${action}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -41,7 +41,7 @@ export async function approveCouponAPI(couponId: string, action: "approve" | "re
 }
 
 export async function toggleCouponStatusAPI(couponId: string) {
-  const res = await fetch(`${API_URL}/ma-giam-gia/${couponId}/trang-thai`, {
+  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}/trang-thai`, {
     method: "PATCH",
     headers: getAuthHeaders(),
   });
@@ -51,11 +51,11 @@ export async function toggleCouponStatusAPI(couponId: string) {
 }
 
 export async function deleteCouponAPI(couponId: string) {
-  const res = await fetch(`${API_URL}/ma-giam-gia/${couponId}`, {
+  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xóa mã giảm giá thất bại");
+  if (!res.ok) throw new Error(data.message || "Xóa mã ưu đãi thất bại");
   return data;
 }

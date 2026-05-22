@@ -59,7 +59,7 @@ export default function ManageCouponsPage() {
       const list = data.data || data || [];
       setCoupons(list.filter((c: any) => c.status !== 'pending' || isAdmin));
     } catch (err: any) {
-      showToast("Lỗi tải mã giảm giá", "error");
+      showToast("Lỗi tải mã ưu đãi", "error");
     } finally {
       setLoading(false);
     }

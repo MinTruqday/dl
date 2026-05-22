@@ -30,11 +30,11 @@ class CouponService:
         
         existing = await db["coupons"].find_one({"code": coupon["code"]})
         if existing:
-            raise HTTPException(status_code=400, detail="Mã giảm giá này đã tồn tại trên hệ thống.")
+            raise HTTPException(status_code=400, detail="Mã ưu đãi này đã tồn tại trên hệ thống.")
             
         await db["coupons"].insert_one(coupon)
         logger.info(f"Identity: User {current_user.id} created coupon {coupon['code']} with status {status}")
-        return {"message": f"Tạo mã giảm giá thành công. Trạng thái: {status}", "coupon_id": coupon["_id"]}
+        return {"message": f"Tạo mã ưu đãi thành công. Trạng thái: {status}", "coupon_id": coupon["_id"]}
 
     @staticmethod
     async def get_coupons(current_user) -> list:
@@ -70,10 +70,10 @@ class CouponService:
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
         res = await db["coupons"].update_one({"_id": coupon_id}, {"$set": {"status": status}})
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Không tìm thấy mã giảm giá.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy mã ưu đãi.")
             
         logger.info(f"Monetization: Admin {current_user.id} {action}ed coupon {coupon_id}")
-        return {"message": f"Đã { 'duyệt' if action == 'approve' else 'từ chối' } mã giảm giá thành công."}
+        return {"message": f"Đã { 'duyệt' if action == 'approve' else 'từ chối' } mã ưu đãi thành công."}
 
     @staticmethod
     async def validate_coupon(code: str, user: Any, document_id: Optional[str] = None) -> dict:
@@ -81,16 +81,16 @@ class CouponService:
         coupon = await db["coupons"].find_one({"code": code.upper(), "is_active": True, "status": CouponStatus.APPROVED})
         
         if not coupon:
-            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại hoặc chưa được duyệt.")
+            raise HTTPException(status_code=404, detail="Mã ưu đãi không tồn tại hoặc chưa được duyệt.")
             
         if coupon.get("expires_at") and coupon["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết hạn.")
+            raise HTTPException(status_code=400, detail="Mã ưu đãi đã hết hạn.")
             
         if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
-            raise HTTPException(status_code=400, detail="Mã giảm giá đã hết lượt sử dụng.")
+            raise HTTPException(status_code=400, detail="Mã ưu đãi đã hết lượt sử dụng.")
             
         if coupon.get("document_id") and coupon["document_id"] != document_id:
-            raise HTTPException(status_code=400, detail="Mã giảm giá không áp dụng cho tài liệu này.")
+            raise HTTPException(status_code=400, detail="Mã ưu đãi không áp dụng cho tài liệu này.")
 
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
@@ -116,12 +116,12 @@ class CouponService:
             
         coupon = await db["coupons"].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
+            raise HTTPException(status_code=404, detail="Mã ưu đãi không tồn tại.")
             
         new_status = not coupon.get("is_active", True)
         await db["coupons"].update_one({"_id": coupon_id}, {"$set": {"is_active": new_status}})
         logger.info(f"Monetization: Coupon {coupon_id} toggled to {new_status}")
-        return {"message": "Đã cập nhật trạng thái mã giảm giá.", "is_active": new_status}
+        return {"message": "Đã cập nhật trạng thái mã ưu đãi.", "is_active": new_status}
 
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user) -> dict:
@@ -132,7 +132,7 @@ class CouponService:
             
         res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Mã giảm giá không tồn tại.")
+            raise HTTPException(status_code=404, detail="Mã ưu đãi không tồn tại.")
             
         logger.info(f"Monetization: Coupon {coupon_id} deleted by user {current_user.id}")
-        return {"message": "Đã xóa mã giảm giá thành công."}
+        return {"message": "Đã xóa mã ưu đãi thành công."}
