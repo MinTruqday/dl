@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { getToken as getAuthToken } from "@/services/authentication.service";
 import { 
   StorageItem, 
   listStorageItemsAPI, 
@@ -344,7 +345,7 @@ export default function StoragePage() {
     setLoading(true);
     try {
       if (useAISearch) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/ai/tim-kiem-thong-minh?q=${encodeURIComponent(searchQuery.trim())}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(searchQuery.trim())}`, {
           headers: { Authorization: `Bearer ${getAuthToken()}` }
         });
         const data = await res.json();
@@ -401,7 +402,7 @@ export default function StoragePage() {
         showToast("Đã bật chia sẻ liên kết công khai.", "success");
         fetchItems(currentFolderId);
       } else {
-        const link = `${window.location.origin}/api/luu-tru/chia-se/${item.share_token}`;
+        const link = `${window.location.origin}/luu-tru/chia-se/${item.share_token}`;
         navigator.clipboard.writeText(link);
         showToast("Đã copy liên kết công khai", "success");
       }
@@ -1300,7 +1301,7 @@ export default function StoragePage() {
                     setChatInput("");
                     
                     try {
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/ai/tro-chuyen`, {
+                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/tro-chuyen`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAuthToken()}` },
                         body: JSON.stringify({ query: newMsg.content, document_id: detailsItem._id })

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from enum import Enum
 
 class TransactionType(str, Enum):
@@ -24,7 +25,7 @@ class CouponStatus(str, Enum):
     REJECTED = "rejected"
 
 class Transaction(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
     type: TransactionType
     amount: int
@@ -33,7 +34,7 @@ class Transaction(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PurchaseRecord(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
     item_type: str = "chapter"
     item_id: str
@@ -41,7 +42,7 @@ class PurchaseRecord(BaseModel):
     purchased_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Voucher(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     code: str
     amount_dl: int = Field(default=0, alias="amount_dl")
     is_used: bool = False

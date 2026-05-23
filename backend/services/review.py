@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class ReviewService:
@@ -41,7 +42,7 @@ class ReviewService:
         description = getattr(data, "description", None) or getattr(data, "context_text", "") or ""
         
         report = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": str(current_user.id),
             "document_id": document_id,
             "chapter_slug": chapter_slug,
@@ -75,7 +76,7 @@ class ReviewService:
         content_text = getattr(review_in, "content", None) or getattr(review_in, "comment", "") or ""
         
         review_item = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "user_id": str(current_user.id),
             "full_name": current_user.full_name or "Cộng tác viên ẩn danh",
@@ -115,7 +116,7 @@ class ReviewService:
         description = getattr(data, "description", None) or getattr(data, "details", "") or ""
         
         report = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "reporter_id": str(current_user.id),
             "item_type": item_type,
             "item_id": item_id,

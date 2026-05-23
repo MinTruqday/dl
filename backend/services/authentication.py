@@ -2,6 +2,7 @@ from core.config import settings
 from datetime import datetime, timezone, timedelta
 import secrets
 import uuid
+from uuid6 import uuid7
 import os
 from fastapi import HTTPException, status
 from core.database import db_client
@@ -89,7 +90,7 @@ class AuthenticationService:
         if not user_doc.get("is_active", True):
             raise HTTPException(status_code=403, detail="Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên.")
             
-        session_id = str(uuid.uuid4())
+        session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         if db_client.redis:
             await db_client.redis.sadd(f"user_sessions:{user_id_str}", session_id)
@@ -194,7 +195,7 @@ class AuthenticationService:
         if not user_doc.get("is_active", True):
             raise HTTPException(status_code=403, detail="Tài khoản của bạn hiện đang bị tạm khóa.")
             
-        session_id = str(uuid.uuid4())
+        session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         if db_client.redis:
             await db_client.redis.sadd(f"user_sessions:{user_id_str}", session_id)
@@ -236,7 +237,7 @@ class AuthenticationService:
                     detail="Hệ thống hiện đang tạm đóng cổng đăng ký mới (bao gồm cả Google). Vui lòng quay lại sau."
                 )
 
-            user_id = str(uuid.uuid4())
+            user_id = str(uuid7())
             user_doc = {"_id": user_id, "email": email, "full_name": google_user.get("name"), "avatar_url": google_user.get("picture"), "slug": google_user.get("email").split("@")[0] + "_" + secrets.token_hex(2), "password_hash": "google_oauth_no_password", "role": RoleEnum.READER, "is_active": True, "created_at": datetime.now(timezone.utc), "updated_at": datetime.now(timezone.utc)}
             await users_col.insert_one(user_doc)
             logger.info(f"New user created via Google login: {email}")

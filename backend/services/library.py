@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class LibraryService:
@@ -9,7 +10,7 @@ class LibraryService:
     async def create_reading_list(data, current_user):
         db = db_client.mongodb.get_default_database()
         new_list = {
-            "_id": str(uuid.uuid4()), 
+            "_id": str(uuid7()), 
             "user_id": str(current_user.id), 
             "name": data.name, 
             "description": data.description, 

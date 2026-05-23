@@ -1,4 +1,5 @@
 import uuid
+from uuid6 import uuid7
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -27,7 +28,7 @@ class ChapterService:
             
         order = len(document.get("chapters", [])) + 1
         new_chapter = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "title": chapter_in.title,
             "content": chapter_in.content,
             "order": order,

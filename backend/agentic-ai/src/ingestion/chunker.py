@@ -1,4 +1,5 @@
 import uuid
+from uuid6 import uuid7
 from typing import List, Dict
 from loguru import logger
 from src.core.config import settings
@@ -50,7 +51,7 @@ class AdvancedSemanticChunker:
                 chunk_text = chunk_obj.text.strip()
                 if len(chunk_text) < 30: continue
                     
-                chunk_id = str(uuid.uuid4())[:12]
+                chunk_id = str(uuid7())[:12]
                 chunk_meta = {
                     **metadata,
                     "chunk_id": chunk_id,
@@ -81,7 +82,7 @@ class AdvancedSemanticChunker:
         chunks = []
         for i, chunk_text in enumerate(texts):
             if len(chunk_text.strip()) < 30: continue
-            chunk_id = str(uuid.uuid4())[:12]
+            chunk_id = str(uuid7())[:12]
             
             chunks.append({
                 "id": f"{metadata.get('document_id', 'unknown')}_{chunk_id}",

@@ -4,6 +4,7 @@ from core.database import db_client
 from models.user import UserInDB
 from typing import Optional, Dict, Any
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class TelemetryService:
@@ -11,7 +12,7 @@ class TelemetryService:
     async def track_event(event_name: str, properties: Dict[str, Any], current_user: Optional[UserInDB] = None):
         db = db_client.mongodb.get_default_database()
         telemetry_event = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "event_name": event_name,
             "properties": properties,
             "user_id": str(current_user.id) if current_user else "anonymous",

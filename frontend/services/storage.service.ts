@@ -1,5 +1,5 @@
-import { getAuthToken } from "@/utils/auth";
-import { API_URL } from "@/config";
+import { getToken as getAuthToken } from "@/services/authentication.service";
+import { API_URL } from "@/services/authentication.service";
 
 export interface StorageItem {
   _id: string;
@@ -37,7 +37,7 @@ export interface StorageItem {
 
 export const createFolderAPI = async (name: string, parent_id?: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/thu-muc`, {
+  const res = await fetch(`${API_URL}/luu-tru/thu-muc`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -56,7 +56,7 @@ export const listStorageItemsAPI = async (parent_id?: string, is_trashed: boolea
   if (parent_id) query.append("parent_id", parent_id);
   if (is_trashed) query.append("is_trashed", "true");
   
-  const res = await fetch(`${API_URL}/api/luu-tru/danh-sach?${query.toString()}`, {
+  const res = await fetch(`${API_URL}/luu-tru/danh-sach?${query.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -69,7 +69,7 @@ export const listStorageItemsAPI = async (parent_id?: string, is_trashed: boolea
 
 export const updateStorageItemAPI = async (id: string, updates: Partial<StorageItem>) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -84,7 +84,7 @@ export const updateStorageItemAPI = async (id: string, updates: Partial<StorageI
 
 export const deleteStorageItemAPI = async (id: string, hard_delete: boolean = false) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}?hard_delete=${hard_delete}`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}?hard_delete=${hard_delete}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -100,7 +100,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   const formData = new FormData();
   formData.append("file", file);
   
-  const res = await fetch(`${API_URL}/api/tai-len/tap-tin`, {
+  const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -112,7 +112,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
   
-  const registerRes = await fetch(`${API_URL}/api/luu-tru/tap-tin`, {
+  const registerRes = await fetch(`${API_URL}/luu-tru/tap-tin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -139,7 +139,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
   query.append("q", q);
   if (type) query.append("type", type);
   
-  const res = await fetch(`${API_URL}/api/luu-tru/tim-kiem?${query.toString()}`, {
+  const res = await fetch(`${API_URL}/luu-tru/tim-kiem?${query.toString()}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -150,7 +150,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
 
 export const getRecentStorageItemsAPI = async (limit: number = 20) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/gan-day?limit=${limit}`, {
+  const res = await fetch(`${API_URL}/luu-tru/gan-day?limit=${limit}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -161,7 +161,7 @@ export const getRecentStorageItemsAPI = async (limit: number = 20) => {
 
 export const copyStorageItemAPI = async (id: string, target_parent_id?: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}/copy`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/copy`, {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
@@ -179,7 +179,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   const formData = new FormData();
   formData.append("file", file);
   
-  const res = await fetch(`${API_URL}/api/tai-len/tap-tin`, {
+  const res = await fetch(`${API_URL}/tai-len/tap-tin`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -189,7 +189,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
   
-  const versionRes = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}/version`, {
+  const versionRes = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/version`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -208,7 +208,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
 
 export const shareStorageItemAPI = async (id: string, email: string, role: string = "viewer") => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}/chia-se`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/chia-se`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -223,7 +223,7 @@ export const shareStorageItemAPI = async (id: string, email: string, role: strin
 
 export const getStorageQuotaAPI = async () => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/quota`, {
+  const res = await fetch(`${API_URL}/luu-tru/quota`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -234,7 +234,7 @@ export const getStorageQuotaAPI = async () => {
 
 export const createShortcutAPI = async (id: string, target_parent_id?: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/luu-tru/tap-tin/${id}/shortcut`, {
+  const res = await fetch(`${API_URL}/luu-tru/tap-tin/${id}/shortcut`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -250,7 +250,7 @@ export const createShortcutAPI = async (id: string, target_parent_id?: string) =
 export const downloadZipAPI = async (ids: string[]) => {
   const token = getAuthToken();
   const query = ids.join(",");
-  const url = `${API_URL}/api/luu-tru/tai-xuong-zip?ids=${query}`;
+  const url = `${API_URL}/luu-tru/tai-xuong-zip?ids=${query}`;
   
   const res = await fetch(url, {
     method: "GET",
@@ -275,7 +275,7 @@ export const downloadZipAPI = async (ids: string[]) => {
 
 export const translateStorageDocumentAPI = async (id: string, target_lang: string = "vi") => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/ai/tai-lieu-luu-tru/${id}/dich`, {
+  const res = await fetch(`${API_URL}/ai/tai-lieu-luu-tru/${id}/dich`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -290,7 +290,7 @@ export const translateStorageDocumentAPI = async (id: string, target_lang: strin
 
 export const getRelatedStorageItemsAPI = async (id: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/api/ai/tai-lieu-luu-tru/${id}/lien-quan`, {
+  const res = await fetch(`${API_URL}/ai/tai-lieu-luu-tru/${id}/lien-quan`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

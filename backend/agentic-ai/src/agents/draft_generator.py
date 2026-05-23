@@ -4,6 +4,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from src.core.config import settings
 import boto3
 import uuid
+from uuid6 import uuid7
 import asyncio
 
 class DraftGeneratorAgent:
@@ -38,7 +39,7 @@ Nếu được yêu cầu LaTeX, hãy trả về đúng cấu trúc chuẩn củ
                 aws_access_key_id=settings.MINIO_ACCESS_KEY,
                 aws_secret_access_key=settings.MINIO_SECRET_KEY
             )
-            file_name = f"drafts/{uuid.uuid4().hex}.{'tex' if format_type == 'latex' else 'md'}"
+            file_name = f"drafts/{uuid7().hex}.{'tex' if format_type == 'latex' else 'md'}"
             s3_client.put_object(
                 Bucket=settings.MINIO_BUCKET_NAME,
                 Key=file_name,

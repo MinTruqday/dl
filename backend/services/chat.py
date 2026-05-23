@@ -411,7 +411,8 @@ class ChatService:
     async def create_group(group_name: str, member_ids: list, current_user: UserInDB) -> dict:
         db = db_client.mongodb.get_default_database()
         import uuid
-        group_id = f"group_{uuid.uuid4()}"
+        from uuid6 import uuid7
+        group_id = f"group_{uuid7()}"
         
         all_members = list(set(member_ids + [str(current_user.id)]))
         group = {

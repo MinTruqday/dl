@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(latex.router, prefix="/api/compile/latex", tags=["LaTeX"])
+app.include_router(latex.router, prefix="/compile/latex", tags=["LaTeX"])
 
 @app.on_event("startup")
 async def startup_event():

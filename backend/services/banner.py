@@ -1,6 +1,7 @@
 from core.database import db_client
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class BannerService:
@@ -14,7 +15,7 @@ class BannerService:
     async def create_banner(data: dict) -> dict:
         db = db_client.mongodb.get_default_database()
         banner = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "title": data.get("title"),
             "image_url": data.get("image_url"),
             "link_url": data.get("link_url"),

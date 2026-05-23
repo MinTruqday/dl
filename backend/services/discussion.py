@@ -1,6 +1,7 @@
 from typing import List, Optional, Any
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from fastapi import HTTPException
 from core.database import db_client
 from loguru import logger
@@ -13,7 +14,7 @@ class DiscussionService:
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         discussion = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "user_id": str(current_user.id),
             "title": data["title"],
@@ -85,7 +86,7 @@ class DiscussionService:
     async def reply_discussion(discussion_id: str, data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         reply = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": str(current_user.id),
             "content": data["content"],
             "created_at": datetime.now(timezone.utc),

@@ -1,4 +1,5 @@
 import uuid
+from uuid6 import uuid7
 from fastapi import HTTPException
 from core.storage import generate_presigned_url, upload_file
 from loguru import logger
@@ -10,7 +11,7 @@ class UploadService:
             raise HTTPException(status_code=400, detail="Hệ thống chỉ chấp nhận các tệp tin hình ảnh")
             
         ext = file.filename.split(".")[-1]
-        filename = f"images/{uuid.uuid4().hex}.{ext}"
+        filename = f"images/{uuid7().hex}.{ext}"
         content = await file.read()
         
         try:
@@ -30,7 +31,7 @@ class UploadService:
         if ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail=f"Hệ thống không hỗ trợ định dạng .{ext}")
             
-        filename = f"documents/{uuid.uuid4().hex}.{ext}"
+        filename = f"documents/{uuid7().hex}.{ext}"
         content = await file.read()
         
         try:

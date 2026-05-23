@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 from models.user import RoleEnum
 
@@ -89,10 +90,10 @@ class OperationService:
     async def create_api_key(name: str, provider: str = "DEFAULT", key_value: str = "") -> dict:
         db = db_client.mongodb.get_default_database()
         if not key_value:
-            key_value = str(uuid.uuid4()).replace("-", "")
+            key_value = str(uuid7()).replace("-", "")
             
         await db["api_keys"].insert_one({
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "name": name,
             "provider": provider,
             "key_value": key_value,
@@ -105,7 +106,7 @@ class OperationService:
     async def create_marketing_campaign(data: dict) -> dict:
         db = db_client.mongodb.get_default_database()
         campaign = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "title": data.get("title", "Chiến dịch mới"),
             "target_audience": data.get("target", "ALL"),
             "discount_percent": data.get("discount", 0),
@@ -288,7 +289,7 @@ class OperationService:
     @staticmethod
     async def handle_bug_report(data: dict, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
-        report_id = str(uuid.uuid4())
+        report_id = str(uuid7())
         await db["bug_reports"].insert_one({
             "_id": report_id, 
             "title": data["title"], 
@@ -304,7 +305,7 @@ class OperationService:
     async def assign_task(data: dict, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
         task = {
-            "_id": str(uuid.uuid4()), 
+            "_id": str(uuid7()), 
             "assigned_to": data["moderator_id"], 
             "title": data["title"], 
             "status": "pending", 
@@ -317,7 +318,7 @@ class OperationService:
     @staticmethod
     async def submit_policy_proposal(data: dict, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
-        proposal_id = str(uuid.uuid4())
+        proposal_id = str(uuid7())
         await db["policy_proposals"].insert_one({
             "_id": proposal_id, 
             "author_id": str(current_moderator.id), 

@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 from models.wallet import Transaction, TransactionType
 from models.user import UserInDB
@@ -12,7 +13,7 @@ class SubscriptionService:
         db = db_client.mongodb.get_default_database()
         
         plan_doc = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "author_id": str(current_user.id),
             "name": plan_data["name"],
             "description": plan_data["description"],
@@ -67,7 +68,7 @@ class SubscriptionService:
                 )
 
                 subscription = {
-                    "_id": str(uuid.uuid4()),
+                    "_id": str(uuid7()),
                     "user_id": str(current_user.id),
                     "author_id": author_id,
                     "plan_id": plan_id,

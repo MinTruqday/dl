@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 
 class CommentBase(BaseModel):
     item_id: str
@@ -16,7 +17,7 @@ class CommentCreate(CommentBase):
     pass
 
 class CommentInDB(CommentBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     likes_count: int = 0

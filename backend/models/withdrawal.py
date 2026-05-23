@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from enum import Enum
 
 class WithdrawalStatus(str, Enum):
@@ -15,7 +16,7 @@ class WithdrawalRequest(BaseModel):
     note: Optional[str] = None
 
 class WithdrawalInDB(WithdrawalRequest):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
     status: WithdrawalStatus = WithdrawalStatus.PENDING
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

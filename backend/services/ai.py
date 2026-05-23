@@ -3,6 +3,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 import uuid
+from uuid6 import uuid7
 import httpx
 import json
 from loguru import logger
@@ -66,7 +67,7 @@ class AIService:
             data = resp.json()
             db = db_client.mongodb.get_default_database()
             flashcard = {
-                "_id": str(uuid.uuid4()), 
+                "_id": str(uuid7()), 
                 "user_id": str(current_user.id), 
                 "document_id": document_id, 
                 "front": data.get("front"), 
@@ -176,7 +177,7 @@ class AIService:
         }
 
     @staticmethod
-    async def get_ai_recommendations(limit: int = 10) -> list:
+    async def get_ai_recommendations(limit: int = 10, current_user=None) -> list:
         db = db_client.mongodb.get_default_database()
         from services.document import serialize_document
         cursor = db["documents"].find({

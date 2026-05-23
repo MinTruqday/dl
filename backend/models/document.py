@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Any
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from enum import Enum
 
 from .chapter import ChapterBase
@@ -76,7 +77,7 @@ class DocumentCreate(DocumentBase):
     pass
 
 class DocumentInDB(DocumentBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     author_id: str
     status: DocumentStatus = DocumentStatus.DRAFT
     drm_fingerprint: Optional[str] = None

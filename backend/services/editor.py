@@ -9,6 +9,7 @@ import os
 import json
 import httpx
 import uuid
+from uuid6 import uuid7
 
 class ConnectionManager:
     def __init__(self):
@@ -225,7 +226,7 @@ class EditorService:
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        comment_id = str(uuid.uuid4())
+        comment_id = str(uuid7())
         comment = {
             "_id": comment_id,
             "document_id": document_id,

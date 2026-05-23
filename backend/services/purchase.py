@@ -1,6 +1,7 @@
 from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 import uuid
+from uuid6 import uuid7
 from fastapi import HTTPException
 from core.database import db_client
 from models.wallet import Transaction, TransactionType
@@ -51,7 +52,7 @@ class PurchaseService:
                     )
                 
                 await db["purchases"].insert_one({
-                    "_id": str(uuid.uuid4()),
+                    "_id": str(uuid7()),
                     "user_id": str(current_user.id),
                     "document_id": document_id,
                     "item_type": "document",
@@ -150,7 +151,7 @@ class PurchaseService:
                     )
                 
                 await db["purchases"].insert_one({
-                    "_id": str(uuid.uuid4()),
+                    "_id": str(uuid7()),
                     "user_id": str(current_user.id),
                     "document_id": document_id,
                     "item_id": chapter_id,

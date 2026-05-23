@@ -42,7 +42,8 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                     
                     from core.storage import upload_file
                     import uuid
-                    file_key = f"documents/{document_id}/tectonic_{uuid.uuid4().hex[:8]}.pdf"
+                    from uuid6 import uuid7
+                    file_key = f"documents/{document_id}/tectonic_{uuid7().hex[:8]}.pdf"
                     
                     if os.path.exists(pdf_file_path):
                         with open(pdf_file_path, "rb") as bf:

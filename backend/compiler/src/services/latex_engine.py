@@ -1,5 +1,6 @@
 import os
 import uuid
+from uuid6 import uuid7
 import tempfile
 import asyncio
 import glob
@@ -10,7 +11,7 @@ class LatexEngine:
     async def compile_to_pdf(content: str) -> bytes:
         latex_code = content
         
-        job_id = str(uuid.uuid4())
+        job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()
         tex_path = os.path.join(temp_dir, f"{job_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{job_id}.pdf")
@@ -78,7 +79,7 @@ class LatexEngine:
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
-        job_id = str(uuid.uuid4())
+        job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()
         tex_path = os.path.join(temp_dir, f"{job_id}.tex")
         out_path = os.path.join(temp_dir, f"{job_id}.{target_format}")

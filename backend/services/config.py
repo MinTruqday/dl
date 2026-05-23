@@ -1,6 +1,7 @@
 from core.database import db_client
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class ConfigService:
@@ -9,7 +10,7 @@ class ConfigService:
         db = db_client.mongodb.get_default_database()
         if action == "create":
             await db["system_tags"].insert_one({
-                "_id": str(uuid.uuid4()), 
+                "_id": str(uuid7()), 
                 "name": tag_name.lower(), 
                 "created_at": datetime.now(timezone.utc)
             })
@@ -32,7 +33,7 @@ class ConfigService:
         db = db_client.mongodb.get_default_database()
         if action == "add":
             await db["blacklist_keywords"].insert_one({
-                "_id": str(uuid.uuid4()), 
+                "_id": str(uuid7()), 
                 "keyword": keyword.lower(), 
                 "created_at": datetime.now(timezone.utc)
             })

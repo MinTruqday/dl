@@ -1,4 +1,5 @@
 import uuid
+from uuid6 import uuid7
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -18,7 +19,7 @@ class SeriesService:
     @staticmethod
     async def create_series(data: dict, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
-        series_id = str(uuid.uuid4())
+        series_id = str(uuid7())
         series = {
             "_id": series_id,
             "author_id": str(current_user.id),

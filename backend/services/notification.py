@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import json
 import asyncio
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class NotificationService:
@@ -123,7 +124,7 @@ class NotificationService:
         if existing:
             raise HTTPException(status_code=400, detail="Email này đã đăng ký nhận bản tin.")
         await db["newsletter_subscribers"].insert_one({
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "email": email,
             "subscribed_at": datetime.now(timezone.utc),
             "is_active": True,
@@ -191,7 +192,7 @@ class NotificationService:
             
             notifications = []
             for uid in user_ids:
-                notif_id = str(uuid.uuid4())
+                notif_id = str(uuid7())
                 notifications.append({
                     "_id": notif_id,
                     "target_user_id": uid,
@@ -267,7 +268,7 @@ class NotificationService:
     @staticmethod
     async def notify_purchase(document_id: str, document_title: str, author_id: str, buyer_name: str):
         db = db_client.mongodb.get_default_database()
-        notif_id = str(uuid.uuid4())
+        notif_id = str(uuid7())
         notification = {
             "_id": notif_id,
             "target_user_id": author_id,

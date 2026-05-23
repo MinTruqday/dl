@@ -81,7 +81,7 @@ code {
   .app-main {
     padding-top: var(--navbar-height);
     margin-left: var(--sidebar-width-expanded);
-    : margin-left var(--sidebar-);
+    transition: margin-left var(--sidebar-);
     min-height: 100vh;
   }
 

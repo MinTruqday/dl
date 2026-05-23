@@ -113,11 +113,12 @@ async def update_item(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER]))
 ):
     import uuid
+    from uuid6 import uuid7
     if data.is_public and data.is_public is True:
         current_item = await StorageService.get_item(item_id, current_user.id)
         if current_item and not current_item.share_token:
             update_data_dict = data.dict(exclude_unset=True)
-            update_data_dict["share_token"] = str(uuid.uuid4())
+            update_data_dict["share_token"] = str(uuid7())
             item = await StorageService.update_item(item_id, current_user.id, StorageItemUpdate(**update_data_dict))
         else:
             item = await StorageService.update_item(item_id, current_user.id, data)

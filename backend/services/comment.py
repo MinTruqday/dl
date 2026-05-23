@@ -1,6 +1,7 @@
 from core.database import db_client
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 from fastapi import HTTPException
 from typing import List, Optional, Any
@@ -10,7 +11,7 @@ class CommentService:
     @staticmethod
     async def create_feed_comment(req: Any, current_user: UserInDB) -> dict:
         db = db_client.mongodb.get_default_database()
-        comment_id = str(uuid.uuid4())
+        comment_id = str(uuid7())
         new_comment = {
             "_id": comment_id,
             "user_id": str(current_user.id),
@@ -27,7 +28,7 @@ class CommentService:
     @staticmethod
     async def create_nested_comment(item_id: str, req: Any, current_user: UserInDB) -> dict:
         db = db_client.mongodb.get_default_database()
-        comment_id = str(uuid.uuid4())
+        comment_id = str(uuid7())
         new_comment = {
             "_id": comment_id,
             "user_id": str(current_user.id),

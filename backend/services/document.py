@@ -3,6 +3,7 @@ from core.config import settings
 from datetime import datetime, timezone
 import os
 import uuid
+from uuid6 import uuid7
 import io
 import json
 import zipfile
@@ -337,7 +338,7 @@ class DocumentService:
             html_content += html_body + "</body></html>"
             zf.writestr("OEBPS/content.xhtml", html_content)
             
-        mem_zip.seek()
+        mem_zip.seek(0)
         logger.info(f"Workspace: EPUB exported for {document_id}")
         return mem_zip.read()
 
@@ -509,7 +510,7 @@ class DocumentService:
         content = doc.get("content", "")
         pdf_data = await CompilationService.compile_latex_to_pdf(content)
         
-        filename = f"documents/{uuid.uuid4().hex}.pdf"
+        filename = f"documents/{uuid7().hex}.pdf"
         await upload_file(pdf_data, filename, "application/pdf")
         
         await db["documents"].update_one(

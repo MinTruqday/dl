@@ -4,6 +4,7 @@ from core.publication import publish_event
 from fastapi import HTTPException
 from loguru import logger
 import uuid
+from uuid6 import uuid7
 from datetime import datetime, timezone
 
 class CollectorService:
@@ -14,7 +15,7 @@ class CollectorService:
 
         payload = {
             "source": source,
-            "job_id": str(uuid.uuid4()),
+            "job_id": str(uuid7()),
             "triggered_at": datetime.now(timezone.utc).isoformat()
         }
 

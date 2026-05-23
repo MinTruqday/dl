@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 
 class TypoReportRequest(BaseModel):
     document_id: Optional[str] = None
@@ -23,7 +24,7 @@ class ReportRequest(BaseModel):
     description: Optional[str] = None
 
 class FeedbackInDB(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
     type: str
     data: dict

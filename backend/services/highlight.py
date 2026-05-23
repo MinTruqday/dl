@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
@@ -15,7 +16,7 @@ class HighlightService:
         if color not in ALLOWED_HIGHLIGHT_COLORS:
             color = "#e4e4e7"
         highlight = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": str(current_user.id),
             "document_id": document_id,
             "chapter_slug": data.get("chapter_slug", ""),

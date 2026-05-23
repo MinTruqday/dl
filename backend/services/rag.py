@@ -2,6 +2,7 @@ import httpx
 import os
 from fastapi import HTTPException
 import uuid
+from uuid6 import uuid7
 from typing import Dict, Any, List, Optional
 from loguru import logger
 from core.http_client import make_ai_request, ai_http_client, ai_circuit_breaker
@@ -162,7 +163,7 @@ class RagService:
         db = db_client.mongodb.get_default_database()
         title = first_query[:40] if first_query else "Cuộc hội thoại mới"
         session = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": user_id,
             "document_id": document_id,
             "title": title,
@@ -200,7 +201,7 @@ class RagService:
         from datetime import datetime, timezone
         db = db_client.mongodb.get_default_database()
         
-        message_id = str(uuid.uuid4())
+        message_id = str(uuid7())
         message = {
             "_id": message_id,
             "session_id": session_id,

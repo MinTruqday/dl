@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class CollaborationService:
@@ -9,7 +10,7 @@ class CollaborationService:
     async def log_activity(document_id: str, user_name: str, action: str, details: str):
         db = db_client.mongodb.get_default_database()
         await db["collaboration_activities"].insert_one({
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "user_name": user_name,
             "action": action,
@@ -45,7 +46,7 @@ class CollaborationService:
             raise HTTPException(status_code=400, detail="Người này đã là cộng tác viên của tài liệu.")
             
         invite = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "document_title": doc.get("title", "Tài liệu không tên"),
             "inviter_id": str(current_user.id),
@@ -305,7 +306,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền truy cập.")
             
         memo = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "sender_name": current_user.full_name,
             "sender_id": str(current_user.id),
@@ -439,7 +440,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền truy cập.")
             
         snapshot = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "version_name": version_name,
             "content": doc.get("content", ""),
@@ -575,7 +576,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền sở hữu.")
             
-        invite_code = str(uuid.uuid4())[:8].upper()
+        invite_code = str(uuid7())[:8].upper()
         
         await db["collaboration_invite_codes"].update_one(
             {"document_id": document_id},
@@ -621,7 +622,7 @@ class CollaborationService:
         )
 
         await db["collaboration_invites"].insert_one({
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "document_title": doc.get("title", "Tài liệu không tên"),
             "inviter_id": doc["author_id"],
@@ -656,7 +657,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại hoặc bạn không có quyền truy cập.")
             
         task = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "document_id": document_id,
             "task_desc": task_desc,
             "is_done": False,
@@ -753,7 +754,7 @@ class CollaborationService:
             raise HTTPException(status_code=403, detail="Bạn không có quyền thảo luận trong nhiệm vụ này.")
             
         comment = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "task_id": task_id,
             "sender_name": current_user.full_name,
             "comment_text": comment_text,

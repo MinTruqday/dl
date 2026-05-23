@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 
 from fastapi import HTTPException
 from core.database import db_client
@@ -44,7 +45,7 @@ class IdentityService:
             raise HTTPException(status_code=403, detail="Tài khoản của bạn đã bị khóa quyền đăng ký làm tác giả.")
             
         application_data = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": user_id,
             "portfolio_url": application.get('portfolio_url', "") if isinstance(application, dict) else "",
             "reason": application.get('reason', "") if isinstance(application, dict) else (application if isinstance(application, str) else ""),
@@ -75,12 +76,12 @@ class IdentityService:
             
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
-        object_name = f"kyc/{user_id}_{uuid.uuid4()}.{file_ext}"
+        object_name = f"kyc/{user_id}_{uuid7()}.{file_ext}"
         
         await upload_file(file_bytes, object_name, content_type=file.content_type)
         
         kyc_data = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": user_id,
             "document_url": object_name,
             "status": KYCStatusEnum.PENDING,

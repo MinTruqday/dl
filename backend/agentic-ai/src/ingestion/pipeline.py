@@ -1,5 +1,6 @@
 import os
 import uuid
+from uuid6 import uuid7
 from typing import Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger
@@ -79,7 +80,7 @@ class IngestionPipeline:
                 chunks.append(summary_chunk)
 
             for i, ac in enumerate(doc_chunks):
-                chunk_id = str(uuid.uuid4())[:12]
+                chunk_id = str(uuid7())[:12]
                 chunk_meta = {
                     **metadata,
                     "chunk_id": chunk_id,

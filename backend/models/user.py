@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from enum import Enum
 
 class KYCStatusEnum(str, Enum):
@@ -44,7 +45,7 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
     is_verified: bool = False
-    storage_limit: int
+    storage_limit: int = 1 * 1024 * 1024 * 1024
 
     @field_validator("kyc_status", "author_status", mode="before")
     @classmethod
@@ -67,7 +68,7 @@ class UserCreate(UserBase):
     agreed_to_terms: bool = False
 
 class UserInDB(UserBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     read_streak: int = 0
     last_read_date: Optional[datetime] = None
     password_hash: str

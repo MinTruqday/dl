@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 
 class BookmarkService:
@@ -54,7 +55,7 @@ class BookmarkService:
     async def create_bookmark_folder(name: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         folder = {
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": str(current_user.id),
             "name": name.strip()[:100],
             "bookmark_ids": [],

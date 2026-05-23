@@ -2,6 +2,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
+from uuid6 import uuid7
 from loguru import logger
 from models.wallet import Transaction, TransactionType
 
@@ -42,7 +43,7 @@ class WithdrawalService:
         if not wallet or wallet.get("wallet_balance", 0) < amount:
             raise HTTPException(status_code=400, detail="Số dư không đủ để thực hiện yêu cầu rút tiền.")
 
-        withdrawal_id = str(uuid.uuid4())
+        withdrawal_id = str(uuid7())
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():

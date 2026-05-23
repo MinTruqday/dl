@@ -3,7 +3,6 @@ import json
 from pydantic import BaseModel, Field
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
-from langchain_community.chat_models import ChatOllama
 from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.core.config import settings
@@ -20,11 +19,6 @@ from src.models.plan import PlanStep, ExecutionPlan
 class AgenticBrain:
     def __init__(self):
         self.llm = llm
-        try:
-            self.fallback_llm = ChatOllama(model=settings.OLLAMA_MODEL, base_url=settings.OLLAMA_BASE_URL, temperature=0.1)
-        except Exception as e:
-            logger.warning(f"Brain: Could not initialize Ollama fallback: {e}")
-            self.fallback_llm = None
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
         
     async def _invoke_llm(self, messages):
@@ -33,15 +27,7 @@ class AgenticBrain:
             return await self.llm.ainvoke(messages)
         except (httpx.TimeoutException, httpx.HTTPStatusError, Exception) as primary_err:
             logger.warning(f"Brain: Primary LLM failed ({primary_err}).")
-            if self.fallback_llm:
-                logger.info("Brain: Falling back to Ollama LLM.")
-                try:
-                    return await self.fallback_llm.ainvoke(messages)
-                except Exception as fallback_err:
-                    logger.error(f"Brain: Fallback LLM also failed: {fallback_err}")
-                    raise Exception("Tất cả dịch vụ LLM đều không phản hồi.")
-            else:
-                raise primary_err
+            raise primary_err
         
     async def create_plan(self, req) -> List[Dict[str, str]]:
         logger.info(f"Brain: Creating structured plan for query: {req.query}")

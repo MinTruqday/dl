@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from loguru import logger
 from models.user import RoleEnum
 import uuid
+from uuid6 import uuid7
 import json
 from datetime import datetime, timezone, timedelta
 
@@ -54,7 +55,7 @@ class UserService:
             raise HTTPException(status_code=404, detail="Không tìm thấy người dùng.")
             
         warning = {
-            "_id": str(uuid.uuid4()), 
+            "_id": str(uuid7()), 
             "user_id": user_id, 
             "moderator_id": str(current_moderator.id), 
             "reason": reason, 
@@ -139,7 +140,7 @@ class UserService:
     async def add_moderator_note(user_id: str, note: str, current_moderator) -> dict:
         db = db_client.mongodb.get_default_database()
         await db["moderator_notes"].insert_one({
-            "_id": str(uuid.uuid4()),
+            "_id": str(uuid7()),
             "user_id": user_id,
             "moderator_id": str(current_moderator.id),
             "note": note,

@@ -15,7 +15,7 @@ router = APIRouter(prefix="/xac-thuc")
 @router.get("/ca-nhan", response_model=APIResponse[UserResponse])
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
     user_data = current_user.model_dump()
-    user_data["has_passkey"] = len(current_user.passkeys) > 0
+    user_data["has_passkey"] = len(current_user.passkeys) > 0 if current_user.passkeys else False
     return APIResponse(data=user_data, message="Lấy thông tin cá nhân thành công", status=status.HTTP_200_OK)
 
 @router.post("/dang-ky", response_model=APIResponse[UserResponse], status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(calls=3, period=60))])
