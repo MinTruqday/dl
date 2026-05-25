@@ -27,3 +27,24 @@ async def export_document_epub(document_id: str, current_user: UserInDB = Depend
         message="Xuất bản sao EPUB thành công", 
         status=200
     )
+
+@router.get("/{document_id}/docx", response_model=APIResponse[Any])
+async def export_document_docx(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    from services.compilation import CompilationService
+    from fastapi import HTTPException
+    
+    db = db_client.mongodb.get_default_database()
+    document = await db["documents"].find_one({"_id": document_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
+        
+    content = document.get("content", "")
+    docx_content = await CompilationService.export_to_format(content, "docx")
+    
+    headers = {"Content-Disposition": f'attachment; filename="DocLib_{document_id}.docx"'}
+    return APIResponse(
+        data=Response(content=docx_content, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers=headers), 
+        message="Xuất bản sao Word thành công", 
+        status=200
+    )

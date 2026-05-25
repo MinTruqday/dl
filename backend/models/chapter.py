@@ -14,6 +14,7 @@ class ChapterBase(BaseModel):
     locked: bool = False
     readability_score: float = 0.0
     vocabulary_richness: float = 0.0
+    level: int = 0
 
 class ChapterCreate(ChapterBase):
     pass

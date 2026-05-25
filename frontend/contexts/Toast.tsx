@@ -64,18 +64,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             return (
               <div
                 key={t.id}
-                className={`relative border border-zinc-200 pl-6 pr-5 py-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto  ${typeStyles}`}
+                className={`relative border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto shadow-sm ${typeStyles}`}
               >
                 <div className="absolute w-1 bg-black" style={{ top: "-1px", bottom: "-1px", left: "-1px" }} />
-                <div className="flex justify-between items-start gap-10 whitespace-nowrap min-w-max">
-                  <div className="flex-1">
+                <div className="flex justify-between items-center gap-6 whitespace-nowrap min-w-max">
+                  <div className="flex-1 pl-2">
                     <p className="leading-relaxed font-bold tracking-tight">
                       {t.message}
                     </p>
                   </div>
                   <button
-                    onClick={() => removeToast(t.id)}
-                    className="opacity-40  p-1 -mt-1 -mr-1 "
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      removeToast(t.id);
+                    }}
+                    className="opacity-40 hover:opacity-100 transition-opacity p-2 cursor-pointer rounded-none flex items-center justify-center"
                   >
                     <X className="w-4 h-4" />
                   </button>

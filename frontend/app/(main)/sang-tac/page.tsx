@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, deleteFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/services/document.service";
 import { compileDocumentAPI } from "@/services/compilation.service";
-import { exportDocumentPdfAPI, exportDocumentEpubAPI } from "@/services/export.service";
+import { exportDocumentPdfAPI, exportDocumentEpubAPI, exportDocumentDocxAPI } from "@/services/export.service";
 import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/services/comment.service";
 import { inviteCollaboratorAPI, getCollaboratorsAPI, removeCollaboratorAPI } from "@/services/collaboration.service";
 import { createCouponAPI, getCouponsAPI } from "@/services/coupon.service";
@@ -61,7 +61,9 @@ import {
   Hash,
   CalendarClock,
   RadioTower,
-  AlertTriangle,
+  Indent,
+  Outdent,
+  CornerDownRight,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const Editor = dynamic(() => import("@/components/editor/Editor"), { ssr: false });
@@ -251,14 +253,11 @@ function StudioContent() {
     setIsLoading(true);
     try {
       let data;
-      let foldersData = [];
+      let foldersData = await getFoldersAPI().catch(() => ({ data: [] }));
       if (user?.role === "admin") {
         data = await getDocumentsAPI();
       } else {
-        [data, foldersData] = await Promise.all([
-          getMyDocumentsAPI(),
-          getFoldersAPI().catch(() => ({ data: [] }))
-        ]);
+        data = await getMyDocumentsAPI();
       }
       
       const list = data.data || data || [];
@@ -289,10 +288,14 @@ function StudioContent() {
       const draft = data.data || data;
       setContent(draft?.content || "");
       setDocuments(prev => {
-        if (!prev.find(d => (d as any).id === selectedDocumentId || (d as any)._id === selectedDocumentId)) {
+        const existingIdx = prev.findIndex(d => (d as any).id === selectedDocumentId || (d as any)._id === selectedDocumentId);
+        if (existingIdx === -1) {
           return [draft, ...prev];
+        } else {
+          const newDocs = [...prev];
+          newDocs[existingIdx] = draft;
+          return newDocs;
         }
-        return prev;
       });
       setStatusMsg("Đã tải xong");
     } catch (e: any) {
@@ -430,7 +433,7 @@ function StudioContent() {
         await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
         showToast("Đã xóa chương thành công", "success");
         if (selectedChapterIndex === chapterIdx) setSelectedChapterIndex(null);
-        fetchDocuments();
+        loadDraft();
       } else if (confirmAction.type === "transfer") {
         await handleTransferOwnership();
       }
@@ -569,6 +572,29 @@ function StudioContent() {
     }
   };
 
+  const handleExportDOCX = async () => {
+    if (!selectedDocumentId) return;
+    setIsExporting(true);
+    setStatusMsg("Đang tạo tệp Word");
+    try {
+      const blob = await exportDocumentDocxAPI(selectedDocumentId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${selectedDocument?.title || "ban-thao"}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast("Đã tải xuống thành công", "success");
+    } catch (e: any) {
+      showToast(e.message || "Xuất bản sao thất bại", "error");
+    } finally {
+      setIsExporting(false);
+      setStatusMsg("Sẵn sàng");
+    }
+  };
+
   const handleViewDeepAnalytics = async (docId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setLoadingAnalytics(true);
@@ -598,9 +624,27 @@ function StudioContent() {
     try {
       await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
       setStatusMsg("Đã thay đổi thứ tự");
-      fetchDocuments();
+      loadDraft();
     } catch (err: any) {
       showToast("Không thể thay đổi thứ tự chương", "error");
+    }
+  };
+
+  const handleChangeChapterLevel = async (idx: number, delta: number) => {
+    if (!selectedDocument || !selectedDocument.chapters) return;
+    const newChapters = [...selectedDocument.chapters];
+    const currentLevel = newChapters[idx].level || 0;
+    
+    let newLevel = Math.max(0, currentLevel + delta);
+    if (newLevel === currentLevel) return;
+
+    newChapters[idx] = { ...newChapters[idx], level: newLevel };
+
+    try {
+      await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
+      loadDraft();
+    } catch (err: any) {
+      showToast("Không thể thay đổi cấp độ chương", "error");
     }
   };
 
@@ -614,7 +658,7 @@ function StudioContent() {
       showToast("Đã thêm chương mới", "success");
       setNewChapterTitle("");
       setShowChapterModal(false);
-      fetchDocuments();
+      loadDraft();
     } catch (err: any) {
       showToast("Lỗi thêm chương mới", "error");
     }
@@ -799,7 +843,7 @@ function StudioContent() {
     if (!selectedDocumentId) return;
     try {
       await updateChapterPaywallAPI(selectedDocumentId, index, !currentPremium);
-      fetchDocuments();
+      loadDraft();
       showToast("Đã cập nhật khóa chương", "success");
     } catch (err: any) { showToast(err.message || "Cập nhật khóa thất bại", "error"); }
   };
@@ -945,7 +989,7 @@ function StudioContent() {
       setShowEditChapterModal(false);
       setEditingChapterIndex(null);
       setEditingChapterTitle("");
-      fetchDocuments();
+      loadDraft();
     } catch (e: any) {
       showToast(e.message || "Cập nhật tiêu đề thất bại", "error");
     }
@@ -1287,20 +1331,34 @@ function StudioContent() {
             {statusMsg}
           </span>
           <div className="flex gap-3">
-            <button
-              onClick={handleExportPDF}
-              disabled={!selectedDocumentId || isExporting}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
-            >
-              <Download className="w-3.5 h-3.5" /> PDF
-            </button>
-            <button
-              onClick={handleExportEPUB}
-              disabled={!selectedDocumentId || isExporting}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
-            >
-              <Download className="w-3.5 h-3.5" /> EPUB
-            </button>
+            <div className="relative group flex items-center h-9">
+              <button
+                disabled={!selectedDocumentId || isExporting}
+                className="h-full px-4 border border-zinc-200 text-sm font-medium text-zinc-700 disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
+              >
+                <Download className="w-3.5 h-3.5" /> Tải xuống
+              </button>
+              <div className="absolute top-full right-0 mt-1 w-32 bg-white border border-zinc-200 shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <button
+                  onClick={handleExportPDF}
+                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                >
+                  Định dạng PDF
+                </button>
+                <button
+                  onClick={handleExportEPUB}
+                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 border-t border-zinc-100"
+                >
+                  Định dạng EPUB
+                </button>
+                <button
+                  onClick={handleExportDOCX}
+                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 border-t border-zinc-100"
+                >
+                  Định dạng Word
+                </button>
+              </div>
+            </div>
             <div className="flex items-center bg-zinc-50 border border-zinc-200 h-9 px-2">
               <CalendarClock className="w-3.5 h-3.5 text-zinc-400 mr-2" />
               <input
@@ -1377,31 +1435,60 @@ function StudioContent() {
                        </button>
                      ) : (
                        <>
-                        {selectedDocument.chapters.map((ch: any, idx: number) => (
-                          <div
-                            key={`chapter-${idx}`}
-                            onClick={() => setSelectedChapterIndex(idx)}
-                            className={`flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer rounded-none ${
-                              selectedChapterIndex === idx 
-                                ? "bg-black text-white border-black" 
-                                : "bg-white text-zinc-700 border-transparent"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs font-medium w-4 text-zinc-400">{idx + 1}</span>
-                              <span className="text-sm truncate">{ch.title}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <button onClick={(e) => handleToggleChapterPaywall(e, idx, ch.is_premium)} className={`p-0.5 rounded-none flex items-center justify-center ${ch.is_premium ? 'text-black' : 'text-zinc-300 '}`} title="Khóa chương (Trả phí)">
-                                <Lock className="w-3 h-3" />
-                              </button>
-                              <button onClick={(e) => { e.stopPropagation(); handleEditChapter(idx); }} className="p-0.5 rounded-none flex items-center justify-center"><Pencil className="w-3 h-3 text-zinc-400" /></button>
-                              <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 rounded-none flex items-center justify-center"><ArrowUp className="w-3 h-3 text-zinc-400" /></button>
-                              <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-0.5 rounded-none flex items-center justify-center"><ArrowDown className="w-3 h-3 text-zinc-400" /></button>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteChapter(idx); }} className="p-0.5 rounded-none flex items-center justify-center"><Trash2 className="w-3 h-3 text-zinc-400" /></button>
-                            </div>
-                          </div>
-                        ))}
+                        {(() => {
+                          const counters = [0, 0, 0, 0, 0, 0, 0];
+                          return selectedDocument.chapters.map((ch: any, idx: number) => {
+                            const lvl = ch.level || 0;
+                            counters[lvl]++;
+                            for (let i = lvl + 1; i < counters.length; i++) counters[i] = 0;
+                            const numStr = counters.slice(0, lvl + 1).join(".");
+                            
+                            return (
+                              <div
+                                key={`chapter-${idx}`}
+                                onClick={() => setSelectedChapterIndex(idx)}
+                                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer rounded-none ${
+                                  selectedChapterIndex === idx 
+                                    ? "bg-black text-white border-black" 
+                                    : "bg-white text-zinc-700 border-transparent"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0" style={{ paddingLeft: `${lvl * 16}px` }}>
+                                  {lvl > 0 && <CornerDownRight className="w-3.5 h-3.5 text-zinc-300 shrink-0" />}
+                                  <span className="text-xs font-medium min-w-[1rem] text-zinc-400 shrink-0">{numStr}</span>
+                                  <span className="text-sm truncate">{ch.title}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={(e) => handleToggleChapterPaywall(e, idx, ch.is_premium)} className={`p-0.5 rounded-none flex items-center justify-center ${ch.is_premium ? 'text-black' : 'text-zinc-300 '}`} title="Khóa chương (Trả phí)">
+                                    <Lock className="w-3 h-3" />
+                                  </button>
+                                  
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleChangeChapterLevel(idx, 1); }} 
+                                    className="p-0.5 rounded-none flex items-center justify-center text-zinc-400" 
+                                    title="Làm mục nhỏ"
+                                  >
+                                    <Indent className="w-3 h-3" />
+                                  </button>
+                                  
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleChangeChapterLevel(idx, -1); }} 
+                                    disabled={lvl === 0}
+                                    className={`p-0.5 rounded-none flex items-center justify-center ${lvl === 0 ? 'text-zinc-200 cursor-not-allowed' : 'text-zinc-400'}`} 
+                                    title="Làm mục chính"
+                                  >
+                                    <Outdent className="w-3 h-3" />
+                                  </button>
+
+                                  <button onClick={(e) => { e.stopPropagation(); handleEditChapter(idx); }} className="p-0.5 rounded-none flex items-center justify-center"><Pencil className="w-3 h-3 text-zinc-400" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "up"); }} className="p-0.5 rounded-none flex items-center justify-center"><ArrowUp className="w-3 h-3 text-zinc-400" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); moveChapter(idx, "down"); }} className="p-0.5 rounded-none flex items-center justify-center"><ArrowDown className="w-3 h-3 text-zinc-400" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); handleDeleteChapter(idx); }} className="p-0.5 rounded-none flex items-center justify-center"><Trash2 className="w-3 h-3 text-zinc-400" /></button>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                         <button
                           onClick={() => setShowChapterModal(true)}
                           className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400  rounded-none"
@@ -1546,7 +1633,7 @@ function StudioContent() {
                             editorMode === m ? "border-black text-black" : "border-transparent text-zinc-500"
                           }`}
                         >
-                          {m === "edit" ? "Biên tập" : m === "preview" ? "Trải nghiệm" : "Dữ liệu thô"}
+                          {m === "edit" ? "Soạn thảo" : m === "preview" ? "Xem trước" : "Mã nguồn"}
                         </button>
                       ))}
                    </div>

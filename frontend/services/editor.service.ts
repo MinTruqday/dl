@@ -19,6 +19,22 @@ export async function compilePreviewAPI(content: string, isFragment: boolean = f
   return await res.blob();
 }
 
+export async function exportToWordAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/xuat-tai-lieu/${documentId}/docx`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    let errMsg = "Xuất file Word thất bại";
+    try {
+      const data = await res.json();
+      errMsg = data.detail || data.message || errMsg;
+    } catch (err: any) {}
+    throw new Error(errMsg);
+  }
+  return await res.blob();
+}
+
 export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
   const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van`, {
     method: "POST",
