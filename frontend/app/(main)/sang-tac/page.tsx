@@ -1668,15 +1668,16 @@ function StudioContent() {
                           <Editor 
                             documentId={selectedDocumentId}
                             initialContent={currentChapterContent} 
-                          onSave={(val) => {
-                            if (selectedChapterIndex !== null && selectedDocument) {
-                              const newChapters = [...(selectedDocument.chapters || [])];
-                              newChapters[selectedChapterIndex].content = val;
-                            } else {
-                              setContent(val);
-                            }
-                          }} 
-                        />
+                            contentFormat={selectedDocument?.content_format || "json"}
+                            onSave={(val) => {
+                              if (selectedChapterIndex !== null && selectedDocument) {
+                                const newChapters = [...(selectedDocument.chapters || [])];
+                                newChapters[selectedChapterIndex].content = val;
+                              } else {
+                                setContent(val);
+                              }
+                            }} 
+                          />
                         </div>
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 border border-zinc-200 rounded-none">

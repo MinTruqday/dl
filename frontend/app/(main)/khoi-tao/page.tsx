@@ -15,6 +15,7 @@ export default function CreateDocumentPage() {
   const [description, setDescription] = useState("");
   const [publisherName, setPublisherName] = useState("");
   const [visibility, setVisibility] = useState("public");
+  const [contentFormat, setContentFormat] = useState("json");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function CreateDocumentPage() {
         description,
         publisher_name: publisherName,
         visibility,
+        content_format: contentFormat,
         status: "draft",
       });
       if (res) {
@@ -105,6 +107,28 @@ export default function CreateDocumentPage() {
                   <div className="space-y-1">
                     <p className={`text-sm font-semibold ${visibility === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
                     <p className={`text-[10px] font-medium leading-relaxed ${visibility === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-black">Môi trường soạn thảo</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: "json", label: "Notion-style Editor", desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng." },
+                { id: "latex", label: "LaTeX Editor", desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp." },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setContentFormat(opt.id)}
+                  className={`p-4 border text-left flex items-start gap-4 rounded-none ${contentFormat === opt.id ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                >
+                  <div className="space-y-1">
+                    <p className={`text-sm font-semibold ${contentFormat === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
+                    <p className={`text-[10px] font-medium leading-relaxed ${contentFormat === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>{opt.desc}</p>
                   </div>
                 </button>
               ))}

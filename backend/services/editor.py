@@ -137,9 +137,37 @@ class EditorService:
     async def auto_save_draft(document_id: str, content: dict, current_user):
         db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
+        
+        toc = []
+        words = 0
+        try:
+            if isinstance(content, str):
+                parsed = json.loads(content)
+            else:
+                parsed = content
+            blocks = parsed.get("blocks", [])
+            for block in blocks:
+                if block.get("type") == "header":
+                    toc.append({
+                        "id": block.get("id"),
+                        "text": block.get("data", {}).get("text", ""),
+                        "level": block.get("data", {}).get("level", 1)
+                    })
+                if "data" in block and "text" in block["data"]:
+                    words += len(str(block["data"]["text"]).split())
+        except Exception as e:
+            logger.error(f"Error parsing draft content for document {document_id}: {e}")
+            
+        reading_time_minutes = max(1, words // 200)
+
         await db["documents"].update_one(
             {"_id": document_id, "$or": [{"author_id": user_id}, {"co_authors": user_id}]},
-            {"$set": {"draft_content": content, "updated_at": datetime.now(timezone.utc)}}
+            {"$set": {
+                "draft_content": content,
+                "toc": toc,
+                "reading_time_minutes": reading_time_minutes,
+                "updated_at": datetime.now(timezone.utc)
+            }}
         )
         return {"message": "Tự động lưu bản nháp thành công.", "timestamp": str(datetime.now(timezone.utc))}
 
@@ -222,6 +250,93 @@ class EditorService:
             if resp.status_code == 200:
                 return {"suggestions": resp.json().get("result", "")}
         return {"suggestions": "Không thể lấy gợi ý vào lúc này."}
+
+    @staticmethod
+    async def summarize_document(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            
+        content = doc.get("draft_content") or doc.get("content", "")
+        text = ""
+        try:
+            if isinstance(content, str):
+                parsed = json.loads(content)
+            else:
+                parsed = content
+            blocks = parsed.get("blocks", [])
+            for block in blocks:
+                if "data" in block and "text" in block["data"]:
+                    text += str(block["data"]["text"]) + " "
+        except:
+            text = str(content)
+            
+        if len(text.split()) < 20:
+            raise HTTPException(status_code=400, detail="Văn bản quá ngắn để tóm tắt")
+            
+        rag_url = settings.AGENTIC_AI_URL
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{rag_url}/inference/hanh-dong", 
+                    json={
+                        "action": "summarize", 
+                        "text": text[:5000], 
+                        "context": doc.get("title", "")
+                    }
+                )
+                if resp.status_code == 200:
+                    summary = resp.json().get("result", "Đã tóm tắt tài liệu thành công.")
+                    await db["documents"].update_one({"_id": document_id}, {"$set": {"description": summary}})
+                    return {"summary": summary}
+        except Exception as e:
+            logger.error(f"Summarization error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối AI Service")
+        raise HTTPException(status_code=500, detail="Không thể tóm tắt tài liệu")
+
+    @staticmethod
+    async def extract_smart_tags(document_id: str, current_user) -> dict:
+        db = db_client.mongodb.get_default_database()
+        doc = await db["documents"].find_one({"_id": document_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            
+        content = doc.get("draft_content") or doc.get("content", "")
+        text = ""
+        try:
+            if isinstance(content, str):
+                parsed = json.loads(content)
+            else:
+                parsed = content
+            for block in parsed.get("blocks", []):
+                if "data" in block and "text" in block["data"]:
+                    text += str(block["data"]["text"]) + " "
+        except:
+            pass
+            
+        rag_url = settings.AGENTIC_AI_URL
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    f"{rag_url}/inference/hanh-dong", 
+                    json={
+                        "action": "extract_tags", 
+                        "text": text[:3000], 
+                        "context": "Trả về 5 thẻ (tags) cho văn bản này dưới dạng mảng JSON."
+                    }
+                )
+                if resp.status_code == 200:
+                    tags = resp.json().get("result", [])
+                    if isinstance(tags, str):
+                        tags = [t.strip() for t in tags.replace("[", "").replace("]", "").replace('"', '').split(",") if t.strip()]
+                    tags = tags[:5]
+                    await db["documents"].update_one({"_id": document_id}, {"$addToSet": {"tags": {"$each": tags}}})
+                    return {"tags": tags}
+        except Exception as e:
+            logger.error(f"Tag extraction error: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi kết nối AI Service")
+        raise HTTPException(status_code=500, detail="Không thể phân tích thẻ")
 
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user) -> dict:

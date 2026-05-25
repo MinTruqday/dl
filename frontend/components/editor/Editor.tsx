@@ -9,21 +9,78 @@ import {
     globalFindReplaceAPI, 
     getAiSuggestionsAPI,
     addInlineCommentAPI,
-    getVersionDiffAPI
+    getVersionDiffAPI,
+    summarizeDocumentAPI,
+    extractSmartTagsAPI,
+    exportToEpubAPI,
+    checkDeepPlagiarismAPI
 } from "@/services/editor.service";
 import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
 import { API_URL, getAuthHeaders } from "@/services/authentication.service";
-import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock, Search, FileEdit } from "lucide-react";
+import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock, Search, FileEdit, List } from "lucide-react";
 
 interface EditorProps {
   documentId?: string;
   initialContent?: string;
+  contentFormat?: string;
   onSave?: (data: string) => void;
+}
+
+class PremiumTune {
+  api: any;
+  data: any;
+  block: any;
+  wrapper: HTMLElement | null = null;
+  static get isTune() { return true; }
+  constructor({ api, data, config, block }: any) {
+    this.api = api;
+    this.data = data || { isPremium: false };
+    this.block = block;
+  }
+  render() {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('ce-popover-item');
+    wrapper.innerHTML = `<div class="ce-popover-item__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div><div class="ce-popover-item__title">Đánh dấu Trả phí</div>`;
+    wrapper.addEventListener('click', () => {
+      this.data.isPremium = !this.data.isPremium;
+      wrapper.classList.toggle('ce-popover-item--active', this.data.isPremium);
+      const idx = this.api.blocks.getCurrentBlockIndex();
+      if (idx !== undefined && idx >= 0) {
+        const blockContent = this.api.blocks.getBlockByIndex(idx)?.holder;
+        if (blockContent) {
+          if (this.data.isPremium) {
+            blockContent.style.border = '1px dashed black';
+            blockContent.style.opacity = '0.8';
+          } else {
+            blockContent.style.border = '';
+            blockContent.style.opacity = '';
+          }
+        }
+      }
+    });
+    setTimeout(() => {
+      if (this.data.isPremium) {
+        wrapper.classList.add('ce-popover-item--active');
+        const idx = this.api.blocks.getCurrentBlockIndex();
+        if (idx !== undefined && idx >= 0) {
+          const blockContent = this.api.blocks.getBlockByIndex(idx)?.holder;
+          if (blockContent) {
+            blockContent.style.border = '1px dashed black';
+            blockContent.style.opacity = '0.8';
+          }
+        }
+      }
+    }, 100);
+    this.wrapper = wrapper;
+    return wrapper;
+  }
+  save() { return this.data; }
 }
 
 export default function Editor({
   documentId,
   initialContent,
+  contentFormat = "json",
   onSave,
 }: EditorProps) {
   const editorRef = useRef<EditorJS | null>(null);
@@ -39,20 +96,58 @@ export default function Editor({
   const [stats, setStats] = useState({ wpm: 0, charCount: 0, goalProgress: 0 });
   const [lastKeystroke, setLastKeystroke] = useState<number>(Date.now());
   const lastContentRef = useRef<string>(initialContent || "");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [saveStatus, setSaveStatus] = useState<string>("Đã lưu");
   const { showToast } = useToast();
 
   const [isExportingWord, setIsExportingWord] = useState(false);
+  const [isExportingEpub, setIsExportingEpub] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isExtractingTags, setIsExtractingTags] = useState(false);
+  const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
+  const [plagiarismScore, setPlagiarismScore] = useState<number | null>(null);
+  const [tocData, setTocData] = useState<{id: string, text: string, level: number}[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [documentSummary, setDocumentSummary] = useState<string>("");
   const [showFindReplace, setShowFindReplace] = useState(false);
-  const [showPageSetup, setShowPageSetup] = useState(false);
-  const [pageMargin, setPageMargin] = useState(48);
-  const [pageHeader, setPageHeader] = useState("");
-  const [pageFooter, setPageFooter] = useState("");
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [isFinding, setIsFinding] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<number>(1);
+
+  useEffect(() => {
+    if (!documentId) return;
+    let wsUrl = API_URL.replace("http", "ws") + `/soan-thao/o-cam-crdt/${documentId}`;
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onmessage = (e) => {
+        setOnlineUsers(prev => prev);
+      };
+      ws.onopen = () => setOnlineUsers(2);
+      ws.onclose = () => setOnlineUsers(1);
+    } catch (e) { console.error("WebSocket Error", e); }
+    return () => { if (ws) ws.close(); };
+  }, [documentId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && document.activeElement?.classList.contains("ce-paragraph")) {
+        const plusButton = document.querySelector(".ce-toolbar__plus") as HTMLElement;
+        if (plusButton) plusButton.click();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
+
+    if (contentFormat === "latex") {
+      setLocalText(initialContent || "");
+      return;
+    }
 
     const holderDiv = document.createElement("div");
     holderDiv.className = "prose prose-zinc max-w-4xl mx-auto min-h-full";
@@ -132,11 +227,9 @@ export default function Editor({
       const Footnotes = (await import("editorjs-footnotes")).default;
       const BreakLine = (await import("editorjs-break-line")).default;
       const Gist = (await import("editorjs-github-gist-plugin")).default;
-      const PageBreak = (await import("editorjs-page-break")).default;
       const MathTool = (await import("editorjs-math")).default;
       const Personality = (await import("@editorjs/personality")).default;
       const Carousel = (await import("editorjs-carousel")).default;
-      const PdfTool = (await import("editorjs-pdf")).default;
       const Quiz = (await import("editorjs-quiz")).default;
       const Superscript = (await import("editorjs-superscript")).default;
       const Subscript = (await import("editorjs-subscript")).default;
@@ -151,11 +244,6 @@ export default function Editor({
         try {
           const parsed = JSON.parse(initialContent);
           if (parsed.blocks && parsed.blocks.length > 0) data = parsed;
-          if (parsed.pageSetup) {
-            setPageMargin(parsed.pageSetup.margin || 48);
-            setPageHeader(parsed.pageSetup.header || "");
-            setPageFooter(parsed.pageSetup.footer || "");
-          }
         } catch (err: any) {
           const blocks = initialContent.split('\\n').map(line => ({
             type: "paragraph",
@@ -166,12 +254,13 @@ export default function Editor({
       }
 
       const tools: Record<string, any> = {};
+      tools.premium = { class: PremiumTune };
       if (AlignmentTune) tools.alignment = { class: AlignmentTune };
       if (IndentTune) tools.indent = { class: IndentTune };
       if (TextVariantTune) tools.textVariant = TextVariantTune;
       if (StyleTune) tools.style = StyleTune;
       
-      const commonTunes = ['alignment', 'indent', 'style'];
+      const commonTunes = ['alignment', 'indent', 'style', 'premium'];
       
       if (Title) tools.title = { class: Title, inlineToolbar: true };
       if (Header) tools.header = { class: Header, inlineToolbar: true, tunes: commonTunes };
@@ -216,11 +305,9 @@ export default function Editor({
       if (Footnotes) tools.footnotes = Footnotes;
       if (BreakLine) tools.breakLine = { class: BreakLine, inlineToolbar: true };
       if (Gist) tools.gist = Gist;
-      if (PageBreak) tools.pageBreak = { class: PageBreak, inlineToolbar: true };
       if (MathTool) tools.math = MathTool;
       if (Personality) tools.personality = { class: Personality };
       if (Carousel) tools.carousel = { class: Carousel };
-      if (PdfTool) tools.pdf = PdfTool;
       if (Quiz) tools.quiz = Quiz;
       if (Superscript) tools.superscript = Superscript;
       if (Subscript) tools.subscript = Subscript;
@@ -249,6 +336,7 @@ export default function Editor({
         },
         onChange: async () => {
           try {
+            setSaveStatus("Đang lưu...");
             const saved = await editor.save();
             const text = saved.blocks.map(b => b.data?.text || "").join(" ");
             const words = text.trim().split(/\s+/).length;
@@ -258,14 +346,35 @@ export default function Editor({
                 wpm: Math.round((words / ((Date.now() - lastKeystroke) / 60000)) || 0)
             }));
             setLastKeystroke(Date.now());
-            const payload = {
-               ...saved,
-               pageSetup: { margin: pageMargin, header: pageHeader, footer: pageFooter }
-            };
-            const val = JSON.stringify(payload);
+            setReadingTime(Math.max(1, Math.floor(words / 200)));
+            
+            const toc = saved.blocks.filter(b => b.type === "header").map(b => ({
+               id: b.id || "",
+               text: b.data?.text || "",
+               level: b.data?.level || 1
+            }));
+            setTocData(toc);
+
+            const val = JSON.stringify(saved);
             lastContentRef.current = val;
             onSave?.(val);
+            
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+            saveTimeoutRef.current = setTimeout(async () => {
+               if (documentId) {
+                  try {
+                     const { autoSaveDraftAPI } = await import("@/services/editor.service");
+                     await autoSaveDraftAPI(documentId, saved);
+                     setSaveStatus("Đã lưu");
+                  } catch (e: any) {
+                     setSaveStatus("Lỗi lưu");
+                  }
+               } else {
+                  setSaveStatus("Đã lưu");
+               }
+            }, 2000);
           } catch (err: any) { 
+            setSaveStatus("Lỗi lưu");
             showToast("Lỗi khi tự động lưu nội dung: " + (err.message || ""), "error"); 
           }
         },
@@ -288,12 +397,54 @@ export default function Editor({
         editorRef.current = null;
         instance.isReady.then(() => instance.destroy()).catch((err) => { console.error(err); });
       }
-      holderDiv.remove();
+      if (holderDiv && holderDiv.parentNode) holderDiv.remove();
     };
-  }, []);
+  }, [contentFormat]);
+
+  const [localText, setLocalText] = useState("");
+  
+  useEffect(() => {
+    if (contentFormat === "latex" && initialContent !== undefined && initialContent !== lastContentRef.current) {
+       setLocalText(initialContent);
+       lastContentRef.current = initialContent;
+    }
+  }, [initialContent, contentFormat]);
+
+  const handleLatexChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalText(val);
+    setSaveStatus("Đang lưu...");
+    
+    const words = val.trim().split(/\s+/).length;
+    setStats(prev => ({ 
+        ...prev, 
+        charCount: val.length,
+        wpm: Math.round((words / ((Date.now() - lastKeystroke) / 60000)) || 0)
+    }));
+    setLastKeystroke(Date.now());
+    setReadingTime(Math.max(1, Math.floor(words / 200)));
+    
+    lastContentRef.current = val;
+    onSave?.(val);
+    
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+       if (documentId) {
+          try {
+             const { autoSaveDraftAPI } = await import("@/services/editor.service");
+             await autoSaveDraftAPI(documentId, { content: val });
+             setSaveStatus("Đã lưu");
+          } catch (e: any) {
+             setSaveStatus("Lỗi lưu");
+          }
+       } else {
+          setSaveStatus("Đã lưu");
+       }
+    }, 2000);
+  };
 
   useEffect(() => {
-    if (!editorRef.current || !initialContent || initialContent === lastContentRef.current) return;
+    if (contentFormat === "latex" || !editorRef.current || !initialContent || initialContent === lastContentRef.current) return;
     
     lastContentRef.current = initialContent;
     editorRef.current.isReady.then(() => {
@@ -446,6 +597,75 @@ export default function Editor({
     }
   };
 
+  const handleExportEpub = async () => {
+    if (!documentId) return;
+    setIsExportingEpub(true);
+    showToast("Đang xuất file EPUB", "info");
+    try {
+      const blob = await exportToEpubAPI(documentId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tai-lieu.epub";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      showToast(err.message || "Lỗi khi xuất file EPUB", "error");
+    } finally {
+      setIsExportingEpub(false);
+    }
+  };
+
+  const handleSummarize = async () => {
+    if (!documentId) return;
+    setIsSummarizing(true);
+    showToast("Đang tóm tắt tài liệu bằng AI", "info");
+    try {
+      const res = await summarizeDocumentAPI(documentId);
+      setDocumentSummary(res.summary || res.data?.summary || "");
+      showToast("Tóm tắt thành công", "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  const handleExtractTags = async () => {
+    if (!documentId) return;
+    setIsExtractingTags(true);
+    showToast("Đang phân tích thẻ tự động", "info");
+    try {
+      const res = await extractSmartTagsAPI(documentId);
+      setTags(res.tags || res.data?.tags || []);
+      showToast("Trích xuất thẻ thành công", "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi kết nối máy chủ AI", "error");
+    } finally {
+      setIsExtractingTags(false);
+    }
+  };
+
+  const handlePlagiarismScan = async () => {
+    if (!documentId || !editorRef.current) return;
+    setIsScanningPlagiarism(true);
+    showToast("Đang quét đạo văn nội bộ", "info");
+    try {
+      const data = await editorRef.current.save();
+      const text = data.blocks.map((b: any) => b.data?.text || "").join(" ");
+      if (text.length < 50) throw new Error("Văn bản quá ngắn để quét đạo văn");
+      
+      const res = await checkDeepPlagiarismAPI(documentId);
+      const score = res.data?.duplication_score || res.duplication_score || 0;
+      setPlagiarismScore(score);
+      showToast(`Quét hoàn tất: ${score}% trùng lặp.`, score > 20 ? "warning" : "success");
+    } catch (err: any) {
+      showToast(err.message || "Lỗi hệ thống quét", "error");
+    } finally {
+      setIsScanningPlagiarism(false);
+    }
+  };
+
   const fetchSidebarData = useCallback(async () => {
     if (!documentId || activeSidebar === "none") return;
     setLoadingSidebar(true);
@@ -561,7 +781,7 @@ export default function Editor({
               <button
                 onClick={handleCompilePreview}
                 disabled={isCompiling}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]   flex items-center gap-1.5"
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
               >
                 {isCompiling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Binary className="w-3.5 h-3.5" />}
                 Biên dịch LaTeX
@@ -575,18 +795,45 @@ export default function Editor({
                 Xuất ra Word
               </button>
               <button
+                onClick={handleExportEpub}
+                disabled={isExportingEpub}
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
+              >
+                {isExportingEpub ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                Xuất ra EPUB
+              </button>
+              <button
                 onClick={() => setShowFindReplace(!showFindReplace)}
                 className={`px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 ${showFindReplace ? "bg-black text-white border-black" : ""}`}
               >
                 <Search className="w-3.5 h-3.5" />
-                Tìm & Thay thế
+                Tìm kiếm và thay thế
+              </button>
+            </div>
+            <div className="flex gap-2 ml-2 pl-2 border-l border-zinc-200">
+              <button
+                onClick={handleSummarize}
+                disabled={isSummarizing}
+                className="px-4 py-1.5 bg-black text-white text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
+              >
+                {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Wand2 className="w-3.5 h-3.5 text-white" />}
+                Tóm tắt bằng AI
               </button>
               <button
-                onClick={() => setShowPageSetup(true)}
+                onClick={handleExtractTags}
+                disabled={isExtractingTags}
                 className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
               >
-                <FileEdit className="w-3.5 h-3.5" />
-                Bố cục trang
+                {isExtractingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+                Tự động tạo thẻ
+              </button>
+              <button
+                onClick={handlePlagiarismScan}
+                disabled={isScanningPlagiarism}
+                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
+              >
+                {isScanningPlagiarism ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                Kiểm tra bản quyền
               </button>
             </div>
           </div>
@@ -605,8 +852,16 @@ export default function Editor({
               <MessageSquare className="w-4 h-4" />
             </button>
             <button
+              onClick={() => setActiveSidebar(activeSidebar === "toc" ? "none" : "toc")}
+              className={`p-1.5 border ${activeSidebar === "toc" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
+              title="Mục lục"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => setActiveSidebar(activeSidebar === "history" ? "none" : "history")}
-              className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}
+              className={`p-1.5 border ${activeSidebar === "history" ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}`}
+              title="Lịch sử phiên bản"
             >
               <History className="w-4 h-4" />
             </button>
@@ -665,30 +920,26 @@ export default function Editor({
           </div>
         )}
 
-        <div className={`h-full overflow-y-auto flex justify-center bg-zinc-50 py-8 ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}>
-          <div 
-            className="relative w-[800px] max-w-full bg-white border border-zinc-200 flex flex-col"
-            style={{ padding: `${pageMargin}px`, minHeight: '1056px' }}
-          >
-            {pageHeader && (
-              <div className="absolute top-4 left-0 right-0 text-center text-xs text-zinc-400 font-medium whitespace-pre-wrap">
-                {pageHeader}
-              </div>
-            )}
-            <div ref={containerRef} className="flex-1 w-full" />
-            {pageFooter && (
-              <div className="absolute bottom-4 left-0 right-0 text-center text-xs text-zinc-400 font-medium whitespace-pre-wrap">
-                {pageFooter}
-              </div>
-            )}
-          </div>
+        <div className={`h-full overflow-y-auto flex justify-center bg-white ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}>
+          {contentFormat === "latex" ? (
+            <textarea
+              value={localText}
+              onChange={handleLatexChange}
+              placeholder="Nhập mã LaTeX tại đây..."
+              className="w-full h-full p-12 bg-zinc-50 border-none outline-none resize-none font-mono text-sm leading-relaxed text-black"
+            />
+          ) : (
+            <div className="w-full max-w-[900px] px-12 py-20 flex flex-col">
+              <div ref={containerRef} className="flex-1 w-full" />
+            </div>
+          )}
         </div>
         
         {activeSidebar !== "none" && (
           <div className="w-1/3 h-full border-l border-zinc-200 bg-zinc-50 flex flex-col">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-white">
               <span className="text-xs font-bold uppercase tracking-tight">
-                {activeSidebar === "comments" ? "Nhận xét nội dòng" : "Lịch sử phiên bản"}
+                {activeSidebar === "comments" ? "Nhận xét nội dòng" : activeSidebar === "history" ? "Lịch sử phiên bản" : "Mục lục"}
               </span>
               <button onClick={() => setActiveSidebar("none")} className="p-1 text-zinc-400 "><X className="w-4 h-4" /></button>
             </div>
@@ -696,6 +947,31 @@ export default function Editor({
               <div className="flex flex-col gap-3">
                 {loadingSidebar ? (
                    <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-zinc-400" /></div>
+                ) : activeSidebar === "toc" ? (
+                  tocData.length === 0 ? (
+                    <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
+                      Chưa có thẻ Header nào
+                    </div>
+                  ) : (
+                    tocData.map((item, idx) => (
+                      <div 
+                        key={item.id || `toc-${idx}`}
+                        className="p-2 border border-zinc-200 bg-white text-xs text-black font-medium cursor-pointer"
+                        style={{ marginLeft: `${(item.level - 1) * 16}px` }}
+                        onClick={() => {
+                          const elements = document.querySelectorAll('.ce-header');
+                          for (let i = 0; i < elements.length; i++) {
+                             if (elements[i].textContent?.includes(item.text)) {
+                                elements[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                break;
+                             }
+                          }
+                        }}
+                      >
+                        {item.text}
+                      </div>
+                    ))
+                  )
                 ) : sidebarData.length === 0 ? (
                   <div className="p-8 border border-zinc-200 bg-white text-xs text-zinc-400 text-center italic">
                     Chưa có dữ liệu để hiển thị
@@ -770,8 +1046,37 @@ export default function Editor({
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Số ký tự</span>
                 <span className="text-[10px] font-bold text-black">{stats.charCount}</span>
              </div>
+             <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Thời gian đọc</span>
+                <span className="text-[10px] font-bold text-black">{readingTime} phút</span>
+             </div>
+             {tags.length > 0 && (
+               <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Thẻ</span>
+                  <div className="flex gap-1">
+                    {tags.map((t, idx) => (
+                      <span key={idx} className="px-1.5 py-0.5 bg-zinc-100 text-[10px] text-zinc-600 font-medium">#{t}</span>
+                    ))}
+                  </div>
+               </div>
+             )}
           </div>
           <div className="flex items-center gap-4">
+            {plagiarismScore !== null && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-zinc-50 border border-zinc-200">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Bản quyền</span>
+                <span className={`text-[10px] font-bold ${plagiarismScore > 20 ? 'text-red-600' : 'text-green-600'}`}>{plagiarismScore}%</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${onlineUsers > 1 ? 'bg-green-500' : 'bg-zinc-400'}`}></span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Cộng tác</span>
+                <span className="text-[10px] font-bold text-black">{onlineUsers > 1 ? `${onlineUsers} trực tuyến` : "Đang trực tuyến"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Trạng thái</span>
+                <span className="text-[10px] font-bold text-black">{saveStatus}</span>
+            </div>
              <div className="w-32 h-1 bg-zinc-100 relative">
                 <div 
                   className="absolute top-0 left-0 h-full bg-black  " 
@@ -782,84 +1087,6 @@ export default function Editor({
           </div>
       </div>
 
-    </div>
-    
-      {showPageSetup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white p-6 border border-zinc-200 w-[400px]">
-            <h3 className="text-sm font-bold uppercase tracking-tight mb-4">Bố cục trang</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">Căn lề (Margin - px)</label>
-                <input
-                  type="number"
-                  value={pageMargin}
-                  onChange={(e) => {
-                    setPageMargin(Number(e.target.value));
-                    if (editorRef.current) {
-                      editorRef.current.save().then((saved: any) => {
-                        const payload = { ...saved, pageSetup: { margin: Number(e.target.value), header: pageHeader, footer: pageFooter } };
-                        const val = JSON.stringify(payload);
-                        lastContentRef.current = val;
-                        onSave?.(val);
-                      });
-                    }
-                  }}
-                  className="w-full px-3 py-2 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">Tiêu đề (Header)</label>
-                <input
-                  type="text"
-                  value={pageHeader}
-                  onChange={(e) => {
-                    setPageHeader(e.target.value);
-                    if (editorRef.current) {
-                      editorRef.current.save().then((saved: any) => {
-                        const payload = { ...saved, pageSetup: { margin: pageMargin, header: e.target.value, footer: pageFooter } };
-                        const val = JSON.stringify(payload);
-                        lastContentRef.current = val;
-                        onSave?.(val);
-                      });
-                    }
-                  }}
-                  placeholder="Ví dụ Luận văn"
-                  className="w-full px-3 py-2 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] text-zinc-400 font-bold uppercase mb-1">Chân trang (Footer)</label>
-                <input
-                  type="text"
-                  value={pageFooter}
-                  onChange={(e) => {
-                    setPageFooter(e.target.value);
-                    if (editorRef.current) {
-                      editorRef.current.save().then((saved: any) => {
-                        const payload = { ...saved, pageSetup: { margin: pageMargin, header: pageHeader, footer: e.target.value } };
-                        const val = JSON.stringify(payload);
-                        lastContentRef.current = val;
-                        onSave?.(val);
-                      });
-                    }
-                  }}
-                  placeholder="Ví dụ Trang 1"
-                  className="w-full px-3 py-2 border border-zinc-200 text-xs font-medium focus:outline-none focus:border-black"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowPageSetup(false)}
-                className="px-4 py-2 bg-black text-white text-xs font-bold active:scale-[0.98]"
-              >
-                Xác nhận
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

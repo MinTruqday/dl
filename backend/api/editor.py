@@ -140,6 +140,14 @@ async def update_cover(
 async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await EditorService.get_ai_suggestions(document_id, payload.context, current_user), message="Lấy gợi ý AI thành công")
 
+@router.post("/{document_id}/tom-tat", response_model=APIResponse[Any])
+async def summarize_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await EditorService.summarize_document(document_id, current_user), message="Tóm tắt tài liệu thành công")
+
+@router.post("/{document_id}/phan-tich-the", response_model=APIResponse[Any])
+async def extract_smart_tags(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(data=await EditorService.extract_smart_tags(document_id, current_user), message="Tự động phân tích thẻ thành công")
+
 @router.post("/{document_id}/kiem-tra-logic", response_model=APIResponse[Any])
 async def check_logic(document_id: str, payload: dict, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data=await EditorService.check_logic(document_id, payload.get("content", ""), current_user), message="Kiểm tra tính nhất quán thành công")

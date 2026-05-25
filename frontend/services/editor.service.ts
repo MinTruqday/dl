@@ -35,6 +35,22 @@ export async function exportToWordAPI(documentId: string) {
   return await res.blob();
 }
 
+export async function exportToEpubAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/xuat-tai-lieu/${documentId}/epub`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    let errMsg = "Xuất file EPUB thất bại";
+    try {
+      const data = await res.json();
+      errMsg = data.detail || data.message || errMsg;
+    } catch (err: any) {}
+    throw new Error(errMsg);
+  }
+  return await res.blob();
+}
+
 export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
   const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van`, {
     method: "POST",
@@ -43,6 +59,16 @@ export async function analyzeInternalPlagiarismAPI(documentId: string, content: 
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Phân tích đạo văn thất bại");
+  return data;
+}
+
+export async function checkDeepPlagiarismAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van-chuyen-sau`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Kiểm tra đạo văn chuyên sâu thất bại");
   return data;
 }
 
@@ -158,6 +184,26 @@ export async function getAiSuggestionsAPI(documentId: string, context: string) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lấy gợi ý AI thất bại");
   return data.data;
+}
+
+export async function summarizeDocumentAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/tom-tat`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tóm tắt tài liệu thất bại");
+  return data;
+}
+
+export async function extractSmartTagsAPI(documentId: string) {
+  const res = await fetch(`${API_URL}/soan-thao/${documentId}/phan-tich-the`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Tự động phân tích thẻ thất bại");
+  return data;
 }
 
 export async function addInlineCommentAPI(documentId: string, payload: { block_id: string; text: string; selected_text?: string }) {

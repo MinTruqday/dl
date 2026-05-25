@@ -53,6 +53,9 @@ class DocumentBase(BaseModel):
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     is_nsfw: Optional[bool] = None
+    draft_content: Optional[str] = None
+    toc: List[dict] = []
+    reading_time_minutes: int = 0
 
 class DocumentContentUpdate(BaseModel):
     content: str
