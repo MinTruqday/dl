@@ -57,16 +57,16 @@ export default function Passkey({
 
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: b64urlToBuffer(begin.public_key.challenge),
-          rp: begin.public_key.rp,
+          challenge: b64urlToBuffer(begin.challenge),
+          rp: begin.rp,
           user: {
-            ...begin.public_key.user,
-            id: b64urlToBuffer(begin.public_key.user.id),
+            ...begin.user,
+            id: b64urlToBuffer(begin.user.id),
           },
-          pubKeyCredParams: begin.public_key.pubKeyCredParams,
-          timeout: begin.public_key.timeout,
-          attestation: begin.public_key.attestation,
-          authenticatorSelection: begin.public_key.authenticatorSelection,
+          pubKeyCredParams: begin.pubKeyCredParams,
+          timeout: begin.timeout,
+          attestation: begin.attestation,
+          authenticatorSelection: begin.authenticatorSelection,
         },
       });
 

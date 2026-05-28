@@ -384,8 +384,16 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           if (type === "status" && data) {
             try {
               const parsed = JSON.parse(data);
-              const nodeVi =
-                nodeDescriptions[parsed.node] || parsed.node;
+              let nodeVi = parsed.node;
+              if (typeof nodeVi === "object" && nodeVi !== null) {
+                if (nodeVi.agent && nodeVi.task) {
+                  nodeVi = `Tác vụ: ${nodeVi.task} (${nodeVi.agent})`;
+                } else {
+                  nodeVi = JSON.stringify(nodeVi);
+                }
+              } else {
+                nodeVi = nodeDescriptions[nodeVi] || nodeVi;
+              }
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
@@ -407,7 +415,8 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
                 if (lastMsg.role === "assistant") {
-                  lastMsg.thoughts = [...(lastMsg.thoughts || []), "Đã lập kế hoạch:", ...(parsed.steps || [])];
+                  const stepsText = (parsed.steps || []).map((s: any) => `Định hướng: ${s.task || "Phân tích yêu cầu"}`);
+                  lastMsg.thoughts = [...(lastMsg.thoughts || []), ...stepsText];
                 }
                 return updated;
               });
@@ -417,7 +426,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           } else if (type === "tool" && data) {
             try {
               const parsed = JSON.parse(data);
-              const toolMsg = `Công cụ ${parsed.agent} xử lý thành công`;
+              const toolMsg = `Đã hoàn tất xử lý tác vụ nội bộ`;
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
@@ -770,7 +779,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                   >
                                     <div className="w-1 h-1 bg-zinc-300 group- " />
                                     <span className="text-[11px] font-medium tracking-tight">
-                                      {nodeDescriptions[thought] || thought}
+                                      {typeof thought === 'string' 
+                                        ? (nodeDescriptions[thought] || thought) 
+                                        : JSON.stringify(thought)}
                                     </span>
                                   </div>
                                 ))}

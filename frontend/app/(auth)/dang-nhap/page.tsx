@@ -62,11 +62,11 @@ export default function LoginPage() {
       const begin = await passkeyLoginBeginAPI(inputEmail);
       const assertion = await navigator.credentials.get({
         publicKey: {
-          challenge: b64urlToBuffer(begin.public_key.challenge),
-          rpId: begin.public_key.rpId,
-          timeout: begin.public_key.timeout,
-          userVerification: begin.public_key.userVerification,
-          allowCredentials: (begin.public_key.allowCredentials || []).map(
+          challenge: b64urlToBuffer(begin.challenge),
+          rpId: begin.rpId,
+          timeout: begin.timeout,
+          userVerification: begin.userVerification,
+          allowCredentials: (begin.allowCredentials || []).map(
             (c: any) => ({
               type: c.type,
               id: b64urlToBuffer(c.id),

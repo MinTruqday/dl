@@ -30,7 +30,7 @@ async def smart_search(q: str = Query(), current_user: UserInDB = Depends(check_
 @router.post("/van-ban", response_model=APIResponse[Any])
 async def process_text(req: AITextRequest, current_user: UserInDB = Depends(check_quota)):
     return APIResponse(
-        data=await AIService.process_text(req), 
+        data=await AIService.process_text(req, current_user), 
         message="Xử lý văn bản bằng AI thành công"
     )
 

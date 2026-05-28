@@ -18,7 +18,8 @@ class RouterAgent:
 
     async def execute(self, query: str) -> dict:
         prompt = PromptTemplate(
-            template="""Bạn là Router của hệ thống DocLib. Phân tích câu hỏi.
+            template="""Bạn là Router của hệ thống DocLib. Phân tích câu hỏi sau đây:
+            Câu hỏi: {question}
             
             Nếu đây là một câu giao tiếp thông thường, hãy trả lời ngay lập tức theo định dạng JSON:
             {{"route": "chat", "answer": "<câu trả lời của bạn>"}}

@@ -40,7 +40,7 @@ class PasskeyService:
         options = generate_registration_options(
             rp_id=RP_ID,
             rp_name=RP_NAME,
-            user_id=user_id,
+            user_id=user_id.encode('utf-8'),
             user_name=email,
             user_display_name=user.get("full_name", email),
             authenticator_selection=AuthenticatorSelectionCriteria(
