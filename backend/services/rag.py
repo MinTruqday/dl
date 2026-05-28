@@ -76,6 +76,7 @@ class RagService:
                 if session_id and current_user:
                     await RagService.add_message(session_id, "user", user_query, str(current_user.id))
 
+                buffer = ""
                 ai_circuit_breaker.check()
                 async with ai_http_client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
                     ai_circuit_breaker.on_success()
@@ -86,17 +87,19 @@ class RagService:
                         
                     async for chunk in response.aiter_bytes():
                         chunk_str = chunk.decode('utf-8')
-                        lines = chunk_str.split("\n\n")
-                        for line in lines:
-                            if line.startswith("data: "):
-                                try:
-                                    data = line.replace("data: ", "").strip()
-                                    if data != "[DONE]":
-                                        parsed = json_mod.loads(data)
-                                        if "chunk" in parsed:
-                                            full_response += parsed["chunk"]
-                                except Exception as parse_error:
-                                    logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
+                        buffer += chunk_str
+                        while "\n\n" in buffer:
+                            event_block, buffer = buffer.split("\n\n", 1)
+                            for line in event_block.split("\n"):
+                                if line.startswith("data: "):
+                                    try:
+                                        data = line[6:].strip()
+                                        if data != "[DONE]":
+                                            parsed = json_mod.loads(data)
+                                            if "chunk" in parsed:
+                                                full_response += parsed["chunk"]
+                                    except Exception as parse_error:
+                                        logger.warning(f"Failed to parse RAG stream chunk: {parse_error}")
                         yield chunk
 
                 if session_id and current_user and full_response:
@@ -104,7 +107,8 @@ class RagService:
                 
                 if current_user:
                     await QuotaService.consume_request(str(current_user.id))
-                    approx_tokens = (len(user_query) + len(full_response)) // 3
+                    # Sử dụng hệ số quy đổi chuyên nghiệp thay cho chia 3 thủ công
+                    approx_tokens = int((len(user_query) + len(full_response)) / 3.5)
                     await QuotaService.consume_tokens(str(current_user.id), approx_tokens)
 
             except Exception as e:

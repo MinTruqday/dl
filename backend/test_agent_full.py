@@ -48,9 +48,64 @@ def test_all_ai_features():
                 "method": "POST",
                 "url": f"{API_BASE}/ai/trich-dan-thong-minh",
                 "payload": {"text": "Einstein phát minh ra thuyết tương đối.", "style": "APA"}
+            },
+            {
+                "name": "Tạo thẻ ghi nhớ",
+                "method": "POST",
+                "url": f"{API_BASE}/ai/tai-lieu/test-doc-1/the-ghi-nho",
+                "payload": {"text": "Trí tuệ nhân tạo", "context": "Khoa học máy tính"}
+            },
+            {
+                "name": "Ôn tập thẻ ghi nhớ",
+                "method": "POST",
+                "url": f"{API_BASE}/ai/the-ghi-nho/on-tap",
+                "payload": {"card_id": "test-card-1", "quality": 5}
+            },
+            {
+                "name": "Phân tích cảm nhận độc giả",
+                "method": "GET",
+                "url": f"{API_BASE}/ai/tai-lieu/test-doc-1/cam-quan",
+                "payload": None
+            },
+            {
+                "name": "Thẩm định nội dung",
+                "method": "POST",
+                "url": f"{API_BASE}/ai/tham-dinh-noi-dung",
+                "payload": {"text": "Bài viết về AI", "criteria": ["độ chính xác", "tính logic"]}
+            },
+            {
+                "name": "Tổng hợp đa tài liệu",
+                "method": "POST",
+                "url": f"{API_BASE}/ai/tong-hop-da-tai-lieu",
+                "payload": {"document_ids": ["doc1", "doc2"], "query": "Tóm tắt"}
+            },
+            {
+                "name": "Dịch tài liệu lưu trữ",
+                "method": "POST",
+                "url": f"{API_BASE}/ai/tai-lieu-luu-tru/item-1/dich",
+                "payload": {"target_lang": "en"}
+            },
+            {
+                "name": "Lấy tài liệu liên quan",
+                "method": "GET",
+                "url": f"{API_BASE}/ai/tai-lieu-luu-tru/item-1/lien-quan",
+                "payload": None
             }
         ]
 
+        # First, test session management directly
+        print("\n=> Kiểm tra quản lý lịch sử hội thoại...")
+        r_session = requests.post(f"{API_BASE}/ai/lich-su", json={"first_query": "Hello", "document_id": "test-doc"}, headers=headers)
+        session_id = None
+        if r_session.status_code in [200, 201]:
+            session_id = r_session.json()["data"]["_id"]
+            print("Khởi tạo hội thoại mới thành công.")
+            requests.put(f"{API_BASE}/ai/lich-su/{session_id}/tieu-de", json={"title": "Updated Title"}, headers=headers)
+            requests.get(f"{API_BASE}/ai/lich-su", headers=headers)
+            requests.get(f"{API_BASE}/ai/lich-su/{session_id}", headers=headers)
+            requests.delete(f"{API_BASE}/ai/lich-su/{session_id}", headers=headers)
+            print("Các API CRUD lịch sử hội thoại thành công.")
+            
         for i, test in enumerate(tests, 2):
             print(f"\n{i}. Kiểm tra: {test['name']}...")
             try:

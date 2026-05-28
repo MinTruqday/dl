@@ -92,10 +92,7 @@ async def reasoning_agent_node(state: CoordinatorState):
     return await execute_tool_node(state, reasoning_agent, "ReasoningAgent")
 
 async def aggregator_node(state: CoordinatorState):
-    req = state.get("req")
-    results = state.get("consolidated_results", [])
-    final_answer = await aggregator_agent.aggregate(req.query, results)
-    return {"final_answer": final_answer}
+    return {"final_answer": ""}
 
 def router(state: CoordinatorState):
     next_node = state.get("next_node")
@@ -137,7 +134,7 @@ class CoordinatorAgent:
 
     async def execute_plan(self, req):
         logger.info("Coordinator: Starting LangGraph execution flow")
-        yield {"type": "status", "node": "Lập kế hoạch phân rã tác vụ (Brain)"}
+        yield {"type": "status", "node": "Phân tích yêu cầu"}
         
         initial_state = {
             "req": req,
@@ -149,8 +146,12 @@ class CoordinatorAgent:
             "error": ""
         }
         
+        final_results = []
         async for output in self.app.astream(initial_state):
             for node_name, state_update in output.items():
+                if "consolidated_results" in state_update:
+                    final_results = state_update["consolidated_results"]
+                    
                 if node_name == "supervisor":
                     steps = state_update.get("steps")
                     if steps and state_update.get("current_step_index") == 0:
@@ -159,12 +160,16 @@ class CoordinatorAgent:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
                     else:
-                        yield {"type": "tool_result", "agent": node_name, "content": "Đã xử lý xong tác vụ."}
+                        yield {"type": "tool_result", "agent": node_name}
                         
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Tổng hợp kết quả (Aggregator)"}
-                    if "final_answer" in state_update:
-                        yield {"type": "message", "chunk": state_update["final_answer"]}
+                    yield {"type": "status", "node": "Tổng hợp thông tin"}
+        
+        if not final_results:
+            final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống."]
+            
+        async for chunk in aggregator_agent.aggregate_stream(req.query, final_results):
+            yield {"type": "message", "chunk": chunk}
                         
         pass
 coordinator = CoordinatorAgent()

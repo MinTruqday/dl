@@ -22,6 +22,7 @@ from models.user import UserInDB
 from datetime import datetime, timezone
 import os
 import uuid
+from loguru import logger
 
 RP_ID = getattr(settings, "PASSKEY_RP_ID")
 RP_NAME = getattr(settings, "PASSKEY_RP_NAME")

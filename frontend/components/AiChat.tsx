@@ -24,6 +24,7 @@ import {
   Plus as PlusIcon,
   User,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { getMyQuotaAPI, QuotaUsage } from "@/services/quota.service";
@@ -141,21 +142,21 @@ const PayOSEmbedded = ({
 
 
 const nodeDescriptions: Record<string, string> = {
-  contextualize_question: "Đang phân tích bối cảnh hội thoại",
-  route_question: "Đang xác định ý định yêu cầu",
-  route_query: "Đang định tuyến tới chuyên gia",
-  retrieve_db: "Đang truy xuất kho nội dung nội bộ",
-  retrieve_internet: "Đang tìm kiếm thông tin trên internet",
-  grade_documents: "Đang thẩm định độ tin cậy của dữ liệu",
-  transform_query: "Đang tinh chỉnh chiến lược tìm kiếm",
-  generate: "Đang tổng hợp câu trả lời từ dữ liệu",
-  generate_direct: "Đang phản hồi trực tiếp",
-  grade_generation: "Đang kiểm tra tính xác thực thông tin",
-  billing: "Đang kết nối hệ thống tài chính",
-  workspace: "Đang truy cập quản lý thư viện",
-  multi: "Đang tổng hợp dữ liệu đa nguồn",
-  rag: "Đang thực hiện quy trình RAG chuyên sâu",
-  chat: "Đang trò chuyện trực tiếp",
+  contextualize_question: "Phân tích bối cảnh hội thoại",
+  route_question: "Định tuyến yêu cầu",
+  route_query: "Định tuyến chuyên môn",
+  retrieve_db: "Tìm kiếm trong DocLib",
+  retrieve_internet: "Tìm kiếm thông tin mở rộng",
+  grade_documents: "Thẩm định độ tin cậy của dữ liệu",
+  transform_query: "Tinh chỉnh chiến lược tìm kiếm",
+  generate: "Tổng hợp câu trả lời",
+  generate_direct: "Phản hồi trực tiếp",
+  grade_generation: "Kiểm tra tính xác thực",
+  billing: "Kết nối hệ thống tài chính",
+  workspace: "Truy cập thư viện",
+  multi: "Đồng bộ dữ liệu đa nguồn",
+  rag: "Tổng hợp thông tin",
+  chat: "Trò chuyện trực tiếp",
 };
 
 interface AiChatProps {
@@ -410,13 +411,12 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             }
           } else if (type === "plan" && data) {
             try {
-              const parsed = JSON.parse(data);
+              JSON.parse(data); // Validate JSON but we don't display raw steps
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
-                if (lastMsg.role === "assistant") {
-                  const stepsText = (parsed.steps || []).map((s: any) => `Định hướng: ${s.task || "Phân tích yêu cầu"}`);
-                  lastMsg.thoughts = [...(lastMsg.thoughts || []), ...stepsText];
+                if (lastMsg.role === "assistant" && !lastMsg.thoughts?.includes("Tiếp nhận và phân tích yêu cầu")) {
+                  lastMsg.thoughts = [...(lastMsg.thoughts || []), "Tiếp nhận và phân tích yêu cầu"];
                 }
                 return updated;
               });
@@ -426,7 +426,24 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           } else if (type === "tool" && data) {
             try {
               const parsed = JSON.parse(data);
-              const toolMsg = `Đã hoàn tất xử lý tác vụ nội bộ`;
+              const agentNames: Record<string, string> = {
+                "KnowledgeAgent": "Tìm kiếm tài liệu trong DocLib",
+                "SearchEngine": "Tìm kiếm thông tin mở rộng",
+                "CodeInterpreter": "Phân tích dữ liệu",
+                "ActionAgent": "Thực hiện thao tác",
+                "DraftGenerator": "Định dạng nội dung",
+                "ReasoningAgent": "Suy luận và đánh giá",
+                "code_interpreter": "Phân tích dữ liệu",
+                "search_engine": "Tìm kiếm thông tin mở rộng",
+                "action_agent": "Thực hiện thao tác",
+                "draft_generator": "Định dạng nội dung",
+                "knowledge_agent": "Tìm kiếm tài liệu trong DocLib",
+                "reasoning_agent": "Suy luận và đánh giá"
+              };
+              
+              const actionName = agentNames[parsed.agent] || "Xử lý thông tin";
+              const toolMsg = `Đã ${actionName.toLowerCase()}`;
+              
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastMsg = updated[updated.length - 1];
@@ -527,16 +544,16 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           }
         >
           <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
-                <Zap className="w-4 h-4 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-base font-medium text-black">
-                  Thiết bị nghiên cứu
+                <h3 className="text-sm font-semibold text-zinc-900">
+                  DocLib AI
                 </h3>
-                <p className="text-sm text-zinc-500 mt-0.5">
-                  Trợ lý AI
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Trợ lý học thuật
                 </p>
               </div>
             </div>
@@ -708,7 +725,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col w-full p-6 gap-8">
+              <div className="flex flex-col w-full p-6 gap-6">
               {messages.map((msg, idx) => {
                 if (msg.role === "user") {
                   return (
@@ -716,17 +733,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                       key={idx}
                       className="flex justify-end animate-in fade-in slide-in-from-right-4"
                     >
-                      <div className="w-full max-w-[95%]">
-                        <div className="flex items-center justify-end gap-3 mb-2">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                            Bạn
-                          </span>
-                          <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
-                        <div className="bg-zinc-100 border border-zinc-200 px-5 py-4 rounded-none">
-                          <p className="text-sm font-medium text-black whitespace-pre-wrap leading-relaxed">
+                      <div className="max-w-[85%]">
+                        <div className="bg-zinc-100 px-5 py-3.5 rounded-2xl rounded-tr-sm">
+                          <p className="text-[15px] text-zinc-900 whitespace-pre-wrap leading-relaxed">
                             {msg.content}
                           </p>
                         </div>
@@ -740,65 +749,39 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     key={idx}
                     className="flex justify-start animate-in fade-in slide-in-from-left-4"
                   >
-                    <div className="w-full max-w-[95%]">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
-                          <Cpu className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-black">
-                          {useSmart ? "Trợ lý Chuyên sâu" : "Trợ lý DocLib"}
-                        </span>
-                        {msg.thoughts && msg.thoughts.length > 0 && (
-                          <div className="flex gap-1">
-                            <div className="w-1.5 h-1.5 bg-black animate-pulse" />
-                            <div
-                              className="w-1.5 h-1.5 bg-black animate-pulse"
-                              style={{ animationDelay: "0.2s" }}
-                            />
-                            <div
-                              className="w-1.5 h-1.5 bg-black animate-pulse"
-                              style={{ animationDelay: "0.4s" }}
-                            />
-                          </div>
-                        )}
-                      </div>
+                    <div className="w-full">
+                      <div className="bg-white border border-zinc-200 px-5 py-3.5 rounded-2xl rounded-tl-sm w-full relative group">
+                        {(() => {
+                          const cleanText = msg.content
+                            .replace(/<think>[\s\S]*?<\/think>/g, "")
+                            .trim();
 
-                      {(() => {
-                        const cleanText = msg.content
-                          .replace(/<think>[\s\S]*?<\/think>/g, "")
-                          .trim();
-
-                        return (
-                          <>
-                            {msg.thoughts && msg.thoughts.length > 0 && (
-                              <div className="mb-4 space-y-2">
-                                {msg.thoughts.map((thought, tidx) => (
+                          return (
+                            <>
+                              {!cleanText && (
+                                <div className="flex gap-1 h-6 items-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />
                                   <div
-                                    key={tidx}
-                                    className="flex items-center gap-3 text-zinc-400 group"
-                                  >
-                                    <div className="w-1 h-1 bg-zinc-300 group- " />
-                                    <span className="text-[11px] font-medium tracking-tight">
-                                      {typeof thought === 'string' 
-                                        ? (nodeDescriptions[thought] || thought) 
-                                        : JSON.stringify(thought)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="bg-white border border-zinc-200 p-0 rounded-none overflow-hidden relative group">
-                              <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-  z-10">
+                                    className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse"
+                                    style={{ animationDelay: "0.2s" }}
+                                  />
+                                  <div
+                                    className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse"
+                                    style={{ animationDelay: "0.4s" }}
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-  z-10 bg-white shadow-sm border border-zinc-100 rounded-md">
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(msg.content);
                                     showToast("Đã sao chép vào bộ nhớ tạm");
                                   }}
-                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center    rounded-none"
+                                  className="w-7 h-7 flex items-center justify-center    rounded-md"
                                   title="Sao chép"
                                 >
-                                  <div className="w-3 h-3 border-2 border-current" />
+                                  <div className="w-3 h-3 border-2 border-zinc-500 rounded-[2px]" />
                                 </button>
                                 <button
                                   onClick={(ev) => {
@@ -811,36 +794,27 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                       ta.style.height = ta.scrollHeight + "px";
                                     }
                                   }}
-                                  className="w-8 h-8 bg-white border border-zinc-200 flex items-center justify-center    rounded-none"
+                                  className="w-7 h-7 flex items-center justify-center    rounded-md text-zinc-500"
                                   title="Phóng to"
                                 >
                                   <Maximize2 className="w-3 h-3" />
                                 </button>
                               </div>
 
-                              {!cleanText &&
-                              msg.thoughts &&
-                              msg.thoughts.length > 0 ? (
-                                <div className="p-5 flex items-center gap-3 text-zinc-400">
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  <span className="text-sm font-medium animate-pulse">
-                                    Đang suy nghĩ
-                                  </span>
-                                </div>
-                              ) : (
+                              {cleanText && (
                                 <ReactMarkdown
                                   remarkPlugins={[remarkGfm, remarkMath]}
                                   rehypePlugins={[rehypeKatex, rehypeHighlight]}
-                                  className="prose prose-sm max-w-none prose-zinc p-6
+                                  className="prose prose-sm max-w-none prose-zinc
                                     prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-black
-                                    prose-p:text-zinc-600 prose-p:leading-relaxed prose-p:text-[14px]
+                                    prose-p:text-[15px] prose-p:text-zinc-900 prose-p:leading-relaxed prose-p:m-0 prose-p:mb-3 last:prose-p:mb-0
                                     prose-strong:text-black prose-strong:font-bold
-                                    prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-black prose-code:before:content-none prose-code:after:content-none
-                                    prose-pre:bg-zinc-950 prose-pre:rounded-none prose-pre:p-0
-                                    prose-ul:list-square prose-li:text-zinc-600
-                                    prose-table:border prose-table:border-zinc-200
-                                    prose-th:bg-zinc-50 prose-th:p-4 prose-th:text-black
-                                    prose-td:p-4 prose-td:border-t prose-td:border-zinc-100"
+                                    prose-code:bg-zinc-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-black prose-code:before:content-none prose-code:after:content-none prose-code:rounded-md
+                                    prose-pre:bg-zinc-950 prose-pre:rounded-xl prose-pre:p-0
+                                    prose-ul:list-disc prose-ul:pl-4 prose-li:text-zinc-900 prose-li:marker:text-zinc-400
+                                    prose-table:border prose-table:border-zinc-200 prose-table:rounded-lg prose-table:overflow-hidden
+                                    prose-th:bg-zinc-50 prose-th:p-3 prose-th:text-black
+                                    prose-td:p-3 prose-td:border-t prose-td:border-zinc-100"
                                   components={{
                                     pre: ({ children }) => (
                                       <pre className="relative group bg-zinc-950 p-6 overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-800 rounded-none">
@@ -882,6 +856,63 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                           </code>
                                         );
                                       }
+                                      
+                                      const match = /language-(\w+)/.exec(className || "");
+                                      const language = match ? match[1] : "";
+
+                                      if (language === "flashcard") {
+                                        try {
+                                          const data = JSON.parse(String(children));
+                                          const cards = Array.isArray(data) ? data : data.cards || [data];
+                                          return (
+                                            <div className="my-6 grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose">
+                                              {cards.map((card: any, i: number) => (
+                                                <div key={i} className="group relative border border-black bg-white p-6 cursor-pointer rounded-none" onClick={(e) => {
+                                                  const front = e.currentTarget.querySelector('.fc-front');
+                                                  const back = e.currentTarget.querySelector('.fc-back');
+                                                  front?.classList.toggle('hidden');
+                                                  back?.classList.toggle('hidden');
+                                                }}>
+                                                  <div className="absolute top-3 right-3 px-2 py-1 bg-black text-white text-[9px] font-bold uppercase tracking-widest">Card {i+1}</div>
+                                                  <div className="fc-front font-bold text-lg text-black mt-4">{card.front || card.question}</div>
+                                                  <div className="fc-back hidden font-medium text-zinc-600 text-base mt-4 border-t border-black pt-4">{card.back || card.answer}</div>
+                                                  <div className="text-[10px] text-zinc-400 mt-6 uppercase tracking-widest border-t border-zinc-200 pt-2 text-center">Bấm để lật thẻ</div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          );
+                                        } catch(e) {}
+                                      }
+
+                                      if (language === "mindmap") {
+                                        try {
+                                          const data = JSON.parse(String(children));
+                                          const renderNode = (node: any, depth = 0) => (
+                                            <div key={Math.random()} className="my-3">
+                                              <div className="flex items-center gap-3">
+                                                {depth > 0 && <div className="w-6 h-[1px] bg-black" />}
+                                                <div className="border border-black px-4 py-2 font-bold bg-white text-sm">
+                                                  {node.title || node.text || node.name}
+                                                </div>
+                                              </div>
+                                              {node.children && node.children.length > 0 && (
+                                                <div className="ml-6 border-l border-black pl-6 py-2">
+                                                  {node.children.map((c: any) => renderNode(c, depth + 1))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                          return (
+                                            <div className="my-8 p-8 border border-black bg-zinc-50 overflow-x-auto not-prose relative">
+                                              <div className="absolute top-0 right-0 bg-black text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest">Bản đồ tư duy</div>
+                                              <div className="min-w-[400px] mt-4">
+                                                {renderNode(data)}
+                                              </div>
+                                            </div>
+                                          );
+                                        } catch(e) {}
+                                      }
+
                                       return (
                                         <code className={className} {...props}>
                                           {children}
@@ -920,10 +951,10 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                   {cleanText}
                                 </ReactMarkdown>
                               )}
-                            </div>
                           </>
                         );
                       })()}
+                      </div>
                     </div>
                   </div>
                 );
