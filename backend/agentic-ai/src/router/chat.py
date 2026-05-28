@@ -75,8 +75,9 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
                     
-                    res = await chat_llm.ainvoke([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt. Câu hỏi: {req.query}")])
-                    yield f"event: message\ndata: {json.dumps({'chunk': res.content})}\n\n"
+                    async for chunk in chat_llm.astream([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện. Câu hỏi: {req.query}")]):
+                        if chunk.content:
+                            yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
             else:
                 async for event in coordinator.execute_plan(req):
                     event_type = event["type"]

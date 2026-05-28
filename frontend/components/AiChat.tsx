@@ -25,6 +25,8 @@ import {
   User,
   Activity,
   Sparkles,
+  MoreVertical,
+  ArrowRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { getMyQuotaAPI, QuotaUsage } from "@/services/quota.service";
@@ -177,6 +179,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
   const [isSending, setIsSending] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
+  const [editingTitleValue, setEditingTitleValue] = useState("");
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const documentId = searchParams.get("tai-lieu");
@@ -243,6 +248,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
     if (!e.target.checked) {
       setSelectedFile(null);
       setSelectedImage(null);
+      setShowAttachments(false);
     }
   };
 
@@ -397,13 +403,14 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               }
               setMessages((prev) => {
                 const updated = [...prev];
-                const lastMsg = updated[updated.length - 1];
+                const lastMsg = { ...updated[updated.length - 1] };
                 if (
                   lastMsg.role === "assistant" &&
                   !lastMsg.thoughts?.includes(nodeVi)
                 ) {
                   lastMsg.thoughts = [...(lastMsg.thoughts || []), nodeVi];
                 }
+                updated[updated.length - 1] = lastMsg;
                 return updated;
               });
             } catch (e) {
@@ -411,13 +418,14 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             }
           } else if (type === "plan" && data) {
             try {
-              JSON.parse(data); // Validate JSON but we don't display raw steps
+              JSON.parse(data);
               setMessages((prev) => {
                 const updated = [...prev];
-                const lastMsg = updated[updated.length - 1];
+                const lastMsg = { ...updated[updated.length - 1] };
                 if (lastMsg.role === "assistant" && !lastMsg.thoughts?.includes("Tiếp nhận và phân tích yêu cầu")) {
                   lastMsg.thoughts = [...(lastMsg.thoughts || []), "Tiếp nhận và phân tích yêu cầu"];
                 }
+                updated[updated.length - 1] = lastMsg;
                 return updated;
               });
             } catch (e) {
@@ -446,13 +454,14 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               
               setMessages((prev) => {
                 const updated = [...prev];
-                const lastMsg = updated[updated.length - 1];
+                const lastMsg = { ...updated[updated.length - 1] };
                 if (
                   lastMsg.role === "assistant" &&
                   !lastMsg.thoughts?.includes(toolMsg)
                 ) {
                   lastMsg.thoughts = [...(lastMsg.thoughts || []), toolMsg];
                 }
+                updated[updated.length - 1] = lastMsg;
                 return updated;
               });
             } catch (e) {
@@ -464,8 +473,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               fullText += parsed.chunk;
               setMessages((prev) => {
                 const updated = [...prev];
-                const lastMsg = updated[updated.length - 1];
+                const lastMsg = { ...updated[updated.length - 1] };
                 if (lastMsg.role === "assistant") lastMsg.content = fullText;
+                updated[updated.length - 1] = lastMsg;
                 return updated;
               });
             } catch (e) {
@@ -476,8 +486,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           } else if (type === "error" && data) {
             setMessages((prev) => {
               const updated = [...prev];
-              updated[updated.length - 1].content =
-                "Đã xảy ra lỗi khi xử lý dữ liệu";
+              const lastMsg = { ...updated[updated.length - 1] };
+              lastMsg.content = "Đã xảy ra lỗi khi xử lý dữ liệu";
+              updated[updated.length - 1] = lastMsg;
               return updated;
             });
           } else if (!type && data) {
@@ -486,7 +497,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               if (parsed.error) {
                 setMessages((prev) => {
                   const updated = [...prev];
-                  updated[updated.length - 1].content = parsed.error;
+                  const lastMsg = { ...updated[updated.length - 1] };
+                  lastMsg.content = parsed.error;
+                  updated[updated.length - 1] = lastMsg;
                   return updated;
                 });
                 isDone = true;
@@ -494,8 +507,9 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 fullText += parsed.chunk;
                 setMessages((prev) => {
                   const updated = [...prev];
-                  const lastMsg = updated[updated.length - 1];
+                  const lastMsg = { ...updated[updated.length - 1] };
                   if (lastMsg.role === "assistant") lastMsg.content = fullText;
+                  updated[updated.length - 1] = lastMsg;
                   return updated;
                 });
               }
@@ -525,7 +539,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
       {!standalone && (
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-none ${isOpen ? "bg-black text-white" : "bg-white text-black"}`}
+          className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-full transition-transform ${isOpen ? "bg-black text-white" : "bg-white text-black hover:bg-zinc-50"}`}
         >
           {isOpen ? (
             <X className="w-6 h-6" />
@@ -539,47 +553,41 @@ export default function AiChat({ standalone = false }: AiChatProps) {
         <div
           className={
             standalone
-              ? "w-full h-full bg-white flex flex-col overflow-hidden animate-in fade-in"
-              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 fade-in rounded-none `
+              ? "w-full h-full bg-white flex flex-col overflow-hidden"
+              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden rounded-2xl `
           }
         >
           <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-black flex items-center justify-center shrink-0">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900">
+                <h3 className="text-lg font-semibold text-zinc-900">
                   DocLib AI
                 </h3>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  Trợ lý học thuật
-                </p>
               </div>
             </div>
             {!standalone && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => {
                     setCurrentSessionId(null);
                     setMessages([]);
                     setView("chat");
                   }}
-                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
+                  className="w-8 h-8 flex items-center justify-center text-zinc-500 rounded-full hover:bg-zinc-100 transition-colors"
                   title="Cuộc hội thoại mới"
                 >
-                  <PlusIcon className="w-4 h-4" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
-                  className={`p-2  rounded-none border ${view === "history" ? "bg-black text-white border-black" : "text-zinc-500  border-zinc-100 "}`}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${view === "history" ? "bg-zinc-100 text-black" : "text-zinc-500 hover:bg-zinc-100"}`}
                   title="Lịch sử nghiên cứu"
                 >
                   <HistoryIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
+                  className="w-8 h-8 flex items-center justify-center text-zinc-500 rounded-full hover:bg-zinc-100 transition-colors"
                   title={isExpanded ? "Thu nhỏ" : "Mở rộng"}
                 >
                   {isExpanded ? (
@@ -590,7 +598,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 text-zinc-500   rounded-none border border-zinc-100 "
+                  className="w-8 h-8 flex items-center justify-center text-zinc-500 rounded-full hover:bg-zinc-100 transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -604,13 +612,13 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     setMessages([]);
                     setView("chat");
                   }}
-                  className="px-4 py-2 text-xs font-bold  border bg-white text-black border-zinc-200 "
+                  className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-zinc-100 transition-colors text-zinc-600"
                 >
                   Cuộc hội thoại mới
                 </button>
                 <button
                   onClick={() => setView(view === "chat" ? "history" : "chat")}
-                  className={`px-4 py-2 text-xs font-bold  border ${view === "history" ? "bg-black text-white border-black" : "bg-white text-black border-zinc-200 "}`}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${view === "history" ? "bg-zinc-100 text-black" : "text-zinc-600 hover:bg-zinc-100"}`}
                 >
                   {view === "history" ? "Quay lại" : "Lịch sử nghiên cứu"}
                 </button>
@@ -623,9 +631,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white no-scrollbar"
           >
             {view === "history" ? (
-              <div className="p-6 space-y-6 animate-in fade-in w-full">
-                <QuotaIndicator />
-                
+              <div className="p-6 space-y-3 w-full">
                 {sessions.length === 0 ? (
                   <div className="py-20 text-center">
                     <HistoryIcon className="w-8 h-8 mx-auto mb-4 text-zinc-300" />
@@ -637,92 +643,160 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   sessions.map((s) => (
                     <div
                       key={s._id}
-                      className={`p-5 border bg-white cursor-pointer group relative rounded-none  ${currentSessionId === s._id ? "border-black" : "border-zinc-200 "}`}
+                      className={`p-3.5 border bg-white group relative rounded-xl transition-colors ${currentSessionId === s._id ? "border-black" : "border-zinc-200 hover:border-zinc-300"}`}
                     >
-                      <div
-                        onClick={async () => {
-                          const token = getToken();
-                          setCurrentSessionId(s._id);
-                          setView("chat");
-                          try {
-                            const res = await fetch(`${API_URL}/ai/lich-su/${s._id}`, {
-                              headers: { Authorization: `Bearer ${token}` }
-                            });
-                            if (res.ok) {
-                              const data = await res.json();
-                              const mapped = (data.data.messages || []).map((m: any) => ({
-                                id: m.id || m._id || Math.random().toString(),
-                                role: m.role || "user",
-                                content: m.content || "",
-                                thoughts: m.thoughts || [],
-                              }));
-                              setMessages(mapped);
-                            } else {
-                              const mapped = (s.messages || []).map((m: any) => ({
-                                id: m.id || m._id || Math.random().toString(),
-                                role: m.role || "user",
-                                content: m.content || "",
-                                thoughts: m.thoughts || [],
-                              }));
-                              setMessages(mapped);
-                            }
-                          } catch (e) {
-                             console.error("Error loading history details", e);
-                          }
-                        }}
-                      >
-                        <p className="text-sm font-medium text-black pr-8 truncate">
-                          {s.title}
-                        </p>
-                        <p className="text-sm text-zinc-500 mt-2">
-                          {new Date(s.updated_at).toLocaleDateString("vi-VN")}
-                        </p>
-                      </div>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
+                      <div className="flex items-center justify-between gap-3">
+                        <div
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={async () => {
                             const token = getToken();
-                            const res = await fetch(
-                              `${API_URL}/ai/lich-su/${s._id}`,
-                              {
-                                method: "DELETE",
-                                headers: { Authorization: `Bearer ${token}` },
-                              },
-                            );
-                            if (res.ok) {
-                              if (currentSessionId === s._id) {
-                                setCurrentSessionId(null);
-                                setMessages([]);
+                            setCurrentSessionId(s._id);
+                            setView("chat");
+                            try {
+                              const res = await fetch(`${API_URL}/ai/lich-su/${s._id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                const mapped = (data.data.messages || []).map((m: any) => ({
+                                  id: m.id || m._id || Math.random().toString(),
+                                  role: m.role || "user",
+                                  content: m.content || "",
+                                  thoughts: m.thoughts || [],
+                                }));
+                                setMessages(mapped);
+                              } else {
+                                const mapped = (s.messages || []).map((m: any) => ({
+                                  id: m.id || m._id || Math.random().toString(),
+                                  role: m.role || "user",
+                                  content: m.content || "",
+                                  thoughts: m.thoughts || [],
+                                }));
+                                setMessages(mapped);
                               }
-                              fetchHistory();
+                            } catch (e) {
+                               console.error("Error loading history details", e);
                             }
-                          } catch (err) {
-                            console.error("Delete session error", err);
-                          }
-                        }}
-                        className="absolute top-5 right-5 p-1 text-zinc-400 opacity-0 group-   rounded-none"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                          }}
+                        >
+                          {editingTitleId === s._id ? (
+                            <input
+                              autoFocus
+                              value={editingTitleValue}
+                              onChange={(e) => setEditingTitleValue(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              onBlur={() => setEditingTitleId(null)}
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!editingTitleValue.trim()) return;
+                                  try {
+                                    const token = getToken();
+                                    const res = await fetch(`${API_URL}/ai/lich-su/${s._id}/tieu-de`, {
+                                      method: "PUT",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({ title: editingTitleValue }),
+                                    });
+                                    if (res.ok) {
+                                      fetchHistory();
+                                      setEditingTitleId(null);
+                                    }
+                                  } catch (err) {
+                                    console.error("Rename error", err);
+                                  }
+                                } else if (e.key === "Escape") {
+                                  setEditingTitleId(null);
+                                }
+                              }}
+                              className="w-full text-[15px] font-medium text-black bg-zinc-50 border border-zinc-300 rounded px-2 py-0.5 outline-none focus:border-black"
+                            />
+                          ) : (
+                            <p className="text-[15px] font-medium text-black truncate">
+                              {s.title}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="text-xs text-zinc-500 whitespace-nowrap">
+                            {new Date(s.updated_at).toLocaleDateString("vi-VN")}
+                          </p>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(openDropdownId === s._id ? null : s._id);
+                              }}
+                              className="p-1.5 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-full transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                            {openDropdownId === s._id && (
+                              <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
+                                <button
+                                  className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenDropdownId(null);
+                                    setEditingTitleId(s._id);
+                                    setEditingTitleValue(s.title);
+                                  }}
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                  Đổi tên
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setOpenDropdownId(null);
+                                    try {
+                                      const token = getToken();
+                                      const res = await fetch(
+                                        `${API_URL}/ai/lich-su/${s._id}`,
+                                        {
+                                          method: "DELETE",
+                                          headers: { Authorization: `Bearer ${token}` },
+                                        },
+                                      );
+                                      if (res.ok) {
+                                        if (currentSessionId === s._id) {
+                                          setCurrentSessionId(null);
+                                          setMessages([]);
+                                        }
+                                        fetchHistory();
+                                      }
+                                    } catch (err) {
+                                      console.error("Delete session error", err);
+                                    }
+                                  }}
+                                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Xóa
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))
                 )}
               </div>
             ) : messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center mb-6 rounded-none">
-                  <Cpu className="w-5 h-5 text-black" />
+                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-6">
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-lg font-medium text-black">
+                <p className="text-xl font-semibold text-zinc-900">
                   Xin chào, {user.full_name}
                 </p>
-                <p className="text-sm text-zinc-500 mt-3 leading-relaxed max-w-sm">
-                  Tôi có thể giúp bạn phân tích tài liệu, tìm kiếm thông tin hoặc giải đáp các thắc mắc chuyên sâu.
+                <p className="text-[15px] text-zinc-500 mt-2 leading-relaxed max-w-sm">
+                  Tôi có thể giúp gì cho bạn hôm nay?
                 </p>
-                <div className="mt-8 w-full max-w-[280px]">
-                  <QuotaIndicator />
-                </div>
               </div>
             ) : (
               <div className="flex flex-col w-full p-6 gap-6">
@@ -731,11 +805,11 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                   return (
                     <div
                       key={idx}
-                      className="flex justify-end animate-in fade-in slide-in-from-right-4"
+                      className="flex justify-end"
                     >
                       <div className="max-w-[85%]">
                         <div className="bg-zinc-100 px-5 py-3.5 rounded-2xl rounded-tr-sm">
-                          <p className="text-[15px] text-zinc-900 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-[15px] text-zinc-900 whitespace-pre-wrap leading-relaxed min-w-0">
                             {msg.content}
                           </p>
                         </div>
@@ -754,6 +828,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                         {(() => {
                           const cleanText = msg.content
                             .replace(/<think>[\s\S]*?<\/think>/g, "")
+                            .replace(/<think>[\s\S]*$/, "")
                             .trim();
 
                           return (
@@ -772,7 +847,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                                 </div>
                               )}
                               
-                              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-  z-10 bg-white shadow-sm border border-zinc-100 rounded-md">
+                              <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-  z-10 bg-white border border-zinc-100 rounded-md">
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(msg.content);
@@ -963,7 +1038,8 @@ export default function AiChat({ standalone = false }: AiChatProps) {
             )}
           </div>
 
-          <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
+          {view !== "history" && (
+            <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
             <div className="w-full relative">
               {(selectedFile || selectedImage) && (
                 <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">
@@ -1000,88 +1076,71 @@ export default function AiChat({ standalone = false }: AiChatProps) {
               )}
 
               {showAttachments && (
-                <div className="absolute bottom-full left-0 mb-4 bg-white border border-zinc-200 p-2 flex gap-2 animate-in fade-in slide-in-from-bottom-4 z-50 rounded-none ">
+                <div className="absolute bottom-full left-0 mb-2 w-36 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
                   <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
                     accept=".txt,.md,.json,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.epub,.mobi,.zip,.csv"
-                    onChange={(e) => handleFileUpload(e, "file")}
+                    onChange={(e) => { handleFileUpload(e, "file"); setShowAttachments(false); }}
                   />
                   <input
                     type="file"
                     ref={imageInputRef}
                     className="hidden"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, "image")}
+                    onChange={(e) => { handleFileUpload(e, "image"); setShowAttachments(false); }}
                   />
                   <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none   border border-transparent "
+                    onClick={() => { fileInputRef.current?.click(); setShowAttachments(false); }}
+                    className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
                   >
-                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
-                      <FileText className="w-5 h-5 text-black" />
-                    </div>
-                    <span className="text-sm font-medium text-black">
-                      Tài liệu
-                    </span>
+                    <FileText className="w-4 h-4" />
+                    Tài liệu
                   </button>
                   <button
-                    onClick={() => imageInputRef.current?.click()}
-                    className="flex flex-col items-center gap-3 p-4 min-w-[90px] rounded-none   border border-transparent "
+                    onClick={() => { imageInputRef.current?.click(); setShowAttachments(false); }}
+                    className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
                   >
-                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center rounded-none bg-white">
-                      <ImageIcon className="w-5 h-5 text-black" />
-                    </div>
-                    <span className="text-sm font-medium text-black">
-                      Hình ảnh
-                    </span>
+                    <ImageIcon className="w-4 h-4" />
+                    Hình ảnh
                   </button>
                 </div>
               )}
 
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={useSmart}
-                      onChange={handleToggleSmart}
-                      className="sr-only peer"
-                    />
-                    <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after: peer-checked:after:translate-x-4 peer-checked:bg-black rounded-none "></div>
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-400  group-">
-                    Chuyên sâu
-                  </span>
-                </label>
-                {useSmart && (
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-none">
-                    <span className="text-xs font-bold">
-                      20 dl/tháng
-                    </span>
-                    <Coins className="w-3 h-3 text-black" />
-                  </div>
-                )}
-              </div>
-
               <form onSubmit={handleSubmit} className="flex gap-3">
-                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-black rounded-none ">
-                  <button
-                    type="button"
-                    onClick={handleAttach}
-                    className="text-zinc-400   shrink-0 rounded-none p-1"
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </button>
+                <div className="flex-1 min-h-[56px] bg-white border border-zinc-200 flex items-center px-4 gap-3 focus-within:border-zinc-300 rounded-xl transition-colors">
+                  {useSmart && (
+                    <button
+                      type="button"
+                      onClick={handleAttach}
+                      className="text-zinc-400 shrink-0 rounded-full p-1.5 hover:bg-zinc-100 transition-colors"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                    </button>
+                  )}
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder=""
                     disabled={isSending}
-                    className="flex-1 h-full py-4 text-sm bg-transparent outline-none font-medium text-black placeholder:text-zinc-400"
+                    className="flex-1 min-w-0 h-full py-4 text-sm bg-transparent outline-none font-medium text-black placeholder:text-zinc-400"
                   />
+                  <label className="flex items-center gap-2 cursor-pointer group shrink-0 pl-3 border-l border-zinc-100">
+                    <span className="text-sm font-medium text-zinc-500 transition-colors select-none">
+                      Nâng cao
+                    </span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={useSmart}
+                        onChange={handleToggleSmart}
+                        className="sr-only peer"
+                      />
+                      <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after:rounded-full peer-checked:after:translate-x-4 peer-checked:bg-black transition-colors"></div>
+                    </div>
+                  </label>
                 </div>
                 <button
                   type="submit"
@@ -1090,17 +1149,18 @@ export default function AiChat({ standalone = false }: AiChatProps) {
                     !input.trim() ||
                     (useSmart && (user?.wallet_balance || 0) < 20)
                   }
-                  className="w-14 shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed  rounded-none"
+                  className="w-14 h-[56px] shrink-0 bg-black text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-colors hover:bg-zinc-800"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <Send className="w-5 h-5" />
+                    <ArrowRight className="w-5 h-5" />
                   )}
                 </button>
               </form>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

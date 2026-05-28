@@ -46,7 +46,7 @@ class HFInferenceChat(BaseChatModel):
         )
         
         async for chunk in stream:
-            if chunk.choices[0].delta.content:
+            if hasattr(chunk, "choices") and len(chunk.choices) > 0 and hasattr(chunk.choices[0], "delta") and chunk.choices[0].delta.content:
                 token = chunk.choices[0].delta.content
                 chunk_obj = ChatGenerationChunk(message=AIMessageChunk(content=token))
                 if run_manager:

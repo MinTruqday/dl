@@ -21,8 +21,8 @@ class RouterAgent:
             template="""Bạn là Router của hệ thống DocLib. Phân tích câu hỏi sau đây:
             Câu hỏi: {question}
             
-            Nếu đây là một câu giao tiếp thông thường, hãy trả lời ngay lập tức theo định dạng JSON:
-            {{"route": "chat", "answer": "<câu trả lời của bạn>"}}
+            Nếu đây là một câu giao tiếp thông thường, hãy trả về định dạng JSON:
+            {{"route": "chat"}}
             
             Nếu là yêu cầu nghiệp vụ, trả về JSON:
             {{"route": "knowledge"}} hoặc {{"route": "action"}}
