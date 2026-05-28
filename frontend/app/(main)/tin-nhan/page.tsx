@@ -52,7 +52,6 @@ import {
   MoreVertical,
   ChevronRight,
   X,
-  Smile,
   Eye,
   Share2,
   Paperclip,
@@ -65,6 +64,8 @@ import {
   Flame,
   Volume2,
   VolumeX,
+  ThumbsUp,
+  Heart,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/lib/utils";
@@ -618,11 +619,11 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
-        className="max-w-xl rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="p-6 border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
@@ -640,7 +641,7 @@ export default function MessagesPage() {
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
               placeholder="Nhập tên người dùng"
-              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-none"
+              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
             />
           </div>
 
@@ -698,7 +699,7 @@ export default function MessagesPage() {
       <Modal
         isOpen={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        className="max-w-xl rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="p-6 border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
@@ -716,7 +717,7 @@ export default function MessagesPage() {
               placeholder="Nhập tên nhóm..."
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium focus:outline-none focus:border-black rounded-none"
+              className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
             />
           </div>
           <div className="space-y-1.5">
@@ -739,7 +740,7 @@ export default function MessagesPage() {
                           setSelectedMembers(selectedMembers.filter(id => id !== (u._id || u.id)));
                         }
                       }}
-                      className="accent-black rounded-none"
+                      className="accent-black rounded-2xl"
                     />
                     <span className="text-xs font-medium text-black">{u.full_name || u.username}</span>
                   </div>
@@ -751,7 +752,7 @@ export default function MessagesPage() {
           </div>
           <button
             onClick={handleCreateGroup}
-            className="w-full h-10 bg-black text-white text-xs font-semibold rounded-none"
+            className="w-full h-10 bg-black text-white text-xs font-semibold rounded-2xl"
           >
             Khởi tạo nhóm
           </button>
@@ -761,7 +762,7 @@ export default function MessagesPage() {
       <Modal
         isOpen={showShareDocModal}
         onClose={() => setShowShareDocModal(false)}
-        className="max-w-xl rounded-none border border-zinc-200 bg-white p-0"
+        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="p-6 border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
@@ -796,36 +797,21 @@ export default function MessagesPage() {
         </ModalContent>
       </Modal>
 
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-3">
-          <h1 className="text-3xl font-semibold text-black">Trò chuyện</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Hệ thống giao tiếp nội bộ chuyên sâu
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={openGroupModal}
-            className="h-10 px-6 border border-zinc-200 bg-white  text-black text-xs font-medium flex items-center gap-2 rounded-none"
-          >
-            <Users className="w-4 h-4" /> Tạo nhóm thảo luận
-          </button>
-          <button
-            onClick={() => setShowNewChatModal(true)}
-            className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none"
-          >
-            Bắt đầu kết nối
-          </button>
-        </div>
-      </div>
-
-      <div className="border border-zinc-200 bg-white flex h-[calc(100vh-200px)] min-h-[500px]">
+      <div className="border border-zinc-200 bg-white flex flex-1 min-h-0 rounded-2xl overflow-hidden">
         <div
           className={`w-full md:w-[320px] lg:w-[380px] border-r border-zinc-200 flex flex-col shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
           <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold text-black uppercase tracking-wider">Hộp thư</span>
+            <div className="flex items-center gap-1.5">
+              <button onClick={openGroupModal} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Tạo nhóm thảo luận">
+                <Users className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowNewChatModal(true)} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Bắt đầu kết nối">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {loadingConv ? (
@@ -885,7 +871,7 @@ export default function MessagesPage() {
                           >
                             <Pin className="w-3 h-3" />
                           </button>
-                          {conv.unread_count > 0 && <div className="w-2 h-2 bg-black shrink-0 rounded-none"></div>}
+                          {conv.unread_count > 0 && <div className="w-2 h-2 bg-black shrink-0 rounded-2xl"></div>}
                         </div>
                       </div>
                     </div>
@@ -893,7 +879,7 @@ export default function MessagesPage() {
                 );
               })
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center opacity-50">
+              <div className="h-full flex flex-col items-center justify-center opacity-50">
                 <p className="text-xs font-medium text-black">Hộp thư rỗng</p>
               </div>
             )}
@@ -919,7 +905,7 @@ export default function MessagesPage() {
                       ) : (
                         <User className="w-5 h-5 text-zinc-400 stroke-[1]" />
                       )}
-                      <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-none ${isOnline ? "bg-black" : "bg-zinc-300"}`} />
+                      <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-white rounded-2xl ${isOnline ? "bg-black" : "bg-zinc-300"}`} />
                     </div>
                     <div className="flex flex-col">
                       <span className="font-semibold text-sm text-black flex items-center gap-1.5">
@@ -932,7 +918,7 @@ export default function MessagesPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)}
-                      className={`p-2 border rounded-none relative ${selfDestructSeconds > 0 ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                      className={`p-2 border rounded-2xl relative ${selfDestructSeconds > 0 ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                       title="Tin nhắn tự hủy"
                     >
                       <Flame className="w-4 h-4" />
@@ -947,26 +933,26 @@ export default function MessagesPage() {
                     </button>
                     <button
                       onClick={handleToggleMute}
-                      className={`p-2 border rounded-none ${isMuted ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                      className={`p-2 border rounded-2xl ${isMuted ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                       title={isMuted ? "Bật âm thông báo" : "Tắt âm thông báo"}
                     >
                       {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </button>
                     <button
                       onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
-                      className={`p-2 border rounded-none ${showSearchMsgBar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                      className={`p-2 border rounded-2xl ${showSearchMsgBar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                     >
                       <Search className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setShowSharedSidebar(!showSharedSidebar)}
-                      className={`p-2 border rounded-none ${showSharedSidebar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                      className={`p-2 border rounded-2xl ${showSharedSidebar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                     >
                       <Paperclip className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleBlockUser}
-                      className={`p-2 border rounded-none ${isBlocked ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                      className={`p-2 border rounded-2xl ${isBlocked ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
                       title={isBlocked ? "Mở chặn" : "Chặn liên lạc"}
                     >
                       <ShieldAlert className="w-4 h-4" />
@@ -986,7 +972,7 @@ export default function MessagesPage() {
                         placeholder="Tìm kiếm nội dung tin nhắn trong lịch sử..."
                         value={searchMsgQuery}
                         onChange={(e) => handleSearchMessages(e.target.value)}
-                        className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-none"
+                        className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
                       />
                     </div>
                     {searchedMsgResults.length > 0 && (
@@ -1105,16 +1091,16 @@ export default function MessagesPage() {
                                 <div className={`absolute top-0 ${isSender ? "-left-[120px]" : "-right-[120px]"} opacity-0 group-  flex items-center gap-1`}>
                                   <div className="relative flex items-center gap-1 bg-white border border-zinc-200 p-1">
                                     <button
-                                      onClick={() => handleAddReaction(msg._id || msg.id, "👍")}
+                                      onClick={() => handleAddReaction(msg._id || msg.id, "like")}
                                       className="  text-[11px]"
                                     >
-                                      👍
+                                      <ThumbsUp className="w-3 h-3" />
                                     </button>
                                     <button
-                                      onClick={() => handleAddReaction(msg._id || msg.id, "❤️")}
+                                      onClick={() => handleAddReaction(msg._id || msg.id, "love")}
                                       className="  text-[11px]"
                                     >
-                                      ❤️
+                                      <Heart className="w-3 h-3 text-red-500" fill="currentColor" />
                                     </button>
                                   </div>
                                   <div className="relative flex items-center gap-0.5">
@@ -1227,7 +1213,7 @@ export default function MessagesPage() {
                       <span className="w-2 h-2 bg-black animate-ping shrink-0" />
                       <span className="text-xs font-bold text-black uppercase">Đang ghi âm cuộc trò chuyện: {recordingDuration} giây</span>
                     </div>
-                    <button onClick={handleStopRecording} className="h-7 px-3 bg-black text-white text-[10px] font-bold uppercase rounded-none">Hoàn tất & Gửi</button>
+                    <button onClick={handleStopRecording} className="h-7 px-3 bg-black text-white text-[10px] font-bold uppercase rounded-2xl">Hoàn tất & Gửi</button>
                   </div>
                 )}
 
@@ -1269,9 +1255,9 @@ export default function MessagesPage() {
                     onKeyDown={(e) => e.key === "Enter" && handleSend()}
                     disabled={isBlocked || isRecording}
                     placeholder={isBlocked ? "Hội thoại bị vô hiệu hóa" : isRecording ? "Bộ thu âm đang mở..." : "Nhập nội dung thông điệp"}
-                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-none placeholder:text-zinc-400 disabled:opacity-50"
+                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-2xl placeholder:text-zinc-400 disabled:opacity-50"
                   />
-                  <button onClick={handleSend} disabled={sending || isBlocked || isRecording || (!newMessage.trim() && !imageFile)} className="w-12 h-12 bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-none shrink-0">
+                  <button onClick={handleSend} disabled={sending || isBlocked || isRecording || (!newMessage.trim() && !imageFile)} className="w-12 h-12 bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-2xl shrink-0">
                     {sending || uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </button>
                 </div>
@@ -1279,8 +1265,8 @@ export default function MessagesPage() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-white">
-              <p className="text-sm font-semibold text-black">Hệ thống truyền tin</p>
-              <p className="text-xs font-medium text-zinc-500 mt-1">Chọn một hội thoại để bắt đầu</p>
+              <p className="text-sm font-semibold text-black">DocLib Tin nhắn</p>
+              <p className="text-xs font-medium text-zinc-500 mt-1">Chọn một cuộc hội thoại từ hộp thư để bắt đầu kết nối</p>
             </div>
           )}
         </div>

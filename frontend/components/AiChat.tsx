@@ -535,17 +535,14 @@ export default function AiChat({ standalone = false }: AiChatProps) {
   };
 
   return (
-    <div className="font-sans">
+    <>
       {!standalone && (
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className={`fixed bottom-6 right-6 z-[100] w-14 h-14 border border-zinc-200 flex items-center justify-center active:scale-95 rounded-full transition-transform ${isOpen ? "bg-black text-white" : "bg-white text-black hover:bg-zinc-50"}`}
+          className={`relative p-2 text-zinc-500 ${isOpen ? "bg-zinc-100 text-black" : ""}`}
+          title="DocLib AI"
         >
-          {isOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <MessageCircle className="w-6 h-6" />
-          )}
+          <MessageCircle className="w-5 h-5" />
         </button>
       )}
 
@@ -553,8 +550,8 @@ export default function AiChat({ standalone = false }: AiChatProps) {
         <div
           className={
             standalone
-              ? "w-full h-full bg-white flex flex-col overflow-hidden"
-              : `fixed bottom-24 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden rounded-2xl `
+              ? "font-sans w-full h-full bg-white flex flex-col overflow-hidden"
+              : `font-sans fixed bottom-6 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)]`
           }
         >
           <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
@@ -1163,6 +1160,6 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 }

@@ -126,6 +126,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <>
+                <AiChat />
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
@@ -292,7 +293,6 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
         </div>
       </nav>
 
-      {user && <AiChat />}
     </>
   );
 }
