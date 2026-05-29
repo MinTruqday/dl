@@ -108,68 +108,52 @@ export default function UsersManagementPage() {
   }
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white bg-white min-h-screen">
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6"
-      >
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-medium text-black">
-              Quản lý nhân sự
-            </h1>
-            <p className="text-zinc-500 text-sm flex items-center gap-2">
-              Hệ thống định danh và phân quyền DocLib
-              <ShieldCheck className="w-4 h-4 text-zinc-400" />
-            </p>
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
+      <div className="flex flex-col gap-6 h-full min-h-0">
+        <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+          <div className="relative w-full md:w-96">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Search className="w-4 h-4 text-zinc-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm kiếm email hoặc tên thành viên"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 pl-11 pr-4 bg-zinc-50 border border-zinc-200 focus:border-black outline-none text-sm text-black placeholder:text-zinc-400 rounded-xl transition-colors"
+            />
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={fetchData}
               disabled={isRefreshing}
-              className="h-10 px-4 border border-zinc-200 text-black text-sm font-medium flex items-center gap-2 rounded-none disabled:opacity-50"
+              className="h-10 px-4 border border-zinc-200 bg-white hover:bg-zinc-50 text-black text-sm font-medium flex items-center gap-2 rounded-xl disabled:opacity-50 transition-colors"
             >
               {isRefreshing ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <RefreshCcw className="w-4 h-4" />
               )}
-              Đồng bộ
+              <span className="hidden sm:inline">Đồng bộ</span>
             </button>
-            <button className="h-10 px-6 bg-black text-white text-sm font-medium flex items-center gap-2 rounded-none">
+            <button className="h-10 px-6 bg-black hover:bg-zinc-800 text-white text-sm font-medium flex items-center gap-2 rounded-xl transition-colors">
               <UserPlus className="w-4 h-4" />
-              Thêm tài khoản
+              <span className="hidden sm:inline">Thêm tài khoản</span>
             </button>
           </div>
         </div>
-      </div>
 
-      <div
-        className="space-y-6"
-      >
-        <div className="relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <Search className="w-4 h-4 text-zinc-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Tìm kiếm email hoặc tên thành viên"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 pl-12 pr-4 bg-white border border-zinc-200 focus:border-black outline-none text-sm text-black placeholder:text-zinc-400 rounded-none"
-          />
-        </div>
-
-        <div className="bg-white border border-zinc-200 rounded-none overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+          <div className="overflow-y-auto custom-scrollbar flex-1">
             <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-600 font-medium">
-                  <th className="px-6 py-4 font-medium">Thành viên hệ thống</th>
-                  <th className="px-6 py-4 font-medium">Quyền hạn truy cập</th>
-                  <th className="px-6 py-4 font-medium">Ngày tham gia</th>
-                  <th className="px-6 py-4 font-medium">Trạng thái vận hành</th>
-                  <th className="px-6 py-4 font-medium text-right">Quản trị</th>
+              <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10">
+                <tr className="border-b border-zinc-200 text-zinc-600 font-medium">
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Thành viên hệ thống</th>
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Quyền hạn truy cập</th>
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Ngày tham gia</th>
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Trạng thái vận hành</th>
+                  <th className="px-6 py-4 font-medium text-right whitespace-nowrap">Quản trị</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
@@ -177,7 +161,7 @@ export default function UsersManagementPage() {
                   <tr key={u._id} className="group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white flex items-center justify-center border border-zinc-200 text-zinc-500 font-medium rounded-none overflow-hidden shrink-0">
+                        <div className="w-10 h-10 bg-zinc-100 flex items-center justify-center text-zinc-500 font-medium rounded-xl overflow-hidden shrink-0">
                           {u.avatar_url ? (
                             <img
                               src={u.avatar_url}
@@ -224,28 +208,27 @@ export default function UsersManagementPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="inline-block px-2 py-1 border border-zinc-200">
+                      <div className="inline-block px-2.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl">
                         <span
-                          className={`text-xs font-medium ${u.is_active ? "text-black" : "text-zinc-400"}`}
+                          className={`text-xs font-semibold ${u.is_active ? "text-black" : "text-zinc-500"}`}
                         >
                           {u.is_active ? "Đang hoạt động" : "Đã khóa"}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end items-center gap-3">
+                      <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => setConfirmModal({ type: "status", user: u, value: !u.is_active })}
-                          className={`text-sm font-medium ${
+                          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
                             u.is_active
-                              ? "text-zinc-500"
-                              : "text-black"
+                              ? "bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:text-black"
+                              : "bg-black text-white hover:bg-zinc-800"
                           }`}
                         >
-                          {u.is_active ? "Khóa tài khoản" : "Kích hoạt lại"}
+                          {u.is_active ? "Khóa" : "Kích hoạt"}
                         </button>
-                        <span className="text-zinc-300">|</span>
-                        <button className="text-sm font-medium text-zinc-500">
+                        <button className="px-3 py-1.5 text-xs font-semibold bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">
                           Cảnh báo
                         </button>
                       </div>
@@ -275,7 +258,7 @@ export default function UsersManagementPage() {
       <Modal
         isOpen={!!confirmModal}
         onClose={() => !isUpdating && setConfirmModal(null)}
-        className="max-w-md rounded-none "
+        className="max-w-md rounded-2xl border border-zinc-200 bg-white p-0 shadow-xl"
       >
         <ModalHeader className="border-b border-zinc-200 pb-4">
           <ModalTitle className="text-lg font-medium text-black">Xác nhận thay đổi</ModalTitle>
@@ -292,11 +275,11 @@ export default function UsersManagementPage() {
               `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "vô hiệu hóa"} tài khoản của "${confirmModal?.user.full_name || confirmModal?.user.email}"?`}
           </p>
         </ModalContent>
-        <ModalFooter className="flex gap-3 pt-4 border-t border-zinc-200">
+        <ModalFooter className="flex gap-3 p-4 bg-zinc-50 border-t border-zinc-200 rounded-b-2xl">
           <button
             onClick={() => setConfirmModal(null)}
             disabled={isUpdating}
-            className="flex-1 h-10 border border-zinc-200 text-sm font-medium text-black rounded-none disabled:opacity-50"
+            className="flex-1 h-10 border border-zinc-200 bg-white text-sm font-medium text-black rounded-xl hover:bg-zinc-50 transition-colors disabled:opacity-50"
           >
             Hủy bỏ
           </button>
@@ -306,9 +289,9 @@ export default function UsersManagementPage() {
               else if (confirmModal?.type === "status") handleUpdateStatus();
             }}
             disabled={isUpdating}
-            className="flex-1 h-10 bg-black text-white text-sm font-medium rounded-none disabled:opacity-50 flex items-center justify-center"
+            className="flex-1 h-10 bg-black hover:bg-zinc-800 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center"
           >
-            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận thay đổi"}
+            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận"}
           </button>
         </ModalFooter>
       </Modal>

@@ -268,7 +268,11 @@ async def get_conversation_settings(other_user_id: str, current_user: UserInDB =
     
     is_online = other_user_id in manager.active_connections
     result["is_online"] = is_online
-    
     return APIResponse(data=result, message="Lấy cài đặt thành công")
+    
+@router.delete("/hoi-thoai/{other_user_id}", response_model=APIResponse[Any])
+async def delete_conversation(other_user_id: str, current_user: UserInDB = Depends(get_current_user)):
+    result = await ChatService.delete_conversation(other_user_id, current_user)
+    return APIResponse(data=result, message="Xóa cuộc hội thoại thành công")
 
 

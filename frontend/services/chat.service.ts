@@ -306,4 +306,14 @@ export const getConversationSettingsAPI = async (otherUserId: string) => {
   if (!res.ok) throw new Error(data.message || "Lấy cài đặt thất bại");
   return data;
 };
-
+export const deleteConversationAPI = async (otherUserId: string) => {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/tro-chuyen/hoi-thoai/${otherUserId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa cuộc hội thoại thất bại");
+  return data;
+};

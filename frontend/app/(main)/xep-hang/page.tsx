@@ -73,22 +73,12 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-black">Xếp hạng</h1>
-            <p className="text-zinc-500 text-sm font-medium">
-              Tôn vinh giá trị nội dung
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 order-2 lg:order-1 hidden lg:block">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 space-y-6 order-2 lg:order-1 hidden lg:block">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Danh mục xếp hạng
             </div>
             <nav className="flex flex-col gap-1">
@@ -100,9 +90,9 @@ export default function LeaderboardPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeTab === tab.id
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent"
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-colors ${activeTab === tab.id
+                      ? "bg-zinc-100 text-black"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50"
                     }`}
                 >
                   {tab.label}
@@ -111,8 +101,8 @@ export default function LeaderboardPage() {
               ))}
             </nav>
           </div>
-          <div className="space-y-6">
-            <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.1em] border-b border-zinc-200 pb-2">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.1em] mb-1">
               Hệ thống dữ liệu
             </div>
             <div className="flex flex-col gap-4">
@@ -126,9 +116,8 @@ export default function LeaderboardPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 order-1 lg:order-2">
-          <div className="max-w-3xl mx-auto space-y-4">
-            <div className="flex lg:hidden mb-6 border border-zinc-200 bg-white rounded-none">
+        <main className="lg:col-span-9 order-1 lg:order-2 flex flex-col gap-4">
+            <div className="flex lg:hidden border border-zinc-200 bg-white rounded-2xl overflow-hidden shadow-sm">
               {[
                 { id: "views", label: "Xem nhiều" },
                 { id: "rating", label: "Đánh giá" },
@@ -150,7 +139,7 @@ export default function LeaderboardPage() {
             {loading ? (
               <div className="space-y-4">
                 {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-24 bg-zinc-50 border border-zinc-200 animate-pulse rounded-none" />
+                  <div key={i} className="h-24 bg-zinc-50 border border-zinc-200 animate-pulse rounded-2xl" />
                 ))}
               </div>
             ) : (
@@ -159,12 +148,12 @@ export default function LeaderboardPage() {
                   <>
                     {activeTab === "views" || activeTab === "rating" ? (
                       ((activeTab === "views" ? data?.top_documents_by_views : data?.top_documents_by_rating) || []).map((document, index) => (
-                        <div key={`${document._id}-${index}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white    rounded-none">
+                        <div key={`${document._id}-${index}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors shadow-sm">
                           <div className="flex items-center gap-6">
                             <div className="relative">
                               {renderRankNumber(index)}
                             </div>
-                            <div className="w-14 h-20 bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
+                            <div className="w-14 h-20 bg-zinc-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
                               {document.cover_image ? (
                                 <img
                                   src={document.cover_image.startsWith("http") ? document.cover_image : `${API_URL}/storage/${document.cover_image}`}
@@ -177,7 +166,7 @@ export default function LeaderboardPage() {
                             </div>
                             <div className="flex flex-col gap-1">
                               <div className="flex flex-wrap gap-1">
-                                <span className="px-1.5 py-0.5 border border-zinc-200 text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">Tài liệu</span>
+                                <span className="px-1.5 py-0.5 border border-zinc-200 bg-zinc-100 rounded-md text-[9px] font-bold text-zinc-500 uppercase tracking-tighter">Tài liệu</span>
                               </div>
                               <Link href={`/tai-lieu/${document.slug}`} className="text-sm font-bold text-black line-clamp-1  decoration-2">
                                 {document.title}
@@ -204,10 +193,10 @@ export default function LeaderboardPage() {
                       ))
                     ) : (
                       (data?.top_authors || []).map((author, index) => (
-                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white    rounded-none">
+                        <Link key={`${author._id}-${index}`} href={`/authors/${author.slug}`} className="group flex items-center justify-between p-4 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors shadow-sm">
                           <div className="flex items-center gap-6">
                             {renderRankNumber(index)}
-                            <div className="w-12 h-12 rounded-none bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0 flex items-center justify-center">
                               {author.avatar_url ? (
                                 <img
                                   src={author.avatar_url.startsWith("http") ? author.avatar_url : `${API_URL}/storage/${author.avatar_url}`}
@@ -232,13 +221,12 @@ export default function LeaderboardPage() {
                     )}
                   </>
                 ) : (
-                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl shadow-sm">
                     <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
                   </div>
                 )}
               </div>
             )}
-          </div>
         </main>
       </div>
     </div>

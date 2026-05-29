@@ -91,7 +91,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
               href="/"
               className="text-xl font-bold tracking-tight text-black leading-none flex items-center gap-2 group "
             >
-              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-none">
+              <div className="w-8 h-8 bg-black flex items-center justify-center text-white text-xs font-bold rounded-2xl">
                 dl
               </div>
               <span className="hidden sm:block">DocLib</span>
@@ -109,7 +109,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-none pl-12 pr-12 py-2 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 "
+                className="w-full bg-white border border-zinc-200 rounded-2xl pl-12 pr-12 py-2 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 "
               />
               {searchQuery && (
                 <button
@@ -136,18 +136,18 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                   >
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-black rounded-none" />
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-black rounded-full" />
                     )}
                   </button>
 
                   {showNotifications && (
-                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-200  z-[200] rounded-none">
+                    <div className="absolute right-0 mt-3 w-80 bg-white border border-zinc-200  z-[200] rounded-2xl overflow-hidden shadow-sm">
                       <div className="px-5 py-4 border-b border-zinc-200 flex items-center justify-between">
                         <span className="text-sm font-semibold text-black">
                           Thông báo
                         </span>
                         {unreadCount > 0 && (
-                          <span className="px-2 py-0.5 bg-black text-white text-[10px] font-semibold rounded-none">
+                          <span className="px-2 py-0.5 bg-black text-white text-[10px] font-semibold rounded-2xl">
                             {unreadCount} mới
                           </span>
                         )}
@@ -205,7 +205,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                     className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500  ${showUserMenu ? "bg-zinc-100 text-black" : ""
                       }`}
                   >
-                    <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-none overflow-hidden">
+                    <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-2xl overflow-hidden">
                       {user.avatar_url ? (
                         <img
                           src={user.avatar_url}
@@ -236,7 +236,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                   </button>
 
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white border border-zinc-200  z-[200] py-2 rounded-none">
+                    <div className="absolute right-0 mt-3 w-56 bg-white border border-zinc-200  z-[200] py-2 rounded-2xl shadow-sm">
                       <div className="px-5 py-3 border-b border-zinc-200 mb-2">
                         <p className="text-[10px] font-semibold text-zinc-400 mb-1 uppercase tracking-wider">
                           Tài khoản
@@ -283,7 +283,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 </Link>
                 <Link
                   href="/dang-ky"
-                  className="px-4 py-2 text-sm font-medium text-white bg-black  rounded-none"
+                  className="px-4 py-2 text-sm font-medium text-white bg-black  rounded-2xl"
                 >
                   Đăng ký
                 </Link>

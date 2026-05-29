@@ -222,16 +222,10 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-3">
-          <h1 className="text-3xl font-semibold text-black">Thư viện</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Quản lý tài liệu và kho nội dung cá nhân
-          </p>
-        </div>
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
+      <div className="mb-6 flex justify-end">
         <div className="flex items-center gap-6">
-          <div className="flex border border-zinc-200 bg-white rounded-none">
+          <div className="flex border border-zinc-200 bg-white rounded-2xl overflow-hidden shadow-sm">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-2 ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500"
@@ -251,10 +245,10 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Quản lý thư viện
             </div>
             <nav className="flex flex-col gap-1">
@@ -262,9 +256,9 @@ export default function LibraryPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as any)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeTab === t.id
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent"
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-2xl transition-colors ${activeTab === t.id
+                      ? "bg-zinc-100 text-black"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50"
                     }`}
                 >
                   {t.label}
@@ -273,7 +267,7 @@ export default function LibraryPage() {
               ))}
               <button
                 onClick={() => setIsSynthesisOpen(true)}
-                className="flex items-center gap-3 px-3 py-3 mt-4 text-[10px] font-bold uppercase tracking-widest border border-black bg-black text-white   active:scale-95"
+                className="flex items-center justify-center gap-3 px-3 py-3 mt-4 text-[10px] font-bold uppercase tracking-widest border border-black bg-black text-white rounded-2xl active:scale-95"
               >
                 <Combine className="w-4 h-4" />
                 Tổng hợp đa tài liệu AI
@@ -281,8 +275,8 @@ export default function LibraryPage() {
             </nav>
           </div>
 
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Tài liệu đã ghim
             </div>
             <div className="space-y-3">
@@ -291,9 +285,9 @@ export default function LibraryPage() {
                   <Link
                     key={doc.id}
                     href={`/tai-lieu/${doc.slug}`}
-                    className="flex items-start gap-3 p-3 bg-white border border-zinc-200 group"
+                    className="flex items-start gap-3 p-3 bg-white border border-zinc-200 rounded-2xl hover:border-black transition-colors group"
                   >
-                    <div className="w-10 h-14 bg-zinc-100 border border-zinc-200 shrink-0 overflow-hidden relative">
+                    <div className="w-10 h-14 bg-zinc-100 rounded-xl shrink-0 overflow-hidden relative">
                       {doc.cover_url ? (
                         <img
                           src={
@@ -321,8 +315,8 @@ export default function LibraryPage() {
                   </Link>
                 ))
               ) : (
-                <div className="py-24 border border-zinc-200 flex flex-col items-center justify-center bg-white">
-                  <p className="text-sm font-medium text-zinc-500">
+                <div className="py-4 flex items-center justify-center">
+                  <p className="text-xs font-medium text-zinc-400">
                     Chưa có dữ liệu
                   </p>
                 </div>
@@ -331,11 +325,11 @@ export default function LibraryPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 space-y-12">
+        <main className="lg:col-span-9 space-y-6">
           {activeTab === "overview" && (
             <>
-              <section className="space-y-6">
-                <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+                <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold text-black">
                     Đang đọc
                   </h2>
@@ -359,7 +353,7 @@ export default function LibraryPage() {
                       <Link
                         key={doc.document_id}
                         href={`/tai-lieu/${doc.document_slug}`}
-                        className={`border border-zinc-200 bg-white group ${viewMode === "grid"
+                        className={`border border-zinc-200 bg-white group rounded-2xl hover:border-black transition-colors overflow-hidden ${viewMode === "grid"
                             ? "flex flex-col"
                             : "flex items-start gap-6 p-4"
                           }`}
@@ -367,7 +361,7 @@ export default function LibraryPage() {
                         <div
                           className={`${viewMode === "grid"
                               ? "aspect-[3/4] border-b border-zinc-200"
-                              : "w-24 h-32 border border-zinc-200"
+                              : "w-24 h-32 rounded-xl"
                             } bg-zinc-50 overflow-hidden relative shrink-0`}
                         >
                           {doc.cover_url ? (
@@ -405,7 +399,7 @@ export default function LibraryPage() {
                             <p className="text-[11px] font-medium text-zinc-500">
                               {doc.progress_percentage}% hoàn tất
                             </p>
-                            <div className="text-[10px] font-semibold text-black border border-black px-2 py-1 uppercase tracking-wider">
+                            <div className="text-[10px] font-semibold text-black bg-zinc-100 px-3 py-1.5 rounded-lg uppercase tracking-wider group-hover:bg-zinc-200 transition-colors">
                               Tiếp tục
                             </div>
                           </div>
@@ -414,7 +408,7 @@ export default function LibraryPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -422,8 +416,8 @@ export default function LibraryPage() {
                 )}
               </section>
 
-              <section className="space-y-6">
-                <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+                <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold text-black">
                     Thư mục và danh sách
                   </h2>
@@ -439,7 +433,7 @@ export default function LibraryPage() {
                         setCreateType("folder");
                         setIsCreateModalOpen(true);
                       }}
-                      className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2"
+                      className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-xl hover:bg-zinc-800 transition-colors"
                     >
                       Tạo mới
                     </button>
@@ -458,7 +452,7 @@ export default function LibraryPage() {
                               ? `/thu-vien/folder/${item.id}`
                               : `/collection/${item._id}`
                           }
-                          className="p-6 border border-zinc-200 bg-white flex flex-col justify-between group"
+                          className="p-6 border border-zinc-200 bg-white flex flex-col justify-between group rounded-2xl hover:border-black transition-colors"
                         >
                           <div className="space-y-2">
                             <div className="flex justify-between items-start">
@@ -492,7 +486,7 @@ export default function LibraryPage() {
                       )
                     )
                   ) : (
-                    <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                    <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                       <p className="text-sm font-medium text-zinc-500">
                         Chưa có dữ liệu
                       </p>
@@ -504,8 +498,8 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "history" && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-black">
                   Lịch sử đọc
                 </h2>
@@ -528,7 +522,7 @@ export default function LibraryPage() {
                   history.map((item, idx) => (
                     <div
                       key={item.document_id + idx}
-                      className={`border border-zinc-200 bg-white relative group ${isDeletingHistory === item.document_id
+                      className={`border border-zinc-200 bg-white relative group rounded-2xl hover:border-black transition-colors overflow-hidden ${isDeletingHistory === item.document_id
                           ? "opacity-50"
                           : ""
                         } ${viewMode === "grid"
@@ -540,7 +534,7 @@ export default function LibraryPage() {
                         href={`/tai-lieu/${item.document_slug}`}
                         className={`block ${viewMode === "grid"
                             ? "aspect-[3/4] border-b border-zinc-200"
-                            : "w-24 h-32 border border-zinc-200"
+                            : "w-24 h-32 rounded-xl"
                           } bg-zinc-50 overflow-hidden relative shrink-0`}
                       >
                         {item.cover_url ? (
@@ -590,7 +584,7 @@ export default function LibraryPage() {
                       </div>
                       <button
                         onClick={() => handleDeleteHistoryItem(item.document_id)}
-                        className="absolute top-2 right-2 p-2 bg-white border border-zinc-200 text-zinc-400   "
+                        className="absolute top-2 right-2 p-2 bg-white border border-zinc-200 text-zinc-400 rounded-xl hover:text-black transition-colors"
                         title="Xóa khỏi lịch sử"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -598,7 +592,7 @@ export default function LibraryPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="py-24 text-center border border-zinc-200 bg-white col-span-full">
+                  <div className="col-span-full py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -609,8 +603,8 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "folders" && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-black">
                   Thư mục lưu trữ
                 </h2>
@@ -631,7 +625,7 @@ export default function LibraryPage() {
                     <Link
                       key={folder.id}
                       href={`/thu-vien/folder/${folder.id}`}
-                      className="p-6 border border-zinc-200 bg-white flex flex-col justify-between h-40 group"
+                      className="p-6 border border-zinc-200 bg-white flex flex-col justify-between h-40 group rounded-2xl hover:border-black transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
@@ -650,7 +644,7 @@ export default function LibraryPage() {
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
+                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -661,8 +655,8 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "lists" && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-black">
                   Danh sách đọc
                 </h2>
@@ -709,7 +703,7 @@ export default function LibraryPage() {
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
+                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -720,8 +714,8 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "series" && (
-            <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center justify-between mb-2">
                 <h2 className="text-lg font-semibold text-black">
                   Chuỗi nội dung
                 </h2>
@@ -768,7 +762,7 @@ export default function LibraryPage() {
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 text-center border border-zinc-200 bg-white">
+                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>

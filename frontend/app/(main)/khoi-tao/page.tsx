@@ -67,7 +67,7 @@ export default function CreateDocumentPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-sm font-semibold outline-none rounded-none"
+              className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-sm font-semibold outline-none rounded-2xl transition-colors"
             />
           </div>
 
@@ -78,7 +78,7 @@ export default function CreateDocumentPage() {
               type="text"
               value={publisherName}
               onChange={(e) => setPublisherName(e.target.value)}
-              className={`w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-2xl transition-colors ${user?.role === "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
             />
           </div>
 
@@ -87,7 +87,7 @@ export default function CreateDocumentPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full min-h-[120px] p-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none resize-none rounded-none"
+              className="w-full min-h-[120px] p-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none resize-none rounded-2xl transition-colors"
             />
           </div>
 
@@ -102,11 +102,11 @@ export default function CreateDocumentPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setVisibility(opt.id)}
-                  className={`p-4 border text-left flex items-start gap-4 rounded-none ${visibility === opt.id ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                  className={`p-4 border text-left flex items-start gap-4 rounded-2xl transition-colors ${visibility === opt.id ? "border-black bg-zinc-50" : "bg-white text-zinc-500 border-zinc-200 hover:border-black/30"}`}
                 >
                   <div className="space-y-1">
-                    <p className={`text-sm font-semibold ${visibility === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
-                    <p className={`text-[10px] font-medium leading-relaxed ${visibility === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>{opt.desc}</p>
+                    <p className="text-sm font-semibold text-black">{opt.label}</p>
+                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -124,11 +124,11 @@ export default function CreateDocumentPage() {
                   key={opt.id}
                   type="button"
                   onClick={() => setContentFormat(opt.id)}
-                  className={`p-4 border text-left flex items-start gap-4 rounded-none ${contentFormat === opt.id ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
+                  className={`p-4 border text-left flex items-start gap-4 rounded-2xl transition-colors ${contentFormat === opt.id ? "border-black bg-zinc-50" : "bg-white text-zinc-500 border-zinc-200 hover:border-black/30"}`}
                 >
                   <div className="space-y-1">
-                    <p className={`text-sm font-semibold ${contentFormat === opt.id ? "text-white" : "text-black"}`}>{opt.label}</p>
-                    <p className={`text-[10px] font-medium leading-relaxed ${contentFormat === opt.id ? "text-zinc-400" : "text-zinc-500"}`}>{opt.desc}</p>
+                    <p className="text-sm font-semibold text-black">{opt.label}</p>
+                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -136,7 +136,7 @@ export default function CreateDocumentPage() {
           </div>
         </div>
 
-        <div className="pt-6 mt-8 border-t border-zinc-200 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="space-y-1">
               <p className="text-xs font-medium text-zinc-500">Khởi tạo bởi: {publisherName}</p>
@@ -146,7 +146,7 @@ export default function CreateDocumentPage() {
           <button
             type="submit"
             disabled={loading || !title.trim()}
-            className="w-full md:w-auto h-10 px-6 bg-black text-white text-sm font-semibold flex items-center justify-center gap-2 rounded-none border border-black disabled:opacity-50"
+            className="w-full md:w-auto h-10 px-6 bg-black text-white text-sm font-semibold flex items-center justify-center gap-2 rounded-2xl border border-black disabled:opacity-50 hover:bg-zinc-800 transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             Bắt đầu soạn thảo

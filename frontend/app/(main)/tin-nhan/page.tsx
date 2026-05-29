@@ -25,6 +25,7 @@ import {
   toggleSelfDestructAPI,
   toggleMuteAPI,
   getConversationSettingsAPI,
+  deleteConversationAPI,
 } from "@/services/chat.service";
 import { searchUsersAPI } from "@/services/user.service";
 import { getMyDocumentsAPI } from "@/services/document.service";
@@ -75,6 +76,7 @@ import {
   Download,
   Edit2,
   Undo2,
+  CheckCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/lib/utils";
@@ -160,6 +162,7 @@ export default function MessagesPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingMsg, setEditingMsg] = useState<any>(null);
   const [showMsgMenu, setShowMsgMenu] = useState<string | null>(null);
+  const [activeConvMenuId, setActiveConvMenuId] = useState<string | null>(null);
 
   const [searchMsgQuery, setSearchMsgQuery] = useState("");
   const [showSearchMsgBar, setShowSearchMsgBar] = useState(false);
@@ -274,6 +277,8 @@ export default function MessagesPage() {
     }
 
     setSelectedConv(conv);
+    setShowConvMenu(false);
+    setActiveConvMenuId(null);
     setLoadingMsgs(true);
     setReplyingTo(null);
     setImageFile(null);
@@ -578,8 +583,34 @@ export default function MessagesPage() {
       const status = res.data || res;
       showToast(status.is_pinned ? "Đã ghim cuộc trò chuyện." : "Đã bỏ ghim cuộc trò chuyện.", "success");
       loadConversations();
+      setActiveConvMenuId(null);
     } catch (err: any) {
       showToast("Không thể thay đổi trạng thái ghim.", "error");
+    }
+  };
+
+  const handleMarkAsRead = async (otherUserId: string) => {
+    try {
+      await markAsReadAPI(otherUserId);
+      loadConversations();
+      setActiveConvMenuId(null);
+    } catch (err) {
+      showToast("Không thể đánh dấu đã đọc", "error");
+    }
+  };
+
+  const handleDeleteConv = async (otherUserId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa cuộc hội thoại này? (Nhóm sẽ bị rời)")) return;
+    try {
+      await deleteConversationAPI(otherUserId);
+      if (selectedConv?.other_user_id === otherUserId) {
+        setSelectedConv(null);
+      }
+      loadConversations();
+      setActiveConvMenuId(null);
+      showToast("Đã xóa cuộc hội thoại", "success");
+    } catch (err) {
+      showToast("Không thể xóa cuộc hội thoại", "error");
     }
   };
 
@@ -643,6 +674,21 @@ export default function MessagesPage() {
       setGroupName("");
       setSelectedMembers([]);
       loadConversations();
+      
+      const newGroupConv = {
+        other_user_id: created._id || created.id,
+        other_user: {
+          username: created.group_name,
+          full_name: created.group_name,
+          avatar_url: "",
+          is_group: true
+        },
+        last_message: null,
+        pinned_messages: [],
+        unread_count: 0
+      };
+      
+      selectConversation(newGroupConv);
     } catch (err: any) {
       showToast("Tạo nhóm thất bại.", "error");
     }
@@ -706,25 +752,21 @@ export default function MessagesPage() {
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
-        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
+        className="max-w-xl rounded-2xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="p-6 border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
             Bắt đầu hội thoại mới
           </ModalTitle>
-          <ModalDescription className="text-xs text-zinc-500 font-medium mt-1">
-            Tìm kiếm người dùng qua tên hoặc ID để kết nối
-          </ModalDescription>
         </ModalHeader>
 
         <ModalContent className="p-6 space-y-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               value={searchQuery}
               onChange={(e) => handleSearchUsers(e.target.value)}
               placeholder="Nhập tên người dùng"
-              className="w-full h-10 pl-10 pr-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
+              className="w-full h-10 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
             />
           </div>
 
@@ -782,17 +824,14 @@ export default function MessagesPage() {
       <Modal
         isOpen={showGroupModal}
         onClose={() => setShowGroupModal(false)}
-        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
+        className="max-w-md rounded-2xl border border-zinc-200 bg-white p-0"
       >
-        <ModalHeader className="p-6 border-b border-zinc-200">
+        <ModalHeader className="border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
             Tạo nhóm thảo luận
           </ModalTitle>
-          <ModalDescription className="text-xs text-zinc-500 font-medium mt-1">
-            Kết nối nhiều tác giả để cùng trao đổi chuyên sâu
-          </ModalDescription>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-4">
+        <ModalContent className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-black uppercase">Tên nhóm thảo luận</label>
             <input
@@ -845,7 +884,7 @@ export default function MessagesPage() {
       <Modal
         isOpen={showShareDocModal}
         onClose={() => setShowShareDocModal(false)}
-        className="max-w-xl rounded-xl border border-zinc-200 bg-white p-0"
+        className="max-w-xl rounded-2xl border border-zinc-200 bg-white p-0"
       >
         <ModalHeader className="p-6 border-b border-zinc-200">
           <ModalTitle className="text-sm font-semibold text-black flex items-center gap-2">
@@ -885,7 +924,7 @@ export default function MessagesPage() {
           className={`w-full md:w-[320px] lg:w-[380px] flex flex-col gap-2 shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
-          <div className="h-[72px] px-4 bg-white border border-zinc-200 rounded-2xl shadow-sm flex items-center justify-between shrink-0">
+          <div className="h-[80px] px-4 bg-white border border-zinc-200 rounded-2xl shadow-sm flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold text-black uppercase tracking-wider">Hộp thư</span>
             <div className="flex items-center gap-1.5">
               <button onClick={openGroupModal} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Tạo nhóm thảo luận">
@@ -896,7 +935,7 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto bg-white border border-zinc-200 rounded-2xl shadow-sm">
+          <div className="flex-1 overflow-y-auto bg-white border border-zinc-200 rounded-2xl shadow-sm p-2 flex flex-col gap-1 overflow-x-hidden">
             {loadingConv ? (
               <div className="p-12 flex flex-col items-center gap-4">
                 <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
@@ -909,12 +948,12 @@ export default function MessagesPage() {
                   <div
                     key={conv.other_user_id}
                     onClick={() => selectConversation(conv)}
-                    className={`p-4 border-b border-zinc-200 cursor-pointer flex items-center gap-4 group relative ${selectedConv?.other_user_id === conv.other_user_id
-                        ? "bg-zinc-50 border-l-[3px] border-l-black pl-[13px]"
-                        : "pl-4"
+                    className={`p-3 rounded-2xl cursor-pointer flex items-center gap-3 group relative transition-colors ${selectedConv?.other_user_id === conv.other_user_id
+                        ? "bg-zinc-100"
+                        : "hover:bg-zinc-50"
                       }`}
                   >
-                    <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden rounded-full">
+                    <div className="w-10 h-10 bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden rounded-full">
                       {conv.other_user?.avatar_url ? (
                         <img
                           src={conv.other_user.avatar_url}
@@ -922,7 +961,7 @@ export default function MessagesPage() {
                           className="w-full h-full object-cover grayscale mix-blend-multiply"
                         />
                       ) : (
-                        <User className="w-5 h-5 text-zinc-400 stroke-[1]" />
+                        <User className="w-4 h-4 text-zinc-400 stroke-[1]" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -944,17 +983,51 @@ export default function MessagesPage() {
                         <p className={`text-xs truncate ${conv.unread_count > 0 ? "text-black font-semibold" : "text-zinc-500 font-medium"}`}>
                           {conv.last_message?.content || "Chưa có tin nhắn"}
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 relative">
+                          {conv.unread_count > 0 && activeConvMenuId !== conv.other_user_id && (
+                            <div className="w-2 h-2 bg-black shrink-0 rounded-2xl"></div>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTogglePinConv(conv.other_user_id);
+                              setActiveConvMenuId(activeConvMenuId === conv.other_user_id ? null : conv.other_user_id);
                             }}
-                            className="opacity-0 group- p-1 bg-white border border-zinc-200 text-zinc-400  shrink-0"
+                            className="p-1 text-zinc-400 hover:text-black transition-colors block"
                           >
-                            <Pin className="w-3 h-3" />
+                            <MoreVertical className="w-4 h-4" />
                           </button>
-                          {conv.unread_count > 0 && <div className="w-2 h-2 bg-black shrink-0 rounded-2xl"></div>}
+                          {activeConvMenuId === conv.other_user_id && (
+                            <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-zinc-200 rounded-2xl shadow-lg z-50 overflow-hidden flex flex-col py-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTogglePinConv(conv.other_user_id);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-50 text-zinc-700 flex items-center gap-2 transition-colors"
+                              >
+                                {isConvPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                                {isConvPinned ? "Bỏ ghim" : "Ghim"}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAsRead(conv.other_user_id);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-zinc-50 text-zinc-700 flex items-center gap-2 transition-colors"
+                              >
+                                <CheckCheck className="w-3.5 h-3.5" /> Đã đọc
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteConv(conv.other_user_id);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 text-red-600 flex items-center gap-2 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -969,11 +1042,11 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "gap-2" : "bg-white border border-zinc-200 rounded-2xl shadow-sm"} ${!selectedConv ? "hidden md:flex" : "flex"}`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "gap-2" : ""} ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
             <>
-              <div className="min-h-[72px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col justify-center shrink-0 z-30 relative">
-                <div className="flex items-center justify-between px-4 py-3">
+              <div className="h-[80px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col justify-center shrink-0 z-30 relative">
+                <div className="flex items-center justify-between px-4">
                   <div className="flex items-center gap-4">
                     <button onClick={() => setSelectedConv(null)} className="md:hidden p-2 text-zinc-500">
                       <ArrowLeft className="w-5 h-5" />
@@ -1001,7 +1074,7 @@ export default function MessagesPage() {
                     {showConvMenu && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowConvMenu(false); setShowSelfDestructMenu(false); }} />
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-lg py-1 z-50">
                         <button
                           onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)}
                           className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center justify-between"
@@ -1046,11 +1119,35 @@ export default function MessagesPage() {
                         </button>
 
                         <button
+                          onClick={() => { handleTogglePinConv(selectedConv.other_user_id); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                        >
+                          {user?.pinned_conversations?.includes(selectedConv.other_user_id) ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                          {user?.pinned_conversations?.includes(selectedConv.other_user_id) ? "Bỏ ghim" : "Ghim hội thoại"}
+                        </button>
+
+                        <button
+                          onClick={() => { handleMarkAsRead(selectedConv.other_user_id); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                        >
+                          <CheckCheck className="w-4 h-4" />
+                          Đánh dấu đã đọc
+                        </button>
+
+                        <button
                           onClick={() => { handleBlockUser(); setShowConvMenu(false); }}
-                          className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5 ${isBlocked ? "text-green-600 hover:bg-green-50" : "text-red-600 hover:bg-red-50"}`}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5 ${isBlocked ? "text-green-600 hover:bg-green-50" : "text-yellow-600 hover:bg-yellow-50"}`}
                         >
                           <ShieldAlert className="w-4 h-4" />
                           {isBlocked ? "Mở chặn liên lạc" : "Chặn liên lạc"}
+                        </button>
+
+                        <button
+                          onClick={() => { handleDeleteConv(selectedConv.other_user_id); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2.5"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Xóa cuộc trò chuyện
                         </button>
                       </div>
                       </>
@@ -1068,9 +1165,10 @@ export default function MessagesPage() {
               </div>
 
               <div className="flex-1 flex overflow-hidden bg-white border border-zinc-200 rounded-2xl shadow-sm relative">
-                <div className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar relative">
+                <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 no-scrollbar relative">
+                  {!(showSearchMsgBar || messages.some((m) => m.is_pinned)) && <div className="pt-2" />}
                   {(showSearchMsgBar || messages.some((m) => m.is_pinned)) && (
-                    <div className="sticky top-0 z-10 mb-6 bg-white/95 backdrop-blur-md border border-zinc-200 rounded-2xl shadow-sm p-4 flex flex-col gap-1.5 shrink-0">
+                    <div className="sticky top-2 z-10 mb-4 bg-white/95 backdrop-blur-md border border-zinc-200 rounded-2xl shadow-sm p-4 flex flex-col gap-1.5 shrink-0">
                       {showSearchMsgBar ? (
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center justify-end">
@@ -1085,7 +1183,7 @@ export default function MessagesPage() {
                               placeholder="Nhập nội dung cần tìm..."
                               value={searchMsgQuery}
                               onChange={(e) => handleSearchMessages(e.target.value)}
-                              className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-xl"
+                              className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
                             />
                           </div>
                           {searchedMsgResults.length > 0 && (
@@ -1179,7 +1277,7 @@ export default function MessagesPage() {
                           }
                         }
 
-                        const marginTopClass = showTimeDivider ? "mt-1" : isDifferentSender ? "mt-4" : "mt-1.5";
+                        const marginTopClass = showTimeDivider ? "mt-1" : "mt-1.5";
 
                         return (
                           <React.Fragment key={msg._id || msg.id || i}>
@@ -1211,7 +1309,7 @@ export default function MessagesPage() {
                               }`}>
                                 {msg.image_url && !msg.is_recalled && (
                                   <div 
-                                    className="mb-2 border border-zinc-200/20 overflow-hidden rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                                    className="mb-2 border border-zinc-200/20 overflow-hidden rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
                                     onClick={() => window.open(msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`, '_blank')}
                                   >
                                     <img
@@ -1232,7 +1330,7 @@ export default function MessagesPage() {
                                   if (docMatch) {
                                     return (
                                       <div 
-                                        className="mb-1 mt-1 p-3 border border-zinc-200/50 bg-black text-white rounded-xl cursor-pointer hover:bg-zinc-900 transition-colors"
+                                        className="mb-1 mt-1 p-3 border border-zinc-200/50 bg-black text-white rounded-2xl cursor-pointer hover:bg-zinc-900 transition-colors"
                                         onClick={() => {
                                           if (docMatch[2]) router.push(`/truyen/${docMatch[2]}`);
                                         }}
@@ -1314,7 +1412,7 @@ export default function MessagesPage() {
                                     {showMsgMenu === (msg._id || msg.id) && (
                                       <>
                                         <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowMsgMenu(null); }} />
-                                        <div className={`absolute z-50 w-48 bg-white border border-zinc-200 shadow-xl rounded-xl py-1.5 ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
+                                        <div className={`absolute z-50 w-48 bg-white border border-zinc-200 shadow-xl rounded-2xl py-1.5 ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
                                           <button
                                             onClick={() => { setReplyingTo(msg); setShowMsgMenu(null); }}
                                           className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
@@ -1471,7 +1569,7 @@ export default function MessagesPage() {
 
                 {imageFile && (
                   <div className="mb-4 relative w-16 h-16">
-                    <img src={URL.createObjectURL(imageFile)} alt="" className="w-full h-full object-cover rounded-xl border border-zinc-200" />
+                    <img src={URL.createObjectURL(imageFile)} alt="" className="w-full h-full object-cover rounded-2xl border border-zinc-200" />
                     <button 
                       onClick={() => setImageFile(null)} 
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white flex items-center justify-center rounded-full shadow-sm"
@@ -1487,7 +1585,7 @@ export default function MessagesPage() {
                   {showAttachMenu && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowAttachMenu(false); }} />
-                      <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
+                      <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-lg py-1 z-50">
                       <button
                         onClick={() => { fileInputRef.current?.click(); }}
                         className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
@@ -1513,7 +1611,7 @@ export default function MessagesPage() {
                     </>
                   )}
 
-                  <div className={`flex-1 min-h-[56px] bg-white border border-zinc-200 flex ${isRecording ? "items-center" : "items-end"} px-4 gap-3 focus-within:border-zinc-300 rounded-xl transition-colors py-1.5`}>
+                  <div className={`flex-1 min-h-[48px] bg-white border border-zinc-200 flex ${isRecording ? "items-center" : "items-end"} px-4 gap-3 focus-within:border-zinc-300 rounded-2xl transition-colors py-1`}>
                     {!isRecording ? (
                       <>
                         <button
@@ -1565,7 +1663,7 @@ export default function MessagesPage() {
                   <button 
                     onClick={isRecording ? handleStopRecording : handleSend} 
                     disabled={sending || isBlocked || (!isRecording && (!newMessage.trim() && !imageFile))} 
-                    className="w-14 h-[56px] bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-xl shrink-0 transition-colors hover:bg-zinc-800"
+                    className="w-12 h-[48px] bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-2xl shrink-0 transition-colors hover:bg-zinc-800"
                   >
                     {sending || uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
@@ -1573,7 +1671,7 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm">
               <p className="text-sm font-semibold text-black">DocLib Tin nhắn</p>
               <p className="text-xs font-medium text-zinc-500 mt-1">Chọn một cuộc hội thoại từ hộp thư để bắt đầu kết nối</p>
             </div>

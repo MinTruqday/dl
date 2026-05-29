@@ -303,9 +303,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <>
-      <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-        
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
         <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} className="max-w-md rounded-none border border-zinc-200 bg-white p-0">
           <ModalHeader className="border-b border-zinc-200 p-6">
             <div className="flex items-center gap-4">
@@ -558,40 +556,10 @@ export default function DocumentsPage() {
           </ModalFooter>
         </Modal>
 
-        <div 
-          className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  " 
-          style={{ opacity: visible ? 1 : 0 }}
-        >
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-black">
-              Tài liệu & Học liệu
-            </h1>
-            <p className="text-zinc-500 text-sm font-medium">
-              Kiến tạo không gian nội dung cá nhân hóa
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setCreateFolderModal(true)}
-              className="h-10 px-6 border border-zinc-200 bg-white text-black text-xs font-medium   flex items-center gap-2 rounded-none"
-            >
-              <FolderPlus className="w-4 h-4" />
-              Thư mục
-            </button>
-            <button 
-              onClick={() => setCreateDocModal(true)}
-              className="h-10 px-6 bg-black text-white text-xs font-medium   flex items-center gap-2 rounded-none"
-            >
-              <Plus className="w-4 h-4" />
-              Thêm tài liệu
-            </button>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-12 gap-12  " style={{ opacity: visible ? 1 : 0 }}>
-          <aside className="lg:col-span-3 space-y-6">
-            <div className="border border-zinc-200 bg-white p-6 space-y-4">
-              <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0" style={{ opacity: visible ? 1 : 0 }}>
+          <aside className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+            <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-4">
+              <h3 className="text-sm font-semibold text-black flex items-center gap-2">
                 <Search className="w-4 h-4" /> Tìm kiếm tài liệu
               </h3>
               <input 
@@ -599,34 +567,34 @@ export default function DocumentsPage() {
                 placeholder="Nhập từ khóa"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none placeholder:text-zinc-400"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-4 text-sm font-medium focus:outline-none focus:border-black rounded-xl placeholder:text-zinc-400 font-sans transition-colors"
               />
             </div>
 
-            <div className="border border-zinc-200 bg-white p-6 space-y-4">
-              <h3 className="text-xs font-semibold text-black flex items-center gap-2 border-b border-zinc-200 pb-2">
+            <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-4">
+              <h3 className="text-sm font-semibold text-black flex items-center gap-2">
                 <Database className="w-4 h-4" /> Lọc dữ liệu
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button 
                   onClick={() => setFilterStar(!filterStar)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium border  rounded-none ${
-                    filterStar ? 'bg-black text-white border-black' : 'bg-white text-zinc-500 border-zinc-200  '
+                  className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium border rounded-xl transition-colors ${
+                    filterStar ? 'bg-black text-white border-black shadow-sm' : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4" /> Yêu thích
+                    <Star className={`w-4 h-4 ${filterStar ? 'fill-current' : ''}`} /> Yêu thích
                   </div>
-                  {filterStar && <X className="w-3 h-3" />}
+                  {filterStar && <X className="w-4 h-4" />}
                 </button>
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Định dạng tệp</label>
+                  <label className="text-xs font-semibold text-zinc-600 uppercase tracking-widest">Định dạng tệp</label>
                   <div className="relative">
                     <select 
                       value={filterFormat} 
                       onChange={(e) => setFilterFormat(e.target.value)}
-                      className="w-full h-10 px-3 border border-zinc-200 bg-zinc-50 text-xs font-medium outline-none focus:border-black  rounded-none appearance-none"
+                      className="w-full h-10 px-4 border border-zinc-200 bg-zinc-50 text-sm font-medium outline-none focus:border-black rounded-xl appearance-none transition-colors"
                     >
                       <option value="all">Mọi định dạng</option>
                       <option value="pdf">Tài liệu PDF</option>
@@ -641,15 +609,63 @@ export default function DocumentsPage() {
                 </div>
               </div>
             </div>
-
-            <div className="p-6 border border-zinc-200 bg-zinc-50">
-              <p className="text-[10px] font-semibold text-zinc-500 leading-relaxed uppercase tracking-widest">
-                Hệ thống lưu trữ của DocLib đảm bảo tính toàn vẹn và bảo mật tuyệt đối cho mọi thực thể dữ liệu.
-              </p>
-            </div>
           </aside>
 
-          <main className="lg:col-span-9 space-y-6">
+          <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
+                <button 
+                  onClick={() => { setCurrentFolder(null); setBreadcrumbs([]); }}
+                  className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-xl border transition-colors ${!currentFolder ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50'}`}
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  Gốc
+                </button>
+                {breadcrumbs.map((b, idx) => (
+                  <div key={b._id} className="flex items-center gap-2 shrink-0">
+                    <ChevronRight className="w-3 h-3 text-zinc-400" />
+                    <button 
+                      onClick={() => {
+                        const newBread = breadcrumbs.slice(0, idx + 1);
+                        setBreadcrumbs(newBread);
+                        setCurrentFolder(newBread[newBread.length - 1]);
+                      }}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-colors ${idx === breadcrumbs.length - 1 ? 'bg-zinc-100 border-zinc-200 text-black font-semibold' : 'bg-white text-zinc-500 border-transparent hover:bg-zinc-50'}`}
+                    >
+                      {b.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setCreateFolderModal(true)}
+                  className="flex items-center gap-2 border border-zinc-200 px-4 py-2 text-sm font-medium rounded-xl bg-white text-black hover:bg-zinc-50 transition-colors"
+                >
+                  <FolderPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Thư mục</span>
+                </button>
+                <button 
+                  onClick={() => setCreateDocModal(true)}
+                  className="flex items-center gap-2 border border-black px-4 py-2 text-sm font-medium rounded-xl bg-black text-white hover:bg-zinc-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Thêm tài liệu</span>
+                </button>
+                <div className="w-[1px] h-8 bg-zinc-200 mx-1"></div>
+                <div className="flex bg-zinc-50 border border-zinc-200 p-0.5 rounded-xl">
+                  <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-white border border-zinc-200 text-black shadow-sm' : 'text-zinc-500 hover:text-black'}`}><LayoutGrid className="w-4 h-4"/></button>
+                  <button onClick={() => setViewMode("list")} className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-white border border-zinc-200 text-black shadow-sm' : 'text-zinc-500 hover:text-black'}`}><List className="w-4 h-4"/></button>
+                </div>
+                <button 
+                  onClick={fetchData}
+                  className="p-2 border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 rounded-xl hover:bg-zinc-50 transition-colors"
+                >
+                  {isRefreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
             <div className="border border-zinc-200 bg-white p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <button 
@@ -691,21 +707,22 @@ export default function DocumentsPage() {
             </div>
 
             {viewMode === "list" ? (
-              <div className="bg-white border border-zinc-200">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-zinc-50 border-b border-zinc-200 text-black font-semibold">
-                      <th className="px-6 py-4">Tài liệu</th>
-                      <th className="px-6 py-4">Phân loại</th>
-                      <th className="px-6 py-4">Bảo mật</th>
-                      <th className="px-6 py-4 text-right">Hành động</th>
-                    </tr>
-                  </thead>
+              <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+                <div className="overflow-y-auto custom-scrollbar flex-1">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10">
+                      <tr className="border-b border-zinc-200 text-black font-semibold">
+                        <th className="px-6 py-4">Tài liệu</th>
+                        <th className="px-6 py-4">Phân loại</th>
+                        <th className="px-6 py-4">Bảo mật</th>
+                        <th className="px-6 py-4 text-right">Hành động</th>
+                      </tr>
+                    </thead>
                   <tbody className="divide-y divide-zinc-200">
                     {folders.map((folder: any) => (
                       <tr 
                         key={folder._id} 
-                        className="  cursor-pointer group"
+                        className="hover:bg-zinc-50 cursor-pointer group transition-colors"
                         onClick={() => {
                           setCurrentFolder(folder);
                           setBreadcrumbs([...breadcrumbs, folder]);
@@ -713,7 +730,7 @@ export default function DocumentsPage() {
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group- group- ">
+                            <div className="w-8 h-8 bg-zinc-100 flex items-center justify-center rounded-xl shrink-0 text-zinc-500 group-hover:text-black transition-colors">
                               <Folder className="w-4 h-4" />
                             </div>
                             <span className="font-semibold text-black">{folder.name}</span>
@@ -722,25 +739,25 @@ export default function DocumentsPage() {
                         <td className="px-6 py-4 text-zinc-500 font-medium">Thư mục hệ thống</td>
                         <td className="px-6 py-4">—</td>
                         <td className="px-6 py-4 text-right">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" });
-                            }}
-                            className="p-2 text-zinc-400    rounded-none inline-flex"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {documents.map((doc: any) => (
-                      <tr key={doc._id || doc.id} className="  group">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none shrink-0 text-zinc-400 group- group- ">
-                              <FileText className="w-4 h-4" />
-                            </div>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmModal({ show: true, title: "Xóa thư mục?", docId: folder._id, type: "folder" });
+                              }}
+                              className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-xl inline-flex transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {documents.map((doc: any) => (
+                        <tr key={doc._id || doc.id} className="hover:bg-zinc-50 group transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-8 h-10 bg-zinc-100 flex items-center justify-center rounded-lg shrink-0 text-zinc-500 group-hover:text-black transition-colors">
+                                <FileText className="w-4 h-4" />
+                              </div>
                             <div className="flex flex-col gap-1 min-w-0">
                               <span className="font-semibold text-black truncate max-w-sm">{doc.title}</span>
                               <span className="text-[10px] font-medium text-zinc-500 uppercase flex items-center gap-1.5">
@@ -766,47 +783,48 @@ export default function DocumentsPage() {
                             <span className="text-zinc-500 text-[10px] font-medium uppercase">Không</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1 opacity-0 group- ">
-                            <button 
-                              onClick={() => toggleStar(doc._id || doc.id)}
-                              className={`p-2  rounded-none inline-flex ${doc.is_starred ? 'text-black bg-zinc-100' : 'text-zinc-400  '}`}
-                            >
-                              <Star className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })}
-                              className="p-2 text-zinc-400    rounded-none inline-flex"
-                            >
-                              <Lock className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })}
-                              className="p-2 text-zinc-400    rounded-none inline-flex"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')}
-                              className="p-2 text-zinc-400    rounded-none inline-flex"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })}
-                              className="p-2 text-zinc-400    rounded-none inline-flex"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => toggleStar(doc._id || doc.id)}
+                                className={`p-2 rounded-xl inline-flex transition-colors ${doc.is_starred ? 'text-yellow-500 bg-yellow-50' : 'text-zinc-400 hover:text-black hover:bg-zinc-100'}`}
+                              >
+                                <Star className={`w-4 h-4 ${doc.is_starred ? 'fill-current' : ''}`} />
+                              </button>
+                              <button 
+                                onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })}
+                                className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-xl inline-flex transition-colors"
+                              >
+                                <Lock className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })}
+                                className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-xl inline-flex transition-colors"
+                              >
+                                <Share2 className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')}
+                                className="p-2 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-xl inline-flex transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })}
+                                className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-xl inline-flex transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
                 {folders.map((folder: any) => (
                   <div 
                     key={folder._id}
@@ -814,9 +832,9 @@ export default function DocumentsPage() {
                       setCurrentFolder(folder);
                       setBreadcrumbs([...breadcrumbs, folder]);
                     }}
-                    className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4   cursor-pointer rounded-none group"
+                    className="bg-white border border-zinc-200 p-6 flex flex-col items-center justify-center gap-4 cursor-pointer rounded-2xl shadow-sm hover:border-black transition-colors group"
                   >
-                    <div className="w-12 h-12 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group- group-  rounded-none">
+                    <div className="w-12 h-12 bg-zinc-50 flex items-center justify-center text-zinc-400 rounded-xl group-hover:text-black group-hover:bg-zinc-100 transition-colors">
                       <Folder className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-semibold text-black text-center">{folder.name}</span>
@@ -825,14 +843,16 @@ export default function DocumentsPage() {
                 {documents.map((doc: any) => (
                   <div 
                     key={doc._id || doc.id}
-                    className="bg-white border border-zinc-200 p-4 flex flex-col group   rounded-none relative"
+                    className="bg-white border border-zinc-200 p-5 flex flex-col rounded-2xl shadow-sm hover:border-zinc-300 transition-colors group relative"
                   >
-                    <div className="absolute top-2 right-2 opacity-0 group-  z-10">
-                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-1.5  bg-white border border-zinc-200 rounded-none ${doc.is_starred ? 'text-black' : 'text-zinc-400 '}`}><Star className="w-3.5 h-3.5" /></button>
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button onClick={() => toggleStar(doc._id || doc.id)} className={`p-1.5 bg-white border border-zinc-200 rounded-xl hover:bg-zinc-50 transition-colors ${doc.is_starred ? 'text-yellow-500 border-yellow-200 bg-yellow-50/50' : 'text-zinc-400'}`}>
+                        <Star className={`w-3.5 h-3.5 ${doc.is_starred ? 'fill-current' : ''}`} />
+                      </button>
                     </div>
                     
                     <div className="flex flex-col items-center gap-4 mb-4">
-                      <div className="w-16 h-20 border border-zinc-200 bg-zinc-50 flex items-center justify-center text-zinc-400 group- group-  rounded-none mt-2">
+                      <div className="w-16 h-20 bg-zinc-50 flex items-center justify-center text-zinc-400 rounded-lg group-hover:text-black transition-colors mt-2 border border-zinc-100">
                         <FileText className="w-6 h-6" />
                       </div>
                       <div className="text-center w-full">
@@ -841,11 +861,11 @@ export default function DocumentsPage() {
                       </div>
                     </div>
                     
-                    <div className="mt-auto border-t border-zinc-200 pt-3 flex justify-between gap-1 opacity-0 group- ">
-                       <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Eye className="w-4 h-4"/></button>
-                       <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Lock className="w-4 h-4"/></button>
-                       <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Share2 className="w-4 h-4"/></button>
-                       <button onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })} className="flex-1 py-1.5 text-zinc-400    flex justify-center rounded-none"><Trash2 className="w-4 h-4"/></button>
+                    <div className="mt-auto border-t border-zinc-100 pt-4 flex justify-between gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button onClick={() => window.open(`/tai-lieu/viewer/${doc._id || doc.id}`, '_blank')} className="flex-1 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-50 rounded-xl transition-colors flex justify-center"><Eye className="w-4 h-4"/></button>
+                       <button onClick={() => setLockModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-50 rounded-xl transition-colors flex justify-center"><Lock className="w-4 h-4"/></button>
+                       <button onClick={() => setShareModal({ show: true, docId: doc._id || doc.id })} className="flex-1 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-50 rounded-xl transition-colors flex justify-center"><Share2 className="w-4 h-4"/></button>
+                       <button onClick={() => setConfirmModal({ show: true, title: "Xóa tài liệu?", docId: doc._id || doc.id, type: "doc" })} className="flex-1 py-1.5 text-zinc-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors flex justify-center"><Trash2 className="w-4 h-4"/></button>
                     </div>
                   </div>
                 ))}
@@ -853,8 +873,8 @@ export default function DocumentsPage() {
             )}
 
             {(documents.length === 0 && folders.length === 0) && (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-zinc-50 rounded-none">
-                <Search className="w-8 h-8 text-zinc-400 mb-4" />
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl shadow-sm">
+                <Search className="w-8 h-8 text-zinc-300 mb-4" />
                 <h2 className="text-sm font-semibold text-black mb-1">
                   Không tìm thấy tài liệu
                 </h2>
@@ -871,7 +891,6 @@ export default function DocumentsPage() {
             )}
           </main>
         </div>
-      </div>
-    </>
+    </div>
   );
 }

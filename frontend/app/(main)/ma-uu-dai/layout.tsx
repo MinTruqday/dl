@@ -44,37 +44,28 @@ export default function PromotionLayout({
   };
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Mã ưu đãi</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Quản lý chương trình khuyến mãi và công cụ thúc đẩy doanh thu
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-1.5">
               {navItems.map((item) => (
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium border rounded-none  ${
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
                     isActive(item.href)
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent "
+                      ? "bg-zinc-100 text-black"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     {item.label}
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="text-[10px] bg-black text-white px-1.5 py-0.5 font-bold">
+                      <span className="text-[10px] bg-black text-white px-1.5 py-0.5 font-bold rounded-md">
                         {item.badge}
                       </span>
                     )}
@@ -85,13 +76,13 @@ export default function PromotionLayout({
             </nav>
           </div>
 
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Thống kê nhanh
             </div>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center">
+                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-xl">
                   <Activity className="w-4 h-4 text-zinc-400" />
                 </div>
                 <div>
@@ -100,7 +91,7 @@ export default function PromotionLayout({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center">
+                <div className="w-8 h-8 bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-xl">
                   <Users className="w-4 h-4 text-zinc-400" />
                 </div>
                 <div>
@@ -112,7 +103,9 @@ export default function PromotionLayout({
           </div>
         </aside>
 
-        <main className="lg:col-span-9">{children}</main>
+        <main className="lg:col-span-9 space-y-6">
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -64,6 +64,7 @@ import {
   Indent,
   Outdent,
   CornerDownRight,
+  AlertTriangle,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 const Editor = dynamic(() => import("@/components/editor/Editor"), { ssr: false });
@@ -1040,7 +1041,7 @@ function StudioContent() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-var(--navbar-height))] overflow-hidden bg-white selection:bg-black selection:text-white relative font-sans">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 bg-[#fafafa] selection:bg-black selection:text-white relative font-sans">
       <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} className="max-w-sm">
         <ModalHeader>
           <ModalTitle>Xác nhận thao tác</ModalTitle>
@@ -1312,7 +1313,7 @@ function StudioContent() {
       </Modal>
 
       <div 
-        className="h-14 border-b border-zinc-200 px-6 flex items-center justify-between bg-white shrink-0 z-30  "
+        className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
         <div className="flex items-center gap-6">
@@ -1334,7 +1335,7 @@ function StudioContent() {
             <div className="relative group flex items-center h-9">
               <button
                 disabled={!selectedDocumentId || isExporting}
-                className="h-full px-4 border border-zinc-200 text-sm font-medium text-zinc-700 disabled:opacity-50 flex items-center gap-2 rounded-none bg-white"
+                className="h-full px-4 border border-zinc-200 text-sm font-medium text-zinc-700 disabled:opacity-50 flex items-center gap-2 rounded-xl bg-white transition-colors hover:bg-zinc-50"
               >
                 <Download className="w-3.5 h-3.5" /> Tải xuống
               </button>
@@ -1359,7 +1360,7 @@ function StudioContent() {
                 </button>
               </div>
             </div>
-            <div className="flex items-center bg-zinc-50 border border-zinc-200 h-9 px-2">
+            <div className="flex items-center bg-zinc-50 border border-zinc-200 rounded-xl h-9 px-2">
               <CalendarClock className="w-3.5 h-3.5 text-zinc-400 mr-2" />
               <input
                 type="datetime-local"
@@ -1372,7 +1373,7 @@ function StudioContent() {
             <button
               onClick={handleSave}
               disabled={!selectedDocumentId || isSaving}
-              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700  disabled:opacity-50 flex items-center gap-2 rounded-none bg-white ml-2"
+              className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 disabled:opacity-50 flex items-center gap-2 rounded-xl bg-white ml-2 transition-colors hover:bg-zinc-50"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Lưu bản nháp
@@ -1380,7 +1381,7 @@ function StudioContent() {
             <button
               onClick={handlePublish}
               disabled={!selectedDocumentId}
-              className="h-9 px-4 bg-black text-white text-sm font-medium  disabled:opacity-50 rounded-none"
+              className="h-9 px-4 bg-black text-white text-sm font-medium disabled:opacity-50 rounded-xl transition-colors hover:bg-zinc-800"
             >
               Công bố tác phẩm
             </button>
@@ -1389,10 +1390,10 @@ function StudioContent() {
       </div>
 
       <div 
-        className="flex flex-1 overflow-hidden   delay-75"
+        className="flex flex-1 overflow-hidden delay-75 gap-6"
         style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
       >
-        <nav className="w-16 border-r border-zinc-200 flex flex-col items-center py-6 gap-4 shrink-0 bg-white">
+        <nav className="w-16 border border-zinc-200 rounded-2xl shadow-sm flex flex-col items-center py-6 gap-4 shrink-0 bg-white">
           {[
             { mode: "edit", icon: FileText, label: "Soạn thảo" },
             { mode: "stats", icon: BarChart3, label: "Số liệu" },
@@ -1404,20 +1405,20 @@ function StudioContent() {
             <button
               key={item.mode}
               onClick={() => setViewMode(item.mode as ViewMode)}
-              className={`p-3  relative group rounded-none flex items-center justify-center w-12 h-12 ${
-                viewMode === item.mode ? "bg-black text-white" : "text-zinc-500"
+              className={`p-3 relative group rounded-xl flex items-center justify-center w-12 h-12 transition-colors ${
+                viewMode === item.mode ? "bg-black text-white" : "text-zinc-500 hover:bg-zinc-100"
               }`}
               title={item.label}
             >
               <item.icon className="w-5 h-5" />
-              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none  z-50 rounded-none">
+              <div className="absolute left-full ml-2 px-2 py-1 bg-black text-white text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 z-50 rounded-lg">
                 {item.label}
               </div>
             </button>
           ))}
         </nav>
 
-        <aside className="w-64 border-r border-zinc-200 flex flex-col shrink-0 bg-white animate-in slide-in-from-left  p-6 space-y-12 overflow-y-auto no-scrollbar">
+        <aside className="w-72 border border-zinc-200 rounded-2xl shadow-sm flex flex-col shrink-0 bg-white animate-in slide-in-from-left p-5 space-y-10 overflow-y-auto custom-scrollbar">
            {viewMode === "edit" ? (
              <>
                 <div className="space-y-4">
@@ -1447,10 +1448,10 @@ function StudioContent() {
                               <div
                                 key={`chapter-${idx}`}
                                 onClick={() => setSelectedChapterIndex(idx)}
-                                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border cursor-pointer rounded-none ${
+                                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium border cursor-pointer rounded-xl transition-colors ${
                                   selectedChapterIndex === idx 
                                     ? "bg-black text-white border-black" 
-                                    : "bg-white text-zinc-700 border-transparent"
+                                    : "bg-white text-zinc-700 border-transparent hover:bg-zinc-50"
                                 }`}
                               >
                                 <div className="flex items-center gap-2 min-w-0" style={{ paddingLeft: `${lvl * 16}px` }}>
@@ -1491,7 +1492,7 @@ function StudioContent() {
                         })()}
                         <button
                           onClick={() => setShowChapterModal(true)}
-                          className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400  rounded-none"
+                          className="mt-2 flex items-center justify-center py-2.5 border border-dashed border-zinc-200 text-zinc-400 rounded-xl hover:bg-zinc-50 transition-colors"
                         >
                           <Plus className="w-3.5 h-3.5 mr-2" />
                           <span className="text-xs font-medium">Chương mới</span>
@@ -1518,7 +1519,7 @@ function StudioContent() {
                         <div key={folder._id || folder.id} className="flex flex-col">
                           <button
                             onClick={() => setExpandedFolders(p => ({ ...p, [folder._id || folder.id]: !isExpanded }))}
-                            className="flex items-center justify-between px-2 py-1.5 text-sm font-medium border border-transparent bg-zinc-50 text-black rounded-none"
+                            className="flex items-center justify-between px-2 py-2 text-sm font-medium border border-transparent bg-zinc-50 text-black rounded-xl transition-colors hover:bg-zinc-100"
                           >
                             <div className="flex items-center gap-2">
                               <Folder className="w-3.5 h-3.5 text-zinc-500" />
@@ -1553,7 +1554,7 @@ function StudioContent() {
                                 <button
                                   key={doc._id || doc.id}
                                   onClick={() => setSelectedDocumentId(doc._id || doc.id)}
-                                  className="flex items-center justify-between px-2 py-1.5 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none"
+                                  className="flex items-center justify-between px-2 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-xl transition-colors hover:bg-zinc-50"
                                 >
                                   <div className="flex items-center gap-2 truncate">
                                     <span className="truncate">{doc.title}</span>
@@ -1575,7 +1576,7 @@ function StudioContent() {
                       <button
                         key={doc._id || doc.id || `other-doc-${idx}`}
                         onClick={() => setSelectedDocumentId(doc._id || doc.id)}
-                        className="flex items-center justify-between px-3 py-2 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-none"
+                        className="flex items-center justify-between px-3 py-2.5 text-sm font-medium border border-transparent bg-white text-zinc-500 rounded-xl transition-colors hover:bg-zinc-50"
                       >
                         <div className="flex items-center gap-2 truncate">
                           <span className="truncate">{doc.title}</span>
@@ -1602,10 +1603,10 @@ function StudioContent() {
                         setSelectedDocumentId(doc._id || doc.id);
                         setViewMode("edit");
                       }}
-                      className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none   ${
+                      className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium border rounded-xl transition-colors ${
                         selectedDocumentId === (doc._id || doc.id) 
                           ? "bg-zinc-100 text-black border-zinc-300" 
-                          : "bg-white text-zinc-500 border-transparent"
+                          : "bg-white text-zinc-500 border-transparent hover:bg-zinc-50"
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -1620,7 +1621,7 @@ function StudioContent() {
            )}
         </aside>
 
-        <main className="flex-1 bg-white overflow-hidden relative border-l border-zinc-200">
+        <main className="flex-1 bg-white overflow-hidden relative border border-zinc-200 rounded-2xl shadow-sm">
            {viewMode === "edit" && (
              <div className="h-full flex flex-col animate-in fade-in ">
                 <div className="h-12 border-b border-zinc-200 bg-white px-6 flex items-center justify-between shrink-0">
@@ -1680,7 +1681,7 @@ function StudioContent() {
                           />
                         </div>
                       ) : editorMode === "preview" ? (
-                        <div className="bg-white p-12 border border-zinc-200 rounded-none">
+                        <div className="bg-white p-12 min-h-full">
                           <div 
                             className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" 
                             dangerouslySetInnerHTML={{ 
@@ -1697,7 +1698,7 @@ function StudioContent() {
                           />
                         </div>
                       ) : (
-                        <pre className="p-8 bg-zinc-50 border border-zinc-200 text-black text-sm font-mono leading-relaxed overflow-auto min-h-[100vh] rounded-none">
+                        <pre className="p-8 bg-zinc-50 text-black text-sm font-mono leading-relaxed overflow-auto min-h-full">
                           {content || "Nội dung hiện đang trống"}
                         </pre>
                       )}

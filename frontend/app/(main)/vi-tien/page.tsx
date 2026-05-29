@@ -235,7 +235,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showTopupModal}
         onClose={() => {
@@ -392,76 +392,37 @@ export default function WalletPage() {
         </ModalFooter>
       </Modal>
 
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  "
-        style={{ opacity: visible ? 1 : 0 }}
-      >
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Ví điện tử</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Quản lý tài nguyên và lịch sử giao dịch
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowTopupModal(true)}
-            className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-none border border-black  "
-          >
-            <Plus className="w-4 h-4" /> Nạp tiền
-          </button>
-          {(user?.role === "author" || user?.role === "admin") && (
-            <button
-              onClick={() => setShowWithdrawModal(true)}
-              className="h-10 px-6 bg-white text-black text-xs font-medium flex items-center gap-2 rounded-none border border-zinc-200  "
-            >
-              <ArrowDownLeft className="w-4 h-4 rotate-180" /> Rút tiền
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-12 gap-12  " style={{ opacity: visible ? 1 : 0 }}>
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="border border-zinc-200 bg-white p-6 space-y-6">
-            <div>
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Số dư hiện tại</p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>
-                <span className="text-sm font-semibold text-black">dl</span>
-              </div>
+      <div className="grid lg:grid-cols-12 gap-6" style={{ opacity: visible ? 1 : 0 }}>
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm">
+            <div className="text-sm font-semibold text-black mb-1">Số dư hiện tại</div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>
+              <span className="text-sm font-semibold text-black">dl</span>
             </div>
             
-            <div className="pt-4 border-t border-zinc-200 flex items-center justify-between">
-               <span className="text-xs font-medium text-zinc-500">Tài khoản an toàn</span>
-               <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setShowTopupModal(true)}
+                className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 rounded-2xl hover:bg-zinc-800 transition-colors"
+              >
+                Nạp tiền
+              </button>
+              {(user?.role === "author" || user?.role === "admin") && (
+                <button
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="w-full h-10 bg-white text-black text-xs font-medium flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 hover:bg-zinc-50 transition-colors"
+                >
+                  Rút tiền
+                </button>
+              )}
             </div>
           </div>
 
-          {(user?.role === "author" || user?.role === "admin") && revenue && (
-            <>
-              <div className="border border-zinc-200 bg-white p-6">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tổng thu nhập</p>
-                <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-3xl font-bold text-black tracking-tight">{revenue.total_revenue?.toLocaleString() || 0}</span>
-                  <span className="text-xs font-semibold text-black">dl</span>
-                </div>
-              </div>
 
-              <div className="border border-zinc-200 bg-white p-6">
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Đang chờ duyệt</p>
-                <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-3xl font-bold text-black tracking-tight">{revenue.pending_withdrawal?.toLocaleString() || 0}</span>
-                  <span className="text-xs font-semibold text-black">dl</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="border border-zinc-200 bg-white p-6 space-y-4">
-            <div className="space-y-1 border-b border-zinc-200 pb-3">
-              <h3 className="text-sm font-semibold text-black flex items-center gap-2">
-                <Gift className="w-4 h-4" /> Kích hoạt Voucher
-              </h3>
+          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm">
+            <div className="text-sm font-semibold text-black mb-1">
+              Kích hoạt Voucher
             </div>
             <form onSubmit={handleRedeemVoucher} className="space-y-3">
               <input
@@ -469,12 +430,12 @@ export default function WalletPage() {
                 value={voucherCode}
                 onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                 placeholder="Nhập mã"
-                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium text-center focus:outline-none focus:border-black  rounded-none"
+                className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium text-center focus:outline-none focus:border-black rounded-2xl"
               />
               <button
                 type="submit"
                 disabled={isRedeeming || !voucherCode.trim()}
-                className="w-full h-10 bg-white text-black border border-zinc-200 text-xs font-medium disabled:opacity-50 rounded-none flex items-center justify-center"
+                className="w-full h-10 bg-white text-black border border-zinc-200 text-xs font-medium disabled:opacity-50 rounded-2xl flex items-center justify-center hover:bg-zinc-50 transition-colors"
               >
                 {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận mã"}
               </button>
@@ -482,42 +443,37 @@ export default function WalletPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-8">
-          <div className="border border-zinc-200 bg-white p-8">
-            <div className="border-b border-zinc-200 pb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <History className="w-4 h-4" /> Nhật ký giao dịch
-                </h3>
-                <p className="text-xs text-zinc-500 font-medium mt-1">
-                  Lịch sử chi tiết dòng tiền
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-black">{history.length} giao dịch</span>
+        <main className="lg:col-span-9 space-y-6">
+          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6">
+            <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-black">
+                Nhật ký giao dịch
+              </h2>
+              <span className="text-sm font-medium text-zinc-500">{history.length} giao dịch</span>
             </div>
 
-            <div className="pt-4">
+            <div>
               {isLoading ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-4 bg-zinc-50 border border-dashed border-zinc-200">
-                  <Loader2 className="animate-spin w-6 h-6 text-zinc-400" />
-                  <span className="text-xs font-medium text-zinc-500">Đang đồng bộ dữ liệu ví</span>
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <Loader2 className="animate-spin w-4 h-4 text-zinc-400 mb-2" />
+                  <p className="text-sm font-medium text-zinc-500">Đang tải dữ liệu...</p>
                 </div>
               ) : history.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-2 bg-zinc-50 border border-dashed border-zinc-200">
-                  <History className="w-5 h-5 text-zinc-400 mb-2" />
-                  <span className="text-xs font-semibold text-black">Nhật ký trống</span>
-                  <span className="text-[10px] font-medium text-zinc-500">Chưa có giao dịch nào được ghi nhận</span>
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <p className="text-sm font-medium text-zinc-500">
+                    Chưa có dữ liệu
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {history.map((tx) => (
                     <div
                       key={tx._id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 gap-4"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 rounded-2xl gap-4"
                     >
                       <div className="flex items-center gap-4">
                         <div
-                          className={`w-10 h-10 flex items-center justify-center border shrink-0 ${
+                          className={`w-10 h-10 flex items-center justify-center border shrink-0 rounded-2xl ${
                             tx.type === "TOPUP"
                               ? "border-zinc-200 bg-white text-black"
                               : "border-black bg-black text-white"

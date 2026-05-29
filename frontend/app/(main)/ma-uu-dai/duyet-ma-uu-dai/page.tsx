@@ -38,23 +38,25 @@ export default function CouponApprovalPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="border-b border-zinc-200 pb-4">
-        <h2 className="text-sm font-semibold text-black uppercase tracking-widest">Phê duyệt mã ưu đãi</h2>
-        <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest mt-1">Hàng đợi kiểm soát mã khuyến mãi hệ thống</p>
+    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+      <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-black">Duyệt mã ưu đãi</h2>
+        </div>
       </div>
 
       {loading ? (
         <div className="py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-400" /></div>
       ) : coupons.length === 0 ? (
-        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-zinc-50">
-          <Ticket className="w-6 h-6 text-zinc-300 mb-3" />
-          <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Hàng chờ hiện đang trống</span>
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+          <p className="text-sm font-medium text-zinc-500">
+            Chưa có dữ liệu
+          </p>
         </div>
       ) : (
         <div className="grid gap-6">
           {coupons.map((c: any) => (
-            <div key={c.id} className="border border-zinc-200 bg-white flex flex-col md:flex-row  ">
+            <div key={c.id} className="border border-zinc-200 bg-white flex flex-col md:flex-row overflow-hidden rounded-2xl hover:shadow-sm transition-shadow">
               <div className="p-6 bg-zinc-50 border-r border-zinc-200 w-full md:w-64">
                 <span className="text-xl font-mono font-bold text-black block">{c.code}</span>
                 <p className="text-xs font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block">-{c.discount_percent}%</p>
@@ -80,14 +82,14 @@ export default function CouponApprovalPage() {
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-zinc-100">
-                  <button onClick={() => handleApprove(c.id, "reject")} className="flex-1 py-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest  ">Từ chối</button>
-                  <button onClick={() => handleApprove(c.id, "approve")} className="flex-1 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest border border-black  ">Phê duyệt</button>
+                  <button onClick={() => handleApprove(c.id, "reject")} className="flex-1 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest hover:bg-zinc-50 rounded-xl transition-colors">Từ chối</button>
+                  <button onClick={() => handleApprove(c.id, "approve")} className="flex-1 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest border border-black rounded-xl hover:bg-zinc-800 transition-colors">Phê duyệt</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

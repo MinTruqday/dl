@@ -450,13 +450,10 @@ export default function StudioCollabPage() {
   }
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Cộng tác nội dung</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Quản trị cộng tác và phân quyền biên tập tài liệu sáng tác
-          </p>
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-lg font-semibold text-black">Mã gia nhập nhóm cộng tác</h1>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -464,34 +461,34 @@ export default function StudioCollabPage() {
             placeholder="Mã cộng tác biên tập"
             value={joinCodeInput}
             onChange={(e) => setJoinCodeInput(e.target.value)}
-            className="border border-zinc-200 px-3 py-1.5 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+            className="border border-zinc-200 px-4 h-10 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
           />
           <button
             onClick={handleJoinWithCode}
-            className="px-4 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black rounded-none"
+            className="px-5 h-10 bg-black text-white text-sm font-medium border border-black rounded-xl hover:bg-zinc-800 transition-colors"
           >
             Gia nhập
           </button>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-4 space-y-6">
-          <div className="border border-zinc-200 bg-white p-6 space-y-6">
-            <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-black mb-1">
               Cài đặt tài liệu cộng tác
             </h2>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                   Tài liệu hoạt động
                 </label>
                 <div className="relative">
                   <select
                     value={selectedDocumentId}
                     onChange={(e) => setSelectedDocumentId(e.target.value)}
-                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black appearance-none rounded-none"
+                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black appearance-none rounded-xl"
                   >
                     <option value="">Chọn tài liệu biên tập</option>
                     {documents.map((doc) => (
@@ -505,30 +502,30 @@ export default function StudioCollabPage() {
               </div>
 
               {selectedDocumentId && isOwnerOfSelected() && (
-                <div className="space-y-2 pt-2 border-t border-zinc-100">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest block mb-2">
+                <div className="space-y-2 pt-2 border-t border-zinc-100 mt-4">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-2">
                     Quyền truy cập mặc định
                   </label>
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => handleUpdateAccessLevel("invite_only")}
-                      className={`flex items-center gap-2 p-2 border text-xs font-medium rounded-none justify-start ${
+                      className={`flex items-center gap-2 p-2 border text-sm font-medium rounded-xl justify-start transition-colors ${
                         accessLevel === "invite_only"
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-zinc-500 border-zinc-200"
+                          ? "bg-zinc-100 text-black border-transparent"
+                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
                       }`}
                     >
-                      <Lock className="w-3.5 h-3.5" /> Chỉ người được mời
+                      <Lock className="w-4 h-4" /> Chỉ người được mời
                     </button>
                     <button
                       onClick={() => handleUpdateAccessLevel("anyone_with_link")}
-                      className={`flex items-center gap-2 p-2 border text-xs font-medium rounded-none justify-start ${
+                      className={`flex items-center gap-2 p-2 border text-sm font-medium rounded-xl justify-start transition-colors ${
                         accessLevel === "anyone_with_link"
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-zinc-500 border-zinc-200"
+                          ? "bg-zinc-100 text-black border-transparent"
+                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
                       }`}
                     >
-                      <Globe className="w-3.5 h-3.5" /> Bất kỳ ai có liên kết tài liệu
+                      <Globe className="w-4 h-4" /> Bất kỳ ai có liên kết tài liệu
                     </button>
                   </div>
                 </div>
@@ -537,8 +534,8 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Khóa biên tập độc quyền
                 </h2>
@@ -546,12 +543,12 @@ export default function StudioCollabPage() {
               </div>
               <div className="space-y-4">
                 {lockStatus.is_locked ? (
-                  <div className="p-3 bg-zinc-50 border border-zinc-200 text-xs text-zinc-500">
+                  <div className="p-3 bg-zinc-50 border border-zinc-200 text-sm text-zinc-500 rounded-xl">
                     Đang khóa bởi: <strong className="text-black">{lockStatus.user_name}</strong>
                     {lockStatus.user_id === (user._id || user.id) && (
                       <button
                         onClick={handleReleaseLock}
-                        className="w-full mt-3 h-8 bg-white border border-zinc-200 text-black text-xs font-medium rounded-none flex items-center justify-center gap-2"
+                        className="w-full mt-3 h-9 bg-white border border-zinc-200 text-black text-sm font-medium rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-50 transition-colors"
                       >
                         Nhả khóa biên tập
                       </button>
@@ -560,7 +557,7 @@ export default function StudioCollabPage() {
                 ) : (
                   <button
                     onClick={handleAcquireLock}
-                    className="w-full h-10 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 rounded-none border border-black"
+                    className="w-full h-10 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 rounded-xl hover:bg-zinc-800 transition-colors"
                   >
                     Yêu cầu khóa biên tập độc quyền
                   </button>
@@ -570,13 +567,13 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-black mb-1">
                 Gửi lời mời cộng tác
               </h2>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                     Email cộng tác viên
                   </label>
                   <input
@@ -584,31 +581,31 @@ export default function StudioCollabPage() {
                     placeholder="nguoidung@doclib.com"
                     value={collaboratorEmail}
                     onChange={(e) => setCollaboratorEmail(e.target.value)}
-                    className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none placeholder:text-zinc-400"
+                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-xl placeholder:text-zinc-400"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                     Vai trò
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setRole("editor")}
-                      className={`py-2 text-xs font-medium border rounded-none ${
+                      className={`py-2 text-sm font-medium border rounded-xl transition-colors ${
                         role === "editor"
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-zinc-500 border-zinc-200"
+                          ? "bg-zinc-100 text-black border-transparent"
+                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
                       }`}
                     >
                       Biên tập viên
                     </button>
                     <button
                       onClick={() => setRole("viewer")}
-                      className={`py-2 text-xs font-medium border rounded-none ${
+                      className={`py-2 text-sm font-medium border rounded-xl transition-colors ${
                         role === "viewer"
-                          ? "bg-black text-white border-black"
-                          : "bg-white text-zinc-500 border-zinc-200"
+                          ? "bg-zinc-100 text-black border-transparent"
+                          : "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50"
                       }`}
                     >
                       Người xem
@@ -619,7 +616,7 @@ export default function StudioCollabPage() {
                 <button
                   onClick={handleInvite}
                   disabled={actionLoading || !collaboratorEmail}
-                  className="w-full h-10 bg-black text-white text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 rounded-none border border-black"
+                  className="w-full h-10 bg-black text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl hover:bg-zinc-800 transition-colors"
                 >
                   {actionLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -632,8 +629,8 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && isOwnerOfSelected() && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Mã mời nhanh
                 </h2>
@@ -641,14 +638,14 @@ export default function StudioCollabPage() {
               </div>
               <div className="space-y-3">
                 {inviteCode ? (
-                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 p-2.5">
+                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 p-2.5 rounded-xl">
                     <span className="font-mono font-bold text-sm tracking-wider flex-1 text-center select-all">{inviteCode}</span>
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(inviteCode);
                         showToast("Đã sao chép mã mời nhanh vào bộ nhớ tạm.", "success");
                       }}
-                      className="text-[10px] font-semibold text-black underline"
+                      className="text-xs font-medium text-black underline hover:text-zinc-500 transition-colors"
                     >
                       Copy
                     </button>
@@ -656,7 +653,7 @@ export default function StudioCollabPage() {
                 ) : (
                   <button
                     onClick={handleGenerateCode}
-                    className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-semibold uppercase tracking-wider rounded-none"
+                    className="w-full h-9 bg-white border border-zinc-200 text-black text-sm font-medium rounded-xl hover:bg-zinc-50 transition-colors"
                   >
                     Tạo mã mời
                   </button>
@@ -666,20 +663,20 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && sentPendingInvites.length > 0 && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <h2 className="text-sm font-semibold text-black mb-1">
                 Lời mời đã gửi (Đang chờ)
               </h2>
               <div className="space-y-3">
                 {sentPendingInvites.map((sp) => (
-                  <div key={sp._id || sp.id} className="flex items-center justify-between gap-3 text-xs border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+                  <div key={sp._id || sp.id} className="flex items-center justify-between gap-3 text-sm border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
                     <div className="flex flex-col">
                       <span className="font-semibold text-black">{sp.invitee_id}</span>
-                      <span className="text-[9px] font-mono text-zinc-400">Vai trò: {sp.role}</span>
+                      <span className="text-[10px] font-mono text-zinc-400">Vai trò: {sp.role}</span>
                     </div>
                     <button
                       onClick={() => handleRevokeInvite(sp._id || sp.id)}
-                      className="text-[10px] font-mono text-black underline underline-offset-2 flex items-center gap-0.5"
+                      className="text-xs font-medium text-black underline flex items-center gap-0.5 hover:text-zinc-500 transition-colors"
                     >
                       <X className="w-3 h-3" /> Thu hồi
                     </button>
@@ -690,12 +687,12 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-black">
                   Cộng tác viên hiện tại
                 </h2>
-                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-100 px-2 py-0.5">
+                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-md">
                   {collaborators.length} người
                 </span>
               </div>
@@ -725,13 +722,13 @@ export default function StudioCollabPage() {
                             <select
                               value={collab.role}
                               onChange={(e) => handleUpdateRole(collab.collaboration_id, e.target.value)}
-                              className="border border-zinc-200 px-2 py-0.5 text-[10px] focus:outline-none focus:border-black rounded-none bg-white text-zinc-600 font-sans"
+                              className="border border-zinc-200 px-2 py-0.5 text-[10px] focus:outline-none focus:border-black rounded-lg bg-white text-zinc-600 font-sans"
                             >
                               <option value="editor">Biên tập viên</option>
                               <option value="viewer">Người xem</option>
                             </select>
                           ) : (
-                            <span className="text-[8px] font-mono border border-zinc-200 bg-zinc-50 text-zinc-500 uppercase px-1.5 py-0.5">
+                            <span className="text-[8px] font-mono border border-zinc-200 bg-zinc-50 text-zinc-500 uppercase px-1.5 py-0.5 rounded-lg">
                               {collab.role === "editor" ? "Biên tập viên" : "Người xem"}
                             </span>
                           )}
@@ -766,12 +763,12 @@ export default function StudioCollabPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-8 space-y-12">
+        <main className="lg:col-span-9 space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
           {selectedDocumentId && contributionStats.length > 0 && (
-            <div className="border border-zinc-200 p-6 bg-zinc-50 space-y-4">
-              <div className="flex items-center gap-2 border-b border-zinc-200 pb-2">
-                <TrendingUp className="w-4 h-4 text-black" />
-                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Phân tích mức độ đóng góp</h3>
+            <div className="border border-zinc-200 bg-zinc-50 rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-5 h-5 text-black" />
+                <h2 className="text-lg font-semibold text-black">Phân tích mức độ đóng góp</h2>
               </div>
               <div className="space-y-3">
                 {contributionStats.map((stat, idx) => {
@@ -784,8 +781,8 @@ export default function StudioCollabPage() {
                         <span>{stat.user_name}</span>
                         <span className="font-mono">{stat.count} thao tác ({percent.toFixed(0)}%)</span>
                       </div>
-                      <div className="w-full h-2 bg-zinc-200 rounded-none overflow-hidden">
-                        <div className={`h-full ${color}`} style={{ width: `${percent}%` }} />
+                      <div className="w-full h-2 bg-zinc-200 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${color}`} style={{ width: `${percent}%` }} />
                       </div>
                     </div>
                   );
@@ -795,10 +792,10 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
-                <h2 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4" /> Nhiệm vụ cộng tác viên (Peer-review Tasks)
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-semibold text-black flex items-center gap-2">
+                  <CheckSquare className="w-5 h-5" /> Nhiệm vụ cộng tác viên
                 </h2>
               </div>
               
@@ -809,18 +806,18 @@ export default function StudioCollabPage() {
                     placeholder="Mô tả nhiệm vụ cần cộng tác viên xử lý"
                     value={newTaskDesc}
                     onChange={(e) => setNewTaskDesc(e.target.value)}
-                    className="flex-1 border border-zinc-200 px-3 py-2 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+                    className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
                   />
                   <input
                     type="text"
                     placeholder="Giao cho (Tên)"
                     value={newTaskAssigned}
                     onChange={(e) => setNewTaskAssigned(e.target.value)}
-                    className="w-40 border border-zinc-200 px-3 py-2 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+                    className="w-40 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
                   />
                   <button
                     onClick={handleCreateTask}
-                    className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black rounded-none font-sans"
+                    className="px-6 py-2 bg-black text-white text-sm font-medium border border-black rounded-xl hover:bg-zinc-800 transition-colors"
                   >
                     Thêm
                   </button>
@@ -829,7 +826,7 @@ export default function StudioCollabPage() {
                 {tasks.length > 0 ? (
                   <div className="space-y-3">
                     {tasks.map((task) => (
-                      <div key={task.id} className="flex items-start justify-between border border-zinc-200 p-3 bg-zinc-50">
+                      <div key={task.id} className="flex items-start justify-between border border-zinc-200 p-3 bg-zinc-50 rounded-xl">
                         <div className="flex items-start gap-3">
                           <button onClick={() => handleToggleTask(task.id, task.is_done)} className="mt-0.5">
                             {task.is_done ? (
@@ -839,7 +836,7 @@ export default function StudioCollabPage() {
                             )}
                           </button>
                           <div className="flex flex-col gap-0.5">
-                            <span className={`text-xs font-semibold ${task.is_done ? "line-through text-zinc-400" : "text-black"}`}>
+                            <span className={`text-sm font-medium ${task.is_done ? "line-through text-zinc-400" : "text-black"}`}>
                               {task.task_desc}
                             </span>
                             <span className="text-[10px] text-zinc-400">
@@ -849,7 +846,7 @@ export default function StudioCollabPage() {
                         </div>
                         <button
                           onClick={() => handleViewTaskComments(task.id)}
-                          className="text-[10px] font-semibold text-black underline underline-offset-2 flex items-center gap-1 font-sans"
+                          className="text-xs font-medium text-black underline flex items-center gap-1 hover:text-zinc-500 transition-colors"
                         >
                           <MessageCircle className="w-3.5 h-3.5 text-zinc-500" /> Thảo luận
                         </button>
@@ -864,10 +861,10 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="border border-zinc-200 bg-white p-6 space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
-                <h2 className="text-sm font-semibold text-black flex items-center gap-2">
-                  <Camera className="w-4 h-4" /> Bản sao lưu nháp biên tập (Draft Snapshots)
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-semibold text-black flex items-center gap-2">
+                  <Camera className="w-5 h-5" /> Bản sao lưu nháp biên tập
                 </h2>
               </div>
               <div className="space-y-4">
@@ -877,11 +874,11 @@ export default function StudioCollabPage() {
                     placeholder="Đặt tên phiên bản lưu trữ (Ví dụ: Nháp trước khi sửa chương 2)"
                     value={newSnapshotName}
                     onChange={(e) => setNewSnapshotName(e.target.value)}
-                    className="flex-1 border border-zinc-200 px-3 py-2 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+                    className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
                   />
                   <button
                     onClick={handleCreateSnapshot}
-                    className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black rounded-none font-sans"
+                    className="px-6 py-2 bg-black text-white text-sm font-medium border border-black rounded-xl hover:bg-zinc-800 transition-colors"
                   >
                     Chụp bản nháp
                   </button>
@@ -908,26 +905,26 @@ export default function StudioCollabPage() {
             </div>
           )}
 
-          <div className="space-y-6">
-            <div className="border-b border-zinc-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
               <h2 className="text-lg font-semibold text-black">
                 Lời mời cộng tác nhận được
               </h2>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative w-40">
-                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                  <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     placeholder="Tìm kiếm"
                     value={inviteSearch}
                     onChange={(e) => setInviteSearch(e.target.value)}
-                    className="w-full border border-zinc-200 pl-8 pr-2 py-1 text-xs focus:outline-none focus:border-black rounded-none bg-white font-sans"
+                    className="w-full border border-zinc-200 pl-9 pr-3 h-9 text-xs focus:outline-none focus:border-black rounded-xl bg-white font-sans"
                   />
                 </div>
                 <select
                   value={inviteFilter}
                   onChange={(e) => setInviteFilter(e.target.value)}
-                  className="border border-zinc-200 px-2 py-1 text-xs focus:outline-none focus:border-black rounded-none bg-white text-zinc-600 font-sans"
+                  className="border border-zinc-200 px-3 h-9 text-xs focus:outline-none focus:border-black rounded-xl bg-white text-zinc-600 font-sans"
                 >
                   <option value="all">Tất cả trạng thái</option>
                   <option value="pending">Đang chờ</option>
@@ -979,15 +976,15 @@ export default function StudioCollabPage() {
                         <div className="flex gap-2 shrink-0">
                           <button
                             onClick={() => handleRespond(invite._id || invite.id, "REJECTED")}
-                            className="px-4 py-2 bg-white border border-zinc-200 text-black text-xs font-medium rounded-none  "
+                            className="px-4 py-2 bg-white border border-zinc-200 text-black text-sm font-medium rounded-xl hover:bg-zinc-50 transition-colors"
                           >
                             Từ chối
                           </button>
                           <button
                             onClick={() => handleRespond(invite._id || invite.id, "ACCEPTED")}
-                            className="px-4 py-2 bg-black border border-black text-white text-xs font-medium rounded-none flex items-center gap-2"
+                            className="px-4 py-2 bg-black border border-black text-white text-sm font-medium rounded-xl flex items-center gap-2 hover:bg-zinc-800 transition-colors"
                           >
-                            <Check className="w-3 h-3" /> Chấp nhận
+                            <Check className="w-4 h-4" /> Chấp nhận
                           </button>
                         </div>
                       )}
@@ -995,7 +992,7 @@ export default function StudioCollabPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                   <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu lời mời</p>
                 </div>
               )}
@@ -1003,22 +1000,21 @@ export default function StudioCollabPage() {
           </div>
 
           {selectedDocumentId && (
-            <div className="space-y-6 border-t border-zinc-200 pt-8">
-              <div className="border-b border-zinc-200 pb-3 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-black" />
-                <h2 className="text-lg font-semibold text-black">
-                  Trao đổi cộng tác (Memos)
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-semibold text-black flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" /> Trao đổi cộng tác (Memos)
                 </h2>
               </div>
 
-              <div className="border border-zinc-200 bg-white p-4 space-y-4">
-                <div className="h-60 overflow-y-auto border border-zinc-100 bg-zinc-50 p-4 space-y-4 flex flex-col">
+              <div className="space-y-4">
+                <div className="h-60 overflow-y-auto border border-zinc-200 bg-zinc-50 p-4 space-y-4 flex flex-col rounded-xl custom-scrollbar">
                   {memos.length > 0 ? (
                     memos.map((memo) => (
-                      <div key={memo.id} className="flex flex-col text-xs max-w-[85%] border border-zinc-200 p-2 bg-white rounded-none">
+                      <div key={memo.id} className="flex flex-col text-sm max-w-[85%] border border-zinc-200 p-3 bg-white rounded-xl shadow-sm">
                         <div className="flex justify-between items-center mb-1 gap-4">
                           <strong className="text-black font-semibold">{memo.sender_name}</strong>
-                          <span className="text-[9px] font-mono text-zinc-400">
+                          <span className="text-[10px] font-mono text-zinc-400">
                             {new Date(memo.timestamp).toLocaleTimeString("vi-VN")}
                           </span>
                         </div>
@@ -1041,11 +1037,11 @@ export default function StudioCollabPage() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSendMemo();
                     }}
-                    className="flex-1 border border-zinc-200 px-3 py-2 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+                    className="flex-1 border border-zinc-200 px-4 h-10 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
                   />
                   <button
                     onClick={handleSendMemo}
-                    className="px-6 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black rounded-none"
+                    className="px-6 h-10 bg-black text-white text-sm font-medium border border-black rounded-xl hover:bg-zinc-800 transition-colors"
                   >
                     Gửi
                   </button>
@@ -1055,11 +1051,10 @@ export default function StudioCollabPage() {
           )}
 
           {selectedDocumentId && (
-            <div className="space-y-6 border-t border-zinc-200 pt-8">
-              <div className="border-b border-zinc-200 pb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-black" />
-                <h2 className="text-lg font-semibold text-black">
-                  Nhật ký hoạt động cộng tác
+            <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="text-lg font-semibold text-black flex items-center gap-2">
+                  <Activity className="w-5 h-5" /> Nhật ký hoạt động cộng tác
                 </h2>
               </div>
 
@@ -1067,7 +1062,7 @@ export default function StudioCollabPage() {
                 <div className="relative pl-6 border-l border-zinc-200 space-y-6">
                   {activities.map((act) => (
                     <div key={act.id} className="relative">
-                      <span className="w-2.5 h-2.5 bg-black border border-white absolute -left-[31.5px] top-1.5 rounded-none" />
+                      <span className="w-2.5 h-2.5 bg-black border border-white absolute -left-[31.5px] top-1.5 rounded-full" />
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-semibold text-black">
@@ -1105,15 +1100,15 @@ export default function StudioCollabPage() {
         <ModalFooter>
           <button
             onClick={() => setTransferId(null)}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center font-sans"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-sm font-medium text-black flex items-center justify-center rounded-xl hover:bg-zinc-50 transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleTransferOwnership}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center font-sans"
+            className="flex-1 py-2 bg-black text-white text-sm font-medium border border-black flex items-center justify-center rounded-xl hover:bg-zinc-800 transition-colors"
           >
-            Xác nhận chuyển quyền
+            Xác nhận
           </button>
         </ModalFooter>
       </Modal>
@@ -1123,13 +1118,13 @@ export default function StudioCollabPage() {
           <ModalTitle>Thảo luận nhiệm vụ cộng tác viên</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <div className="h-60 overflow-y-auto border border-zinc-200 bg-zinc-50 p-4 space-y-3 flex flex-col mb-4">
+          <div className="h-60 overflow-y-auto border border-zinc-200 bg-zinc-50 p-4 space-y-3 flex flex-col mb-4 rounded-xl custom-scrollbar">
             {activeTaskComments.length > 0 ? (
               activeTaskComments.map((comment) => (
-                <div key={comment.id} className="flex flex-col text-xs max-w-[90%] border border-zinc-200 p-2 bg-white rounded-none">
+                <div key={comment.id} className="flex flex-col text-sm max-w-[90%] border border-zinc-200 p-3 bg-white rounded-xl shadow-sm">
                   <div className="flex justify-between items-center mb-1 gap-4">
                     <strong className="text-black font-semibold">{comment.sender_name}</strong>
-                    <span className="text-[9px] font-mono text-zinc-400">
+                    <span className="text-[10px] font-mono text-zinc-400">
                       {new Date(comment.timestamp).toLocaleTimeString("vi-VN")}
                     </span>
                   </div>
@@ -1151,11 +1146,11 @@ export default function StudioCollabPage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSendTaskComment();
               }}
-              className="flex-1 border border-zinc-200 px-3 py-2 text-xs focus:outline-none focus:border-black rounded-none bg-white placeholder:text-zinc-400 font-sans"
+              className="flex-1 border border-zinc-200 px-4 h-10 text-sm focus:outline-none focus:border-black rounded-xl bg-white placeholder:text-zinc-400 font-sans"
             />
             <button
               onClick={handleSendTaskComment}
-              className="px-5 py-2 bg-black text-white text-xs font-semibold uppercase tracking-wider border border-black rounded-none font-sans"
+              className="px-6 h-10 bg-black text-white text-sm font-medium border border-black rounded-xl hover:bg-zinc-800 transition-colors"
             >
               Gửi
             </button>
@@ -1164,9 +1159,9 @@ export default function StudioCollabPage() {
         <ModalFooter>
           <button
             onClick={() => setActiveTaskId(null)}
-            className="w-full py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center font-sans"
+            className="w-full py-2 border border-zinc-200 bg-white text-sm font-medium text-black flex items-center justify-center rounded-xl hover:bg-zinc-50 transition-colors"
           >
-            Đóng thảo luận
+            Đóng
           </button>
         </ModalFooter>
       </Modal>

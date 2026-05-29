@@ -203,34 +203,17 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6  "
-        style={{ opacity: visible ? 1 : 0 }}
-      >
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Hồ sơ cá nhân</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Quản lý định danh và tài sản hệ thống
-          </p>
-        </div>
-        <button
-          onClick={logoutState}
-          className="h-10 px-6 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center gap-2 rounded-none"
-        >
-          <LogOut className="w-4 h-4" /> Đăng xuất
-        </button>
-      </div>
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
 
       <div
-        className="grid lg:grid-cols-12 gap-12  "
+        className="grid lg:grid-cols-12 gap-6"
         style={{ opacity: visible ? 1 : 0 }}
       >
-        <aside className="lg:col-span-4 space-y-8">
-          <div className="border border-zinc-200 bg-white p-6">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-none border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
+                <div className="w-32 h-32 rounded-full border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
@@ -241,7 +224,7 @@ export default function ProfilePage() {
                     <User className="w-10 h-10 text-zinc-400 stroke-[1]" />
                   )}
                 </div>
-                <label className="absolute inset-0 bg-white/80 opacity-0 flex flex-col items-center justify-center text-black cursor-pointer rounded-none border border-zinc-200">
+                <label className="absolute inset-0 bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-black cursor-pointer rounded-full border border-zinc-200">
                   <Camera className="w-5 h-5 mb-1" />
                   <span className="text-[10px] font-semibold">Đổi ảnh</span>
                   <input
@@ -263,152 +246,75 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <p className="text-xs text-zinc-500 font-medium mt-1">
-                  @{user.username || "nguoidung"}
+                  @{user.slug || "nguoidung"}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 border-t border-zinc-200 pt-6 mt-6">
-              <div className="flex flex-col items-center justify-center border-r border-zinc-200 px-2">
-                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
-                  Chuỗi
-                </span>
-                <span className="text-sm font-semibold text-black">
-                  {user.streak_days || 0}
-                </span>
-              </div>
-              <div className="flex flex-col items-center justify-center border-r border-zinc-200 px-2">
-                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
-                  Thực thể
-                </span>
-                <span className="text-sm font-semibold text-black">
-                  {bookmarks.length || 0}
-                </span>
-              </div>
-              <div className="flex flex-col items-center justify-center px-2">
-                <span className="text-[10px] text-zinc-500 font-medium mb-1 uppercase tracking-widest">
-                  Số dư
-                </span>
-                <span className="text-sm font-semibold text-black">
-                  {user.wallet_balance?.toLocaleString() || 0}
-                </span>
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="text-xs font-semibold text-black border-b border-zinc-200 pb-2">
-              Giao diện quản trị
-            </h3>
-            <nav className="flex flex-col border border-zinc-200 bg-white">
-              {[
-                { id: "info", icon: User, label: "Thông tin định danh" },
-                {
-                  id: "bookmarks",
-                  icon: Bookmark,
-                  label: "Bộ sưu tập nội dung",
-                },
-                { id: "history", icon: History, label: "Nhật ký hoạt động" },
-              ].map((tab, idx) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center justify-between px-4 py-3 text-xs font-medium ${idx !== 2 ? "border-b border-zinc-200" : ""
-                    } ${activeTab === tab.id
-                      ? "bg-zinc-50 text-black font-semibold"
-                      : "text-zinc-500"
-                    }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {tab.label}
-                  </div>
-                  {activeTab === tab.id && (
-                    <ChevronRight className="w-4 h-4 text-black" />
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
 
-          <div className="border border-zinc-200 bg-zinc-50 p-6 space-y-4">
-            <div className="border-b border-zinc-200 pb-3">
-              <span className="text-xs font-semibold text-black flex items-center gap-2">
-                <CreditCard className="w-4 h-4" /> Nạp tiền (VNĐ)
-              </span>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="Nhập số tiền"
-                className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
-              />
+            <div className="mt-6">
               <button
-                onClick={handleDeposit}
-                disabled={isDepositing}
-                className="w-full h-10 bg-black text-white text-xs font-medium flex items-center justify-center gap-2 disabled:opacity-50 rounded-none"
+                onClick={logoutState}
+                className="w-full h-9 bg-white border border-zinc-200 text-black text-xs font-medium flex items-center justify-center gap-2 rounded-2xl hover:bg-zinc-50 transition-colors shadow-sm"
               >
-                {isDepositing ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "Kích hoạt nạp tiền"
-                )}
+                <LogOut className="w-4 h-4" /> Đăng xuất
               </button>
             </div>
           </div>
+
+
+
         </aside>
 
-        <main className="lg:col-span-8">
-          {activeTab === "info" && (
-            <div className="border border-zinc-200 bg-white p-8 space-y-8">
-              <div className="border-b border-zinc-200 pb-4">
-                <h3 className="text-sm font-semibold text-black">
-                  Thông tin định danh
-                </h3>
-                <p className="text-xs text-zinc-500 font-medium mt-1">
-                  Cập nhật dữ liệu hệ thống cho tài khoản của bạn
-                </p>
+        <main className="lg:col-span-9 space-y-6">
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-black">
+                    Thông tin định danh
+                  </h2>
+                </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest flex items-center gap-2">
-                    <Mail className="w-3 h-3" /> Địa chỉ liên kết
+                  <label className="text-xs font-semibold text-black">
+                    Địa chỉ Email
                   </label>
-                  <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-xs font-medium cursor-not-allowed rounded-none">
+                  <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-sm font-medium cursor-not-allowed rounded-2xl">
                     {user.email}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                    Danh xưng hiển thị
+                  <label className="text-xs font-semibold text-black">
+                    Tên hiển thị
                   </label>
                   <input
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-black uppercase tracking-widest flex items-center gap-2">
-                  <LinkIcon className="w-3 h-3" /> Tiểu sử (Bio)
-                </label>
-                <textarea
+                  <label className="text-xs font-semibold text-black">
+                    Tiểu sử
+                  </label>
+                <input
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Nhập thông tin giới thiệu ngắn gọn"
-                  className="w-full min-h-[160px] bg-white border border-zinc-200 p-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none resize-none placeholder:text-zinc-400"
+                  className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
                 />
               </div>
 
-              <div className="flex justify-end pt-6 border-t border-zinc-200">
+              <div className="flex justify-end">
                 <button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-none"
+                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -420,7 +326,7 @@ export default function ProfilePage() {
               </div>
 
               {user.role === "reader" && (
-                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                <div className="mt-8 space-y-4">
                   <h3 className="text-sm font-semibold text-black">
                     Trở thành tác giả
                   </h3>
@@ -430,7 +336,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleBecomeAuthor}
                     disabled={isSaving}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-none"
+                    className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
                   >
                     {isSaving ? "Đang xử lý..." : "Trở thành tác giả ngay"}
                   </button>
@@ -438,7 +344,7 @@ export default function ProfilePage() {
               )}
 
               {user.role === "author" && (
-                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                <div className="mt-8 space-y-4">
                   <h3 className="text-sm font-semibold text-black">
                     Ứng tuyển Tác giả tiềm năng
                   </h3>
@@ -450,12 +356,12 @@ export default function ProfilePage() {
                       value={motivation}
                       onChange={(e) => setMotivation(e.target.value)}
                       placeholder="Lý do ứng tuyển tác giả tiềm năng"
-                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
+                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
                     />
                     <button
                       onClick={handleApplyAuthor}
                       disabled={isApplying}
-                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-none shrink-0"
+                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-2xl shrink-0 hover:bg-zinc-50 transition-colors"
                     >
                       {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                     </button>
@@ -464,7 +370,7 @@ export default function ProfilePage() {
               )}
 
               {user.role === "potential_author" && (
-                <div className="mt-12 pt-8 border-t border-zinc-200 space-y-4">
+                <div className="mt-8 space-y-4">
                   <h3 className="text-sm font-semibold text-black">
                     Vị thế Tác giả tiềm năng
                   </h3>
@@ -474,156 +380,6 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-          )}
-
-          {activeTab === "bookmarks" && (
-            <div className="border border-zinc-200 bg-white p-8 space-y-8">
-              <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
-                <div>
-                  <h3 className="text-sm font-semibold text-black">
-                    Bộ sưu tập nội dung
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium mt-1">
-                    Tài liệu đã được lưu trữ vào không gian cá nhân
-                  </p>
-                </div>
-                <span className="text-xs font-semibold text-black">
-                  {bookmarks.length} thực thể
-                </span>
-              </div>
-
-              {isBookmarksLoading ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-4 border border-dashed border-zinc-200 bg-zinc-50">
-                  <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
-                  <span className="text-xs font-medium text-zinc-500">
-                    Đang tải bộ sưu tập
-                  </span>
-                </div>
-              ) : bookmarks.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {bookmarks.map((doc) => (
-                    <Link
-                      key={doc._id}
-                      href={`/tai-lieu/${doc.slug || doc._id}`}
-                      className="border border-zinc-200 bg-white group flex flex-col"
-                    >
-                      <div className="aspect-[3/4] border-b border-zinc-200 bg-zinc-50 overflow-hidden relative shrink-0">
-                        {doc.cover_url ? (
-                          <img
-                            src={
-                              doc.cover_url.startsWith("http")
-                                ? doc.cover_url
-                                : `${API_URL}/storage/${doc.cover_url}`
-                            }
-                            className="w-full h-full object-cover grayscale mix-blend-multiply"
-                            alt={doc.title}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <FileText className="w-6 h-6 text-zinc-400 stroke-[1]" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3 flex-1 flex flex-col justify-between">
-                        <h4 className="text-xs font-semibold text-black line-clamp-2">
-                          {doc.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-medium mt-2">
-                          <span className="truncate">
-                            {doc.publisher_name || "DocLib Institutional"}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
-                  <p className="text-sm font-medium text-zinc-500">
-                    Chưa có dữ liệu
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "history" && (
-            <div className="border border-zinc-200 bg-white p-8 space-y-8">
-              <div className="border-b border-zinc-200 pb-4 flex justify-between items-end">
-                <div>
-                  <h3 className="text-sm font-semibold text-black">
-                    Nhật ký hoạt động
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium mt-1">
-                    Dòng tiền và giao dịch hệ thống
-                  </p>
-                </div>
-              </div>
-
-              {isHistoryLoading ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-4 border border-dashed border-zinc-200 bg-zinc-50">
-                  <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
-                  <span className="text-xs font-medium text-zinc-500">
-                    Đang tải dữ liệu
-                  </span>
-                </div>
-              ) : historyList.length > 0 ? (
-                <div className="space-y-4">
-                  {historyList.map((tx, idx) => (
-                    <div
-                      key={idx}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-zinc-200 bg-zinc-50 gap-4"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-10 h-10 flex items-center justify-center border shrink-0 ${tx.amount > 0
-                              ? "border-zinc-200 bg-white text-black"
-                              : "border-black bg-black text-white"
-                            }`}
-                        >
-                          {tx.amount > 0 ? (
-                            <ArrowUpRight className="w-5 h-5" />
-                          ) : (
-                            <ArrowDownLeft className="w-5 h-5" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-black">
-                            {tx.description ||
-                              tx.type_display ||
-                              "Giao dịch"}
-                          </p>
-                          <p className="text-[10px] font-medium text-zinc-500 mt-1">
-                            {new Date(tx.created_at).toLocaleString("vi-VN")} •
-                            TX-{idx + 1000}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-left sm:text-right flex flex-col sm:items-end">
-                        <span
-                          className={`text-sm font-bold ${tx.amount > 0 ? "text-black" : "text-zinc-500"
-                            }`}
-                        >
-                          {tx.amount > 0 ? "+" : ""}
-                          {tx.amount.toLocaleString()} dl
-                        </span>
-                        <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 bg-black rounded-none"></div>
-                          Hoàn tất
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
-                  <p className="text-sm font-medium text-zinc-500">
-                    Chưa có dữ liệu
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </main>
       </div>
     </div>

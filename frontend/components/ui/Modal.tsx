@@ -38,7 +38,7 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 animate-in fade-in  backdrop-blur-sm bg-black/40">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in  backdrop-blur-sm bg-black/40">
       <div
         className={cn(
           "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95  rounded-none relative p-0",
@@ -48,7 +48,7 @@ export function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-zinc-400 "
+            className="absolute top-5 right-5 text-zinc-400 hover:text-black transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -67,7 +67,7 @@ export function ModalHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("border-b border-zinc-200 p-6 mb-0", className)}>
+    <div className={cn("border-b border-zinc-200 p-5 mb-0", className)}>
       {children}
     </div>
   );
@@ -108,7 +108,7 @@ export function ModalContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("p-6 space-y-4", className)}>{children}</div>;
+  return <div className={cn("p-5 space-y-4", className)}>{children}</div>;
 }
 
 export function ModalFooter({
@@ -119,7 +119,7 @@ export function ModalFooter({
   className?: string;
 }) {
   return (
-    <div className={cn("flex gap-3 border-t border-zinc-200 p-6 bg-zinc-50 mt-0 space-y-0", className)}>
+    <div className={cn("flex gap-3 border-t border-zinc-200 p-5 bg-zinc-50 mt-0 space-y-0", className)}>
       {children}
     </div>
   );

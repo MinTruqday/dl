@@ -141,8 +141,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <Navigation />
+
+      <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
+        <div className="w-full max-w-md w-full">
 
       {pendingPasskeyEmail && (
         <Passkey
@@ -152,23 +155,20 @@ export default function LoginPage() {
         />
       )}
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-md mt-16">
-        <h2 className="text-center text-3xl font-bold tracking-tight text-black">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold tracking-tight text-black">
           Đăng nhập
         </h2>
-        <p className="mt-2 text-center text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-zinc-500">
           Chưa có tài khoản?{" "}
-          <a
-            href="/dang-ky"
-            className="font-medium text-black underline"
-          >
+          <a href="/dang-ky" className="font-medium text-black underline">
             Đăng ký ngay
           </a>
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-none">
+      <div className="w-full space-y-6">
+        <div className="bg-white p-6 sm:p-8 border border-zinc-200 rounded-2xl shadow-sm">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label
@@ -188,7 +188,7 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setEmail(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function LoginPage() {
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setPassword(e.target.value)
                   }
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-none placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
                 />
                 <div className="mt-2 text-right">
                   <button
@@ -230,7 +230,7 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded-none cursor-pointer"
+                  className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded-lg cursor-pointer"
                 />
                 <label
                   htmlFor="remember-me"
@@ -254,27 +254,17 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-none text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-2xl text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
               >
                 {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
               </button>
             </div>
           </form>
+        </div>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-200" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-white text-zinc-500">
-                  Hoặc tiếp tục với
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="bg-white py-8 px-6 sm:px-12 border border-zinc-200 rounded-2xl shadow-sm">
+          <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={async () => {
@@ -287,7 +277,7 @@ export default function LoginPage() {
                   }
                   await completePasskeyLogin(email);
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black gap-2"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
               >
                 <KeyRound className="w-5 h-5 text-black" />
                 Passkey
@@ -302,7 +292,7 @@ export default function LoginPage() {
                     showToast("Không thể kết nối với Google", "error");
                   }
                 }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-none bg-white text-sm font-medium text-black gap-2"
+                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
               >
                 <GoogleIcon />
                 Google
@@ -311,6 +301,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

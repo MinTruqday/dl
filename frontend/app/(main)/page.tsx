@@ -80,74 +80,41 @@ export default function ExplorePage() {
   }, [loadDocuments]);
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
       {banners.length > 0 ? (
-        <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none overflow-hidden group">
+        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group">
           <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
             {banners[0].image_url ? (
-              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply group-  " />
+              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+              <div className="w-full h-full flex items-center justify-center bg-zinc-50">
                 <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>
               </div>
             )}
           </a>
         </div>
       ) : (
-        <div className="mb-10 relative h-[120px] md:h-[200px] bg-zinc-50 border border-zinc-200 flex items-center justify-center rounded-none">
+        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center rounded-2xl">
           <p className="text-zinc-500 text-sm font-medium">
             Liên hệ quảng cáo với DocLib
           </p>
         </div>
       )}
 
-      <div className="mb-8 border-b border-zinc-200 pb-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <h1 className="text-3xl font-semibold text-black">Khám phá</h1>
-            <p className="text-zinc-500 text-sm font-medium">
-              Tìm kiếm và kết nối với nguồn nội dung mới nhất
-            </p>
-          </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex border border-zinc-200 bg-white rounded-none">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 ${viewMode === "grid"
-                  ? "bg-zinc-100 text-black"
-                  : "bg-transparent text-zinc-500"
-                  }`}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <div className="w-[1px] bg-zinc-200" />
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list"
-                  ? "bg-zinc-100 text-black"
-                  : "bg-transparent text-zinc-500"
-                  }`}
-              >
-                <ListIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <aside className="lg:col-span-3 space-y-6">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${!selectedCategory
-                  ? "bg-zinc-100 text-black border-zinc-300"
-                  : "bg-white text-zinc-500 border-transparent"
+                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${!selectedCategory
+                  ? "bg-zinc-100 text-black"
+                  : "bg-white text-zinc-500 hover:bg-zinc-50"
                   }`}
               >
                 Tất cả tài liệu
@@ -159,9 +126,9 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${selectedCategory === cat
-                    ? "bg-zinc-100 text-black border-zinc-300"
-                    : "bg-white text-zinc-500 border-transparent"
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${selectedCategory === cat
+                    ? "bg-zinc-100 text-black"
+                    : "bg-white text-zinc-500 hover:bg-zinc-50"
                     }`}
                 >
                   {cat}
@@ -173,8 +140,8 @@ export default function ExplorePage() {
             </nav>
           </div>
 
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Xu hướng
             </div>
             <div className="flex flex-col gap-4">
@@ -183,26 +150,25 @@ export default function ExplorePage() {
                   <Link
                     key={`trending-${document._id || i}`}
                     href={`/tai-lieu/${document.slug}`}
-                    className="flex gap-3 group"
+                    className="flex gap-3 group items-center p-2 rounded-xl hover:bg-zinc-50 transition-colors -mx-2"
                   >
-                    <span className="text-sm font-semibold text-zinc-400 w-4">
+                    <span className="text-sm font-semibold text-zinc-400 w-5 text-center">
                       {i + 1}
                     </span>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-medium text-black line-clamp-2 leading-snug">
+                    <div className="space-y-1 flex-1">
+                      <h4 className="text-sm font-medium text-black line-clamp-2 leading-snug group-hover:underline">
                         {document.title}
                       </h4>
-                      <div className="text-xs font-medium text-zinc-500">
-                        {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
-                        lượt xem
+                      <div className="text-[11px] font-medium text-zinc-500">
+                        {document.views_count?.toLocaleString("vi-VN") || 0} lượt xem
                       </div>
                     </div>
                   </Link>
                 ))
               ) : (
                 <div className="py-4 flex items-center justify-center">
-                  <p className="text-sm font-medium text-zinc-500">
-                    Đang phân tích
+                  <p className="text-xs font-medium text-zinc-400">
+                    Chưa có dữ liệu
                   </p>
                 </div>
               )}
@@ -210,27 +176,27 @@ export default function ExplorePage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 space-y-12">
+        <main className="lg:col-span-9 space-y-6">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="space-y-6">
-              <div className="border-b border-zinc-200 pb-2">
-                <h2 className="text-lg font-semibold text-black">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+              <div className="mb-1">
+                <h2 className="text-base font-semibold text-black">
                   Gợi ý dành riêng cho bạn
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/tai-lieu/${doc.slug}`}
-                    className="flex gap-4 p-4 border border-zinc-200 bg-white rounded-none"
+                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors group"
                   >
-                    <div className="w-20 h-28 shrink-0 bg-zinc-100 border border-zinc-200 overflow-hidden relative">
+                    <div className="w-20 h-28 shrink-0 bg-zinc-100 rounded-xl overflow-hidden relative">
                       {doc.cover_url ? (
                         <img
                           src={doc.cover_url}
                           alt={doc.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -255,13 +221,36 @@ export default function ExplorePage() {
             </section>
           )}
 
-          <section className="space-y-6">
-            <div className="border-b border-zinc-200 pb-2 flex items-center justify-between">
+          <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
                 {searchQuery
                   ? `Kết quả tìm kiếm cho "${searchQuery}"`
                   : "Kho nội dung"}
               </h2>
+              
+              <div className="flex items-center gap-6">
+                <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 transition-colors ${viewMode === "grid"
+                      ? "bg-white text-black shadow-sm"
+                      : "bg-transparent text-zinc-500 hover:text-black"
+                      }`}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`p-1.5 transition-colors ${viewMode === "list"
+                      ? "bg-white text-black shadow-sm"
+                      : "bg-transparent text-zinc-500 hover:text-black"
+                      }`}
+                  >
+                    <ListIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {loading ? (
@@ -292,20 +281,20 @@ export default function ExplorePage() {
                     href={`/tai-lieu/${document.slug}`}
                     className={`group flex ${viewMode === "grid"
                       ? "flex-col"
-                      : "flex-row gap-6 p-4"
-                      } border border-zinc-200 bg-white rounded-none`}
+                      : "flex-row gap-6 p-3"
+                      } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
                   >
                     <div
                       className={`${viewMode === "grid"
                         ? "aspect-[2/3] w-full border-b"
-                        : "w-24 h-36 shrink-0 border"
+                        : "w-24 h-36 shrink-0 rounded-xl"
                         } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
                     >
                       {document.cover_url ? (
                         <img
                           src={document.cover_url}
                           alt={document.title}
-                          className="w-full h-full object-cover grayscale mix-blend-multiply"
+                          className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
@@ -323,7 +312,7 @@ export default function ExplorePage() {
                             .map((tag: string, idx: number) => (
                               <span
                                 key={idx}
-                                className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 border border-zinc-200 bg-white"
+                                className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md"
                               >
                                 {tag}
                               </span>
@@ -382,7 +371,7 @@ export default function ExplorePage() {
                             ? `${document.price || 0} dl`
                             : "Miễn phí"}
                         </span>
-                        <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider">
+                        <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
                           Xem
                         </div>
                       </div>
@@ -391,7 +380,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                 <p className="text-sm font-medium text-zinc-500">
                   Chưa có dữ liệu
                 </p>

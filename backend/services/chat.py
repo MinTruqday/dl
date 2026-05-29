@@ -154,11 +154,12 @@ class ChatService:
         conversations = await db["messages"].aggregate(pipeline).to_list(length=100)
         
         other_user_ids = [conv["_id"] for conv in conversations]
-        if not other_user_ids:
-            return []
 
-        users_list = await db["users"].find({"_id": {"$in": other_user_ids}}, {"username": 1, "avatar_url": 1, "full_name": 1}).to_list(length=len(other_user_ids))
+        users_list = await db["users"].find({"_id": {"$in": other_user_ids}}, {"username": 1, "avatar_url": 1, "full_name": 1}).to_list(length=len(other_user_ids)) if other_user_ids else []
         user_map = {str(u["_id"]): u for u in users_list}
+
+        groups_list = await db["chat_groups"].find({"_id": {"$in": other_user_ids}}).to_list(length=len(other_user_ids)) if other_user_ids else []
+        group_map = {str(g["_id"]): g for g in groups_list}
 
         pinned_query = {
             "$or": [],
@@ -168,7 +169,7 @@ class ChatService:
             pinned_query["$or"].append({"sender_id": current_user.id, "receiver_id": uid})
             pinned_query["$or"].append({"sender_id": uid, "receiver_id": current_user.id})
         
-        all_pinned = await db["messages"].find(pinned_query).sort("created_at", -1).to_list(length=500)
+        all_pinned = await db["messages"].find(pinned_query).sort("created_at", -1).to_list(length=500) if other_user_ids else []
         pinned_map = {}
         for pm in all_pinned:
             key = pm["receiver_id"] if pm["sender_id"] == current_user.id else pm["sender_id"]
@@ -179,6 +180,7 @@ class ChatService:
         results = []
         for conv in conversations:
             other_user = user_map.get(conv["_id"])
+            group = group_map.get(conv["_id"])
             if other_user:
                 results.append({
                     "other_user_id": conv["_id"],
@@ -191,6 +193,39 @@ class ChatService:
                     "pinned_messages": pinned_map.get(conv["_id"], []),
                     "unread_count": conv["unread_count"]
                 })
+            elif group:
+                results.append({
+                    "other_user_id": conv["_id"],
+                    "other_user": {
+                        "username": group.get("group_name"),
+                        "full_name": group.get("group_name"),
+                        "avatar_url": "",
+                        "is_group": True
+                    },
+                    "last_message": conv["last_message"],
+                    "pinned_messages": pinned_map.get(conv["_id"], []),
+                    "unread_count": conv["unread_count"]
+                })
+                
+        empty_groups = await db["chat_groups"].find({
+            "members": str(current_user.id),
+            "_id": {"$nin": other_user_ids}
+        }).to_list(length=100)
+        
+        for eg in empty_groups:
+            results.append({
+                "other_user_id": eg["_id"],
+                "other_user": {
+                    "username": eg.get("group_name"),
+                    "full_name": eg.get("group_name"),
+                    "avatar_url": "",
+                    "is_group": True
+                },
+                "last_message": None,
+                "pinned_messages": [],
+                "unread_count": 0
+            })
+
         return results
 
     @staticmethod
@@ -225,6 +260,30 @@ class ChatService:
         }
         messages = await db["messages"].find(query).sort("created_at", -1).to_list(length=100)
         return messages[::-1]
+
+    @staticmethod
+    async def delete_conversation(other_user_id: str, current_user: UserInDB) -> dict:
+        db = db_client.mongodb.get_default_database()
+        if other_user_id.startswith("group_"):
+            group = await db["chat_groups"].find_one({"_id": other_user_id})
+            if group:
+                if group.get("created_by") == str(current_user.id):
+                    await db["chat_groups"].delete_one({"_id": other_user_id})
+                    await db["messages"].delete_many({"receiver_id": other_user_id})
+                else:
+                    await db["chat_groups"].update_one(
+                        {"_id": other_user_id},
+                        {"$pull": {"members": str(current_user.id)}}
+                    )
+            return {"status": "success"}
+            
+        await db["messages"].delete_many({
+            "$or": [
+                {"sender_id": current_user.id, "receiver_id": other_user_id},
+                {"sender_id": other_user_id, "receiver_id": current_user.id}
+            ]
+        })
+        return {"status": "success"}
 
     @staticmethod
     async def add_reaction(message_id: str, reaction: str, current_user: UserInDB):

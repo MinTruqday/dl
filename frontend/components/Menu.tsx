@@ -78,7 +78,7 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-none ${isOpen ? "px-6 gap-4" : "px-0 justify-center"
+        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-2xl transition-all ${isOpen ? "px-6 gap-4 hover:bg-zinc-100" : "px-0 justify-center hover:bg-zinc-100"
           } ${active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
             : "font-medium text-zinc-500 border-l-2 border-transparent"

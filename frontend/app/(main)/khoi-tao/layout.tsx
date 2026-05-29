@@ -26,20 +26,11 @@ export default function CreationLayout({
   };
 
   return (
-    <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold text-black">Khởi tạo nội dung</h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Khởi tạo & Thiết lập không gian soạn thảo
-          </p>
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12">
-          <div className="space-y-4">
-            <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
+      <div className="grid lg:grid-cols-12 gap-6 h-full">
+        <aside className="lg:col-span-3 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <div className="text-sm font-semibold text-black mb-1">
               Sáng tác
             </div>
             <nav className="flex flex-col gap-1">
@@ -47,10 +38,10 @@ export default function CreationLayout({
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none  ${
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
                     isActive(item.href)
-                      ? "bg-zinc-100 text-black border-zinc-300"
-                      : "bg-white text-zinc-500 border-transparent "
+                      ? "bg-zinc-100 text-black"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50"
                   }`}
                 >
                   {item.label}
@@ -59,10 +50,13 @@ export default function CreationLayout({
               ))}
             </nav>
           </div>
-
         </aside>
 
-        <main className="lg:col-span-9">{children}</main>
+        <main className="lg:col-span-9 h-full overflow-y-auto pr-2 custom-scrollbar">
+          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm min-h-full">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

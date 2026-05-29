@@ -94,6 +94,7 @@ export default function Editor({
   const [sidebarData, setSidebarData] = useState<any[]>([]);
   const [loadingSidebar, setLoadingSidebar] = useState(false);
   const [stats, setStats] = useState({ wpm: 0, charCount: 0, goalProgress: 0 });
+  const [readingTime, setReadingTime] = useState<number>(0);
   const [lastKeystroke, setLastKeystroke] = useState<number>(Date.now());
   const lastContentRef = useRef<string>(initialContent || "");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -180,6 +181,7 @@ export default function Editor({
       const Undo = (await import("editorjs-undo")).default;
       const DragDrop = (await import("editorjs-drag-drop")).default;
       const Columns = (await import("@calumk/editorjs-columns")).default;
+      const Layout = (await import("editorjs-layout")).default;
       const AttachesTool = (await import("@editorjs/attaches")).default;
       const Tooltip = (await import("editorjs-tooltip")).default;
       const Alert = (await import("editorjs-alert")).default;
@@ -255,19 +257,23 @@ export default function Editor({
 
       const tools: Record<string, any> = {};
       tools.premium = { class: PremiumTune };
-      if (AlignmentTune) tools.alignment = { class: AlignmentTune };
-      if (IndentTune) tools.indent = { class: IndentTune };
-      if (TextVariantTune) tools.textVariant = TextVariantTune;
-      if (StyleTune) tools.style = StyleTune;
+      const commonTunes = ['premium'];
+      if (AlignmentTune) { tools.alignment = { class: AlignmentTune }; commonTunes.push('alignment'); }
+      if (IndentTune) { tools.indent = { class: IndentTune }; commonTunes.push('indent'); }
+      if (StyleTune) { tools.style = StyleTune; commonTunes.push('style'); }
       
-      const commonTunes = ['alignment', 'indent', 'style', 'premium'];
-      
+      const paragraphTunes = [...commonTunes];
+      if (TextVariantTune) { tools.textVariant = TextVariantTune; paragraphTunes.push('textVariant'); }
+
+      const indentTunes = IndentTune ? ['indent'] : [];
+      const alignTunes = AlignmentTune ? ['alignment'] : [];
+
       if (Title) tools.title = { class: Title, inlineToolbar: true };
       if (Header) tools.header = { class: Header, inlineToolbar: true, tunes: commonTunes };
-      if (ParagraphLinebreakable) tools.paragraph = { class: ParagraphLinebreakable, inlineToolbar: true, tunes: [...commonTunes, 'textVariant'] };
-      if (NestedList) tools.list = { class: NestedList, inlineToolbar: true, tunes: ['indent'] };
-      if (NestedChecklist) tools.checklist = { class: NestedChecklist, inlineToolbar: true, tunes: ['indent'] };
-      if (CychannQuote) tools.quote = { class: CychannQuote, inlineToolbar: true, tunes: ['alignment'] };
+      if (ParagraphLinebreakable) tools.paragraph = { class: ParagraphLinebreakable, inlineToolbar: true, tunes: paragraphTunes };
+      if (NestedList) tools.list = { class: NestedList, inlineToolbar: true, tunes: indentTunes };
+      if (NestedChecklist) tools.checklist = { class: NestedChecklist, inlineToolbar: true, tunes: indentTunes };
+      if (CychannQuote) tools.quote = { class: CychannQuote, inlineToolbar: true, tunes: alignTunes };
       if (Warning) tools.warning = Warning;
       if (Alert) tools.alert = { class: Alert, inlineToolbar: true };
       if (Notice) tools.notice = Notice;
