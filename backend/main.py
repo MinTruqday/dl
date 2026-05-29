@@ -108,6 +108,21 @@ async def serve_document(file_path: str):
         logger.error(f"Error serving document '{file_path}' from MinIO: {e}")
         raise HTTPException(status_code=404, detail="File not found")
 
+@app.get("/storage/{file_path:path}")
+async def serve_storage(file_path: str):
+    local_path = os.path.join("assets", file_path)
+    if os.path.exists(local_path) and os.path.isfile(local_path):
+        return FileResponse(local_path)
+    try:
+        from core.storage import get_storage_client
+        async with await get_storage_client() as storage_client:
+            response = await storage_client.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=file_path)
+            content = await response["Body"].read()
+            return Response(content, media_type=response.get("ContentType", "application/octet-stream"))
+    except Exception as e:
+        logger.error(f"Error serving storage '{file_path}' from MinIO: {e}")
+        raise HTTPException(status_code=404, detail="File not found")
+
 os.makedirs("assets/social", exist_ok=True)
 os.makedirs("assets/document", exist_ok=True)
 app.mount("/social", StaticFiles(directory="assets/social"), name="social")

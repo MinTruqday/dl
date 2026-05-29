@@ -7,7 +7,7 @@ import { updateProfileAPI } from "@/services/setting.service";
 import { getDetailedHistoryAPI } from "@/services/wallet.service";
 import { createDepositLinkAPI } from "@/services/deposit.service";
 import { applyAuthorAPI, becomeAuthorAPI } from "@/services/setting.service";
-import { uploadMediaAPI } from "@/services/archive.service";
+import { uploadAssetAPI } from "@/services/upload.service";
 import { getBookmarksAPI } from "@/services/bookmark.service";
 import {
   User,
@@ -177,10 +177,10 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append("file", e.target.files[0]);
     try {
-      const data = await uploadMediaAPI(formData);
-      if (data.url) {
+      const res = await uploadAssetAPI(e.target.files[0], 'image');
+      if (res.data?.url) {
         setAvatarUrl(
-          data.url.startsWith("http") ? data.url : `${API_URL}${data.url}`
+          res.data.url.startsWith("http") ? res.data.url : `${API_URL}/storage/${res.data.url}`
         );
         showToast("Đã tích hợp ảnh định danh mới", "success");
       }

@@ -66,9 +66,71 @@ import {
   VolumeX,
   ThumbsUp,
   Heart,
+  Play,
+  Pause,
+  Trash2,
+  MoreHorizontal,
+  Reply,
+  PinOff,
+  Download,
+  Edit2,
+  Undo2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseUTC } from "@/lib/utils";
+
+const CustomAudioPlayer = ({ src, isSender }: { src: string, isSender: boolean }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setProgress((audioRef.current.currentTime / (audioRef.current.duration || 1)) * 100);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    if (!time || isNaN(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <div className={`flex items-center gap-3 w-full rounded-full py-1 min-w-[200px]`}>
+      <button onClick={togglePlay} className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full ${isSender ? "bg-white text-black" : "bg-black text-white"}`}>
+        {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="ml-0.5 fill-current" />}
+      </button>
+      <div className="flex-1 flex items-center gap-3">
+        <div className="flex-1 h-1.5 rounded-full relative overflow-hidden" style={{ background: isSender ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)' }}>
+          <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-100 ease-linear" style={{ width: `${progress}%`, background: isSender ? 'white' : 'black' }}></div>
+        </div>
+        <span className="text-[11px] font-medium opacity-80 min-w-[32px] text-right">
+          {formatTime(audioRef.current?.currentTime || 0)}
+        </span>
+      </div>
+      <audio 
+        ref={audioRef} 
+        src={src} 
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={() => { setIsPlaying(false); setProgress(100); }}
+        className="hidden" 
+      />
+    </div>
+  );
+};
 
 export default function MessagesPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
@@ -124,7 +186,10 @@ export default function MessagesPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showConvMenu, setShowConvMenu] = useState(false);
   const recordTimerRef = useRef<any>(null);
+  const cancelRecordingRef = useRef(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -217,6 +282,7 @@ export default function MessagesPage() {
     setSearchedMsgResults([]);
     setShowSharedSidebar(false);
     setShowSelfDestructMenu(false);
+    setShowConvMenu(false);
 
     try {
       const res = await getMessagesAPI(conv.other_user_id);
@@ -251,7 +317,7 @@ export default function MessagesPage() {
       showToast("Không thể gửi tin nhắn khi bị chặn hoặc đang chặn người dùng này.", "error");
       return;
     }
-    if ((!newMessage.trim() && !imageFile) || !selectedConv) return;
+    if ((!newMessage.trim() && !imageFile) || !selectedConv || sending) return;
 
     if (editingMsg) {
       setSending(true);
@@ -317,6 +383,7 @@ export default function MessagesPage() {
   };
 
   const handleStartRecording = async () => {
+    cancelRecordingRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -324,10 +391,13 @@ export default function MessagesPage() {
 
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = async () => {
+        if (cancelRecordingRef.current) return;
         setSending(true);
         try {
-          const blob = new Blob(chunks, { type: "audio/webm" });
-          const file = new File([blob], "voice.webm", { type: "audio/webm" });
+          const mimeType = recorder.mimeType || "audio/webm";
+          const ext = mimeType.includes("mp4") ? "m4a" : mimeType.includes("ogg") ? "ogg" : "webm";
+          const blob = new Blob(chunks, { type: mimeType });
+          const file = new File([blob], `voice.${ext}`, { type: mimeType });
           const formData = new FormData();
           formData.append("file", file);
 
@@ -364,6 +434,15 @@ export default function MessagesPage() {
 
   const handleStopRecording = () => {
     if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      clearInterval(recordTimerRef.current);
+    }
+  };
+
+  const handleCancelRecording = () => {
+    if (mediaRecorder && isRecording) {
+      cancelRecordingRef.current = true;
       mediaRecorder.stop();
       setIsRecording(false);
       clearInterval(recordTimerRef.current);
@@ -431,7 +510,11 @@ export default function MessagesPage() {
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
     try {
-      const res = await addReactionAPI(messageId, reaction);
+      const msg = messages.find(m => (m._id || m.id) === messageId);
+      const existingReaction = msg?.reactions?.find((r: any) => r.user_id === user?._id);
+      const finalReaction = existingReaction?.reaction === reaction ? "" : reaction;
+
+      const res = await addReactionAPI(messageId, finalReaction);
       const updated = res.data || res;
       setMessages((prev) =>
         prev.map((m) =>
@@ -659,7 +742,7 @@ export default function MessagesPage() {
                   className="flex items-center justify-between p-3 border border-zinc-200 cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center overflow-hidden bg-white shrink-0">
+                    <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center overflow-hidden bg-white shrink-0 rounded-full">
                       {u.avatar_url ? (
                         <img
                           src={u.avatar_url}
@@ -802,7 +885,7 @@ export default function MessagesPage() {
           className={`w-full md:w-[320px] lg:w-[380px] border-r border-zinc-200 flex flex-col shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
-          <div className="p-4 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0">
+          <div className="h-[72px] px-4 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold text-black uppercase tracking-wider">Hộp thư</span>
             <div className="flex items-center gap-1.5">
               <button onClick={openGroupModal} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Tạo nhóm thảo luận">
@@ -831,7 +914,7 @@ export default function MessagesPage() {
                         : "pl-4"
                       }`}
                   >
-                    <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden rounded-full">
                       {conv.other_user?.avatar_url ? (
                         <img
                           src={conv.other_user.avatar_url}
@@ -886,16 +969,16 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className={`flex-1 flex flex-col ${!selectedConv ? "hidden md:flex" : "flex"}`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
             <>
-              <div className="p-4 border-b border-zinc-200 bg-white flex flex-col shrink-0">
+              <div className="h-[72px] px-4 border-b border-zinc-200 bg-white flex flex-col justify-center shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button onClick={() => setSelectedConv(null)} className="md:hidden p-2 text-zinc-500">
                       <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 border border-zinc-200 overflow-hidden bg-white flex items-center justify-center relative">
+                    <div className="w-10 h-10 border border-zinc-200 overflow-hidden bg-white flex items-center justify-center relative rounded-full">
                       {selectedConv.other_user?.avatar_url ? (
                         <img
                           src={selectedConv.other_user.avatar_url}
@@ -910,54 +993,72 @@ export default function MessagesPage() {
                     <div className="flex flex-col">
                       <span className="font-semibold text-sm text-black flex items-center gap-1.5">
                         {selectedConv.other_user?.full_name || selectedConv.other_user?.username}
-                        <span className="text-[9px] font-normal text-zinc-400">({isOnline ? "Trực tuyến" : "Ngoại tuyến"})</span>
+                        <span className="text-[10px] font-normal text-zinc-400">({isOnline ? "Trực tuyến" : "Ngoại tuyến"})</span>
                       </span>
-                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5">Bảo mật hai chiều</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)}
-                      className={`p-2 border rounded-2xl relative ${selfDestructSeconds > 0 ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
-                      title="Tin nhắn tự hủy"
+                  <div className="flex items-center gap-2 relative">
+                    {showConvMenu && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowConvMenu(false); setShowSelfDestructMenu(false); }} />
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
+                        <button
+                          onClick={() => setShowSelfDestructMenu(!showSelfDestructMenu)}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Flame className={`w-4 h-4 ${selfDestructSeconds > 0 ? "text-red-500" : ""}`} />
+                            Tin nhắn tự hủy
+                          </div>
+                          {selfDestructSeconds > 0 && <span className="text-[10px] font-medium text-red-500">{selfDestructSeconds}s</span>}
+                        </button>
+                        {showSelfDestructMenu && (
+                          <div className="bg-zinc-50 border-y border-zinc-100 flex flex-col text-left text-xs">
+                            <button onClick={() => { handleUpdateSelfDestruct(0); setShowConvMenu(false); }} className="px-9 py-2 hover:bg-zinc-100">Tắt tự hủy</button>
+                            <button onClick={() => { handleUpdateSelfDestruct(5); setShowConvMenu(false); }} className="px-9 py-2 hover:bg-zinc-100">5 giây</button>
+                            <button onClick={() => { handleUpdateSelfDestruct(60); setShowConvMenu(false); }} className="px-9 py-2 hover:bg-zinc-100">1 phút</button>
+                            <button onClick={() => { handleUpdateSelfDestruct(3600); setShowConvMenu(false); }} className="px-9 py-2 hover:bg-zinc-100">1 giờ</button>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => { handleToggleMute(); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                        >
+                          {isMuted ? <VolumeX className="w-4 h-4 text-zinc-400" /> : <Volume2 className="w-4 h-4" />}
+                          {isMuted ? "Bật âm thông báo" : "Tắt âm thông báo"}
+                        </button>
+
+                        <button
+                          onClick={() => { setShowSearchMsgBar(!showSearchMsgBar); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                        >
+                          <Search className={`w-4 h-4 ${showSearchMsgBar ? "text-black" : "text-zinc-500"}`} />
+                          Tìm kiếm tin nhắn
+                        </button>
+
+                        <button
+                          onClick={() => { setShowSharedSidebar(!showSharedSidebar); setShowConvMenu(false); }}
+                          className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                        >
+                          <Paperclip className={`w-4 h-4 ${showSharedSidebar ? "text-black" : "text-zinc-500"}`} />
+                          Tệp đính kèm
+                        </button>
+
+                        <button
+                          onClick={() => { handleBlockUser(); setShowConvMenu(false); }}
+                          className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2.5 ${isBlocked ? "text-green-600 hover:bg-green-50" : "text-red-600 hover:bg-red-50"}`}
+                        >
+                          <ShieldAlert className="w-4 h-4" />
+                          {isBlocked ? "Mở chặn liên lạc" : "Chặn liên lạc"}
+                        </button>
+                      </div>
+                      </>
+                    )}
+                    <button 
+                      onClick={() => setShowConvMenu(!showConvMenu)}
+                      className="p-1.5 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-full transition-colors"
                     >
-                      <Flame className="w-4 h-4" />
-                      {showSelfDestructMenu && (
-                        <div className="absolute right-0 top-full mt-1.5 z-20 w-36 bg-white border border-zinc-200  flex flex-col text-left">
-                          <button onClick={() => handleUpdateSelfDestruct(0)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">Tắt tự hủy</button>
-                          <button onClick={() => handleUpdateSelfDestruct(5)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">5 giây</button>
-                          <button onClick={() => handleUpdateSelfDestruct(60)} className="px-3 py-2 text-[10px] font-semibold text-black  border-b border-zinc-100">1 phút</button>
-                          <button onClick={() => handleUpdateSelfDestruct(3600)} className="px-3 py-2 text-[10px] font-semibold text-black ">1 giờ</button>
-                        </div>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleToggleMute}
-                      className={`p-2 border rounded-2xl ${isMuted ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
-                      title={isMuted ? "Bật âm thông báo" : "Tắt âm thông báo"}
-                    >
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => setShowSearchMsgBar(!showSearchMsgBar)}
-                      className={`p-2 border rounded-2xl ${showSearchMsgBar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
-                    >
-                      <Search className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setShowSharedSidebar(!showSharedSidebar)}
-                      className={`p-2 border rounded-2xl ${showSharedSidebar ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
-                    >
-                      <Paperclip className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={handleBlockUser}
-                      className={`p-2 border rounded-2xl ${isBlocked ? "bg-black text-white border-black" : "bg-white text-zinc-500 border-zinc-200"}`}
-                      title={isBlocked ? "Mở chặn" : "Chặn liên lạc"}
-                    >
-                      <ShieldAlert className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 text-zinc-400">
                       <MoreVertical className="w-5 h-5" />
                     </button>
                   </div>
@@ -998,8 +1099,8 @@ export default function MessagesPage() {
               <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 overflow-y-auto px-6 pb-6 pt-0 bg-white no-scrollbar">
                   {(messages.some((m) => m.is_pinned)) && (
-                    <div className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6 bg-white border-b border-zinc-100 flex flex-col gap-1 shrink-0">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6 bg-white/95 backdrop-blur-sm border-b border-zinc-100 flex flex-col gap-1.5 shrink-0">
+                      <div className="flex items-center">
                         <span className="text-[10px] font-bold text-black tracking-wider shrink-0">Đã ghim:</span>
                       </div>
                       <div className="space-y-1">
@@ -1007,9 +1108,9 @@ export default function MessagesPage() {
                           <div
                             key={pm._id || pm.id}
                             onClick={() => scrollToMessage(pm._id || pm.id)}
-                            className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2 py-1.5 border-l-2 border-black cursor-pointer "
+                            className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2.5 py-1.5 border-l-2 border-black cursor-pointer rounded-r-md hover:bg-zinc-100 transition-colors"
                           >
-                            {pm.content || "Hình ảnh"}
+                            {pm.is_recalled ? <span className="italic text-zinc-400">Tin nhắn đã bị thu hồi</span> : pm.content || "[Hình ảnh / Tệp đính kèm]"}
                           </div>
                         ))}
                       </div>
@@ -1031,17 +1132,17 @@ export default function MessagesPage() {
                           <div
                             key={i}
                             ref={(el) => (messageRefs.current[msg._id || msg.id] = el)}
-                            className={`flex flex-col   ${isSender ? "items-end" : "items-start"}`}
+                            className={`group flex flex-col ${isSender ? "items-end" : "items-start"}`}
                           >
-                            <div className="group relative max-w-[85%] sm:max-w-[70%]">
+                            <div className="relative max-w-[85%] sm:max-w-[360px]">
                               {msg.replied_message && (
                                 <div className={`mb-1 px-3 py-1.5 border-l-2 border-zinc-300 bg-zinc-50/50 text-[11px] text-zinc-500 truncate`}>
-                                  <span className="font-bold mr-1">{msg.replied_message.sender_id === user?._id ? "Bạn" : selectedConv.other_user?.full_name}:</span>
+                                  <span className="font-bold mr-1">{msg.replied_message.sender_id === user?._id ? user?.full_name : selectedConv.other_user?.full_name}:</span>
                                   {msg.replied_message.content || "[Hình ảnh]"}
                                 </div>
                               )}
 
-                              <div className={`px-4 py-3 text-sm leading-relaxed border  ${
+                              <div className={`px-4 py-3 text-sm leading-relaxed border rounded-2xl break-words whitespace-pre-wrap ${isSender ? "rounded-tr-sm" : "rounded-tl-sm"} ${
                                 msg.is_recalled 
                                   ? "bg-zinc-50 border-zinc-200 text-zinc-400 italic" 
                                   : isSender 
@@ -1049,21 +1150,41 @@ export default function MessagesPage() {
                                     : "bg-white text-black border-zinc-200"
                               }`}>
                                 {msg.image_url && !msg.is_recalled && (
-                                  <div className="mb-2 border border-zinc-800 overflow-hidden">
+                                  <div 
+                                    className="mb-2 border border-zinc-200/20 overflow-hidden rounded-xl cursor-pointer hover:opacity-90 transition-opacity"
+                                    onClick={() => window.open(msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`, '_blank')}
+                                  >
                                     <img
                                       src={msg.image_url.startsWith("http") ? msg.image_url : `${API_URL}/storage/${msg.image_url}`}
                                       alt=""
-                                      className="w-full h-auto max-h-[300px] object-contain"
+                                      className="w-full h-auto max-h-[300px] object-cover"
                                     />
                                   </div>
                                 )}
                                 {msg.audio_url && !msg.is_recalled && (
-                                  <div className="mb-2 w-full max-w-[260px] shrink-0">
-                                    <audio controls src={msg.audio_url.startsWith("http") ? msg.audio_url : `${API_URL}/storage/${msg.audio_url}`} className="w-full h-9" />
+                                  <div className="w-[240px] shrink-0">
+                                    <CustomAudioPlayer src={msg.audio_url.startsWith("http") ? msg.audio_url : `${API_URL}/storage/${msg.audio_url}`} isSender={isSender} />
                                   </div>
                                 )}
-                                {msg.content}
-                                {msg.translated_content && (
+                                {(() => {
+                                  if (msg.is_recalled) return "Tin nhắn đã bị thu hồi";
+                                  const docMatch = msg.content.match(/^Đã chia sẻ tài liệu: \*\*\[([^\]]+)\](?:\(([^)]+)\))?\*\*(?:\n\n([\s\S]*))?/);
+                                  if (docMatch) {
+                                    return (
+                                      <div 
+                                        className="mb-1 mt-1 p-3 border border-zinc-200/50 bg-black text-white rounded-xl cursor-pointer hover:bg-zinc-900 transition-colors"
+                                        onClick={() => {
+                                          if (docMatch[2]) router.push(`/truyen/${docMatch[2]}`);
+                                        }}
+                                      >
+                                        <span className="font-bold text-[14px] text-blue-400">{docMatch[1]}</span>
+                                      </div>
+                                    );
+                                  }
+                                  if (msg.audio_url && msg.content === "Tin nhắn thoại") return null;
+                                  return msg.content;
+                                })()}
+                                {msg.translated_content && !msg.is_recalled && (
                                   <div className="mt-2 pt-2 border-t border-dashed border-zinc-300/30 text-[11px] opacity-90 text-zinc-400">
                                     {msg.translated_content}
                                   </div>
@@ -1073,88 +1194,31 @@ export default function MessagesPage() {
                                 )}
                               </div>
 
-                              {reactions.length > 0 && (
+                              {reactions.length > 0 && !msg.is_recalled && (
                                 <div className={`flex gap-1 mt-1.5 flex-wrap ${isSender ? "justify-end" : "justify-start"}`}>
                                   {reactions.map((r: any, idx: number) => (
-                                    <span
+                                    <div
                                       key={idx}
                                       title={r.user_name}
-                                      className="px-2 py-0.5 border border-zinc-200 bg-zinc-50 text-[10px] font-medium"
+                                      onClick={() => { if (r.user_id === user?._id) handleAddReaction(msg._id || msg.id, r.reaction); }}
+                                      className={`flex items-center justify-center px-1.5 py-1 border border-zinc-200 bg-white rounded-full shadow-sm hover:bg-zinc-50 transition-colors ${r.user_id === user?._id ? "cursor-pointer hover:border-black" : "cursor-default"}`}
                                     >
-                                      {r.reaction}
-                                    </span>
+                                      {r.reaction === "like" ? (
+                                        <ThumbsUp className="w-3 h-3 text-black" />
+                                      ) : r.reaction === "love" ? (
+                                        <Heart className="w-3 h-3 text-red-500" fill="currentColor" />
+                                      ) : (
+                                        <span className="text-[10px] font-medium">{r.reaction}</span>
+                                      )}
+                                    </div>
                                   ))}
                                 </div>
                               )}
 
-                              {!msg.is_recalled && (
-                                <div className={`absolute top-0 ${isSender ? "-left-[120px]" : "-right-[120px]"} opacity-0 group-  flex items-center gap-1`}>
-                                  <div className="relative flex items-center gap-1 bg-white border border-zinc-200 p-1">
-                                    <button
-                                      onClick={() => handleAddReaction(msg._id || msg.id, "like")}
-                                      className="  text-[11px]"
-                                    >
-                                      <ThumbsUp className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleAddReaction(msg._id || msg.id, "love")}
-                                      className="  text-[11px]"
-                                    >
-                                      <Heart className="w-3 h-3 text-red-500" fill="currentColor" />
-                                    </button>
-                                  </div>
-                                  <div className="relative flex items-center gap-0.5">
-                                    <button
-                                      onClick={() => handleTranslate(msg._id || msg.id, "vi")}
-                                      className="p-1 bg-white border border-zinc-200 text-zinc-400 "
-                                      title="Dịch sang tiếng Việt"
-                                    >
-                                      <Languages className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => setShowMsgMenu(showMsgMenu === (msg._id || msg.id) ? null : (msg._id || msg.id))}
-                                      className="p-1.5 bg-white border border-zinc-200 text-zinc-400  "
-                                    >
-                                      <MoreVertical className="w-4 h-4" />
-                                    </button>
-                                    {showMsgMenu === (msg._id || msg.id) && (
-                                      <div className={`absolute z-10 w-32 bg-white border border-zinc-200  ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
-                                        <button
-                                          onClick={() => { setReplyingTo(msg); setShowMsgMenu(null); }}
-                                          className="w-full text-left px-3 py-2 text-[11px] font-medium "
-                                        >
-                                          Trả lời
-                                        </button>
-                                        <button
-                                          onClick={() => { handlePin(msg._id || msg.id); setShowMsgMenu(null); }}
-                                          className="w-full text-left px-3 py-2 text-[11px] font-medium "
-                                        >
-                                          {msg.is_pinned ? "Bỏ ghim" : "Ghim"}
-                                        </button>
-                                        {isSender && (
-                                          <>
-                                            <button
-                                              onClick={() => { setEditingMsg(msg); setNewMessage(msg.content); setShowMsgMenu(null); }}
-                                              className="w-full text-left px-3 py-2 text-[11px] font-medium "
-                                            >
-                                              Chỉnh sửa
-                                            </button>
-                                            <button
-                                              onClick={() => { handleRecall(msg._id || msg.id); setShowMsgMenu(null); }}
-                                              className="w-full text-left px-3 py-2 text-[11px] font-medium  text-black font-semibold"
-                                            >
-                                              Thu hồi
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+
                             </div>
 
-                            <div className="flex items-center gap-2 mt-1 px-1">
+                            <div className={`flex items-center gap-2 mt-1 px-1 ${isSender ? "flex-row-reverse" : "flex-row"}`}>
                               <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-tighter">
                                 {parseUTC(msg.created_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                               </span>
@@ -1162,6 +1226,93 @@ export default function MessagesPage() {
                                 <span className="text-[8px] font-semibold uppercase tracking-widest text-zinc-500 flex items-center gap-0.5">
                                   <Eye className="w-2.5 h-2.5 text-zinc-400" /> {msg.is_read ? "Đã xem" : "Đã gửi"}
                                 </span>
+                              )}
+                              
+                              {!msg.is_recalled && (
+                                <div className={`flex items-center gap-1 transition-opacity ${isSender ? "flex-row-reverse" : "flex-row"} ${showMsgMenu === (msg._id || msg.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                                  <button
+                                    onClick={() => handleAddReaction(msg._id || msg.id, "like")}
+                                    className="p-1 hover:bg-zinc-100 rounded-full transition-colors text-zinc-400 hover:text-black"
+                                    title="Thích"
+                                  >
+                                    <ThumbsUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleAddReaction(msg._id || msg.id, "love")}
+                                    className="p-1 hover:bg-zinc-100 rounded-full transition-colors text-zinc-400 hover:text-red-500"
+                                    title="Yêu thích"
+                                  >
+                                    <Heart className="w-3.5 h-3.5" />
+                                  </button>
+                                  <div className="relative">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setShowMsgMenu(showMsgMenu === (msg._id || msg.id) ? null : (msg._id || msg.id)); }}
+                                      className={`p-1 rounded-full transition-colors ${showMsgMenu === (msg._id || msg.id) ? "bg-zinc-100 text-black" : "text-zinc-400 hover:text-black hover:bg-zinc-100"}`}
+                                    >
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </button>
+                                    {showMsgMenu === (msg._id || msg.id) && (
+                                      <>
+                                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowMsgMenu(null); }} />
+                                        <div className={`absolute z-50 w-48 bg-white border border-zinc-200 shadow-xl rounded-xl py-1.5 ${isSender ? "right-0" : "left-0"} top-full mt-1`}>
+                                          <button
+                                            onClick={() => { setReplyingTo(msg); setShowMsgMenu(null); }}
+                                          className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                        >
+                                          <Reply className="w-4 h-4" />
+                                          Trả lời
+                                        </button>
+                                        <button
+                                          onClick={() => { handlePin(msg._id || msg.id); setShowMsgMenu(null); }}
+                                          className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                        >
+                                          {msg.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                                          {msg.is_pinned ? "Bỏ ghim" : "Ghim"}
+                                        </button>
+                                        <button
+                                          onClick={() => { handleTranslate(msg._id || msg.id, "vi"); setShowMsgMenu(null); }}
+                                          className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                        >
+                                          <Languages className="w-4 h-4" />
+                                          Dịch sang Tiếng Việt
+                                        </button>
+                                        {(msg.image_url || msg.audio_url || (msg.attachments && msg.attachments.length > 0)) && (
+                                          <button
+                                            onClick={() => {
+                                              const url = msg.image_url || msg.audio_url || (msg.attachments && msg.attachments[0].url);
+                                              if (url) window.open(url.startsWith("http") ? url : `${API_URL}/storage/${url}`, '_blank');
+                                              setShowMsgMenu(null);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                          >
+                                            <Download className="w-4 h-4" />
+                                            Tải xuống
+                                          </button>
+                                        )}
+                                        {isSender && (
+                                          <>
+                                            <div className="h-px bg-zinc-100 my-1.5 mx-2" />
+                                            <button
+                                              onClick={() => { setEditingMsg(msg); setNewMessage(msg.content); setShowMsgMenu(null); }}
+                                              className="w-full text-left px-3 py-2 text-[12px] font-medium text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2"
+                                            >
+                                              <Edit2 className="w-4 h-4" />
+                                              Chỉnh sửa
+                                            </button>
+                                            <button
+                                              onClick={() => { handleRecall(msg._id || msg.id); setShowMsgMenu(null); }}
+                                              className="w-full text-left px-3 py-2 text-[12px] font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                            >
+                                              <Undo2 className="w-4 h-4" />
+                                              Thu hồi
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1207,21 +1358,12 @@ export default function MessagesPage() {
                   </div>
                 )}
 
-                {isRecording && (
-                  <div className="mb-3 p-2.5 border border-black bg-zinc-50 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-black animate-ping shrink-0" />
-                      <span className="text-xs font-bold text-black uppercase">Đang ghi âm cuộc trò chuyện: {recordingDuration} giây</span>
-                    </div>
-                    <button onClick={handleStopRecording} className="h-7 px-3 bg-black text-white text-[10px] font-bold uppercase rounded-2xl">Hoàn tất & Gửi</button>
-                  </div>
-                )}
 
                 {(replyingTo || editingMsg) && (
                   <div className="mb-4 p-3 bg-zinc-50 border-l-2 border-black flex items-center justify-between">
                     <div className="min-w-0">
-                      <span className="text-[10px] font-bold text-black uppercase block mb-1">
-                        {editingMsg ? "Đang chỉnh sửa tin nhắn" : `Đang trả lời ${replyingTo.sender_id === user?._id ? "chính mình" : selectedConv.other_user?.full_name}`}
+                      <span className="text-[11px] font-bold text-black block mb-1">
+                        {editingMsg ? "Chỉnh sửa tin nhắn" : (replyingTo.sender_id === user?._id ? user?.full_name : selectedConv.other_user?.full_name)}
                       </span>
                       <p className="text-xs text-zinc-500 truncate">{(editingMsg || replyingTo).content || "[Hình ảnh]"}</p>
                     </div>
@@ -1232,33 +1374,104 @@ export default function MessagesPage() {
                 )}
 
                 {imageFile && (
-                  <div className="mb-4 relative w-24 h-24 border border-zinc-200">
-                    <img src={URL.createObjectURL(imageFile)} alt="" className="w-full h-full object-cover" />
-                    <button onClick={() => setImageFile(null)} className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white flex items-center justify-center text-[10px]">X</button>
+                  <div className="mb-4 relative w-16 h-16">
+                    <img src={URL.createObjectURL(imageFile)} alt="" className="w-full h-full object-cover rounded-xl border border-zinc-200" />
+                    <button 
+                      onClick={() => setImageFile(null)} 
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white flex items-center justify-center rounded-full shadow-sm"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </div>
                 )}
 
-                <div className="flex gap-3">
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => setImageFile(e.target.files ? e.target.files[0] : null)} />
-                  <button onClick={() => fileInputRef.current?.click()} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
-                    <Plus className="w-5 h-5" />
-                  </button>
-                  <button onClick={openShareDoc} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
-                    <Book className="w-5 h-5" />
-                  </button>
-                  <button onClick={handleStartRecording} disabled={isBlocked || isRecording} className="w-12 h-12 bg-white border border-zinc-200 flex items-center justify-center text-zinc-400   shrink-0 disabled:opacity-50">
-                    <Mic className="w-5 h-5" />
-                  </button>
-                  <input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
-                    disabled={isBlocked || isRecording}
-                    placeholder={isBlocked ? "Hội thoại bị vô hiệu hóa" : isRecording ? "Bộ thu âm đang mở..." : "Nhập nội dung thông điệp"}
-                    className="flex-1 h-12 px-4 bg-zinc-50 border border-zinc-200 text-sm font-medium focus:outline-none focus:border-black rounded-2xl placeholder:text-zinc-400 disabled:opacity-50"
-                  />
-                  <button onClick={handleSend} disabled={sending || isBlocked || isRecording || (!newMessage.trim() && !imageFile)} className="w-12 h-12 bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-2xl shrink-0">
-                    {sending || uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                <div className="flex gap-3 relative items-end">
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => { setImageFile(e.target.files ? e.target.files[0] : null); setShowAttachMenu(false); }} />
+                  
+                  {showAttachMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowAttachMenu(false); }} />
+                      <div className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-lg py-1 z-50">
+                      <button
+                        onClick={() => { fileInputRef.current?.click(); }}
+                        className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                        Hình ảnh
+                      </button>
+                      <button
+                        onClick={() => { openShareDoc(); setShowAttachMenu(false); }}
+                        className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                      >
+                        <Book className="w-4 h-4" />
+                        Tài liệu sáng tác
+                      </button>
+                      <button
+                        onClick={() => { handleStartRecording(); setShowAttachMenu(false); }}
+                        className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors flex items-center gap-2.5"
+                      >
+                        <Mic className="w-4 h-4" />
+                        Ghi âm
+                      </button>
+                    </div>
+                    </>
+                  )}
+
+                  <div className={`flex-1 min-h-[56px] bg-white border border-zinc-200 flex ${isRecording ? "items-center" : "items-end"} px-4 gap-3 focus-within:border-zinc-300 rounded-xl transition-colors py-1.5`}>
+                    {!isRecording ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setShowAttachMenu(!showAttachMenu)}
+                          disabled={isBlocked}
+                          className="text-zinc-400 shrink-0 rounded-full p-1.5 hover:bg-zinc-100 transition-colors disabled:opacity-50 mb-1"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                        <textarea
+                          rows={1}
+                          value={newMessage}
+                          onChange={(e) => {
+                            setNewMessage(e.target.value);
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              if (!sending) handleSend();
+                            }
+                          }}
+                          disabled={isBlocked}
+                          placeholder={isBlocked ? "Hội thoại bị vô hiệu hóa" : ""}
+                          className="flex-1 min-w-0 py-2.5 max-h-32 resize-none text-sm bg-transparent outline-none font-medium text-black placeholder:text-zinc-400 disabled:opacity-50 scrollbar-hide"
+                        />
+                      </>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-between py-1 h-full">
+                        <button 
+                          onClick={handleCancelRecording}
+                          className="text-zinc-400 hover:text-black hover:bg-zinc-100 p-1.5 rounded-full transition-colors shrink-0"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                        <div className="flex-1 flex items-center justify-center gap-3">
+                          <span className="w-2.5 h-2.5 bg-black rounded-full animate-ping shrink-0" />
+                          <span className="text-sm font-bold text-black font-mono">
+                            {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                          </span>
+                        </div>
+                        <div className="w-8 shrink-0"></div> {/* Placeholder to perfectly center the text */}
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    onClick={isRecording ? handleStopRecording : handleSend} 
+                    disabled={sending || isBlocked || (!isRecording && (!newMessage.trim() && !imageFile))} 
+                    className="w-14 h-[56px] bg-black text-white flex items-center justify-center disabled:opacity-50 rounded-xl shrink-0 transition-colors hover:bg-zinc-800"
+                  >
+                    {sending || uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
                 </div>
               </div>

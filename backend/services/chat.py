@@ -265,7 +265,7 @@ class ChatService:
         if not doc:
             return None
             
-        content = f"Đã chia sẻ tài liệu: **[{doc.get('title')}]**\n\nXem tài liệu trực tiếp qua đường dẫn đính kèm."
+        content = f"Đã chia sẻ tài liệu: **[{doc.get('title')}]({document_id})**"
         
         message = MessageInDB(
             sender_id=current_user.id,

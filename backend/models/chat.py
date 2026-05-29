@@ -10,6 +10,7 @@ class MessageBase(BaseModel):
     content: Optional[str] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
+    attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
     is_pinned: bool = False
     is_read: bool = False
@@ -24,6 +25,7 @@ class MessageCreate(BaseModel):
     content: Optional[str] = None
     image_url: Optional[str] = None
     audio_url: Optional[str] = None
+    attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
 
 class MessageInDB(MessageBase):
