@@ -115,8 +115,8 @@ export default function Menu({
 
       <aside
         className={`
-          fixed left-0 top-[var(--navbar-height)] h-[calc(100dvh-var(--navbar-height))]
-          bg-white border-r border-zinc-200   z-40
+          fixed left-2 md:left-4 top-[calc(var(--navbar-height)+16px)] md:top-[calc(var(--navbar-height)+32px)] bottom-2 md:bottom-4
+          bg-white border border-zinc-200 rounded-2xl shadow-sm z-40
           flex flex-col overflow-hidden font-sans
           ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
         `}

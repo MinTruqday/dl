@@ -550,11 +550,11 @@ export default function AiChat({ standalone = false }: AiChatProps) {
         <div
           className={
             standalone
-              ? "font-sans w-full h-full bg-white flex flex-col overflow-hidden"
-              : `font-sans fixed bottom-6 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] bg-white border border-zinc-200 flex flex-col overflow-hidden rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)]`
+              ? "font-sans w-full h-full flex flex-col gap-2 overflow-hidden"
+              : `font-sans fixed bottom-6 right-6 z-[100] ${isExpanded ? "w-[900px]" : "w-[450px]"} h-[80vh] min-h-[600px] max-h-[800px] flex flex-col gap-2 overflow-hidden`
           }
         >
-          <div className="px-6 py-5 border-b border-zinc-200 flex items-center justify-between shrink-0 bg-white">
+          <div className="min-h-[72px] px-6 bg-white border border-zinc-200 rounded-2xl shadow-sm flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-zinc-900">
@@ -625,7 +625,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
 
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white no-scrollbar"
+            className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-white border border-zinc-200 rounded-2xl shadow-sm no-scrollbar relative"
           >
             {view === "history" ? (
               <div className="p-6 space-y-3 w-full">
@@ -1036,7 +1036,7 @@ export default function AiChat({ standalone = false }: AiChatProps) {
           </div>
 
           {view !== "history" && (
-            <div className="p-4 bg-white border-t border-zinc-200 shrink-0 relative flex justify-center">
+            <div className="p-4 bg-white border border-zinc-200 rounded-2xl shadow-sm shrink-0 relative flex justify-center">
             <div className="w-full relative">
               {(selectedFile || selectedImage) && (
                 <div className="flex gap-4 mb-4 overflow-x-auto pb-2 scrollbar-none">

@@ -68,7 +68,7 @@ export default function Workspace({ children, requireAuth = false }: WorkspacePr
   }
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white overflow-x-hidden">
       <Navigation onToggleSidebar={toggleSidebar} />
 
       <Menu
@@ -79,16 +79,16 @@ export default function Workspace({ children, requireAuth = false }: WorkspacePr
       />
 
       <main
-        className="relative  "
+        className="relative pr-2 md:pr-4 pb-2 md:pb-4 transition-all duration-300"
         style={{
-          paddingTop: "var(--navbar-height)",
+          paddingTop: isMobile ? "calc(var(--navbar-height) + 16px)" : "calc(var(--navbar-height) + 32px)",
           marginLeft: !mounted
-            ? "var(--sidebar-width-expanded)"
+            ? "calc(var(--sidebar-width-expanded) + 32px)"
             : isMobile
-              ? 0
+              ? "8px"
               : sidebarOpen
-                ? "var(--sidebar-width-expanded)"
-                : "var(--sidebar-width-collapsed)",
+                ? "calc(var(--sidebar-width-expanded) + 32px)"
+                : "calc(var(--sidebar-width-collapsed) + 32px)",
           minHeight: "100vh",
         }}
       >

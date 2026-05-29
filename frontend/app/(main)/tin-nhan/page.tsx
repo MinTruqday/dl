@@ -220,7 +220,7 @@ export default function MessagesPage() {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages.length, selectedConv?.other_user_id]);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -496,16 +496,16 @@ export default function MessagesPage() {
 
   const handleSearchMessages = async (q: string) => {
     setSearchMsgQuery(q);
-    if (!selectedConv || q.length < 2) {
+    if (!selectedConv || q.length < 1) {
       setSearchedMsgResults([]);
       return;
     }
-    try {
-      const res = await searchMessagesAPI(selectedConv.other_user_id, q);
-      setSearchedMsgResults(res.data || res || []);
-    } catch (err: any) {
-      console.warn("Failed to search messages", err.message || err);
-    }
+    const results = messages.filter(m => 
+      m.content && 
+      !m.is_recalled && 
+      m.content.toLowerCase().includes(q.toLowerCase())
+    );
+    setSearchedMsgResults(results);
   };
 
   const handleAddReaction = async (messageId: string, reaction: string) => {
@@ -702,7 +702,7 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height)-48px)] flex flex-col font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
@@ -880,12 +880,12 @@ export default function MessagesPage() {
         </ModalContent>
       </Modal>
 
-      <div className="border border-zinc-200 bg-white flex flex-1 min-h-0 rounded-2xl overflow-hidden">
+      <div className="flex flex-1 min-h-0 gap-4">
         <div
-          className={`w-full md:w-[320px] lg:w-[380px] border-r border-zinc-200 flex flex-col shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
+          className={`w-full md:w-[320px] lg:w-[380px] flex flex-col gap-2 shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
-          <div className="h-[72px] px-4 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0">
+          <div className="h-[72px] px-4 bg-white border border-zinc-200 rounded-2xl shadow-sm flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold text-black uppercase tracking-wider">Hộp thư</span>
             <div className="flex items-center gap-1.5">
               <button onClick={openGroupModal} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Tạo nhóm thảo luận">
@@ -896,7 +896,7 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-white border border-zinc-200 rounded-2xl shadow-sm">
             {loadingConv ? (
               <div className="p-12 flex flex-col items-center gap-4">
                 <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
@@ -969,11 +969,11 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "gap-2" : "bg-white border border-zinc-200 rounded-2xl shadow-sm"} ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
             <>
-              <div className="h-[72px] px-4 border-b border-zinc-200 bg-white flex flex-col justify-center shrink-0">
-                <div className="flex items-center justify-between">
+              <div className="min-h-[72px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col justify-center shrink-0 z-30 relative">
+                <div className="flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-4">
                     <button onClick={() => setSelectedConv(null)} className="md:hidden p-2 text-zinc-500">
                       <ArrowLeft className="w-5 h-5" />
@@ -1064,61 +1064,68 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-                {showSearchMsgBar && (
-                  <div className="mt-3 flex flex-col gap-2 bg-zinc-50 border border-zinc-200 p-2.5">
-                    <div className="relative">
-                      <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        placeholder="Tìm kiếm nội dung tin nhắn trong lịch sử..."
-                        value={searchMsgQuery}
-                        onChange={(e) => handleSearchMessages(e.target.value)}
-                        className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
-                      />
-                    </div>
-                    {searchedMsgResults.length > 0 && (
-                      <div className="max-h-36 overflow-y-auto space-y-1.5 pt-1.5 border-t border-zinc-100">
-                        {searchedMsgResults.map((sm) => (
-                          <div
-                            key={sm._id || sm.id}
-                            onClick={() => scrollToMessage(sm._id || sm.id)}
-                            className="p-1.5  text-[10px] text-zinc-500 flex justify-between cursor-pointer border border-zinc-100 bg-white"
-                          >
-                            <span className="font-semibold text-black truncate max-w-[70%]">{sm.content}</span>
-                            <span className="font-mono text-[8px] text-zinc-400">
-                              {new Date(sm.created_at).toLocaleTimeString("vi-VN")}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+
               </div>
 
-              <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 overflow-y-auto px-6 pb-6 pt-0 bg-white no-scrollbar">
-                  {(messages.some((m) => m.is_pinned)) && (
-                    <div className="sticky top-0 z-10 -mx-6 px-6 py-4 mb-6 bg-white/95 backdrop-blur-sm border-b border-zinc-100 flex flex-col gap-1.5 shrink-0">
-                      <div className="flex items-center">
-                        <span className="text-[10px] font-bold text-black tracking-wider shrink-0">Đã ghim:</span>
-                      </div>
-                      <div className="space-y-1">
-                        {messages.filter((m) => m.is_pinned).slice(0, 3).map((pm: any) => (
-                          <div
-                            key={pm._id || pm.id}
-                            onClick={() => scrollToMessage(pm._id || pm.id)}
-                            className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2.5 py-1.5 border-l-2 border-black cursor-pointer rounded-r-md hover:bg-zinc-100 transition-colors"
-                          >
-                            {pm.is_recalled ? <span className="italic text-zinc-400">Tin nhắn đã bị thu hồi</span> : pm.content || "[Hình ảnh / Tệp đính kèm]"}
+              <div className="flex-1 flex overflow-hidden bg-white border border-zinc-200 rounded-2xl shadow-sm relative">
+                <div className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar relative">
+                  {(showSearchMsgBar || messages.some((m) => m.is_pinned)) && (
+                    <div className="sticky top-0 z-10 mb-6 bg-white/95 backdrop-blur-md border border-zinc-200 rounded-2xl shadow-sm p-4 flex flex-col gap-1.5 shrink-0">
+                      {showSearchMsgBar ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-end">
+                            <button onClick={() => { setShowSearchMsgBar(false); setSearchMsgQuery(""); setSearchedMsgResults([]); }} className="text-zinc-400 hover:text-black">
+                              <X className="w-4 h-4" />
+                            </button>
                           </div>
-                        ))}
-                      </div>
+                          <div className="relative">
+                            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              placeholder="Nhập nội dung cần tìm..."
+                              value={searchMsgQuery}
+                              onChange={(e) => handleSearchMessages(e.target.value)}
+                              className="w-full pl-8 pr-3 h-8 border border-zinc-200 bg-white text-xs font-medium focus:outline-none focus:border-black rounded-xl"
+                            />
+                          </div>
+                          {searchedMsgResults.length > 0 && (
+                            <div className="max-h-36 overflow-y-auto space-y-1.5 pt-1.5 border-t border-zinc-100 mt-1">
+                              {searchedMsgResults.map((sm) => (
+                                <div
+                                  key={sm._id || sm.id}
+                                  onClick={() => scrollToMessage(sm._id || sm.id)}
+                                  className="p-1.5 text-[10px] text-zinc-500 flex justify-between cursor-pointer border border-zinc-100 bg-white rounded-md hover:border-black transition-colors"
+                                >
+                                  <span className="font-semibold text-black truncate max-w-[70%]">{sm.content}</span>
+                                  <span className="font-mono text-[8px] text-zinc-400">
+                                    {new Date(sm.created_at).toLocaleTimeString("vi-VN")}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center">
+                            <span className="text-[10px] font-bold text-black tracking-wider shrink-0">Đã ghim:</span>
+                          </div>
+                          <div className="space-y-1">
+                            {messages.filter((m) => m.is_pinned).slice(0, 3).map((pm: any) => (
+                              <div
+                                key={pm._id || pm.id}
+                                onClick={() => scrollToMessage(pm._id || pm.id)}
+                                className="text-[10px] font-medium text-zinc-600 truncate bg-zinc-50 px-2.5 py-1.5 border-l-2 border-black cursor-pointer rounded-r-md hover:bg-zinc-100 transition-colors"
+                              >
+                                {pm.is_recalled ? <span className="italic text-zinc-400">Tin nhắn đã bị thu hồi</span> : pm.content || "[Hình ảnh / Tệp đính kèm]"}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
-
-                  {!messages.some(m => m.is_pinned) && <div className="pt-6" />}
-                  <div className="flex flex-col gap-8">
+                  <div className="flex flex-col pb-4">
                     {loadingMsgs ? (
                       <div className="flex h-full flex-col items-center justify-center gap-4">
                         <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
@@ -1128,13 +1135,66 @@ export default function MessagesPage() {
                       messages.map((msg, i) => {
                         const isSender = msg.sender_id === user?._id;
                         const reactions = msg.reactions || [];
+                        
+                        let showTimeDivider = false;
+                        let timeLabel = "";
+                        let isDifferentSender = false;
+                        
+                        if (i === 0) {
+                          showTimeDivider = true;
+                          isDifferentSender = true;
+                        } else {
+                          const prevMsg = messages[i - 1];
+                          const currDate = new Date(msg.created_at);
+                          const prevDate = new Date(prevMsg.created_at);
+                          const diffMs = currDate.getTime() - prevDate.getTime();
+                          
+                          if (diffMs > 1800000) { // 30 mins
+                            showTimeDivider = true;
+                          }
+                          
+                          if (prevMsg.sender_id !== msg.sender_id) {
+                            isDifferentSender = true;
+                          }
+                        }
+
+                        if (showTimeDivider) {
+                          const currDate = new Date(msg.created_at);
+                          const today = new Date();
+                          const yesterday = new Date();
+                          yesterday.setDate(yesterday.getDate() - 1);
+                          
+                          const isToday = currDate.getDate() === today.getDate() && currDate.getMonth() === today.getMonth() && currDate.getFullYear() === today.getFullYear();
+                          const isYesterday = currDate.getDate() === yesterday.getDate() && currDate.getMonth() === yesterday.getMonth() && currDate.getFullYear() === yesterday.getFullYear();
+                          
+                          const timeString = currDate.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+                          
+                          if (isToday) {
+                            timeLabel = `${timeString} Hôm nay`;
+                          } else if (isYesterday) {
+                            timeLabel = `${timeString} Hôm qua`;
+                          } else {
+                            const dateString = currDate.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+                            timeLabel = `${timeString} ${dateString}`;
+                          }
+                        }
+
+                        const marginTopClass = showTimeDivider ? "mt-1" : isDifferentSender ? "mt-4" : "mt-1.5";
+
                         return (
-                          <div
-                            key={i}
-                            ref={(el) => (messageRefs.current[msg._id || msg.id] = el)}
-                            className={`group flex flex-col ${isSender ? "items-end" : "items-start"}`}
-                          >
-                            <div className="relative max-w-[85%] sm:max-w-[360px]">
+                          <React.Fragment key={msg._id || msg.id || i}>
+                            {showTimeDivider && (
+                              <div className={`flex justify-center mb-4 mt-8`}>
+                                <span className="px-3 py-1 bg-zinc-50 border border-zinc-200 rounded-full text-[10px] font-bold text-zinc-500 shadow-sm">
+                                  {timeLabel}
+                                </span>
+                              </div>
+                            )}
+                            <div
+                              ref={(el) => (messageRefs.current[msg._id || msg.id] = el)}
+                              className={`group flex flex-col ${isSender ? "items-end" : "items-start"} ${marginTopClass}`}
+                            >
+                              <div className="relative max-w-[85%] sm:max-w-[400px]">
                               {msg.replied_message && (
                                 <div className={`mb-1 px-3 py-1.5 border-l-2 border-zinc-300 bg-zinc-50/50 text-[11px] text-zinc-500 truncate`}>
                                   <span className="font-bold mr-1">{msg.replied_message.sender_id === user?._id ? user?.full_name : selectedConv.other_user?.full_name}:</span>
@@ -1316,6 +1376,7 @@ export default function MessagesPage() {
                               )}
                             </div>
                           </div>
+                          </React.Fragment>
                         );
                       })
                     )}
@@ -1324,34 +1385,69 @@ export default function MessagesPage() {
                 </div>
 
                 {showSharedSidebar && (
-                  <div className="w-64 border-l border-zinc-200 p-4 bg-zinc-50/50 flex flex-col shrink-0 overflow-y-auto">
-                    <span className="text-[10px] font-bold text-black uppercase tracking-wider mb-3">Tệp tin chia sẻ</span>
-                    <div className="space-y-3">
-                      {sharedAttachments.length > 0 ? (
-                        sharedAttachments.map((att) => (
-                          <div key={att.id} className="p-2 border border-zinc-200 bg-white">
-                            {att.type === "image" ? (
-                              <div className="flex flex-col gap-1.5">
-                                <img src={att.url.startsWith("http") ? att.url : `${API_URL}/storage/${att.url}`} className="w-full h-24 object-cover" />
-                                <span className="text-[8px] font-mono text-zinc-400">Ảnh gửi lúc: {new Date(att.created_at).toLocaleDateString()}</span>
+                  <>
+                    <div className="absolute inset-0 z-20" onClick={() => setShowSharedSidebar(false)} />
+                    <div className="absolute right-4 top-4 bottom-4 w-[280px] border border-zinc-200 p-4 bg-white/95 backdrop-blur-md flex flex-col shrink-0 overflow-y-auto z-30 shadow-sm transition-all rounded-2xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-bold text-black uppercase tracking-wider">Tệp tin chia sẻ</span>
+                        <button onClick={() => setShowSharedSidebar(false)} className="text-zinc-400 hover:text-black p-1.5 rounded-full hover:bg-zinc-100 transition-colors">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {sharedAttachments.length > 0 ? (
+                          sharedAttachments.map((att) => {
+                            const isDoc = att.content && att.content.includes("](/truyen/");
+                            let parsedTitle = att.content;
+                            let docUrl = null;
+                            if (isDoc) {
+                              const match = att.content.match(/\[(.*?)\]\((.*?)\)/);
+                              if (match) {
+                                parsedTitle = match[1];
+                                docUrl = match[2];
+                              }
+                            }
+                            return (
+                              <div
+                                key={att.id || att._id}
+                                onClick={() => {
+                                  if (att.image_url) {
+                                    window.open(att.image_url.startsWith("http") ? att.image_url : `${API_URL}/storage/${att.image_url}`, '_blank');
+                                  } else if (docUrl) {
+                                    if (docUrl.startsWith("http") || docUrl.startsWith("/")) window.open(docUrl, '_blank');
+                                    else window.open(`${API_URL}/storage/${docUrl}`, '_blank');
+                                  } else if (att.audio_url) {
+                                    window.open(`${API_URL}/storage/${att.audio_url}`, '_blank');
+                                  }
+                                }}
+                                className="p-2 border border-zinc-200 bg-white hover:border-black cursor-pointer transition-colors"
+                              >
+                                {att.image_url ? (
+                                  <div className="flex flex-col gap-1.5">
+                                    <img src={att.image_url.startsWith("http") ? att.image_url : `${API_URL}/storage/${att.image_url}`} className="w-full h-24 object-cover" />
+                                    <span className="text-[8px] font-mono text-zinc-400">Ảnh gửi lúc: {new Date(att.created_at).toLocaleDateString()}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-xs font-semibold text-black truncate">{parsedTitle || "Tài liệu đính kèm"}</span>
+                                    <span className="text-[8px] font-mono text-zinc-400">
+                                      {isDoc ? "Tài liệu sáng tác" : (att.audio_url ? "Tin nhắn thoại" : "Tài liệu đính kèm")}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                            ) : (
-                              <div className="flex flex-col gap-1">
-                                <span className="text-xs font-semibold text-black truncate">{att.content}</span>
-                                <span className="text-[8px] font-mono text-zinc-400">Tài liệu đính kèm</span>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-zinc-400 text-center py-6">Chưa có tệp tin nào được chia sẻ</p>
-                      )}
+                            );
+                          })
+                        ) : (
+                          <p className="text-xs text-zinc-400 text-center py-6">Chưa có tệp tin nào được chia sẻ</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
 
-              <div className="p-4 border-t border-zinc-200 bg-white shrink-0">
+              <div className="p-4 bg-white border border-zinc-200 rounded-2xl shadow-sm shrink-0 z-10 relative">
                 {isBlocked && (
                   <div className="mb-3 p-2 border border-zinc-200 bg-zinc-50 text-xs text-zinc-500 text-center font-medium">
                     Liên lạc đã bị khóa. Không thể truyền tin.
