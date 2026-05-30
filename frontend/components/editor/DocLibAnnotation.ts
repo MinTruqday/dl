@@ -1,0 +1,127 @@
+import { API, InlineTool } from "@editorjs/editorjs";
+
+export default class DocLibAnnotation implements InlineTool {
+  private api: API;
+  private button: HTMLButtonElement | null = null;
+  private _state: boolean = false;
+  private tooltipInput: HTMLInputElement | null = null;
+  private spanTooltip: HTMLElement | null = null;
+
+  static get isInline() { return true; }
+  static get title() { return "DocLib Annotation"; }
+  
+  get state() { return this._state; }
+  set state(s: boolean) {
+      this._state = s;
+      if (this.button) {
+          this.button.classList.toggle(this.api.styles.inlineToolButtonActive, s);
+      }
+  }
+
+  constructor({ api }: { api: API }) {
+    this.api = api;
+  }
+
+  render() {
+    this.button = document.createElement("button");
+    this.button.type = "button";
+    this.button.classList.add(this.api.styles.inlineToolButton);
+    this.button.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+    
+    if (!document.getElementById('doclib-annotation-styles')) {
+        const style = document.createElement('style');
+        style.id = 'doclib-annotation-styles';
+        style.innerHTML = `
+            .cdx-annotation { background-color: rgba(255, 212, 0, 0.4); border-bottom: 2px solid #ffd400; padding: 2px 0; border-radius: 2px; position: relative; }
+            .cdx-annotation:hover::after { content: attr(data-text); position: absolute; left: 0; background: #333; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 12px; z-index: 100; top: 100%; margin-top: 5px; white-space: nowrap; pointer-events: none; }
+        `;
+        document.head.appendChild(style);
+    }
+    return this.button;
+  }
+
+  surround(range: Range) {
+    if (this.state) {
+      this.unwrap(range);
+    } else {
+      this.wrap(range);
+    }
+  }
+
+  wrap(range: Range) {
+    const selectedText = range.extractContents();
+    this.spanTooltip = document.createElement('span');
+    this.spanTooltip.classList.add('cdx-annotation');
+    this.spanTooltip.appendChild(selectedText);
+    range.insertNode(this.spanTooltip);
+    this.api.selection.expandToTag(this.spanTooltip);
+  }
+
+  unwrap(range: Range) {
+    this.spanTooltip = this.api.selection.findParentTag('SPAN', 'cdx-annotation');
+    if (!this.spanTooltip) return;
+    const text = range.extractContents();
+    this.spanTooltip.remove();
+    range.insertNode(text);
+  }
+
+  checkState() {
+    this.spanTooltip = this.api.selection.findParentTag('SPAN', 'cdx-annotation');
+    this.state = !!this.spanTooltip;
+    if (this.state) this.showActions();
+    else this.hideActions();
+    return this.state;
+  }
+
+  renderActions() {
+    this.spanTooltip = this.api.selection.findParentTag('SPAN', 'cdx-annotation');
+    this.tooltipInput = document.createElement('input');
+    this.tooltipInput.placeholder = 'Thêm chú thích...';
+    this.tooltipInput.classList.add(this.api.styles.input);
+    this.tooltipInput.style.display = 'block';
+    this.tooltipInput.style.width = '100%';
+    this.tooltipInput.style.boxSizing = 'border-box';
+    this.tooltipInput.style.padding = '5px 10px';
+    this.tooltipInput.style.border = '1px solid #e1e1e1';
+    this.tooltipInput.style.marginTop = '5px';
+    
+    if (this.spanTooltip && this.spanTooltip.dataset.text) {
+      this.tooltipInput.value = this.spanTooltip.dataset.text;
+    }
+    this.tooltipInput.hidden = true;
+    return this.tooltipInput;
+  }
+
+  showActions() {
+    if (this.tooltipInput) {
+        this.tooltipInput.hidden = false;
+        setTimeout(() => this.tooltipInput!.focus(), 50);
+        
+        this.api.listeners.on(this.tooltipInput, 'keydown', (e: any) => {
+          if (e.key === 'Enter') {
+            if (this.spanTooltip) {
+                this.spanTooltip.dataset.text = this.tooltipInput!.value;
+            }
+            this.closeToolbar();
+          }
+        }, false);
+    }
+  }
+
+  hideActions() {
+    if (this.tooltipInput) this.tooltipInput.hidden = true;
+  }
+
+  closeToolbar() {
+    const toolbar = document.querySelector('.ce-inline-toolbar--showed');
+    if (toolbar) toolbar.classList.remove('ce-inline-toolbar--showed');
+  }
+
+  static get sanitize() {
+    return {
+      span: () => {
+        return { class: true, 'data-text': true };
+      }
+    };
+  }
+}

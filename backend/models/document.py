@@ -34,7 +34,7 @@ class DocumentBase(BaseModel):
     cover_url: Optional[str] = None
     file_url: Optional[str] = None
     tags: List[str] = []
-    content: Optional[str] = None
+    content: Optional[Any] = None
     content_format: Optional[DocumentContentFormat] = DocumentContentFormat.LATEX
     price_dl: int = 0
     visibility: str = "public"
@@ -53,12 +53,12 @@ class DocumentBase(BaseModel):
     drm_settings: Optional[dict] = None
     publish_at: Optional[datetime] = None
     is_nsfw: Optional[bool] = None
-    draft_content: Optional[str] = None
+    draft_content: Optional[Any] = None
     toc: List[dict] = []
     reading_time_minutes: int = 0
 
 class DocumentContentUpdate(BaseModel):
-    content: str
+    content: Any
     content_format: str
 
 class DocumentUpdate(BaseModel):

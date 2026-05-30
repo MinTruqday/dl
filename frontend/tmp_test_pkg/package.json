@@ -1,0 +1,20 @@
+{
+  "name": "tmp_test_pkg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@editorjs/delimiter": "^1.4.2",
+    "@editorjs/inline-code": "^1.5.2",
+    "@editorjs/marker": "^1.4.0",
+    "@sotaproject/strikethrough": "^1.0.1",
+    "editor-js-alignment-tune": "^1.0.1"
+  }
+}

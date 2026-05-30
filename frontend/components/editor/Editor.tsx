@@ -77,6 +77,8 @@ class PremiumTune {
   save() { return this.data; }
 }
 
+
+
 export default function Editor({
   documentId,
   initialContent,
@@ -159,102 +161,102 @@ export default function Editor({
 
     const init = async () => {
       const EditorJSModule = (await import("@editorjs/editorjs")).default;
-      const Header = (await import("@editorjs/header")).default;
-      const Paragraph = (await import("@editorjs/paragraph")).default;
-      const ListTool = (await import("@editorjs/list")).default;
-      const Quote = (await import("@editorjs/quote")).default;
-      const Warning = (await import("@editorjs/warning")).default;
-      const Marker = (await import("@editorjs/marker")).default;
-      const CodeTool = (await import("@editorjs/code")).default;
-      const Delimiter = (await import("@editorjs/delimiter")).default;
-      const InlineCode = (await import("@editorjs/inline-code")).default;
-      const Embed = (await import("@editorjs/embed")).default;
-      const Table = (await import("@editorjs/table")).default;
-      const SimpleImage = (await import("@editorjs/simple-image")).default;
-      const RawTool = (await import("@editorjs/raw")).default;
-      const UnderlineTool = (await import("@editorjs/underline")).default;
-      const Checklist = (await import("@editorjs/checklist")).default;
-      const LinkTool = (await import("@editorjs/link")).default;
-      const Strikethrough = (await import("@sotaproject/strikethrough")).default;
-      const AlignmentTune = (await import("editor-js-alignment-tune")).default;
-      const TextColor = (await import("editorjs-text-color-plugin")).default;
-      const Undo = (await import("editorjs-undo")).default;
-      const DragDrop = (await import("editorjs-drag-drop")).default;
-      const Columns = (await import("@calumk/editorjs-columns")).default;
-      const Layout = (await import("editorjs-layout")).default;
-      const AttachesTool = (await import("@editorjs/attaches")).default;
-      const Tooltip = (await import("editorjs-tooltip")).default;
-      const Alert = (await import("editorjs-alert")).default;
-      const Button = (await import("editorjs-button")).default;
-      const MermaidTool = (await import("editorjs-mermaid")).default;
-      const LatexTool = (await import("editorjs-latex")).default;
-      const IndentTune = (await import("editorjs-indent-tune")).default;
-      const Spoiler = (await import("editorjs-inline-spoiler-tool")).default;
-      const ChangeCase = (await import("editorjs-change-case")).default;
-      const TextVariantTune = (await import("@editorjs/text-variant-tune")).default;
-      const NestedList = (await import("@editorjs/nested-list")).default;
-      const Codebox = (await import("@bomdi/codebox")).default;
-      const NestedChecklist = (await import("@calumk/editorjs-nested-checklist")).default;
-      const Anchor = (await import("@coolbytes/editorjs-anchor")).default;
-      const GroupImage = (await import("@cychann/editorjs-group-image")).default;
-      const AdvancedImage = (await import("@editorjs/image")).default;
-      const LinkAutocomplete = (await import("@editorjs/link-autocomplete")).default;
-      const Audio = (await import("@furison-tech/editorjs-audio")).default;
-      const TextStyle = (await import("@skchawala/editorjs-text-style")).default;
-      const Video = (await import("@weekwood/editorjs-video")).default;
-      const Annotation = (await import("editorjs-annotation")).default;
-      const Chart = (await import("editorjs-chart")).default;
-      const Gallery = (await import("editorjs-gallery")).default;
-      const Hyperlink = (await import("editorjs-hyperlink")).default;
-      const TelegramPost = (await import("editorjs-telegram-post")).default;
-      const Title = (await import("title-editorjs")).default;
-      const StyleTune = (await import("editorjs-style")).default;
-      const Codecup = (await import("@calumk/editorjs-codecup")).default;
-      const ParagraphLinebreakable = (await import("@calumk/editorjs-paragraph-linebreakable")).default;
-      const CoolbytesDelimiter = (await import("@coolbytes/editorjs-delimiter")).default;
-      const CychannQuote = (await import("@cychann/editorjs-quote")).default;
-      const AudioPlayer = (await import("editorjs-audio-player")).default;
-      const ChartJS = (await import("editorjs-chartjs")).default;
-      const CollapsibleBlock = (await import("editorjs-collapsible-block")).default;
-      const ColorPicker = (await import("editorjs-color-picker")).default;
-      const EditorjsComment = (await import("editorjs-comment")).default;
-      const ImageCropResize = (await import("editorjs-image-crop-resize")).default;
-      const Inline = (await import("editorjs-inline")).default;
-      const InlineHotkey = (await import("editorjs-inline-hotkey")).default;
-      const InlineImage = (await import("editorjs-inline-image")).default;
-      const InlineTemplate = (await import("editorjs-inline-template")).default;
-      const InlineTool = (await import("editorjs-inline-tool")).default;
-      const MultiBlockSelection = (await import("editorjs-multiblock-selection-plugin")).default;
-      const Notice = (await import("editorjs-notice")).default;
-      const Footnotes = (await import("editorjs-footnotes")).default;
-      const BreakLine = (await import("editorjs-break-line")).default;
-      const Gist = (await import("editorjs-github-gist-plugin")).default;
-      const MathTool = (await import("editorjs-math")).default;
-      const Personality = (await import("@editorjs/personality")).default;
-      const Carousel = (await import("editorjs-carousel")).default;
-      const Quiz = (await import("editorjs-quiz")).default;
-      const Superscript = (await import("editorjs-superscript")).default;
-      const Subscript = (await import("editorjs-subscript")).default;
-      const CodeMirror = (await import("editorjs-codemirror")).default;
-      const ToggleBlock = (await import("editorjs-toggle-block")).default;
-      const AceCodeEditor = (await import("ace-code-editorjs")).default;
-      const RxpmCode = (await import("@rxpm/editor-js-code")).default;
-      const SimpleImageTool = (await import("simple-image-editorjs")).default;
+      const DocLibHeader = (await import("./DocLibHeader")).default;
+      const DocLibParagraph = (await import("./DocLibParagraph")).default;
+      const DocLibList = (await import("./DocLibList")).default;
+      const DocLibQuote = (await import("./DocLibQuote")).default;
+      const DocLibWarning = (await import("./DocLibWarning")).default;
+      const DocLibMarker = (await import("./DocLibMarker")).default;
+      const DocLibCode = (await import("./DocLibCode")).default;
+      const DocLibDelimiter = (await import("./DocLibDelimiter")).default;
+      const DocLibInlineCode = (await import("./DocLibInlineCode")).default;
+      const DocLibEmbed = (await import("./DocLibEmbed")).default;
+      const DocLibTable = (await import("./DocLibTable")).default;
+      const DocLibSimpleImage = (await import("./DocLibSimpleImage")).default;
+      const DocLibRaw = (await import("./DocLibRaw")).default;
+      const DocLibUnderline = (await import("./DocLibUnderline")).default;
+      const DocLibChecklist = (await import("./DocLibChecklist")).default;
+      const DocLibLinkPreview = (await import("./DocLibLinkPreview")).default;
+      const DocLibStrikethrough = (await import("./DocLibStrikethrough")).default;
+      const DocLibAlignmentTune = (await import("./DocLibAlignment")).default;
+      const DocLibColumns = (await import("./DocLibColumns")).default;
+      const DocLibFile = (await import("./DocLibFile")).default;
+      const DocLibTooltip = (await import("./DocLibTooltip")).default;
+      const DocLibAlert = (await import("./DocLibAlert")).default;
+      const DocLibButton = (await import("./DocLibButton")).default;
+      const DocLibMermaid = (await import("./DocLibMermaid")).default;
+
+      const DocLibLatex = (await import("./DocLibLatex")).default;
+      const DocLibColorPicker = (await import("./DocLibTextColor")).default;
+      const DocLibIndentTune = (await import("./DocLibIndent")).default;
+      const DocLibSpoiler = (await import("./DocLibSpoiler")).default;
+      const DocLibChangeCase = (await import("./DocLibChangeCase")).default;
+      const DocLibTextVariant = (await import("./DocLibTextVariant")).default;
+      const DocLibCodeBox = (await import("./DocLibCodeBox")).default;
+      const DocLibAnchor = (await import("./DocLibAnchor")).default;
+      const DocLibGroupImage = (await import("./DocLibGroupImage")).default;
+      const DocLibImage = (await import("./DocLibImage")).default;
+      const DocLibAudio = (await import("./DocLibAudio")).default;
+      const DocLibTextStyle = (await import("./DocLibTextStyle")).default;
+      const DocLibVideo = (await import("./DocLibVideo")).default;
+      const DocLibAnnotation = (await import("./DocLibAnnotation")).default;
+      const DocLibChart = (await import("./DocLibChart")).default;
+      const DocLibGallery = (await import("./DocLibGallery")).default;
+      const DocLibHyperlink = (await import("./DocLibHyperlink")).default;
+      const DocLibTelegramPost = (await import("./DocLibTelegramPost")).default;
+      const DocLibTitle = (await import("./DocLibTitle")).default;
+      const DocLibStyleTune = (await import("./DocLibStyleTune")).default;
+      const DocLibNestedChecklist = (await import("./DocLibNestedChecklist")).default;
+
+      const DocLibAudioPlayer = (await import("./DocLibAudioPlayer")).default;
+
+      const DocLibComment = (await import("./DocLibComment")).default;
+      const DocLibImageCrop = (await import("./DocLibImageCrop")).default;
+      const DocLibTemplate = (await import("./DocLibTemplate")).default;
+      const DocLibNotice = (await import("./DocLibNotice")).default;
+      const DocLibFootnote = (await import("./DocLibFootnote")).default;
+      const DocLibBreakLine = (await import("./DocLibBreakLine")).default;
+      const DocLibGist = (await import("./DocLibGist")).default;
+
+      const DocLibPersonality = (await import("./DocLibPersonality")).default;
+      const DocLibCarousel = (await import("./DocLibCarousel")).default;
+      const DocLibQuiz = (await import("./DocLibQuiz")).default;
+      const DocLibSuperscript = (await import("./DocLibSuperscript")).default;
+      const DocLibSubscript = (await import("./DocLibSubscript")).default;
+      const DocLibToggle = (await import("./DocLibToggle")).default;
       
-      const AiText = (await import("@alkhipce/editorjs-aitext")).default;
-      const HeaderWithAlignment = (await import("editorjs-header-with-alignment")).default;
-      const HeaderWithAnchor = (await import("editorjs-header-with-anchor")).default;
-      const ParagraphWithAlignment = (await import("editorjs-paragraph-with-alignment")).default;
+      const DocLibAiText = (await import("./DocLibAiText")).default;
+
       
-      const DrawingTool = (await import("@blade47/editorjs-drawing-tool")).default;
-      const GifTool = (await import("@jingjunma/editorjs-gif")).default;
-      const ImageWithLink = (await import("editorjs-image-with-link")).default;
-      const Flipbox = (await import("skm-flipbox")).default;
+      const DocLibDrawing = (await import("./DocLibDrawing")).default;
+      const DocLibGif = (await import("./DocLibGif")).default;
+      const DocLibImageWithLink = (await import("./DocLibImageWithLink")).default;
+      const DocLibFlipbox = (await import("./DocLibFlipbox")).default;
       
-      const AdvancedTable = (await import("editorjs-table")).default;
+      const DocLibNestedList = (await import("./DocLibNestedList")).default;
+      const DocLibLinkSearch = (await import("./DocLibLinkSearch")).default;
+      const DocLibTimeline = (await import("./DocLibTimeline")).default;
+      const DocLibPricing = (await import("./DocLibPricing")).default;
+      const DocLibTestimonial = (await import("./DocLibTestimonial")).default;
+      const DocLibMath = (await import("./DocLibMath")).default;
+      const DocLibKanban = (await import("./DocLibKanban")).default;
+      const DocLibCodeMirror = (await import("./DocLibCodeMirror")).default;
+      const DocLibUndo = (await import("./DocLibUndo")).default;
+      const DocLibDragDrop = (await import("./DocLibDragDrop")).default;
+      const DocLibMultiBlockSelection = (await import("./DocLibMultiBlockSelection")).default;
       
-      const CodeFlask = (await import("@calumk/editorjs-codeflask")).default;
-      const TgSpoiler = (await import("@iizotikov/editor-js-tg-spoiler")).default;
+      const DocLibCallout = (await import("./DocLibCallout")).default;
+      const DocLibBookmark = (await import("./DocLibBookmark")).default;
+      const DocLibCountdown = (await import("./DocLibCountdown")).default;
+      const DocLibProgressBar = (await import("./DocLibProgressBar")).default;
+      const DocLibSteps = (await import("./DocLibSteps")).default;
+      const DocLibPoll = (await import("./DocLibPoll")).default;
+      const DocLibIframeEmbed = (await import("./DocLibIframeEmbed")).default;
+      const DocLibDivider = (await import("./DocLibDivider")).default;
+      const DocLibBadge = (await import("./DocLibBadge")).default;
+      const DocLibKeyboard = (await import("./DocLibKeyboard")).default;
+      
+      
       if (cancelled) {
         holderDiv.remove();
         return;
@@ -276,132 +278,121 @@ export default function Editor({
 
       const tools: Record<string, any> = {};
       
-      // --- BLOCK TUNES ---
       tools.premium = { class: PremiumTune };
-      const commonTunes = ['premium'];
-      if (AlignmentTune) { tools.alignment = { class: AlignmentTune }; commonTunes.push('alignment'); }
-      if (IndentTune) { 
-        tools.indent = { 
-          class: IndentTune,
-          config: {
-            tuneName: 'indent',
-            multiblock: true,
-            indentSize: 24,
-            maxIndent: 10,
-            orientation: 'horizontal'
-          }
-        }; 
-        commonTunes.push('indent'); 
-      }
+      const commonTunes = ['textVariant', 'styleTune'];
+      if (DocLibAlignmentTune) { tools.alignment = { class: DocLibAlignmentTune }; commonTunes.push('alignment'); }
+      tools.indent = { class: DocLibIndentTune }; 
+      commonTunes.push('indent');
       if (StyleTune) { tools.style = StyleTune; commonTunes.push('style'); }
       
-      if (Notice) { tools.notice = Notice; commonTunes.push('notice'); }
-      if (Anchor) { tools.anchor = { class: Anchor, config: { theme: 'light' } }; commonTunes.push('anchor'); }
+      if (DocLibNotice) { tools.notice = DocLibNotice; commonTunes.push('notice'); }
+      if (DocLibAnchor) { tools.anchor = { class: DocLibAnchor, config: { theme: 'light' } }; commonTunes.push('anchor'); }
       const paragraphTunes = [...commonTunes];
-      if (TextVariantTune) { tools.textVariant = TextVariantTune; paragraphTunes.push('textVariant'); }
-      const indentTunes = IndentTune ? ['indent'] : [];
-      const alignTunes = AlignmentTune ? ['alignment'] : [];
-      // Text and typography
-      if (Title) tools.title = { class: Title, inlineToolbar: true };
-      if (Header) tools.header = { class: Header, inlineToolbar: true, config: { levels: [1, 2, 3, 4, 5, 6], defaultLevel: 1 }, tunes: commonTunes };
-      if (ParagraphLinebreakable) tools.paragraph = { class: ParagraphLinebreakable, inlineToolbar: true, tunes: paragraphTunes };
-      if (Paragraph) tools.originalParagraph = { class: Paragraph, inlineToolbar: true };
-      if (CychannQuote) tools.quote = { class: CychannQuote, inlineToolbar: true, tunes: alignTunes };
-      if (Quote) tools.originalQuote = { class: Quote, inlineToolbar: true };
-      if (Warning) tools.warning = Warning;
-      if (Alert) tools.alert = { class: Alert, inlineToolbar: true };
-      if (CoolbytesDelimiter) tools.delimiter = CoolbytesDelimiter;
-      if (Delimiter) tools.originalDelimiter = Delimiter;
-      if (AiText) tools.aiText = AiText;
-      if (HeaderWithAlignment) tools.headerWithAlignment = HeaderWithAlignment;
-      if (HeaderWithAnchor) tools.headerWithAnchor = HeaderWithAnchor;
-      if (ParagraphWithAlignment) tools.paragraphWithAlignment = ParagraphWithAlignment;
-      if (ToggleBlock) tools.toggle = { class: ToggleBlock, inlineToolbar: true };
-      if (BreakLine) tools.breakLine = { class: BreakLine, inlineToolbar: true };
-      
-      // Lists
-      if (ListTool) tools.list = { class: ListTool, inlineToolbar: true, tunes: indentTunes };
-      if (NestedList) tools.nestedList = { class: NestedList, inlineToolbar: true, tunes: indentTunes };
-      if (Checklist) tools.checklist = { class: Checklist, inlineToolbar: true, tunes: indentTunes };
-      if (NestedChecklist) tools.nestedChecklist = { class: NestedChecklist, inlineToolbar: true, tunes: indentTunes };
-      
-      // Media and embed
-      if (AdvancedImage) tools.image = AdvancedImage;
-      if (SimpleImageTool) tools.simpleImageTool = SimpleImageTool;
-      if (SimpleImage) tools.originalSimpleImage = SimpleImage;
-      if (ImageCropResize) tools.imageCrop = ImageCropResize;
-      if (InlineImage) tools.inlineImage = InlineImage;
-      if (GroupImage) tools.groupImage = GroupImage;
-      if (Gallery) tools.gallery = Gallery;
-      if (Carousel) tools.carousel = { class: Carousel };
-      if (AttachesTool) tools.attaches = { class: AttachesTool };
-      if (Embed) tools.embed = Embed;
-      if (MermaidTool) tools.mermaid = MermaidTool;
-      if (DrawingTool) tools.drawing = DrawingTool;
-      if (GifTool) tools.gif = GifTool;
-      if (ImageWithLink) tools.imageWithLink = ImageWithLink;
-      if (Flipbox) tools.flipbox = Flipbox;
-      if (LatexTool) tools.latex = LatexTool;
-      if (Audio) tools.audio = Audio;
-      if (AudioPlayer) tools.audioPlayer = AudioPlayer;
-      if (Video) tools.video = { class: Video, config: { player: { pip: false } } };
-      if (TelegramPost) tools.telegramPost = TelegramPost;
-      
-      // Code
-      if (CodeTool) tools.code = CodeTool;
-      if (RawTool) tools.raw = RawTool;
-      if (CodeMirror) tools.codeMirror = CodeMirror;
-      if (Codebox) tools.codebox = Codebox;
-      if (CodeFlask) tools.codeFlask = CodeFlask;
-      if (AceCodeEditor) tools.aceCode = AceCodeEditor;
-      if (RxpmCode) tools.rxpmCode = RxpmCode;
-      if (Codecup) tools.codecup = Codecup;
-      if (Gist) tools.gist = Gist;
-      
-      // Table
-      if (Table) tools.table = Table;
-      if (AdvancedTable) tools.advancedTable = AdvancedTable;
+      if (DocLibStyleTune) tools.styleTune = DocLibStyleTune;
+      const indentTunes = ['indent'];
+      const alignTunes = DocLibAlignmentTune ? ['alignment'] : [];
 
-      // Chart
-      if (Chart) tools.chart = Chart;
-      if (ChartJS) tools.chartJS = ChartJS;
+      if (DocLibTitle) tools.title = DocLibTitle;
+      if (DocLibHeader) {
+        tools.header = { class: DocLibHeader, inlineToolbar: true, config: { placeholder: 'Nhập tiêu đề...', levels: [1, 2, 3, 4, 5, 6], defaultLevel: 2 }, tunes: commonTunes };
+      }
       
-      // Button
-      if (Button) tools.button = { class: Button };
+      if (DocLibParagraph) tools.paragraph = { class: DocLibParagraph, inlineToolbar: true, tunes: paragraphTunes };
+      if (DocLibQuote) tools.originalQuote = { class: DocLibQuote, inlineToolbar: true };
+      if (DocLibWarning) tools.warning = DocLibWarning;
+      if (DocLibAlert) tools.alert = { class: DocLibAlert, inlineToolbar: true };
+      if (DocLibDelimiter) tools.originalDelimiter = DocLibDelimiter;
+      if (DocLibAiText) tools.aiText = DocLibAiText;
+
+      if (DocLibTable) tools.table = { class: DocLibTable, inlineToolbar: true };
+      if (DocLibToggle) tools.toggle = { class: DocLibToggle, inlineToolbar: true };
+      if (DocLibBreakLine) tools.breakLine = { class: DocLibBreakLine, inlineToolbar: true };
       
-      // Layout
-      if (CollapsibleBlock) tools.collapsible = { class: CollapsibleBlock, inlineToolbar: true };
-      if (Columns) tools.columns = { class: Columns, config: { tools: { header: Header, paragraph: ParagraphLinebreakable || Paragraph, list: NestedList || ListTool, image: AdvancedImage || SimpleImage, quote: CychannQuote || Quote } } };
-      if (Layout) tools.layout = { class: Layout, config: { tools: { header: Header, paragraph: ParagraphLinebreakable || Paragraph, list: NestedList || ListTool, image: AdvancedImage || SimpleImage, quote: CychannQuote || Quote } } };
+      if (DocLibList) tools.list = { class: DocLibList, inlineToolbar: true, tunes: indentTunes };
+      if (DocLibChecklist) tools.checklist = { class: DocLibChecklist, inlineToolbar: true, tunes: indentTunes };
+      if (DocLibNestedChecklist) tools.nestedChecklist = { class: DocLibNestedChecklist, inlineToolbar: true, tunes: indentTunes };
       
-      // --- OTHERS ---
-      if (Footnotes) tools.footnotes = Footnotes;
-      if (MathTool) tools.math = MathTool;
-      if (Personality) tools.personality = { class: Personality };
-      if (Quiz) tools.quiz = Quiz;
+      if (DocLibImage) tools.image = { class: DocLibImage, config: { endpoints: { byFile: '/api/uploadFile', byUrl: '/api/fetchUrl' } } };
+
+      if (DocLibImageCrop) tools.imageCrop = DocLibImageCrop;
+      if (DocLibGroupImage) tools.groupImage = DocLibGroupImage;
+      if (DocLibGallery) tools.gallery = DocLibGallery;
+      if (DocLibCarousel) tools.carousel = DocLibCarousel;
+      if (DocLibFile) tools.attaches = { class: DocLibFile };
+      if (DocLibEmbed) tools.embed = DocLibEmbed;
+      if (DocLibMermaid) tools.mermaid = DocLibMermaid;
+      if (DocLibDrawing) tools.drawing = DocLibDrawing;
+      if (DocLibGif) tools.gif = DocLibGif;
+      if (DocLibImageWithLink) tools.imageWithLink = DocLibImageWithLink;
+      if (DocLibFlipbox) tools.flipbox = DocLibFlipbox;
+      if (DocLibLatex) {
+        tools.latex = DocLibLatex;
+        tools.monacoLatex = DocLibLatex;
+      }
+      if (DocLibAudio) tools.audio = DocLibAudio;
+      if (DocLibAudioPlayer) tools.audioPlayer = DocLibAudioPlayer;
+      if (DocLibVideo) tools.video = DocLibVideo;
+      if (DocLibTelegramPost) tools.telegramPost = DocLibTelegramPost;
       
-      // Inline Tools
-      if (Marker) tools.marker = Marker;
-      if (InlineCode) tools.inlineCode = InlineCode;
-      if (UnderlineTool) tools.underline = UnderlineTool;
-      if (LinkAutocomplete) tools.linkTool = LinkAutocomplete;
-      if (Hyperlink) tools.hyperlink = { class: Hyperlink };
-      if (Spoiler) tools.spoiler = { class: Spoiler };
-      if (InlineTool) tools.inlineTool = InlineTool;
-      if (Inline) tools.inline = Inline;
-      if (InlineTemplate) tools.inlineTemplate = InlineTemplate;
-      if (ChangeCase) tools.changeCase = { class: ChangeCase };
-      if (Tooltip) tools.tooltip = { class: Tooltip };
-      if (Strikethrough) tools.strikethrough = Strikethrough;
-      if (TextColor) tools.textColor = { class: TextColor, config: { defaultColor: '#FF1300', type: 'text', colorCollections: ['#FF1300','#EC7878','#9C27B0','#673AB7','#3F51B5','#0070FF','#03A9F4','#00BCD4','#4CAF50','#8BC34A','#CDDC39', '#FFF'] } };
-      if (ColorPicker) tools.colorPicker = { class: ColorPicker, config: { defaultColor: '#FF1300', type: 'marker', colorCollections: ['#FF1300','#EC7878','#9C27B0','#673AB7','#3F51B5','#0070FF','#03A9F4','#00BCD4','#4CAF50','#8BC34A','#CDDC39', '#FFF'] } };
-      if (Annotation) tools.annotation = Annotation;
-      if (EditorjsComment) tools.comment = EditorjsComment;
-      if (InlineHotkey) tools.inlineHotkey = InlineHotkey;
-      if (TgSpoiler) tools.tgSpoiler = TgSpoiler;
-      if (Superscript) tools.superscript = Superscript;
-      if (Subscript) tools.subscript = Subscript;
-      if (TextStyle) tools.textStyle = TextStyle;
+      if (DocLibCode) tools.code = DocLibCode;
+      if (DocLibRaw) tools.raw = DocLibRaw;
+      if (DocLibCodeBox) tools.codeBox = DocLibCodeBox;
+      if (DocLibCodeMirror) tools.codeMirror = DocLibCodeMirror;
+      if (DocLibGist) tools.gist = DocLibGist;
+    
+
+
+      if (DocLibChart) tools.chart = DocLibChart;
+      
+
+      if (DocLibButton) tools.button = DocLibButton;
+      
+
+      if (DocLibColumns) tools.columns = DocLibColumns;
+      
+      if (DocLibNestedList) tools.nestedList = { class: DocLibNestedList, inlineToolbar: true };
+      if (DocLibTimeline) tools.timeline = DocLibTimeline;
+      if (DocLibPricing) tools.pricing = DocLibPricing;
+      if (DocLibTestimonial) tools.testimonial = DocLibTestimonial;
+      if (DocLibMath) tools.math = DocLibMath;
+      if (DocLibKanban) tools.kanban = DocLibKanban;
+      
+      if (DocLibCallout) tools.callout = DocLibCallout;
+      if (DocLibBookmark) tools.bookmark = DocLibBookmark;
+      if (DocLibCountdown) tools.countdown = DocLibCountdown;
+      if (DocLibProgressBar) tools.progress = DocLibProgressBar;
+      if (DocLibSteps) tools.steps = DocLibSteps;
+      if (DocLibPoll) tools.poll = DocLibPoll;
+      if (DocLibIframeEmbed) tools.iframe = DocLibIframeEmbed;
+      if (DocLibDivider) tools.divider = { class: DocLibDivider, inlineToolbar: true };
+      
+
+      if (DocLibFootnote) tools.footnotes = DocLibFootnote;
+
+      if (DocLibPersonality) tools.personality = { class: DocLibPersonality, config: { endpoint: '/api/uploadFile' } };
+      if (DocLibQuiz) tools.quiz = DocLibQuiz;
+      
+
+      if (DocLibMarker) tools.marker = DocLibMarker;
+      if (DocLibInlineCode) tools.inlineCode = DocLibInlineCode;
+      if (DocLibUnderline) tools.underline = DocLibUnderline;
+      if (DocLibLinkPreview) tools.linkTool = DocLibLinkPreview;
+      if (DocLibLinkSearch) tools.linkSearch = DocLibLinkSearch;
+      if (DocLibBadge) tools.badge = DocLibBadge;
+      if (DocLibKeyboard) tools.keyboard = DocLibKeyboard;
+      if (DocLibHyperlink) tools.hyperlink = { class: DocLibHyperlink };
+      if (DocLibSpoiler) tools.spoiler = DocLibSpoiler;
+      if (DocLibChangeCase) tools.changeCase = DocLibChangeCase;
+      if (DocLibTooltip) tools.tooltip = { class: DocLibTooltip };
+      if (DocLibStrikethrough) tools.strikethrough = DocLibStrikethrough;
+      if (DocLibColorPicker) tools.textColor = { class: DocLibColorPicker, config: { type: 'text' } };
+      if (DocLibColorPicker) tools.colorPicker = { class: DocLibColorPicker, config: { type: 'marker' } };
+      if (DocLibAnnotation) tools.annotation = DocLibAnnotation;
+      if (DocLibComment) tools.comment = DocLibComment;
+      if (DocLibTemplate) tools.template = DocLibTemplate;
+      if (DocLibSuperscript) tools.superscript = DocLibSuperscript;
+      if (DocLibSubscript) tools.subscript = DocLibSubscript;
+      if (DocLibTextStyle) tools.textStyle = DocLibTextStyle;
       
       const editor = new EditorJSModule({
         holder: holderDiv,
@@ -409,13 +400,13 @@ export default function Editor({
         data,
         placeholder: "Bắt đầu soạn thảo",
         onReady: () => {
-          if (Undo) new Undo({ editor });
-          if (DragDrop) new DragDrop(editor);
-          if (MultiBlockSelection) new MultiBlockSelection(editor);
+          if (DocLibUndo) new DocLibUndo({ editor });
+          if (DocLibDragDrop) new DocLibDragDrop(editor);
+          if (DocLibMultiBlockSelection) new DocLibMultiBlockSelection(editor);
         },
         onChange: async () => {
           try {
-            setSaveStatus("Đang lưu...");
+            setSaveStatus("Đang lưu");
             const saved = await editor.save();
             const text = saved.blocks.map(b => b.data?.text || "").join(" ");
             const words = text.trim().split(/\s+/).length;
@@ -492,7 +483,7 @@ export default function Editor({
   const handleLatexChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setLocalText(val);
-    setSaveStatus("Đang lưu...");
+    setSaveStatus("Đang lưu");
     
     const words = val.trim().split(/\s+/).length;
     setStats(prev => ({ 
@@ -589,6 +580,8 @@ export default function Editor({
           latexCode += (b.data?.code || "") + "\n\n";
         } else if (b.type === "raw") {
           latexCode += (b.data?.html || "") + "\n\n";
+        } else if (b.type === "monacoLatex") {
+          latexCode += (b.data?.code || "") + "\n\n";
         }
       });
       
@@ -991,7 +984,7 @@ export default function Editor({
             <textarea
               value={localText}
               onChange={handleLatexChange}
-              placeholder="Nhập mã LaTeX tại đây..."
+              placeholder="Nhập mã LaTeX tại đây"
               className="w-full h-full p-12 bg-zinc-50 border-none outline-none resize-none font-mono text-sm leading-relaxed text-black"
             />
           ) : (
