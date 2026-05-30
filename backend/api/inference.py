@@ -48,3 +48,7 @@ async def translate_text(payload: dict, current_user: UserInDB = Depends(check_q
 @router.post("/tao-ma-nguon", response_model=APIResponse[Any])
 async def generate_code(payload: dict, current_user: UserInDB = Depends(check_quota)):
     return await proxy_post("tao-ma-nguon", payload, success_message="Tạo mã nguồn thành công")
+
+@router.post("/tao-noi-dung", response_model=APIResponse[Any])
+async def generate_text(payload: dict, current_user: UserInDB = Depends(check_quota)):
+    return await proxy_post("tao-noi-dung", payload, success_message="Tạo nội dung thành công")

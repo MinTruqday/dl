@@ -32,7 +32,7 @@ export default class DocLibDragDrop {
       const toolbar = document.querySelector('.ce-toolbar');
       if (!toolbar) return;
 
-      // We attach dragging events to the EditorJS native drag handle
+      
       document.addEventListener('mousedown', (e: MouseEvent) => {
           const target = e.target as HTMLElement;
           const dragHandle = target.closest('.ce-toolbar__settings-btn');
@@ -88,7 +88,7 @@ export default class DocLibDragDrop {
               return;
           }
           
-          // Execute Move
+          
           const blocks = Array.from(this.holder!.children).filter(c => c.classList.contains('ce-block'));
           const fromIndex = blocks.indexOf(this.draggedBlock);
           

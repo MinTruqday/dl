@@ -34,7 +34,7 @@ export default class DocLibGif implements BlockTool {
             .doclib-gif-container { position: relative; border-radius: 12px; overflow: hidden; display: inline-block; max-width: 100%; border: 4px solid #f1f5f9; line-height: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-gif-img { max-width: 100%; display: block; border-radius: 8px; }
             .doclib-gif-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 12px 4px 4px 4px; font-style: italic; }
-            .doclib-gif-caption:empty::before { content: 'Nhập chú thích ảnh GIF...'; color: #cbd5e1; pointer-events: none; }
+            .doclib-gif-caption:empty::before { content: 'Enter GIF caption'; color: #cbd5e1; pointer-events: none; }
             .doclib-gif-input-container { display: flex; align-items: center; gap: 8px; padding: 16px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; }
         `;
         document.head.appendChild(style);
@@ -67,7 +67,7 @@ export default class DocLibGif implements BlockTool {
           
           container.appendChild(img);
           
-          // Edit overlay
+          
           const overlay = document.createElement('div');
           overlay.style.position = 'absolute';
           overlay.style.top = '8px';
@@ -76,7 +76,7 @@ export default class DocLibGif implements BlockTool {
           overlay.style.transition = 'opacity 0.2s';
           
           const editBtn = document.createElement('button');
-          editBtn.innerText = 'Đổi GIF';
+          editBtn.innerText = 'Change GIF';
           editBtn.style.padding = '4px 12px';
           editBtn.style.borderRadius = '20px';
           editBtn.style.border = 'none';
@@ -102,11 +102,11 @@ export default class DocLibGif implements BlockTool {
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input);
           input.style.flexGrow = '1';
-          input.placeholder = 'Dán link Giphy (.gif) vào đây...';
+          input.placeholder = 'Paste Giphy link here';
 
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Chèn GIF';
+          btn.innerText = 'Insert GIF';
 
           const insert = () => {
             if (input.value) {

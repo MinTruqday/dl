@@ -43,7 +43,7 @@ export default class DocLibQuote implements BlockTool {
     this.wrapper.classList.add(this._CSS.wrapper);
     this.wrapper.classList.add(this._CSS.block);
     this.wrapper.style.textAlign = this.data.alignment;
-    // Styling matching original @editorjs/quote precisely
+    
     this.wrapper.style.margin = '20px 0';
     this.wrapper.style.padding = '10px 20px';
     this.wrapper.style.borderLeft = '3px solid #000';
@@ -54,7 +54,7 @@ export default class DocLibQuote implements BlockTool {
     text.classList.add(this._CSS.text);
     text.contentEditable = 'true';
     text.innerHTML = this.data.text;
-    text.dataset.placeholder = 'Quote...';
+    text.dataset.placeholder = 'Quote';
     text.style.outline = 'none';
 
     const caption = document.createElement('div');

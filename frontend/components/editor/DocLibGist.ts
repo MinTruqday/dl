@@ -63,7 +63,7 @@ export default class DocLibGist implements BlockTool {
       
       iframe.srcdoc = html;
       
-      // Auto-resize iframe hack
+      
       iframe.onload = () => {
           try {
               if (iframe.contentWindow?.document?.body) {
@@ -74,11 +74,11 @@ export default class DocLibGist implements BlockTool {
       
       this.wrapper.appendChild(iframe);
       
-      // Edit button
+      
       const editBtn = document.createElement('button');
       editBtn.classList.add('doclib-table-btn');
       editBtn.style.marginTop = '8px';
-      editBtn.innerText = 'Sửa Link Gist';
+      editBtn.innerText = 'Edit Gist Link';
       editBtn.addEventListener('click', () => {
           this.data.url = '';
           this.buildUI();
@@ -91,27 +91,27 @@ export default class DocLibGist implements BlockTool {
 
       const urlInput = document.createElement('input');
       urlInput.classList.add(this.api.styles.input, 'doclib-gist-input');
-      urlInput.placeholder = 'URL GitHub Gist (VD: https://gist.github.com/user/id)...';
+      urlInput.placeholder = 'URL GitHub Gist (VD: https://gist.github.com/user/id)';
       urlInput.value = this.data.url;
 
       const fileInput = document.createElement('input');
       fileInput.classList.add(this.api.styles.input);
       fileInput.style.width = '150px';
-      fileInput.placeholder = 'Tên file (tùy chọn)';
+      fileInput.placeholder = 'File name (optional)';
       fileInput.value = this.data.file;
 
       const btn = document.createElement('button');
       btn.classList.add(this.api.styles.button);
-      btn.innerText = 'Nhúng Gist';
+      btn.innerText = 'Embed Gist';
 
       const insertGist = () => {
         if (urlInput.value && urlInput.value.includes('gist.github.com')) {
-          this.data.url = urlInput.value.replace(/\.js$/, ''); // remove .js if user pasted it
+          this.data.url = urlInput.value.replace(/\.js$/, ''); 
           this.data.file = fileInput.value;
           this.buildUI();
         } else {
           urlInput.value = '';
-          urlInput.placeholder = 'Link Gist không hợp lệ!';
+          urlInput.placeholder = 'Invalid Gist link!';
         }
       };
 

@@ -18,7 +18,7 @@ export default class DocLibTimeline implements BlockTool {
     this.api = api;
     this.data = {
       items: data.items && data.items.length > 0 ? data.items : [
-          { title: 'Bắt đầu dự án', date: 'Tháng 1, 2024', desc: 'Khởi động và lập kế hoạch chi tiết.' }
+          { title: 'Start Project', date: 'Jan 2024', desc: 'Kickoff and detailed planning.' }
       ]
     };
   }
@@ -39,11 +39,11 @@ export default class DocLibTimeline implements BlockTool {
             .doclib-tl-content { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; position: relative; }
             .doclib-tl-content::before { content: ''; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; background: #f8fafc; border-left: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; transform: rotate(45deg); }
             .doclib-tl-title { font-weight: 700; font-size: 1.1em; color: #0f172a; outline: none; margin-bottom: 4px; }
-            .doclib-tl-title:empty::before { content: 'Nhập tên sự kiện...'; color: #94a3b8; }
+            .doclib-tl-title:empty::before { content: 'Enter event name'; color: #94a3b8; }
             .doclib-tl-date { font-size: 0.85em; color: #3b82f6; font-weight: 600; outline: none; margin-bottom: 8px; }
-            .doclib-tl-date:empty::before { content: 'Thời gian...'; color: #93c5fd; }
+            .doclib-tl-date:empty::before { content: 'Time'; color: #93c5fd; }
             .doclib-tl-desc { font-size: 0.95em; color: #475569; outline: none; line-height: 1.5; }
-            .doclib-tl-desc:empty::before { content: 'Mô tả chi tiết...'; color: #94a3b8; }
+            .doclib-tl-desc:empty::before { content: 'Detailed description'; color: #94a3b8; }
             .doclib-tl-btn { margin-top: 16px; padding: 8px 16px; background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 500; cursor: pointer; width: 100%; text-align: center; transition: background 0.2s; }
             .doclib-tl-btn:hover { background: #e2e8f0; }
             .doclib-tl-rm { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #ef4444; border-radius: 4px; cursor: pointer; border: none; opacity: 0; transition: opacity 0.2s; }
@@ -116,7 +116,7 @@ export default class DocLibTimeline implements BlockTool {
       if (!this.api.readOnly.toggle) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-tl-btn');
-          addBtn.innerText = '+ Thêm Mốc Thời Gian';
+          addBtn.innerText = '+ Add Timeline Milestone';
           addBtn.addEventListener('click', () => {
               this.data.items.push({ title: '', date: '', desc: '' });
               this.buildUI();

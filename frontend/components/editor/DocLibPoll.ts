@@ -19,8 +19,8 @@ export default class DocLibPoll implements BlockTool {
     this.data = {
       question: data.question || '',
       options: data.options && data.options.length > 0 ? data.options : [
-          { text: 'Lựa chọn 1', votes: 0 },
-          { text: 'Lựa chọn 2', votes: 0 }
+          { text: 'Option 1', votes: 0 },
+          { text: 'Option 2', votes: 0 }
       ]
     };
   }
@@ -35,14 +35,14 @@ export default class DocLibPoll implements BlockTool {
         style.innerHTML = `
             .doclib-po-wrapper { border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 16px 0; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
             .doclib-po-question { font-size: 1.2em; font-weight: 700; color: #0f172a; margin-bottom: 16px; outline: none; }
-            .doclib-po-question:empty::before { content: 'Nhập câu hỏi khảo sát...'; color: #94a3b8; }
+            .doclib-po-question:empty::before { content: 'Enter survey question'; color: #94a3b8; }
             .doclib-po-options { display: flex; flex-direction: column; gap: 12px; }
             .doclib-po-option { display: flex; align-items: center; gap: 12px; }
             .doclib-po-bar-wrapper { flex-grow: 1; height: 40px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; position: relative; overflow: hidden; display: flex; align-items: center; cursor: pointer; transition: border-color 0.2s; }
             .doclib-po-bar-wrapper:hover { border-color: #cbd5e1; }
             .doclib-po-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #eff6ff; z-index: 1; transition: width 0.3s ease-out; border-right: 2px solid #3b82f6; }
             .doclib-po-text { position: relative; z-index: 2; margin-left: 12px; font-weight: 500; color: #334155; outline: none; flex-grow: 1; }
-            .doclib-po-text:empty::before { content: 'Nhập lựa chọn...'; color: #94a3b8; }
+            .doclib-po-text:empty::before { content: 'Enter option'; color: #94a3b8; }
             .doclib-po-pct { position: relative; z-index: 2; margin-right: 12px; font-weight: 600; color: #3b82f6; font-size: 13px; }
             .doclib-po-rm { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #fee2e2; color: #ef4444; border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0; }
             .doclib-po-add { margin-top: 16px; width: 100%; padding: 10px; background: transparent; border: 1px dashed #cbd5e1; border-radius: 6px; color: #64748b; font-weight: 500; cursor: pointer; }
@@ -73,7 +73,7 @@ export default class DocLibPoll implements BlockTool {
       optionsDiv.classList.add('doclib-po-options');
       
       let totalVotes = this.data.options.reduce((sum, opt) => sum + opt.votes, 0);
-      if (totalVotes === 0) totalVotes = 1; // Prevent NaN
+      if (totalVotes === 0) totalVotes = 1; 
       
       this.data.options.forEach((opt, index) => {
           const optEl = document.createElement('div');
@@ -101,9 +101,9 @@ export default class DocLibPoll implements BlockTool {
           barWrap.appendChild(text);
           barWrap.appendChild(pct);
           
-          // Voting logic
+          
           barWrap.addEventListener('click', (e) => {
-              if (e.target === text && !this.api.readOnly.toggle) return; // Don't vote if editing text
+              if (e.target === text && !this.api.readOnly.toggle) return; 
               opt.votes++;
               this.buildUI();
           });
@@ -129,7 +129,7 @@ export default class DocLibPoll implements BlockTool {
       if (!this.api.readOnly.toggle) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-po-add');
-          addBtn.innerText = '+ Thêm Lựa chọn';
+          addBtn.innerText = '+ Add Option';
           addBtn.addEventListener('click', () => {
               this.data.options.push({ text: '', votes: 0 });
               this.buildUI();

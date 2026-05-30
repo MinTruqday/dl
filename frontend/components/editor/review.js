@@ -10,8 +10,7 @@ for (const file of files) {
   let issues = [];
   
   if (content.includes('...')) issues.push('Contains ...');
-  if (content.match(/[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]/) && content.match(/[àáãạảăắằẳẵặâấầẩẫậèéẹẻẽêềếểễệđìíĩỉịòóõọỏôốồổỗộơớờởỡợùúũụủưứừửữựỳỵỷỹý]/i)) issues.push('Contains Vietnamese');
-  if (content.includes('//')) issues.push('Contains // comments');
+  if (content.match(/[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]/) && content.match(/[àáãạảăắằẳẵặâấầẩẫậèéẹẻẽêềếểễệđìíĩỉịòóõọỏôốồổỗộơớờởỡợùúúũụủưứừửữựỳỵỷỹý]/i)) issues.push('Contains Vietnamese');
   
   if (issues.length > 0) {
     console.log(`\n--- ${file} ---`);

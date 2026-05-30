@@ -76,11 +76,11 @@ export default class DocLibTextHighlight implements InlineTool {
     const termWrapper = this.api.selection.findParentTag('MARK', 'data-color');
     
     if (termWrapper) {
-        // If already highlighted, clicking button removes it or opens picker?
-        // Let's just toggle picker
+        
+        
         this.togglePicker();
     } else {
-        // If not highlighted, highlight with default yellow
+        
         this.wrap(range, '#fef08a');
     }
   }

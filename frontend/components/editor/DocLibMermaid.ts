@@ -48,7 +48,7 @@ export default class DocLibMermaid implements BlockTool {
       const textarea = document.createElement('textarea');
       textarea.classList.add('doclib-mermaid-textarea');
       textarea.value = this.data.code;
-      textarea.placeholder = 'Nhập mã Mermaid Graph...';
+      textarea.placeholder = 'Enter Mermaid Graph code';
       
       const preview = document.createElement('div');
       preview.classList.add('doclib-mermaid-preview');
@@ -78,7 +78,7 @@ export default class DocLibMermaid implements BlockTool {
               const { svg } = await (window as any).mermaid.render(id, code);
               container.innerHTML = svg;
           } catch (e) {
-              container.innerHTML = `<span style="color: #ef4444; font-weight: 500;">Lỗi cú pháp Mermaid</span>`;
+              container.innerHTML = `<span style="color: #ef4444; font-weight: 500;">Mermaid Syntax Error</span>`;
           }
       };
       

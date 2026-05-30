@@ -20,7 +20,7 @@ export default class DocLibColumns implements BlockTool {
       cols: data.cols || 2,
       contents: Array.isArray(data.contents) && data.contents.length > 0 ? data.contents : ['', '']
     };
-    // Ensure array length matches cols
+    
     while (this.data.contents.length < this.data.cols) this.data.contents.push('');
   }
 
@@ -35,7 +35,7 @@ export default class DocLibColumns implements BlockTool {
             .doclib-cols-wrapper { display: flex; gap: 16px; margin: 16px 0; }
             .doclib-cols-col { flex: 1; min-height: 60px; padding: 12px; border: 1px dashed transparent; border-radius: 8px; transition: border 0.2s, background 0.2s; outline: none; line-height: 1.6; }
             .doclib-cols-col:focus-within { border-color: #cbd5e1; background: #f8fafc; }
-            .doclib-cols-col:empty::before { content: 'Nhập nội dung cột...'; color: #94a3b8; pointer-events: none; }
+            .doclib-cols-col:empty::before { content: 'Enter column text'; color: #94a3b8; pointer-events: none; }
         `;
         document.head.appendChild(style);
     }
@@ -51,7 +51,7 @@ export default class DocLibColumns implements BlockTool {
           const btn = document.createElement('div');
           btn.classList.add(this.api.styles.settingsButton);
           if (this.data.cols === cols) btn.classList.add(this.api.styles.settingsButtonActive);
-          btn.innerHTML = `<b>${cols}</b> Cột`;
+          btn.innerHTML = `<b>${cols}</b> Columns`;
           btn.addEventListener('click', () => {
               this.data.cols = cols;
               while (this.data.contents.length < cols) this.data.contents.push('');

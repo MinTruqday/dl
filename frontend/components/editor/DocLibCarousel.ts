@@ -111,9 +111,9 @@ export default class DocLibCarousel implements BlockTool {
           
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-carousel-edit-btn');
-          addBtn.innerText = '+ Thêm Ảnh';
+          addBtn.innerText = '+ Add Image';
           addBtn.addEventListener('click', () => {
-              const url = prompt('Nhập URL ảnh mới:');
+              const url = prompt('Enter new image URL:');
               if (url) {
                   this.data.urls.push(url);
                   this.currentIndex = this.data.urls.length - 1;
@@ -123,9 +123,9 @@ export default class DocLibCarousel implements BlockTool {
           
           const rmBtn = document.createElement('button');
           rmBtn.classList.add('doclib-carousel-edit-btn');
-          rmBtn.innerText = '- Xóa Ảnh Này';
+          rmBtn.innerText = '- Delete Image';
           rmBtn.addEventListener('click', () => {
-              if (confirm('Xóa ảnh này khỏi Carousel?')) {
+              if (confirm('Delete image from Carousel?')) {
                   this.data.urls.splice(this.currentIndex, 1);
                   this.currentIndex = Math.max(0, this.currentIndex - 1);
                   this.buildUI();
@@ -144,11 +144,11 @@ export default class DocLibCarousel implements BlockTool {
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input);
           input.style.flexGrow = '1';
-          input.placeholder = 'Nhập URL ảnh đầu tiên cho Carousel...';
+          input.placeholder = 'Enter first image URL';
 
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Tạo Carousel';
+          btn.innerText = 'Create Carousel';
 
           const insert = () => {
             if (input.value) {

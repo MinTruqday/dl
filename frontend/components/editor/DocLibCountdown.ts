@@ -18,8 +18,8 @@ export default class DocLibCountdown implements BlockTool {
   constructor({ api, data }: { api: API, data: any }) {
     this.api = api;
     this.data = {
-      title: data.title || 'Sự kiện sắp tới',
-      targetDate: data.targetDate || new Date(Date.now() + 86400000 * 7).toISOString() // 7 days default
+      title: data.title || 'Upcoming Event',
+      targetDate: data.targetDate || new Date(Date.now() + 86400000 * 7).toISOString() 
     };
   }
 
@@ -79,10 +79,10 @@ export default class DocLibCountdown implements BlockTool {
           return { box, num };
       };
       
-      const dBox = createBox('Ngày');
-      const hBox = createBox('Giờ');
-      const mBox = createBox('Phút');
-      const sBox = createBox('Giây');
+      const dBox = createBox('Days');
+      const hBox = createBox('Hours');
+      const mBox = createBox('Minutes');
+      const sBox = createBox('Seconds');
       
       grid.appendChild(dBox.box);
       grid.appendChild(hBox.box);
@@ -97,7 +97,7 @@ export default class DocLibCountdown implements BlockTool {
           input.type = 'datetime-local';
           input.classList.add('doclib-cd-input');
           
-          // Format ISO to datetime-local format
+          
           try {
               const d = new Date(this.data.targetDate);
               input.value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);

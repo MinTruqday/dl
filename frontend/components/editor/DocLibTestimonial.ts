@@ -38,14 +38,14 @@ export default class DocLibTestimonial implements BlockTool {
             .doclib-tm-stars { display: flex; justify-content: center; gap: 4px; color: #fbbf24; margin-bottom: 16px; }
             .doclib-tm-star { width: 20px; height: 20px; cursor: pointer; }
             .doclib-tm-content { font-size: 1.1em; font-style: italic; color: #334155; line-height: 1.6; margin-bottom: 24px; outline: none; position: relative; z-index: 1; }
-            .doclib-tm-content:empty::before { content: 'Nhập nội dung đánh giá của khách hàng...'; color: #94a3b8; }
+            .doclib-tm-content:empty::before { content: 'Enter customer review content'; color: #94a3b8; }
             .doclib-tm-author-box { display: flex; align-items: center; justify-content: center; gap: 12px; }
             .doclib-tm-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #e2e8f0; cursor: pointer; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
             .doclib-tm-info { text-align: left; }
             .doclib-tm-name { font-weight: 700; color: #0f172a; outline: none; font-size: 15px; }
-            .doclib-tm-name:empty::before { content: 'Tên khách hàng...'; color: #94a3b8; }
+            .doclib-tm-name:empty::before { content: 'Customer name'; color: #94a3b8; }
             .doclib-tm-role { font-size: 13px; color: #64748b; outline: none; }
-            .doclib-tm-role:empty::before { content: 'Chức vụ/Công ty...'; color: #94a3b8; }
+            .doclib-tm-role:empty::before { content: 'Position/Company'; color: #94a3b8; }
         `;
         document.head.appendChild(style);
     }
@@ -97,7 +97,7 @@ export default class DocLibTestimonial implements BlockTool {
       avatar.src = this.data.avatar || 'https://ui-avatars.com/api/?name=User&background=cbd5e1&color=fff';
       if (!this.api.readOnly.toggle) {
           avatar.addEventListener('click', () => {
-              const url = prompt('Nhập URL Avatar khách hàng:', this.data.avatar);
+              const url = prompt('Enter customer Avatar URL:', this.data.avatar);
               if (url !== null) {
                   this.data.avatar = url;
                   this.buildUI();

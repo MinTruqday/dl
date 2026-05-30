@@ -87,7 +87,7 @@ export default class DocLibDrawing implements BlockTool {
       
       const clearBtn = document.createElement('button');
       clearBtn.classList.add('doclib-drawing-btn');
-      clearBtn.innerText = 'Xóa nháp';
+      clearBtn.innerText = 'Delete draft';
       clearBtn.addEventListener('click', () => {
           if (this.ctx && this.canvas) {
               this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -105,7 +105,7 @@ export default class DocLibDrawing implements BlockTool {
       
       this.wrapper.appendChild(container);
       
-      // Setup Canvas Context
+      
       setTimeout(() => {
           if (!this.canvas) return;
           this.canvas.width = this.canvas.offsetWidth;

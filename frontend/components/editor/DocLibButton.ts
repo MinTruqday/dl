@@ -5,7 +5,7 @@ export default class DocLibButton implements BlockTool {
   private data: { link: string; text: string };
   private wrapper: HTMLElement | null = null;
   
-  // Nodes
+  
   private container: HTMLElement | null = null;
   private inputHolder: HTMLElement | null = null;
   private anyButtonHolder: HTMLElement | null = null;
@@ -72,7 +72,7 @@ export default class DocLibButton implements BlockTool {
 
     this.wrapper.appendChild(this.container);
 
-    // Inject styles inline to avoid SCSS webpack errors
+    
     if (!document.getElementById('doclib-button-styles')) {
         const style = document.createElement('style');
         style.id = 'doclib-button-styles';
@@ -104,7 +104,7 @@ export default class DocLibButton implements BlockTool {
     this.linkInput = document.createElement('div');
     this.linkInput.classList.add(this.api.styles.input, this.CSS.input, this.CSS.inputLink);
     this.linkInput.contentEditable = (!this.readOnly).toString();
-    this.linkInput.dataset.placeholder = 'Link URL (https://...)';
+    this.linkInput.dataset.placeholder = 'Link URL (https://)';
 
     this.registButton = document.createElement('button');
     this.registButton.classList.add(this.CSS.registButton);
@@ -113,7 +113,7 @@ export default class DocLibButton implements BlockTool {
 
     this.registButton.addEventListener('click', () => {
       if (!this.linkInput?.textContent || !this.textInput?.textContent) {
-          alert('Vui lòng nhập đầy đủ Tên nút và Đường link!');
+          alert('Please enter button text and link');
           return;
       }
       this.data = {

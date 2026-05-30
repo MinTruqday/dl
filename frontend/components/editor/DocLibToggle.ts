@@ -39,9 +39,9 @@ export default class DocLibToggle implements BlockTool {
             .doclib-toggle-icon { margin-right: 8px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
             .doclib-toggle-details[open] .doclib-toggle-icon { transform: rotate(90deg); }
             .doclib-toggle-title { flex-grow: 1; outline: none; }
-            .doclib-toggle-title:empty::before { content: 'Nhập tiêu đề ẩn...'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-title:empty::before { content: 'Enter hidden title'; color: #94a3b8; pointer-events: none; }
             .doclib-toggle-content { padding: 16px; min-height: 80px; outline: none; line-height: 1.6; }
-            .doclib-toggle-content:empty::before { content: 'Nhập nội dung bên trong...'; color: #94a3b8; pointer-events: none; }
+            .doclib-toggle-content:empty::before { content: 'Enter inner content'; color: #94a3b8; pointer-events: none; }
         `;
         document.head.appendChild(style);
     }
@@ -77,7 +77,7 @@ export default class DocLibToggle implements BlockTool {
       title.contentEditable = 'true';
       title.innerHTML = this.data.title;
       title.addEventListener('input', () => this.data.title = title.innerHTML);
-      // Prevent summary toggle when clicking inside title
+      
       title.addEventListener('click', (e) => e.preventDefault());
       
       summary.appendChild(icon);

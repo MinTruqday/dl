@@ -28,7 +28,7 @@ export default class DocLibChangeCase implements InlineTool {
 
     let newText = '';
     
-    // Cycle logic: original -> UPPER -> lower -> Title
+    
     if (selectedText === selectedText.toUpperCase()) {
         newText = selectedText.toLowerCase();
     } else if (selectedText === selectedText.toLowerCase()) {

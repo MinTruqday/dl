@@ -37,7 +37,7 @@ export default class DocLibCodeMirror implements BlockTool {
             .doclib-cm-lang { color: #94a3b8; font-size: 12px; font-family: monospace; text-transform: uppercase; outline: none; }
             .doclib-cm-lang:empty::before { content: 'LANGUAGE'; }
             .doclib-cm-editor { color: #e2e8f0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.5; outline: none; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
-            .doclib-cm-editor:empty::before { content: 'Nhập mã nguồn vào đây...'; color: #475569; }
+            .doclib-cm-editor:empty::before { content: 'Enter source code here'; color: #475569; }
         `;
         document.head.appendChild(style);
     }
@@ -80,7 +80,7 @@ export default class DocLibCodeMirror implements BlockTool {
       editor.innerHTML = this.data.code;
       editor.addEventListener('input', () => this.data.code = editor.innerHTML);
       
-      // Basic Tab Support
+      
       editor.addEventListener('keydown', (e) => {
           if (e.key === 'Tab') {
               e.preventDefault();

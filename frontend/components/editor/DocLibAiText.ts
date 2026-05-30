@@ -72,31 +72,47 @@ export default class DocLibAiText implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add('doclib-ai-input');
-          input.placeholder = 'Bạn muốn tôi viết gì? (VD: Viết một đoạn văn tóm tắt...)';
+          input.placeholder = 'Enter AI prompt';
           input.value = this.data.prompt;
           
           const btn = document.createElement('button');
           btn.classList.add('doclib-ai-btn');
-          btn.innerText = 'Tạo nội dung';
+          btn.innerText = 'Generate Content';
           
           if (this.data.status === 'generating') {
               input.disabled = true;
               btn.disabled = true;
-              btn.innerText = 'Đang viết...';
+              btn.innerText = 'Generating';
           }
           
           const submit = () => {
               if (!input.value.trim() || this.data.status === 'generating') return;
               this.data.prompt = input.value;
+              this.data.response = '';
               this.data.status = 'generating';
               this.buildUI();
               
-              // Simulate API call
-              setTimeout(() => {
-                  this.data.response = "Dưới đây là nội dung AI đã tạo theo yêu cầu:\\n\\n" + this.data.prompt + "\\n\\nBạn có thể chỉnh sửa trực tiếp đoạn văn bản này để hoàn thiện nội dung. (Tính năng này đang được mock kết quả, vui lòng kết nối API backend thực tế để AI hoạt động).";
+              const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/suy-luan/tao-noi-dung';
+              fetch(apiUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      prompt: this.data.prompt,
+                      max_tokens: 500,
+                      temperature: 0.3
+                  })
+              })
+              .then(res => res.json())
+              .then(res => {
+                  this.data.response = res.data?.result || res.result || res.message || "No response generated.";
                   this.data.status = 'done';
                   this.buildUI();
-              }, 2000);
+              })
+              .catch(err => {
+                  this.data.response = "Error connecting to AI: " + err.message;
+                  this.data.status = 'done';
+                  this.buildUI();
+              });
           };
           
           btn.addEventListener('click', submit);
@@ -115,7 +131,7 @@ export default class DocLibAiText implements BlockTool {
       
       if (this.data.status === 'generating') {
           responseBox.classList.add('doclib-ai-generating');
-          responseBox.innerText = 'DocLib AI đang suy nghĩ và soạn thảo nội dung...';
+          responseBox.innerText = 'AI is generating content';
           responseBox.contentEditable = 'false';
       } else if (this.data.status === 'done') {
           responseBox.innerText = this.data.response;

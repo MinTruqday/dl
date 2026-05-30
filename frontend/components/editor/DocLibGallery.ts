@@ -81,11 +81,11 @@ export default class DocLibGallery implements BlockTool {
       
       const input = document.createElement('input');
       input.classList.add(this.api.styles.input, 'doclib-gallery-input');
-      input.placeholder = 'Thêm đường dẫn ảnh (URL) vào Thư viện...';
+      input.placeholder = 'Add image URL to gallery';
       
       const btn = document.createElement('button');
       btn.classList.add(this.api.styles.button);
-      btn.innerText = 'Thêm Ảnh';
+      btn.innerText = 'Add Image';
       
       const insertImg = () => {
           if (input.value) {

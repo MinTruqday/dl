@@ -62,11 +62,11 @@ export default class DocLibTelegramPost implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input, 'doclib-telegram-input');
-          input.placeholder = 'Nhập link Telegram Post (VD: https://t.me/durov/123)...';
+          input.placeholder = 'Enter Telegram Post link';
           
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Nhúng';
+          btn.innerText = 'Embed';
           
           const insertPost = () => {
               if (input.value && input.value.includes('t.me/')) {
@@ -74,7 +74,7 @@ export default class DocLibTelegramPost implements BlockTool {
                   this.buildUI();
               } else {
                   input.value = '';
-                  input.placeholder = 'Link không hợp lệ!';
+                  input.placeholder = 'Invalid link!';
               }
           };
           

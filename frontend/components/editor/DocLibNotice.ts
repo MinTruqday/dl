@@ -24,7 +24,7 @@ export default class DocLibNotice implements BlockTune {
     
     this.input = document.createElement('input');
     this.input.classList.add(this.api.styles.input, 'doclib-notice-input');
-    this.input.placeholder = 'Nhập tiêu đề chú ý...';
+    this.input.placeholder = 'Enter notice title';
     this.input.value = this.data.caption;
     
     this.input.addEventListener('input', () => {

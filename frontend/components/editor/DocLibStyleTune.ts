@@ -57,7 +57,7 @@ export default class DocLibStyleTune {
     
     const shadowRow = document.createElement('div');
     shadowRow.classList.add('doclib-st-row');
-    shadowRow.innerHTML = `<span>Đổ bóng (Shadow)</span>`;
+    shadowRow.innerHTML = `<span>Shadow</span>`;
     const shadowToggle = document.createElement('input');
     shadowToggle.type = 'checkbox';
     shadowToggle.checked = this.data.shadow;
@@ -69,7 +69,7 @@ export default class DocLibStyleTune {
     
     const radiusRow = document.createElement('div');
     radiusRow.classList.add('doclib-st-row');
-    radiusRow.innerHTML = `<span>Bo góc (px)</span>`;
+    radiusRow.innerHTML = `<span>Corner radius (px)</span>`;
     const radiusInput = document.createElement('input');
     radiusInput.type = 'number';
     radiusInput.value = this.data.radius.toString();

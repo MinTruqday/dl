@@ -17,7 +17,7 @@ export default class DocLibProgressBar implements BlockTool {
   constructor({ api, data }: { api: API, data: any }) {
     this.api = api;
     this.data = {
-      label: data.label || 'Tiến độ dự án',
+      label: data.label || 'Project Progress',
       percentage: data.percentage !== undefined ? data.percentage : 50,
       color: data.color || '#3b82f6'
     };

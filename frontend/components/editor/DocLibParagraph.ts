@@ -26,7 +26,7 @@ export default class DocLibParagraph implements BlockTool {
     this.wrapper.classList.add(this.api.styles.block, 'doclib-paragraph');
     this.wrapper.contentEditable = 'true';
     this.wrapper.innerHTML = this.data.text;
-    this.wrapper.dataset.placeholder = 'Gõ "/" để chọn lệnh...';
+    this.wrapper.dataset.placeholder = 'Type "/" for commands';
     
     if (!document.getElementById('doclib-paragraph-styles')) {
         const style = document.createElement('style');

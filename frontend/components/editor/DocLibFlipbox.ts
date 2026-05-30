@@ -36,8 +36,8 @@ export default class DocLibFlipbox implements BlockTool {
             .doclib-fb-wrapper:hover .doclib-fb-inner { transform: rotateY(180deg); }
             .doclib-fb-front, .doclib-fb-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 24px; font-size: 1.2em; font-weight: 600; color: white; outline: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-fb-back { transform: rotateY(180deg); background-color: #0f172a !important; }
-            .doclib-fb-front:empty::before { content: 'Nhập nội dung mặt trước...'; opacity: 0.7; }
-            .doclib-fb-back:empty::before { content: 'Nhập nội dung mặt sau...'; opacity: 0.7; }
+            .doclib-fb-front:empty::before { content: 'Enter front content'; opacity: 0.7; }
+            .doclib-fb-back:empty::before { content: 'Enter back content'; opacity: 0.7; }
         `;
         document.head.appendChild(style);
     }

@@ -36,9 +36,9 @@ export default class DocLibAudioPlayer implements BlockTool {
             .doclib-ap-cover { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background: #f1f5f9; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
             .doclib-ap-info { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
             .doclib-ap-title { font-weight: 700; font-size: 1.1em; color: #0f172a; outline: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .doclib-ap-title:empty::before { content: 'Tên bài hát/Podcast...'; color: #94a3b8; pointer-events: none; }
+            .doclib-ap-title:empty::before { content: 'Song/Podcast Title'; color: #94a3b8; pointer-events: none; }
             .doclib-ap-artist { font-size: 0.9em; color: #64748b; outline: none; }
-            .doclib-ap-artist:empty::before { content: 'Tên ca sĩ/Tác giả...'; color: #94a3b8; pointer-events: none; }
+            .doclib-ap-artist:empty::before { content: 'Artist/Author Name'; color: #94a3b8; pointer-events: none; }
             .doclib-ap-controls { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
             .doclib-ap-audio { width: 100%; height: 32px; }
             .doclib-ap-inputs { display: flex; flex-direction: column; gap: 8px; width: 100%; }
@@ -66,7 +66,7 @@ export default class DocLibAudioPlayer implements BlockTool {
           cover.src = this.data.coverUrl || 'https://ui-avatars.com/api/?name=Audio&background=f1f5f9&color=94a3b8&size=160';
           cover.addEventListener('click', () => {
               if (this.api.readOnly.toggle) return;
-              const url = prompt('Nhập URL ảnh bìa (Cover Art):', this.data.coverUrl);
+              const url = prompt('Enter Cover Art URL:', this.data.coverUrl);
               if (url !== null) {
                   this.data.coverUrl = url;
                   this.buildUI();
@@ -121,12 +121,12 @@ export default class DocLibAudioPlayer implements BlockTool {
           
           const audioInput = document.createElement('input');
           audioInput.classList.add(this.api.styles.input);
-          audioInput.placeholder = 'Dán URL file Audio (.mp3, .wav)...';
+          audioInput.placeholder = 'Paste Audio URL (.mp3, .wav)';
           audioInput.value = this.data.audioUrl;
           
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Tạo Audio Player';
+          btn.innerText = 'Create Audio Player';
           
           const insert = () => {
               if (audioInput.value) {

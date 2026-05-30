@@ -15,7 +15,7 @@ export default class DocLibUndo {
     this.editor = editor;
     this.maxHistorySize = maxHistorySize;
     
-    // Inject Styles
+    
     if (!document.getElementById('doclib-undo-styles')) {
         const style = document.createElement('style');
         style.id = 'doclib-undo-styles';
@@ -32,20 +32,20 @@ export default class DocLibUndo {
   }
   
   private async initialize() {
-      // Create UI
+      
       const wrapper = document.createElement('div');
       wrapper.classList.add('doclib-undo-wrapper');
       
       this.undoBtn = document.createElement('button');
       this.undoBtn.classList.add('doclib-undo-btn');
       this.undoBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>';
-      this.undoBtn.title = "Hoàn tác (Cmd+Z)";
+      this.undoBtn.title = "Undo (Cmd+Z)";
       this.undoBtn.disabled = true;
       
       this.redoBtn = document.createElement('button');
       this.redoBtn.classList.add('doclib-undo-btn');
       this.redoBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg>';
-      this.redoBtn.title = "Làm lại (Cmd+Shift+Z)";
+      this.redoBtn.title = "Redo (Cmd+Shift+Z)";
       this.redoBtn.disabled = true;
       
       wrapper.appendChild(this.undoBtn);
@@ -55,14 +55,14 @@ export default class DocLibUndo {
       this.undoBtn.addEventListener('click', () => this.undo());
       this.redoBtn.addEventListener('click', () => this.redo());
       
-      // Save initial state
+      
       try {
           const initialData = await this.editor.save();
           this.history.push(initialData);
           this.position = 0;
       } catch (e) {}
 
-      // Handle Keyboard shortcuts
+      
       document.addEventListener('keydown', (e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
               e.preventDefault();
@@ -78,7 +78,7 @@ export default class DocLibUndo {
           }
       });
       
-      // Setup MutationObserver to watch Editor changes
+      
       setTimeout(() => {
           this.holder = document.querySelector('.codex-editor__redactor');
           if (this.holder) {
@@ -97,11 +97,11 @@ export default class DocLibUndo {
           try {
               const data = await this.editor.save();
               
-              // Only save if data actually changed
+              
               const lastData = this.history[this.position];
               if (JSON.stringify(data.blocks) === JSON.stringify(lastData?.blocks)) return;
               
-              // If we are not at the end of history, truncate the future
+              
               if (this.position < this.history.length - 1) {
                   this.history = this.history.slice(0, this.position + 1);
               }
@@ -114,7 +114,7 @@ export default class DocLibUndo {
               }
               this.updateUI();
           } catch(e) {}
-      }, 400); // 400ms debounce
+      }, 400); 
   }
   
   public async undo() {

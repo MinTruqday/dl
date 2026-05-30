@@ -28,7 +28,7 @@ export default class DocLibLatex implements BlockTool {
     this.wrapper.classList.add(this.api.styles.block);
     this.wrapper.style.padding = '10px 0';
     
-    // Nút hiển thị nhãn (tùy chọn để user biết đây là khối LaTeX)
+    
     const label = document.createElement('div');
     label.style.fontSize = '10px';
     label.style.color = '#999';
@@ -37,14 +37,14 @@ export default class DocLibLatex implements BlockTool {
     label.style.letterSpacing = '1px';
     label.innerText = 'DocLib LaTeX';
     
-    // Vùng nhập liệu LaTeX thuần túy (contentEditable)
+    
     this.editor = document.createElement('div');
     this.editor.classList.add(this.api.styles.input);
     this.editor.contentEditable = 'true';
     this.editor.innerHTML = this.data.code;
-    this.editor.dataset.placeholder = 'Nhập mã LaTeX ở đây (sẽ được Tectonic biên dịch)...';
+    this.editor.dataset.placeholder = 'Enter LaTeX code here';
     
-    // Chỉnh sửa style để hiển thị "bình thường" giống khối khác, nhưng có background nhẹ để phân biệt
+    
     this.editor.style.fontFamily = 'monospace';
     this.editor.style.minHeight = '60px';
     this.editor.style.backgroundColor = '#f4f4f5';
@@ -69,13 +69,13 @@ export default class DocLibLatex implements BlockTool {
   save(blockContent: HTMLElement) {
     return {
       code: this.editor ? this.editor.innerHTML : this.data.code,
-      math: this.editor ? this.editor.innerHTML : this.data.code // Hỗ trợ tương thích ngược
+      math: this.editor ? this.editor.innerHTML : this.data.code 
     };
   }
 
   static get sanitize() {
     return {
-      code: true, // Cho phép các công cụ inline tool hoạt động
+      code: true, 
       math: true
     };
   }

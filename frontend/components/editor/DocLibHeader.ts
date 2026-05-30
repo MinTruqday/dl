@@ -26,7 +26,7 @@ export default class DocLibHeader implements BlockTool {
     this.wrapper.classList.add(this.api.styles.block, 'doclib-header');
     this.wrapper.contentEditable = 'true';
     this.wrapper.innerHTML = this.data.text;
-    this.wrapper.dataset.placeholder = `Tiêu đề H${this.data.level}...`;
+    this.wrapper.dataset.placeholder = `Heading ${this.data.level}`;
     
     if (!document.getElementById('doclib-header-styles')) {
         const style = document.createElement('style');
@@ -70,7 +70,7 @@ export default class DocLibHeader implements BlockTool {
                   newWrapper.classList.add(this.api.styles.block, 'doclib-header');
                   newWrapper.contentEditable = 'true';
                   newWrapper.innerHTML = this.wrapper.innerHTML;
-                  newWrapper.dataset.placeholder = `Tiêu đề H${level}...`;
+                  newWrapper.dataset.placeholder = `Heading ${level}`;
                   newWrapper.addEventListener('input', () => { this.data.text = newWrapper.innerHTML; });
                   newWrapper.addEventListener('keydown', (e) => {
                       if (e.key === 'Enter') {
@@ -82,7 +82,7 @@ export default class DocLibHeader implements BlockTool {
                   this.wrapper.replaceWith(newWrapper);
                   this.wrapper = newWrapper;
               }
-              // re-render settings would be nice but simple toggle is enough
+              
               Array.from(wrapper.children).forEach(c => c.classList.remove(this.api.styles.settingsButtonActive));
               btn.classList.add(this.api.styles.settingsButtonActive);
           });

@@ -30,7 +30,7 @@ export default class DocLibRaw implements BlockTool {
     this.textarea = document.createElement('textarea');
     this.textarea.classList.add(this.api.styles.input);
     this.textarea.value = this.data.html;
-    this.textarea.placeholder = 'Nhập mã HTML tại đây...';
+    this.textarea.placeholder = 'Enter HTML code here';
     
     this.textarea.style.minHeight = '150px';
     this.textarea.style.fontFamily = 'monospace';

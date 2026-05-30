@@ -1,0 +1,8 @@
+[
+  "`Tiêu đề H${this.data.level}`",
+  "`Tiêu đề H${level}`",
+  "`Độ cao: ${this.data.height}px`",
+  "\"></path></svg> Liên kết đến URL này`",
+  "'Gõ \"",
+  "\" để chọn lệnh'"
+]

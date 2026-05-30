@@ -18,7 +18,7 @@ export default class DocLibSteps implements BlockTool {
     this.api = api;
     this.data = {
       steps: data.steps && data.steps.length > 0 ? data.steps : [
-          { title: 'Bước 1', desc: 'Mô tả chi tiết bước 1' }
+          { title: 'Step 1', desc: 'Detailed step description 1' }
       ]
     };
   }
@@ -37,9 +37,9 @@ export default class DocLibSteps implements BlockTool {
             .doclib-stp-item:not(:last-child)::after { content: ''; position: absolute; left: 15px; top: 32px; bottom: -16px; width: 2px; background: #e2e8f0; z-index: 1; }
             .doclib-stp-content { flex-grow: 1; padding-top: 4px; padding-bottom: 8px; }
             .doclib-stp-title { font-weight: 700; color: #0f172a; outline: none; margin-bottom: 4px; font-size: 1.1em; }
-            .doclib-stp-title:empty::before { content: 'Nhập tiêu đề bước...'; color: #94a3b8; }
+            .doclib-stp-title:empty::before { content: 'Enter step title'; color: #94a3b8; }
             .doclib-stp-desc { color: #475569; outline: none; line-height: 1.5; font-size: 0.95em; }
-            .doclib-stp-desc:empty::before { content: 'Nhập mô tả chi tiết...'; color: #94a3b8; }
+            .doclib-stp-desc:empty::before { content: 'Enter detailed description'; color: #94a3b8; }
             .doclib-stp-rm { background: #fee2e2; color: #ef4444; border: none; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
             .doclib-stp-item:hover .doclib-stp-rm { opacity: 1; }
             .doclib-stp-add { margin-left: 48px; padding: 8px 16px; background: transparent; border: 1px dashed #cbd5e1; border-radius: 8px; color: #64748b; font-weight: 500; cursor: pointer; text-align: center; }
@@ -99,7 +99,7 @@ export default class DocLibSteps implements BlockTool {
       if (!this.api.readOnly.toggle) {
           const add = document.createElement('button');
           add.classList.add('doclib-stp-add');
-          add.innerText = '+ Thêm Bước';
+          add.innerText = '+ Add Step';
           add.addEventListener('click', () => {
               this.data.steps.push({ title: '', desc: '' });
               this.buildUI();

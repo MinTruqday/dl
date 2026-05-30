@@ -38,7 +38,7 @@ export default class DocLibAlignmentTune implements BlockTune {
         this.data.alignment = align.name;
         this.applyAlignment();
         
-        // Update UI
+        
         Array.from(this.wrapper!.children).forEach((child: any) => {
           child.classList.remove(this.api.styles.settingsButtonActive);
         });

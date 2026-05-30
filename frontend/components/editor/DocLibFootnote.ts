@@ -43,7 +43,7 @@ export default class DocLibFootnote implements InlineTool {
   }
 
   wrap(range: Range) {
-      const footnote = prompt('Nhập nội dung chú thích (Footnote):');
+      const footnote = prompt('Enter footnote content:');
       if (!footnote) return;
       
       const sup = document.createElement('sup');

@@ -70,9 +70,9 @@ export default class DocLibIframeEmbed implements BlockTool {
               
               const heightBtn = document.createElement('button');
               heightBtn.classList.add('doclib-if-height-btn');
-              heightBtn.innerText = `Độ cao: ${this.data.height}px`;
+              heightBtn.innerText = `Height: ${this.data.height}px`;
               heightBtn.addEventListener('click', () => {
-                  const h = prompt('Nhập độ cao (px):', this.data.height.toString());
+                  const h = prompt('Enter height (px):', this.data.height.toString());
                   if (h && !isNaN(parseInt(h))) {
                       this.data.height = parseInt(h);
                       this.buildUI();
@@ -82,7 +82,7 @@ export default class DocLibIframeEmbed implements BlockTool {
               const rmBtn = document.createElement('button');
               rmBtn.classList.add('doclib-if-height-btn');
               rmBtn.style.color = '#ef4444';
-              rmBtn.innerText = 'Đổi Link';
+              rmBtn.innerText = 'Change Link';
               rmBtn.addEventListener('click', () => {
                   this.data.url = '';
                   this.buildUI();
@@ -101,11 +101,11 @@ export default class DocLibIframeEmbed implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add('doclib-if-input');
-          input.placeholder = 'Dán Link nhúng (CodePen, CodeSandbox, Figma, Typeform, v.v...)';
+          input.placeholder = 'Paste embed link (CodePen, CodeSandbox, Figma, Typeform, etc)';
           
           const btn = document.createElement('button');
           btn.classList.add('doclib-if-btn');
-          btn.innerText = 'Nhúng (Embed)';
+          btn.innerText = 'Embed (Embed)';
           
           const submit = () => {
               if (input.value) {

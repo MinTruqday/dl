@@ -20,8 +20,8 @@ export default class DocLibPricing implements BlockTool {
     this.api = api;
     this.data = {
       plans: data.plans && data.plans.length > 0 ? data.plans : [
-          { title: 'Cơ bản', price: '0đ / tháng', features: ['Tính năng 1', 'Tính năng 2'], highlighted: false },
-          { title: 'Pro', price: '99k / tháng', features: ['Tất cả cơ bản', 'Tính năng VIP'], highlighted: true }
+          { title: 'Basic', price: '$0 / month', features: ['Feature 1', 'Feature 2'], highlighted: false },
+          { title: 'Pro', price: '$9 / month', features: ['All basic features', 'VIP Feature'], highlighted: true }
       ]
     };
   }
@@ -44,7 +44,7 @@ export default class DocLibPricing implements BlockTool {
             .doclib-pr-price { font-size: 1.8em; font-weight: 800; color: #3b82f6; margin-bottom: 24px; outline: none; }
             .doclib-pr-features { list-style: none; padding: 0; margin: 0 0 24px 0; flex-grow: 1; text-align: left; }
             .doclib-pr-feature { font-size: 0.95em; color: #475569; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 8px; outline: none; }
-            .doclib-pr-feature::before { content: '✓'; color: #10b981; font-weight: 700; }
+            .doclib-pr-feature::before { content: ''; color: #10b981; font-weight: 700; }
             .doclib-pr-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; border: none; }
             .doclib-pr-card .doclib-pr-btn { background: #f1f5f9; color: #0f172a; }
             .doclib-pr-card.highlighted .doclib-pr-btn { background: #3b82f6; color: white; }
@@ -79,7 +79,7 @@ export default class DocLibPricing implements BlockTool {
           if (plan.highlighted) {
               const badge = document.createElement('div');
               badge.classList.add('doclib-pr-badge');
-              badge.innerText = 'Phổ biến nhất';
+              badge.innerText = 'Most Popular';
               card.appendChild(badge);
           }
           
@@ -106,7 +106,7 @@ export default class DocLibPricing implements BlockTool {
               li.addEventListener('keydown', (e) => {
                   if (e.key === 'Enter') {
                       e.preventDefault();
-                      plan.features.splice(fIndex + 1, 0, 'Tính năng mới');
+                      plan.features.splice(fIndex + 1, 0, 'New feature');
                       this.buildUI();
                   } else if (e.key === 'Backspace' && li.innerHTML === '') {
                       e.preventDefault();
@@ -122,9 +122,9 @@ export default class DocLibPricing implements BlockTool {
               addF.classList.add('doclib-pr-feature');
               addF.style.cursor = 'pointer';
               addF.style.opacity = '0.5';
-              addF.innerText = '+ Thêm tính năng';
+              addF.innerText = '+ Add feature';
               addF.addEventListener('click', () => {
-                  plan.features.push('Tính năng mới');
+                  plan.features.push('New feature');
                   this.buildUI();
               });
               featureList.appendChild(addF);
@@ -132,7 +132,7 @@ export default class DocLibPricing implements BlockTool {
           
           const ctaBtn = document.createElement('button');
           ctaBtn.classList.add('doclib-pr-btn');
-          ctaBtn.innerText = 'Đăng ký ngay';
+          ctaBtn.innerText = 'Subscribe now';
           
           card.appendChild(title);
           card.appendChild(price);
@@ -145,8 +145,8 @@ export default class DocLibPricing implements BlockTool {
               
               const starBtn = document.createElement('button');
               starBtn.classList.add('doclib-pr-icon-btn');
-              starBtn.innerHTML = plan.highlighted ? '★' : '☆';
-              starBtn.title = 'Làm nổi bật';
+              starBtn.innerHTML = plan.highlighted ? '' : '';
+              starBtn.title = 'Highlight';
               starBtn.addEventListener('click', () => {
                   this.data.plans.forEach(p => p.highlighted = false);
                   plan.highlighted = true;
@@ -156,7 +156,7 @@ export default class DocLibPricing implements BlockTool {
               const rmBtn = document.createElement('button');
               rmBtn.classList.add('doclib-pr-icon-btn');
               rmBtn.innerHTML = '&times;';
-              rmBtn.title = 'Xóa gói này';
+              rmBtn.title = 'Delete this plan';
               rmBtn.addEventListener('click', () => {
                   this.data.plans.splice(index, 1);
                   this.buildUI();
@@ -174,9 +174,9 @@ export default class DocLibPricing implements BlockTool {
           const addCol = document.createElement('div');
           addCol.classList.add('doclib-pr-add-col');
           addCol.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
-          addCol.title = 'Thêm Gói mới';
+          addCol.title = 'Add New Plan';
           addCol.addEventListener('click', () => {
-              this.data.plans.push({ title: 'Gói mới', price: '0đ', features: ['Tính năng 1'], highlighted: false });
+              this.data.plans.push({ title: 'New Plan', price: '$0', features: ['Feature 1'], highlighted: false });
               this.buildUI();
           });
           container.appendChild(addCol);

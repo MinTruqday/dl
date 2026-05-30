@@ -83,12 +83,12 @@ export default class DocLibCodeBox implements BlockTool {
       const textarea = document.createElement('textarea');
       textarea.classList.add('doclib-codebox-textarea');
       textarea.value = this.data.code;
-      textarea.placeholder = '// Code goes here...';
+      textarea.placeholder = 'Enter source code';
       textarea.spellcheck = false;
       
       textarea.addEventListener('input', () => this.data.code = textarea.value);
       
-      // Auto-indent support
+      
       textarea.addEventListener('keydown', (e) => {
           if (e.key === 'Tab') {
               e.preventDefault();

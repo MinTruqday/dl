@@ -27,7 +27,7 @@ export default class DocLibTitle implements BlockTool {
     this.wrapper.classList.add(this.api.styles.block);
     this.wrapper.contentEditable = 'true';
     this.wrapper.innerHTML = this.data.text;
-    this.wrapper.dataset.placeholder = 'Nhập Tiêu Đề Chính...';
+    this.wrapper.dataset.placeholder = 'Enter Main Title';
     
     this.wrapper.style.fontSize = '2.25rem';
     this.wrapper.style.fontWeight = '700';

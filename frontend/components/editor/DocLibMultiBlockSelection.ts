@@ -25,7 +25,7 @@ export default class DocLibMultiBlockSelection {
       if (!this.holder) return;
 
       document.addEventListener('mousedown', (e: MouseEvent) => {
-          // If shift key is held and we click a block
+          
           if (e.shiftKey) {
               const target = e.target as HTMLElement;
               const blockEl = target.closest('.ce-block');
@@ -57,7 +57,7 @@ export default class DocLibMultiBlockSelection {
           this.isSelecting = false;
       });
       
-      // Handle bulk delete
+      
       document.addEventListener('keydown', (e: KeyboardEvent) => {
           if ((e.key === 'Backspace' || e.key === 'Delete') && this.currentSelection.size > 0) {
               e.preventDefault();

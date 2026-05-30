@@ -37,7 +37,7 @@ export default class DocLibEmbed implements BlockTool {
             .doclib-embed-wrapper { text-align: center; }
             .doclib-embed-iframe { max-width: 100%; border: none; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
             .doclib-embed-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
-            .doclib-embed-caption:empty::before { content: 'Nhập chú thích video...'; color: #94a3b8; pointer-events: none; }
+            .doclib-embed-caption:empty::before { content: 'Enter video caption'; color: #94a3b8; pointer-events: none; }
             .doclib-embed-input-container { display: flex; align-items: center; }
             .doclib-embed-input { flex-grow: 1; margin-right: 12px; }
         `;
@@ -78,11 +78,11 @@ export default class DocLibEmbed implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input, 'doclib-embed-input');
-          input.placeholder = 'Nhập link YouTube (VD: https://youtube.com/watch?v=...)';
+          input.placeholder = 'Enter YouTube link';
           
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Nhúng';
+          btn.innerText = 'Embed';
           
           const processEmbed = () => {
               const val = input.value;
@@ -96,7 +96,7 @@ export default class DocLibEmbed implements BlockTool {
                   }
               } else {
                   input.value = '';
-                  input.placeholder = 'Link không hợp lệ! Vui lòng nhập link YouTube.';
+                  input.placeholder = 'Invalid link! Please enter a YouTube link.';
               }
           };
           

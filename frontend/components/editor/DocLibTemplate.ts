@@ -40,10 +40,10 @@ export default class DocLibTemplate implements InlineTool {
       this.picker.style.display = 'none';
       
       const templates = [
-          { name: 'Tên Khách Hàng', value: '{{customer_name}}' },
-          { name: 'Tên Công Ty', value: '{{company_name}}' },
-          { name: 'Ngày Hiện Tại', value: '{{current_date}}' },
-          { name: 'Tổng Tiền', value: '{{total_amount}}' }
+          { name: 'Customer Name', value: '{{customer_name}}' },
+          { name: 'Company Name', value: '{{company_name}}' },
+          { name: 'Current Date', value: '{{current_date}}' },
+          { name: 'Total Amount', value: '{{total_amount}}' }
       ];
       
       templates.forEach(t => {
@@ -78,7 +78,7 @@ export default class DocLibTemplate implements InlineTool {
       range.deleteContents();
       range.insertNode(span);
       
-      // Move caret after
+      
       range.setStartAfter(span);
       range.setEndAfter(span);
       sel.removeAllRanges();

@@ -18,7 +18,7 @@ export default class DocLibChart implements BlockTool {
     this.api = api;
     this.data = {
       type: data.type || 'bar',
-      labels: data.labels && data.labels.length > 0 ? data.labels : ['Tháng 1', 'Tháng 2', 'Tháng 3'],
+      labels: data.labels && data.labels.length > 0 ? data.labels : ['Jan', 'Feb', 'Mar'],
       datasets: data.datasets && data.datasets.length > 0 ? data.datasets : [{ label: 'Doanh thu', data: [10, 20, 30] }]
     };
   }
@@ -96,7 +96,7 @@ export default class DocLibChart implements BlockTool {
                       data: {
                           labels: this.data.labels,
                           datasets: this.data.datasets.map((ds, i) => {
-                              // Auto generate colors for datasets
+                              
                               const colors = [
                                   'rgba(59, 130, 246, 0.6)',
                                   'rgba(16, 185, 129, 0.6)',
@@ -130,7 +130,7 @@ export default class DocLibChart implements BlockTool {
                       options: { responsive: true, maintainAspectRatio: false }
                   });
               } catch (e) {
-                  canvasContainer.innerHTML = '<span style="color:#ef4444; font-weight: 500;">Lỗi render Chart.js</span>';
+                  canvasContainer.innerHTML = '<span style="color:#ef4444; font-weight: 500;">Error render Chart.js</span>';
               }
           };
           
@@ -150,12 +150,12 @@ export default class DocLibChart implements BlockTool {
           const editor = document.createElement('div');
           editor.classList.add('doclib-chart-editor');
           
-          // Header Row
+          
           const headerRow = document.createElement('div');
           headerRow.classList.add('doclib-chart-row');
           const emptyCell = document.createElement('div');
           emptyCell.classList.add('doclib-chart-cell', 'header');
-          emptyCell.innerText = 'Nhãn (X)';
+          emptyCell.innerText = 'Label (X)';
           headerRow.appendChild(emptyCell);
           
           this.data.datasets.forEach((ds, dsIndex) => {
@@ -173,7 +173,7 @@ export default class DocLibChart implements BlockTool {
           });
           editor.appendChild(headerRow);
           
-          // Data Rows
+          
           this.data.labels.forEach((label, labelIndex) => {
               const row = document.createElement('div');
               row.classList.add('doclib-chart-row');
@@ -210,30 +210,30 @@ export default class DocLibChart implements BlockTool {
           
           this.wrapper.appendChild(editor);
           
-          // Controls
+          
           const btnGroup = document.createElement('div');
           btnGroup.classList.add('doclib-chart-btn-group');
           
           const addRowBtn = document.createElement('button');
           addRowBtn.classList.add('doclib-chart-btn');
-          addRowBtn.innerText = '+ Thêm Dòng (Trục X)';
+          addRowBtn.innerText = '+ Add Row';
           addRowBtn.addEventListener('click', () => {
-              this.data.labels.push('Nhãn mới');
+              this.data.labels.push('New label');
               this.data.datasets.forEach(ds => ds.data.push(0));
               this.buildUI();
           });
           
           const addColBtn = document.createElement('button');
           addColBtn.classList.add('doclib-chart-btn');
-          addColBtn.innerText = '+ Thêm Cột (Dataset)';
+          addColBtn.innerText = '+ Add Dataset';
           addColBtn.addEventListener('click', () => {
-              this.data.datasets.push({ label: 'Dataset mới', data: new Array(this.data.labels.length).fill(0) });
+              this.data.datasets.push({ label: 'New dataset', data: new Array(this.data.labels.length).fill(0) });
               this.buildUI();
           });
           
           const rmRowBtn = document.createElement('button');
           rmRowBtn.classList.add('doclib-chart-btn');
-          rmRowBtn.innerText = '- Xóa Dòng Cuối';
+          rmRowBtn.innerText = '- Delete Last Row';
           rmRowBtn.addEventListener('click', () => {
               if (this.data.labels.length > 1) {
                   this.data.labels.pop();

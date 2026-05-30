@@ -20,9 +20,9 @@ export default class DocLibKanban implements BlockTool {
     this.api = api;
     this.data = {
       columns: data.columns && data.columns.length > 0 ? data.columns : [
-          { id: 'c1', title: 'Cần làm', color: '#cbd5e1', tasks: [{ id: 't1', text: 'Nhiệm vụ 1' }] },
-          { id: 'c2', title: 'Đang làm', color: '#60a5fa', tasks: [] },
-          { id: 'c3', title: 'Hoàn thành', color: '#34d399', tasks: [] }
+          { id: 'c1', title: 'To Do', color: '#cbd5e1', tasks: [{ id: 't1', text: 'Task 1' }] },
+          { id: 'c2', title: 'In Progress', color: '#60a5fa', tasks: [] },
+          { id: 'c3', title: 'Done', color: '#34d399', tasks: [] }
       ]
     };
   }
@@ -42,7 +42,7 @@ export default class DocLibKanban implements BlockTool {
             .doclib-kb-title { font-weight: 700; color: #1e293b; outline: none; flex-grow: 1; }
             .doclib-kb-task { background: #fff; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 8px; align-items: flex-start; }
             .doclib-kb-task-text { flex-grow: 1; outline: none; font-size: 14px; color: #334155; line-height: 1.4; }
-            .doclib-kb-task-text:empty::before { content: 'Nhập tên công việc...'; color: #94a3b8; }
+            .doclib-kb-task-text:empty::before { content: 'Enter task name'; color: #94a3b8; }
             .doclib-kb-btn-rm { background: transparent; border: none; color: #cbd5e1; cursor: pointer; padding: 0; display: flex; opacity: 0; }
             .doclib-kb-task:hover .doclib-kb-btn-rm { opacity: 1; }
             .doclib-kb-btn-rm:hover { color: #ef4444; }
@@ -89,7 +89,7 @@ export default class DocLibKanban implements BlockTool {
           if (!this.api.readOnly.toggle) {
               dot.style.cursor = 'pointer';
               dot.addEventListener('click', () => {
-                  const newColor = prompt('Nhập mã màu (Hex/Tên màu) cho cột này:', col.color);
+                  const newColor = prompt('Enter color code (Hex/Name) for this column:', col.color);
                   if (newColor) {
                       col.color = newColor;
                       dot.style.backgroundColor = newColor;
@@ -169,7 +169,7 @@ export default class DocLibKanban implements BlockTool {
           if (!this.api.readOnly.toggle) {
               const addBtn = document.createElement('button');
               addBtn.classList.add('doclib-kb-add');
-              addBtn.innerText = '+ Thêm Card';
+              addBtn.innerText = '+ Add Card';
               addBtn.addEventListener('click', () => {
                   col.tasks.push({ id: Date.now().toString(), text: '' });
                   this.buildUI();
@@ -192,7 +192,7 @@ export default class DocLibKanban implements BlockTool {
           addColBtn.style.color = '#94a3b8';
           addColBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
           addColBtn.addEventListener('click', () => {
-              this.data.columns.push({ id: Date.now().toString(), title: 'Cột mới', color: '#94a3b8', tasks: [] });
+              this.data.columns.push({ id: Date.now().toString(), title: 'New Column', color: '#94a3b8', tasks: [] });
               this.buildUI();
           });
           container.appendChild(addColBtn);

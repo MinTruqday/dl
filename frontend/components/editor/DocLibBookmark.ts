@@ -36,9 +36,9 @@ export default class DocLibBookmark implements BlockTool {
             .doclib-bm-wrapper:hover { background: #f8fafc; }
             .doclib-bm-content { flex: 1; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
             .doclib-bm-title { font-weight: 600; font-size: 15px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; outline: none; }
-            .doclib-bm-title:empty::before { content: 'Tiêu đề trang web...'; color: #94a3b8; }
+            .doclib-bm-title:empty::before { content: 'Web page title'; color: #94a3b8; }
             .doclib-bm-desc { font-size: 13px; color: #475569; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; outline: none; line-height: 1.4; }
-            .doclib-bm-desc:empty::before { content: 'Mô tả ngắn...'; color: #94a3b8; }
+            .doclib-bm-desc:empty::before { content: 'Short description'; color: #94a3b8; }
             .doclib-bm-url { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 8px; }
             .doclib-bm-img-box { width: 30%; min-width: 120px; border-left: 1px solid #e2e8f0; position: relative; background: #f1f5f9; }
             .doclib-bm-img { width: 100%; height: 100%; object-fit: cover; }
@@ -61,7 +61,7 @@ export default class DocLibBookmark implements BlockTool {
           container.href = this.data.url;
           container.target = '_blank';
           container.addEventListener('click', (e) => {
-              if (!this.api.readOnly.toggle) e.preventDefault(); // Prevent jump when editing
+              if (!this.api.readOnly.toggle) e.preventDefault(); 
           });
           
           const content = document.createElement('div');
@@ -97,14 +97,14 @@ export default class DocLibBookmark implements BlockTool {
           
           if (!this.api.readOnly.toggle) {
               const editImg = document.createElement('button');
-              editImg.innerHTML = 'Đổi ảnh';
+              editImg.innerHTML = 'Change image';
               editImg.style.position = 'absolute';
               editImg.style.bottom = '4px';
               editImg.style.right = '4px';
               editImg.style.fontSize = '10px';
               editImg.addEventListener('click', (e) => {
                   e.stopPropagation();
-                  const newImg = prompt('URL Ảnh Preview:', this.data.img);
+                  const newImg = prompt('Preview Image URL:', this.data.img);
                   if (newImg) {
                       this.data.img = newImg;
                       this.buildUI();
@@ -121,16 +121,16 @@ export default class DocLibBookmark implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input);
-          input.placeholder = 'Dán Link Web Bookmark...';
+          input.placeholder = 'Paste Web Bookmark Link';
           
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Tạo';
+          btn.innerText = 'Create';
           btn.addEventListener('click', () => {
               if (input.value) {
                   this.data.url = input.value;
-                  this.data.title = 'Tiêu đề trang';
-                  this.data.desc = 'Mô tả trang web...';
+                  this.data.title = 'Page title';
+                  this.data.desc = 'Description trang web';
                   this.buildUI();
               }
           });

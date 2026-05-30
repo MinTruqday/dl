@@ -41,7 +41,7 @@ export default class DocLibWarning implements BlockTool {
     this.wrapper.classList.add(this._CSS.wrapper);
     this.wrapper.classList.add(this._CSS.block);
     
-    // Style matching original @editorjs/warning
+    
     this.wrapper.style.display = 'flex';
     this.wrapper.style.alignItems = 'flex-start';
     this.wrapper.style.padding = '15px';

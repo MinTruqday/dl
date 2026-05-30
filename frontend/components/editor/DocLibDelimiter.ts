@@ -26,7 +26,7 @@ export default class DocLibDelimiter implements BlockTool {
     this.wrapper = document.createElement('div');
     this.wrapper.classList.add(this.api.styles.block);
     
-    // Create the three asterisks style mimicking original delimiter
+    
     const asterisks = document.createElement('div');
     asterisks.classList.add('ce-delimiter');
     asterisks.style.lineHeight = '1.6em';
@@ -42,6 +42,6 @@ export default class DocLibDelimiter implements BlockTool {
   }
 
   save() {
-    return {}; // Delimiter has no data to save
+    return {}; 
   }
 }

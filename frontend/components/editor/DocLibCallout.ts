@@ -17,7 +17,7 @@ export default class DocLibCallout implements BlockTool {
   constructor({ api, data }: { api: API, data: any }) {
     this.api = api;
     this.data = {
-      icon: data.icon || '💡',
+      icon: data.icon || '',
       text: data.text || '',
       bgColor: data.bgColor || '#f8fafc'
     };
@@ -35,7 +35,7 @@ export default class DocLibCallout implements BlockTool {
             .doclib-co-icon { font-size: 24px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; transition: background 0.2s; }
             .doclib-co-icon:hover { background: rgba(0,0,0,0.05); }
             .doclib-co-text { flex-grow: 1; outline: none; line-height: 1.6; color: #1e293b; min-height: 24px; padding-top: 4px; }
-            .doclib-co-text:empty::before { content: 'Nhập nội dung nổi bật...'; color: #94a3b8; }
+            .doclib-co-text:empty::before { content: 'Enter highlight text'; color: #94a3b8; }
         `;
         document.head.appendChild(style);
     }
@@ -83,9 +83,9 @@ export default class DocLibCallout implements BlockTool {
       iconBtn.innerText = this.data.icon;
       if (!this.api.readOnly.toggle) {
           iconBtn.addEventListener('click', () => {
-              const newIcon = prompt('Nhập Emoji mới:', this.data.icon);
+              const newIcon = prompt('Enter new icon:', this.data.icon);
               if (newIcon) {
-                  this.data.icon = newIcon.substring(0, 2); // Keep it short
+                  this.data.icon = newIcon.substring(0, 2); 
                   this.buildUI();
               }
           });

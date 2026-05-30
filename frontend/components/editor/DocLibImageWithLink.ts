@@ -36,7 +36,7 @@ export default class DocLibImageWithLink implements BlockTool {
             .doclib-il-container:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
             .doclib-il-img { max-width: 100%; display: block; border-radius: inherit; }
             .doclib-il-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 8px 4px 4px 4px; }
-            .doclib-il-caption:empty::before { content: 'Nhập chú thích Banner...'; color: #94a3b8; pointer-events: none; }
+            .doclib-il-caption:empty::before { content: 'Enter Banner caption'; color: #94a3b8; pointer-events: none; }
             .doclib-il-inputs { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; }
             .doclib-il-btn { position: absolute; top: 8px; right: 8px; padding: 4px 12px; font-size: 12px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 10; }
             .doclib-il-container:hover .doclib-il-btn { opacity: 1; }
@@ -65,7 +65,7 @@ export default class DocLibImageWithLink implements BlockTool {
           
           container.addEventListener('click', (e) => {
               if (this.api.readOnly.toggle) return;
-              // Prevent navigation while editing
+              
               e.preventDefault();
           });
           
@@ -81,7 +81,7 @@ export default class DocLibImageWithLink implements BlockTool {
           
           const editBtn = document.createElement('button');
           editBtn.classList.add('doclib-il-btn');
-          editBtn.innerText = 'Sửa Link / Đổi Ảnh';
+          editBtn.innerText = 'Edit Link / Change Image';
           editBtn.addEventListener('click', (e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -102,17 +102,17 @@ export default class DocLibImageWithLink implements BlockTool {
 
           const imgInput = document.createElement('input');
           imgInput.classList.add(this.api.styles.input);
-          imgInput.placeholder = 'Dán URL Ảnh tĩnh hoặc GIF...';
+          imgInput.placeholder = 'Paste Static Image or GIF URL';
           imgInput.value = this.data.url;
 
           const linkInput = document.createElement('input');
           linkInput.classList.add(this.api.styles.input);
-          linkInput.placeholder = 'Dán URL Liên kết đích (khi click vào ảnh)...';
+          linkInput.placeholder = 'Paste Destination Link URL (on click)';
           linkInput.value = this.data.link;
 
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Tạo Banner';
+          btn.innerText = 'Create Banner';
 
           const insert = () => {
             if (imgInput.value) {

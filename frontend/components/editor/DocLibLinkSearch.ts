@@ -44,15 +44,15 @@ export default class DocLibLinkSearch implements InlineTool {
       
       const input = document.createElement('input');
       input.classList.add('doclib-ls-input');
-      input.placeholder = 'Tìm kiếm tài liệu hoặc dán Link...';
+      input.placeholder = 'Search document or paste Link';
       
       const resultsDiv = document.createElement('div');
       resultsDiv.classList.add('doclib-ls-results');
       
       const dummyData = [
-          { title: 'Tài liệu Hướng dẫn sử dụng', url: '/docs/manual' },
-          { title: 'Báo cáo Doanh thu Q3', url: '/reports/q3' },
-          { title: 'Chính sách bảo mật', url: '/policies/privacy' }
+          { title: 'User Manual Document', url: '/docs/manual' },
+          { title: 'Q3 Revenue Report', url: '/reports/q3' },
+          { title: 'Privacy Policy', url: '/policies/privacy' }
       ];
       
       const renderResults = (query: string) => {
@@ -62,7 +62,7 @@ export default class DocLibLinkSearch implements InlineTool {
           if (query && filtered.length === 0) {
               const r = document.createElement('div');
               r.classList.add('doclib-ls-result');
-              r.innerHTML = `<svg class="doclib-ls-result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="13" x2="21" y2="2"></line><path d="M10 13l-3 3a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l3-3"></path></svg> Liên kết đến URL này`;
+              r.innerHTML = `<svg class="doclib-ls-result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="13" x2="21" y2="2"></line><path d="M10 13l-3 3a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l3-3"></path></svg> Link to this URL`;
               r.addEventListener('click', () => {
                   this.applyLink(query);
               });

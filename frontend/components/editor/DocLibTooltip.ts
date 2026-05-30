@@ -76,7 +76,7 @@ export default class DocLibTooltip implements InlineTool {
   renderActions() {
     this.spanTooltip = this.api.selection.findParentTag('SPAN', 'cdx-tooltip');
     this.tooltipInput = document.createElement('input');
-    this.tooltipInput.placeholder = 'Enter a tooltip...';
+    this.tooltipInput.placeholder = 'Enter a tooltip';
     this.tooltipInput.classList.add(this.api.styles.input, 'tooltip-tool__input');
     if (this.spanTooltip && this.spanTooltip.dataset.tooltip) {
       this.tooltipInput.value = this.spanTooltip.dataset.tooltip;
@@ -89,7 +89,7 @@ export default class DocLibTooltip implements InlineTool {
     if (this.tooltipInput) {
         this.tooltipInput.hidden = false;
         
-        // Use a small delay to ensure input is rendered before focus
+        
         setTimeout(() => this.tooltipInput!.focus(), 50);
         
         this.api.listeners.on(this.tooltipInput, 'keydown', (e: any) => {

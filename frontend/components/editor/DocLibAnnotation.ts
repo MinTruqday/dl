@@ -76,7 +76,7 @@ export default class DocLibAnnotation implements InlineTool {
   renderActions() {
     this.spanTooltip = this.api.selection.findParentTag('SPAN', 'cdx-annotation');
     this.tooltipInput = document.createElement('input');
-    this.tooltipInput.placeholder = 'Thêm chú thích...';
+    this.tooltipInput.placeholder = 'Add caption';
     this.tooltipInput.classList.add(this.api.styles.input);
     this.tooltipInput.style.display = 'block';
     this.tooltipInput.style.width = '100%';

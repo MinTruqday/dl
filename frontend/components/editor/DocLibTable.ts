@@ -36,7 +36,7 @@ export default class DocLibTable implements BlockTool {
         .doclib-table-wrapper { width: 100%; margin: 16px 0; overflow-x: auto; }
         .doclib-table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; }
         .doclib-table td { border: 1px solid #e2e8f0; padding: 8px 12px; min-width: 100px; outline: none; }
-        .doclib-table td:empty::before { content: '...'; color: #cbd5e1; }
+        .doclib-table td:empty::before { content: ''; color: #cbd5e1; }
         .doclib-table-controls { display: flex; gap: 8px; margin-top: 8px; justify-content: flex-end; }
         .doclib-table-btn { padding: 4px 8px; font-size: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; color: #475569; }
         .doclib-table-btn:hover { background: #e2e8f0; }
@@ -77,7 +77,7 @@ export default class DocLibTable implements BlockTool {
 
     const addRowBtn = document.createElement('button');
     addRowBtn.classList.add('doclib-table-btn');
-    addRowBtn.innerText = '+ Thêm hàng';
+    addRowBtn.innerText = '+ Add row';
     addRowBtn.addEventListener('click', () => {
       const cols = this.data.content[0]?.length || 2;
       this.data.content.push(Array(cols).fill(''));
@@ -86,7 +86,7 @@ export default class DocLibTable implements BlockTool {
 
     const addColBtn = document.createElement('button');
     addColBtn.classList.add('doclib-table-btn');
-    addColBtn.innerText = '+ Thêm cột';
+    addColBtn.innerText = '+ Add column';
     addColBtn.addEventListener('click', () => {
       this.data.content.forEach(row => row.push(''));
       this.buildUI();
@@ -94,7 +94,7 @@ export default class DocLibTable implements BlockTool {
     
     const rmRowBtn = document.createElement('button');
     rmRowBtn.classList.add('doclib-table-btn');
-    rmRowBtn.innerText = '- Bớt hàng';
+    rmRowBtn.innerText = '- Remove row';
     rmRowBtn.addEventListener('click', () => {
       if (this.data.content.length > 1) {
           this.data.content.pop();
@@ -104,7 +104,7 @@ export default class DocLibTable implements BlockTool {
     
     const rmColBtn = document.createElement('button');
     rmColBtn.classList.add('doclib-table-btn');
-    rmColBtn.innerText = '- Bớt cột';
+    rmColBtn.innerText = '- Remove column';
     rmColBtn.addEventListener('click', () => {
       if (this.data.content[0]?.length > 1) {
           this.data.content.forEach(row => row.pop());

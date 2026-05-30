@@ -119,9 +119,9 @@ export default class DocLibGroupImage implements BlockTool {
       if (!this.api.readOnly.toggle) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-gi-add');
-          addBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm Ảnh';
+          addBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Image';
           addBtn.addEventListener('click', () => {
-              const url = prompt('Nhập URL ảnh:');
+              const url = prompt('Enter image URL:');
               if (url) {
                   this.data.urls.push(url);
                   this.buildUI();

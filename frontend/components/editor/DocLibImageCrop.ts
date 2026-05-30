@@ -41,7 +41,7 @@ export default class DocLibImageCrop implements BlockTool {
             .doclib-ic-label { font-size: 12px; font-weight: 600; color: #475569; text-transform: uppercase; }
             .doclib-ic-slider { width: 100%; accent-color: #3b82f6; }
             .doclib-ic-caption { outline: none; margin-top: 8px; color: #64748b; font-size: 0.9em; }
-            .doclib-ic-caption:empty::before { content: 'Nhập chú thích ảnh...'; color: #cbd5e1; }
+            .doclib-ic-caption:empty::before { content: 'Enter image caption'; color: #cbd5e1; }
         `;
         document.head.appendChild(style);
     }
@@ -64,7 +64,7 @@ export default class DocLibImageCrop implements BlockTool {
           const img = document.createElement('img');
           img.classList.add('doclib-ic-img');
           img.src = this.data.url;
-          // Apply crop settings
+          
           img.style.objectPosition = `${this.data.x}% ${this.data.y}%`;
           img.style.transform = `scale(${this.data.scale / 100})`;
           
@@ -97,9 +97,9 @@ export default class DocLibImageCrop implements BlockTool {
                   return group;
               };
               
-              controls.appendChild(createSlider('Phóng To (Zoom)', 100, 300, this.data.scale, (v) => this.data.scale = v));
-              controls.appendChild(createSlider('Căn Ngang (X)', 0, 100, this.data.x, (v) => this.data.x = v));
-              controls.appendChild(createSlider('Căn Dọc (Y)', 0, 100, this.data.y, (v) => this.data.y = v));
+              controls.appendChild(createSlider('Zoom', 100, 300, this.data.scale, (v) => this.data.scale = v));
+              controls.appendChild(createSlider('Horizontal Align (X)', 0, 100, this.data.x, (v) => this.data.x = v));
+              controls.appendChild(createSlider('Vertical Align (Y)', 0, 100, this.data.y, (v) => this.data.y = v));
               
               outer.appendChild(controls);
           }
@@ -123,11 +123,11 @@ export default class DocLibImageCrop implements BlockTool {
           
           const input = document.createElement('input');
           input.classList.add(this.api.styles.input);
-          input.placeholder = 'Dán URL Ảnh để tiến hành Crop/Zoom...';
+          input.placeholder = 'Paste Image URL to Crop/Zoom';
           
           const btn = document.createElement('button');
           btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Tiếp tục';
+          btn.innerText = 'Continue';
           btn.addEventListener('click', () => {
               if (input.value) {
                   this.data.url = input.value;

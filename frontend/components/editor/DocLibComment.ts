@@ -46,15 +46,15 @@ export default class DocLibComment implements InlineTool {
       
       const input = document.createElement('input');
       input.classList.add('doclib-comment-input');
-      input.placeholder = 'Nhập bình luận/Ghi chú...';
+      input.placeholder = 'Enter comment/note';
       
       const btn = document.createElement('button');
       btn.classList.add('doclib-comment-btn');
-      btn.innerText = 'Lưu';
+      btn.innerText = 'Save';
       
       const rmBtn = document.createElement('button');
       rmBtn.classList.add('doclib-comment-rm');
-      rmBtn.innerText = 'Xóa';
+      rmBtn.innerText = 'Delete';
       
       btn.addEventListener('click', () => {
           const mark = this.api.selection.findParentTag('MARK', 'class');
@@ -89,7 +89,7 @@ export default class DocLibComment implements InlineTool {
         const mark = document.createElement('mark');
         mark.classList.add('doclib-comment-mark');
         mark.dataset.comment = 'true';
-        mark.setAttribute('title', 'Bình luận mới...');
+        mark.setAttribute('title', 'New comment');
         mark.appendChild(range.extractContents());
         range.insertNode(mark);
         this.api.selection.expandToTag(mark);

@@ -35,7 +35,7 @@ export default class DocLibNestedChecklist implements BlockTool {
             .doclib-ncl-item { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; }
             .doclib-ncl-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6; margin-top: 4px; }
             .doclib-ncl-text { flex-grow: 1; outline: none; line-height: 1.6; padding: 2px 0; }
-            .doclib-ncl-text:empty::before { content: 'Nhập việc cần làm (Tab/Shift+Tab để thụt lề)...'; color: #94a3b8; pointer-events: none; }
+            .doclib-ncl-text:empty::before { content: 'Enter task (Tab/Shift+Tab to indent)'; color: #94a3b8; pointer-events: none; }
             .doclib-ncl-item.checked .doclib-ncl-text { text-decoration: line-through; color: #94a3b8; }
         `;
         document.head.appendChild(style);
@@ -86,7 +86,7 @@ export default class DocLibNestedChecklist implements BlockTool {
                   e.preventDefault();
                   this.data.items.splice(index + 1, 0, { text: '', checked: false, depth: item.depth });
                   this.buildUI();
-                  // Focus the new item
+                  
                   setTimeout(() => {
                       const newText = container.children[index + 1].querySelector('.doclib-ncl-text') as HTMLElement;
                       if (newText) newText.focus();

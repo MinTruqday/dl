@@ -40,12 +40,12 @@ export default class DocLibBadge implements InlineTool {
       this.picker.style.display = 'none';
       
       const colors = [
-          { bg: '#fee2e2', text: '#ef4444', label: 'R' }, // Red
-          { bg: '#fef3c7', text: '#f59e0b', label: 'Y' }, // Yellow
-          { bg: '#dcfce7', text: '#10b981', label: 'G' }, // Green
-          { bg: '#dbeafe', text: '#3b82f6', label: 'B' }, // Blue
-          { bg: '#f3e8ff', text: '#8b5cf6', label: 'P' }, // Purple
-          { bg: '#f1f5f9', text: '#475569', label: 'G' }  // Gray
+          { bg: '#fee2e2', text: '#ef4444', label: 'R' }, 
+          { bg: '#fef3c7', text: '#f59e0b', label: 'Y' }, 
+          { bg: '#dcfce7', text: '#10b981', label: 'G' }, 
+          { bg: '#dbeafe', text: '#3b82f6', label: 'B' }, 
+          { bg: '#f3e8ff', text: '#8b5cf6', label: 'P' }, 
+          { bg: '#f1f5f9', text: '#475569', label: 'G' }  
       ];
       
       colors.forEach(c => {
@@ -84,7 +84,7 @@ export default class DocLibBadge implements InlineTool {
         const span = document.createElement('span');
         span.classList.add('doclib-badge-mark');
         span.dataset.badge = 'true';
-        span.style.backgroundColor = '#dbeafe'; // default blue
+        span.style.backgroundColor = '#dbeafe'; 
         span.style.color = '#3b82f6';
         span.appendChild(range.extractContents());
         range.insertNode(span);

@@ -3,6 +3,7 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibImage implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
+  private config: any;
   private data: { file: { url: string }, caption: string, withBorder: boolean, withBackground: boolean, stretched: boolean };
 
   static get toolbox() {
@@ -14,8 +15,9 @@ export default class DocLibImage implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, config }: { api: API, data: any }) {
     this.api = api;
+    this.config = config || {};
     this.data = {
       file: { url: data.file?.url || data.url || '' },
       caption: data.caption || '',
@@ -37,7 +39,7 @@ export default class DocLibImage implements BlockTool {
             .doclib-image-container { position: relative; border-radius: 8px; overflow: hidden; display: inline-block; max-width: 100%; transition: all 0.3s; line-height: 0; }
             .doclib-image-img { max-width: 100%; display: block; border-radius: inherit; }
             .doclib-image-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 8px 4px 4px 4px; }
-            .doclib-image-caption:empty::before { content: 'Nhập chú thích ảnh...'; color: #94a3b8; pointer-events: none; }
+            .doclib-image-caption:empty::before { content: 'Enter image caption'; color: #94a3b8; pointer-events: none; }
             .doclib-image-container.with-border { border: 2px solid #e2e8f0; }
             .doclib-image-container.with-background { padding: 24px; background: #f1f5f9; border-radius: 12px; }
             .doclib-image-container.stretched { width: 100%; display: block; }
@@ -114,8 +116,8 @@ export default class DocLibImage implements BlockTool {
           uploader.classList.add('doclib-image-uploader');
           uploader.innerHTML = `
               <div class="doclib-image-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-              <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Tải ảnh lên</div>
-              <div style="font-size: 0.9em; opacity: 0.8;">Click để chọn file hoặc Click chuột phải để dán URL</div>
+              <div style="font-weight: 500; font-size: 1.1em; margin-bottom: 4px;">Upload Image</div>
+              <div style="font-size: 0.9em; opacity: 0.8;">Click to select file or Right click to paste URL</div>
           `;
           
           const input = document.createElement('input');
@@ -123,19 +125,44 @@ export default class DocLibImage implements BlockTool {
           input.accept = 'image/*';
           input.addEventListener('change', () => {
               if (input.files && input.files[0]) {
-                  const url = URL.createObjectURL(input.files[0]);
-                  this.data.file.url = url;
-                  this.buildUI();
+                  const file = input.files[0];
+                  const formData = new FormData();
+                  formData.append('file', file);
+                  
+                  const endpoint = this.config.endpoints?.byFile || '/api/uploadFile';
+                  
+                  // Show uploading state (simple text change)
+                  uploader.innerHTML = '<div style="padding: 20px; font-weight: 500;">Uploading...</div>';
+                  
+                  fetch(endpoint, {
+                      method: 'POST',
+                      body: formData
+                  })
+                  .then(res => res.json())
+                  .then(res => {
+                      if (res.success === 1 && res.file && res.file.url) {
+                          this.data.file.url = res.file.url;
+                      } else {
+                          // Fallback if backend doesn't match EditorJS format
+                          this.data.file.url = res.url || res.data?.url || URL.createObjectURL(file);
+                      }
+                      this.buildUI();
+                  })
+                  .catch(err => {
+                      console.error("Upload failed", err);
+                      this.data.file.url = URL.createObjectURL(file);
+                      this.buildUI();
+                  });
               }
           });
           
           uploader.appendChild(input);
           outer.appendChild(uploader);
           
-          // Provide prompt for pasting URL if they don't want to upload
+          
           uploader.addEventListener('contextmenu', (e) => {
               e.preventDefault();
-              const url = prompt('Dán URL Ảnh trực tiếp:');
+              const url = prompt('Paste direct Image URL:');
               if (url) {
                   this.data.file.url = url;
                   this.buildUI();

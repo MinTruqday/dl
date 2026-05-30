@@ -32,7 +32,7 @@ export default class DocLibAnchor implements BlockTune {
         toggler.classList.add(this.api.styles.settingsButtonActive);
     }
     
-    this.api.tooltip.onHover(toggler, 'Neo thẻ (Anchor)', { placement: 'top', hidingDelay: 500 });
+    this.api.tooltip.onHover(toggler, 'Anchor', { placement: 'top', hidingDelay: 500 });
     
     toggler.addEventListener('click', () => {
         if (this.currentAnchor) {

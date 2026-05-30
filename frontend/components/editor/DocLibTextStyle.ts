@@ -15,7 +15,7 @@ export default class DocLibTextStyle implements InlineTool {
   render() {
     this.button = document.createElement('button');
     this.button.type = 'button';
-    // Font icon
+    
     this.button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>';
     this.button.classList.add(this.api.styles.inlineToolButton);
     return this.button;
@@ -24,7 +24,7 @@ export default class DocLibTextStyle implements InlineTool {
   surround(range: Range) {
     if (!range) return;
     
-    // Toggle between big text, small text, and normal text
+    
     const termWrapper = this.api.selection.findParentTag('SPAN');
     
     if (termWrapper && termWrapper.style.fontSize) {
