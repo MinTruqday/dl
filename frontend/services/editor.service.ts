@@ -120,7 +120,7 @@ export async function autoSaveDraftAPI(documentId: string, content: any) {
   const res = await fetch(`${API_URL}/soan-thao/${documentId}/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(content),
+    body: JSON.stringify({ content }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Tự động lưu bản nháp thất bại");

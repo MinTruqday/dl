@@ -46,6 +46,54 @@ async def list_documents(
 ) -> Any:
     return APIResponse(data=await DocumentService.list_documents(limit, cursor, q, sort_by, category, tag), message="Lấy danh sách tài liệu thành công", status=status.HTTP_200_OK)
 
+class FolderCreate(BaseModel):
+    name: str
+    parent_id: Optional[str] = None
+
+@router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    db = db_client.mongodb.get_default_database()
+    query = {"author_id": str(current_user.id)}
+    if parent_id:
+        query["parent_id"] = parent_id
+    cursor = db["workspace_folders"].find(query).sort("created_at", 1)
+    folders = await cursor.to_list(length=100)
+    for f in folders:
+        f["_id"] = str(f["_id"])
+    return APIResponse(data=folders, message="Lấy danh sách thư mục thành công")
+
+@router.post("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    from datetime import datetime, timezone
+    db = db_client.mongodb.get_default_database()
+    folder_doc = {
+        "name": req.name,
+        "parent_id": req.parent_id,
+        "author_id": str(current_user.id),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    res = await db["workspace_folders"].insert_one(folder_doc)
+    folder_doc["_id"] = str(res.inserted_id)
+    return APIResponse(data=folder_doc, message="Tạo thư mục thành công")
+
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
+    from core.database import db_client
+    from bson import ObjectId
+    db = db_client.mongodb.get_default_database()
+    folder = await db["workspace_folders"].find_one({"_id": ObjectId(folder_id), "author_id": str(current_user.id)})
+    if not folder:
+        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục")
+    await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
+    await db["documents"].update_many(
+        {"folder_id": folder_id},
+        {"$unset": {"folder_id": ""}}
+    )
+    return APIResponse(data={"deleted": True}, message="Xóa thư mục thành công")
+
 @router.get("/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_my_documents(cursor: Optional[str] = None, limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
@@ -180,53 +228,6 @@ async def compile_document(document_id: str, current_user: UserInDB = Depends(ge
         message="Biên dịch tài liệu thành công"
     )
 
-class FolderCreate(BaseModel):
-    name: str
-    parent_id: Optional[str] = None
-
-@router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
-    db = db_client.mongodb.get_default_database()
-    query = {"author_id": str(current_user.id)}
-    if parent_id:
-        query["parent_id"] = parent_id
-    cursor = db["workspace_folders"].find(query).sort("created_at", 1)
-    folders = await cursor.to_list(length=100)
-    for f in folders:
-        f["_id"] = str(f["_id"])
-    return APIResponse(data=folders, message="Lấy danh sách thư mục thành công")
-
-@router.post("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
-    from datetime import datetime, timezone
-    db = db_client.mongodb.get_default_database()
-    folder_doc = {
-        "name": req.name,
-        "parent_id": req.parent_id,
-        "author_id": str(current_user.id),
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc)
-    }
-    res = await db["workspace_folders"].insert_one(folder_doc)
-    folder_doc["_id"] = str(res.inserted_id)
-    return APIResponse(data=folder_doc, message="Tạo thư mục thành công")
-
-@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
-    from bson import ObjectId
-    db = db_client.mongodb.get_default_database()
-    folder = await db["workspace_folders"].find_one({"_id": ObjectId(folder_id), "author_id": str(current_user.id)})
-    if not folder:
-        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục")
-    await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
-    await db["documents"].update_many(
-        {"folder_id": folder_id},
-        {"$unset": {"folder_id": ""}}
-    )
-    return APIResponse(data={"deleted": True}, message="Xóa thư mục thành công")
 
 @router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def toggle_star_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):

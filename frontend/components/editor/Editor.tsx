@@ -235,7 +235,26 @@ export default function Editor({
       const Quiz = (await import("editorjs-quiz")).default;
       const Superscript = (await import("editorjs-superscript")).default;
       const Subscript = (await import("editorjs-subscript")).default;
-
+      const CodeMirror = (await import("editorjs-codemirror")).default;
+      const ToggleBlock = (await import("editorjs-toggle-block")).default;
+      const AceCodeEditor = (await import("ace-code-editorjs")).default;
+      const RxpmCode = (await import("@rxpm/editor-js-code")).default;
+      const SimpleImageTool = (await import("simple-image-editorjs")).default;
+      
+      const AiText = (await import("@alkhipce/editorjs-aitext")).default;
+      const HeaderWithAlignment = (await import("editorjs-header-with-alignment")).default;
+      const HeaderWithAnchor = (await import("editorjs-header-with-anchor")).default;
+      const ParagraphWithAlignment = (await import("editorjs-paragraph-with-alignment")).default;
+      
+      const DrawingTool = (await import("@blade47/editorjs-drawing-tool")).default;
+      const GifTool = (await import("@jingjunma/editorjs-gif")).default;
+      const ImageWithLink = (await import("editorjs-image-with-link")).default;
+      const Flipbox = (await import("skm-flipbox")).default;
+      
+      const AdvancedTable = (await import("editorjs-table")).default;
+      
+      const CodeFlask = (await import("@calumk/editorjs-codeflask")).default;
+      const TgSpoiler = (await import("@iizotikov/editor-js-tg-spoiler")).default;
       if (cancelled) {
         holderDiv.remove();
         return;
@@ -256,79 +275,133 @@ export default function Editor({
       }
 
       const tools: Record<string, any> = {};
+      
+      // --- BLOCK TUNES ---
       tools.premium = { class: PremiumTune };
       const commonTunes = ['premium'];
       if (AlignmentTune) { tools.alignment = { class: AlignmentTune }; commonTunes.push('alignment'); }
-      if (IndentTune) { tools.indent = { class: IndentTune }; commonTunes.push('indent'); }
+      if (IndentTune) { 
+        tools.indent = { 
+          class: IndentTune,
+          config: {
+            tuneName: 'indent',
+            multiblock: true,
+            indentSize: 24,
+            maxIndent: 10,
+            orientation: 'horizontal'
+          }
+        }; 
+        commonTunes.push('indent'); 
+      }
       if (StyleTune) { tools.style = StyleTune; commonTunes.push('style'); }
       
+      if (Notice) { tools.notice = Notice; commonTunes.push('notice'); }
+      if (Anchor) { tools.anchor = { class: Anchor, config: { theme: 'light' } }; commonTunes.push('anchor'); }
       const paragraphTunes = [...commonTunes];
       if (TextVariantTune) { tools.textVariant = TextVariantTune; paragraphTunes.push('textVariant'); }
-
       const indentTunes = IndentTune ? ['indent'] : [];
       const alignTunes = AlignmentTune ? ['alignment'] : [];
-
+      // Text and typography
       if (Title) tools.title = { class: Title, inlineToolbar: true };
-      if (Header) tools.header = { class: Header, inlineToolbar: true, tunes: commonTunes };
+      if (Header) tools.header = { class: Header, inlineToolbar: true, config: { levels: [1, 2, 3, 4, 5, 6], defaultLevel: 1 }, tunes: commonTunes };
       if (ParagraphLinebreakable) tools.paragraph = { class: ParagraphLinebreakable, inlineToolbar: true, tunes: paragraphTunes };
-      if (NestedList) tools.list = { class: NestedList, inlineToolbar: true, tunes: indentTunes };
-      if (NestedChecklist) tools.checklist = { class: NestedChecklist, inlineToolbar: true, tunes: indentTunes };
+      if (Paragraph) tools.originalParagraph = { class: Paragraph, inlineToolbar: true };
       if (CychannQuote) tools.quote = { class: CychannQuote, inlineToolbar: true, tunes: alignTunes };
+      if (Quote) tools.originalQuote = { class: Quote, inlineToolbar: true };
       if (Warning) tools.warning = Warning;
       if (Alert) tools.alert = { class: Alert, inlineToolbar: true };
-      if (Notice) tools.notice = Notice;
-      if (CollapsibleBlock) tools.collapsible = { class: CollapsibleBlock, inlineToolbar: true };
-      if (Marker) tools.marker = Marker;
-      if (Codebox) tools.code = Codebox;
       if (CoolbytesDelimiter) tools.delimiter = CoolbytesDelimiter;
-      if (InlineCode) tools.inlineCode = InlineCode;
-      if (LinkAutocomplete) tools.linkTool = LinkAutocomplete;
-      if (Hyperlink) tools.hyperlink = { class: Hyperlink };
-      if (Embed) tools.embed = Embed;
-      if (Table) tools.table = Table;
+      if (Delimiter) tools.originalDelimiter = Delimiter;
+      if (AiText) tools.aiText = AiText;
+      if (HeaderWithAlignment) tools.headerWithAlignment = HeaderWithAlignment;
+      if (HeaderWithAnchor) tools.headerWithAnchor = HeaderWithAnchor;
+      if (ParagraphWithAlignment) tools.paragraphWithAlignment = ParagraphWithAlignment;
+      if (ToggleBlock) tools.toggle = { class: ToggleBlock, inlineToolbar: true };
+      if (BreakLine) tools.breakLine = { class: BreakLine, inlineToolbar: true };
+      
+      // Lists
+      if (ListTool) tools.list = { class: ListTool, inlineToolbar: true, tunes: indentTunes };
+      if (NestedList) tools.nestedList = { class: NestedList, inlineToolbar: true, tunes: indentTunes };
+      if (Checklist) tools.checklist = { class: Checklist, inlineToolbar: true, tunes: indentTunes };
+      if (NestedChecklist) tools.nestedChecklist = { class: NestedChecklist, inlineToolbar: true, tunes: indentTunes };
+      
+      // Media and embed
       if (AdvancedImage) tools.image = AdvancedImage;
+      if (SimpleImageTool) tools.simpleImageTool = SimpleImageTool;
+      if (SimpleImage) tools.originalSimpleImage = SimpleImage;
       if (ImageCropResize) tools.imageCrop = ImageCropResize;
       if (InlineImage) tools.inlineImage = InlineImage;
       if (GroupImage) tools.groupImage = GroupImage;
       if (Gallery) tools.gallery = Gallery;
+      if (Carousel) tools.carousel = { class: Carousel };
       if (AttachesTool) tools.attaches = { class: AttachesTool };
-      if (Button) tools.button = { class: Button };
+      if (Embed) tools.embed = Embed;
       if (MermaidTool) tools.mermaid = MermaidTool;
+      if (DrawingTool) tools.drawing = DrawingTool;
+      if (GifTool) tools.gif = GifTool;
+      if (ImageWithLink) tools.imageWithLink = ImageWithLink;
+      if (Flipbox) tools.flipbox = Flipbox;
       if (LatexTool) tools.latex = LatexTool;
       if (Audio) tools.audio = Audio;
       if (AudioPlayer) tools.audioPlayer = AudioPlayer;
-      if (Video) tools.video = Video;
-      if (Chart) tools.chart = Chart;
-      if (ChartJS) tools.chartjs = ChartJS;
-      if (Anchor) tools.anchor = Anchor;
+      if (Video) tools.video = { class: Video, config: { player: { pip: false } } };
       if (TelegramPost) tools.telegramPost = TelegramPost;
+      
+      // Code
+      if (CodeTool) tools.code = CodeTool;
+      if (RawTool) tools.raw = RawTool;
+      if (CodeMirror) tools.codeMirror = CodeMirror;
+      if (Codebox) tools.codebox = Codebox;
+      if (CodeFlask) tools.codeFlask = CodeFlask;
+      if (AceCodeEditor) tools.aceCode = AceCodeEditor;
+      if (RxpmCode) tools.rxpmCode = RxpmCode;
+      if (Codecup) tools.codecup = Codecup;
+      if (Gist) tools.gist = Gist;
+      
+      // Table
+      if (Table) tools.table = Table;
+      if (AdvancedTable) tools.advancedTable = AdvancedTable;
+
+      // Chart
+      if (Chart) tools.chart = Chart;
+      if (ChartJS) tools.chartJS = ChartJS;
+      
+      // Button
+      if (Button) tools.button = { class: Button };
+      
+      // Layout
+      if (CollapsibleBlock) tools.collapsible = { class: CollapsibleBlock, inlineToolbar: true };
       if (Columns) tools.columns = { class: Columns, config: { tools: { header: Header, paragraph: ParagraphLinebreakable || Paragraph, list: NestedList || ListTool, image: AdvancedImage || SimpleImage, quote: CychannQuote || Quote } } };
       if (Layout) tools.layout = { class: Layout, config: { tools: { header: Header, paragraph: ParagraphLinebreakable || Paragraph, list: NestedList || ListTool, image: AdvancedImage || SimpleImage, quote: CychannQuote || Quote } } };
-      if (RawTool) tools.raw = RawTool;
-      if (UnderlineTool) tools.underline = UnderlineTool;
-      if (Strikethrough) tools.strikethrough = Strikethrough;
       
+      // --- OTHERS ---
       if (Footnotes) tools.footnotes = Footnotes;
-      if (BreakLine) tools.breakLine = { class: BreakLine, inlineToolbar: true };
-      if (Gist) tools.gist = Gist;
       if (MathTool) tools.math = MathTool;
       if (Personality) tools.personality = { class: Personality };
-      if (Carousel) tools.carousel = { class: Carousel };
       if (Quiz) tools.quiz = Quiz;
+      
+      // Inline Tools
+      if (Marker) tools.marker = Marker;
+      if (InlineCode) tools.inlineCode = InlineCode;
+      if (UnderlineTool) tools.underline = UnderlineTool;
+      if (LinkAutocomplete) tools.linkTool = LinkAutocomplete;
+      if (Hyperlink) tools.hyperlink = { class: Hyperlink };
+      if (Spoiler) tools.spoiler = { class: Spoiler };
+      if (InlineTool) tools.inlineTool = InlineTool;
+      if (Inline) tools.inline = Inline;
+      if (InlineTemplate) tools.inlineTemplate = InlineTemplate;
+      if (ChangeCase) tools.changeCase = { class: ChangeCase };
+      if (Tooltip) tools.tooltip = { class: Tooltip };
+      if (Strikethrough) tools.strikethrough = Strikethrough;
+      if (TextColor) tools.textColor = { class: TextColor, config: { defaultColor: '#FF1300', type: 'text', colorCollections: ['#FF1300','#EC7878','#9C27B0','#673AB7','#3F51B5','#0070FF','#03A9F4','#00BCD4','#4CAF50','#8BC34A','#CDDC39', '#FFF'] } };
+      if (ColorPicker) tools.colorPicker = { class: ColorPicker, config: { defaultColor: '#FF1300', type: 'marker', colorCollections: ['#FF1300','#EC7878','#9C27B0','#673AB7','#3F51B5','#0070FF','#03A9F4','#00BCD4','#4CAF50','#8BC34A','#CDDC39', '#FFF'] } };
+      if (Annotation) tools.annotation = Annotation;
+      if (EditorjsComment) tools.comment = EditorjsComment;
+      if (InlineHotkey) tools.inlineHotkey = InlineHotkey;
+      if (TgSpoiler) tools.tgSpoiler = TgSpoiler;
       if (Superscript) tools.superscript = Superscript;
       if (Subscript) tools.subscript = Subscript;
       if (TextStyle) tools.textStyle = TextStyle;
-      if (TextColor) tools.textColor = { class: TextColor, inlineToolbar: true };
-      if (ColorPicker) tools.colorPicker = { class: ColorPicker, inlineToolbar: true };
-      if (Tooltip) tools.tooltip = { class: Tooltip, inlineToolbar: true };
-      if (Spoiler) tools.spoiler = { class: Spoiler };
-      if (Annotation) tools.annotation = Annotation;
-      if (ChangeCase) tools.changeCase = { class: ChangeCase };
-      if (EditorjsComment) tools.comment = EditorjsComment;
-      if (Inline) tools.inline = Inline;
-      if (InlineHotkey) tools.inlineHotkey = InlineHotkey;
-      if (InlineTemplate) tools.inlineTemplate = InlineTemplate;
-      if (InlineTool) tools.inlineTool = InlineTool;
       
       const editor = new EditorJSModule({
         holder: holderDiv,
@@ -754,96 +827,83 @@ export default function Editor({
   return (
     <div className={`flex flex-col w-full h-full bg-white relative font-sans ${isZenMode ? "fixed inset-0 z-50" : ""}`}>
       {!isZenMode && (
-        <div className="flex justify-between items-center border-b border-zinc-200 p-3">
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="flex gap-2 ml-2">
-              <button
-                onClick={handleSynonyms}
-                disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
-              >
-                Gợi ý từ ngữ
-              </button>
-              <button
-                onClick={handleAiWritingPartner}
-                disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
-              >
-                Trợ lý AI
-              </button>
-              <button
-                onClick={handleConsistencyCheck}
-                disabled={isSuggesting}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
-              >
-                Kiểm tra tính logic
-              </button>
-              <button
-                onClick={handleGrammarCheck}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98]  "
-              >
-                Kiểm tra ngữ pháp
-              </button>
-              <button
-                onClick={handleCompilePreview}
-                disabled={isCompiling}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isCompiling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Binary className="w-3.5 h-3.5" />}
-                Biên dịch LaTeX
-              </button>
-              <button
-                onClick={handleExportWord}
-                disabled={isExportingWord}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isExportingWord ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileEdit className="w-3.5 h-3.5" />}
-                Xuất ra Word
-              </button>
-              <button
-                onClick={handleExportEpub}
-                disabled={isExportingEpub}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isExportingEpub ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-                Xuất ra EPUB
-              </button>
-              <button
-                onClick={() => setShowFindReplace(!showFindReplace)}
-                className={`px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 ${showFindReplace ? "bg-black text-white border-black" : ""}`}
-              >
-                <Search className="w-3.5 h-3.5" />
-                Tìm kiếm và thay thế
-              </button>
-            </div>
-            <div className="flex gap-2 ml-2 pl-2 border-l border-zinc-200">
-              <button
-                onClick={handleSummarize}
-                disabled={isSummarizing}
-                className="px-4 py-1.5 bg-black text-white text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Wand2 className="w-3.5 h-3.5 text-white" />}
-                Tóm tắt bằng AI
-              </button>
-              <button
-                onClick={handleExtractTags}
-                disabled={isExtractingTags}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isExtractingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
-                Tự động tạo thẻ
-              </button>
-              <button
-                onClick={handlePlagiarismScan}
-                disabled={isScanningPlagiarism}
-                className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5"
-              >
-                {isScanningPlagiarism ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                Kiểm tra bản quyền
-              </button>
-            </div>
+        <div className="flex justify-between items-center border-b border-zinc-200 p-3 gap-4">
+          <div className="flex flex-1 overflow-x-auto no-scrollbar gap-2 items-center">
+            <button
+              onClick={handleSynonyms}
+              disabled={isSuggesting}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+            >
+              Gợi ý từ ngữ
+            </button>
+            <button
+              onClick={handleAiWritingPartner}
+              disabled={isSuggesting}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+            >
+              <Bot className="w-3.5 h-3.5" />
+              Trợ lý AI
+            </button>
+            <button
+              onClick={handleConsistencyCheck}
+              disabled={isSuggesting}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+            >
+              <Network className="w-3.5 h-3.5" />
+              Kiểm tra tính logic
+            </button>
+            <button
+              onClick={handleGrammarCheck}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 flex items-center gap-1.5"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              Kiểm tra ngữ pháp
+            </button>
+            <button
+              onClick={handleCompilePreview}
+              disabled={isCompiling}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+            >
+              {isCompiling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Binary className="w-3.5 h-3.5" />}
+              Biên dịch LaTeX
+            </button>
+
+            <button
+              onClick={() => setShowFindReplace(!showFindReplace)}
+              className={`px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 ${showFindReplace ? "bg-black text-white border-black hover:bg-zinc-800" : ""}`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              Tìm kiếm / Thay thế
+            </button>
+            
+            <div className="w-px h-6 bg-zinc-200 mx-1 shrink-0" />
+
+            <button
+              onClick={handleSummarize}
+              disabled={isSummarizing}
+              className="px-4 py-1.5 bg-black text-white text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-800"
+            >
+              {isSummarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Wand2 className="w-3.5 h-3.5 text-white" />}
+              Tóm tắt bằng AI
+            </button>
+            <button
+              onClick={handleExtractTags}
+              disabled={isExtractingTags}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+            >
+              {isExtractingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+              Tự động tạo thẻ
+            </button>
+            <button
+              onClick={handlePlagiarismScan}
+              disabled={isScanningPlagiarism}
+              className="px-4 py-1.5 border border-zinc-200 text-zinc-600 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50"
+            >
+              {isScanningPlagiarism ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+              Kiểm tra bản quyền
+            </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button
               onClick={() => setIsPreview(!isPreview)}
               className={`p-1.5 border ${isPreview ? "bg-black text-white border-black" : "border-zinc-200 text-zinc-600"}  `}

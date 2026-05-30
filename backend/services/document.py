@@ -130,7 +130,7 @@ class DocumentService:
         )
         await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), str(current_user.id), current_user.full_name)
         logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
-        return await docs_collection.find_one({"_id": document_id})
+        return serialize_document(await docs_collection.find_one({"_id": document_id}))
 
     @staticmethod
     async def update_document(document_id: str, doc_update, current_user) -> dict:

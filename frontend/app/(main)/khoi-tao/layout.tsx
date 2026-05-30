@@ -17,12 +17,17 @@ export default function CreationLayout({
   const navItems = [
     { id: "step1", label: "Thông tin sơ bộ", href: "/khoi-tao" },
     { id: "step2", label: "Kho lưu trữ nháp", href: "/khoi-tao/ban-thao" },
-    ...(isAdminOrMod ? [{ id: "step3", label: "Duyệt bản thảo", href: "/khoi-tao/duyet-ban-thao" }] : []),
+    { id: "step3", label: "Số liệu", href: "/khoi-tao/so-lieu" },
+    { id: "step4", label: "Cấu hình", href: "/khoi-tao/cau-hinh" },
+    { id: "step5", label: "Lịch sử", href: "/khoi-tao/lich-su" },
+    { id: "step6", label: "Bình luận", href: "/khoi-tao/binh-luan" },
+    { id: "step7", label: "Thùng rác", href: "/khoi-tao/thung-rac" },
+    ...(isAdminOrMod ? [{ id: "step8", label: "Duyệt bản thảo", href: "/khoi-tao/duyet-ban-thao" }] : []),
   ];
 
   const isActive = (href: string) => {
     if (href === "/khoi-tao") return pathname === "/khoi-tao";
-    return pathname === href;
+    return pathname.startsWith(href);
   };
 
   return (

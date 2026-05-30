@@ -48,6 +48,22 @@ export async function getAdminConfigAPI() {
   return data;
 }
 
+export async function updateAdminConfigAPI(config: any) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/van-hanh/cau-hinh`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(config),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình hệ thống");
+  return data;
+}
+
 export async function getSystemHealthAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
