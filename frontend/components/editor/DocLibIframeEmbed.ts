@@ -4,6 +4,7 @@ export default class DocLibIframeEmbed implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string, height: number };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibIframeEmbed implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       url: data.url || '',
       height: data.height || 400
@@ -64,7 +66,7 @@ export default class DocLibIframeEmbed implements BlockTool {
           
           container.appendChild(iframe);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const controls = document.createElement('div');
               controls.classList.add('doclib-if-controls');
               

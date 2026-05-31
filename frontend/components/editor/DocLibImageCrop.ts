@@ -4,6 +4,7 @@ export default class DocLibImageCrop implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string, scale: number, x: number, y: number, caption: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibImageCrop implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       url: data.url || '',
       scale: data.scale || 100,
@@ -71,7 +73,7 @@ export default class DocLibImageCrop implements BlockTool {
           container.appendChild(img);
           outer.appendChild(container);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const controls = document.createElement('div');
               controls.classList.add('doclib-ic-controls');
               

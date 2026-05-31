@@ -4,6 +4,7 @@ export default class DocLibTimeline implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { items: { title: string, date: string, desc: string }[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibTimeline implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       items: data.items && data.items.length > 0 ? data.items : [
           { title: 'Start Project', date: 'Jan 2024', desc: 'Kickoff and detailed planning.' }
@@ -75,19 +77,19 @@ export default class DocLibTimeline implements BlockTool {
           
           const title = document.createElement('div');
           title.classList.add('doclib-tl-title');
-          title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          title.contentEditable = !this.readOnly ? 'true' : 'false';
           title.innerHTML = item.title;
           title.addEventListener('input', () => item.title = title.innerHTML);
           
           const date = document.createElement('div');
           date.classList.add('doclib-tl-date');
-          date.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          date.contentEditable = !this.readOnly ? 'true' : 'false';
           date.innerHTML = item.date;
           date.addEventListener('input', () => item.date = date.innerHTML);
           
           const desc = document.createElement('div');
           desc.classList.add('doclib-tl-desc');
-          desc.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          desc.contentEditable = !this.readOnly ? 'true' : 'false';
           desc.innerHTML = item.desc;
           desc.addEventListener('input', () => item.desc = desc.innerHTML);
           
@@ -95,7 +97,7 @@ export default class DocLibTimeline implements BlockTool {
           content.appendChild(date);
           content.appendChild(desc);
           
-          if (!this.api.readOnly.toggle && this.data.items.length > 1) {
+          if (!this.readOnly && this.data.items.length > 1) {
               const rmBtn = document.createElement('button');
               rmBtn.classList.add('doclib-tl-rm');
               rmBtn.innerHTML = '&times;';
@@ -113,7 +115,7 @@ export default class DocLibTimeline implements BlockTool {
       
       this.wrapper.appendChild(container);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-tl-btn');
           addBtn.innerText = '+ Add Timeline Milestone';

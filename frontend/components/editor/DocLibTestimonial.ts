@@ -4,6 +4,7 @@ export default class DocLibTestimonial implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { author: string, role: string, avatar: string, content: string, rating: number };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibTestimonial implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       author: data.author || '',
       role: data.role || '',
@@ -72,7 +74,7 @@ export default class DocLibTestimonial implements BlockTool {
           star.setAttribute('fill', i <= this.data.rating ? 'currentColor' : 'none');
           star.innerHTML = '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>';
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               star.addEventListener('click', () => {
                   this.data.rating = i;
                   this.buildUI();
@@ -84,7 +86,7 @@ export default class DocLibTestimonial implements BlockTool {
       
       const content = document.createElement('div');
       content.classList.add('doclib-tm-content');
-      content.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      content.contentEditable = !this.readOnly ? 'true' : 'false';
       content.innerHTML = this.data.content;
       content.addEventListener('input', () => this.data.content = content.innerHTML);
       container.appendChild(content);
@@ -95,7 +97,7 @@ export default class DocLibTestimonial implements BlockTool {
       const avatar = document.createElement('img');
       avatar.classList.add('doclib-tm-avatar');
       avatar.src = this.data.avatar || 'https://ui-avatars.com/api/?name=User&background=cbd5e1&color=fff';
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           avatar.addEventListener('click', () => {
               const url = prompt('Enter customer Avatar URL:', this.data.avatar);
               if (url !== null) {
@@ -111,14 +113,14 @@ export default class DocLibTestimonial implements BlockTool {
       
       const name = document.createElement('div');
       name.classList.add('doclib-tm-name');
-      name.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      name.contentEditable = !this.readOnly ? 'true' : 'false';
       name.innerHTML = this.data.author;
       name.addEventListener('input', () => this.data.author = name.innerHTML);
       info.appendChild(name);
       
       const role = document.createElement('div');
       role.classList.add('doclib-tm-role');
-      role.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      role.contentEditable = !this.readOnly ? 'true' : 'false';
       role.innerHTML = this.data.role;
       role.addEventListener('input', () => this.data.role = role.innerHTML);
       info.appendChild(role);

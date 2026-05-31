@@ -10,18 +10,24 @@ class RabbitMQConnection:
         self.channel = None
 
     async def connect(self):
-        try:
-            self.connection = await aio_pika.connect_robust(self.url)
-            self.channel = await self.connection.channel()
-            await self.channel.declare_queue("collect_list_queue", durable=True)
-            await self.channel.declare_queue("collect_detail_queue", durable=True)
-            await self.channel.declare_queue("download_processor_queue", durable=True)
-            await self.channel.declare_queue("format_converter_queue", durable=True)
-            await self.channel.declare_queue("nxbgd_queue", durable=True)
-            logger.info("RabbitMQ Connected & Queues declared.")
-        except Exception as e:
-            logger.error(f"Failed to connect RabbitMQ: {e}")
-            raise e
+        import asyncio
+        max_retries = 10
+        for attempt in range(max_retries):
+            try:
+                self.connection = await aio_pika.connect_robust(self.url)
+                self.channel = await self.connection.channel()
+                await self.channel.declare_queue("collect_list_queue", durable=True)
+                await self.channel.declare_queue("collect_detail_queue", durable=True)
+                await self.channel.declare_queue("download_processor_queue", durable=True)
+                await self.channel.declare_queue("format_converter_queue", durable=True)
+                await self.channel.declare_queue("nxbgd_queue", durable=True)
+                logger.info("RabbitMQ Connected & Queues declared.")
+                return
+            except Exception as e:
+                logger.error(f"Failed to connect RabbitMQ (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt == max_retries - 1:
+                    raise e
+                await asyncio.sleep(3)
 
     async def publish(self, queue_name: str, payload: dict):
         if not self.channel:

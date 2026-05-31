@@ -6,6 +6,7 @@ export default class DocLibKanban implements BlockTool {
   private data: { 
     columns: { id: string, title: string, color: string, tasks: { id: string, text: string }[] }[] 
   };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -16,8 +17,9 @@ export default class DocLibKanban implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       columns: data.columns && data.columns.length > 0 ? data.columns : [
           { id: 'c1', title: 'To Do', color: '#cbd5e1', tasks: [{ id: 't1', text: 'Task 1' }] },
@@ -79,14 +81,14 @@ export default class DocLibKanban implements BlockTool {
           
           const title = document.createElement('div');
           title.classList.add('doclib-kb-title');
-          title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          title.contentEditable = !this.readOnly ? 'true' : 'false';
           title.innerHTML = col.title;
           title.addEventListener('input', () => col.title = title.innerHTML);
           
           header.appendChild(dot);
           header.appendChild(title);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               dot.style.cursor = 'pointer';
               dot.addEventListener('click', () => {
                   const newColor = prompt('Enter color code (Hex/Name) for this column:', col.color);
@@ -117,13 +119,13 @@ export default class DocLibKanban implements BlockTool {
               
               const text = document.createElement('div');
               text.classList.add('doclib-kb-task-text');
-              text.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+              text.contentEditable = !this.readOnly ? 'true' : 'false';
               text.innerHTML = task.text;
               text.addEventListener('input', () => task.text = text.innerHTML);
               
               taskEl.appendChild(text);
               
-              if (!this.api.readOnly.toggle) {
+              if (!this.readOnly) {
                   const nav = document.createElement('div');
                   nav.classList.add('doclib-kb-nav');
                   
@@ -166,7 +168,7 @@ export default class DocLibKanban implements BlockTool {
               colEl.appendChild(taskEl);
           });
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const addBtn = document.createElement('button');
               addBtn.classList.add('doclib-kb-add');
               addBtn.innerText = '+ Add Card';
@@ -180,7 +182,7 @@ export default class DocLibKanban implements BlockTool {
           container.appendChild(colEl);
       });
       
-      if (!this.api.readOnly.toggle && this.data.columns.length < 5) {
+      if (!this.readOnly && this.data.columns.length < 5) {
           const addColBtn = document.createElement('div');
           addColBtn.style.flex = '0 0 50px';
           addColBtn.style.display = 'flex';

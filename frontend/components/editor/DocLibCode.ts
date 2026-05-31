@@ -1,5 +1,4 @@
 import { API, BlockTool } from "@editorjs/editorjs";
-import { IconCode } from "@codexteam/icons";
 
 export default class DocLibCode implements BlockTool {
   private api: API;
@@ -15,7 +14,7 @@ export default class DocLibCode implements BlockTool {
   static get toolbox() {
     return {
       title: 'DocLib Code',
-      icon: IconCode
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>'
     };
   }
 

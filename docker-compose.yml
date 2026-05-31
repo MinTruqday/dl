@@ -206,6 +206,7 @@ services:
     volumes:
       - ./backend/collector/src:/app/src
       - ./backend/logs:/app/logs
+    command: bash -c "xvfb-run -a python -u main.py > /app/logs/collector_startup.log 2>&1"
     networks:
       - doclib_network
 

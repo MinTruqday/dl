@@ -4,6 +4,7 @@ export default class DocLibNestedList implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { style: 'ordered' | 'unordered', items: { content: string, items: any[] }[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibNestedList implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       style: data.style || 'unordered',
       items: data.items && data.items.length > 0 ? data.items : [{ content: '', items: [] }]
@@ -76,7 +78,7 @@ export default class DocLibNestedList implements BlockTool {
           
           const content = document.createElement('div');
           content.classList.add('doclib-nl-content');
-          content.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          content.contentEditable = !this.readOnly ? 'true' : 'false';
           content.innerHTML = item.content;
           
           content.addEventListener('input', () => { item.content = content.innerHTML; });

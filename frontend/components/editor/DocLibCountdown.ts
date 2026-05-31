@@ -4,6 +4,7 @@ export default class DocLibCountdown implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { title: string, targetDate: string };
+  private readOnly: boolean;
   private timerId: any = null;
 
   static get toolbox() {
@@ -15,8 +16,9 @@ export default class DocLibCountdown implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       title: data.title || 'Upcoming Event',
       targetDate: data.targetDate || new Date(Date.now() + 86400000 * 7).toISOString() 
@@ -57,7 +59,7 @@ export default class DocLibCountdown implements BlockTool {
       
       const title = document.createElement('div');
       title.classList.add('doclib-cd-title');
-      title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      title.contentEditable = !this.readOnly ? 'true' : 'false';
       title.innerHTML = this.data.title;
       title.addEventListener('input', () => this.data.title = title.innerHTML);
       container.appendChild(title);
@@ -90,7 +92,7 @@ export default class DocLibCountdown implements BlockTool {
       grid.appendChild(sBox.box);
       container.appendChild(grid);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const editDiv = document.createElement('div');
           editDiv.classList.add('doclib-cd-edit');
           const input = document.createElement('input');

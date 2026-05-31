@@ -4,18 +4,20 @@ export default class DocLibAiText implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { prompt: string, response: string, status: 'idle' | 'generating' | 'done' };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
       title: 'DocLib AI',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path><circle cx="12" cy="12" r="3"></circle></svg>'
     };
   }
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       prompt: data.prompt || '',
       response: data.response || '',
@@ -66,7 +68,7 @@ export default class DocLibAiText implements BlockTool {
       `;
       container.appendChild(header);
       
-      if (!this.api.readOnly.toggle && this.data.status !== 'done') {
+      if (!this.readOnly && this.data.status !== 'done') {
           const promptRow = document.createElement('div');
           promptRow.classList.add('doclib-ai-prompt');
           
@@ -127,7 +129,7 @@ export default class DocLibAiText implements BlockTool {
       
       const responseBox = document.createElement('div');
       responseBox.classList.add('doclib-ai-response');
-      responseBox.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      responseBox.contentEditable = !this.readOnly ? 'true' : 'false';
       
       if (this.data.status === 'generating') {
           responseBox.classList.add('doclib-ai-generating');

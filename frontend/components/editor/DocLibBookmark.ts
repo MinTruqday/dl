@@ -4,6 +4,7 @@ export default class DocLibBookmark implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string, title: string, desc: string, img: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibBookmark implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       url: data.url || '',
       title: data.title || '',
@@ -61,7 +63,7 @@ export default class DocLibBookmark implements BlockTool {
           container.href = this.data.url;
           container.target = '_blank';
           container.addEventListener('click', (e) => {
-              if (!this.api.readOnly.toggle) e.preventDefault(); 
+              if (!this.readOnly) e.preventDefault(); 
           });
           
           const content = document.createElement('div');
@@ -69,13 +71,13 @@ export default class DocLibBookmark implements BlockTool {
           
           const title = document.createElement('div');
           title.classList.add('doclib-bm-title');
-          title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          title.contentEditable = !this.readOnly ? 'true' : 'false';
           title.innerHTML = this.data.title;
           title.addEventListener('input', () => this.data.title = title.innerHTML);
           
           const desc = document.createElement('div');
           desc.classList.add('doclib-bm-desc');
-          desc.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          desc.contentEditable = !this.readOnly ? 'true' : 'false';
           desc.innerHTML = this.data.desc;
           desc.addEventListener('input', () => this.data.desc = desc.innerHTML);
           
@@ -95,7 +97,7 @@ export default class DocLibBookmark implements BlockTool {
           img.src = this.data.img || 'https://via.placeholder.com/300x200?text=No+Image';
           imgBox.appendChild(img);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const editImg = document.createElement('button');
               editImg.innerHTML = 'Change image';
               editImg.style.position = 'absolute';

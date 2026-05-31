@@ -1,5 +1,4 @@
 import { API, InlineTool } from "@editorjs/editorjs";
-import { IconInlineCode } from "@codexteam/icons";
 
 export default class DocLibInlineCode implements InlineTool {
   private api: API;
@@ -20,7 +19,7 @@ export default class DocLibInlineCode implements InlineTool {
     this.button = document.createElement("button");
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
-    this.button.innerHTML = IconInlineCode;
+    this.button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18l-6-6 6-6"/><path d="M14 6l6 6-6 6"/></svg>';
     return this.button;
   }
 

@@ -328,7 +328,6 @@ export default function Editor({
       if (DocLibFlipbox) tools.flipbox = DocLibFlipbox;
       if (DocLibLatex) {
         tools.latex = DocLibLatex;
-        tools.monacoLatex = DocLibLatex;
       }
       if (DocLibAudio) tools.audio = DocLibAudio;
       if (DocLibAudioPlayer) tools.audioPlayer = DocLibAudioPlayer;

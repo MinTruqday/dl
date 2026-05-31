@@ -4,6 +4,7 @@ export default class DocLibCodeMirror implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { code: string, language: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibCodeMirror implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       code: data.code || '',
       language: data.language || 'javascript'
@@ -67,7 +69,7 @@ export default class DocLibCodeMirror implements BlockTool {
       
       const lang = document.createElement('div');
       lang.classList.add('doclib-cm-lang');
-      lang.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      lang.contentEditable = !this.readOnly ? 'true' : 'false';
       lang.innerHTML = this.data.language;
       lang.addEventListener('input', () => this.data.language = lang.innerHTML);
       
@@ -76,7 +78,7 @@ export default class DocLibCodeMirror implements BlockTool {
       
       const editor = document.createElement('div');
       editor.classList.add('doclib-cm-editor');
-      editor.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      editor.contentEditable = !this.readOnly ? 'true' : 'false';
       editor.innerHTML = this.data.code;
       editor.addEventListener('input', () => this.data.code = editor.innerHTML);
       

@@ -4,6 +4,7 @@ export default class DocLibCallout implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { icon: string, text: string, bgColor: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibCallout implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       icon: data.icon || '',
       text: data.text || '',
@@ -81,7 +83,7 @@ export default class DocLibCallout implements BlockTool {
       const iconBtn = document.createElement('div');
       iconBtn.classList.add('doclib-co-icon');
       iconBtn.innerText = this.data.icon;
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           iconBtn.addEventListener('click', () => {
               const newIcon = prompt('Enter new icon:', this.data.icon);
               if (newIcon) {
@@ -93,7 +95,7 @@ export default class DocLibCallout implements BlockTool {
       
       const text = document.createElement('div');
       text.classList.add('doclib-co-text');
-      text.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      text.contentEditable = !this.readOnly ? 'true' : 'false';
       text.innerHTML = this.data.text;
       text.addEventListener('input', () => this.data.text = text.innerHTML);
       

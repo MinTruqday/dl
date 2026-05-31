@@ -4,6 +4,7 @@ export default class DocLibMath implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { formula: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibMath implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       formula: data.formula || 'E = mc^2'
     };
@@ -84,7 +86,7 @@ export default class DocLibMath implements BlockTool {
       
       container.appendChild(display);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const input = document.createElement('input');
           input.classList.add('doclib-math-input');
           input.value = this.data.formula;

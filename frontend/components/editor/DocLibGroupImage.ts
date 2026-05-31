@@ -4,6 +4,7 @@ export default class DocLibGroupImage implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { urls: string[], layout: 'grid' | 'masonry' };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibGroupImage implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       urls: Array.isArray(data.urls) ? data.urls : [],
       layout: data.layout || 'grid'
@@ -95,7 +97,7 @@ export default class DocLibGroupImage implements BlockTool {
               img.src = url;
               item.appendChild(img);
               
-              if (!this.api.readOnly.toggle) {
+              if (!this.readOnly) {
                   const overlay = document.createElement('div');
                   overlay.classList.add('doclib-gi-item-overlay');
                   
@@ -116,7 +118,7 @@ export default class DocLibGroupImage implements BlockTool {
           container.appendChild(grid);
       }
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-gi-add');
           addBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Image';
@@ -130,7 +132,7 @@ export default class DocLibGroupImage implements BlockTool {
           container.appendChild(addBtn);
       }
       
-      if (this.data.urls.length === 0 && this.api.readOnly.toggle) {
+      if (this.data.urls.length === 0 && this.readOnly) {
           return;
       }
       

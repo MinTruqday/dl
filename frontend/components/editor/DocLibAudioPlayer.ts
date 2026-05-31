@@ -4,18 +4,20 @@ export default class DocLibAudioPlayer implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { audioUrl: string, coverUrl: string, title: string, artist: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
       title: 'DocLib Audio Player',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>'
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>'
     };
   }
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       audioUrl: data.audioUrl || '',
       coverUrl: data.coverUrl || '',
@@ -65,7 +67,7 @@ export default class DocLibAudioPlayer implements BlockTool {
           cover.classList.add('doclib-ap-cover');
           cover.src = this.data.coverUrl || 'https://ui-avatars.com/api/?name=Audio&background=f1f5f9&color=94a3b8&size=160';
           cover.addEventListener('click', () => {
-              if (this.api.readOnly.toggle) return;
+              if (this.readOnly) return;
               const url = prompt('Enter Cover Art URL:', this.data.coverUrl);
               if (url !== null) {
                   this.data.coverUrl = url;
@@ -105,7 +107,7 @@ export default class DocLibAudioPlayer implements BlockTool {
           container.appendChild(cover);
           container.appendChild(info);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const editBtn = document.createElement('button');
               editBtn.classList.add('doclib-ap-edit-btn');
               editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';

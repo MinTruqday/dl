@@ -4,6 +4,7 @@ export default class DocLibImageWithLink implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { url: string, link: string, caption: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibImageWithLink implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       url: data.url || '',
       link: data.link || '',
@@ -64,7 +66,7 @@ export default class DocLibImageWithLink implements BlockTool {
           }
           
           container.addEventListener('click', (e) => {
-              if (this.api.readOnly.toggle) return;
+              if (this.readOnly) return;
               
               e.preventDefault();
           });
@@ -90,7 +92,7 @@ export default class DocLibImageWithLink implements BlockTool {
           });
           
           container.appendChild(img);
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               container.appendChild(editBtn);
           }
           

@@ -4,6 +4,7 @@ export default class DocLibSteps implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { steps: { title: string, desc: string }[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibSteps implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       steps: data.steps && data.steps.length > 0 ? data.steps : [
           { title: 'Step 1', desc: 'Detailed step description 1' }
@@ -68,13 +70,13 @@ export default class DocLibSteps implements BlockTool {
           
           const title = document.createElement('div');
           title.classList.add('doclib-stp-title');
-          title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          title.contentEditable = !this.readOnly ? 'true' : 'false';
           title.innerHTML = step.title;
           title.addEventListener('input', () => step.title = title.innerHTML);
           
           const desc = document.createElement('div');
           desc.classList.add('doclib-stp-desc');
-          desc.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          desc.contentEditable = !this.readOnly ? 'true' : 'false';
           desc.innerHTML = step.desc;
           desc.addEventListener('input', () => step.desc = desc.innerHTML);
           
@@ -82,7 +84,7 @@ export default class DocLibSteps implements BlockTool {
           content.appendChild(desc);
           item.appendChild(content);
           
-          if (!this.api.readOnly.toggle && this.data.steps.length > 1) {
+          if (!this.readOnly && this.data.steps.length > 1) {
               const rm = document.createElement('button');
               rm.classList.add('doclib-stp-rm');
               rm.innerHTML = '&times;';
@@ -96,7 +98,7 @@ export default class DocLibSteps implements BlockTool {
           container.appendChild(item);
       });
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const add = document.createElement('button');
           add.classList.add('doclib-stp-add');
           add.innerText = '+ Add Step';

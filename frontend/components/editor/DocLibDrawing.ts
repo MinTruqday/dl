@@ -4,6 +4,7 @@ export default class DocLibDrawing implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { image: string };
+  private readOnly: boolean;
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private isDrawing: boolean = false;
@@ -17,8 +18,9 @@ export default class DocLibDrawing implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = { image: data.image || '' };
   }
 
@@ -54,7 +56,7 @@ export default class DocLibDrawing implements BlockTool {
       const container = document.createElement('div');
       container.classList.add('doclib-drawing-wrapper');
       
-      if (this.api.readOnly.toggle && this.data.image) {
+      if (this.readOnly && this.data.image) {
           const img = document.createElement('img');
           img.classList.add('doclib-drawing-readonly-img');
           img.src = this.data.image;

@@ -4,6 +4,7 @@ export default class DocLibColumns implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { cols: number, contents: string[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibColumns implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       cols: data.cols || 2,
       contents: Array.isArray(data.contents) && data.contents.length > 0 ? data.contents : ['', '']
@@ -74,7 +76,7 @@ export default class DocLibColumns implements BlockTool {
       for (let i = 0; i < this.data.cols; i++) {
           const col = document.createElement('div');
           col.classList.add('doclib-cols-col');
-          col.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          col.contentEditable = !this.readOnly ? 'true' : 'false';
           col.innerHTML = this.data.contents[i] || '';
           col.addEventListener('input', () => this.data.contents[i] = col.innerHTML);
           container.appendChild(col);

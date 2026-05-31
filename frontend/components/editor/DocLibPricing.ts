@@ -6,6 +6,7 @@ export default class DocLibPricing implements BlockTool {
   private data: { 
     plans: { title: string, price: string, features: string[], highlighted: boolean }[] 
   };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -16,8 +17,9 @@ export default class DocLibPricing implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       plans: data.plans && data.plans.length > 0 ? data.plans : [
           { title: 'Basic', price: '$0 / month', features: ['Feature 1', 'Feature 2'], highlighted: false },
@@ -85,13 +87,13 @@ export default class DocLibPricing implements BlockTool {
           
           const title = document.createElement('div');
           title.classList.add('doclib-pr-title');
-          title.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          title.contentEditable = !this.readOnly ? 'true' : 'false';
           title.innerHTML = plan.title;
           title.addEventListener('input', () => plan.title = title.innerHTML);
           
           const price = document.createElement('div');
           price.classList.add('doclib-pr-price');
-          price.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          price.contentEditable = !this.readOnly ? 'true' : 'false';
           price.innerHTML = plan.price;
           price.addEventListener('input', () => plan.price = price.innerHTML);
           
@@ -100,7 +102,7 @@ export default class DocLibPricing implements BlockTool {
           plan.features.forEach((feat, fIndex) => {
               const li = document.createElement('li');
               li.classList.add('doclib-pr-feature');
-              li.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+              li.contentEditable = !this.readOnly ? 'true' : 'false';
               li.innerHTML = feat;
               li.addEventListener('input', () => plan.features[fIndex] = li.innerHTML);
               li.addEventListener('keydown', (e) => {
@@ -117,7 +119,7 @@ export default class DocLibPricing implements BlockTool {
               featureList.appendChild(li);
           });
           
-          if (!this.api.readOnly.toggle && plan.features.length === 0) {
+          if (!this.readOnly && plan.features.length === 0) {
               const addF = document.createElement('li');
               addF.classList.add('doclib-pr-feature');
               addF.style.cursor = 'pointer';
@@ -139,7 +141,7 @@ export default class DocLibPricing implements BlockTool {
           card.appendChild(featureList);
           card.appendChild(ctaBtn);
           
-          if (!this.api.readOnly.toggle) {
+          if (!this.readOnly) {
               const controls = document.createElement('div');
               controls.classList.add('doclib-pr-controls');
               
@@ -170,7 +172,7 @@ export default class DocLibPricing implements BlockTool {
           container.appendChild(card);
       });
       
-      if (!this.api.readOnly.toggle && this.data.plans.length < 4) {
+      if (!this.readOnly && this.data.plans.length < 4) {
           const addCol = document.createElement('div');
           addCol.classList.add('doclib-pr-add-col');
           addCol.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';

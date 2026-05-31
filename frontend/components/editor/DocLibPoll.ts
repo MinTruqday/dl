@@ -4,6 +4,7 @@ export default class DocLibPoll implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { question: string, options: { text: string, votes: number }[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibPoll implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       question: data.question || '',
       options: data.options && data.options.length > 0 ? data.options : [
@@ -64,7 +66,7 @@ export default class DocLibPoll implements BlockTool {
       
       const question = document.createElement('div');
       question.classList.add('doclib-po-question');
-      question.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      question.contentEditable = !this.readOnly ? 'true' : 'false';
       question.innerHTML = this.data.question;
       question.addEventListener('input', () => this.data.question = question.innerHTML);
       container.appendChild(question);
@@ -89,7 +91,7 @@ export default class DocLibPoll implements BlockTool {
           
           const text = document.createElement('div');
           text.classList.add('doclib-po-text');
-          text.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+          text.contentEditable = !this.readOnly ? 'true' : 'false';
           text.innerHTML = opt.text;
           text.addEventListener('input', () => opt.text = text.innerHTML);
           
@@ -103,14 +105,14 @@ export default class DocLibPoll implements BlockTool {
           
           
           barWrap.addEventListener('click', (e) => {
-              if (e.target === text && !this.api.readOnly.toggle) return; 
+              if (e.target === text && !this.readOnly) return; 
               opt.votes++;
               this.buildUI();
           });
           
           optEl.appendChild(barWrap);
           
-          if (!this.api.readOnly.toggle && this.data.options.length > 2) {
+          if (!this.readOnly && this.data.options.length > 2) {
               const rmBtn = document.createElement('button');
               rmBtn.classList.add('doclib-po-rm');
               rmBtn.innerHTML = '&times;';
@@ -126,7 +128,7 @@ export default class DocLibPoll implements BlockTool {
       
       container.appendChild(optionsDiv);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const addBtn = document.createElement('button');
           addBtn.classList.add('doclib-po-add');
           addBtn.innerText = '+ Add Option';

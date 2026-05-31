@@ -4,6 +4,7 @@ export default class DocLibProgressBar implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { label: string, percentage: number, color: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,8 +15,9 @@ export default class DocLibProgressBar implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
       label: data.label || 'Project Progress',
       percentage: data.percentage !== undefined ? data.percentage : 50,
@@ -82,7 +84,7 @@ export default class DocLibProgressBar implements BlockTool {
       
       const label = document.createElement('div');
       label.classList.add('doclib-pg-label');
-      label.contentEditable = !this.api.readOnly.toggle ? 'true' : 'false';
+      label.contentEditable = !this.readOnly ? 'true' : 'false';
       label.innerHTML = this.data.label;
       label.addEventListener('input', () => this.data.label = label.innerHTML);
       
@@ -104,7 +106,7 @@ export default class DocLibProgressBar implements BlockTool {
       container.appendChild(header);
       container.appendChild(track);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const slider = document.createElement('input');
           slider.type = 'range';
           slider.min = '0';
