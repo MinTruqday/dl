@@ -205,6 +205,7 @@ services:
       - minio
     volumes:
       - ./backend/collector/src:/app/src
+      - ./backend/logs:/app/logs
     networks:
       - doclib_network
 

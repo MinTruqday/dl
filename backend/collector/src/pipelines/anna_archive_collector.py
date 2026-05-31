@@ -24,8 +24,11 @@ USER_AGENTS = [
 
 class AnnaArchiveCollector:
     @staticmethod
-    async def run_list_collector(search_query: str, index_type: str = ""):
-        logger.info(f"Starting paginated search on Anna's Archive: {search_query}")
+    async def run_list_collector(search_query: str = "", pages: int = 0):
+        if search_query:
+            logger.info(f"Starting paginated search on Anna's Archive: {search_query}")
+        else:
+            logger.info("Starting general paginated collection on Anna's Archive")
         encoded = urllib.parse.quote(search_query)
         
         async with async_playwright() as p:
@@ -83,6 +86,9 @@ class AnnaArchiveCollector:
                             new_urls_found += 1
                     
                     logger.info(f"Successfully published {new_urls_found} new items from page {page_num}")
+                    if page_num >= pages:
+                        logger.info(f"Reached requested limit of {pages} pages, terminating.")
+                        break
                     page_num += 1
             except Exception as e:
                 logger.error(f"Error in Anna's Archive list collector pipeline: {e}")

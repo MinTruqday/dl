@@ -9,6 +9,10 @@ from src.pipelines.ctan_collector import CTANCollector
 from src.pipelines.format_converter import run_format_converter
 
 async def main():
+    import sys
+    logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
+    logger.add("logs/backend.log", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}", rotation="10 MB", level="INFO")
+    
     await mq_client.connect()
     
     async def process_msg(message, handler_func):
@@ -27,15 +31,26 @@ async def main():
     queue_format = await mq_client.channel.get_queue("format_converter_queue")
     queue_nxbgd = await mq_client.channel.get_queue("nxbgd_queue")
     queue_nxbst = await mq_client.channel.get_queue("nxbst_queue")
+    queue_anna = await mq_client.channel.get_queue("anna_archive_queue")
+    queue_ctan = await mq_client.channel.get_queue("ctan_queue")
+
+    async def route_anna_collector(payload):
+        pages = int(payload.get("pages", 0))
+        await AnnaArchiveCollector.run_list_collector(search_query="", pages=pages)
+
+    async def route_ctan_collector(payload):
+        pages = int(payload.get("pages", 0))
+        await CTANCollector.run_list_collector(pages)
 
     async def route_list_collector(payload):
         source = payload.get("source", "AnnaArchive")
+        pages = int(payload.get("pages", 0))
         if source == "NXBST":
-            await NXBSTCollector.run_list_collector()
+            await NXBSTCollector.run_list_collector(pages)
         elif source == "CTAN":
-            await CTANCollector.run_list_collector()
+            await CTANCollector.run_list_collector(pages)
         else:
-            await AnnaArchiveCollector.run_list_collector(payload.get("url", ""), payload.get("index_type", ""))
+            await AnnaArchiveCollector.run_list_collector(search_query="", pages=pages)
 
     async def route_detail_collector(payload):
         source = payload.get("source", "AnnaArchive")
@@ -58,8 +73,10 @@ async def main():
         if url:
             await NXBSTCollector.run_detail_collector(url)
         else:
-            await NXBSTCollector.run_list_collector()
+            await NXBSTCollector.run_list_collector(int(payload.get("pages", 0)))
 
+    await queue_anna.consume(lambda m: process_msg(m, route_anna_collector))
+    await queue_ctan.consume(lambda m: process_msg(m, route_ctan_collector))
     await queue_list.consume(lambda m: process_msg(m, route_list_collector))
     await queue_detail.consume(lambda m: process_msg(m, route_detail_collector))
     

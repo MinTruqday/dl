@@ -2,9 +2,7 @@ import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function triggerCollectionAPI(
   source: string,
-  url: string,
-  index_type: string,
-  target_class: string,
+  pages: number,
 ) {
   const res = await fetch(`${API_URL}/thu-thap/kich-hoat`, {
     method: "POST",
@@ -12,7 +10,7 @@ export async function triggerCollectionAPI(
       ...getAuthHeaders(),
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ source, url, index_type, target_class }),
+    body: JSON.stringify({ source, pages }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể kích hoạt tiến trình thu thập");
@@ -25,5 +23,14 @@ export async function getCollectorStatsAPI() {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải trạng thái thu thập");
+  return data;
+}
+
+export async function getCollectorLogsAPI() {
+  const res = await fetch(`${API_URL}/thu-thap/logs`, {
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể tải log tiến trình");
   return data;
 }

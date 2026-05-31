@@ -209,7 +209,7 @@ class NXBSTStreamState:
 
 class NXBSTCollector:
     @staticmethod
-    async def run_list_collector():
+    async def run_list_collector(pages: int = 0):
         start_url = "https://stbook.vn/"
         logger.info(f"Starting List Collection on NXBST {start_url}")
 
@@ -266,6 +266,10 @@ class NXBSTCollector:
                                     await dedup.mark_collected("nxbst_url", full_url)
 
                         logger.info(f"Pushed {found_documents} documents to MQ from page {current_page}.")
+                        
+                        if current_page >= pages:
+                            logger.info(f"Reached requested limit of {pages} pages for this category.")
+                            break
 
                         next_page_idx = current_page + 1
                         pagination_btn_xpath = f'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'

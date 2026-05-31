@@ -26,8 +26,8 @@ USER_AGENTS = [
 
 class CTANCollector:
     @staticmethod
-    async def run_list_collector():
-        logger.info("Starting CTAN Alphabetical List Collector")
+    async def run_list_collector(pages: int = 0):
+        logger.info(f"Starting CTAN Alphabetical List Collector")
         
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])

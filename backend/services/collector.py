@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 class CollectorService:
     @staticmethod
-    async def trigger_collection(source: str, url: Optional[str] = None, index_type: Optional[str] = None, target_class: Optional[str] = None):
+    async def trigger_collection(source: str, pages: Optional[int] = 1):
         if not db_client.rabbitmq:
             raise HTTPException(status_code=503, detail="Dịch vụ hàng đợi RabbitMQ hiện không sẵn sàng.")
 
@@ -21,19 +21,17 @@ class CollectorService:
 
         queue_name = ""
         if source == "AnnaArchive":
-            queue_name = "collect_list_queue" if index_type == "list" else "collect_detail_queue"
-            payload["url"] = url
-            payload["index_type"] = index_type
+            queue_name = "anna_archive_queue"
+            payload["pages"] = pages
         elif source == "NXBST":
             queue_name = "nxbst_queue"
-            payload["url"] = url
-        elif source == "NXBGDC":
+            payload["pages"] = pages
+        elif source == "NXBGD":
             queue_name = "nxbgd_queue"
-            payload["target_class"] = target_class or "10"
+            payload["pages"] = pages
         elif source == "CTAN":
-            queue_name = "collect_list_queue" if index_type == "list" else "collect_detail_queue"
-            payload["url"] = url
-            payload["index_type"] = index_type
+            queue_name = "ctan_queue"
+            payload["pages"] = pages
         else:
             raise HTTPException(status_code=400, detail=f"Nguồn thu thập '{source}' không được hỗ trợ.")
 
@@ -50,6 +48,6 @@ class CollectorService:
         total_collected = await db["documents"].count_documents({"author_id": {"$regex": ".*collector.*"}})
         return {
             "total_documents_collected": total_collected,
-            "active_sources": ["AnnaArchive", "NXBST", "NXBGDC", "CTAN"],
+            "active_sources": ["AnnaArchive", "NXBST", "NXBGD", "CTAN"],
             "status": "operational"
         }
