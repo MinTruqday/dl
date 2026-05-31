@@ -2,8 +2,9 @@ from pydantic import BaseModel, Field
 from typing import List
 
 class PlanStep(BaseModel):
-    agent: str = Field(description="Tên của Agent thực thi (VD: CodeInterpreter, SearchEngine, ActionAgent, DraftGenerator, KnowledgeAgent)")
-    task: str = Field(description="Nhiệm vụ cụ thể mà Agent này cần thực thi, mô tả chi tiết bằng tiếng Việt")
+    agent: str = Field(description="Name of the execution agent: ActionAgent, KnowledgeAgent, CodeInterpreter, SearchEngine, DraftGenerator, ReasoningAgent")
+    task: str = Field(description="Specific task description for the agent to execute")
 
 class ExecutionPlan(BaseModel):
-    steps: List[PlanStep] = Field(description="Danh sách thứ tự các bước để hoàn thành yêu cầu của người dùng")
+    reasoning: str = Field(description="Chain of thought reasoning before decomposing the steps")
+    steps: List[PlanStep] = Field(description="Ordered list of execution steps to fulfill the request")

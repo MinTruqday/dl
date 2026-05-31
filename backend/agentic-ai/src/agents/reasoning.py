@@ -12,11 +12,14 @@ class ReasoningAgent:
 
     async def execute(self, task: str) -> str:
         logger.info(f"ReasoningAgent: Executing logic task: {task[:50]}")
-        prompt = f"""Bạn là một chuyên gia phân tích logic và suy luận (Reasoning Agent). Nhiệm vụ của bạn là giải quyết vấn đề phức tạp, đánh giá thông tin, phân tích nguyên nhân - kết quả và đưa ra kết luận mạch lạc.
+        prompt = f"""SYSTEM IDENTITY: DocLib Core System - Analytical Engine.
+OBJECTIVE: Perform deep logical analysis, evaluate cause-and-effect, and provide coherent conclusions.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
-Nhiệm vụ: {task}
+TASK: {task}
 
-Hãy phân tích từng bước (step-by-step) và đưa ra câu trả lời cuối cùng:"""
+INSTRUCTIONS:
+Provide a step-by-step logical breakdown of the problem before delivering the final conclusion."""
         try:
             llm = HuggingFaceEndpoint(
                 repo_id=self._model,
@@ -33,21 +36,26 @@ Hãy phân tích từng bước (step-by-step) và đưa ra câu trả lời cu�
     async def evaluate_quality(self, query: str, answer: str, context_docs: List[Dict]) -> Dict:
         context_str = self._build_context(context_docs[:3])
 
-        eval_prompt = f"""Hãy đánh giá chất lượng của cặp Câu hỏi và Câu trả lời sau. CHỈ trả về một khối JSON hợp lệ.
+        eval_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Quality Evaluation Engine.
+OBJECTIVE: Evaluate the quality of the generated response against the provided context.
+OUTPUT_LANGUAGE: You must output ONLY a valid JSON object.
 
-CÂU HỎI: {query}
-CÂU TRẢ LỜI: {answer}
-NGỮ CẢNH HIỆN CÓ: {context_str[:3000]}
+USER QUERY: {query}
+GENERATED RESPONSE: {answer}
+REFERENCE CONTEXT: {context_str[:3000]}
 
-Tiêu chí đánh giá tính theo thang 0.0 đến 1.0 (Giữ nguyên Key JSON):
-1. "relevance": 0.0-1.0 (độ liên quan giữa câu trả lời và câu hỏi, có sử dụng ngữ cảnh hay không)
-2. "grounding": 0.0-1.0 (độ chính xác, có bị ảo giác hay không, có bám sát ngữ cảnh hay không)
-3. "completeness": 0.0-1.0 (độ đầy đủ, có trả lời hết ý câu hỏi hay không)
-4. "overall": 0.0-1.0 (đánh giá tổng thể chất lượng câu trả lời, có thể là trung bình có trọng số của 3 tiêu chí trên)
-5. "should_retry": bool (true nếu overall < 0.6)
-6. "feedback": "Nhận xét ngắn gọn về điểm mạnh, điểm yếu của câu trả lời và gợi ý cải thiện nếu cần thiết."
+JSON SCHEMA:
+{{
+    "relevance": <float between 0.0 and 1.0>,
+    "grounding": <float between 0.0 and 1.0>,
+    "completeness": <float between 0.0 and 1.0>,
+    "overall": <float between 0.0 and 1.0>,
+    "should_retry": <boolean, true if overall < 0.6>,
+    "feedback": "<string, concise feedback on strengths and weaknesses>"
+}}
 
-Chỉ trả về định dạng JSON:"""
+RULES:
+- Output nothing but the requested JSON structure."""
 
         try:
             llm = HuggingFaceEndpoint(

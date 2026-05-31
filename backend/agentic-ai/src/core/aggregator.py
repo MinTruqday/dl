@@ -13,7 +13,22 @@ class AggregatorAgent:
             from src.core.brain import llm
             from langchain_core.messages import HumanMessage
             
-            final_prompt = f"Bạn là một chuyên gia tổng hợp thông tin từ hệ thống DocLib. Hãy dựa vào các dữ liệu dưới đây để viết câu trả lời hoàn chỉnh, tự nhiên, rõ ràng và mạch lạc cho yêu cầu ban đầu. Nếu dữ liệu không đủ, hãy trả lời theo hiểu biết của bạn nhưng nói rõ là không có trong tài liệu. Đặc biệt: Tuyệt đối giữ nguyên vẹn mọi đường dẫn/link (dạng [Text](url) hoặc https://...) có trong dữ liệu và trả về cho người dùng.\nYêu cầu: {query}\n\nDữ liệu:\n" + "\n\n".join(consolidated_results)
+            final_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
+OBJECTIVE: Consolidate data from multiple sub-systems into a single, cohesive, and professional response.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
+
+RULES:
+1. Synthesize the provided data naturally. Do NOT use mechanical phrasing like "Step 1 did X, Step 2 did Y".
+2. You MUST preserve all URLs, hyperlinks, and markdown links exactly as they appear in the data.
+3. If the data contains authentication errors or access denials, convey this politely to the user.
+4. Maintain high professional standards.
+
+USER QUERY: "{query}"
+
+SYSTEM GATHERED DATA:
+{"\n\n".join(consolidated_results)}
+
+RESPONSE:"""
             
             async for chunk in llm.astream([HumanMessage(content=final_prompt)]):
                 if chunk.content:

@@ -77,6 +77,8 @@ class RagService:
                     await RagService.add_message(session_id, "user", user_query, str(current_user.id))
 
                 buffer = ""
+                import codecs
+                decoder = codecs.getincrementaldecoder('utf-8')()
                 ai_circuit_breaker.check()
                 async with ai_http_client.stream("POST", rag_url, json=payload, headers=headers, timeout=120.0) as response:
                     ai_circuit_breaker.on_success()
@@ -86,7 +88,7 @@ class RagService:
                         return
                         
                     async for chunk in response.aiter_bytes():
-                        chunk_str = chunk.decode('utf-8')
+                        chunk_str = decoder.decode(chunk)
                         buffer += chunk_str
                         while "\n\n" in buffer:
                             event_block, buffer = buffer.split("\n\n", 1)

@@ -32,23 +32,56 @@ class AgenticBrain:
     async def create_plan(self, req) -> List[Dict[str, str]]:
         logger.info(f"Brain: Creating structured plan for query: {req.query}")
         
-        system_prompt = """Bạn là Core Brain của hệ thống Agentic AI. Nhiệm vụ của bạn là phân rã yêu cầu của người dùng thành một kế hoạch chi tiết với các bước nhỏ hơn.
-Các công cụ/Agent mà hệ thống có sẵn (Bạn KHÔNG tự thực thi, chỉ định tuyến):
-1. KnowledgeAgent: Đọc, tìm kiếm và phân tích tài liệu nội bộ từ thư viện.
-2. CodeInterpreter: Viết và thực thi mã Python để xử lý các tác vụ lập trình.
-3. SearchEngine: Tìm kiếm thông tin mở rộng trên internet toàn cầu.
-4. ActionAgent: Truy xuất và thao tác dữ liệu với hệ thống nội bộ.
-5. DraftGenerator: Tạo nháp văn bản và định dạng cấu trúc nội dung.
-6. ReasoningAgent: Đánh giá chất lượng, phân tích logic sâu và suy luận đa chiều.
+        system_prompt = """SYSTEM IDENTITY: DocLib Core System - Neural Routing Brain.
+OBJECTIVE: Analyze the user's request, perform logical reasoning, and decompose it into a structured execution plan.
+OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
 
-Lưu ý: BẮT BUỘC TRẢ VỀ ĐỊNH DẠNG JSON HỢP LỆ THEO YÊU CẦU DƯỚI ĐÂY.
+AVAILABLE AGENTS:
+- ActionAgent: Executes system operations, modifies personal data, manages wallet balance, deletes/restores documents.
+- KnowledgeAgent: Searches, reads, and analyzes internal documents from the DocLib library.
+- CodeInterpreter: Writes and executes Python code for data processing, calculations, and plotting.
+- SearchEngine: Performs web searches to retrieve external information.
+- DraftGenerator: Generates drafts, writes emails, formats text into Markdown or LaTeX.
+- ReasoningAgent: Performs deep logical analysis and evaluates quality.
+
+RULES:
+1. You MUST output a strictly valid JSON object.
+2. The JSON object must contain a "reasoning" string detailing your Chain of Thought.
+3. The JSON object must contain a "steps" array with the execution sequence.
+
+<example>
+<user_input>Search for AI trends in 2024 on the internet and create a markdown draft document.</user_input>
+<output>
+{{
+    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGenerator formats the output.",
+    "steps": [
+        {{"agent": "SearchEngine", "task": "Search for AI trends in 2024"}},
+        {{"agent": "DraftGenerator", "task": "Draft a markdown document summarizing the found AI trends"}}
+    ]
+}}
+</output>
+</example>
+
+<example>
+<user_input>Draw a pie chart of documents uploaded this month.</user_input>
+<output>
+{{
+    "reasoning": "The user wants a chart based on system data. ActionAgent fetches the statistics, then CodeInterpreter draws the chart.",
+    "steps": [
+        {{"agent": "ActionAgent", "task": "Fetch document upload statistics for the current month"}},
+        {{"agent": "CodeInterpreter", "task": "Generate a pie chart using the provided upload statistics"}}
+    ]
+}}
+</output>
+</example>
+
 {format_instructions}"""
         
         history_str = ""
         if hasattr(req, "conversation_history") and req.conversation_history:
             history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_history[-5:]])
             
-        prompt = f"Lịch sử trò chuyện gần đây:\n{history_str}\n\nYêu cầu mới nhất: {req.query}\nNgữ cảnh hiện tại: {req.context if hasattr(req, 'context') else 'Không có'}\n\nHãy lập kế hoạch:"
+        prompt = f"Recent conversation history:\n{history_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
         
         try:
             format_instructions = self.parser.get_format_instructions()

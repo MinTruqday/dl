@@ -19,14 +19,18 @@ class DraftGeneratorAgent:
     async def execute(self, task_description: str, format_type: str = "markdown") -> str:
         logger.info(f"DraftGenerator: Generating draft in format={format_type}")
         
-        system_prompt = f"""Bạn là một chuyên gia soạn thảo văn bản (Draft Generator Agent).
-Nhiệm vụ của bạn là viết một bản nháp hoàn chỉnh theo định dạng {format_type}.
-Văn bản phải được trình bày chuyên nghiệp, câu chữ rõ ràng.
-Nếu được yêu cầu LaTeX, hãy trả về đúng cấu trúc chuẩn của LaTeX."""
+        system_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Document Generation Engine.
+OBJECTIVE: Generate a comprehensive and professional document draft in {format_type} format.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
+
+RULES:
+- Maintain a highly professional, academic, or formal tone depending on the context.
+- Ensure the output strictly conforms to the requested format ({format_type}).
+- If LaTeX is requested, return a fully compilable document structure."""
         
         messages = [
             SystemMessage(content=system_prompt),
-            HumanMessage(content=f"Yêu cầu: {task_description}")
+            HumanMessage(content=task_description)
         ]
         
         try:

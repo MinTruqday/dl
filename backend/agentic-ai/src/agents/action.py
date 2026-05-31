@@ -11,7 +11,7 @@ auth_token_var = contextvars.ContextVar("auth_token", default=None)
 
 @tool
 async def get_user_balance() -> str:
-    """Lấy số dư ví DocLib (dl) của người dùng hiện tại."""
+    """Get the current user's DocLib wallet balance in dl currency."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
@@ -32,7 +32,7 @@ async def get_user_balance() -> str:
 
 @tool
 async def get_transaction_history() -> str:
-    """Xem lịch sử các giao dịch tài chính gần đây (nạp tiền, thanh toán)."""
+    """View recent financial transaction history including deposits and payments."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
@@ -58,7 +58,7 @@ async def get_transaction_history() -> str:
 
 @tool
 async def redeem_voucher(code: str) -> str:
-    """Đổi mã quà tặng (voucher) để cộng tiền vào tài khoản."""
+    """Redeem a gift voucher code to add funds to the account."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
@@ -84,7 +84,7 @@ async def redeem_voucher(code: str) -> str:
 
 @tool
 async def get_revenue_report() -> str:
-    """Xem báo cáo doanh thu từ việc bán tài liệu (dành cho tác giả)."""
+    """View revenue report from document sales, intended for authors."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem doanh thu"
@@ -104,7 +104,7 @@ async def get_revenue_report() -> str:
 
 @tool
 async def send_virtual_tip(target_user_id: str, amount: int) -> str:
-    """Gửi tặng tiền (dl) cho một người dùng khác (tác giả)."""
+    """Send a virtual tip in dl currency to another user or author."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để gửi tặng dl"
@@ -126,7 +126,7 @@ async def send_virtual_tip(target_user_id: str, amount: int) -> str:
 
 @tool
 async def get_my_documents() -> str:
-    """Liệt kê danh sách tài liệu cá nhân đang sở hữu hoặc đã đăng."""
+    """List all personal documents owned or published by the current user."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem tài liệu"
@@ -149,7 +149,7 @@ async def get_my_documents() -> str:
 
 @tool
 async def get_trash_documents() -> str:
-    """Xem danh sách tài liệu đã bị xóa nằm trong thùng rác."""
+    """View deleted documents currently in the trash bin."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -172,7 +172,7 @@ async def get_trash_documents() -> str:
 
 @tool
 async def delete_document(document_id: str) -> str:
-    """Xóa một tài liệu (chuyển vào thùng rác) theo ID."""
+    """Delete a document by ID, moving it to the trash bin."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
@@ -189,7 +189,7 @@ async def delete_document(document_id: str) -> str:
 
 @tool
 async def restore_document(document_id: str) -> str:
-    """Khôi phục tài liệu từ thùng rác theo ID."""
+    """Restore a document from the trash bin by its ID."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -206,7 +206,7 @@ async def restore_document(document_id: str) -> str:
 
 @tool
 async def create_document(title: str, content: str) -> str:
-    """Tạo mới một tài liệu với tiêu đề và nội dung được cung cấp."""
+    """Create a new document with the provided title and content."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
@@ -237,7 +237,7 @@ async def create_document(title: str, content: str) -> str:
 
 @tool
 async def get_document_analytics(document_id: str) -> str:
-    """Xem thống kê chi tiết về lượt đọc và tỉ lệ bỏ dở của tài liệu."""
+    """View detailed analytics including read count and drop-off rate for a document."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực"
@@ -271,7 +271,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 @tool
 async def agent_generate_mindmap(document_id: str) -> str:
-    """Tạo bản đồ tư duy (mindmap) cho tài liệu."""
+    """Generate a mindmap structure for a document by its ID."""
     token = auth_token_var.get()
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
@@ -288,7 +288,7 @@ async def agent_generate_mindmap(document_id: str) -> str:
 
 @tool
 async def agent_suggest_citations(document_id: str) -> str:
-    """Gợi ý trích dẫn cho tài liệu."""
+    """Suggest academic citations for a document by its ID."""
     token = auth_token_var.get()
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
@@ -303,7 +303,7 @@ async def agent_suggest_citations(document_id: str) -> str:
 
 @tool
 async def agent_peer_review(document_id: str) -> str:
-    """Thẩm định nội dung tài liệu, đánh giá ưu nhược điểm."""
+    """Perform a peer review of a document, evaluating strengths and weaknesses."""
     token = auth_token_var.get()
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
@@ -318,7 +318,7 @@ async def agent_peer_review(document_id: str) -> str:
 
 @tool
 async def agent_transform_tone(document_id: str, tone: str) -> str:
-    """Biến đổi giọng văn (tone) của tài liệu (ví dụ: hàn lâm, chuyên nghiệp)."""
+    """Transform the writing tone of a document, e.g. academic, professional, casual."""
     token = auth_token_var.get()
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
@@ -334,7 +334,7 @@ async def agent_transform_tone(document_id: str, tone: str) -> str:
 
 @tool
 async def create_deposit_link(amount: int) -> str:
-    """Tạo liên kết nạp tiền (topup) vào ví dl (Đơn vị VNĐ, ví dụ: 50000). Trả về URL để thanh toán."""
+    """Create a deposit link to top up the dl wallet. Amount is in VND. Returns a payment URL."""
     token = auth_token_var.get()
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để nạp tiền"
@@ -388,8 +388,3 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 
 llm = ChatHuggingFace(llm=_hf_endpoint)
-
-action_agent_app = create_react_agent(
-    llm,
-    tools
-)

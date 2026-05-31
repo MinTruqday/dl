@@ -45,7 +45,7 @@ async def generate_text(req: GenerationRequest):
 @router.post("/dich-thuat")
 async def translate_text(req: TranslationRequest):
     try:
-        prompt = f"Dịch đoạn văn sau sang tiếng {req.target_lang}. Chỉ trả về bản dịch, không thêm nội dung khác:\n\n{req.text}"
+        prompt = f"OBJECTIVE: Translate the following text into {req.target_lang}. Output ONLY the translated text.\n\nTEXT:\n{req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) * 3,
@@ -79,7 +79,7 @@ async def analyze_sentiment(req: SentimentRequest):
 
         results = []
         for text in texts_to_analyze[:10]:
-            prompt = f"Phân tích cảm xúc của đoạn văn sau. Trả lời duy nhất 1 từ (Tích cực, Tiêu cực hoặc Trung lập):\n\n{text}"
+            prompt = f"OBJECTIVE: Analyze the sentiment of the following text. Output ONLY one word: Positive, Negative, or Neutral.\n\nTEXT:\n{text}"
             sentiment = await _chat_direct(
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=10,
@@ -87,8 +87,8 @@ async def analyze_sentiment(req: SentimentRequest):
             )
             results.append(sentiment.strip())
         
-        pos = results.count("Tích cực")
-        neg = results.count("Tiêu cực")
+        pos = sum(1 for r in results if r.lower() in ["positive", "tích cực"])
+        neg = sum(1 for r in results if r.lower() in ["negative", "tiêu cực"])
         total = len(results)
         score = (pos - neg) / total if total > 0 else 0
         
@@ -96,7 +96,7 @@ async def analyze_sentiment(req: SentimentRequest):
         if score > 0.2: mood = "positive"
         elif score < -0.2: mood = "negative"
         
-        summary_prompt = f"Dựa trên các nhận xét sau, hãy viết một câu tóm tắt cảm nhận chung của độc giả: {'; '.join(texts_to_analyze[:5])}"
+        summary_prompt = f"OBJECTIVE: Based on the following reviews, write a one-sentence summary of the overall reader sentiment.\nOUTPUT_LANGUAGE: Must match the language of the reviews.\n\nREVIEWS: {'; '.join(texts_to_analyze[:5])}"
         summary = await _chat_direct(
             messages=[{"role": "user", "content": summary_prompt}],
             max_tokens=100
@@ -149,7 +149,7 @@ async def generate_cover(req: CoverRequest):
 @router.post("/tao-ma-nguon")
 async def generate_code(req: CodeRequest):
     try:
-        prompt = f"Viết mã nguồn {req.language} sạch và hiệu quả cho yêu cầu sau. Chỉ trả về khối mã:\n\n{req.prompt}"
+        prompt = f"OBJECTIVE: Write clean and efficient {req.language} code for the following request. Output ONLY the code block.\n\nREQUEST:\n{req.prompt}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -162,7 +162,7 @@ async def generate_code(req: CodeRequest):
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(req: GrammarRequest):
     try:
-        prompt = f"Kiểm tra và sửa lỗi chính tả, ngữ pháp cho đoạn văn bản sau. Chỉ trả về đoạn văn đã sửa:\n\n{req.text}"
+        prompt = f"OBJECTIVE: Check and correct all spelling and grammar errors in the following text. Output ONLY the corrected text.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT:\n{req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) + 200,
@@ -183,7 +183,7 @@ async def grammar_check(req: GrammarRequest):
 @router.post("/tao-the-ghi-nho")
 async def generate_flashcard(req: FlashcardRequest):
     try:
-        prompt = f"Dựa trên văn bản và bối cảnh sau, hãy tạo một flashcard (thẻ ghi nhớ) chất lượng cao với 2 mặt: Câu hỏi (front) và Câu trả lời (back). Trả về định dạng JSON: {{'front': '...', 'back': '...'}}.\nContext: {req.context}\nText: {req.text}"
+        prompt = f"OBJECTIVE: Create a high-quality flashcard with a front (question) and back (answer) based on the given text and context. Output ONLY valid JSON: {{'front': '...', 'back': '...'}}.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nCONTEXT: {req.context}\nTEXT: {req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -207,7 +207,7 @@ async def generate_flashcard(req: FlashcardRequest):
 @router.post("/tom-tat")
 async def summarize_text(req: SummarizeRequest):
     try:
-        prompt = f"Cung cấp một bản tóm tắt ngắn gọn, súc tích bằng tiếng {req.language} cho nội dung sau:\n\n{req.text}"
+        prompt = f"OBJECTIVE: Provide a concise summary of the following content in {req.language}.\n\nTEXT:\n{req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -237,19 +237,20 @@ async def check_plagiarism(req: GrammarRequest):
             }
         
         context = "\n".join([f"- Match (Score: {m['score']:.2f}): {m['text'][:200]}" for m in significant_matches])
-        prompt = f"""Bạn là một Chuyên gia Kiểm định Bản quyền. 
-Dưới đây là một đoạn văn bản cần kiểm tra và các đoạn văn bản tương tự tìm thấy trong hệ thống:
+        prompt = f"""SYSTEM IDENTITY: DocLib Core System - Plagiarism Detection Engine.
+OBJECTIVE: Evaluate whether the similarity between the submitted text and matched sources indicates plagiarism.
+OUTPUT_LANGUAGE: Must match the language of the submitted text.
 
-Văn bản cần kiểm tra:
+SUBMITTED TEXT:
 {req.text[:1000]}
 
-Các nội dung tương tự tìm thấy:
+MATCHED SOURCES:
 {context}
 
-Nhiệm vụ của bạn:
-1. Đánh giá xem sự tương đồng này là do trùng hợp ngẫu nhiên hay có dấu hiệu sao chép.
-2. Tính toán một 'Plagiarism Score' (0-100).
-3. Trả về kết quả duy nhất dưới dạng JSON: {{'plagiarism_score': float, 'status': 'clean|warning|danger', 'message': '...', 'matched_sources': [...]}}
+INSTRUCTIONS:
+1. Evaluate whether the similarity is coincidental or indicates copying.
+2. Calculate a Plagiarism Score (0-100).
+3. Output ONLY valid JSON: {{'plagiarism_score': float, 'status': 'clean|warning|danger', 'message': '...', 'matched_sources': [...]}}
 """
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
@@ -281,11 +282,11 @@ Nhiệm vụ của bạn:
 async def unified_action(req: ActionRequest):
     try:
         prompts = {
-            "autocomplete": f"Viết tiếp một câu hợp lý cho đoạn văn này mà không lặp lại nội dung cũ. Context: {req.context}. Text: {req.text}",
-            "grammar": f"Sửa tất cả lỗi ngữ pháp và chính tả trong đoạn văn sau. Chỉ trả về văn bản đã sửa: {req.text}",
-            "summarize": f"Tóm tắt ngắn gọn nội dung sau: {req.text}",
-            "ai_suggestions": f"Dựa trên bối cảnh '{req.context}', hãy gợi ý 3 hướng phát triển tiếp theo cho nội dung này: {req.text}",
-            "check_logic": f"Kiểm tra sự mâu thuẫn về logic, cốt truyện hoặc nhân vật trong nội dung sau, dựa trên bối cảnh: {req.context}. Nội dung: {req.text}"
+            "autocomplete": f"OBJECTIVE: Write one natural continuation sentence for the following text without repeating existing content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}",
+            "grammar": f"OBJECTIVE: Fix all grammar and spelling errors. Output ONLY the corrected text. OUTPUT_LANGUAGE: Must match the input text language.\nTEXT: {req.text}",
+            "summarize": f"OBJECTIVE: Provide a concise summary. OUTPUT_LANGUAGE: Must match the input text language.\nTEXT: {req.text}",
+            "ai_suggestions": f"OBJECTIVE: Based on the context, suggest 3 development directions for this content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}",
+            "check_logic": f"OBJECTIVE: Check for logical contradictions, plot holes, or character inconsistencies. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}"
         }
         
         prompt = prompts.get(req.action)
@@ -305,7 +306,7 @@ async def unified_action(req: ActionRequest):
 @router.post("/tu-dong-nghia")
 async def get_synonyms(req: GrammarRequest):
     try:
-        prompt = f"Tìm các từ đồng nghĩa cho cụm từ hoặc đoạn văn sau. Chỉ trả về danh sách phân cách bằng dấu phẩy:\n\n{req.text}"
+        prompt = f"OBJECTIVE: Find synonyms for the following word or phrase. Output ONLY a comma-separated list.\nOUTPUT_LANGUAGE: Must match the language of the input.\n\nINPUT: {req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
@@ -318,7 +319,7 @@ async def get_synonyms(req: GrammarRequest):
 @router.post("/tao-ban-do-tu-duy")
 async def generate_mindmap(req: MindmapRequest):
     try:
-        prompt = f"Phân tích văn bản sau và tạo một bản đồ tư duy (mindmap) với độ sâu {req.depth}. Trả về ĐÚNG MỘT khối JSON hợp lệ, KHÔNG có markdown, KHÔNG có text thừa. Cấu trúc JSON: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"...\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"...\"}}]}}.\n\nVăn bản: {req.text[:2000]}"
+        prompt = f"OBJECTIVE: Analyze the following text and generate a mindmap structure with depth {req.depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"...\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"...\"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {req.text[:2000]}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -348,9 +349,9 @@ async def suggest_citations(req: CitationRequest):
         sources = []
         for m in matches:
             meta = m.get("metadata", {})
-            sources.append(f"Tài liệu: {meta.get('title', 'N/A')}, Tác giả: {meta.get('author', 'N/A')}. Nội dung: {m['text'][:200]}")
+            sources.append(f"Document: {meta.get('title', 'N/A')}, Author: {meta.get('author', 'N/A')}. Content: {m['text'][:200]}")
             
-        prompt = f"Dựa trên văn bản người dùng đang viết và các nguồn tham khảo tìm thấy, hãy gợi ý các trích dẫn theo phong cách {req.style}. Trả về danh sách các gợi ý.\n\nVăn bản: {req.text}\n\nNguồn tham khảo:\n" + "\n".join(sources)
+        prompt = f"OBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {req.style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {req.text}\n\nREFERENCE SOURCES:\n" + "\n".join(sources)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
@@ -363,8 +364,8 @@ async def suggest_citations(req: CitationRequest):
 @router.post("/bien-doi-van-ban")
 async def transform_tone(req: ToneRequest):
     try:
-        action = "mở rộng và biến đổi" if req.expansion else "biến đổi"
-        prompt = f"Hãy {action} đoạn văn bản sau sang giọng văn '{req.tone}'. Giữ nguyên ý nghĩa cốt lõi nhưng thay đổi sắc thái ngôn ngữ phù hợp:\n\n{req.text}"
+        action = "expand and transform" if req.expansion else "transform"
+        prompt = f"OBJECTIVE: {action.capitalize()} the following text to match the tone '{req.tone}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000 if req.expansion else 500,
@@ -377,8 +378,8 @@ async def transform_tone(req: ToneRequest):
 @router.post("/tham-dinh-noi-dung")
 async def peer_review(req: ReviewRequest):
     try:
-        criteria_str = ", ".join(req.criteria) if req.criteria else "tính logic, độ rõ ràng, tính thuyết phục"
-        prompt = f"Bạn là một chuyên gia thẩm định nội dung. Hãy đánh giá văn bản sau dựa trên các tiêu chí: {criteria_str}. Trả về một bản báo cáo chi tiết gồm Ưu điểm, Nhược điểm và Gợi ý cải thiện.\n\nVăn bản: {req.text[:3000]}"
+        criteria_str = ", ".join(req.criteria) if req.criteria else "logic, clarity, persuasiveness"
+        prompt = f"SYSTEM IDENTITY: DocLib Core System - Content Review Engine.\nOBJECTIVE: Evaluate the following text based on these criteria: {criteria_str}. Provide a detailed report with Strengths, Weaknesses, and Improvement Suggestions.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {req.text[:3000]}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -402,7 +403,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
             for m in matches:
                 all_context.append(f"[Từ tài liệu {doc_id}]: {m['text']}")
                 
-        prompt = f"Tổng hợp thông tin từ nhiều tài liệu khác nhau để trả lời câu hỏi: '{req.query}'.\n\nNgữ cảnh:\n" + "\n".join(all_context[:10])
+        prompt = f"OBJECTIVE: Synthesize information from multiple documents to answer the query: '{req.query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n" + "\n".join(all_context[:10])
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,

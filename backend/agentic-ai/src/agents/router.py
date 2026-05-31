@@ -18,16 +18,44 @@ class RouterAgent:
 
     async def execute(self, query: str) -> dict:
         prompt = PromptTemplate(
-            template="""Bạn là Router của hệ thống DocLib. Phân tích câu hỏi sau đây:
-            Câu hỏi: {question}
-            
-            Nếu đây là một câu giao tiếp thông thường, hãy trả về định dạng JSON:
-            {{"route": "chat"}}
-            
-            Nếu là yêu cầu nghiệp vụ, trả về JSON:
-            {{"route": "knowledge"}} hoặc {{"route": "action"}}
-            
-            Chỉ trả về chuỗi JSON hợp lệ, không giải thích.""",
+            template="""SYSTEM IDENTITY: DocLib Core System - Primary Router.
+OBJECTIVE: Analyze the user's intent and determine the primary processing route.
+OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
+
+ROUTES AVAILABLE:
+- "action": System operations, data mutations, wallet transactions, document management.
+- "knowledge": Information retrieval, academic questions, document querying, mathematical logic, code generation.
+- "chat": Casual conversation, greetings, pleasantries.
+
+RULES:
+1. Provide a step-by-step reasoning in the "reasoning" field.
+2. Return the chosen route in the "route" field.
+3. If the route is "chat", provide a direct response in the "answer" field. Otherwise, leave it empty.
+4. Output ONLY valid JSON.
+
+<example>
+<user_input>Create a new folder called Study Materials</user_input>
+<output>
+{{
+    "reasoning": "The user is requesting a system operation to create a new directory.",
+    "route": "action",
+    "answer": ""
+}}
+</output>
+</example>
+
+<example>
+<user_input>Summarize chapter 1 of Clean Code for me</user_input>
+<output>
+{{
+    "reasoning": "The user is asking for a document summary, which requires knowledge retrieval and analysis.",
+    "route": "knowledge",
+    "answer": ""
+}}
+</output>
+</example>
+
+USER INPUT: {question}""",
             input_variables=["question"]
         )
         try:

@@ -16,6 +16,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     if token:
         bearer_token = token.replace("Bearer ", "")
         auth_token_var.set(bearer_token)
+        req.token = bearer_token
 
     try:
         route_data = await router_agent.execute(req.query)
@@ -32,7 +33,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 
                 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                 chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
-                res = await chat_llm.ainvoke([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện bằng tiếng Việt. Câu hỏi: {req.query}")])
+                res = await chat_llm.ainvoke([HumanMessage(content=f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}")])
                 final_answer = res.content
         else:
             async for event in coordinator.execute_plan(req):
@@ -55,6 +56,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
     async def response_generator():
         if bearer_token:
             auth_token_var.set(bearer_token)
+            req.token = bearer_token
 
         try:
             route_data = await router_agent.execute(req.query)
@@ -75,7 +77,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
                     
-                    async for chunk in chat_llm.astream([HumanMessage(content=f"Bạn là trợ lý ảo DocLib. Hãy trả lời ngắn gọn, thân thiện. Câu hỏi: {req.query}")]):
+                    async for chunk in chat_llm.astream([HumanMessage(content=f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}")]):
                         if chunk.content:
                             yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
             else:
@@ -87,7 +89,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     elif event_type == "plan":
                         yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
                     elif event_type == "tool_result":
-                        yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event['content']})}\n\n"
+                        yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoàn thành')})}\n\n"
                     elif event_type == "message":
                         yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"
                     elif event_type == "error":

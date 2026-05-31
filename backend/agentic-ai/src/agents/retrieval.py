@@ -22,11 +22,16 @@ class RetrievalAgent:
         logger.info(f"Multi-query retrieval for: {question}")
         
         prompt = PromptTemplate(
-            template="""Bạn là một trợ lý AI có nhiệm vụ tối ưu hóa việc tìm kiếm tài liệu. 
-            Hãy tạo ra 3 phiên bản khác nhau của câu hỏi dưới đây để giúp tìm kiếm vector hiệu quả hơn.
-            Câu hỏi gốc: {question}
-            
-            Trả lời bằng 3 dòng, mỗi dòng là một phiên bản câu hỏi. Không thêm bất kỳ lời giải thích nào.""",
+            template="""SYSTEM IDENTITY: DocLib Core System - Multi-Query Generator.
+OBJECTIVE: Generate 3 alternative versions of the given question to improve vector search recall.
+OUTPUT_LANGUAGE: Must exactly match the language of the original question.
+
+RULES:
+- Output exactly 3 lines, each containing one reformulated query.
+- Do NOT include any explanations or numbering.
+
+ORIGINAL QUESTION: {question}
+OUTPUT:""",
             input_variables=["question"]
         )
         

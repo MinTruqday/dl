@@ -54,26 +54,37 @@ async def contextualize_question(state: AgentState):
 
     history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-5:]])
     prompt = PromptTemplate(
-        template="""Bạn là một hệ thống thấu hiểu ngôn ngữ tự nhiên.
-Dưới đây là lịch sử trò chuyện và câu nói mới nhất của người dùng.
+        template="""SYSTEM IDENTITY: DocLib Core System - Contextualization Engine.
+OBJECTIVE: Reconstruct the latest user query into an independent, fully contextualized query by performing anaphora and co-reference resolution based on the conversation history.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
-Nhiệm vụ của bạn là trích xuất ý định thực sự của người dùng trong câu nói mới nhất thành một câu truy vấn độc lập, rõ ràng và trọn vẹn ý nghĩa.
+RULES:
+- Resolve all ambiguous pronouns and contextual references into explicit entities.
+- Wrap the final reconstructed query inside <query>...</query> XML tags.
+- Provide no additional conversational text.
 
-Nguyên tắc hoạt động:
-- Tự suy luận xem câu nói mới nhất đang nối tiếp chủ đề cũ hay đã chuyển sang chủ đề mới.
-- Khôi phục mọi đại từ ẩn ý như nó, cái đó, ông ấy thành danh từ hoặc thực thể cụ thể dựa vào ngữ cảnh.
-- Trả về duy nhất một câu truy vấn hoàn chỉnh đại diện cho ý định đó, không giải thích, không trò chuyện.
+<example>
+<history>user: Where is the ReactJS tutorial document?</history>
+<user_input>Who is its author?</user_input>
+<output>
+<query>Who is the author of the ReactJS tutorial document?</query>
+</output>
+</example>
 
-Lịch sử trò chuyện:
+CONVERSATION HISTORY:
 {history}
 
-Câu nói mới nhất: {question}
-Truy vấn hoàn chỉnh:""",
+LATEST USER INPUT: {question}
+OUTPUT:""",
         input_variables=["history", "question"]
     )
     try:
         response = await llm.ainvoke(prompt.format(history=history_str, question=question))
-        return {"question": response.content.strip()}
+        content = response.content.strip()
+        import re
+        q_match = re.search(r"<query>(.*?)</query>", content, re.DOTALL)
+        final_q = q_match.group(1).strip() if q_match else content.replace("<query>", "").replace("</query>", "").strip()
+        return {"question": final_q}
     except Exception as e:
         logger.error(f"Contextualization error: {e}")
         return {"question": question}
@@ -81,21 +92,36 @@ Truy vấn hoàn chỉnh:""",
 async def route_question(state: AgentState):
     question = state["question"]
     prompt = PromptTemplate(
-        template="""Bạn là hệ thống Điều phối thông minh (Router). Nhiệm vụ của bạn là quyết định cách tốt nhất để phản hồi người dùng.
+        template="""SYSTEM IDENTITY: DocLib Core System - Secondary Router.
+OBJECTIVE: Classify the query into either an internal database search or a direct response.
 
-Câu hỏi của người dùng: "{question}"
+ROUTES:
+- <route>rag</route>: The query requires retrieving factual data, company procedures, technical documents, or specific file contents.
+- <route>direct</route>: The query is general knowledge, conversational, or does not require retrieving specific internal documents.
 
-Hãy đánh giá: Để trả lời câu hỏi này một cách chính xác nhất, bạn có cần tra cứu các tài liệu chuyên môn, dự án, quy trình hoặc dữ liệu bên ngoài không?
+RULES:
+- Provide reasoning inside <think>...</think> tags.
+- Output the route inside <route>...</route> tags.
 
-Nếu câu trả lời là có (câu hỏi về nội dung, tài liệu, dữ liệu cụ thể): Trả về 'rag'
+<example>
+<user_input>What is the process for uploading documents to DocLib?</user_input>
+<output>
+<think>This requires internal system documentation regarding upload procedures.</think>
+<route>rag</route>
+</output>
+</example>
 
-Chỉ trả về duy nhất một từ ('rag' hoặc 'direct'), không kèm theo bất kỳ dấu câu hay lời giải thích nào khác.""",
+USER INPUT: "{question}"
+OUTPUT:""",
         input_variables=["question"]
     )
     try:
         response = await llm.ainvoke(prompt.format(question=question))
         res = response.content.strip().lower()
-        return {"current_source": "db", "route": "direct" if "direct" in res else "rag"}
+        import re
+        route_match = re.search(r"<route>(.*?)</route>", res)
+        route_val = route_match.group(1).strip() if route_match else ("direct" if "direct" in res else "rag")
+        return {"current_source": "db", "route": route_val}
     except Exception as e:
         logger.error(f"Routing error: {e}")
         return {"current_source": "db", "route": "rag"}
@@ -114,25 +140,46 @@ async def retrieve_db(state: AgentState):
     question = state["question"]
     document_id = state.get("document_id")
     prompt = PromptTemplate(
-        template="""Bạn là một Chuyên gia Chiến lược Tìm kiếm. Đứng trước câu hỏi: "{question}"
+        template="""SYSTEM IDENTITY: DocLib Core System - Search Strategy Engine.
+OBJECTIVE: Decompose the user query into optimal search paths using a Tree of Thoughts approach.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
-Bạn luôn áp dụng tư duy Đa Nhánh (Tree of Thoughts) để xử lý:
-Thay vì nhảy vào tìm kiếm ngay, hãy ngầm đánh giá xem câu hỏi này chạm vào bao nhiêu khía cạnh nội dung khác nhau. Một câu hỏi đơn giản chỉ cần một nhánh duy nhất, trong khi một câu hỏi phức tạp thường ẩn chứa nhiều góc nhìn mà nếu tách ra sẽ giúp tìm kiếm hiệu quả hơn rất nhiều.
+RULES:
+1. Analyze if the query is simple (1 path) or complex (multiple paths). Wrap reasoning in <think>...</think>.
+2. Wrap the search strategy in <result>...</result>.
+- If simple: output exactly <result>SIMPLE</result>.
+- If complex: output the decomposed sub-queries, one per line, inside the <result> tags.
 
-Nhiệm vụ của bạn:
-- Nếu câu hỏi thuộc dạng tra cứu sự thật đơn giản (1 nhánh): Trả về đúng một từ "SIMPLE".
-- Nếu câu hỏi phức tạp (nhiều nhánh): Đúc kết các nhánh suy nghĩ của bạn thành danh sách các câu truy vấn tối ưu nhất. In ra mỗi câu trên một dòng (tối đa 3 câu).
+<example>
+<user_input>Compare the features of DocLib Basic and Premium plans.</user_input>
+<output>
+<think>The query addresses two distinct entities: Basic plan and Premium plan features. Decomposition is required.</think>
+<result>
+Features of the Basic plan
+Features of the Premium plan
+</result>
+</output>
+</example>
 
-Chỉ trả về kết quả cuối cùng ("SIMPLE" hoặc danh sách truy vấn). Không in ra quá trình suy nghĩ.""",
+USER INPUT: "{question}"
+OUTPUT:""",
         input_variables=["question"]
     )
     queries = [question]
     try:
         response = await llm.ainvoke(prompt.format(question=question))
         decision = response.content.strip()
+        
+        import re
+        result_match = re.search(r"<result>(.*?)</result>", decision, re.DOTALL)
+        if result_match:
+            decision = result_match.group(1).strip()
+        else:
+            decision = decision.split("</think>")[-1].strip() if "</think>" in decision else decision
+            
         if "SIMPLE" not in decision.upper():
             for q in decision.split("\n"):
-                q_clean = q.strip("- 123. ")
+                q_clean = q.strip("- 123. \r")
                 if q_clean: queries.append(q_clean)
     except Exception as e:
         logger.error(f"Retrieval strategy error: {e}")
@@ -162,12 +209,18 @@ async def grade_documents(state: AgentState):
     question = state["question"]
     documents = state.get("documents", [])
     prompt = PromptTemplate(
-        template="""Bạn là Chuyên gia Thẩm định Dữ liệu. Hãy đánh giá: Tài liệu này có chứa thông tin giúp trả lời câu hỏi không?
-Nếu có giá trị, trả về 'yes'. Nếu lạc đề, trả về 'no'.
+        template="""SYSTEM IDENTITY: DocLib Core System - Document Grading Engine.
+OBJECTIVE: Evaluate whether the provided document contains information relevant to answering the user's query.
+OUTPUT_LANGUAGE: Exact string match.
 
-Tài liệu: {context}
-Câu hỏi: {question}
-Kết luận:""",
+RULES:
+- Return 'yes' if the document is relevant or helpful.
+- Return 'no' if the document is completely irrelevant.
+- Output ONLY 'yes' or 'no'.
+
+DOCUMENT: {context}
+USER QUERY: {question}
+CONCLUSION:""",
         input_variables=["context", "question"]
     )
     filtered_docs = []
@@ -191,7 +244,16 @@ def decide_after_grade(state: AgentState):
 async def transform_query(state: AgentState):
     question = state["question"]
     prompt = PromptTemplate(
-        template="Viết lại câu hỏi để tối ưu tìm kiếm: {question}",
+        template="""SYSTEM IDENTITY: DocLib Core System - Query Optimization Engine.
+OBJECTIVE: Rewrite the given query to maximize vector search retrieval performance.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
+
+RULES:
+- Extract key entities, concepts, and remove stop words.
+- Output ONLY the optimized query.
+
+ORIGINAL QUERY: {question}
+OPTIMIZED QUERY:""",
         input_variables=["question"]
     )
     try:
@@ -202,7 +264,12 @@ async def transform_query(state: AgentState):
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
-    prompt = f"Bạn là trợ lý DocLib thông thái. Trả lời người dùng thân thiện.\nCâu hỏi: {state['question']}"
+    prompt = f"""SYSTEM IDENTITY: DocLib Core System - Direct Response Engine.
+OBJECTIVE: Provide a helpful and conversational response to the user.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
+
+USER QUERY: {state['question']}
+RESPONSE:"""
     try:
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
@@ -220,33 +287,29 @@ async def generate(state: AgentState):
     if state.get("file_data"):
         documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data'][:6000]}")
     
-    citation_instruction = "- Sử dụng trích dẫn nguồn inline (ví dụ: [1], [2])" if documents else "- Tuyệt đối KHÔNG sử dụng trích dẫn."
-    thought_instruction = "- Trình bày lập luận trong thẻ <think>...</think>." if state.get("use_smart") else ""
+    citation_instruction = "- Use inline source citations when referencing documents, e.g. [1], [2]." if documents else "- Do NOT use any citations as no relevant documents were found."
+    thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think>...</think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
 
     prompt = PromptTemplate(
-        template="""Bạn là DocLib AI - Cố vấn thông thái. Hãy áp dụng quy trình tư duy sâu sau đây:
+        template="""SYSTEM IDENTITY: DocLib Core System - Answer Synthesis Engine.
+OBJECTIVE: Synthesize a highly accurate, coherent, and professional response based on the provided reference documents.
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
-Quy trình tư duy nội bộ (không in ra ngoài):
-1. Phân tích tài liệu: Quét toàn bộ nguồn cấp để lọc ra các bằng chứng xác đáng.
-2. Kết nối logic: Xâu chuỗi các dữ kiện bằng tư duy phản biện.
-3. Lập dàn ý: Sắp xếp các ý chính theo thứ tự ưu tiên.
-4. Tổng hợp: Sinh câu trả lời cuối cùng dựa trên các bước trên.
-
-Nguyên tắc phản hồi:
-- Chỉ xuất ra kết quả cuối cùng từ bước 4. Tuyệt đối không in ra các tiêu đề "Bước 1, 2, 3".
-- Nếu tài liệu ({source_name}) KHÔNG có thông tin, hãy thông báo và có thể hỗ trợ bằng kiến thức hệ thống.
+RULES:
+- Base your answer strictly on the provided REFERENCE DOCUMENTS ({source_name}).
+- If the documents do not contain the necessary information, state this clearly before attempting to answer based on general knowledge.
 {citation_instruction}
 {thought_instruction}
-- Phản hồi bằng chính ngôn ngữ người dùng sử dụng.
+- Maintain a professional and objective tone.
 
-Thông tin cá nhân hoá:
+USER CONTEXT:
 {user_context}
 
-Dữ liệu tham khảo ({source_name}):
+REFERENCE DOCUMENTS ({source_name}):
 {documents}
 
-Câu hỏi: {question}
-Kết quả phản hồi (Chỉ in kết quả cuối cùng):""",
+USER QUERY: {question}
+RESPONSE:""",
         input_variables=["question", "documents", "source_name", "user_context", "citation_instruction", "thought_instruction"]
     )
     try:

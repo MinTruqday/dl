@@ -53,7 +53,8 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
     
     try:
         if agent_name == "ActionAgent":
-            res = await tool_callable.execute(task_desc, {}, req.user_id)
+            token = getattr(req, "token", None)
+            res = await tool_callable.execute(task_desc, {}, req.user_id, token)
         elif agent_name == "KnowledgeAgent":
             res = await tool_callable.execute(req)
         else:
@@ -62,7 +63,8 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
         current_results = state.get("consolidated_results", [])
         return {
             "consolidated_results": current_results + [f"Kết quả bước {idx+1} ({agent_name}):\n{res}"],
-            "current_step_index": idx + 1
+            "current_step_index": idx + 1,
+            "last_agent_result": res
         }
     except Exception as e:
         logger.error(f"Coordinator: Node execution failed: {e}")
@@ -160,7 +162,7 @@ class CoordinatorAgent:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
                     else:
-                        yield {"type": "tool_result", "agent": node_name}
+                        yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
                         
                 elif node_name == "aggregator":
                     yield {"type": "status", "node": "Tổng hợp thông tin"}
