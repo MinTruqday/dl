@@ -116,13 +116,13 @@ export default function CollectorPage() {
               </button>
             </div>
             <div className="flex flex-col gap-4">
-              <div className="border border-zinc-200 bg-zinc-50 rounded-xl p-5 flex flex-col justify-between h-32">
+              <div className="border border-zinc-200 bg-zinc-50 rounded-2xl p-5 flex flex-col justify-between h-32">
                 <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Tài liệu đã thu thập</p>
                 <p className="text-3xl font-bold tracking-tight text-black">
                   {collectorStats?.total_documents_collected || 0}
                 </p>
               </div>
-              <div className="border border-zinc-200 bg-zinc-50 rounded-xl p-5 flex flex-col justify-between h-32">
+              <div className="border border-zinc-200 bg-zinc-50 rounded-2xl p-5 flex flex-col justify-between h-32">
                 <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Worker Status</p>
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${collectorStats?.status === 'operational' ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -184,7 +184,7 @@ export default function CollectorPage() {
                 <select
                   value={collectionForm.source}
                   onChange={(e) => setCollectionForm({ ...collectionForm, source: e.target.value })}
-                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-xl bg-white appearance-none"
+                  className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-2xl bg-white appearance-none"
                 >
                   <option value="" disabled>-- Chọn nguồn dữ liệu --</option>
                   <option value="AnnaArchive">Anna's Archive</option>
@@ -206,7 +206,7 @@ export default function CollectorPage() {
                       const val = parseInt(e.target.value);
                       setCollectionForm({ ...collectionForm, pages: isNaN(val) ? 0 : val });
                     }}
-                    className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-xl bg-white"
+                    className="w-full border border-zinc-200 p-3 text-sm font-medium text-black focus:outline-none focus:border-black rounded-2xl bg-white"
                   />
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function CollectorPage() {
               <button
                 onClick={() => setConfirmModal(true)}
                 disabled={isRefreshing}
-                className="w-full py-3 bg-black text-white text-xs font-semibold uppercase tracking-wider disabled:opacity-50 border border-black rounded-xl hover:bg-zinc-800 transition-colors"
+                className="w-full py-3 bg-black text-white text-xs font-semibold uppercase tracking-wider disabled:opacity-50 border border-black rounded-2xl hover:bg-zinc-800 transition-colors"
               >
                 Bắt đầu thu thập
               </button>
@@ -238,14 +238,14 @@ export default function CollectorPage() {
           <button
             onClick={() => !isProcessing && setConfirmModal(false)}
             disabled={isProcessing}
-            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-xl hover:bg-zinc-50 transition-colors"
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black disabled:opacity-50 flex items-center justify-center rounded-2xl hover:bg-zinc-50 transition-colors"
           >
             Hủy
           </button>
           <button
             onClick={handleTriggerCollection}
             disabled={isProcessing}
-            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-xl hover:bg-zinc-800 transition-colors"
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-2xl hover:bg-zinc-800 transition-colors"
           >
             {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác nhận
           </button>

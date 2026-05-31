@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
       </div>
 
       <div className="w-full">
-        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-2xl shadow-sm">
+        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label

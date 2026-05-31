@@ -168,7 +168,7 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full space-y-6">
-        <div className="bg-white p-6 sm:p-8 border border-zinc-200 rounded-2xl shadow-sm">
+        <div className="bg-white p-6 sm:p-8 border border-zinc-200 rounded-2xl">
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label
@@ -263,7 +263,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <div className="bg-white py-8 px-6 sm:px-12 border border-zinc-200 rounded-2xl shadow-sm">
+        <div className="bg-white py-8 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
           <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
