@@ -17,6 +17,16 @@ export async function triggerCollectionAPI(
   return data;
 }
 
+export async function stopCollectionAPI() {
+  const res = await fetch(`${API_URL}/thu-thap/dung`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Không thể dừng tiến trình thu thập");
+  return data;
+}
+
 export async function getCollectorStatsAPI() {
   const res = await fetch(`${API_URL}/thu-thap/thong-ke`, {
     headers: getAuthHeaders(),

@@ -10,6 +10,8 @@ class DocLibDatabase:
 
     async def insert_document(self, document_data: dict):
         try:
+            from uuid6 import uuid7
+            document_data["_id"] = str(uuid7())
             res = await self.db.documents.insert_one(document_data)
             logger.success(f"[DB] Inserted document ID: {res.inserted_id}")
             return str(res.inserted_id)

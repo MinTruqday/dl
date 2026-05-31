@@ -17,6 +17,14 @@ async def trigger_collection(req: CollectionRequest):
         status=202
     )
 
+@router.post("/dung", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def stop_collection():
+    return APIResponse(
+        data=await CollectorService.stop_collection(),
+        message="Đã hủy bỏ toàn bộ quá trình thu thập",
+        status=200
+    )
+
 @router.get("/thong-ke", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_collector_stats():
     return APIResponse(

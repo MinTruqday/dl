@@ -13,6 +13,12 @@ class CollectorService:
         if not db_client.rabbitmq:
             raise HTTPException(status_code=503, detail="Dịch vụ hàng đợi RabbitMQ hiện không sẵn sàng.")
 
+        # Stop previous jobs to prevent parallel scraping of different sources
+        try:
+            await CollectorService.stop_collection()
+        except Exception:
+            pass
+
         payload = {
             "source": source,
             "job_id": str(uuid7()),
@@ -41,6 +47,30 @@ class CollectorService:
         
         logger.info(f"Collection job {payload['job_id']} triggered for source {source}")
         return {"status": "success", "job_id": payload["job_id"], "message": f"Đã kích hoạt tiến trình thu thập dữ liệu từ {source}."}
+
+    @staticmethod
+    async def stop_collection():
+        if not db_client.rabbitmq:
+            raise HTTPException(status_code=503, detail="Dịch vụ hàng đợi RabbitMQ hiện không sẵn sàng.")
+            
+        try:
+            channel = await db_client.rabbitmq.channel()
+            queues = [
+                "collect_list_queue", "collect_detail_queue", "download_processor_queue",
+                "nxbgd_queue", "nxbst_queue", "anna_archive_queue", "ctan_queue"
+            ]
+            for q_name in queues:
+                try:
+                    queue = await channel.declare_queue(q_name, durable=True)
+                    await queue.purge()
+                except Exception as ex:
+                    logger.warning(f"Could not purge queue {q_name}: {ex}")
+            await channel.close()
+            logger.info("Purged all collector queues")
+            return {"status": "success", "message": "Đã dừng và làm sạch toàn bộ hàng đợi thu thập."}
+        except Exception as e:
+            logger.error(f"Failed to purge queues: {e}")
+            raise HTTPException(status_code=500, detail="Lỗi khi làm sạch hàng đợi.")
 
     @staticmethod
     async def get_collector_stats():

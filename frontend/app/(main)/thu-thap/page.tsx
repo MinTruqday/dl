@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getCollectorStatsAPI, triggerCollectionAPI, getCollectorLogsAPI } from "@/services/collector.service";
+import { getCollectorStatsAPI, triggerCollectionAPI, getCollectorLogsAPI, stopCollectionAPI } from "@/services/collector.service";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { useToast } from "@/contexts/Toast";
@@ -91,6 +91,24 @@ export default function CollectorPage() {
     }
   };
 
+  const handleStopCollection = async () => {
+    setIsProcessing(true);
+    try {
+      setIsRefreshing(true);
+      await stopCollectionAPI();
+      showToast("Đã dừng tất cả các tiến trình cào dữ liệu.", "success");
+      fetchData();
+    } catch (err: any) {
+      showToast(
+        err.message || "Không thể dừng tiến trình thu thập.",
+        "error"
+      );
+    } finally {
+      setIsRefreshing(false);
+      setIsProcessing(false);
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
@@ -131,6 +149,13 @@ export default function CollectorPage() {
                   </p>
                 </div>
               </div>
+              <button
+                onClick={handleStopCollection}
+                disabled={isProcessing}
+                className="w-full py-3 bg-red-50 text-red-600 text-xs font-semibold uppercase tracking-wider disabled:opacity-50 border border-red-200 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+              >
+                {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />} Dừng tất cả tiến trình
+              </button>
             </div>
           </section>
         </aside>
