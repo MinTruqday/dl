@@ -283,12 +283,13 @@ export default function Editor({
       if (DocLibAlignmentTune) { tools.alignment = { class: DocLibAlignmentTune }; commonTunes.push('alignment'); }
       tools.indent = { class: DocLibIndentTune }; 
       commonTunes.push('indent');
-      if (StyleTune) { tools.style = StyleTune; commonTunes.push('style'); }
+      if (DocLibStyleTune) { tools.style = DocLibStyleTune; commonTunes.push('style'); }
       
       if (DocLibNotice) { tools.notice = DocLibNotice; commonTunes.push('notice'); }
       if (DocLibAnchor) { tools.anchor = { class: DocLibAnchor, config: { theme: 'light' } }; commonTunes.push('anchor'); }
       const paragraphTunes = [...commonTunes];
       if (DocLibStyleTune) tools.styleTune = DocLibStyleTune;
+      if (DocLibTextVariant) tools.textVariant = DocLibTextVariant;
       const indentTunes = ['indent'];
       const alignTunes = DocLibAlignmentTune ? ['alignment'] : [];
 

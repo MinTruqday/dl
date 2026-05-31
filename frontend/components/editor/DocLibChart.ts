@@ -4,6 +4,7 @@ export default class DocLibChart implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { type: 'bar' | 'line' | 'pie', labels: string[], datasets: { label: string, data: number[] }[] };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -14,12 +15,13 @@ export default class DocLibChart implements BlockTool {
 
   static get isReadOnlySupported() { return true; }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
+    this.readOnly = !!readOnly;
     this.data = {
-      type: data.type || 'bar',
-      labels: data.labels && data.labels.length > 0 ? data.labels : ['Jan', 'Feb', 'Mar'],
-      datasets: data.datasets && data.datasets.length > 0 ? data.datasets : [{ label: 'Doanh thu', data: [10, 20, 30] }]
+      type: data?.type || 'bar',
+      labels: data?.labels && data.labels.length > 0 ? data.labels : ['Jan', 'Feb', 'Mar'],
+      datasets: data?.datasets && data.datasets.length > 0 ? data.datasets : [{ label: 'Doanh thu', data: [10, 20, 30] }]
     };
   }
 
@@ -146,7 +148,7 @@ export default class DocLibChart implements BlockTool {
       
       this.wrapper.appendChild(canvasContainer);
       
-      if (!this.api.readOnly.toggle) {
+      if (!this.readOnly) {
           const editor = document.createElement('div');
           editor.classList.add('doclib-chart-editor');
           

@@ -13,6 +13,7 @@ class AggregatorAgent:
             from src.core.brain import llm
             from langchain_core.messages import HumanMessage
             
+            gathered_data = "\n\n".join(consolidated_results)
             final_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
 OBJECTIVE: Consolidate data from multiple sub-systems into a single, cohesive, and professional response.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -26,7 +27,7 @@ RULES:
 USER QUERY: "{query}"
 
 SYSTEM GATHERED DATA:
-{"\n\n".join(consolidated_results)}
+{gathered_data}
 
 RESPONSE:"""
             

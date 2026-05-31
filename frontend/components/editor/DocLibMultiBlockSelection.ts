@@ -32,7 +32,7 @@ export default class DocLibMultiBlockSelection {
               if (blockEl) {
                   e.preventDefault();
                   this.isSelecting = true;
-                  const blocks = Array.from(this.holder!.children);
+                  const blocks = Array.from(this.holder!.querySelectorAll('.ce-block'));
                   this.startBlockIndex = blocks.indexOf(blockEl);
                   this.toggleSelection(this.startBlockIndex);
               }
@@ -47,8 +47,8 @@ export default class DocLibMultiBlockSelection {
           const target = e.target as HTMLElement;
           const blockEl = target.closest('.ce-block');
           if (blockEl) {
-              const blocks = Array.from(this.holder!.children);
-              const hoverIndex = blocks.indexOf(blockEl);
+              const blocks = Array.from(this.holder!.querySelectorAll('.ce-block'));
+              const hoverIndex = blocks.indexOf(blockEl as HTMLElement);
               this.selectRange(this.startBlockIndex, hoverIndex);
           }
       });
@@ -63,7 +63,11 @@ export default class DocLibMultiBlockSelection {
               e.preventDefault();
               const indices = Array.from(this.currentSelection).sort((a, b) => b - a);
               indices.forEach(index => {
-                  this.editor.blocks.delete(index);
+                  try {
+                      this.editor.blocks.delete(index);
+                  } catch (err) {
+                      console.warn("Could not delete block at index", index, err);
+                  }
               });
               this.clearSelection();
           }
@@ -100,7 +104,7 @@ export default class DocLibMultiBlockSelection {
   
   private renderSelection() {
       if (!this.holder) return;
-      const blocks = Array.from(this.holder.children);
+      const blocks = Array.from(this.holder.querySelectorAll('.ce-block'));
       blocks.forEach((block, index) => {
           if (this.currentSelection.has(index)) {
               block.classList.add('ce-block--selected');

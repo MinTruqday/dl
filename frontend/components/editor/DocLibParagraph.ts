@@ -4,6 +4,7 @@ export default class DocLibParagraph implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
   private data: { text: string };
+  private readOnly: boolean;
 
   static get toolbox() {
     return {
@@ -15,18 +16,27 @@ export default class DocLibParagraph implements BlockTool {
   static get enableLineBreaks() { return true; }
   static get sanitize() { return { text: { br: true, b: true, i: true, a: true, span: true, mark: true, code: true, u: true, s: true, sup: true, sub: true } } }
   static get conversionConfig() { return { export: 'text', import: 'text' }; }
+  
+  static get pasteConfig() {
+    return { tags: ['P'] };
+  }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
     this.api = api;
-    this.data = { text: data.text || '' };
+    this.readOnly = !!readOnly;
+    this.data = { text: data?.text || '' };
   }
 
   render() {
     this.wrapper = document.createElement('div');
     this.wrapper.classList.add(this.api.styles.block, 'doclib-paragraph');
-    this.wrapper.contentEditable = 'true';
+    
+    if (!this.readOnly) {
+      this.wrapper.contentEditable = 'true';
+      this.wrapper.dataset.placeholder = 'Type "/" for commands';
+    }
+    
     this.wrapper.innerHTML = this.data.text;
-    this.wrapper.dataset.placeholder = 'Type "/" for commands';
     
     if (!document.getElementById('doclib-paragraph-styles')) {
         const style = document.createElement('style');
@@ -38,12 +48,30 @@ export default class DocLibParagraph implements BlockTool {
         document.head.appendChild(style);
     }
     
-    this.wrapper.addEventListener('input', () => { this.data.text = this.wrapper!.innerHTML; });
+    this.wrapper.addEventListener('input', () => { 
+        if (this.wrapper) this.data.text = this.wrapper.innerHTML; 
+    });
     
     return this.wrapper;
   }
   
   save(blockContent: HTMLElement) {
     return { text: blockContent.innerHTML };
+  }
+
+  merge(data: { text: string }) {
+    if (!this.wrapper) return;
+    this.data.text += data.text || '';
+    this.wrapper.innerHTML = this.data.text;
+  }
+
+  onPaste(event: any) {
+    const data = {
+      text: event.detail.data.innerHTML
+    };
+    this.data = data;
+    if (this.wrapper) {
+       this.wrapper.innerHTML = this.data.text;
+    }
   }
 }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mermaid Test</title>
+</head>
+<body>
+    <div id="wrapper"></div>
+    <script>
+        const wrapper = document.getElementById('wrapper');
+        const preview = document.createElement('div');
+        const container = document.createElement('div');
+        const id = 'mermaid-123';
+        container.id = id;
+        preview.appendChild(container);
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js';
+        script.onload = () => {
+            console.log("window.mermaid:", window.mermaid);
+            try {
+                window.mermaid.initialize({ startOnLoad: false, theme: 'default' });
+                window.mermaid.render(id, 'Intent -- "chat" --> FastChat', (svgCode) => {
+                    console.log("SVG generated:", svgCode.substring(0, 50));
+                    container.innerHTML = svgCode;
+                });
+            } catch (err) {
+                console.error("Error in render:", err);
+                container.innerHTML = "Error rendering: " + err.message;
+            }
+            wrapper.appendChild(preview);
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

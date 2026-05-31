@@ -61,22 +61,29 @@ export default class DocLibMermaid implements BlockTool {
           preview.appendChild(container);
           
           if (!(window as any).mermaid) {
-              const script = document.createElement('script');
-              script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-              script.onload = () => {
-                  (window as any).mermaid.initialize({ startOnLoad: false, theme: 'default' });
-                  renderMermaid(id, textarea.value, container);
-              };
-              document.head.appendChild(script);
+              if (!document.getElementById('mermaid-script')) {
+                  const script = document.createElement('script');
+                  script.id = 'mermaid-script';
+                  script.src = 'https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js';
+                  script.onload = () => {
+                      (window as any).mermaid.initialize({ startOnLoad: false, theme: 'default' });
+                      window.dispatchEvent(new Event('mermaid-loaded'));
+                  };
+                  document.head.appendChild(script);
+                  window.addEventListener('mermaid-loaded', () => renderMermaid(id, textarea.value, container), { once: true });
+              } else {
+                  window.addEventListener('mermaid-loaded', () => renderMermaid(id, textarea.value, container), { once: true });
+              }
           } else {
               renderMermaid(id, textarea.value, container);
           }
       };
       
-      const renderMermaid = async (id: string, code: string, container: HTMLElement) => {
+      const renderMermaid = (id: string, code: string, container: HTMLElement) => {
           try {
-              const { svg } = await (window as any).mermaid.render(id, code);
-              container.innerHTML = svg;
+              (window as any).mermaid.render(id, code, (svgCode: string) => {
+                  container.innerHTML = svgCode;
+              });
           } catch (e) {
               container.innerHTML = `<span style="color: #ef4444; font-weight: 500;">Mermaid Syntax Error</span>`;
           }
