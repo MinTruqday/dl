@@ -225,11 +225,30 @@ export default function MessagesPage() {
     }
   }, [messages.length, selectedConv?.other_user_id]);
 
+  const socketRef = useRef<WebSocket | null>(null);
+
+  const updateConversationInPlace = useCallback((senderId: string, messageData: any) => {
+    setConversations(prev => {
+      const idx = prev.findIndex(c => c.other_user_id === senderId);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const conv = { ...updated[idx] };
+      conv.last_message = messageData;
+      if (selectedConvRef.current?.other_user_id !== senderId) {
+        conv.unread_count = (conv.unread_count || 0) + 1;
+      }
+      updated.splice(idx, 1);
+      updated.unshift(conv);
+      return updated;
+    });
+  }, []);
+
   useEffect(() => {
     if (!user?._id) return;
 
     const wsUrl = `${WS_URL}/tro-chuyen/ws/${user._id}`;
     const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
 
     socket.onmessage = (event) => {
       try {
@@ -241,23 +260,45 @@ export default function MessagesPage() {
               if (prev.some(m => (m._id || m.id) === (data._id || data.id))) return prev;
               return [...prev, data];
             });
-            markAsReadAPI(selectedConvRef.current.other_user_id).catch(() => {});
+            if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+              socketRef.current.send(JSON.stringify({
+                action: "mark_read",
+                data: { other_user_id: selectedConvRef.current.other_user_id }
+              }));
+            }
           }
-          loadConversations();
+          updateConversationInPlace(data.sender_id, data);
+        } else if (type === "message_sent_ack") {
+          setMessages(prev => {
+            if (prev.some(m => (m._id || m.id) === (data._id || data.id))) return prev;
+            return [...prev, data];
+          });
+          updateConversationInPlace(data.receiver_id, data);
         } else if (type === "message_edited") {
           setMessages(prev => prev.map(m => (m._id || m.id) === (data._id || data.id) ? data : m));
+          setConversations(prev => prev.map(c => {
+            if (c.last_message && (c.last_message._id || c.last_message.id) === (data._id || data.id)) {
+              return { ...c, last_message: { ...c.last_message, content: data.content } };
+            }
+            return c;
+          }));
         } else if (type === "message_pinned") {
           setMessages(prev => prev.map(m => (m._id || m.id) === (data._id || data.id) ? data : m));
-          loadConversations();
         } else if (type === "message_recalled") {
           setMessages(prev => prev.map(m => (m._id || m.id) === (data._id || data.id) ? data : m));
-          loadConversations();
+          setConversations(prev => prev.map(c => {
+            if (c.last_message && (c.last_message._id || c.last_message.id) === (data._id || data.id)) {
+              return { ...c, last_message: { ...c.last_message, content: data.content, is_recalled: true } };
+            }
+            return c;
+          }));
         } else if (type === "message_reaction") {
           setMessages(prev => prev.map(m => (m._id || m.id) === (data._id || data.id) ? data : m));
         } else if (type === "messages_read") {
           setMessages(prev => prev.map(m => m.sender_id === data.reader_id ? { ...m, is_read: true } : m));
         } else if (type === "message_translated") {
           setMessages(prev => prev.map(m => (m._id || m.id) === data.message_id ? { ...m, translated_content: data.translated_content } : m));
+        } else if (type === "typing_indicator") {
         } else if (type === "conversation_settings_updated") {
           if (selectedConvRef.current) {
             setSelfDestructSeconds(data.self_destruct_seconds || 0);
@@ -268,8 +309,11 @@ export default function MessagesPage() {
       }
     };
 
-    return () => socket.close();
-  }, [user?._id, loadConversations]);
+    return () => {
+      socketRef.current = null;
+      socket.close();
+    };
+  }, [user?._id, updateConversationInPlace]);
 
   const selectConversation = async (conv: any) => {
     if (selectedConvRef.current && newMessage.trim()) {
@@ -308,8 +352,10 @@ export default function MessagesPage() {
 
       const draftRes = await getDraftAPI(conv.other_user_id);
       setNewMessage(draftRes.data?.content || "");
-      
-      loadConversations();
+
+      setConversations(prev => prev.map(c =>
+        c.other_user_id === conv.other_user_id ? { ...c, unread_count: 0 } : c
+      ));
     } catch (err: any) {
       showToast("Không thể truy xuất lịch sử tin nhắn.", "error");
     } finally {
@@ -375,7 +421,7 @@ export default function MessagesPage() {
       setImageFile(null);
       
       await saveDraftAPI(selectedConv.other_user_id, "");
-      loadConversations();
+      updateConversationInPlace(selectedConv.other_user_id, msg);
       
       const attachRes = await getSharedAttachmentsAPI(selectedConv.other_user_id);
       setSharedAttachments(attachRes.data || attachRes || []);
@@ -417,7 +463,7 @@ export default function MessagesPage() {
           const res = await sendMessageAPI(selectedConv.other_user_id, "Tin nhắn thoại", undefined, undefined, audioUrl);
           const msg = res.data || res;
           setMessages((prev) => [...prev, msg]);
-          loadConversations();
+          updateConversationInPlace(selectedConv.other_user_id, msg);
         } catch (err) {
           showToast("Lỗi gửi tin nhắn thoại.", "error");
         } finally {
@@ -476,7 +522,6 @@ export default function MessagesPage() {
         }
         return newMsgs;
       });
-      loadConversations();
     } catch (err: any) {
       showToast("Thao tác ghim thất bại.", "error");
     }
@@ -493,7 +538,12 @@ export default function MessagesPage() {
         ),
       );
       showToast("Đã thu hồi tin nhắn.", "success");
-      loadConversations();
+      setConversations(prev => prev.map(c => {
+        if (c.last_message && (c.last_message._id || c.last_message.id) === messageId) {
+          return { ...c, last_message: { ...c.last_message, content: "Tin nhắn đã bị thu hồi", is_recalled: true } };
+        }
+        return c;
+      }));
     } catch (err: any) {
       showToast(err.message || "Thu hồi thất bại.", "error");
     }
@@ -551,7 +601,7 @@ export default function MessagesPage() {
       setMessages((prev) => [...prev, newMsg]);
       setShowShareDocModal(false);
       showToast("Đã chia sẻ liên kết tài liệu.", "success");
-      loadConversations();
+      updateConversationInPlace(selectedConv.other_user_id, newMsg);
       
       const attachRes = await getSharedAttachmentsAPI(selectedConv.other_user_id);
       setSharedAttachments(attachRes.data || attachRes || []);
@@ -582,7 +632,6 @@ export default function MessagesPage() {
       const res = await togglePinConversationAPI(otherId);
       const status = res.data || res;
       showToast(status.is_pinned ? "Đã ghim cuộc trò chuyện." : "Đã bỏ ghim cuộc trò chuyện.", "success");
-      loadConversations();
       setActiveConvMenuId(null);
     } catch (err: any) {
       showToast("Không thể thay đổi trạng thái ghim.", "error");
@@ -592,7 +641,9 @@ export default function MessagesPage() {
   const handleMarkAsRead = async (otherUserId: string) => {
     try {
       await markAsReadAPI(otherUserId);
-      loadConversations();
+      setConversations(prev => prev.map(c =>
+        c.other_user_id === otherUserId ? { ...c, unread_count: 0 } : c
+      ));
       setActiveConvMenuId(null);
     } catch (err) {
       showToast("Không thể đánh dấu đã đọc", "error");
@@ -606,7 +657,7 @@ export default function MessagesPage() {
       if (selectedConv?.other_user_id === otherUserId) {
         setSelectedConv(null);
       }
-      loadConversations();
+      setConversations(prev => prev.filter(c => c.other_user_id !== otherUserId));
       setActiveConvMenuId(null);
       showToast("Đã xóa cuộc hội thoại", "success");
     } catch (err) {

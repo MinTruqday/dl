@@ -31,9 +31,8 @@ class NotificationService:
                 "data": json.dumps({"status": "Listening for notifications"})
             }
             
-            while True:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-                if message:
+            async for message in pubsub.listen():
+                if message["type"] == "message":
                     try:
                         data = json.loads(message["data"].decode("utf-8"))
                         if "body" in data and "message" not in data:
@@ -42,12 +41,14 @@ class NotificationService:
                             data["body"] = data["message"]
                         payload = json.dumps(data)
                     except Exception:
-                        payload = message["data"].decode("utf-8")
+                        if isinstance(message["data"], bytes):
+                            payload = message["data"].decode("utf-8")
+                        else:
+                            payload = str(message["data"])
                     yield {
                         "event": "notification",
                         "data": payload
                     }
-                await asyncio.sleep(0.5)
         except asyncio.CancelledError:
             logger.info(f"SSE notification stream cancelled for user {user_id}")
         except Exception as e:
@@ -56,6 +57,9 @@ class NotificationService:
                 "event": "error",
                 "data": json.dumps({"detail": "Mất kết nối với máy chủ thông báo."})
             }
+        finally:
+            if db_client.redis:
+                await pubsub.unsubscribe(f"user_notifications:{user_id}")
 
     @staticmethod
     async def get_notifications(current_user):

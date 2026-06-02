@@ -58,6 +58,7 @@ from api.preference import router as preference_router
 from api.quota import router as quota_router
 from api.rank import router as rank_router
 from api.storage import router as storage_router
+from api.finetune import router as finetune_router
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
@@ -238,6 +239,7 @@ app.include_router(preference_router)
 app.include_router(quota_router)
 app.include_router(rank_router)
 app.include_router(storage_router)
+app.include_router(finetune_router)
 
 @app.get("/health")
 async def health_check():
