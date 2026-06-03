@@ -2,6 +2,7 @@ from loguru import logger
 import os
 import aioboto3
 from botocore.exceptions import ClientError
+import brotli
 
 from core.config import settings
 
@@ -30,15 +31,32 @@ async def initialize_bucket():
             await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
             logger.info(f"Bucket {MINIO_BUCKET_NAME} created successfully.")
 
-async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf") -> str:
+async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf", compress: bool = False) -> str:
+    kwargs = {
+        "Bucket": MINIO_BUCKET_NAME,
+        "Key": object_name,
+        "ContentType": content_type
+    }
+    
+    if compress or content_type.startswith("text/") or content_type == "application/json":
+        file_content = brotli.compress(file_content, quality=11)
+        kwargs["ContentEncoding"] = "br"
+        
+    kwargs["Body"] = file_content
+
     async with await get_storage_client() as storage_client:
-        await storage_client.put_object(
-            Bucket=MINIO_BUCKET_NAME,
-            Key=object_name,
-            Body=file_content,
-            ContentType=content_type
-        )
+        await storage_client.put_object(**kwargs)
     return object_name
+
+async def download_file(object_name: str) -> tuple[bytes, str]:
+    async with await get_storage_client() as storage_client:
+        response = await storage_client.get_object(Bucket=MINIO_BUCKET_NAME, Key=object_name)
+        content = await response["Body"].read()
+        
+        if response.get("ContentEncoding") == "br":
+            content = brotli.decompress(content)
+            
+        return content, response.get("ContentType", "application/octet-stream")
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     async with await get_storage_client() as storage_client:

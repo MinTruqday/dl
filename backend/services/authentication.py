@@ -131,7 +131,7 @@ class AuthenticationService:
                 "_id": secrets.token_hex(8),
                 "email": email,
                 "token": otp_code,
-                "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
+                "expires_at": datetime.now(timezone.utc) + timedelta(minutes=1),
                 "used": False,
                 "created_at": datetime.now(timezone.utc),
             })

@@ -1,8 +1,8 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
-import { verifyCodeAPI } from "@/services/authentication.service";
+import { verifyCodeAPI, forgotPasswordAPI } from "@/services/authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/contexts/Toast";
 import { Loader2 } from "lucide-react";
@@ -10,10 +10,33 @@ import { Loader2 } from "lucide-react";
 export default function VerifyCodePage() {
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const [resending, setResending] = useState(false);
   const { showToast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const handleResend = async () => {
+    if (!email) return;
+    try {
+      setResending(true);
+      await forgotPasswordAPI(email);
+      showToast("Đã gửi lại mã xác thực", "success");
+      setCountdown(60);
+    } catch (err: any) {
+      showToast(err.message || "Không thể gửi lại mã", "error");
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -89,8 +112,23 @@ export default function VerifyCodePage() {
             </button>
           </form>
 
-          <div className="mt-8 text-sm text-center">
+          <div className="mt-8 text-sm text-center flex flex-col gap-4">
+            {countdown > 0 ? (
+              <p className="text-zinc-500 font-medium">
+                Chưa nhận được mã? Gửi lại sau {countdown} giây
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="text-black font-medium underline hover:text-zinc-700"
+              >
+                {resending ? "Đang gửi..." : "Gửi lại mã xác thực"}
+              </button>
+            )}
             <button
+              type="button"
               onClick={() => router.back()}
               className="text-zinc-500 font-medium underline"
             >

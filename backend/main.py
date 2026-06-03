@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from brotli_asgi import BrotliMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from core.database import init_db, close_db, db_client
@@ -74,6 +75,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    BrotliMiddleware,
+    quality=5,
+    minimum_size=500
 )
 
 from fastapi.responses import Response, FileResponse

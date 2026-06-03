@@ -14,6 +14,8 @@ from webauthn.helpers.structs import (
     AuthenticatorSelectionCriteria,
     UserVerificationRequirement,
     AuthenticatorAttachment,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,
 )
 from webauthn.helpers.exceptions import InvalidRegistrationResponse, InvalidAuthenticationResponse
 from fastapi import HTTPException
@@ -132,11 +134,11 @@ class PasskeyService:
         
         options = generate_authentication_options(
             rp_id=RP_ID,
-            allow_credentials=[{
-                "id": base64.b64decode(p["credential_id"]),
-                "type": "public-key",
-                "transports": p.get("transports", [])
-            } for p in passkeys],
+            allow_credentials=[PublicKeyCredentialDescriptor(
+                id=base64.b64decode(p["credential_id"]),
+                type=PublicKeyCredentialType.PUBLIC_KEY,
+                transports=p.get("transports")
+            ) for p in passkeys],
             user_verification=UserVerificationRequirement.PREFERRED,
         )
         

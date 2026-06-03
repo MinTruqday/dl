@@ -54,6 +54,8 @@ class Settings(BaseModel):
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
+    SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
+    SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
 
     PASSKEY_RP_ID: str = os.getenv("PASSKEY_RP_ID")
     PASSKEY_RP_NAME: str = os.getenv("PASSKEY_RP_NAME")
