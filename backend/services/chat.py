@@ -11,14 +11,20 @@ class ChatService:
         
         participants = [sender_id, receiver_id] if not receiver_id.startswith("group_") else []
         
+        if receiver_id.startswith("group_"):
+            group_doc = await db["chat_groups"].find_one({"_id": receiver_id})
+            members = group_doc.get("members", []) if group_doc else []
+            inc_data = {f"unread_count.{m}": 1 for m in members if m != sender_id}
+        else:
+            inc_data = {f"unread_count.{receiver_id}": 1}
+
         update_doc = {
             "$set": {
                 "last_message": message_data,
                 "updated_at": datetime.now(timezone.utc),
+                "cleared_by": []
             },
-            "$inc": {
-                f"unread_count.{receiver_id}": 1,
-            },
+            "$inc": inc_data,
             "$setOnInsert": {
                 "created_at": datetime.now(timezone.utc),
                 "pinned_messages": []
@@ -54,9 +60,9 @@ class ChatService:
         settings = results[0]
         reply_msg = results[1] if reply_to_id and len(results) > 1 else None
 
+        self_destruct_seconds = None
         if settings and settings.get("self_destruct_seconds", 0) > 0:
-            from datetime import timedelta
-            self_destruct_at = datetime.now(timezone.utc) + timedelta(seconds=settings["self_destruct_seconds"])
+            self_destruct_seconds = settings["self_destruct_seconds"]
 
         message = MessageInDB(
             sender_id=sender_id,
@@ -65,7 +71,7 @@ class ChatService:
             image_url=image_url,
             audio_url=audio_url,
             reply_to_id=reply_to_id,
-            self_destruct_at=self_destruct_at
+            self_destruct_seconds=self_destruct_seconds
         )
         msg_dict = message.model_dump(by_alias=True)
         
@@ -106,6 +112,8 @@ class ChatService:
 
         if cursor:
             query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            
+        query["deleted_by"] = {"$ne": str(current_user.id)}
 
         messages = await db["messages"].find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
         
@@ -131,7 +139,8 @@ class ChatService:
             "$or": [
                 {"participants": str(current_user.id)},
                 {"_id": {"$in": [g["_id"] for g in await db["chat_groups"].find({"members": str(current_user.id)}).to_list(100)]}}
-            ]
+            ],
+            "cleared_by": {"$ne": str(current_user.id)}
         }).sort("updated_at", -1).to_list(length=200)
 
         other_user_ids = []
@@ -353,22 +362,30 @@ class ChatService:
                 if group.get("created_by") == str(current_user.id):
                     await db["chat_groups"].delete_one({"_id": other_user_id})
                     await db["messages"].delete_many({"receiver_id": other_user_id})
+                    await db["conversations"].delete_one({"_id": other_user_id})
                 else:
                     await db["chat_groups"].update_one(
                         {"_id": other_user_id},
                         {"$pull": {"members": str(current_user.id)}}
                     )
-            await db["conversations"].delete_one({"_id": other_user_id})
+                    await db["conversations"].update_one(
+                        {"_id": other_user_id},
+                        {"$addToSet": {"cleared_by": str(current_user.id)}}
+                    )
             return {"status": "success"}
 
-        await db["messages"].delete_many({
+        await db["messages"].update_many({
             "$or": [
                 {"sender_id": str(current_user.id), "receiver_id": other_user_id},
                 {"sender_id": other_user_id, "receiver_id": str(current_user.id)}
             ]
-        })
+        }, {"$addToSet": {"deleted_by": str(current_user.id)}})
+        
         participant_key = f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
-        await db["conversations"].delete_one({"_id": participant_key})
+        await db["conversations"].update_one(
+            {"_id": participant_key},
+            {"$addToSet": {"cleared_by": str(current_user.id)}}
+        )
         return {"status": "success"}
 
     @staticmethod
@@ -378,20 +395,20 @@ class ChatService:
         if not msg:
             return None
 
-        reactions = msg.get("reactions", [])
-        updated_reactions = [r for r in reactions if r["user_id"] != str(current_user.id)]
-
-        if reaction:
-            updated_reactions.append({
-                "user_id": str(current_user.id),
-                "user_name": current_user.full_name,
-                "reaction": reaction
-            })
-
         await db["messages"].update_one(
             {"_id": message_id},
-            {"$set": {"reactions": updated_reactions}}
+            {"$pull": {"reactions": {"user_id": str(current_user.id)}}}
         )
+
+        if reaction:
+            await db["messages"].update_one(
+                {"_id": message_id},
+                {"$push": {"reactions": {
+                    "user_id": str(current_user.id),
+                    "user_name": current_user.full_name,
+                    "reaction": reaction
+                }}}
+            )
         return await db["messages"].find_one({"_id": message_id})
 
     @staticmethod
@@ -404,6 +421,34 @@ class ChatService:
         last_msg = await db["messages"].find_one(
             {"receiver_id": participant_key if other_user_id.startswith("group_") else user_id},
             sort=[("created_at", -1)]
+        )
+        
+        # update self_destruct_at for unread messages with self_destruct_seconds
+        from datetime import timedelta
+        await db["messages"].update_many(
+            {
+                "receiver_id": participant_key if other_user_id.startswith("group_") else user_id,
+                "is_read": False,
+                "self_destruct_seconds": {"$exists": True, "$ne": None},
+                "self_destruct_at": None
+            },
+            [{
+                "$set": {
+                    "is_read": True,
+                    "self_destruct_at": {
+                        "$add": [datetime.now(timezone.utc), {"$multiply": ["$self_destruct_seconds", 1000]}]
+                    }
+                }
+            }]
+        )
+        
+        # mark others as read
+        await db["messages"].update_many(
+            {
+                "receiver_id": participant_key if other_user_id.startswith("group_") else user_id,
+                "is_read": False
+            },
+            {"$set": {"is_read": True}}
         )
         
         update_data = {f"unread_count.{user_id}": 0}

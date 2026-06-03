@@ -174,16 +174,34 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 @router.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: str):
+async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Query(...)):
+    try:
+        user = await get_current_user(token)
+        if str(user.id) != user_id:
+            await websocket.close(code=1008)
+            return
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(user_id, websocket)
     try:
         while True:
-            raw = await websocket.receive_text()
+            raw = await asyncio.wait_for(websocket.receive_text(), timeout=60.0)
             try:
                 payload = json.loads(raw)
+                if payload.get("action") == "ping":
+                    await websocket.send_json({"type": "pong"})
+                    continue
                 await manager._handle_ws_action(user_id, payload)
             except json.JSONDecodeError:
                 pass
+    except asyncio.TimeoutError:
+        manager.disconnect(user_id, websocket)
+        try:
+            await websocket.close(code=1000)
+        except Exception:
+            pass
     except WebSocketDisconnect:
         manager.disconnect(user_id, websocket)
 

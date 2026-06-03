@@ -16,10 +16,21 @@ from src.models.state import CoordinatorState
 async def supervisor_node(state: CoordinatorState):
     steps = state.get("steps", [])
     idx = state.get("current_step_index", 0)
+    replan_count = state.get("replan_count", 0)
     
-    if not steps:
-        steps = await brain.create_plan(state["req"])
-        idx = 0
+    if replan_count > 3:
+        return {"steps": steps, "current_step_index": len(steps), "next_node": "aggregator", "error": "Tool budget exceeded"}
+        
+    if not steps or (state.get("error") and replan_count <= 3):
+        if state.get("error"):
+            req = state["req"]
+            req.context = f"Previous error: {state['error']}. Please use a different approach."
+            steps = await brain.create_plan(req)
+            idx = 0
+            return {"steps": steps, "current_step_index": idx, "replan_count": replan_count + 1, "error": ""}
+        else:
+            steps = await brain.create_plan(state["req"])
+            idx = 0
         
     if idx >= len(steps):
         return {"steps": steps, "current_step_index": idx, "next_node": "aggregator"}
@@ -53,6 +64,15 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
     
     try:
         if agent_name == "ActionAgent":
+            if any(keyword in task_desc.lower() for keyword in ["xoá", "xóa", "delete", "remove", "drop"]):
+                if not getattr(req, "useSmart", False):
+                    res = "Hành động này được phân loại là NGUY HIỂM. Hệ thống đang chờ phê duyệt từ người dùng (Human-in-the-loop)."
+                    return {
+                        "consolidated_results": state.get("consolidated_results", []) + [res],
+                        "current_step_index": idx + 1,
+                        "last_agent_result": res
+                    }
+                    
             token = getattr(req, "token", None)
             res = await tool_callable.execute(task_desc, {}, req.user_id, token)
         elif agent_name == "KnowledgeAgent":
@@ -70,9 +90,10 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
         logger.error(f"Coordinator: Node execution failed: {e}")
         current_results = state.get("consolidated_results", [])
         return {
-            "consolidated_results": current_results + ["Hệ thống đang gặp sự cố, vui lòng thử lại sau."],
+            "consolidated_results": current_results + [f"Lỗi tại bước {idx+1} ({agent_name}): {str(e)}"],
             "current_step_index": idx + 1,
-            "error": str(e)
+            "error": str(e),
+            "next_node": "supervisor"
         }
 
 async def code_interpreter_node(state: CoordinatorState):
@@ -145,7 +166,8 @@ class CoordinatorAgent:
             "consolidated_results": [],
             "final_answer": "",
             "next_node": "",
-            "error": ""
+            "error": "",
+            "replan_count": 0
         }
         
         final_results = []

@@ -246,9 +246,15 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user?._id) return;
 
-    const wsUrl = `${WS_URL}/tro-chuyen/ws/${user._id}`;
+    const wsUrl = `${WS_URL}/tro-chuyen/ws/${user._id}?token=${getToken()}`;
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
+
+    const pingInterval = setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ action: "ping" }));
+      }
+    }, 30000);
 
     socket.onmessage = (event) => {
       try {
@@ -310,6 +316,7 @@ export default function MessagesPage() {
     };
 
     return () => {
+      clearInterval(pingInterval);
       socketRef.current = null;
       socket.close();
     };

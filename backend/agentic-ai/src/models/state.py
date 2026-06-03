@@ -24,3 +24,4 @@ class CoordinatorState(TypedDict):
     final_answer: str
     next_node: str
     error: str
+    replan_count: int

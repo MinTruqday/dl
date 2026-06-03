@@ -17,6 +17,7 @@ class MessageBase(BaseModel):
     is_edited: bool = False
     is_recalled: bool = False
     reactions: List[dict] = []
+    self_destruct_seconds: Optional[int] = None
     self_destruct_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

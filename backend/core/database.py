@@ -25,6 +25,24 @@ async def init_db():
         sys.exit(1)
 
     db_client.mongodb = AsyncIOMotorClient(mongo_uri)
+    
+    try:
+        await db_client.mongodb.admin.command("replSetGetStatus")
+    except Exception:
+        try:
+            from urllib.parse import urlparse
+            parsed_uri = urlparse(mongo_uri)
+            host_with_port = parsed_uri.netloc.split('@')[-1] if '@' in parsed_uri.netloc else parsed_uri.netloc
+            logger.info("Initializing MongoDB Replica Set from backend")
+            await db_client.mongodb.admin.command("replSetInitiate", {
+                "_id": "rs0",
+                "members": [{"_id": 0, "host": host_with_port}]
+            })
+            logger.info("MongoDB Replica Set initialized successfully.")
+            await asyncio.sleep(3)
+        except Exception as e:
+            logger.warning(f"Replica set initialization ignored or failed: {e}")
+
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
     
     max_retries = 5

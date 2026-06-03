@@ -58,9 +58,17 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             auth_token_var.set(bearer_token)
             req.token = bearer_token
 
+        from src.memory.manager import memory_manager
+        
         try:
+            if req.session_id:
+                history = await memory_manager.get_short_term(req.session_id)
+                if history:
+                    req.conversation_history = history
+            
             route_data = await router_agent.execute(req.query)
             route = route_data["route"]
+            final_answer = ""
             
             if route == "chat":
                 yield f"event: status\ndata: {json.dumps({'node': 'Đang phản hồi trực tiếp'})}\n\n"
@@ -79,7 +87,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     
                     async for chunk in chat_llm.astream([HumanMessage(content=f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}")]):
                         if chunk.content:
+                            final_answer += chunk.content
                             yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
+                            
+                if req.session_id:
+                    await memory_manager.save_short_term(req.session_id, {"role": "user", "content": req.query})
+                    await memory_manager.save_short_term(req.session_id, {"role": "assistant", "content": final_answer})
             else:
                 async for event in coordinator.execute_plan(req):
                     event_type = event["type"]
@@ -91,9 +104,14 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     elif event_type == "tool_result":
                         yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoàn thành')})}\n\n"
                     elif event_type == "message":
+                        final_answer += event['chunk']
                         yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"
                     elif event_type == "error":
                         yield f"event: message\ndata: {json.dumps({'chunk': event['message']})}\n\n"
+                        
+                if req.session_id and final_answer:
+                    await memory_manager.save_short_term(req.session_id, {"role": "user", "content": req.query})
+                    await memory_manager.save_short_term(req.session_id, {"role": "assistant", "content": final_answer})
                     
         except Exception as e:
             logger.exception(f"Stream execution error: {e}")

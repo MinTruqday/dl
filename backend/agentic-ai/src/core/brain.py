@@ -32,50 +32,8 @@ class AgenticBrain:
     async def create_plan(self, req) -> List[Dict[str, str]]:
         logger.info(f"Brain: Creating structured plan for query: {req.query}")
         
-        system_prompt = """SYSTEM IDENTITY: DocLib Core System - Neural Routing Brain.
-OBJECTIVE: Analyze the user's request, perform logical reasoning, and decompose it into a structured execution plan.
-OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
-
-AVAILABLE AGENTS:
-- ActionAgent: Executes system operations, modifies personal data, manages wallet balance, deletes/restores documents.
-- KnowledgeAgent: Searches, reads, and analyzes internal documents from the DocLib library.
-- CodeInterpreter: Writes and executes Python code for data processing, calculations, and plotting.
-- SearchEngine: Performs web searches to retrieve external information.
-- DraftGenerator: Generates drafts, writes emails, formats text into Markdown or LaTeX.
-- ReasoningAgent: Performs deep logical analysis and evaluates quality.
-
-RULES:
-1. You MUST output a strictly valid JSON object.
-2. The JSON object must contain a "reasoning" string detailing your Chain of Thought.
-3. The JSON object must contain a "steps" array with the execution sequence.
-
-<example>
-<user_input>Search for AI trends in 2024 on the internet and create a markdown draft document.</user_input>
-<output>
-{{
-    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGenerator formats the output.",
-    "steps": [
-        {{"agent": "SearchEngine", "task": "Search for AI trends in 2024"}},
-        {{"agent": "DraftGenerator", "task": "Draft a markdown document summarizing the found AI trends"}}
-    ]
-}}
-</output>
-</example>
-
-<example>
-<user_input>Draw a pie chart of documents uploaded this month.</user_input>
-<output>
-{{
-    "reasoning": "The user wants a chart based on system data. ActionAgent fetches the statistics, then CodeInterpreter draws the chart.",
-    "steps": [
-        {{"agent": "ActionAgent", "task": "Fetch document upload statistics for the current month"}},
-        {{"agent": "CodeInterpreter", "task": "Generate a pie chart using the provided upload statistics"}}
-    ]
-}}
-</output>
-</example>
-
-{format_instructions}"""
+        from src.core.prompt_registry import prompt_registry, PromptType
+        system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
         
         history_str = ""
         if hasattr(req, "conversation_history") and req.conversation_history:

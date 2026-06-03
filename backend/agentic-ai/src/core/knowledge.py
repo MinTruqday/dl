@@ -53,29 +53,9 @@ async def contextualize_question(state: AgentState):
         return {"question": question}
 
     history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-5:]])
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Contextualization Engine.
-OBJECTIVE: Reconstruct the latest user query into an independent, fully contextualized query by performing anaphora and co-reference resolution based on the conversation history.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-RULES:
-- Resolve all ambiguous pronouns and contextual references into explicit entities.
-- Wrap the final reconstructed query inside <query>...</query> XML tags.
-- Provide no additional conversational text.
-
-<example>
-<history>user: Where is the ReactJS tutorial document?</history>
-<user_input>Who is its author?</user_input>
-<output>
-<query>Who is the author of the ReactJS tutorial document?</query>
-</output>
-</example>
-
-CONVERSATION HISTORY:
-{history}
-
-LATEST USER INPUT: {question}
-OUTPUT:""",
+        template=prompt_registry.get(PromptType.CONTEXTUALIZE),
         input_variables=["history", "question"]
     )
     try:
@@ -91,28 +71,9 @@ OUTPUT:""",
 
 async def route_question(state: AgentState):
     question = state["question"]
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Secondary Router.
-OBJECTIVE: Classify the query into either an internal database search or a direct response.
-
-ROUTES:
-- <route>rag</route>: The query requires retrieving factual data, company procedures, technical documents, or specific file contents.
-- <route>direct</route>: The query is general knowledge, conversational, or does not require retrieving specific internal documents.
-
-RULES:
-- Provide reasoning inside <think>...</think> tags.
-- Output the route inside <route>...</route> tags.
-
-<example>
-<user_input>What is the process for uploading documents to DocLib?</user_input>
-<output>
-<think>This requires internal system documentation regarding upload procedures.</think>
-<route>rag</route>
-</output>
-</example>
-
-USER INPUT: "{question}"
-OUTPUT:""",
+        template=prompt_registry.get(PromptType.ROUTE),
         input_variables=["question"]
     )
     try:
@@ -139,30 +100,9 @@ def preprocess_file(state: AgentState):
 async def retrieve_db(state: AgentState):
     question = state["question"]
     document_id = state.get("document_id")
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Search Strategy Engine.
-OBJECTIVE: Decompose the user query into optimal search paths using a Tree of Thoughts approach.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-RULES:
-1. Analyze if the query is simple (1 path) or complex (multiple paths). Wrap reasoning in <think>...</think>.
-2. Wrap the search strategy in <result>...</result>.
-- If simple: output exactly <result>SIMPLE</result>.
-- If complex: output the decomposed sub-queries, one per line, inside the <result> tags.
-
-<example>
-<user_input>Compare the features of DocLib Basic and Premium plans.</user_input>
-<output>
-<think>The query addresses two distinct entities: Basic plan and Premium plan features. Decomposition is required.</think>
-<result>
-Features of the Basic plan
-Features of the Premium plan
-</result>
-</output>
-</example>
-
-USER INPUT: "{question}"
-OUTPUT:""",
+        template=prompt_registry.get(PromptType.RETRIEVAL_STRATEGY),
         input_variables=["question"]
     )
     queries = [question]
@@ -187,9 +127,9 @@ OUTPUT:""",
     extracted_docs = []
     for q in list(dict.fromkeys(queries))[:3]: 
         try:
-            results = await vector_store.search(query_vector=await embedding_service.embed_query(q), limit=3)
+            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), limit=3)
             for doc in results:
-                extracted_docs.append(f"[Nguồn: {doc.payload.get('title', 'Tài liệu')}]\n{doc.payload.get('text', '')}")
+                extracted_docs.append(f"[Nguồn: {doc.get('metadata', {}).get('title', 'Tài liệu')}]\n{doc.get('text', '')}")
         except Exception as e:
             logger.error(f"Vector search error for query '{q}': {e}")
     
@@ -208,19 +148,9 @@ async def retrieve_internet(state: AgentState):
 async def grade_documents(state: AgentState):
     question = state["question"]
     documents = state.get("documents", [])
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Document Grading Engine.
-OBJECTIVE: Evaluate whether the provided document contains information relevant to answering the user's query.
-OUTPUT_LANGUAGE: Exact string match.
-
-RULES:
-- Return 'yes' if the document is relevant or helpful.
-- Return 'no' if the document is completely irrelevant.
-- Output ONLY 'yes' or 'no'.
-
-DOCUMENT: {context}
-USER QUERY: {question}
-CONCLUSION:""",
+        template=prompt_registry.get(PromptType.GRADE_DOCUMENT),
         input_variables=["context", "question"]
     )
     filtered_docs = []
@@ -243,17 +173,9 @@ def decide_after_grade(state: AgentState):
 
 async def transform_query(state: AgentState):
     question = state["question"]
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Query Optimization Engine.
-OBJECTIVE: Rewrite the given query to maximize vector search retrieval performance.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-RULES:
-- Extract key entities, concepts, and remove stop words.
-- Output ONLY the optimized query.
-
-ORIGINAL QUERY: {question}
-OPTIMIZED QUERY:""",
+        template=prompt_registry.get(PromptType.OPTIMIZE_QUERY),
         input_variables=["question"]
     )
     try:
@@ -264,12 +186,8 @@ OPTIMIZED QUERY:""",
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
-    prompt = f"""SYSTEM IDENTITY: DocLib Core System - Direct Response Engine.
-OBJECTIVE: Provide a helpful and conversational response to the user.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-USER QUERY: {state['question']}
-RESPONSE:"""
+    from src.core.prompt_registry import prompt_registry, PromptType
+    prompt = prompt_registry.get(PromptType.GENERATE_DIRECT).format(question=state['question'])
     try:
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
@@ -290,26 +208,9 @@ async def generate(state: AgentState):
     citation_instruction = "- Use inline source citations when referencing documents, e.g. [1], [2]." if documents else "- Do NOT use any citations as no relevant documents were found."
     thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think>...</think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
 
+    from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
-        template="""SYSTEM IDENTITY: DocLib Core System - Answer Synthesis Engine.
-OBJECTIVE: Synthesize a highly accurate, coherent, and professional response based on the provided reference documents.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-RULES:
-- Base your answer strictly on the provided REFERENCE DOCUMENTS ({source_name}).
-- If the documents do not contain the necessary information, state this clearly before attempting to answer based on general knowledge.
-{citation_instruction}
-{thought_instruction}
-- Maintain a professional and objective tone.
-
-USER CONTEXT:
-{user_context}
-
-REFERENCE DOCUMENTS ({source_name}):
-{documents}
-
-USER QUERY: {question}
-RESPONSE:""",
+        template=prompt_registry.get(PromptType.SYNTHESIS),
         input_variables=["question", "documents", "source_name", "user_context", "citation_instruction", "thought_instruction"]
     )
     try:
