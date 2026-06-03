@@ -207,13 +207,13 @@ async def import_docs(req: dict):
                 messages = [{"role": "user", "content": prompt}]
                 resp = await client.chat_completion(messages=messages, max_tokens=1024, temperature=0.3)
                 raw = resp.choices[0].message.content.strip()
-                    if "```json" in raw:
-                        raw = raw.split("```json")[1].split("```")[0]
-                    elif "```" in raw:
-                        raw = raw.split("```")[1].split("```")[0]
-                    for p in json.loads(raw):
-                        if p.get("instruction") and p.get("output"):
-                            samples.append({"_id": str(uuid7()), "dataset_id": ds_id, "instruction": p["instruction"], "input": p.get("input", ""), "output": p["output"], "created_at": datetime.now(timezone.utc)})
+                if "```json" in raw:
+                    raw = raw.split("```json")[1].split("```")[0]
+                elif "```" in raw:
+                    raw = raw.split("```")[1].split("```")[0]
+                for p in json.loads(raw):
+                    if p.get("instruction") and p.get("output"):
+                        samples.append({"_id": str(uuid7()), "dataset_id": ds_id, "instruction": p["instruction"], "input": p.get("input", ""), "output": p["output"], "created_at": datetime.now(timezone.utc)})
             except Exception as e:
                 logger.warning(f"Finetune extract failed: {e}")
     if samples:
@@ -300,8 +300,6 @@ async def deploy_model(job_id: str, req: dict):
     if not job:
         raise HTTPException(status_code=404, detail="Khong tim thay cong viec hoan thanh.")
     model_name = job.get("merged_model_name", job["job_name"])
-    # In this LLAMA-centric architecture, deployment usually means updating the .env file
-    # or restarting the TGI container. We just mark it deployed here.
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})
     return {"status": "deployed", "model_name": model_name}
 

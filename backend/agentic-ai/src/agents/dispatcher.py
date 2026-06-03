@@ -1,10 +1,10 @@
 import json
 from loguru import logger
 from src.core.config import settings
-from src.agents.action import tools, llm
+from src.tools.actions import tools, llm
 from langchain_core.messages import SystemMessage, HumanMessage
 
-class InternalAPIAgent:
+class ToolDispatcher:
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
@@ -25,59 +25,26 @@ class InternalAPIAgent:
             
         system_prompt = f"""SYSTEM IDENTITY: DocLib Core System - API Tool Dispatcher.
 OBJECTIVE: Analyze the user intent and select the appropriate system tool for execution.
-OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
-
-AVAILABLE TOOLS:
-{self.tools_prompt}
-
-RULES:
-1. You MUST output ONLY a valid JSON object.
-2. The JSON object must conform to the following schema:
-{{
-    "tool": "<tool_name_or_none>",
-    "params": {{
-        "<param_1>": "<value_1>"
-    }}
-}}
-3. If no tools match the user's request, set "tool" to "none" and "params" to {{}}.
-4. Do NOT output any explanatory text outside the JSON object.
-
-<example>
-<user_input>Create a folder called AI Research</user_input>
-<output>
-{{
-    "tool": "create_directory",
-    "params": {{
-        "name": "AI Research"
-    }}
-}}
-</output>
-</example>"""
+OUTPUT_LANGUAGE: Must exactly match the language of the user's input query."""
 
         try:
             messages = [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=action)
             ]
-            res = await llm.ainvoke(messages)
-            content = res.content.strip()
             
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].strip()
-                
-            try:
-                decision = json.loads(content)
-            except Exception as e:
-                logger.error(f"InternalAPI JSON parse failed. Content: {content}. Error: {e}")
-                return "Hệ thống không thể nhận diện được yêu cầu thao tác. Vui lòng kiểm tra lại câu lệnh."
-                
-            tool_name = decision.get("tool")
-            tool_params = decision.get("params", {})
+            llm_with_tools = llm.bind_tools(tools)
+            res = await llm_with_tools.ainvoke(messages)
             
-            if tool_name == "none" or tool_name not in self.tool_map:
-                return f"Từ chối thực thi: Hệ thống không có công cụ nào phù hợp để xử lý yêu cầu này."
+            if not res.tool_calls:
+                return "Từ chối thực thi: Hệ thống không có công cụ nào phù hợp để xử lý yêu cầu này."
+                
+            tool_call = res.tool_calls[0]
+            tool_name = tool_call["name"]
+            tool_params = tool_call["args"]
+            
+            if tool_name not in self.tool_map:
+                return f"Từ chối thực thi: Công cụ '{tool_name}' không tồn tại."
                 
             selected_tool = self.tool_map[tool_name]
             
@@ -97,4 +64,4 @@ RULES:
             logger.error(f"InternalAPI: Task execution failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-internal_api_agent = InternalAPIAgent()
+dispatcher = ToolDispatcher()

@@ -14,7 +14,7 @@ _hf = HuggingFaceEndpoint(
 )
 _llm = ChatHuggingFace(llm=_hf)
 
-class RetrievalAgent:
+class RetrievalService:
     def __init__(self):
         self.llm = _llm
 
@@ -72,4 +72,4 @@ OUTPUT:""",
         
         return docs
 
-retrieval_agent = RetrievalAgent()
+retrieval_service = RetrievalService()

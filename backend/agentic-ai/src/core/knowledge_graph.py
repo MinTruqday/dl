@@ -13,7 +13,7 @@ from redis import Redis
 from loguru import logger
 from src.store.vector_store import vector_store
 from src.ingestion.embedder import embedding_service
-from src.agents.retrieval import retrieval_agent
+from src.core.retrieval import retrieval_service
 from src.memory.mem0_manager import mem0_manager
 from src.memory.manager import memory_manager
 from src.core.config import settings

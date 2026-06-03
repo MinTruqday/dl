@@ -1,15 +1,17 @@
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
 from src.core.brain import brain
 from src.agents.code_interpreter import code_interpreter_agent
 from src.integrations.search_engine import search_engine_agent
-from src.tools.internal_api import internal_api_agent
+from src.agents.dispatcher import dispatcher
 from src.agents.draft_generator import draft_generator_agent
 from src.agents.knowledge import knowledge_agent
 from src.agents.reasoning import reasoning_agent
 from src.core.aggregator import aggregator_agent
+from uuid6 import uuid7
 
 from src.models.state import CoordinatorState
 
@@ -33,12 +35,12 @@ async def supervisor_node(state: CoordinatorState):
         return {"steps": steps, "current_step_index": idx, "next_node": "aggregator"}
         
     current_step = steps[idx]
-    agent_name = current_step.get("agent", "ActionAgent")
+    agent_name = current_step.get("agent", "ToolDispatcher")
     
     route_map = {
         "CodeInterpreter": "code_interpreter",
         "SearchEngine": "search_engine",
-        "ActionAgent": "action_agent",
+        "ToolDispatcher": "action_agent",
         "InternalAPI": "action_agent",
         "DraftGenerator": "draft_generator",
         "KnowledgeAgent": "knowledge_agent",
@@ -60,7 +62,7 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
     req = state.get("req")
     
     try:
-        if agent_name == "ActionAgent":
+        if agent_name == "ToolDispatcher":
             token = getattr(req, "token", None)
             res = await tool_callable.execute(task_desc, {}, req.user_id, token)
         elif agent_name == "KnowledgeAgent":
@@ -91,7 +93,7 @@ async def search_engine_node(state: CoordinatorState):
     return await execute_tool_node(state, search_engine_agent, "SearchEngine")
 
 async def action_agent_node(state: CoordinatorState):
-    return await execute_tool_node(state, internal_api_agent, "ActionAgent")
+    return await execute_tool_node(state, dispatcher, "ToolDispatcher")
 
 async def draft_generator_node(state: CoordinatorState):
     return await execute_tool_node(state, draft_generator_agent, "DraftGenerator")
@@ -137,7 +139,12 @@ for node in ["code_interpreter", "search_engine", "action_agent", "draft_generat
     workflow.add_edge(node, "supervisor")
 
 workflow.add_edge("aggregator", END)
-coordinator_app = workflow.compile()
+
+memory = MemorySaver()
+coordinator_app = workflow.compile(
+    checkpointer=memory,
+    interrupt_before=["action_agent"]
+)
 
 class CoordinatorAgent:
     def __init__(self):
@@ -159,7 +166,8 @@ class CoordinatorAgent:
         }
         
         final_results = []
-        async for output in self.app.astream(initial_state):
+        config = {"configurable": {"thread_id": req.session_id or str(uuid7())}}
+        async for output in self.app.astream(initial_state, config=config):
             for node_name, state_update in output.items():
                 if "consolidated_results" in state_update:
                     final_results = state_update["consolidated_results"]

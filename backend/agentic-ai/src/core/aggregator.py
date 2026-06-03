@@ -14,6 +14,9 @@ class AggregatorAgent:
             from langchain_core.messages import HumanMessage
             
             gathered_data = "\n\n".join(consolidated_results)
+            if len(gathered_data) > 12000:
+                gathered_data = gathered_data[:12000] + "\n...[Nội dung đã được cắt bớt do quá dài]..."
+                
             final_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
 OBJECTIVE: Consolidate data from multiple sub-systems into a single, cohesive, and professional response.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.

@@ -34,7 +34,7 @@ from api.monetization import router as monetization_router
 from api.withdrawal import router as withdrawal_router
 from api.rag import router as rag_router
 from api.inference import router as inference_router
-from api.chat import router as chat_router
+from api.message import router as message_router
 from api.latex import router as latex_router
 from api.collector import router as collector_router
 from api.library import router as library_router
@@ -224,7 +224,7 @@ app.include_router(ai_router)
 app.include_router(rag_router)
 app.include_router(inference_router)
 app.include_router(notification_router)
-app.include_router(chat_router)
+app.include_router(message_router)
 app.include_router(collector_router)
 app.include_router(withdrawal_router)
 app.include_router(operation_router)

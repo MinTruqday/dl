@@ -268,6 +268,9 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         logger.error(f"Error fetching doc: {e}")
     return ""
 
+from src.router.inference import generate_mindmap, suggest_citations, peer_review, transform_tone
+from src.models.inference import MindmapRequest, CitationRequest, ReviewRequest, ToneRequest
+
 @tool
 async def agent_generate_mindmap(document_id: str, config: RunnableConfig) -> str:
     """Generate a mindmap structure for a document by its ID."""
@@ -275,15 +278,13 @@ async def agent_generate_mindmap(document_id: str, config: RunnableConfig) -> st
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{settings.AGENTIC_AI_URL}/inference/tao-ban-do-tu-duy", json={"text": text[:2000], "depth": 2})
-            if resp.status_code == 200:
-                data = resp.json()
-                import json
-                return f"Đã tạo cấu trúc bản đồ tư duy thành công:\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
+        req = MindmapRequest(text=text[:2000], depth=2)
+        data = await generate_mindmap(req)
+        import json
+        return f"Đã tạo cấu trúc bản đồ tư duy thành công:\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
     except Exception as e:
+        logger.error(f"Error in mindmap: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
-    return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
@@ -292,13 +293,12 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{settings.AGENTIC_AI_URL}/inference/trich-dan-thong-minh", json={"text": text[:1000], "style": "APA"})
-            if resp.status_code == 200:
-                return f"Gợi ý trích dẫn:\n\n{resp.json().get('citations', '')}"
+        req = CitationRequest(text=text[:1000], style="APA")
+        data = await suggest_citations(req)
+        return f"Gợi ý trích dẫn:\n\n{data.get('citations', '')}"
     except Exception as e:
+        logger.error(f"Error in citations: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
-    return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
@@ -307,13 +307,12 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{settings.AGENTIC_AI_URL}/inference/tham-dinh-noi-dung", json={"text": text[:2000], "criteria": ["logic", "rõ ràng"]})
-            if resp.status_code == 200:
-                return f"Báo cáo thẩm định:\n\n{resp.json().get('review_report', '')}"
+        req = ReviewRequest(text=text[:2000], criteria=["logic", "rõ ràng"])
+        data = await peer_review(req)
+        return f"Báo cáo thẩm định:\n\n{data.get('review_report', '')}"
     except Exception as e:
+        logger.error(f"Error in peer review: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
-    return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
 async def agent_transform_tone(document_id: str, tone: str, config: RunnableConfig) -> str:
@@ -322,13 +321,12 @@ async def agent_transform_tone(document_id: str, tone: str, config: RunnableConf
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{settings.AGENTIC_AI_URL}/inference/bien-doi-van-ban", json={"text": text[:1000], "tone": tone, "expansion": False})
-            if resp.status_code == 200:
-                return f"Văn bản đã biến đổi ({tone}):\n\n{resp.json().get('transformed_text', '')}"
+        req = ToneRequest(text=text[:1000], tone=tone, expansion=False)
+        data = await transform_tone(req)
+        return f"Văn bản đã biến đổi ({tone}):\n\n{data.get('transformed_text', '')}"
     except Exception as e:
+        logger.error(f"Error transforming tone: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
-    return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 
 @tool

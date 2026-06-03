@@ -1,10 +1,10 @@
 from core.database import db_client
-from models.chat import MessageInDB
+from models.message import MessageInDB
 from models.user import UserInDB
 from datetime import datetime, timezone
 import asyncio
 
-class ChatService:
+class MessageService:
     @staticmethod
     async def _upsert_conversation(db, sender_id: str, receiver_id: str, message_data: dict):
         participant_key = receiver_id if receiver_id.startswith("group_") else f"{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -91,7 +91,7 @@ class ChatService:
 
         await db["messages"].insert_one(msg_dict)
         
-        await ChatService._upsert_conversation(db, sender_id, receiver_id, {
+        await MessageService._upsert_conversation(db, sender_id, receiver_id, {
             "_id": msg_dict["_id"],
             "sender_id": sender_id,
             "receiver_id": receiver_id,
@@ -488,7 +488,7 @@ class ChatService:
         msg_dict = message.model_dump(by_alias=True)
         await db["messages"].insert_one(msg_dict)
 
-        await ChatService._upsert_conversation(db, str(current_user.id), receiver_id, {
+        await MessageService._upsert_conversation(db, str(current_user.id), receiver_id, {
             "_id": msg_dict["_id"],
             "sender_id": str(current_user.id),
             "receiver_id": receiver_id,

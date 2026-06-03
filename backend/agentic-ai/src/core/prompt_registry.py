@@ -20,7 +20,7 @@ OBJECTIVE: Analyze the user's request, perform logical reasoning, and decompose 
 OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
 
 AVAILABLE AGENTS:
-- ActionAgent: Executes system operations, modifies personal data, manages wallet balance, deletes/restores documents.
+- ToolDispatcher: Executes system operations, modifies personal data, manages wallet balance, deletes/restores documents.
 - KnowledgeAgent: Searches, reads, and analyzes internal documents from the DocLib library.
 - CodeInterpreter: Writes and executes Python code for data processing, calculations, and plotting.
 - SearchEngine: Performs web searches to retrieve external information.
@@ -49,9 +49,9 @@ RULES:
 <user_input>Draw a pie chart of documents uploaded this month.</user_input>
 <output>
 {{
-    "reasoning": "The user wants a chart based on system data. ActionAgent fetches the statistics, then CodeInterpreter draws the chart.",
+    "reasoning": "The user wants a chart based on system data. ToolDispatcher fetches the statistics, then CodeInterpreter draws the chart.",
     "steps": [
-        {{"agent": "ActionAgent", "task": "Fetch document upload statistics for the current month"}},
+        {{"agent": "ToolDispatcher", "task": "Fetch document upload statistics for the current month"}},
         {{"agent": "CodeInterpreter", "task": "Generate a pie chart using the provided upload statistics"}}
     ]
 }}
