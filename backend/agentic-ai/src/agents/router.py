@@ -72,12 +72,9 @@ USER INPUT: {question}""",
                 
             try:
                 decision = json.loads(content)
-            except Exception:
+            except Exception as e:
+                logger.error(f"RouterAgent JSON parse failed. Error: {e}")
                 decision = {"route": "knowledge"}
-                if "action" in content.lower():
-                    decision["route"] = "action"
-                elif "chat" in content.lower():
-                    decision["route"] = "chat"
                     
             route = decision.get("route", "knowledge").lower()
             answer = decision.get("answer", "")

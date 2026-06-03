@@ -24,7 +24,7 @@ async def init_db():
         import sys
         sys.exit(1)
 
-    db_client.mongodb = AsyncIOMotorClient(mongo_uri)
+    db_client.mongodb = AsyncIOMotorClient(mongo_uri, maxPoolSize=1000)
     
     try:
         await db_client.mongodb.admin.command("replSetGetStatus")

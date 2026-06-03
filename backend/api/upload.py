@@ -42,3 +42,54 @@ async def get_presigned_download_url(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER]))
 ):
     return APIResponse(data=await UploadService.get_presigned_url(file_path), message="Tạo liên kết tải tập tin thành công", status=200)
+
+@router.post("/phan-doan", response_model=APIResponse[Any])
+async def upload_chunk(
+    file: UploadFile = File(...),
+    upload_id: str = Depends(),
+    chunk_index: int = Depends(),
+    total_chunks: int = Depends(),
+    filename: str = Depends(),
+    current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN]))
+) -> Any:
+    """ Resumable Chunked Upload for flaky networks """
+    import os, aiofiles
+    
+    chunk_dir = f"storage/chunks/{upload_id}"
+    os.makedirs(chunk_dir, exist_ok=True)
+    
+    chunk_path = os.path.join(chunk_dir, f"chunk_{chunk_index}")
+    
+    async with aiofiles.open(chunk_path, 'wb') as f:
+        while chunk := await file.read(1024 * 1024):
+            await f.write(chunk)
+            
+    # Check if all chunks are uploaded
+    if len(os.listdir(chunk_dir)) == total_chunks:
+        # Assemble file
+        final_path = f"storage/tmp/{filename}"
+        os.makedirs("storage/tmp", exist_ok=True)
+        
+        async with aiofiles.open(final_path, 'wb') as outfile:
+            for i in range(total_chunks):
+                async with aiofiles.open(os.path.join(chunk_dir, f"chunk_{i}"), 'rb') as infile:
+                    await outfile.write(await infile.read())
+                    
+        # Upload using the existing service
+        # Mock UploadFile from assembled file
+        class MockFile:
+            def __init__(self, p, n):
+                self.file = open(p, 'rb')
+                self.filename = n
+        
+        mock_file = MockFile(final_path, filename)
+        result = await UploadService.upload_document(mock_file)
+        
+        # Cleanup
+        import shutil
+        shutil.rmtree(chunk_dir)
+        os.remove(final_path)
+        
+        return APIResponse(data=result, message="Tải tập tin lên thành công", status=201)
+        
+    return APIResponse(data={"uploaded": chunk_index}, message="Tải phân đoạn thành công", status=200)

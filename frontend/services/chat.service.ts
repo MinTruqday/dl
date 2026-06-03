@@ -14,15 +14,17 @@ export const getConversationsAPI = async () => {
 export const getMessagesAPI = async (
   otherUserId: string,
   limit: number = 50,
+  cursor?: string
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(
-    `${API_URL}/tro-chuyen/tin-nhan/${otherUserId}?limit=${limit}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
-  );
+  let url = `${API_URL}/tro-chuyen/tin-nhan/${otherUserId}?limit=${limit}`;
+  if (cursor) {
+    url += `&cursor=${cursor}`;
+  }
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử tin nhắn");
   return data;
@@ -49,6 +51,7 @@ export const sendMessageAPI = async (
       image_url: imageUrl,
       audio_url: audioUrl,
       reply_to_id: replyToId,
+      client_msg_id: crypto.randomUUID(),
     }),
   });
   const data = await res.json();

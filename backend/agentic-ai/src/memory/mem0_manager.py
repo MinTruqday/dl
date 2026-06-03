@@ -3,7 +3,6 @@ from typing import List, Dict
 import os
 from src.core.config import settings
 
-os.environ["HUGGINGFACE_API_KEY"] = settings.HF_TOKEN
 
 try:
     from mem0 import Memory
@@ -29,7 +28,8 @@ class Mem0Manager:
                         "provider": "litellm",
                         "config": {
                             "model": f"huggingface/{settings.LLAMA_MODEL}",
-                            "temperature": 0
+                            "temperature": 0,
+                            "api_key": settings.HF_TOKEN
                         }
                     },
                     "embedder": {
@@ -65,7 +65,7 @@ class Mem0Manager:
             if not memories:
                 return ""
                 
-            context = "Thông tin cá nhân hoá của người dùng (từ trí nhớ ngắn/dài hạn):\n"
+            context = "Thông tin cá nhân hoá của người dùng:\n"
             for i, m in enumerate(memories):
                 context += f"- {m}\n"
             return context

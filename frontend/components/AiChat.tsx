@@ -830,6 +830,16 @@ export default function AiChat({ standalone = false }: AiChatProps) {
 
                           return (
                             <>
+                              {msg.thoughts && msg.thoughts.length > 0 && (
+                                <div className="mb-3 flex flex-wrap gap-2">
+                                  {msg.thoughts.map((t, i) => (
+                                    <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-200 text-[11px] font-semibold text-zinc-600 whitespace-nowrap">
+                                      <Zap className="w-3 h-3 text-zinc-400" />
+                                      {t}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                               {!cleanText && (
                                 <div className="flex gap-1 h-6 items-center">
                                   <div className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-pulse" />

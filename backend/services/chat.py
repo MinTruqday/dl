@@ -41,9 +41,15 @@ class ChatService:
         )
 
     @staticmethod
-    async def send_message(receiver_id: str, content: str, current_user, image_url: str = None, reply_to_id: str = None, audio_url: str = None):
+    async def send_message(receiver_id: str, content: str, current_user, image_url: str = None, reply_to_id: str = None, audio_url: str = None, client_msg_id: str = None):
         db = db_client.mongodb.get_default_database()
         sender_id = str(current_user.id)
+        
+        if client_msg_id:
+            existing = await db["messages"].find_one({"client_msg_id": client_msg_id, "sender_id": sender_id})
+            if existing:
+                existing["_id"] = str(existing["_id"])
+                return existing
 
         user_doc = await db["users"].find_one({"_id": receiver_id}, {"blocked_users": 1})
         if user_doc and sender_id in user_doc.get("blocked_users", []):
@@ -71,6 +77,7 @@ class ChatService:
             image_url=image_url,
             audio_url=audio_url,
             reply_to_id=reply_to_id,
+            client_msg_id=client_msg_id,
             self_destruct_seconds=self_destruct_seconds
         )
         msg_dict = message.model_dump(by_alias=True)
@@ -111,11 +118,11 @@ class ChatService:
             }
 
         if cursor:
-            query["created_at"] = {"$lt": datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
+            query["_id"] = {"$lt": cursor}
             
         query["deleted_by"] = {"$ne": str(current_user.id)}
 
-        messages = await db["messages"].find(query).sort("created_at", -1).limit(limit).to_list(length=limit)
+        messages = await db["messages"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         
         participant_key = other_user_id if other_user_id.startswith("group_") else f"{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}"
         

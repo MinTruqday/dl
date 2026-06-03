@@ -1,7 +1,7 @@
 import json
 from loguru import logger
 from src.core.config import settings
-from src.agents.action import auth_token_var, tools, llm
+from src.agents.action import tools, llm
 from langchain_core.messages import SystemMessage, HumanMessage
 
 class InternalAPIAgent:
@@ -20,10 +20,6 @@ class InternalAPIAgent:
         self.tools_prompt = "\n".join(tool_descriptions)
 
     async def execute(self, action: str, params: dict, user_id: str, token: str = None) -> str:
-        token = token or auth_token_var.get()
-        if token:
-            auth_token_var.set(token)
-        logger.info(f"InternalAPI: Executing action {action} for user {user_id} with explicit token")
         if not token and action != "public_query":
             return "Lỗi xác thực: Vui lòng đăng nhập để thực hiện thao tác với hệ thống."
             
@@ -83,11 +79,15 @@ RULES:
             if tool_name == "none" or tool_name not in self.tool_map:
                 return f"Từ chối thực thi: Hệ thống không có công cụ nào phù hợp để xử lý yêu cầu này."
                 
-            logger.info(f"InternalAPI: Invoking tool '{tool_name}' with params {tool_params}")
             selected_tool = self.tool_map[tool_name]
             
+            if getattr(selected_tool, "requires_approval", False):
+                return f"[INTERRUPT] Tác vụ {tool_name} yêu cầu xác nhận. Hệ thống đang chờ phê duyệt từ người dùng."
+
+            logger.info(f"InternalAPI: Invoking tool '{tool_name}' with params {tool_params}")
+            
             try:
-                tool_result = await selected_tool.ainvoke(tool_params)
+                tool_result = await selected_tool.ainvoke(tool_params, config={"configurable": {"token": token}})
                 return str(tool_result)
             except Exception as e:
                 logger.error(f"InternalAPI: Tool '{tool_name}' failed: {e}")

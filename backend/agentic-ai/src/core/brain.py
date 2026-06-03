@@ -55,13 +55,12 @@ class AgenticBrain:
             steps = [{"agent": step["agent"], "task": step["task"]} for step in parsed_result.get("steps", [])]
             
             if not steps:
-                steps = [{"agent": "ActionAgent", "task": "Xử lý trực tiếp yêu cầu"}]
+                steps = [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này."}]
                 
             return steps
             
         except Exception as e:
             logger.error(f"Brain: Plan creation failed: {e}")
-            return [{"agent": "ActionAgent", "task": req.query}]
+            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
 
 brain = AgenticBrain()
-

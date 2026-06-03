@@ -129,7 +129,10 @@ async def retrieve_db(state: AgentState):
         try:
             results = await vector_store.query(query_vector=await embedding_service.embed_query(q), limit=3)
             for doc in results:
-                extracted_docs.append(f"[Nguồn: {doc.get('metadata', {}).get('title', 'Tài liệu')}]\n{doc.get('text', '')}")
+                meta = doc.get('metadata', {})
+                title = meta.get('title', 'Tài liệu')
+                file_url = meta.get('file_url', '')
+                extracted_docs.append(f"[Nguồn: {title}] (PDF: {file_url})\n{doc.get('text', '')}")
         except Exception as e:
             logger.error(f"Vector search error for query '{q}': {e}")
     
@@ -209,15 +212,21 @@ async def generate(state: AgentState):
     thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think>...</think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
 
     from src.core.prompt_registry import prompt_registry, PromptType
-    prompt = PromptTemplate(
-        template=prompt_registry.get(PromptType.SYNTHESIS),
-        input_variables=["question", "documents", "source_name", "user_context", "citation_instruction", "thought_instruction"]
-    )
-    try:
-        response = await llm_generate.ainvoke(prompt.format(
+    prompt_text = prompt_registry.get(PromptType.SYNTHESIS).format(
             question=question, documents="\n\n".join(documents), source_name="Hệ thống" if state.get("current_source") == "db" else "Internet",
             user_context=user_context, citation_instruction=citation_instruction, thought_instruction=thought_instruction
-        ))
+        )
+    
+    if state.get("image_data"):
+        content = [
+            {"type": "text", "text": prompt_text},
+            {"type": "image_url", "image_url": {"url": state["image_data"]}}
+        ]
+    else:
+        content = prompt_text
+
+    try:
+        response = await llm_generate.ainvoke([HumanMessage(content=content)])
         generation = response.content
         mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}

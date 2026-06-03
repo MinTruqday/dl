@@ -37,7 +37,8 @@ class IngestionPipeline:
             "title": title,
             "author": author,
             "content_format": document.get("content_format", "unknown"),
-            "source": "anna_archive"
+            "source": "anna_archive",
+            "file_url": file_url
         }
 
         extraction_method = "local"

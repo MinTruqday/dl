@@ -21,16 +21,13 @@ async def supervisor_node(state: CoordinatorState):
     if replan_count > 3:
         return {"steps": steps, "current_step_index": len(steps), "next_node": "aggregator", "error": "Tool budget exceeded"}
         
-    if not steps or (state.get("error") and replan_count <= 3):
-        if state.get("error"):
-            req = state["req"]
-            req.context = f"Previous error: {state['error']}. Please use a different approach."
-            steps = await brain.create_plan(req)
-            idx = 0
-            return {"steps": steps, "current_step_index": idx, "replan_count": replan_count + 1, "error": ""}
-        else:
-            steps = await brain.create_plan(state["req"])
-            idx = 0
+    if not steps:
+        steps = await brain.create_plan(state["req"])
+        idx = 0
+        
+    if state.get("error"):
+        logger.warning(f"Coordinator: Skipping further tools due to error: {state.get('error')}")
+        return {"steps": steps, "current_step_index": len(steps), "next_node": "aggregator"}
         
     if idx >= len(steps):
         return {"steps": steps, "current_step_index": idx, "next_node": "aggregator"}
@@ -64,15 +61,6 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
     
     try:
         if agent_name == "ActionAgent":
-            if any(keyword in task_desc.lower() for keyword in ["xoá", "xóa", "delete", "remove", "drop"]):
-                if not getattr(req, "useSmart", False):
-                    res = "Hành động này được phân loại là NGUY HIỂM. Hệ thống đang chờ phê duyệt từ người dùng (Human-in-the-loop)."
-                    return {
-                        "consolidated_results": state.get("consolidated_results", []) + [res],
-                        "current_step_index": idx + 1,
-                        "last_agent_result": res
-                    }
-                    
             token = getattr(req, "token", None)
             res = await tool_callable.execute(task_desc, {}, req.user_id, token)
         elif agent_name == "KnowledgeAgent":

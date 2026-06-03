@@ -33,7 +33,17 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 
                 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                 chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
-                res = await chat_llm.ainvoke([HumanMessage(content=f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}")])
+                
+                text_prompt = f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}"
+                if req.image_data:
+                    content = [
+                        {"type": "text", "text": text_prompt},
+                        {"type": "image_url", "image_url": {"url": req.image_data}}
+                    ]
+                else:
+                    content = text_prompt
+                    
+                res = await chat_llm.ainvoke([HumanMessage(content=content)])
                 final_answer = res.content
         else:
             async for event in coordinator.execute_plan(req):
@@ -85,7 +95,16 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
                     
-                    async for chunk in chat_llm.astream([HumanMessage(content=f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}")]):
+                    text_prompt = f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}"
+                    if req.image_data:
+                        content = [
+                            {"type": "text", "text": text_prompt},
+                            {"type": "image_url", "image_url": {"url": req.image_data}}
+                        ]
+                    else:
+                        content = text_prompt
+                        
+                    async for chunk in chat_llm.astream([HumanMessage(content=content)]):
                         if chunk.content:
                             final_answer += chunk.content
                             yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"

@@ -250,6 +250,13 @@ export default function MessagesPage() {
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
+    socket.onopen = () => {
+      const lastMsgId = localStorage.getItem(`last_msg_id_${user._id}`);
+      if (lastMsgId) {
+        socket.send(JSON.stringify({ action: "sync", data: { last_message_id: lastMsgId } }));
+      }
+    };
+
     const pingInterval = setInterval(() => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ action: "ping" }));
@@ -274,12 +281,14 @@ export default function MessagesPage() {
             }
           }
           updateConversationInPlace(data.sender_id, data);
+          localStorage.setItem(`last_msg_id_${user._id}`, data._id || data.id);
         } else if (type === "message_sent_ack") {
           setMessages(prev => {
             if (prev.some(m => (m._id || m.id) === (data._id || data.id))) return prev;
             return [...prev, data];
           });
           updateConversationInPlace(data.receiver_id, data);
+          localStorage.setItem(`last_msg_id_${user._id}`, data._id || data.id);
         } else if (type === "message_edited") {
           setMessages(prev => prev.map(m => (m._id || m.id) === (data._id || data.id) ? data : m));
           setConversations(prev => prev.map(c => {
