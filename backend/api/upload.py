@@ -7,11 +7,23 @@ from services.upload import UploadService
 
 router = APIRouter(prefix="/tai-len")
 
+from fastapi import HTTPException
+import re
+
+async def validate_svg(file: UploadFile):
+    if file.filename and file.filename.lower().endswith(".svg"):
+        content = await file.read()
+        text = content.decode('utf-8', errors='ignore')
+        if re.search(r"<!ENTITY", text, re.IGNORECASE) or re.search(r"<!DOCTYPE", text, re.IGNORECASE):
+            raise HTTPException(status_code=400, detail="Tệp SVG chứa định dạng không an toàn (XXE/XML Bomb).")
+        await file.seek(0)
+
 @router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
+    await validate_svg(file)
     return APIResponse(data=await UploadService.upload_image(file), message="Tải hình ảnh lên thành công", status=201)
 
 @router.post("/tai-lieu", response_model=APIResponse[Any])

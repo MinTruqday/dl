@@ -220,6 +220,7 @@ services:
       - "8200:8200"
     volumes:
       - ./backend/compiler/src:/app/src
+      - tectonic_cache:/home/doclibuser/.cache/Tectonic
     networks:
       - doclib_network
 
@@ -237,3 +238,4 @@ volumes:
   grafana_data:
   hf_cache:
   ollama_data:
+  tectonic_cache:

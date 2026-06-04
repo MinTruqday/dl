@@ -7,10 +7,19 @@ import glob
 import re
 from loguru import logger
 class LatexEngine:
+    DANGEROUS_PATTERNS = [
+        r"\\input\s*\{?\s*/", r"\\include\s*\{?\s*/",
+        r"\\input\s*\{?\s*\.\.", r"\\include\s*\{?\s*\.\.",
+        r"\\lstinputlisting", r"\\openin", r"\\read",
+        r"\\newwrite", r"\\openout", r"\\write"
+    ]
+
     @staticmethod
     async def compile_to_pdf(content: str) -> bytes:
-        latex_code = content
-        
+        for pattern in LatexEngine.DANGEROUS_PATTERNS:
+            if re.search(pattern, content):
+                raise Exception({"error": "Bảo mật: Mã LaTeX chứa các tập lệnh đọc file hoặc ghi file không được phép."})
+
         job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()
         tex_path = os.path.join(temp_dir, f"{job_id}.tex")
@@ -18,36 +27,42 @@ class LatexEngine:
         log_path = os.path.join(temp_dir, f"{job_id}.log")
         
         with open(tex_path, "w", encoding="utf-8") as f:
-            f.write(latex_code)
+            f.write(content)
             
+        process = None
         try:
             process = await asyncio.create_subprocess_exec(
+                "timeout", "-k", "35", "30",
                 "tectonic", 
                 "--synctex", 
                 "--keep-logs", 
                 "-Z", "continue-on-errors",
-                "-Z", "shell-escape",
                 "--outdir", temp_dir,
                 tex_path,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                limit=1024 * 1024 * 2
             )
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
             
             if not os.path.exists(pdf_path):
-                log_content = stdout.decode('utf-8', errors='ignore') + stderr.decode('utf-8', errors='ignore')
+                log_content = ""
                 parsed_errors = []
+                
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8", errors="ignore") as lf:
+                        lf.seek(0, 2)
+                        size = lf.tell()
+                        lf.seek(max(size - 500000, 0))
                         log_content = lf.read()
                     
-                    error_pattern = re.compile(r"!(.*?)l\.(\d+)(.*)", re.DOTALL)
+                    error_pattern = re.compile(r"!(.*?)\nl\.(\d+)(.*?)(?=\n|$)", re.IGNORECASE)
                     matches = error_pattern.findall(log_content)
                     for match in matches:
                         parsed_errors.append({
                             "line": int(match[1]),
                             "message": match[0].strip(),
-                            "context": match[2].strip().split("\n")[0][:100]
+                            "context": match[2].strip()[:100]
                         })
                 
                 raise Exception({
@@ -57,25 +72,22 @@ class LatexEngine:
                 })
                 
             with open(pdf_path, "rb") as f:
-                pdf_bytes = f.read()
+                return f.read()
                 
-            return pdf_bytes
-            
         except asyncio.TimeoutError:
-            try:
-                process.kill()
-            except Exception as e:
-                logger.warning(f"LatexEngine: Failed to kill process: {e}")
-            raise Exception("Quá thời gian biên dịch tài liệu LaTeX")
+            if process:
+                try:
+                    process.kill()
+                except Exception as e:
+                    logger.warning(f"LatexEngine: Lỗi khi kill process: {e}")
+            raise Exception("Quá thời gian biên dịch tài liệu LaTeX (Max 30s).")
             
         finally:
-            for ext in [".tex", ".pdf", ".aux", ".log", ".out", ".fls", ".fdb_latexmk"]:
-                path = os.path.join(temp_dir, f"{job_id}{ext}")
-                if os.path.exists(path):
-                    try:
-                        os.remove(path)
-                    except Exception as e:
-                        logger.warning(f"LatexEngine: Failed to remove temp file: {e}")
+            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    logger.warning(f"LatexEngine: Không thể dọn dẹp file {filepath}: {e}")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -101,9 +113,8 @@ class LatexEngine:
             with open(out_path, "rb") as f:
                 return f.read()
         finally:
-            for p in [tex_path, out_path]:
-                if os.path.exists(p):
-                    try:
-                        os.remove(p)
-                    except Exception as e:
-                        logger.warning(f"LatexEngine: Failed to remove temp file: {e}")
+            for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
+                try:
+                    os.remove(filepath)
+                except Exception as e:
+                    logger.warning(f"LatexEngine: Không thể dọn dẹp file {filepath}: {e}")

@@ -69,8 +69,41 @@ import {
 import dynamic from "next/dynamic";
 const Editor = dynamic(() => import("@/components/editor/Editor"), { ssr: false });
 import edjsHTML from "editorjs-html";
+import { compileLatexPreviewAPI } from "@/services/latex.service";
 
-const edjsParser = edjsHTML();
+const customParsers = {
+  alert: (block: any) => `<div class="p-4 rounded-md border my-4 bg-zinc-50 border-zinc-200"><strong>${block.data.type || 'Lưu ý'}</strong>: ${block.data.message}</div>`,
+  table: (block: any) => `<table class="w-full border-collapse border border-zinc-200 my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class="border border-zinc-200 p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
+  toggle: (block: any) => `<details class="p-4 border border-zinc-200 rounded-md my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-sm text-zinc-600">${block.data.items}</div></details>`,
+  checklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.text}</span></li>`).join("")}</ul>`,
+  nestedChecklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.content}</span></li>`).join("")}</ul>`,
+  originalQuote: (block: any) => `<blockquote class="border-l-4 border-zinc-300 pl-4 py-2 italic my-4 text-zinc-600">${block.data.text} <br/><cite class="text-sm font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
+  divider: () => `<hr class="my-6 border-zinc-200" />`,
+  math: (block: any) => `<div class="p-4 bg-zinc-50 font-mono text-sm my-4 overflow-x-auto border border-zinc-200 rounded-md">${block.data.math}</div>`,
+  mermaid: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 text-sm text-zinc-500 italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
+  attaches: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 flex flex-col gap-1 text-sm bg-zinc-50"><span class="font-semibold text-zinc-900">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-blue-600 hover:underline break-all">${block.data.file?.url}</a></div>`,
+  personality: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 flex gap-4 items-center bg-zinc-50"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-zinc-900">${block.data.name}</div><div class="text-sm text-zinc-600">${block.data.description}</div></div></div>`,
+};
+
+const edjsParser = edjsHTML(customParsers);
+
+const safeParseEditorJs = (data: any) => {
+  if (!data || !data.blocks) return "";
+  const supportedTypes = ['paragraph', 'header', 'list', 'quote', 'image', 'delimiter', ...Object.keys(customParsers)];
+  const sanitizedData = {
+    ...data,
+    blocks: data.blocks.map((b: any) => {
+      if (!supportedTypes.includes(b.type)) {
+        return {
+           type: 'paragraph',
+           data: { text: `<div class="p-4 border border-red-200 bg-red-50 text-red-600 text-sm my-4 rounded-md"><strong>Khối chưa hỗ trợ xem trước:</strong> ${b.type}</div>` }
+        };
+      }
+      return b;
+    })
+  };
+  return edjsParser.parse(sanitizedData).join("");
+};
 
 type StudioDocument = {
   _id: string;
@@ -239,6 +272,9 @@ function StudioContent() {
   const [broadcastMsg, setBroadcastMsg] = useState("");
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [isPreviewCompiling, setIsPreviewCompiling] = useState(false);
+
   const selectedDocument = useMemo(
     () => documents.find((b: any) => (b._id || b.id) === selectedDocumentId) || null,
     [documents, selectedDocumentId]
@@ -250,6 +286,32 @@ function StudioContent() {
     }
     return content;
   }, [selectedChapterIndex, selectedDocument, content]);
+
+  useEffect(() => {
+    let currentUrl: string | null = null;
+
+    if (editorMode === "preview" && selectedDocument?.content_format === "latex") {
+      setIsPreviewCompiling(true);
+      compileLatexPreviewAPI(currentChapterContent, false)
+        .then((blob) => {
+          currentUrl = URL.createObjectURL(blob);
+          setPreviewPdfUrl(currentUrl);
+        })
+        .catch((err: any) => {
+          showToast("Lỗi biên dịch: " + (err.message || "Lỗi không xác định"), "error");
+        })
+        .finally(() => {
+          setIsPreviewCompiling(false);
+        });
+    }
+
+    return () => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      setPreviewPdfUrl(null);
+    };
+  }, [editorMode, selectedDocument?.content_format, currentChapterContent, showToast]);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
@@ -356,7 +418,7 @@ function StudioContent() {
           const newChapters = [...(selectedDocument.chapters || [])];
           await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
         } else if (content) {
-          await saveDocumentDraftAPI(selectedDocumentId, content, "html");
+          await saveDocumentDraftAPI(selectedDocumentId, content, selectedDocument?.content_format || "json");
         }
         setStatusMsg("Đã lưu bản nháp");
         setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
@@ -502,7 +564,7 @@ function StudioContent() {
     setIsSaving(true);
     setStatusMsg("Đang lưu");
     try {
-      await saveDocumentDraftAPI(selectedDocumentId, content, "html");
+      await saveDocumentDraftAPI(selectedDocumentId, content, selectedDocument?.content_format || "json");
       showToast("Đã lưu bản nháp thành công", "success");
     } catch (err: any) {
       console.error(err.message || err);
@@ -903,9 +965,16 @@ function StudioContent() {
       setNewDocDescription("");
       setNewDocPrice(0);
       setNewDocFormat("json");
+      const newDoc = result?.data || result;
+      if (newDoc) {
+        setDocuments(prev => {
+          const exists = prev.find(d => (d._id || d.id) === (newDoc._id || newDoc.id));
+          if (exists) return prev;
+          return [newDoc, ...prev];
+        });
+        setSelectedDocumentId(newDoc._id || newDoc.id);
+      }
       fetchDocuments();
-      const newId = result?.data?._id || result?.data?.id || result?._id || result?.id;
-      if (newId) setSelectedDocumentId(newId);
     } catch (e: any) {
       showToast(e.message || "Không thể tạo tác phẩm mới", "error");
     } finally {
@@ -1371,8 +1440,9 @@ function StudioContent() {
               </button>
               <div className="absolute top-full right-0 mt-1 w-32 bg-white border border-zinc-200 shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <button
+                  disabled={isExporting}
                   onClick={handleExportPDF}
-                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
                 >
                   Định dạng PDF
                 </button>
@@ -1482,20 +1552,33 @@ function StudioContent() {
                         </div>
                       ) : editorMode === "preview" ? (
                         <div className="bg-white p-12 min-h-full">
-                          <div 
-                            className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" 
-                            dangerouslySetInnerHTML={{ 
-                              __html: (() => {
-                                try {
-                                  const data = JSON.parse(content);
-                                  if (data.blocks) return edjsParser.parse(data).join("");
-                                  return content;
-                                } catch (e) {
-                                  return content;
-                                }
-                              })()
-                            }} 
-                          />
+                          {selectedDocument?.content_format === "latex" ? (
+                            isPreviewCompiling ? (
+                              <div className="flex flex-col items-center justify-center h-full text-zinc-500 min-h-[400px]">
+                                <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                                <p className="text-sm">Đang biên dịch mã nguồn LaTeX...</p>
+                              </div>
+                            ) : previewPdfUrl ? (
+                              <iframe src={previewPdfUrl} className="w-full h-[calc(100vh-200px)] min-h-[800px] border-0 rounded-md shadow-sm" title="Preview PDF" />
+                            ) : (
+                              <div className="text-zinc-500 text-center italic mt-12 min-h-[400px]">Không có dữ liệu PDF để hiển thị.</div>
+                            )
+                          ) : (
+                            <div 
+                              className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" 
+                              dangerouslySetInnerHTML={{ 
+                                __html: (() => {
+                                  try {
+                                    const data = JSON.parse(currentChapterContent || content);
+                                    if (data.blocks) return safeParseEditorJs(data);
+                                    return currentChapterContent || content;
+                                  } catch (e) {
+                                    return currentChapterContent || content;
+                                  }
+                                })()
+                              }} 
+                            />
+                          )}
                         </div>
                       ) : (
                         <pre className="p-8 bg-zinc-50 text-black text-sm font-mono leading-relaxed overflow-auto min-h-full">

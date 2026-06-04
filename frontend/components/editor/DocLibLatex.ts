@@ -41,7 +41,7 @@ export default class DocLibLatex implements BlockTool {
     this.editor = document.createElement('div');
     this.editor.classList.add(this.api.styles.input);
     this.editor.contentEditable = 'true';
-    this.editor.innerHTML = this.data.code;
+    this.editor.textContent = this.data.code;
     this.editor.dataset.placeholder = 'Enter LaTeX code here';
     
     
@@ -59,7 +59,7 @@ export default class DocLibLatex implements BlockTool {
 
     this.editor.addEventListener('input', () => {
       if (this.editor) {
-        this.data.code = this.editor.innerHTML;
+        this.data.code = this.editor.textContent || '';
       }
     });
 
@@ -68,8 +68,8 @@ export default class DocLibLatex implements BlockTool {
 
   save(blockContent: HTMLElement) {
     return {
-      code: this.editor ? this.editor.innerHTML : this.data.code,
-      math: this.editor ? this.editor.innerHTML : this.data.code 
+      code: this.editor ? (this.editor.textContent || '') : this.data.code,
+      math: this.editor ? (this.editor.textContent || '') : this.data.code 
     };
   }
 

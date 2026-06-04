@@ -76,10 +76,34 @@ async def delete_history_item(document_id: str, current_user: UserInDB = Depends
 import aiohttp
 import zipfile
 import io
+import socket
+from urllib.parse import urlparse
+import ipaddress
+from fastapi import HTTPException
+
+def validate_url_ssrf(url: str):
+    parsed = urlparse(url)
+    if not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Invalid URL")
+    try:
+        ip = socket.gethostbyname(parsed.hostname)
+        ip_obj = ipaddress.ip_address(ip)
+        if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+            raise HTTPException(status_code=403, detail="Tên miền phân giải ra IP nội bộ bị cấm (SSRF Protection).")
+    except socket.gaierror:
+        raise HTTPException(status_code=400, detail="Cannot resolve hostname")
+
+def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
+    if ".." in info.filename or info.filename.startswith("/"):
+        return False
+    if (info.external_attr >> 16) & 0o120000 == 0o120000:
+        return False
+    return True
 
 @router.get("/cay-thu-muc-zip", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...)):
     try:
+        validate_url_ssrf(file_url)
         async with aiohttp.ClientSession() as session:
             async with session.get(file_url) as resp:
                 if resp.status == 200:
@@ -87,27 +111,35 @@ async def get_zip_tree(file_url: str = Query(...)):
                     with zipfile.ZipFile(io.BytesIO(content)) as z:
                         tree = []
                         for info in z.infolist():
-                            tree.append({
-                                "path": info.filename,
-                                "name": info.filename.split("/")[-1] if not info.is_dir() else info.filename.split("/")[-2],
-                                "is_dir": info.is_dir(),
-                                "size": info.file_size
-                            })
+                            if is_safe_zip_info(info):
+                                tree.append({
+                                    "path": info.filename,
+                                    "name": info.filename.split("/")[-1] if not info.is_dir() else info.filename.split("/")[-2],
+                                    "is_dir": info.is_dir(),
+                                    "size": info.file_size
+                                })
                         return APIResponse(data=tree, message="Lấy cây thư mục thành công")
                 else:
                     return APIResponse(data=None, message="Không thể tải file", status=400)
+    except HTTPException as he:
+        raise he
     except Exception as e:
         return APIResponse(data=None, message=str(e), status=500)
 
 @router.get("/noi-dung-zip", response_model=APIResponse[Any])
 async def get_zip_content(file_url: str = Query(...), path: str = Query(...)):
     try:
+        validate_url_ssrf(file_url)
         async with aiohttp.ClientSession() as session:
             async with session.get(file_url) as resp:
                 if resp.status == 200:
                     content = await resp.read()
                     with zipfile.ZipFile(io.BytesIO(content)) as z:
                         if path in z.namelist():
+                            info = z.getinfo(path)
+                            if not is_safe_zip_info(info):
+                                return APIResponse(data=None, message="Tệp tin không an toàn", status=403)
+                            
                             file_bytes = z.read(path)
                             try:
                                 text = file_bytes.decode('utf-8')
@@ -115,5 +147,7 @@ async def get_zip_content(file_url: str = Query(...), path: str = Query(...)):
                             except UnicodeDecodeError:
                                 return APIResponse(data={"content": "Binary file cannot be displayed.", "type": "binary"}, message="Thành công")
                         return APIResponse(data=None, message="Không tìm thấy tệp", status=404)
+    except HTTPException as he:
+        raise he
     except Exception as e:
         return APIResponse(data=None, message=str(e), status=500)

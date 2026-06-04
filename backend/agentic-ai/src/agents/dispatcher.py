@@ -48,7 +48,8 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query."""
                 
             selected_tool = self.tool_map[tool_name]
             
-            if getattr(selected_tool, "requires_approval", False):
+            REQUIRES_APPROVAL_TOOLS = ["delete_document", "restore_document", "create_document", "send_virtual_tip", "redeem_voucher"]
+            if tool_name in REQUIRES_APPROVAL_TOOLS:
                 return f"[INTERRUPT] Tác vụ {tool_name} yêu cầu xác nhận. Hệ thống đang chờ phê duyệt từ người dùng."
 
             logger.info(f"InternalAPI: Invoking tool '{tool_name}' with params {tool_params}")

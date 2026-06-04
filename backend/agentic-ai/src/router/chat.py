@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 import json
 from loguru import logger
 from src.models.chat import ChatRequest
-from src.tools.actions import auth_token_var
+
 from src.agents.coordinator import coordinator
 from src.core.router import router_agent
 
@@ -15,7 +15,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
         bearer_token = token.replace("Bearer ", "")
-        auth_token_var.set(bearer_token)
+
         req.token = bearer_token
 
     try:
@@ -65,7 +65,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
     async def response_generator():
         if bearer_token:
-            auth_token_var.set(bearer_token)
+
             req.token = bearer_token
 
         from src.memory.manager import memory_manager

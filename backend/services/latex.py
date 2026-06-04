@@ -19,7 +19,18 @@ class LatexService:
 
     @staticmethod
     async def compile_latex_preview(request, current_user):
+        import hashlib
+        import base64
+        
         latex_code = request.content
+        md5_hash = hashlib.md5(latex_code.encode('utf-8')).hexdigest()
+        cache_key = f"latex_preview_{md5_hash}"
+        
+        if hasattr(db_client, 'redis') and db_client.redis:
+            cached_b64 = await db_client.redis.get(cache_key)
+            if cached_b64:
+                return base64.b64decode(cached_b64)
+
         job_id = "preview_job"
         
         try:
@@ -31,6 +42,9 @@ class LatexService:
                 
                 if res.status_code == 200:
                     logger.info(f"LaTeX preview compiled via Compiler Service for user {current_user.id}")
+                    if hasattr(db_client, 'redis') and db_client.redis:
+                        b64_content = base64.b64encode(res.content).decode('utf-8')
+                        await db_client.redis.set(cache_key, b64_content, ex=60)
                     return res.content
                 elif res.status_code == 400:
                     raise HTTPException(status_code=400, detail=res.json().get("detail", {}))

@@ -2,8 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN sed -i -e 's/Components: main$/Components: main contrib non-free/' /etc/apt/sources.list.d/debian.sources || true && \
+    echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
+    apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
+    fonts-wine ttf-mscorefonts-installer \
+    && fc-cache -f -v \
     && ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then \
         URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-aarch64-unknown-linux-musl.tar.gz"; \
@@ -17,5 +21,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ ./src/
+
+RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
+USER doclibuser
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8200"]

@@ -103,6 +103,7 @@ class DocumentService:
                 "title": b.get("title", ""),
                 "slug": b.get("slug", ""),
                 "status": b.get("status", "draft"),
+                "content_format": b.get("content_format", "json"),
                 "cover_url": b.get("cover_url"),
                 "views": b.get("views", 0),
                 "average_rating": b.get("average_rating"),

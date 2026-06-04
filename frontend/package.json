@@ -12,6 +12,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@codexteam/icons": "^0.3.3",
     "@doclib/api-client": "file:../packages/api-client",
     "@editorjs/editorjs": "latest",
     "@monaco-editor/react": "^4.6.0",

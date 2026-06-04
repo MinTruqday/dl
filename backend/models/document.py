@@ -35,7 +35,7 @@ class DocumentBase(BaseModel):
     file_url: Optional[str] = None
     tags: List[str] = []
     content: Optional[Any] = None
-    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.LATEX
+    content_format: Optional[DocumentContentFormat] = DocumentContentFormat.JSON
     price_dl: int = 0
     visibility: str = "public"
     password: Optional[str] = None

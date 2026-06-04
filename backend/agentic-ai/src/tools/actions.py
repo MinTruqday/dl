@@ -356,11 +356,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 
-delete_document.requires_approval = True
-restore_document.requires_approval = True
-create_document.requires_approval = True
-send_virtual_tip.requires_approval = True
-redeem_voucher.requires_approval = True
+
 
 tools = [
     get_user_balance,

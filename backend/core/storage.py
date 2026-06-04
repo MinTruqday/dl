@@ -60,9 +60,13 @@ async def download_file(object_name: str) -> tuple[bytes, str]:
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     async with await get_storage_client() as storage_client:
+        params = {"Bucket": MINIO_BUCKET_NAME, "Key": object_name}
+        if object_name.lower().endswith(".pdf"):
+            params["ResponseContentDisposition"] = 'attachment; filename="document.pdf"'
+            
         response = await storage_client.generate_presigned_url(
             "get_object",
-            Params={"Bucket": MINIO_BUCKET_NAME, "Key": object_name},
+            Params=params,
             ExpiresIn=expiration
         )
         if MINIO_PUBLIC_URL and MINIO_ENDPOINT in response:
