@@ -41,7 +41,7 @@ class AnnaArchiveCollector:
                 page_num = 1
                 
                 while True:
-                    search_url = f"https://annas-archive.gl/search?index=&sort=&src=zlib&lang=en&lang=anti__zh&lang=anti__zh-Hant&lang=vi&display=&q={encoded}&page={page_num}"
+                    search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
                     logger.info(f"Navigating to page {page_num}: {search_url}")
                     
                     await page.goto(search_url, timeout=60000, wait_until='domcontentloaded')
@@ -159,7 +159,7 @@ class AnnaArchiveCollector:
                 
 
                 author_el = await page.query_selector('div.italic')
-                payload["author"] = await author_el.inner_text() if author_el else "Unknown Author"
+                payload["author"] = await author_el.inner_text() if author_el else "Unknown"
                 
                 logger.info(f"Extracted Title: {payload['title']}, Author: {payload['author']}")
                 
@@ -215,8 +215,8 @@ class AnnaArchiveCollector:
                             payload["download_link"] = download_link
                             logger.info(f"Successfully extracted completed download link: {download_link}")
                             
-                            ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'epub'
-                            if len(ext) > 4 or "/" in ext: ext = 'epub'
+                            ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'pdf'
+                            if len(ext) > 4 or "/" in ext: ext = 'pdf'
                             slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
                             payload["filename"] = f"{slug}.{ext}"
                             payload["content_format"] = ext
@@ -246,7 +246,7 @@ class AnnaArchiveCollector:
         logger.info(f"[Download Processor] Processing physical download: {title}")
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
-        ext = payload.get("content_format", "epub")
+        ext = payload.get("content_format", "pdf")
         filename = payload.get("filename") or f"{slug}.{ext}"
         
         import tempfile
@@ -281,17 +281,16 @@ class AnnaArchiveCollector:
                 "slug": slug,
                 "description": f"Extracted via Anna's Archive bot.",
                 "file_url": minio_url,
-                "tags": [payload.get("author", "Unknown")],
+                "pdf_url": minio_url if ext.lower() == "pdf" else None,
+                "tags": ["Anna's Archive", payload.get("author", "Unknown")],
                 "content": None,
                 "content_format": ext,
                 "price": 0.0,
                 "visibility": "public",
-                "author_id": "annas-archive-collector",
+                "author_id": "annas-archive",
                 "status": "published",
                 "views": 0,
                 "average_rating": 0.0
             }
             
             doc_id = await db_client.insert_document(document_metadata)
-            if doc_id:
-                await mq_client.publish("format_converter_queue", {"document_id": doc_id, "file_url": minio_url, "filename": filename})

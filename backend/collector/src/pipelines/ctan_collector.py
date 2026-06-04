@@ -215,11 +215,11 @@ class CTANCollector:
                 "description": payload.get("description", "Extracted via CTAN bot."),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
-                "tags": payload.get("authors", []),
+                "tags": ["CTAN"] + (payload.get("authors") if payload.get("authors") else ["Unknown"]),
                 "content_format": "zip",
                 "price": 0.0,
-                "visibility": "public",
-                "author_id": "ctan-crawler",
+                "visibility": "private",
+                "author_id": "ctan",
                 "status": "published",
                 "rag_status": "pending",
                 "views": 0,
@@ -227,5 +227,3 @@ class CTANCollector:
             }
             
             doc_id = await db_client.insert_document(book_document)
-            if doc_id:
-                await mq_client.publish("format_converter_queue", {"book_id": doc_id, "file_url": minio_url_book, "filename": filename})

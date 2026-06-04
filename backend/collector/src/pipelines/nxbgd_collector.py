@@ -138,12 +138,12 @@ class NXBGDCollector:
                     "slug": slug,
                     "description": "Extracted via NXBGD collector.",
                     "file_url": minio_url,
-                    "tags": ["NXB Giao duc"],
+                    "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,
                     "content_format": "pdf",
                     "price": 0.0,
-                    "visibility": "public",
-                    "author_id": "nxbgd-collector",
+                    "visibility": "private",
+                    "author_id": "nxbgd",
                     "status": "published",
                     "views": 0,
                     "average_rating": 0.0
@@ -151,7 +151,7 @@ class NXBGDCollector:
                 
                 doc_id = await db_client.insert_document(document_metadata)
                 if doc_id:
-                    await mq_client.publish("format_converter_queue", {"document_id": doc_id, "file_url": minio_url, "filename": final_pdf_name})
+                    pass
                     
         except Exception as e:
             logger.error(f"[NXBGD PDF Compile Error]: {e}")

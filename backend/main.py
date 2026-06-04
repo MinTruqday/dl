@@ -17,7 +17,6 @@ import sys
 import time
 
 from api.authentication import router as auth_router
-from api.comment import router as comment_router
 from api.document import router as document_router
 from api.upload import router as upload_router
 from api.profile import router as profile_router
@@ -86,20 +85,6 @@ app.add_middleware(
 from fastapi.responses import Response, FileResponse
 from core.storage import get_storage_client
 
-@app.get("/social/{file_path:path}")
-async def serve_social_media(file_path: str):
-    local_path = os.path.join("assets/social", file_path)
-    if os.path.exists(local_path) and os.path.isfile(local_path):
-        return FileResponse(local_path)
-    try:
-        async with await get_storage_client() as storage_client:
-            object_key = f"social/{file_path}"
-            response = await storage_client.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)
-            content = await response["Body"].read()
-            return Response(content, media_type=response.get("ContentType", "image/png"))
-    except Exception as e:
-        logger.error(f"Error serving social media '{file_path}' from MinIO: {e}")
-        raise HTTPException(status_code=404, detail="File not found")
 
 @app.get("/document/{file_path:path}")
 async def serve_document(file_path: str):
@@ -131,9 +116,7 @@ async def serve_storage(file_path: str):
         logger.error(f"Error serving storage '{file_path}' from MinIO: {e}")
         raise HTTPException(status_code=404, detail="File not found")
 
-os.makedirs("assets/social", exist_ok=True)
 os.makedirs("assets/document", exist_ok=True)
-app.mount("/social", StaticFiles(directory="assets/social"), name="social")
 app.mount("/document", StaticFiles(directory="assets/document"), name="document")
 
 
@@ -208,7 +191,6 @@ app.include_router(wallet_router)
 app.include_router(deposit_router)
 app.include_router(export_router)
 app.include_router(upload_router)
-app.include_router(comment_router)
 app.include_router(document_router)
 app.include_router(review_router)
 app.include_router(version_router)

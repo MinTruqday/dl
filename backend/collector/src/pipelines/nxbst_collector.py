@@ -185,16 +185,14 @@ class NXBSTStreamState:
                     "content": None,
                     "content_format": "pdf",
                     "price": 0.0,
-                    "visibility": "public",
-                    "author_id": "nxbst_collector",
+                    "visibility": "private",
+                    "author_id": "nxbst",
                     "status": "published",
                     "views": 0,
                     "average_rating": 0.0
                 }
 
                 doc_id = await db_client.insert_document(document_metadata)
-                if doc_id:
-                    await mq_client.publish("format_converter_queue", {"document_id": doc_id, "file_url": minio_url, "filename": final_pdf_name})
 
             if os.path.exists(pdf_path):
                 os.remove(pdf_path)
@@ -322,7 +320,7 @@ class NXBSTCollector:
 
                 author_xpath = 'xpath=//*[@id="detail"]/div[2]/div/div[1]/a'
                 author_el = await page.query_selector(author_xpath)
-                raw_author = await author_el.inner_text() if author_el else "Unknown Author"
+                raw_author = await author_el.inner_text() if author_el else "Unknown"
 
                 logger.info(f"Targeting document {raw_title} | Author: {raw_author}")
 

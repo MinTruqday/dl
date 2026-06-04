@@ -81,7 +81,6 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/assets/document:/app/assets/document
-      - ./backend/assets/social:/app/assets/social
       - ./packages:/packages
     networks:
       - doclib_network
