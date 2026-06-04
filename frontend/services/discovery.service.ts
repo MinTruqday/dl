@@ -30,12 +30,7 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
   return data;
 };
 
-export const getFeaturedAuthorsAPI = async (limit: number = 10) => {
-  const res = await fetch(`${API_URL}/kham-pha/tac-gia-noi-bat?limit=${limit}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách tác giả nổi bật");
-  return data;
-};
+
 
 export const getTrendingTagsAPI = async (limit: number = 10) => {
   const res = await fetch(`${API_URL}/kham-pha/hashtag-xu-huong?limit=${limit}`);

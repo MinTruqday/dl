@@ -28,7 +28,7 @@ from api.notification import router as notification_router
 from api.wallet import router as wallet_router
 from api.export import router as export_router
 from api.deposit import router as deposit_router
-from api.read import router as read_router, reader_router
+from api.reading import router as reading_router
 from api.monetization import router as monetization_router
 from api.withdrawal import router as withdrawal_router
 from api.rag import router as rag_router
@@ -42,7 +42,7 @@ from api.ai import router as ai_router
 from api.operation import router as operation_router
 from api.draft import router as draft_router
 from api.report import router as report_router
-from api.log import router as log_router
+from api.audit import router as audit_router
 from api.telemetry import router as telemetry_router
 from api.banner import router as banner_router
 from api.user import router as user_router
@@ -56,7 +56,6 @@ from api.bookmark import router as bookmark_router
 from api.pin import router as pin_router
 from api.preference import router as preference_router
 from api.quota import router as quota_router
-from api.rank import router as rank_router
 from api.storage import router as storage_router
 from api.finetune import router as finetune_router
 
@@ -197,8 +196,7 @@ app.include_router(version_router)
 app.include_router(latex_router)
 app.include_router(editor_router)
 app.include_router(monetization_router)
-app.include_router(read_router)
-app.include_router(reader_router)
+app.include_router(reading_router)
 app.include_router(highlight_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
@@ -212,7 +210,7 @@ app.include_router(withdrawal_router)
 app.include_router(operation_router)
 app.include_router(draft_router)
 app.include_router(report_router)
-app.include_router(log_router)
+app.include_router(audit_router)
 app.include_router(telemetry_router)
 app.include_router(banner_router)
 app.include_router(user_router)
@@ -226,7 +224,6 @@ app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(preference_router)
 app.include_router(quota_router)
-app.include_router(rank_router)
 app.include_router(storage_router)
 app.include_router(finetune_router)
 

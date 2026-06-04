@@ -195,6 +195,32 @@ class CTANCollector:
                             minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
                             logger.info(f"Found and uploaded primary PDF: {minio_url_pdf}")
                             payload["pdf_url"] = minio_url_pdf
+                            
+                        md_content = f"# Source code for {title}\n\n"
+                        allowed_exts = {".tex", ".sty", ".cls", ".dtx", ".ins", ".bib", ".def"}
+                        for root_dir, _, files in os.walk(search_root):
+                            for f in files:
+                                ext = os.path.splitext(f)[1].lower()
+                                if ext in allowed_exts:
+                                    file_path = os.path.join(root_dir, f)
+                                    rel_path = os.path.relpath(file_path, search_root)
+                                    try:
+                                        with open(file_path, "r", encoding="utf-8") as text_file:
+                                            content = text_file.read()
+                                            md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
+                                    except UnicodeDecodeError:
+                                        pass
+                                    except Exception as e:
+                                        logger.warning(f"Failed to read {rel_path}: {e}")
+                                        
+                        md_filename = f"{slug}_source.md"
+                        md_path = os.path.join(temp_base, md_filename)
+                        with open(md_path, "w", encoding="utf-8") as md_f:
+                            md_f.write(md_content)
+                            
+                        minio_url_md = await storage.upload_local_file(f"documents/ctan/{md_filename}", md_path)
+                        logger.info(f"Compiled and uploaded Markdown source: {minio_url_md}")
+                        payload["markdown_url"] = minio_url_md
                         
                         logger.info(f"Successfully processed {filename}.")
                     else:
@@ -215,6 +241,7 @@ class CTANCollector:
                 "description": payload.get("description", "Extracted via CTAN bot."),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
+                "markdown_url": payload.get("markdown_url"),
                 "tags": ["CTAN"] + (payload.get("authors") if payload.get("authors") else ["Unknown"]),
                 "content_format": "zip",
                 "price": 0.0,

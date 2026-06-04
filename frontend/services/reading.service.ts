@@ -113,7 +113,7 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
 
 
 export async function clearReadingHistoryAPI() {
-  const res = await fetch(`${API_URL}/reader/history`, {
+  const res = await fetch(`${API_URL}/doc/lich-su`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -123,7 +123,7 @@ export async function clearReadingHistoryAPI() {
 }
 
 export async function deleteReadingHistoryItemAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/reader/history/${documentId}`, {
+  const res = await fetch(`${API_URL}/doc/lich-su/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

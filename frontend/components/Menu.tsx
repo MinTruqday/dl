@@ -123,7 +123,7 @@ export default function Menu({
       >
         <div className="flex-1 overflow-y-auto py-4 scroll-smooth flex flex-col pb-20 no-scrollbar">
           <NavLink icon={Search} label="Khám phá" href="/" />
-          <NavLink icon={Trophy} label="Xếp hạng" href="/xep-hang" />
+
           <NavLink
             icon={MessageSquare}
             label="Tin nhắn"

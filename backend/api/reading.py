@@ -1,0 +1,119 @@
+from typing import Any, List
+from fastapi import APIRouter, Depends, Query
+from api.dependency import get_current_user
+from models.user import UserInDB
+from models.library import TypographyRequest, ProgressUpdate, ReadingGoalCreate, PinnedDocumentRequest
+from core.response import APIResponse
+from services.reading import ReadingService
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/doc")
+
+@router.get("/lich-su", response_model=APIResponse[Any])
+async def get_history(cursor: str = None, limit: int = Query(20), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.get_reading_history(current_user, cursor, limit),
+        message="Lấy lịch sử đọc thành công"
+    )
+
+@router.post("/tien-do", response_model=APIResponse[Any])
+async def update_progress(data: ProgressUpdate, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.update_progress(data, current_user),
+        message="Cập nhật tiến độ thành công"
+    )
+
+@router.get("/dang-doc", response_model=APIResponse[Any])
+async def get_continue_reading(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.get_continue_reading(current_user),
+        message="Lấy danh sách đang đọc thành công"
+    )
+
+@router.post("/muc-tieu", response_model=APIResponse[Any])
+async def set_reading_goal(data: ReadingGoalCreate, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.set_reading_goal(data, current_user),
+        message="Thiết lập mục tiêu thành công",
+        status=201
+    )
+
+@router.get("/muc-tieu", response_model=APIResponse[Any])
+async def get_reading_goal(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.get_reading_goal(current_user),
+        message="Lấy thông tin mục tiêu thành công"
+    )
+@router.put("/trinh-bay", response_model=APIResponse[Any])
+async def update_typography(data: TypographyRequest, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.update_typography(data, current_user),
+        message="Cập nhật hiển thị thành công"
+    )
+
+@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
+async def search_in_document(document_id: str, q: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.search_in_document(document_id, q, current_user),
+        message="Tìm kiếm trong tài liệu thành công"
+    )
+
+
+@router.delete("/lich-su", response_model=APIResponse[Any])
+async def clear_reading_history(current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.clear_reading_history(current_user),
+        message="Xóa toàn bộ lịch sử đọc thành công"
+    )
+
+@router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
+async def delete_history_item(document_id: str, current_user: UserInDB = Depends(get_current_user)):
+    return APIResponse(
+        data=await ReadingService.delete_history_item(document_id, current_user),
+        message="Xóa mục lịch sử đọc thành công"
+    )
+
+import aiohttp
+import zipfile
+import io
+
+@router.get("/cay-thu-muc-zip", response_model=APIResponse[Any])
+async def get_zip_tree(file_url: str = Query(...)):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as resp:
+                if resp.status == 200:
+                    content = await resp.read()
+                    with zipfile.ZipFile(io.BytesIO(content)) as z:
+                        tree = []
+                        for info in z.infolist():
+                            tree.append({
+                                "path": info.filename,
+                                "name": info.filename.split("/")[-1] if not info.is_dir() else info.filename.split("/")[-2],
+                                "is_dir": info.is_dir(),
+                                "size": info.file_size
+                            })
+                        return APIResponse(data=tree, message="Lấy cây thư mục thành công")
+                else:
+                    return APIResponse(data=None, message="Không thể tải file", status=400)
+    except Exception as e:
+        return APIResponse(data=None, message=str(e), status=500)
+
+@router.get("/noi-dung-zip", response_model=APIResponse[Any])
+async def get_zip_content(file_url: str = Query(...), path: str = Query(...)):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_url) as resp:
+                if resp.status == 200:
+                    content = await resp.read()
+                    with zipfile.ZipFile(io.BytesIO(content)) as z:
+                        if path in z.namelist():
+                            file_bytes = z.read(path)
+                            try:
+                                text = file_bytes.decode('utf-8')
+                                return APIResponse(data={"content": text, "type": "text"}, message="Thành công")
+                            except UnicodeDecodeError:
+                                return APIResponse(data={"content": "Binary file cannot be displayed.", "type": "binary"}, message="Thành công")
+                        return APIResponse(data=None, message="Không tìm thấy tệp", status=404)
+    except Exception as e:
+        return APIResponse(data=None, message=str(e), status=500)

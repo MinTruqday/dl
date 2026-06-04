@@ -18,7 +18,7 @@ import {
   deleteReadingHistoryItemAPI,
   getMySeriesAPI,
   createSeriesAPI,
-} from "@/services/read.service";
+} from "@/services/reading.service";
 import { API_URL } from "@/services/authentication.service";
 import {
   LayoutGrid,

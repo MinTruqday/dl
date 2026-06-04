@@ -41,6 +41,7 @@ import {
   X,
   FileText,
   Image as ImageIcon,
+  Folder,
 } from "lucide-react";
 
 export default function DocumentViewer() {
@@ -59,12 +60,16 @@ export default function DocumentViewer() {
   const [asking, setAsking] = useState(false);
   const [useSmart, setUseSmart] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<
-    "chat" | "highlights" | "thumbnails" | "history"
+    "chat" | "highlights" | "thumbnails" | "history" | "zip"
   >("chat");
   const [readingMode, setReadingMode] = useState<"single" | "double">("single");
   const [zoom, setZoom] = useState(100);
   const [currentPage, setCurrentPage] = useState(1);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const [zipTree, setZipTree] = useState<any[]>([]);
+  const [selectedZipFile, setSelectedZipFile] = useState<{name: string, content: string, type: string} | null>(null);
+  const [zipLoading, setZipLoading] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [highlights, setHighlights] = useState<any[]>([]);
@@ -140,6 +145,13 @@ export default function DocumentViewer() {
             setIsBookmarked(
               bookmarks.data.some((b: any) => (b.id || b._id) === docId),
             );
+          }
+          if (data.data?.content_format === "zip" && data.data?.file_url) {
+            setSidebarTab("zip");
+            fetch(`${API_URL}/doc/cay-thu-muc-zip?file_url=${encodeURIComponent(data.data.file_url)}`)
+              .then(r => r.json())
+              .then(res => setZipTree(res.data || []))
+              .catch(console.error);
           }
         } else {
           setError("Quyền truy cập của bạn bị giới hạn đối với tài liệu này");
@@ -369,6 +381,38 @@ export default function DocumentViewer() {
   }
 
   const getPageContent = () => {
+    if (document?.content_format === "zip") {
+      return (
+        <div className="w-full h-full min-h-[500px] flex flex-col bg-zinc-50 border border-zinc-200">
+          <div className="h-12 border-b border-zinc-200 bg-white flex items-center px-4 shrink-0">
+            <FileText className="w-4 h-4 mr-2 text-zinc-500" />
+            <span className="text-sm font-medium">{selectedZipFile ? selectedZipFile.name : "Trình duyệt mã nguồn ZIP"}</span>
+          </div>
+          <div className="flex-1 overflow-auto p-4 bg-white">
+            {zipLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
+              </div>
+            ) : selectedZipFile ? (
+              selectedZipFile.type === "text" ? (
+                <pre className="text-xs font-mono text-black whitespace-pre-wrap leading-relaxed">{selectedZipFile.content}</pre>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center text-zinc-500">
+                  <AlertTriangle className="w-8 h-8 mb-4 opacity-20" />
+                  <p className="text-sm">Định dạng nhị phân không được hỗ trợ hiển thị</p>
+                </div>
+              )
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center text-zinc-400">
+                <Folder className="w-12 h-12 mb-4 opacity-20" />
+                <p className="text-sm">Chọn một tệp từ cây thư mục bên phải để xem mã nguồn</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     const content =
       document?.content ||
       document?.description ||
@@ -490,6 +534,14 @@ export default function DocumentViewer() {
         >
           <History className="w-5 h-5" />
         </button>
+        {document?.content_format === "zip" && (
+          <button
+            onClick={() => setSidebarTab("zip")}
+            className={`p-3 rounded-none  ${sidebarTab === "zip" ? "bg-black text-white" : "text-zinc-500 "}`}
+          >
+            <Folder className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -563,9 +615,9 @@ export default function DocumentViewer() {
 
         <main className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center">
           <div
-            className={`mx-auto bg-white border border-zinc-200 p-12 md:p-24  rounded-none min-h-full origin-top  ${readingMode === "double" ? "w-full max-w-6xl" : "w-full max-w-3xl"}`}
+            className={`mx-auto bg-white border border-zinc-200 ${document?.content_format === "zip" ? "p-0 h-full max-w-full" : "p-12 md:p-24 min-h-full origin-top"} rounded-none ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-6xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
             style={{
-              transform: `scale(${zoom / 100})`,
+              transform: document?.content_format === "zip" ? "none" : `scale(${zoom / 100})`,
             }}
           >
             {getPageContent()}
@@ -619,7 +671,9 @@ export default function DocumentViewer() {
                   ? "Nêu bật"
                   : sidebarTab === "history"
                     ? "Lịch sử"
-                    : "Mục lục trang"}
+                    : sidebarTab === "zip"
+                      ? "Mã nguồn ZIP"
+                      : "Mục lục trang"}
             </span>
             {sidebarTab === "chat" && (
               <button
@@ -774,6 +828,36 @@ export default function DocumentViewer() {
                     </button>
                   </div>
                 ))
+              )}
+            </div>
+          ) : sidebarTab === "zip" ? (
+            <div className="space-y-1 overflow-x-auto text-sm animate-in fade-in">
+              {zipTree.map((item, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    if (!item.is_dir) {
+                      setZipLoading(true);
+                      fetch(`${API_URL}/doc/noi-dung-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`)
+                        .then(r => r.json())
+                        .then(res => {
+                          setSelectedZipFile({ name: item.name, content: res.data?.content || "", type: res.data?.type || "text" });
+                        })
+                        .catch(() => showToast("Không thể mở tệp", "error"))
+                        .finally(() => setZipLoading(false));
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100 cursor-pointer rounded-none whitespace-nowrap ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-zinc-100 font-medium" : "text-zinc-600"}`}
+                  style={{ paddingLeft: `${item.path.split('/').length * 12}px` }}
+                >
+                  {item.is_dir ? <Folder className="w-4 h-4 text-zinc-400 shrink-0" /> : <FileText className="w-4 h-4 text-zinc-400 shrink-0" />}
+                  <span className="truncate">{item.name}</span>
+                </div>
+              ))}
+              {zipTree.length === 0 && (
+                <div className="py-20 text-center text-zinc-400">
+                  <p>Đang tải cây thư mục...</p>
+                </div>
               )}
             </div>
           ) : (

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 from loguru import logger
 
-class ReadService:
+class ReadingService:
 
 
     @staticmethod

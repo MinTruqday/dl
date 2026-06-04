@@ -16,7 +16,7 @@ import {
   ArrowRight,
   Layers,
 } from "lucide-react";
-import { getSeriesByIdAPI } from "@/services/read.service";
+import { getSeriesByIdAPI } from "@/services/reading.service";
 import { API_URL } from "@/services/authentication.service";
 import Link from "next/link";
 

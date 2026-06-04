@@ -12,7 +12,7 @@ export default function MainLayout({
 
   const isPublic = () => {
     if (pathname === "/") return true;
-    if (pathname === "/xep-hang") return true;
+
     if (pathname.startsWith("/author")) return true;
     if (pathname.startsWith("/tim-kiem")) return true;
     

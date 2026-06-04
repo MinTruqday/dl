@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getModeratorActivityAPI } from "@/services/log.service";
+import { getModeratorActivityAPI } from "@/services/audit.service";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { useToast } from "@/contexts/Toast";
