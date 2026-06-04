@@ -197,6 +197,7 @@ function StudioContent() {
   const [newDocTitle, setNewDocTitle] = useState("");
   const [newDocDescription, setNewDocDescription] = useState("");
   const [newDocPrice, setNewDocPrice] = useState(0);
+  const [newDocFormat, setNewDocFormat] = useState("json");
   const [isCreatingDoc, setIsCreatingDoc] = useState(false);
   const [showEditChapterModal, setShowEditChapterModal] = useState(false);
   const [editingChapterIndex, setEditingChapterIndex] = useState<number | null>(null);
@@ -894,12 +895,14 @@ function StudioContent() {
         title: newDocTitle.trim(),
         description: newDocDescription.trim(),
         price_dl: newDocPrice,
+        content_format: newDocFormat,
       });
       showToast("Đã tạo tác phẩm mới thành công", "success");
       setShowCreateDocModal(false);
       setNewDocTitle("");
       setNewDocDescription("");
       setNewDocPrice(0);
+      setNewDocFormat("json");
       fetchDocuments();
       const newId = result?.data?._id || result?.data?.id || result?._id || result?.id;
       if (newId) setSelectedDocumentId(newId);
@@ -1269,6 +1272,33 @@ function StudioContent() {
                 onChange={(e) => setNewDocPrice(parseInt(e.target.value) || 0)}
                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Loại trình soạn thảo</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="docFormat"
+                    value="json"
+                    checked={newDocFormat === "json"}
+                    onChange={(e) => setNewDocFormat(e.target.value)}
+                    className="accent-black w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-medium text-black">Soạn thảo chuẩn (Khối)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="docFormat"
+                    value="latex"
+                    checked={newDocFormat === "latex"}
+                    onChange={(e) => setNewDocFormat(e.target.value)}
+                    className="accent-black w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-medium text-black">Soạn thảo LaTeX (Mã nguồn)</span>
+                </label>
+              </div>
             </div>
           </div>
         </ModalContent>

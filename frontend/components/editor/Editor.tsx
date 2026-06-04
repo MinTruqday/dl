@@ -18,6 +18,7 @@ import {
 import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
 import { API_URL, getAuthHeaders } from "@/services/authentication.service";
 import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock, Search, FileEdit, List } from "lucide-react";
+import MonacoEditor from "@monaco-editor/react";
 
 interface EditorProps {
   documentId?: string;
@@ -480,29 +481,29 @@ export default function Editor({
     }
   }, [initialContent, contentFormat]);
 
-  const handleLatexChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setLocalText(val);
+  const handleLatexChange = (val: string | undefined) => {
+    const textVal = val || "";
+    setLocalText(textVal);
     setSaveStatus("Đang lưu");
     
-    const words = val.trim().split(/\s+/).length;
+    const words = textVal.trim().split(/\s+/).length;
     setStats(prev => ({ 
         ...prev, 
-        charCount: val.length,
+        charCount: textVal.length,
         wpm: Math.round((words / ((Date.now() - lastKeystroke) / 60000)) || 0)
     }));
     setLastKeystroke(Date.now());
     setReadingTime(Math.max(1, Math.floor(words / 200)));
     
-    lastContentRef.current = val;
-    onSave?.(val);
+    lastContentRef.current = textVal;
+    onSave?.(textVal);
     
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
        if (documentId) {
           try {
              const { autoSaveDraftAPI } = await import("@/services/editor.service");
-             await autoSaveDraftAPI(documentId, { content: val });
+             await autoSaveDraftAPI(documentId, { content: textVal });
              setSaveStatus("Đã lưu");
           } catch (e: any) {
              setSaveStatus("Lỗi lưu");
@@ -981,12 +982,25 @@ export default function Editor({
 
         <div className={`h-full overflow-y-auto flex justify-center bg-white ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}>
           {contentFormat === "latex" ? (
-            <textarea
-              value={localText}
-              onChange={handleLatexChange}
-              placeholder="Nhập mã LaTeX tại đây"
-              className="w-full h-full p-12 bg-zinc-50 border-none outline-none resize-none font-mono text-sm leading-relaxed text-black"
-            />
+            <div className="w-full h-full pt-4">
+              <MonacoEditor
+                height="100%"
+                language="latex"
+                theme="light"
+                value={localText}
+                onChange={handleLatexChange}
+                options={{
+                  wordWrap: "on",
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineHeight: 24,
+                  padding: { top: 16, bottom: 16 },
+                  scrollBeyondLastLine: false,
+                  smoothScrolling: true,
+                  cursorBlinking: "smooth",
+                }}
+              />
+            </div>
           ) : (
             <div className="w-full max-w-[900px] px-12 py-20 flex flex-col">
               <div ref={containerRef} className="flex-1 w-full" />
