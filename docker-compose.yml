@@ -15,7 +15,7 @@ services:
     image: mongo:7.0
     container_name: doclib_mongodb
     restart: always
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
     ports:
       - "27017:27017"
     volumes:
@@ -87,8 +87,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./frontend/Dockerfile
       target: deps
     container_name: doclib_frontend
     restart: always

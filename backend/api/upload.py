@@ -1,6 +1,6 @@
 from typing import Any
 from core.response import APIResponse
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Form
 from models.user import UserInDB, RoleEnum
 from api.dependency import require_role
 from services.upload import UploadService
@@ -29,8 +29,6 @@ async def upload_asset(
     from fastapi import HTTPException
     from services.storage import StorageService
     quota = await StorageService.get_storage_quota(current_user.id)
-    # Estimate size (file.size might not be populated until read, but for FastAPI UploadFile we can check later)
-    # However, to be safe, just check if already exceeded:
     if quota["used"] >= quota["limit"]:
         raise HTTPException(status_code=400, detail="Đã vượt quá hạn mức lưu trữ (1GB). Vui lòng dọn dẹp bớt tệp tin.")
         
@@ -46,10 +44,10 @@ async def get_presigned_download_url(
 @router.post("/phan-doan", response_model=APIResponse[Any])
 async def upload_chunk(
     file: UploadFile = File(...),
-    upload_id: str = Depends(),
-    chunk_index: int = Depends(),
-    total_chunks: int = Depends(),
-    filename: str = Depends(),
+    upload_id: str = Form(...),
+    chunk_index: int = Form(...),
+    total_chunks: int = Form(...),
+    filename: str = Form(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN]))
 ) -> Any:
     """ Resumable Chunked Upload for flaky networks """
