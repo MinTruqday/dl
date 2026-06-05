@@ -96,6 +96,10 @@ class EditorService:
         sug = await db['editor_suggestions'].find_one({'_id': ObjectId(suggestion_id)})
         if not sug:
             raise HTTPException(status_code=404, detail='Không tìm thấy gợi ý.')
+        doc = await db['documents'].find_one({'_id': sug['document_id']})
+        if doc and str(doc.get('author_id')) != user_id and sug.get('reviewer_id') != user_id:
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý gợi ý này.')
+
         await db['editor_suggestions'].update_one({'_id': ObjectId(suggestion_id)}, {'$set': {'status': payload.get('action', 'rejected'), 'resolved_at': datetime.now(timezone.utc)}})
         logger.info(f'Suggestion {suggestion_id} resolved by user {user_id}')
         action_map = {'accepted': 'chấp nhận', 'rejected': 'từ chối'}
@@ -113,6 +117,17 @@ class EditorService:
 
     @staticmethod
     async def auto_save_draft(document_id: str, content: dict, current_user, db=None):
+        import re
+        import json
+        if isinstance(content, str):
+            content = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</>', '', content, flags=re.IGNORECASE|re.DOTALL)
+            content = re.sub(r' on\w+\s*=', ' ', content, flags=re.IGNORECASE)
+        elif isinstance(content, dict):
+            content_str = json.dumps(content)
+            content_str = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</>', '', content_str, flags=re.IGNORECASE|re.DOTALL)
+            content_str = re.sub(r' on\w+\s*=', ' ', content_str, flags=re.IGNORECASE)
+            content = json.loads(content_str)
+
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
@@ -288,6 +303,16 @@ class EditorService:
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
+        comment = await db['editor_comments'].find_one({'_id': comment_id})
+        if not comment:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail='Không tìm thấy bình luận.')
+            
+        doc = await db['documents'].find_one({'_id': comment['document_id']})
+        if doc and str(doc.get('author_id')) != str(current_user.id) and comment.get('user_id') != str(current_user.id):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý bình luận này.')
+            
         await db['editor_comments'].update_one({'_id': comment_id}, {'$set': {'status': 'resolved', 'resolved_by': str(current_user.id), 'resolved_at': datetime.now(timezone.utc)}})
         return {'message': 'Đã xử lý nhận xét.'}
 

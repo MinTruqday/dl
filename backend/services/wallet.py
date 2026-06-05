@@ -18,31 +18,59 @@ class WalletService:
     async def redeem_voucher(req, current_user, db=None):
         lock_key = f'lock:voucher:{req.code}'
         is_locked = False
+        
+        # Rate Limiting
+        if db_client.redis:
+            user_rl_key = f'rl:voucher:{current_user.id}'
+            try:
+                attempts = await db_client.redis.incr(user_rl_key)
+                if attempts == 1:
+                    await db_client.redis.expire(user_rl_key, 300)
+                if attempts > 10:
+                    raise HTTPException(status_code=429, detail="Bạn thử quá nhiều lần. Vui lòng thử lại sau 5 phút.")
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.exception(f"Redis rate limit failed: {e}")
+        
+        # Redis Lock
         if db_client.redis:
             try:
                 is_locked = await db_client.redis.set(lock_key, 'locked', nx=True, ex=10)
                 if not is_locked:
                     raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail='Mã nạp này đang được xử lý, vui lòng chờ giây lát.')
+            except HTTPException:
+                raise
             except Exception as e:
-                logger.warning(f'Redis set lock failed: {e}')
+                logger.exception(f'Redis set lock failed: {e}')
+                raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm. Vui lòng thử lại sau.")
+
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        vouchers = db['vouchers']
+        users = db['users']
+        transactions = db['transactions']
+        
+        session = await db_client.mongodb.start_session()
         try:
-            if db is None:
-                db = db_client.mongodb.get_default_database()
-            vouchers = db['vouchers']
-            users = db['users']
-            transactions = db['transactions']
-            voucher = await vouchers.find_one({'code': req.code})
-            if not voucher:
-                raise HTTPException(status_code=404, detail='Mã nạp không hợp lệ hoặc không tồn tại.')
-            if voucher.get('is_used'):
-                raise HTTPException(status_code=400, detail='Mã nạp này đã được sử dụng trước đó.')
-            bonus_dl = voucher.get('amount_dl', voucher.get('amount_dls', 0))
-            result = await vouchers.update_one({'_id': voucher['_id'], 'is_used': False}, {'$set': {'is_used': True, 'used_by': str(current_user.id), 'used_at': datetime.now(timezone.utc)}})
-            if result.modified_count == 0:
-                raise HTTPException(status_code=400, detail='Mã nạp vừa được sử dụng bởi người dùng khác.')
-            await users.update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': bonus_dl}})
-            tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi voucher: {req.code}')
-            await transactions.insert_one(tx.model_dump(by_alias=True))
+            async with session.start_transaction():
+                voucher = await vouchers.find_one({'code': req.code}, session=session)
+                if not voucher:
+                    raise HTTPException(status_code=404, detail='Mã nạp không hợp lệ hoặc không tồn tại.')
+                if voucher.get('is_used'):
+                    raise HTTPException(status_code=400, detail='Mã nạp này đã được sử dụng trước đó.')
+                
+                bonus_dl = voucher.get('amount_dl', voucher.get('amount_dls', 0))
+                result = await vouchers.update_one({'_id': voucher['_id'], 'is_used': False}, {'$set': {'is_used': True, 'used_by': str(current_user.id), 'used_at': datetime.now(timezone.utc)}}, session=session)
+                if result.modified_count == 0:
+                    await session.abort_transaction()
+                    raise HTTPException(status_code=400, detail='Mã nạp vừa được sử dụng bởi người dùng khác.')
+                    
+                await users.update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': bonus_dl}}, session=session)
+                tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi voucher: {req.code}')
+                await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
+                await session.commit_transaction()
+                
             if db_client.redis:
                 try:
                     await db_client.redis.publish(f'user_notifications:{current_user.id}', json.dumps({'title': 'Nạp dl thành công', 'body': f'Tài khoản vừa được cộng thêm {bonus_dl} dl.'}))
@@ -50,7 +78,14 @@ class WalletService:
                     logger.warning(f'Redis publish notification failed: {e}')
             logger.info(f'User {current_user.id} redeemed voucher {req.code} for {bonus_dl} dl')
             return {'message': 'Đổi voucher thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
+        except HTTPException:
+            raise
+        except Exception as e:
+            await session.abort_transaction()
+            logger.exception(f'Voucher redeem failed: {e}')
+            raise HTTPException(status_code=500, detail="Hệ thống bảo trì, thử lại sau.")
         finally:
+            await session.end_session()
             if db_client.redis and is_locked:
                 try:
                     await db_client.redis.delete(lock_key)

@@ -13,11 +13,6 @@ async def export_document_pdf(document_id: str, current_user: UserInDB=Depends(g
     headers = {'Content-Disposition': f'attachment; filename="DocLib_Export_{document_id}_Watermarked.pdf"'}
     return APIResponse(data=Response(content=pdf_content, media_type='application/pdf', headers=headers), message='Xuất bản sao PDF đính kèm dấu bản quyền thành công', status=200)
 
-@router.get('/{document_id}/epub', response_model=APIResponse[Any])
-async def export_document_epub(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    content = await DocumentService.export_epub(document_id, current_user, db=db)
-    headers = {'Content-Disposition': f'attachment; filename="DocLib_{document_id}.epub"'}
-    return APIResponse(data=Response(content=content, media_type='application/epub+zip', headers=headers), message='Xuất bản sao EPUB thành công', status=200)
 
 @router.get('/{document_id}/docx', response_model=APIResponse[Any])
 async def export_document_docx(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

@@ -17,6 +17,15 @@ class RagService:
         rag_url = f'{base_url}/tro-chuyen'
         if current_user:
             payload['user_id'] = str(current_user.id)
+            if db is None:
+                from core.database import db_client
+                db = db_client.mongodb.get_default_database()
+            purchases = await db['purchases'].find({"user_id": str(current_user.id), "item_type": "document"}).to_list(length=None)
+            purchased_ids = [p["item_id"] for p in purchases]
+            own_docs = await db['documents'].find({"author_id": str(current_user.id)}, {"_id": 1}).to_list(length=None)
+            purchased_ids.extend([str(d["_id"]) for d in own_docs])
+            payload['accessible_doc_ids'] = purchased_ids
+            payload['user_role'] = getattr(current_user, 'role', 'USER')
         else:
             raise HTTPException(status_code=401, detail='Bạn cần đăng nhập để sử dụng tính năng này.')
         headers = {'Content-Type': 'application/json'}
@@ -53,10 +62,20 @@ class RagService:
         rag_url = f'{base_url}/luong-du-lieu'
         if current_user:
             payload['user_id'] = str(current_user.id)
+            if db is None:
+                from core.database import db_client
+                db = db_client.mongodb.get_default_database()
+            purchases = await db['purchases'].find({"user_id": str(current_user.id), "item_type": "document"}).to_list(length=None)
+            purchased_ids = [p["item_id"] for p in purchases]
+            own_docs = await db['documents'].find({"author_id": str(current_user.id)}, {"_id": 1}).to_list(length=None)
+            purchased_ids.extend([str(d["_id"]) for d in own_docs])
+            payload['accessible_doc_ids'] = purchased_ids
+            payload['user_role'] = getattr(current_user, 'role', 'USER')
         else:
             from fastapi import HTTPException
             raise HTTPException(status_code=401, detail='Bạn cần đăng nhập để sử dụng tính năng này.')
         headers = {'Content-Type': 'application/json'}
+
         if auth_header:
             headers['Authorization'] = auth_header
 

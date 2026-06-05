@@ -28,6 +28,11 @@ class ExportService:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại trên hệ thống.')
         user_email = current_user.email if hasattr(current_user, 'email') and current_user.email else str(current_user.id)
         user_id = str(current_user.id)
+        if document.get("is_premium") and document.get("author_id") != user_id and (not hasattr(current_user, 'role') or current_user.role not in ["ADMIN", "MODERATOR"]):
+            purchases_col = db["purchases"]
+            purchase = await purchases_col.find_one({"user_id": user_id, "item_id": str(document["_id"])})
+            if not purchase:
+                raise HTTPException(status_code=403, detail='Bạn chưa mua quyền truy cập tài liệu này.')
         watermark_text = f'Bản quyền thuộc DocLib - Cấp riêng cho: {user_email} (ID: {user_id})'
 
         def generate_pdf_sync(db=None):

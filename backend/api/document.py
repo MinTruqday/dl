@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from typing import Any, List, Optional
 from core.response import APIResponse
 from api.dependency import get_db, get_current_user_optional, get_current_user, require_role
-from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, Header, Body
+from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, Header, Body, Request
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService

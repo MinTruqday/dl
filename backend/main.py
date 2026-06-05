@@ -85,12 +85,38 @@ from fastapi.responses import Response, FileResponse
 from core.storage import get_storage_client
 
 
+from fastapi import Query
+
 @app.get("/document/{file_path:path}")
-async def serve_document(file_path: str):
+async def serve_document(file_path: str, token: str = Query(None)):
     local_path = os.path.join("assets/document", file_path)
     if os.path.exists(local_path) and os.path.isfile(local_path):
         return FileResponse(local_path)
+        
+    # Check if this is a sensitive document
+    if file_path.endswith(('.pdf', '.zip', '.docx')):
+        user = None
+        if token:
+            from api.dependency import get_current_user_token_param
+            try:
+                user = await get_current_user_token_param(token)
+            except Exception:
+                pass
+                
+        # We need to ensure the user has purchased the document if it's premium
+        from core.database import db_client
+        db = db_client.mongodb.get_default_database()
+        # Find document by file_url exactly
+        doc = await db["documents"].find_one({"file_url": {"$in": [file_path, f"/{file_path}", f"documents/{file_path}"]}})
+        if doc and doc.get("is_premium"):
+            if not user:
+                raise HTTPException(status_code=401, detail="Cần đăng nhập để tải tài liệu này")
+            if str(doc.get("author_id")) != str(user.id) and user.role not in ["ADMIN", "MODERATOR"]:
+                purchase = await db["purchases"].find_one({"user_id": str(user.id), "item_id": str(doc["_id"])})
+                if not purchase:
+                    raise HTTPException(status_code=403, detail="Bạn chưa mua tài liệu này")
     try:
+        from core.storage import get_s3_client
         async with await get_s3_client() as s3:
             object_key = f"documents/{file_path}"
             response = await s3.get_object(Bucket=settings.MINIO_BUCKET_NAME, Key=object_key)

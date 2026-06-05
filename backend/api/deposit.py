@@ -17,4 +17,4 @@ async def payos_webhook(request: Request, db=Depends(get_db)):
 
 @router.get('/kiem-tra/{order_code}', response_model=APIResponse[Any])
 async def verify_deposit(order_code: int, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await DepositService.verify_deposit(order_code, db=db), message='Kiểm tra trạng thái nạp tiền', status=200)
+    return APIResponse(data=await DepositService.verify_deposit(order_code, current_user, db=db), message='Kiểm tra trạng thái nạp tiền', status=200)

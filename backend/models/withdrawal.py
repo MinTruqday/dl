@@ -23,7 +23,3 @@ class WithdrawalInDB(WithdrawalRequest):
     processed_at: Optional[datetime] = None
     processed_by: Optional[str] = None
     rejection_reason: Optional[str] = None
-
-class WithdrawalRequest(BaseModel):
-    amount: int
-    bank_info: dict

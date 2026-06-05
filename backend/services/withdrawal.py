@@ -1,10 +1,10 @@
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
-import uuid
 from uuid6 import uuid7
 from loguru import logger
 from models.wallet import Transaction, TransactionType
+
 ALLOWED_WITHDRAWAL_QUEUE_STATUSES = {'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'}
 ALLOWED_WITHDRAWAL_ACTIONS = {'approve', 'reject'}
 
@@ -52,7 +52,7 @@ class WithdrawalService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Withdrawal: Request failed for user {current_user.id}: {e}')
+            logger.exception(f'Withdrawal: Request failed for user {current_user.id}: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             await session.end_session()
@@ -69,7 +69,15 @@ class WithdrawalService:
         result = []
         for p in withdrawals:
             user = p.get('user_info', {})
-            result.append({'_id': str(p['_id']), 'user_id': p.get('user_id'), 'user_name': user.get('full_name') if user else 'Unknown', 'amount': p.get('amount'), 'status': p.get('status'), 'created_at': p['created_at'].isoformat() if isinstance(p.get('created_at'), datetime) else p.get('created_at')})
+            result.append({
+                '_id': str(p['_id']), 
+                'user_id': p.get('user_id'), 
+                'user_name': user.get('full_name') if user else 'Unknown', 
+                'amount': p.get('amount'), 
+                'status': p.get('status'), 
+                'bank_info': p.get('bank_info', {}),
+                'created_at': p['created_at'].isoformat() if isinstance(p.get('created_at'), datetime) else p.get('created_at')
+            })
         return result
 
     @staticmethod
@@ -82,6 +90,8 @@ class WithdrawalService:
         withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id})
         if not withdrawal:
             raise HTTPException(status_code=404, detail='Không tìm thấy yêu cầu rút tiền.')
+        if str(current_moderator.id) == withdrawal.get('user_id'):
+            raise HTTPException(status_code=403, detail="Không thể tự duyệt yêu cầu của chính mình.")
         current_status = withdrawal.get('status')
         if current_status != 'PENDING':
             raise HTTPException(status_code=400, detail='Yêu cầu rút tiền đã được xử lý trước đó.')
@@ -89,7 +99,11 @@ class WithdrawalService:
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
-                await db['withdrawal_requests'].update_one({'_id': withdrawal_id, 'status': 'PENDING'}, {'$set': {'status': status, 'processed_by': str(current_moderator.id), 'processed_at': datetime.now(timezone.utc)}}, session=session)
+                update_result = await db['withdrawal_requests'].update_one({'_id': withdrawal_id, 'status': 'PENDING'}, {'$set': {'status': status, 'processed_by': str(current_moderator.id), 'processed_at': datetime.now(timezone.utc)}}, session=session)
+                if update_result.modified_count == 0:
+                    await session.abort_transaction()
+                    raise HTTPException(status_code=400, detail="Không thể cập nhật trạng thái yêu cầu.")
+                    
                 if status == 'REJECTED':
                     await db['users'].update_one({'_id': withdrawal.get('user_id')}, {'$inc': {'wallet_balance': withdrawal.get('amount', 0)}}, session=session)
                     refund_transaction = Transaction(user_id=withdrawal.get('user_id'), amount=withdrawal.get('amount', 0), type=TransactionType.REFUND, note=f'Hoàn tiền yêu cầu rút tiền {withdrawal_id}', reference_id=withdrawal_id)
@@ -102,7 +116,7 @@ class WithdrawalService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Withdrawal: Verify failed for {withdrawal_id}: {e}')
+            logger.exception(f'Withdrawal: Verify failed for {withdrawal_id}: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             await session.end_session()
@@ -119,7 +133,11 @@ class WithdrawalService:
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
-                await db['withdrawal_requests'].update_one({'_id': withdrawal_id, 'user_id': str(current_user.id), 'status': 'PENDING'}, {'$set': {'status': 'CANCELLED', 'cancelled_at': datetime.now(timezone.utc)}}, session=session)
+                update_result = await db['withdrawal_requests'].update_one({'_id': withdrawal_id, 'user_id': str(current_user.id), 'status': 'PENDING'}, {'$set': {'status': 'CANCELLED', 'cancelled_at': datetime.now(timezone.utc)}}, session=session)
+                if update_result.modified_count == 0:
+                    await session.abort_transaction()
+                    raise HTTPException(status_code=400, detail="Không thể cập nhật trạng thái yêu cầu.")
+                    
                 await db['users'].update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': withdrawal.get('amount', 0)}}, session=session)
                 refund_transaction = Transaction(user_id=str(current_user.id), amount=withdrawal.get('amount', 0), type=TransactionType.TOPUP, note=f'Hủy yêu cầu rút tiền {withdrawal_id}', reference_id=withdrawal_id)
                 await db['transactions'].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
@@ -130,7 +148,7 @@ class WithdrawalService:
             raise
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Withdrawal: Cancel failed for {withdrawal_id}: {e}')
+            logger.exception(f'Withdrawal: Cancel failed for {withdrawal_id}: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             await session.end_session()

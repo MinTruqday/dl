@@ -69,10 +69,7 @@ class DocumentService:
         cursor = docs_col.find({
             "status": DocumentStatus.PUBLISHED, 
             "is_deleted": {"$ne": True},
-            "$or": [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"description": {"$regex": query, "$options": "i"}}
-            ]
+            "$text": {"$search": query}
         }).limit(limit)
         documents = await cursor.to_list(length=limit)
         return [serialize_document(d) for d in documents]
@@ -99,7 +96,7 @@ class DocumentService:
         if db is None: db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
         if cursor:
-            query["_id"] = {"$lt": ObjectId(cursor)}
+            query["_id"] = {"$lt": cursor}
             
         docs = await db["documents"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
         return [
@@ -125,6 +122,12 @@ class DocumentService:
         document = await docs_collection.find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
+        
+        if content_in.expected_version:
+            # Parse expected_version and updated_at to ensure format matches if needed, or string compare
+            db_updated = document.get("updated_at")
+            if db_updated and str(db_updated).split('+')[0] != str(content_in.expected_version).split('+')[0]:
+                raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác.")
             
         await docs_collection.update_one(
             {"_id": document_id},
@@ -136,6 +139,12 @@ class DocumentService:
         )
         await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), str(current_user.id), current_user.full_name)
         logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
+        
+        if hasattr(db_client, 'redis') and db_client.redis:
+            await db_client.redis.delete(f"document:{document_id}")
+            if document.get("slug"):
+                await db_client.redis.delete(f"document:slug:{document.get('slug')}")
+                
         return serialize_document(await docs_collection.find_one({"_id": document_id}))
 
     @staticmethod
@@ -148,6 +157,11 @@ class DocumentService:
         if doc.get("author_id") != str(current_user.id) and current_user.role != "ADMIN":
             raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này.")
             
+        if hasattr(doc_update, "expected_version") and doc_update.expected_version:
+            db_updated = doc.get("updated_at")
+            if db_updated and str(db_updated).split('+')[0] != str(doc_update.expected_version).split('+')[0]:
+                raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác.")
+            
         update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
         if "slug" in update_data and update_data["slug"] != doc.get("slug"):
             existing = await docs_col.find_one({"slug": update_data["slug"]})
@@ -157,6 +171,11 @@ class DocumentService:
         if update_data:
             update_data["updated_at"] = datetime.now(timezone.utc)
             await docs_col.update_one({"_id": document_id}, {"$set": update_data})
+            
+        if hasattr(db_client, 'redis') and db_client.redis:
+            await db_client.redis.delete(f"document:{document_id}")
+            if doc.get("slug"):
+                await db_client.redis.delete(f"document:slug:{doc.get('slug')}")
             
         return serialize_document(await docs_col.find_one({"_id": document_id}))
 
@@ -184,7 +203,7 @@ class DocumentService:
         
         if cursor:
             if sort_field == "created_at":
-                query["_id"] = {"$lt": ObjectId(cursor)}
+                query["_id"] = {"$lt": cursor}
             
         cursor_db = docs_collection.find(query).sort(sort_field, sort_dir).limit(limit)
         documents = await cursor_db.to_list(length=limit)
@@ -200,17 +219,32 @@ class DocumentService:
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy thông tin tài liệu.")
 
+        if document.get("author_id") != user_id and document.get("status") != DocumentStatus.PUBLISHED:
+            if not current_user or current_user.role != "ADMIN":
+                raise HTTPException(status_code=403, detail="Tài liệu đang ở bản nháp.")
+
         if document.get("is_password_protected") and document.get("author_id") != user_id:
             if not password:
                 return {"_id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
+            
+            rl_key = None
+            if hasattr(db_client, 'redis') and db_client.redis:
+                rl_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
+                attempts = await db_client.redis.get(rl_key)
+                if attempts and int(attempts) >= 5:
+                    raise HTTPException(status_code=429, detail="Bạn đã nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau 15 phút.")
+                    
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):
+                if rl_key and hasattr(db_client, 'redis') and db_client.redis:
+                    await db_client.redis.incr(rl_key)
+                    await db_client.redis.expire(rl_key, 900)
                 raise HTTPException(status_code=403, detail="Mật khẩu truy cập không chính xác.")
+                
+            if rl_key and hasattr(db_client, 'redis') and db_client.redis:
+                await db_client.redis.delete(rl_key)
         
         document = serialize_document(document)
-        if document["author_id"] != user_id and document["status"] != DocumentStatus.PUBLISHED:
-            if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="Tài liệu đang ở bản nháp.")
         
         return document
 
@@ -310,15 +344,27 @@ class DocumentService:
         # Truncate content if not purchased
         is_privileged = current_user and current_user.role in ["ADMIN", "MODERATOR"]
         if document.get("is_premium") and not has_purchased and not is_privileged:
-            limit = document.get("preview_pages", 5) * 1000
-            document["content"] = (document.get("content") or "")[:limit]
+            # Fix JSON Corruption
+            raw_content = document.get("content") or ""
+            limit = document.get("preview_pages", 5)
+            try:
+                import json
+                parsed = json.loads(raw_content)
+                if "blocks" in parsed:
+                    parsed["blocks"] = parsed["blocks"][:limit * 5] # Assume 1 page = 5 blocks
+                    document["content"] = json.dumps(parsed)
+                else:
+                    document["content"] = raw_content[:limit * 1000]
+            except:
+                document["content"] = raw_content[:limit * 1000]
+
 
         # Prevent view spam using Redis cache
         should_increment = True
         if user_id == document.get("author_id"):
             should_increment = False
-        elif user_id and hasattr(db_client, 'redis') and db_client.redis:
-            cache_key = f"viewed:{user_id}:{document['_id']}"
+        elif hasattr(db_client, 'redis') and db_client.redis:
+            cache_key = f"viewed:{user_id or 'guest'}:{document['_id']}"
             if await db_client.redis.get(cache_key):
                 should_increment = False
             else:
@@ -368,13 +414,27 @@ class DocumentService:
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         
-        limit = doc.get("preview_pages", 5) * 1000
+        
+        limit = doc.get("preview_pages", 5)
+        raw_content = doc.get("content", "")
+        preview_content = ""
+        try:
+            import json
+            parsed = json.loads(raw_content)
+            if "blocks" in parsed:
+                parsed["blocks"] = parsed["blocks"][:limit * 5]
+                preview_content = json.dumps(parsed)
+            else:
+                preview_content = raw_content[:limit * 1000]
+        except:
+            preview_content = raw_content[:limit * 1000]
+            
         preview_data = {
             "title": doc.get("title"),
             "description": doc.get("description"),
             "cover_url": doc.get("cover_url"),
             "author_id": doc.get("author_id"),
-            "preview_content": doc.get("content", "")[:limit] if doc.get("content") else ""
+            "preview_content": preview_content
         }
         return preview_data
 

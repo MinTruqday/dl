@@ -8,6 +8,8 @@ class UploadService:
 
     @staticmethod
     async def upload_image(file, db=None):
+        if 'svg' in file.content_type.lower() or file.filename.lower().endswith('.svg'):
+            raise HTTPException(status_code=400, detail='Không hỗ trợ định dạng SVG để bảo mật.')
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail='Hệ thống chỉ chấp nhận các tệp tin hình ảnh')
         ext = file.filename.split('.')[-1]
@@ -25,6 +27,8 @@ class UploadService:
     async def upload_document(file, db=None):
         allowed_extensions = ['pdf', 'epub', 'mobi', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt', 'zip', 'csv', 'json', 'md', 'png', 'jpg', 'jpeg', 'webp', 'webm', 'mp3', 'wav', 'm4a', 'ogg', 'mp4']
         ext = file.filename.split('.')[-1].lower()
+        if ext == 'svg' or 'svg' in file.content_type.lower():
+            raise HTTPException(status_code=400, detail='SVG upload is blocked.')
         if ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail=f'Hệ thống không hỗ trợ định dạng .{ext}')
         filename = f'documents/{uuid7().hex}.{ext}'

@@ -60,6 +60,7 @@ class DocumentBase(BaseModel):
 class DocumentContentUpdate(BaseModel):
     content: Any
     content_format: str
+    expected_version: Optional[datetime] = None
 
 class DocumentUpdate(BaseModel):
     title: Optional[str] = None
@@ -75,6 +76,7 @@ class DocumentUpdate(BaseModel):
     publish_at: Optional[datetime] = None
     scheduled_publish_at: Optional[datetime] = None
     is_nsfw: Optional[bool] = None
+    expected_version: Optional[datetime] = None
 
 class DocumentCreate(DocumentBase):
     pass

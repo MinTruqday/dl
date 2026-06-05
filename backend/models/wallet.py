@@ -56,13 +56,8 @@ class Voucher(BaseModel):
 class TipRequest(BaseModel):
     receiver_id: Optional[str] = None
     author_id: Optional[str] = None
-    amount: int
+    amount: int = Field(..., gt=0)
     message: Optional[str] = None
-
-class WithdrawalRequest(BaseModel):
-    amount: int
-    payment_method: str
-    account_info: str
 
 class RedeemVoucherRequest(BaseModel):
     code: str
@@ -82,12 +77,12 @@ class FlashSaleRequest(BaseModel):
     expires_at: str
 
 class TopupRequest(BaseModel):
-    amount: int
+    amount: int = Field(..., gt=0)
     method: str = "payos"
 
 class VoucherCreateRequest(BaseModel):
     code: str
-    amount_dl: int
+    amount_dl: int = Field(..., gt=0)
     expires_at: datetime
 
 class CouponCreateRequest(BaseModel):
