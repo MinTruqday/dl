@@ -49,7 +49,7 @@ class Mem0Manager:
             return
         try:
             self.memory.add(messages, user_id=user_id)
-            logger.info(f"Added memory to Mem0 for user{user_id}")
+            logger.info(f"Mem0: Added memory for user {user_id}")
         except Exception as e:
             logger.error(f"Mem0 add_memory error: {e}")
 
@@ -61,7 +61,7 @@ class Mem0Manager:
             if not results:
                 return ""
             
-            memories = [r["memory"] for r in results if r.get("score", 0) > 0.3]
+            memories = [r["memory"] for r in results if r.get("score", 0) > 0.65]
             if not memories:
                 return ""
                 

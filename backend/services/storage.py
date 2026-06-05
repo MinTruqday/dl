@@ -9,16 +9,15 @@ class StorageService:
     async def create_item(item: StorageItemCreate, owner_id: str, db=None) -> StorageItemInDB:
         db_item = StorageItemInDB(**item.dict(), owner_id=owner_id)
         await db_client.mongodb.get_default_database().storage_items.insert_one(db_item.dict(by_alias=True))
+        if db_item.size and db_item.size > 0:
+            await db_client.mongodb.get_default_database().users.update_one({'_id': owner_id}, {'$inc': {'used_storage': db_item.size}})
         return db_item
 
     @staticmethod
     async def get_storage_quota(owner_id: str, db=None) -> dict:
         user = await db_client.mongodb.get_default_database().users.find_one({'_id': owner_id})
         limit = user.get('storage_limit', 1 * 1024 * 1024 * 1024) if user else 1 * 1024 * 1024 * 1024
-        pipeline = [{'$match': {'owner_id': owner_id, 'is_trashed': False, 'is_folder': False}}, {'$group': {'_id': None, 'total': {'$sum': '$size'}}}]
-        cursor = db_client.mongodb.get_default_database().storage_items.aggregate(pipeline)
-        result = await cursor.to_list(length=1)
-        used = result[0]['total'] if result else 0
+        used = user.get('used_storage', 0) if user else 0
         return {'used': used, 'limit': limit}
 
     @staticmethod
@@ -76,16 +75,53 @@ class StorageService:
         item = await StorageService.get_item(item_id, owner_id)
         if not item:
             return False
+
+        should_delete_physical = False
+        old_version_urls = []
         if not item.is_folder and (not item.is_shortcut) and item.url:
+            ref_count = await db_client.mongodb.get_default_database().storage_items.count_documents({'url': item.url})
+            if ref_count <= 1:
+                should_delete_physical = True
+                if hasattr(item, 'versions') and item.versions:
+                    old_version_urls = [v.get('url') for v in item.versions if v.get('url') and v.get('url') != item.url]
+
+        result = await db_client.mongodb.get_default_database().storage_items.delete_one({'_id': item_id, 'owner_id': owner_id})
+        if result.deleted_count == 0:
+            return False
+
+        if item.size and item.size > 0:
+            await db_client.mongodb.get_default_database().users.update_one({'_id': owner_id}, {'$inc': {'used_storage': -item.size}})
+
+        await db_client.mongodb.get_default_database().storage_items.delete_many({'target_id': item_id})
+
+        if should_delete_physical:
             from core.storage import get_storage_client
             from core.config import settings
             try:
-                async with await get_storage_client() as client:
-                    await client.delete_object(Bucket=settings.MINIO_BUCKET_NAME, Key=item.url)
+                storage_client = await get_storage_client()
+                await storage_client.delete_object(Bucket=settings.MINIO_BUCKET_NAME, Key=item.url)
+                for old_url in old_version_urls:
+                    try:
+                        await storage_client.delete_object(Bucket=settings.MINIO_BUCKET_NAME, Key=old_url)
+                    except Exception:
+                        pass
             except Exception as e:
                 print(f'Error physically deleting file from MinIO: {e}')
-        result = await db_client.mongodb.get_default_database().storage_items.delete_one({'_id': item_id, 'owner_id': owner_id})
-        return result.deleted_count > 0
+
+        return True
+
+    @staticmethod
+    async def _copy_children(source_parent_id: str, new_parent_id: str, owner_id: str):
+        cursor = db_client.mongodb.get_default_database().storage_items.find({'owner_id': owner_id, 'parent_id': source_parent_id, 'is_trashed': False})
+        children = await cursor.to_list(length=None)
+        for child in children:
+            child_dict = StorageItemInDB(**child).dict()
+            child_id_old = child_dict.pop('id', None)
+            child_dict['parent_id'] = new_parent_id
+            new_child = StorageItemInDB(**child_dict)
+            await db_client.mongodb.get_default_database().storage_items.insert_one(new_child.dict(by_alias=True))
+            if new_child.is_folder:
+                await StorageService._copy_children(str(child_id_old), str(new_child.id), owner_id)
 
     @staticmethod
     async def copy_item(item_id: str, owner_id: str, target_parent_id: Optional[str]=None, db=None) -> Optional[StorageItemInDB]:
@@ -96,9 +132,11 @@ class StorageService:
         new_item_dict['name'] = f'{item.name} (Bản sao)'
         if target_parent_id is not None:
             new_item_dict['parent_id'] = target_parent_id
-        del new_item_dict['id']
+        new_item_dict.pop('id', None)
         new_item = StorageItemInDB(**new_item_dict)
         await db_client.mongodb.get_default_database().storage_items.insert_one(new_item.dict(by_alias=True))
+        if item.is_folder:
+            await StorageService._copy_children(item_id, str(new_item.id), owner_id)
         return new_item
 
     @staticmethod
@@ -111,8 +149,13 @@ class StorageService:
         update_op = {'$set': update_dict}
         if item.url:
             old_version = FileVersion(url=item.url, size=item.size, created_at=item.updated_at)
-            update_op['$push'] = {'versions': old_version.dict()}
+            update_op['$push'] = {'versions': {'$each': [old_version.dict()], '$slice': -10}}
+
+        size_diff = size - (item.size or 0)
         await db_client.mongodb.get_default_database().storage_items.update_one({'_id': item_id, 'owner_id': owner_id}, update_op)
+        if size_diff != 0:
+            await db_client.mongodb.get_default_database().users.update_one({'_id': owner_id}, {'$inc': {'used_storage': size_diff}})
+
         return await StorageService.get_item(item_id, owner_id)
 
     @staticmethod
@@ -136,10 +179,12 @@ class StorageService:
         if not item:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail='Tài nguyên không tồn tại hoặc bạn không có quyền chia sẻ.')
-        shared_list = item.get('shared_with', [])
-        if any((isinstance(s, dict) and s.get('user_id') == target_user_id for s in shared_list)):
+        result = await db_client.mongodb.get_default_database().storage_items.update_one(
+            {'_id': item_id, 'shared_with.user_id': {'$ne': target_user_id}},
+            {'$addToSet': {'shared_with': {'user_id': target_user_id, 'role': role}}}
+        )
+        if result.modified_count == 0:
             return {'message': 'Tệp tin đã được chia sẻ cho người dùng này trước đó.'}
-        await db_client.mongodb.get_default_database().storage_items.update_one({'_id': item_id}, {'$push': {'shared_with': {'user_id': target_user_id, 'role': role}}})
         return {'message': f'Chia sẻ tệp tin thành công tới {email} với quyền {role}.'}
 
     @staticmethod

@@ -10,12 +10,15 @@ class AggregatorAgent:
         logger.info(f"Aggregator: Consolidating results for query: {query[:50]}")
         
         try:
-            from src.core.brain import llm
+            from src.workflow.brain import llm
             from langchain_core.messages import HumanMessage
             
             gathered_data = "\n\n".join(consolidated_results)
             if len(gathered_data) > 12000:
-                gathered_data = gathered_data[:12000] + "\n...[Nội dung đã được cắt bớt do quá dài]..."
+                from langchain_text_splitters import RecursiveCharacterTextSplitter
+                splitter = RecursiveCharacterTextSplitter(chunk_size=12000, chunk_overlap=0)
+                chunks = splitter.split_text(gathered_data)
+                gathered_data = chunks[0] + "\n[Nội dung đã được cắt bớt do quá dài]" if chunks else ""
                 
             final_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
 OBJECTIVE: Consolidate data from multiple sub-systems into a single, cohesive, and professional response.

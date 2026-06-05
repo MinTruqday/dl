@@ -1,5 +1,23 @@
+
+import re
+
+def _sanitize_text(text: str) -> bool:
+    pattern = r"(?i)(ignore all previous instructions|bỏ qua mọi lệnh|bypass|jailbreak|bạn đã bị hack|print out|forget the previous)"
+    if re.search(pattern, text):
+        return False
+    return True
+
 import uuid
 from uuid6 import uuid7
+import re
+
+def _sanitize_text(text: str) -> bool:
+    pattern = r"(?i)(ignore all previous instructions|bỏ qua mọi lệnh|bypass|jailbreak|bạn đã bị hack|print out|forget the previous)"
+    if re.search(pattern, text):
+        return False
+    return True
+
+import uuid7
 from typing import List, Dict
 from loguru import logger
 from src.core.config import settings
@@ -49,7 +67,7 @@ class AdvancedSemanticChunker:
             
             for i, chunk_obj in enumerate(chonkie_chunks):
                 chunk_text = chunk_obj.text.strip()
-                if len(chunk_text) < 30: continue
+                if len(chunk_text) < 30 or not _sanitize_text(chunk_text): continue
                     
                 chunk_id = str(uuid7())[:12]
                 chunk_meta = {
@@ -75,23 +93,35 @@ class AdvancedSemanticChunker:
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
-        splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=100)
+        from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
         
-        texts = splitter.split_text(text)
+        headers_to_split_on = [
+            ("#", "Header 1"),
+            ("##", "Header 2"),
+            ("###", "Header 3"),
+        ]
+        try:
+            markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
+            md_docs = markdown_splitter.split_text(text)
+            texts = [doc.page_content for doc in md_docs]
+        except Exception:
+            splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=100)
+            texts = splitter.split_text(text)
+            
         chunks = []
         for i, chunk_text in enumerate(texts):
-            if len(chunk_text.strip()) < 30: continue
+            clean_text = chunk_text.strip()
+            if len(clean_text) < 30 or not _sanitize_text(clean_text): continue
             chunk_id = str(uuid7())[:12]
             
             chunks.append({
                 "id": f"{metadata.get('document_id', 'unknown')}_{chunk_id}",
-                "text": chunk_text.strip(),
+                "text": clean_text,
                 "metadata": {
                     **metadata,
                     "chunk_id": chunk_id,
                     "chunk_index": i,
-                    "chunk_type": "recursive_fallback"
+                    "chunk_type": "markdown_structure"
                 }
             })
             

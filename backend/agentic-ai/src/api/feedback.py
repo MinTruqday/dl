@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.core.config import settings
-from src.models.feedback import FeedbackRequest
+from src.schemas.feedback import FeedbackRequest
 
 router = APIRouter()
 

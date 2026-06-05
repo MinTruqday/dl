@@ -14,7 +14,7 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
-from src.models.plan import PlanStep, ExecutionPlan
+from src.schemas.plan import PlanStep, ExecutionPlan
 
 class AgenticBrain:
     def __init__(self):
@@ -45,8 +45,7 @@ class AgenticBrain:
             format_instructions = self.parser.get_format_instructions()
             messages = [
                 SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
-                HumanMessage(content=f"Recent conversation history:\n{history_str}"),
-                HumanMessage(content=f"Latest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}")
+                HumanMessage(content=prompt)
             ]
             
             response = await self._invoke_llm(messages)

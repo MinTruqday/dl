@@ -12,8 +12,8 @@ from langchain_community.cache import RedisCache
 from redis import Redis
 from loguru import logger
 from src.store.vector_store import vector_store
-from src.ingestion.embedder import embedding_service
-from src.core.retrieval import retrieval_service
+from src.rag.embedder import embedding_service
+from src.rag.retrieval import retrieval_service
 from src.memory.mem0_manager import mem0_manager
 from src.memory.manager import memory_manager
 from src.core.config import settings
@@ -29,11 +29,13 @@ except Exception as e:
 
 try:
     redis_url = settings.REDIS_URI
-    langchain.llm_cache = RedisCache(redis_=Redis.from_url(redis_url))
+    from langchain_community.cache import RedisSemanticCache
+    langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=embedding_service)
+    logger.info("Redis Semantic Cache enabled.")
 except Exception as e:
-    logger.error(f"Redis cache error: {e}")
+    logger.error(f"Redis semantic cache error: {e}")
 
-from src.models.state import AgentState
+from src.workflow.state import AgentState
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
@@ -97,6 +99,14 @@ def preprocess_file(state: AgentState):
         if text: return {"file_data": text}
     return {}
 
+
+def _mask_pii(text: str) -> str:
+    import re
+    text = re.sub(r'\b(0[3|5|7|8|9])+([0-9]{8})\b', '[REDACTED PHONE]', text)
+    text = re.sub(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', '[REDACTED EMAIL]', text)
+    text = re.sub(r'\b(?:\d[ -]*?){13,16}\b', '[REDACTED CC]', text)
+    return text
+
 async def retrieve_db(state: AgentState):
     question = state["question"]
     document_id = state.get("document_id")
@@ -125,21 +135,47 @@ async def retrieve_db(state: AgentState):
         logger.error(f"Retrieval strategy error: {e}")
             
     extracted_docs = []
+    
+    try:
+        from sentence_transformers import CrossEncoder
+        reranker = CrossEncoder(settings.RERANKER_MODEL)
+    except Exception:
+        reranker = None
+        
+    all_raw_docs = []
     for q in list(dict.fromkeys(queries))[:3]: 
         try:
-            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), limit=3)
+            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), limit=10)
             for doc in results:
-                meta = doc.get('metadata', {})
-                title = meta.get('title', 'Tài liệu')
-                file_url = meta.get('file_url', '')
-                extracted_docs.append(f"[Nguồn: {title}] (PDF: {file_url})\n{doc.get('text', '')}")
+                doc['_query'] = q
+                all_raw_docs.append(doc)
         except Exception as e:
             logger.error(f"Vector search error for query '{q}': {e}")
+            
+    if all_raw_docs:
+        if reranker:
+            try:
+                pairs = [[doc['_query'], doc.get('text', '')] for doc in all_raw_docs]
+                scores = reranker.predict(pairs)
+                scored_docs = list(zip(all_raw_docs, scores))
+                scored_docs.sort(key=lambda x: x[1], reverse=True)
+                top_docs = [doc for doc, score in scored_docs[:3]]
+            except Exception as e:
+                logger.error(f"Reranking error in KG: {e}")
+                top_docs = all_raw_docs[:3]
+        else:
+            top_docs = all_raw_docs[:3]
+            
+        for doc in top_docs:
+            meta = doc.get('metadata', {})
+            title = meta.get('title', 'Tài liệu')
+            file_url = meta.get('file_url', '')
+            extracted_docs.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
     
     return {"documents": list(set(extracted_docs)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
-    from src.integrations.search_engine import search_engine_agent
+    from src.tools.search_engine import search_engine_agent
     question = state["question"]
     try:
         results = await search_engine_agent.execute(question)
@@ -209,7 +245,7 @@ async def generate(state: AgentState):
         documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data'][:6000]}")
     
     citation_instruction = "- Use inline source citations when referencing documents, e.g. [1], [2]." if documents else "- Do NOT use any citations as no relevant documents were found."
-    thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think>...</think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
+    thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think></think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
 
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt_text = prompt_registry.get(PromptType.SYNTHESIS).format(

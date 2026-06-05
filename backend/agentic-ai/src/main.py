@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from loguru import logger
-from src.router.inference import router as inference_router
-from src.router.chat import router as chat_router
-from src.router.ingest import router as ingest_router
-from src.router.feedback import router as feedback_router
-from src.router.finetune import router as finetune_router
+from src.api.inference import router as inference_router
+from src.api.chat import router as chat_router
+from src.api.ingest import router as ingest_router
+from src.api.feedback import router as feedback_router
+from src.api.finetune import router as finetune_router
 
 app = FastAPI(title="DocLib Agentic AI")
 

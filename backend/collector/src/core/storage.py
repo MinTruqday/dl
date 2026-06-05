@@ -1,45 +1,55 @@
-from minio import Minio
 import os
 from loguru import logger
-import asyncio
+import aioboto3
+from botocore.exceptions import ClientError
 
 class CollectorStorage:
     def __init__(self):
         endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
-        if endpoint.startswith("http://"):
-            endpoint = endpoint[7:]
-        elif endpoint.startswith("https://"):
-            endpoint = endpoint[8:]
+        if not endpoint.startswith("http"):
+            endpoint = f"http://{endpoint}"
+            
+        self.endpoint = endpoint
+        self.access_key = os.environ.get("MINIO_ACCESS_KEY")
+        self.secret_key = os.environ.get("MINIO_SECRET_KEY")
         
-        self.client = Minio(
-            endpoint,
-            access_key=os.environ.get("MINIO_ACCESS_KEY", "minioadmin"),
-            secret_key=os.environ.get("MINIO_SECRET_KEY", "miniopassword"),
-            secure=False
-        )
+        if not self.access_key or not self.secret_key:
+            raise ValueError("MINIO_ACCESS_KEY or MINIO_SECRET_KEY is not set in environment variables.")
+
         self.bucket = os.environ.get("MINIO_BUCKET_NAME", "doclib-books")
         self.public_url = os.environ.get("MINIO_PUBLIC_URL", "http://localhost:9000")
-        self._ensure_bucket()
+        
+        self.session = aioboto3.Session()
+        self._storage_client = None
 
-    def _ensure_bucket(self):
+    async def get_client(self):
+        if self._storage_client is None:
+            self._storage_client = await self.session.client(
+                "s3",
+                endpoint_url=self.endpoint,
+                aws_access_key_id=self.access_key,
+                aws_secret_access_key=self.secret_key,
+            ).__aenter__()
+        return self._storage_client
+
+    async def _ensure_bucket(self):
         try:
-            if not self.client.bucket_exists(self.bucket):
-                self.client.make_bucket(self.bucket)
-        except Exception as e:
-            logger.error(f"Failed to ensure MinIO bucket exists: {e}")
-            raise e
+            client = await self.get_client()
+            await client.head_bucket(Bucket=self.bucket)
+        except ClientError:
+            logger.info(f"Bucket {self.bucket} not found. Creating...")
+            client = await self.get_client()
+            await client.create_bucket(Bucket=self.bucket)
 
     async def upload_local_file(self, object_name: str, local_file_path: str, content_type: str = "application/pdf") -> str:
         try:
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                None,
-                lambda: self.client.fput_object(
-                    bucket_name=self.bucket,
-                    object_name=object_name,
-                    file_path=local_file_path,
-                    content_type=content_type
-                )
+            await self._ensure_bucket()
+            client = await self.get_client()
+            await client.upload_file(
+                Filename=local_file_path,
+                Bucket=self.bucket,
+                Key=object_name,
+                ExtraArgs={'ContentType': content_type}
             )
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url

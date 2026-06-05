@@ -5,14 +5,18 @@ from typing import Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger
 from src.core.config import settings
-from src.ingestion.chunker import chunker
-from src.ingestion.embedder import embedding_service
+from src.rag.chunker import chunker
+from src.rag.embedder import embedding_service
 from src.store.vector_store import vector_store
 
 class IngestionPipeline:
+    _mongo_client = None
+    
     def __init__(self):
         mongo_uri = settings.MONGODB_URI
-        self._mongo = AsyncIOMotorClient(mongo_uri)
+        if IngestionPipeline._mongo_client is None:
+            IngestionPipeline._mongo_client = AsyncIOMotorClient(mongo_uri, maxPoolSize=100)
+        self._mongo = IngestionPipeline._mongo_client
         self._db = self._mongo.doclib
         minio_endpoint = settings.MINIO_ENDPOINT
         self._minio_base = minio_endpoint.rstrip("/")
@@ -44,7 +48,7 @@ class IngestionPipeline:
         extraction_method = "local"
         chunks = []
 
-        from src.ingestion.document_parser import document_parser
+        from src.rag.document_parser import document_parser
         doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url)
 
         async def get_summary_chunk(first_pages, extract_method):
@@ -58,7 +62,7 @@ class IngestionPipeline:
                 _hf = HuggingFaceEndpoint(repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
                 llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
-                    template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: ...\nTác giả: ...\nNăm xuất bản/Bối cảnh: ...\nTóm tắt nội dung chính: ...\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
+                    template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: (Tên)\nTác giả: (Tác giả)\nNăm xuất bản/Bối cảnh: (Năm/Bối cảnh)\nTóm tắt nội dung chính: (Nội dung)\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
                     input_variables=["text"]
                 )
                 response = await llm_summary.ainvoke(prompt.format(text=first_pages))

@@ -22,6 +22,9 @@ class Settings(BaseModel):
     MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
 
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
+    LANGCHAIN_API_KEY: Optional[str] = os.getenv("LANGCHAIN_API_KEY")
+    LANGCHAIN_TRACING_V2: Optional[str] = os.getenv("LANGCHAIN_TRACING_V2")
+    LANGCHAIN_PROJECT: Optional[str] = os.getenv("LANGCHAIN_PROJECT")
 
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")
@@ -41,3 +44,8 @@ class Settings(BaseModel):
     OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
 
 settings = Settings()
+
+if settings.LANGCHAIN_API_KEY:
+    os.environ["LANGCHAIN_TRACING_V2"] = settings.LANGCHAIN_TRACING_V2 or "true"
+    os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT or "DocLib-Agent"
+    os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY

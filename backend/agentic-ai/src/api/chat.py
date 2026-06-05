@@ -3,10 +3,10 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 import json
 from loguru import logger
-from src.models.chat import ChatRequest
+from src.schemas.chat import ChatRequest
 
-from src.agents.coordinator import coordinator
-from src.core.router import router_agent
+from src.workflow.coordinator import coordinator
+from src.workflow.semantic_router import router_agent
 
 router = APIRouter()
 

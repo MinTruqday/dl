@@ -1,5 +1,5 @@
 from loguru import logger
-from src.core.knowledge_graph import knowledge_agent_app
+from src.workflow.graph import knowledge_agent_app
 
 class KnowledgeAgent:
     def __init__(self):

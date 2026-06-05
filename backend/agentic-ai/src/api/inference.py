@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Any
 from loguru import logger
 from src.core.config import settings
-from src.models.inference import (
+from src.schemas.inference import (
     GenerationRequest, TranslationRequest, SentimentRequest,
     CoverRequest, CodeRequest, GrammarRequest, FlashcardRequest,
     SummarizeRequest, ActionRequest, MindmapRequest, CitationRequest,
@@ -183,7 +183,7 @@ async def grammar_check(req: GrammarRequest):
 @router.post("/tao-the-ghi-nho")
 async def generate_flashcard(req: FlashcardRequest):
     try:
-        prompt = f"OBJECTIVE: Create a high-quality flashcard with a front (question) and back (answer) based on the given text and context. Output ONLY valid JSON: {{'front': '...', 'back': '...'}}.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nCONTEXT: {req.context}\nTEXT: {req.text}"
+        prompt = f"OBJECTIVE: Create a high-quality flashcard with a front (question) and back (answer) based on the given text and context. Output ONLY valid JSON: {{'front': 'question', 'back': 'answer'}}.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nCONTEXT: {req.context}\nTEXT: {req.text}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -220,7 +220,7 @@ async def summarize_text(req: SummarizeRequest):
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(req: GrammarRequest):
     try:
-        from src.ingestion.embedder import embedding_service
+        from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.text[:2000])
@@ -250,7 +250,7 @@ MATCHED SOURCES:
 INSTRUCTIONS:
 1. Evaluate whether the similarity is coincidental or indicates copying.
 2. Calculate a Plagiarism Score (0-100).
-3. Output ONLY valid JSON: {{'plagiarism_score': float, 'status': 'clean|warning|danger', 'message': '...', 'matched_sources': [...]}}
+3. Output ONLY valid JSON: {{'plagiarism_score': float, 'status': 'clean|warning|danger', 'message': 'text', 'matched_sources': []}}
 """
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
@@ -319,7 +319,7 @@ async def get_synonyms(req: GrammarRequest):
 @router.post("/tao-ban-do-tu-duy")
 async def generate_mindmap(req: MindmapRequest):
     try:
-        prompt = f"OBJECTIVE: Analyze the following text and generate a mindmap structure with depth {req.depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"...\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"...\"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {req.text[:2000]}"
+        prompt = f"OBJECTIVE: Analyze the following text and generate a mindmap structure with depth {req.depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"node\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"node\"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {req.text[:2000]}"
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -340,7 +340,7 @@ async def generate_mindmap(req: MindmapRequest):
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(req: CitationRequest):
     try:
-        from src.ingestion.embedder import embedding_service
+        from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.text[:500])
@@ -392,7 +392,7 @@ async def peer_review(req: ReviewRequest):
 @router.post("/tong-hop-da-tai-lieu")
 async def multi_doc_synthesis(req: SynthesisRequest):
     try:
-        from src.ingestion.embedder import embedding_service
+        from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.query)
@@ -420,7 +420,7 @@ async def extract_text(req: dict):
         if not file_url:
             raise HTTPException(status_code=400, detail="Thiếu file_url")
             
-        from src.ingestion.pipeline import ingestion_pipeline
+        from src.rag.ingestion_pipeline import ingestion_pipeline
         extracted_text = await ingestion_pipeline._extract_text(file_url)
         
         return {"extracted_text": extracted_text}

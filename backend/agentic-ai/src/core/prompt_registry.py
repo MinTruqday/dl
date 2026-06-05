@@ -66,7 +66,7 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 RULES:
 - Resolve all ambiguous pronouns and contextual references into explicit entities.
-- Wrap the final reconstructed query inside <query>...</query> XML tags.
+- Wrap the final reconstructed query inside <query></query> XML tags.
 - Provide no additional conversational text.
 
 <example>
@@ -91,8 +91,8 @@ ROUTES:
 - <route>direct</route>: The query is general knowledge, conversational, or does not require retrieving specific internal documents.
 
 RULES:
-- Provide reasoning inside <think>...</think> tags.
-- Output the route inside <route>...</route> tags.
+- Provide reasoning inside <think></think> tags.
+- Output the route inside <route></route> tags.
 
 <example>
 <user_input>What is the process for uploading documents to DocLib?</user_input>
@@ -110,8 +110,8 @@ OBJECTIVE: Decompose the user query into optimal search paths using a Tree of Th
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 RULES:
-1. Analyze if the query is simple (1 path) or complex (multiple paths). Wrap reasoning in <think>...</think>.
-2. Wrap the search strategy in <result>...</result>.
+1. Analyze if the query is simple (1 path) or complex (multiple paths). Wrap reasoning in <think></think>.
+2. Wrap the search strategy in <result></result>.
 - If simple: output exactly <result>SIMPLE</result>.
 - If complex: output the decomposed sub-queries, one per line, inside the <result> tags.
 

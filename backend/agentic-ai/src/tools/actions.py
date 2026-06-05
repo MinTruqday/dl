@@ -1,4 +1,24 @@
 import httpx
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
+    async with httpx.AsyncClient() as client:
+        response = await client.request(method, url, **kwargs)
+        if response.status_code in [429, 500, 502, 503, 504]:
+            response.raise_for_status()
+        return response
+
+
+import jwt
+def _check_admin(token: str) -> bool:
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        role = payload.get("role", "student")
+        return role in ["admin", "teacher"]
+    except:
+        return False
+
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
@@ -16,8 +36,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
@@ -37,8 +56,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -63,12 +81,11 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
+        response = await _make_api_request("POST", 
                 f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma", 
                 json={"code": code}, 
                 headers=headers, 
-                timeout=5
+                timeout=30
             )
         if response.status_code == 200:
             res_data = response.json().get("data", {})
@@ -89,8 +106,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem doanh thu"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
@@ -109,11 +125,10 @@ async def send_virtual_tip(target_user_id: str, amount: int, config: RunnableCon
         return "Lỗi xác thực: Vui lòng đăng nhập để gửi tặng dl"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
+        response = await _make_api_request("POST", 
                 f"{INTERNAL_API_URL}/vi-tien/tien-ung-ho/{target_user_id}?amount={amount}", 
                 headers=headers, 
-                timeout=5
+                timeout=30
             )
         if response.status_code == 200:
             return f"Đã gửi tặng thành công {amount} dl tới người dùng {target_user_id}"
@@ -131,8 +146,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem tài liệu"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -152,10 +166,12 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực"
+    if not _check_admin(token):
+        return "UnauthorizedException: Bạn không có quyền khôi phục tài liệu này."
+
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -175,10 +191,19 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
+    if not _check_admin(token):
+        return "UnauthorizedException: Bạn không có quyền xóa tài liệu này."
+
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.delete(f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=5)
+        import langchain
+        try:
+            if langchain.llm_cache:
+                langchain.llm_cache.clear()
+                logger.info("Cleared Semantic Cache due to document update")
+        except Exception as e:
+            pass
+        response = await _make_api_request("DELETE", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=30)
         if response.status_code == 200:
             return "Đã xóa tài liệu thành công"
         return "Xóa tài liệu thất bại"
@@ -192,10 +217,19 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực"
+    if not _check_admin(token):
+        return "UnauthorizedException: Bạn không có quyền khôi phục tài liệu này."
+
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, timeout=5)
+        import langchain
+        try:
+            if langchain.llm_cache:
+                langchain.llm_cache.clear()
+                logger.info("Cleared Semantic Cache due to document update")
+        except Exception as e:
+            pass
+        response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, timeout=30)
         if response.status_code == 200:
             return "Đã khôi phục tài liệu thành công"
         return "Khôi phục thất bại"
@@ -209,6 +243,9 @@ async def create_document(title: str, content: str, config: RunnableConfig) -> s
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
+    if not _check_admin(token):
+        return "UnauthorizedException: Bạn không có quyền xóa tài liệu này."
+
     headers = {"Authorization": token}
     
     import re
@@ -224,8 +261,7 @@ async def create_document(title: str, content: str, config: RunnableConfig) -> s
         "content_format": "html"
     }
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(f"{INTERNAL_API_URL}/tai-lieu/", json=payload, headers=headers, timeout=10)
+        response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", json=payload, headers=headers, timeout=30)
         if response.status_code == 201:
             data = response.json().get("data", {})
             return f"Đã tạo tài liệu/bài đăng thành công! ID tài liệu: {data.get('_id', data.get('id'))}"
@@ -240,10 +276,12 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực"
+    if not _check_admin(token):
+        return "UnauthorizedException: Bạn không có quyền khôi phục tài liệu này."
+
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, timeout=5)
+        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", {})
             dropoff = data.get("dropoff_data", [])
@@ -260,16 +298,15 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
 
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
-        async with httpx.AsyncClient() as client:
-            res = await client.get(f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": f"Bearer {token}"}, timeout=10)
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": f"Bearer {token}"}, timeout=30)
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
         logger.error(f"Error fetching doc: {e}")
     return ""
 
-from src.router.inference import generate_mindmap, suggest_citations, peer_review, transform_tone
-from src.models.inference import MindmapRequest, CitationRequest, ReviewRequest, ToneRequest
+from src.api.inference import generate_mindmap, suggest_citations, peer_review, transform_tone
+from src.schemas.inference import MindmapRequest, CitationRequest, ReviewRequest, ToneRequest
 
 @tool
 async def agent_generate_mindmap(document_id: str, config: RunnableConfig) -> str:
@@ -277,8 +314,11 @@ async def agent_generate_mindmap(document_id: str, config: RunnableConfig) -> st
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
+    safe_text = splitter.split_text(text)[0] if text else ""
     try:
-        req = MindmapRequest(text=text[:2000], depth=2)
+        req = MindmapRequest(text=safe_text, depth=2)
         data = await generate_mindmap(req)
         import json
         return f"Đã tạo cấu trúc bản đồ tư duy thành công:\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
@@ -292,8 +332,11 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    safe_text = splitter.split_text(text)[0] if text else ""
     try:
-        req = CitationRequest(text=text[:1000], style="APA")
+        req = CitationRequest(text=safe_text, style="APA")
         data = await suggest_citations(req)
         return f"Gợi ý trích dẫn:\n\n{data.get('citations', '')}"
     except Exception as e:
@@ -306,8 +349,11 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
+    safe_text = splitter.split_text(text)[0] if text else ""
     try:
-        req = ReviewRequest(text=text[:2000], criteria=["logic", "rõ ràng"])
+        req = ReviewRequest(text=safe_text, criteria=["logic", "rõ ràng"])
         data = await peer_review(req)
         return f"Báo cáo thẩm định:\n\n{data.get('review_report', '')}"
     except Exception as e:
@@ -320,8 +366,11 @@ async def agent_transform_tone(document_id: str, tone: str, config: RunnableConf
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu."
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    safe_text = splitter.split_text(text)[0] if text else ""
     try:
-        req = ToneRequest(text=text[:1000], tone=tone, expansion=False)
+        req = ToneRequest(text=safe_text, tone=tone, expansion=False)
         data = await transform_tone(req)
         return f"Văn bản đã biến đổi ({tone}):\n\n{data.get('transformed_text', '')}"
     except Exception as e:
@@ -337,12 +386,11 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để nạp tiền"
     headers = {"Authorization": token}
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
+        response = await _make_api_request("POST", 
                 f"{INTERNAL_API_URL}/nap-tien/tao-link", 
                 json={"amount": amount}, 
                 headers=headers, 
-                timeout=10
+                timeout=30
             )
         if response.status_code in [200, 201]:
             data = response.json().get("data", {})
@@ -358,7 +406,10 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
 
 
 
+from src.workflow.map_reduce import agent_summarize_long_document
+
 tools = [
+    agent_summarize_long_document,
     get_user_balance,
     get_transaction_history,
     redeem_voucher,

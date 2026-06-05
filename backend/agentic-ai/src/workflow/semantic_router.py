@@ -59,25 +59,30 @@ USER INPUT: {question}""",
             input_variables=["question"]
         )
         try:
-            from src.core.brain import llm
-            import json
+            from src.workflow.brain import llm
+            from pydantic import BaseModel, Field
             
-            res = await llm.ainvoke(prompt.format(question=query))
-            content = res.content.strip()
+            class RouteDecision(BaseModel):
+                reasoning: str = Field(description="Step-by-step reasoning")
+                route: str = Field(description="The chosen route: 'action', 'knowledge', or 'chat'")
+                answer: str = Field(description="Direct response if route is 'chat', else empty string")
             
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].strip()
-                
             try:
-                decision = json.loads(content)
-            except Exception as e:
-                logger.error(f"RouterAgent JSON parse failed. Error: {e}")
-                decision = {"route": "knowledge"}
-                    
-            route = decision.get("route", "knowledge").lower()
-            answer = decision.get("answer", "")
+                structured_llm = llm.with_structured_output(RouteDecision)
+                res = await structured_llm.ainvoke(prompt.format(question=query))
+                route = res.route.lower()
+                answer = res.answer
+            except Exception:
+                import json
+                import re
+                raw_res = await llm.ainvoke(prompt.format(question=query))
+                match = re.search(r'\{.*\}', raw_res.content, re.DOTALL)
+                if match:
+                    decision = json.loads(match.group(0))
+                else:
+                    decision = {}
+                route = decision.get("route", "knowledge").lower()
+                answer = decision.get("answer", "")
             
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"

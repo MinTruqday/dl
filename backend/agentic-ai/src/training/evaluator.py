@@ -58,7 +58,7 @@ async def llm_judge_score(
     judge_prompt = (
         "You are an expert evaluator. Score the AI response compared to the expected answer.\n"
         "Criteria: accuracy (0-10), completeness (0-10), relevance (0-10).\n"
-        "Return ONLY a JSON object: {\"accuracy\": N, \"completeness\": N, \"relevance\": N, \"explanation\": \"...\"}\n\n"
+        "Return ONLY a JSON object: {\"accuracy\": N, \"completeness\": N, \"relevance\": N, \"explanation\": \"text\"}\n\n"
         f"Question: {instruction}\n\n"
         f"Expected Answer: {expected}\n\n"
         f"AI Response: {actual}\n\n"
