@@ -35,7 +35,6 @@ async def redis_listener():
         async for message in pubsub.listen():
             if message["type"] == "message":
                 document_id = message["data"].decode("utf-8")
-                # Run the cleanup logic asynchronously so it doesn't block
                 asyncio.create_task(cleanup_orphaned_document(document_id))
     except asyncio.CancelledError:
         logger.info("Worker stopped.")

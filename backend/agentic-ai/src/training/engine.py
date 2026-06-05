@@ -120,11 +120,10 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
         train_dataset=dataset,
         val_dataset=None,
         args=training_args,
-        loss_fn=None,  # use default
+        loss_fn=None,
         iteration_callback=Reporter(update_callback, total_iters)
     )
 
-    # MLX currently saves adapter. Merge back to HF.
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
     from mlx_lm.fuse import fuse
     fuse(model=base_model_name, adapter_file=training_args.adapter_file, save_path=merged_path)

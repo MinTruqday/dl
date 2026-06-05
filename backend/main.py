@@ -93,7 +93,6 @@ async def serve_document(file_path: str, token: str = Query(None)):
     if os.path.exists(local_path) and os.path.isfile(local_path):
         return FileResponse(local_path)
         
-    # Check if this is a sensitive document
     if file_path.endswith(('.pdf', '.zip', '.docx')):
         user = None
         if token:
@@ -103,10 +102,8 @@ async def serve_document(file_path: str, token: str = Query(None)):
             except Exception:
                 pass
                 
-        # We need to ensure the user has purchased the document if it's premium
         from core.database import db_client
         db = db_client.mongodb.get_default_database()
-        # Find document by file_url exactly
         doc = await db["documents"].find_one({"file_url": {"$in": [file_path, f"/{file_path}", f"documents/{file_path}"]}})
         if doc and doc.get("is_premium"):
             if not user:

@@ -147,41 +147,62 @@ class DepositService:
             raise HTTPException(status_code=500, detail='Lỗi kiểm tra trạng thái thanh toán')
 
     @staticmethod
-    async def process_success_order(order_code: int, paid_amount: int=None, db=None):
+    async def process_success_order(order_code: int, paid_amount: int=None, db=None, session=None):
+        should_close_session = False
         if db is None:
             db = db_client.mongodb.get_default_database()
+        
+        if session is None:
+            session = await db_client.mongodb.start_session()
+            session.start_transaction()
+            should_close_session = True
+
         orders = db['orders']
         users = db['users']
         transactions = db['transactions']
-        order = await orders.find_one({'order_code': order_code, 'status': 'pending'})
+        
+        # Kiểm tra trước để tránh tốn tài nguyên
+        order = await orders.find_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}})
         if not order:
             logger.warning(f'Order {order_code} not found or already processed')
+            if should_close_session:
+                await session.abort_transaction()
+                await session.end_session()
             return
             
         if paid_amount is not None and paid_amount < order.get('amount', 0):
             logger.warning(f"Order {order_code} paid amount ({paid_amount}) is less than required ({order.get('amount')}).")
+            if should_close_session:
+                await session.abort_transaction()
+                await session.end_session()
             return
             
         dl_to_add = order.get('dl', 0)
         user_id = order['user_id']
-        session = await db_client.mongodb.start_session()
+        
         try:
-            async with session.start_transaction():
-                result = await orders.update_one({'order_code': order_code, 'status': 'pending'}, {'$set': {'status': 'success', 'updated_at': datetime.now(timezone.utc)}}, session=session)
-                if result.modified_count != 1:
+            # Idempotent update
+            result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'success', 'updated_at': datetime.now(timezone.utc)}}, session=session)
+            if result.modified_count != 1:
+                if should_close_session:
                     await session.abort_transaction()
-                    logger.warning(f'Order {order_code} status update failed (already processed?)')
-                    return
-                await users.update_one({'_id': user_id}, {'$inc': {'wallet_balance': dl_to_add}}, session=session)
-                tx = Transaction(user_id=user_id, type=TransactionType.TOPUP, amount=dl_to_add, note=f"Nạp tiền qua payOS: {order['amount']} VNĐ")
-                await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
+                logger.warning(f'Order {order_code} status update failed (already processed?)')
+                return
+            await users.update_one({'_id': user_id}, {'$inc': {'wallet_balance': dl_to_add}}, session=session)
+            tx = Transaction(user_id=user_id, type=TransactionType.TOPUP, amount=dl_to_add, note=f"Nạp tiền qua payOS: {order['amount']} VNĐ")
+            await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
+            
+            if should_close_session:
                 await session.commit_transaction()
-                if getattr(db_client, 'redis', None):
-                    await db_client.redis.publish(f'user_notifications:{user_id}', json.dumps({'title': 'Nạp tiền thành công', 'body': f'Tài khoản vừa được cộng thêm {dl_to_add} dl.'}))
-                logger.info(f'Added {dl_to_add} dl to user {user_id} (Order {order_code}) (atomic)')
+                
+            if getattr(db_client, 'redis', None):
+                await db_client.redis.publish(f'user_notifications:{user_id}', json.dumps({'title': 'Nạp tiền thành công', 'body': f'Tài khoản vừa được cộng thêm {dl_to_add} dl.'}))
+            logger.info(f'Added {dl_to_add} dl to user {user_id} (Order {order_code}) (atomic)')
         except Exception as e:
-            await session.abort_transaction()
+            if should_close_session:
+                await session.abort_transaction()
             logger.exception(f'Order processing failed for {order_code}: {e}')
             raise HTTPException(status_code=500, detail="Lỗi hệ thống tạm thời")
         finally:
-            await session.end_session()
+            if should_close_session:
+                await session.end_session()

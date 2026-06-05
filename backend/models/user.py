@@ -77,6 +77,8 @@ class UserInDB(UserBase):
     is_active: bool = True
     is_kyc_verified: bool = False
     passkeys: List[Dict[str, Any]] = []
+    last_password_change: Optional[datetime] = None
+    last_bank_update: Optional[datetime] = None
 
 class UserResponse(UserBase):
     id: str = Field(alias="_id")

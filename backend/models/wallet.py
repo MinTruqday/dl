@@ -73,7 +73,7 @@ class DocumentPricingRequest(BaseModel):
     is_drm_protected: bool = True
 
 class FlashSaleRequest(BaseModel):
-    price: float
+    price: int
     expires_at: str
 
 class TopupRequest(BaseModel):

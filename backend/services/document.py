@@ -124,7 +124,6 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
         
         if content_in.expected_version:
-            # Parse expected_version and updated_at to ensure format matches if needed, or string compare
             db_updated = document.get("updated_at")
             if db_updated and str(db_updated).split('+')[0] != str(content_in.expected_version).split('+')[0]:
                 raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác.")
@@ -341,17 +340,15 @@ class DocumentService:
                 if purchase:
                     has_purchased = True
                     
-        # Truncate content if not purchased
         is_privileged = current_user and current_user.role in ["ADMIN", "MODERATOR"]
         if document.get("is_premium") and not has_purchased and not is_privileged:
-            # Fix JSON Corruption
             raw_content = document.get("content") or ""
             limit = document.get("preview_pages", 5)
             try:
                 import json
                 parsed = json.loads(raw_content)
                 if "blocks" in parsed:
-                    parsed["blocks"] = parsed["blocks"][:limit * 5] # Assume 1 page = 5 blocks
+                    parsed["blocks"] = parsed["blocks"][:limit * 5]
                     document["content"] = json.dumps(parsed)
                 else:
                     document["content"] = raw_content[:limit * 1000]
@@ -359,7 +356,6 @@ class DocumentService:
                 document["content"] = raw_content[:limit * 1000]
 
 
-        # Prevent view spam using Redis cache
         should_increment = True
         if user_id == document.get("author_id"):
             should_increment = False
