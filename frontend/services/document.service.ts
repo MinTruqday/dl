@@ -104,10 +104,14 @@ export async function getDocumentBySlugAPI(slug: string) {
   return data;
 }
 
-export async function getMyDocumentsAPI(cursor: string = "", limit: number = 50) {
+export async function getMyDocumentsAPI(search: string = "", cursor: string = "", limit: number = 50) {
   const token = getToken();
+  const params = new URLSearchParams({ limit: limit.toString() });
+  if (search) params.append("q", search);
+  if (cursor) params.append("cursor", cursor);
+
   const res = await fetch(
-    `${API_URL}/tai-lieu/ca-nhan?cursor=${cursor}&limit=${limit}`,
+    `${API_URL}/tai-lieu/ca-nhan?${params.toString()}`,
     {
       method: "GET",
       headers: {
@@ -288,8 +292,8 @@ export const unlockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
   const res = await fetch(`${API_URL}/tai-lieu/${id}/mo-khoa`, {
     method: "POST",
-    body: password,
-    headers: { Authorization: "Bearer " + token, "Content-Type": "text/plain" },
+    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Mật mã không chính xác");

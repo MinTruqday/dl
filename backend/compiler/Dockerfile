@@ -2,9 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN sed -i -e 's/Components: main$/Components: main contrib non-free/' /etc/apt/sources.list.d/debian.sources || true && \
-    echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
     fonts-wine ttf-mscorefonts-installer \
     && fc-cache -f -v \

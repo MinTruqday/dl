@@ -6,19 +6,12 @@ from core.response import APIResponse
 from services.user import UserService
 from models.feedback import ResolveReportRequest
 from pydantic import BaseModel
+router = APIRouter(prefix='/bao-cao')
 
-router = APIRouter(prefix="/bao-cao")
+@router.get('/hang-doi', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def get_reports(status: str='pending', cursor: str=None, limit: int=30, skip: int=0, db=Depends(get_db)):
+    return APIResponse(data=await UserService.get_report_queue(status, cursor, limit, skip, db=db), message='Lấy danh sách báo cáo thành công')
 
-@router.get("/hang-doi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def get_reports(status: str = "pending", cursor: str = None, limit: int = 30, skip: int = 0):
-    return APIResponse(
-        data=await UserService.get_report_queue(status, cursor, limit, skip),
-        message="Lấy danh sách báo cáo thành công"
-    )
-
-@router.post("/{report_id}/giai-quyet", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def resolve_report(report_id: str, req: ResolveReportRequest, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await UserService.resolve_report(report_id, req.action, current_user), 
-        message="Xử lý báo cáo thành công"
-    )
+@router.post('/{report_id}/giai-quyet', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
+async def resolve_report(report_id: str, req: ResolveReportRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(data=await UserService.resolve_report(report_id, req.action, current_user, db=db), message='Xử lý báo cáo thành công')

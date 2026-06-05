@@ -24,6 +24,7 @@ import { toggleBookmarkAPI } from "@/services/bookmark.service";
 import Review from "@/components/Review";
 import Comment from "@/components/Comment";
 import Report from "@/components/Report";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function DocumentDetailsPage() {
   const params = useParams();
@@ -363,8 +364,7 @@ export default function DocumentDetailsPage() {
                     const isPrivileged = user && ["admin", "author", "moderator"].includes(user.role?.toLowerCase());
                     const hasPaid = docData.has_purchased || !docData.is_premium;
                     const canSeeFull = isPrivileged || hasPaid;
-                    const previewLimit = docData.preview_pages || 5;
-                    const contentToDisplay = canSeeFull ? docData.content : (docData.content || "").slice(0, previewLimit * 1000);
+                    const contentToDisplay = docData.content || "";
 
                     return (
                       <div className="bg-white border border-zinc-200 min-h-[600px] relative rounded-none">

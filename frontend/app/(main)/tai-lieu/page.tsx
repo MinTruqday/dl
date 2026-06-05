@@ -14,6 +14,7 @@ import {
   toggleStarDocumentAPI
 } from "@/services/document.service";
 import { uploadDocumentAPI } from "@/services/upload.service";
+import { QRCodeSVG } from "qrcode.react";
 import {
   AlertTriangle,
   FileText,
@@ -113,7 +114,7 @@ export default function DocumentsPage() {
       const currentCursor = isLoadMore ? cursor : undefined;
       
       const [docsData, foldersData] = await Promise.all([
-        isAdmin ? getDocumentsAPI(searchQuery, undefined, undefined, undefined, currentFolder?._id, filterStar, filterFormat, undefined, currentCursor || "", 20) : getMyDocumentsAPI(currentCursor || "", 20),
+        isAdmin ? getDocumentsAPI(searchQuery, undefined, undefined, undefined, currentFolder?._id, filterStar, filterFormat, undefined, currentCursor || "", 20) : getMyDocumentsAPI(searchQuery, currentCursor || "", 20),
         !isLoadMore ? getFoldersAPI(currentFolder?._id) : Promise.resolve([])
       ]);
       
@@ -192,19 +193,29 @@ export default function DocumentsPage() {
 
     setIsCreating(true);
     try {
-        const uploadRes = await uploadDocumentAPI(file);
-        const file_url = uploadRes.data.url;
-
         const submissionData = {
           ...newDoc,
-          file_url,
-          content_format: uploadRes.data.extension || file.name.split(".").pop()?.toLowerCase(),
+          file_url: "",
+          content_format: file.name.split(".").pop()?.toLowerCase() || "json",
           folder_id: currentFolder?._id || null,
           slug: newDoc.slug || newDoc.title.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now().toString().slice(-4),
           publish_at: newDoc.status === 'scheduled' ? newDoc.publish_at : null
         };
 
-        await createDocumentAPI(submissionData);
+        const createdDoc = await createDocumentAPI(submissionData);
+        
+        try {
+            const uploadRes = await uploadDocumentAPI(file);
+            const file_url = uploadRes.data.url;
+            await updateDocumentAPI(createdDoc.data._id || createdDoc.data.id, { 
+                file_url, 
+                content_format: uploadRes.data.extension || submissionData.content_format 
+            });
+        } catch (uploadErr: any) {
+            await deleteAuthorDocumentAPI(createdDoc.data._id || createdDoc.data.id).catch(() => {});
+            throw new Error("Lỗi tải lên tệp tin, đã hủy tạo tài liệu");
+        }
+
         showToast("Đã khởi tạo tài liệu thành công", "success");
         setCreateDocModal(false);
         setNewDoc({ 
@@ -543,7 +554,7 @@ export default function DocumentsPage() {
                 <div className="p-6 bg-zinc-50 border border-zinc-200 flex flex-col items-center gap-6 animate-in fade-in rounded-none">
                   <div className="text-[10px] font-semibold text-black break-all select-all text-center uppercase tracking-widest bg-white p-3 border border-zinc-200 w-full rounded-none">{publicUrl}</div>
                   <div className="p-4 bg-white border border-zinc-200 rounded-none">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicUrl)}`} className="w-32 h-32 grayscale" alt="QR Code" />
+                    <QRCodeSVG value={publicUrl} size={128} />
                   </div>
                   <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2"><QrCode className="w-4 h-4"/> Quét mã để tiếp cận</p>
                 </div>

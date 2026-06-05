@@ -117,11 +117,10 @@ export default function DocumentViewer() {
         }
 
         let url = `${API_URL}/tai-lieu/${id}`;
-        if (pwd) url += `?password=${encodeURIComponent(pwd)}`;
+        const headers: any = { Authorization: `Bearer ${token}` };
+        if (pwd) headers["x-document-password"] = pwd;
 
-        const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(url, { headers });
 
         if (res.status === 401) {
           router.push("/dang-nhap");
@@ -417,40 +416,22 @@ export default function DocumentViewer() {
       document?.content ||
       document?.description ||
       "Không có nội dung hiển thị";
-    const charsPerPage = 3000;
-
-    if (readingMode === "double") {
-      const start1 = (currentPage - 1) * charsPerPage * 2;
-      const end1 = start1 + charsPerPage;
-      const start2 = end1;
-      const end2 = start2 + charsPerPage;
-
+    if (readingMode === "double" && document?.content_format !== "zip") {
       return (
-        <div className="grid grid-cols-2 gap-16 w-full">
-          <div className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap">
-            {content.substring(start1, end1)}
-          </div>
-          <div className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap">
-            {content.substring(start2, end2)}
-          </div>
+        <div className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap" style={{ columnCount: 2, columnGap: "4rem" }}>
+          {content}
         </div>
       );
     }
 
-    const start = (currentPage - 1) * charsPerPage;
-    const end = start + charsPerPage;
     return (
       <div className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap">
-        {content.substring(start, end)}
+        {content}
       </div>
     );
   };
 
-  const totalPages =
-    Math.ceil(
-      (document?.content?.length || 0) /
-        (readingMode === "double" ? 6000 : 3000),
-    ) || 1;
+  const totalPages = 1;
 
   if (isLocked) {
     return (

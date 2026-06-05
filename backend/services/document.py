@@ -1,3 +1,9 @@
+from services.editor import EditorService
+from bson import ObjectId
+from core.publication import trigger_document_publish_job
+from services.compilation import CompilationService
+from passlib.context import CryptContext
+from core.storage import upload_file
 from typing import List, Any
 from core.config import settings
 from datetime import datetime, timezone
@@ -29,7 +35,7 @@ def serialize_document(document):
 class DocumentService:
     @staticmethod
     async def get_tags_categories():
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         pipeline_tags = [
             {"$unwind": "$tags"},
@@ -50,7 +56,7 @@ class DocumentService:
 
     @staticmethod
     async def get_trending_documents(limit: int = 5) -> List[dict]:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         cursor = docs_col.find({"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}).sort("views", -1).limit(limit)
         documents = await cursor.to_list(length=limit)
@@ -58,7 +64,7 @@ class DocumentService:
 
     @staticmethod
     async def get_text_search(query: str, limit: int = 10) -> List[dict]:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         cursor = docs_col.find({
             "status": DocumentStatus.PUBLISHED, 
@@ -73,7 +79,7 @@ class DocumentService:
 
     @staticmethod
     async def create_document(doc_in: DocumentCreate, current_user):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
@@ -90,10 +96,9 @@ class DocumentService:
 
     @staticmethod
     async def get_my_documents(current_user, cursor: str = None, limit: int = 50) -> list:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
         if cursor:
-            from bson import ObjectId
             query["_id"] = {"$lt": ObjectId(cursor)}
             
         docs = await db["documents"].find(query).sort("_id", -1).limit(limit).to_list(length=limit)
@@ -115,7 +120,7 @@ class DocumentService:
 
     @staticmethod
     async def update_document_content(document_id: str, content_in: DocumentContentUpdate, current_user):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         document = await docs_collection.find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not document:
@@ -135,7 +140,7 @@ class DocumentService:
 
     @staticmethod
     async def update_document(document_id: str, doc_update, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
@@ -157,7 +162,7 @@ class DocumentService:
 
     @staticmethod
     async def list_documents(limit: int, cursor: str, q: str, sort_by: str, category: str = None, tag: str = None):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         query = {"status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}}
         if q:
@@ -178,7 +183,6 @@ class DocumentService:
         sort_field, sort_dir = sort_mapping.get(sort_by, ("created_at", -1))
         
         if cursor:
-            from bson import ObjectId
             if sort_field == "created_at":
                 query["_id"] = {"$lt": ObjectId(cursor)}
             
@@ -188,7 +192,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_by_id(document_id: str, current_user, password: str = None):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         user_id = str(current_user.id) if current_user else None
         
@@ -199,8 +203,6 @@ class DocumentService:
         if document.get("is_password_protected") and document.get("author_id") != user_id:
             if not password:
                 return {"_id": str(document["_id"]), "title": document.get("title"), "is_password_protected": True}
-            
-            from passlib.context import CryptContext
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):
                 raise HTTPException(status_code=403, detail="Mật khẩu truy cập không chính xác.")
@@ -214,7 +216,7 @@ class DocumentService:
 
     @staticmethod
     async def soft_delete_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         res = await db["documents"].update_one(
             {"_id": document_id, "author_id": str(current_user.id), "is_deleted": {"$ne": True}},
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}}
@@ -227,7 +229,7 @@ class DocumentService:
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         res = await db["documents"].update_one(
             {"_id": document_id, "author_id": str(current_user.id), "is_deleted": True},
             {"$set": {"is_deleted": False, "deleted_at": None}}
@@ -240,7 +242,7 @@ class DocumentService:
 
     @staticmethod
     async def get_trash(current_user) -> list:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs = await db["documents"].find(
             {"author_id": str(current_user.id), "is_deleted": True}
         ).sort("deleted_at", -1).to_list(length=100)
@@ -255,12 +257,10 @@ class DocumentService:
 
     @staticmethod
     async def set_document_password(document_id: str, password: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-            
-        from passlib.context import CryptContext
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await db["documents"].update_one(
@@ -272,7 +272,7 @@ class DocumentService:
 
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         document = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
@@ -290,7 +290,7 @@ class DocumentService:
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_collection = db["documents"]
         document = await docs_collection.find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
         if not document:
@@ -306,9 +306,27 @@ class DocumentService:
                 purchase = await purchases_col.find_one({"user_id": user_id, "item_id": str(document["_id"])})
                 if purchase:
                     has_purchased = True
-        
-        await docs_collection.update_one({"_id": document["_id"]}, {"$inc": {"views": 1}})
-        document["views"] = document.get("views", 0) + 1
+                    
+        # Truncate content if not purchased
+        is_privileged = current_user and current_user.role in ["ADMIN", "MODERATOR"]
+        if document.get("is_premium") and not has_purchased and not is_privileged:
+            limit = document.get("preview_pages", 5) * 1000
+            document["content"] = (document.get("content") or "")[:limit]
+
+        # Prevent view spam using Redis cache
+        should_increment = True
+        if user_id == document.get("author_id"):
+            should_increment = False
+        elif user_id and hasattr(db_client, 'redis') and db_client.redis:
+            cache_key = f"viewed:{user_id}:{document['_id']}"
+            if await db_client.redis.get(cache_key):
+                should_increment = False
+            else:
+                await db_client.redis.setex(cache_key, 600, "1")
+                
+        if should_increment:
+            await docs_collection.update_one({"_id": document["_id"]}, {"$inc": {"views": 1}})
+            document["views"] = document.get("views", 0) + 1
         document = serialize_document(document)
         
         author = await db["users"].find_one({"_id": document["author_id"]})
@@ -324,7 +342,7 @@ class DocumentService:
 
     @staticmethod
     async def export_epub(document_id: str, current_user):
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         document = await db["documents"].find_one({"_id": document_id})
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
@@ -332,12 +350,12 @@ class DocumentService:
         mem_zip = io.BytesIO()
         with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             zf.writestr("mimetype", "application/epub+zip")
-            html_content = f'<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{document.get("title")}</title></head><body><h1>{document.get("title")}</h1>'
-            content = document.get("content") or ""
-            paragraphs = content.split("\n")
-            html_body = "".join([f"<p>{p.strip()}</p>" for p in paragraphs if p.strip()])
-            html_content += html_body + "</body></html>"
-            zf.writestr("OEBPS/content.xhtml", html_content)
+            with zf.open("OEBPS/content.xhtml", "w") as f:
+                f.write(f'<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{document.get("title")}</title></head><body><h1>{document.get("title")}</h1>'.encode("utf-8"))
+                for p in (document.get("content") or "").split("\n"):
+                    if p.strip():
+                        f.write(f"<p>{p.strip()}</p>".encode("utf-8"))
+                f.write(b"</body></html>")
             
         mem_zip.seek(0)
         logger.info(f"Workspace: EPUB exported for {document_id}")
@@ -345,23 +363,24 @@ class DocumentService:
 
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"slug": slug, "status": DocumentStatus.PUBLISHED, "is_deleted": {"$ne": True}})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại.")
         
+        limit = doc.get("preview_pages", 5) * 1000
         preview_data = {
             "title": doc.get("title"),
             "description": doc.get("description"),
             "cover_url": doc.get("cover_url"),
             "author_id": doc.get("author_id"),
-            "preview_content": doc.get("content", "")[:500] if doc.get("content") else ""
+            "preview_content": doc.get("content", "")[:limit] if doc.get("content") else ""
         }
         return preview_data
 
     @staticmethod
     async def get_document_audit_logs(document_id: str, current_user) -> list:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         document = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)}, {"_id": 1})
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
@@ -380,7 +399,7 @@ class DocumentService:
 
     @staticmethod
     async def get_approval_queue(cursor: str = None, limit: int = 30) -> list:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         query = {"status": "processing_publish"}
         if cursor:
             import datetime as dt_mod
@@ -424,7 +443,7 @@ class DocumentService:
 
     @staticmethod
     async def moderate_document(document_id: str, action: str, reason: str, current_moderator) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         status_val = "PUBLISHED" if action == "approve" else "REJECTED"
         
         await db["documents"].update_one(
@@ -433,7 +452,6 @@ class DocumentService:
         )
         
         if action == "approve":
-            from core.publication import trigger_document_publish_job
             doc = await db["documents"].find_one({"_id": document_id})
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("author_id"))
@@ -451,7 +469,7 @@ class DocumentService:
 
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         await db["copyright_disputes"].update_one(
             {"_id": dispute_id}, 
             {"$set": {
@@ -466,12 +484,11 @@ class DocumentService:
 
     @staticmethod
     async def generate_ai_cover(document_id: str, current_user) -> dict:
-        from services.editor import EditorService
         return await EditorService.generate_cover(document_id, "minimalist", current_user)
 
     @staticmethod
     async def get_trending_tags(limit: int = 10) -> List[str]:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         pipeline = [
             {"$unwind": "$tags"},
@@ -484,7 +501,7 @@ class DocumentService:
 
     @staticmethod
     async def get_suggested_documents(limit: int = 5) -> List[dict]:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         docs_col = db["documents"]
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)
         documents = await cursor.to_list(length=limit)
@@ -500,13 +517,10 @@ class DocumentService:
 
     @staticmethod
     async def compile_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
+        if db is None: db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-            
-        from services.compilation import CompilationService
-        from core.storage import upload_file
         
         content = doc.get("content", "")
         pdf_data = await CompilationService.compile_latex_to_pdf(content)

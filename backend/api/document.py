@@ -1,7 +1,11 @@
+from core.database import db_client
+from bson import ObjectId
+from datetime import datetime, timezone
+from fastapi import HTTPException
 from typing import Any, List, Optional
 from core.response import APIResponse
-from api.dependency import get_current_user_optional, get_current_user, require_role
-from fastapi import APIRouter, Depends, Response, Query, status, HTTPException
+from api.dependency import get_db, get_current_user_optional, get_current_user, require_role
+from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, Header, Body
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
@@ -52,7 +56,6 @@ class FolderCreate(BaseModel):
 
 @router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
     db = db_client.mongodb.get_default_database()
     query = {"author_id": str(current_user.id)}
     if parent_id:
@@ -65,8 +68,6 @@ async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = 
 
 @router.post("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
-    from datetime import datetime, timezone
     db = db_client.mongodb.get_default_database()
     folder_doc = {
         "name": req.name,
@@ -81,8 +82,6 @@ async def create_folder(req: FolderCreate, current_user: UserInDB = Depends(get_
 
 @router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
-    from bson import ObjectId
     db = db_client.mongodb.get_default_database()
     folder = await db["workspace_folders"].find_one({"_id": ObjectId(folder_id), "author_id": str(current_user.id)})
     if not folder:
@@ -95,9 +94,9 @@ async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_cur
     return APIResponse(data={"deleted": True}, message="Xóa thư mục thành công")
 
 @router.get("/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_my_documents(cursor: Optional[str] = None, limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user)):
+async def get_my_documents(q: Optional[str] = None, cursor: Optional[str] = None, limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
-        data=await DocumentService.get_my_documents(current_user, cursor, limit),
+        data=await DocumentService.get_my_documents(current_user, q, cursor, limit, db=db),
         message="Lấy danh sách tài liệu cá nhân thành công"
     )
 
@@ -111,17 +110,17 @@ async def get_trash(current_user: UserInDB = Depends(get_current_user)):
 @router.get("/{document_id}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_id(
     document_id: str,
-    password: Optional[str] = Query(None),
+    password: Optional[str] = Header(None, alias="x-document-password"),
     current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
-    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password), message="Lấy thông tin tài liệu thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password, db=db), message="Lấy thông tin tài liệu thành công", status=status.HTTP_200_OK)
 
 @router.get("/d/{slug}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_slug(
     slug: str,
     current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
-    return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user), message="Lấy tài liệu theo đường dẫn thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user, db=db), message="Lấy tài liệu theo đường dẫn thành công", status=status.HTTP_200_OK)
 
 @router.get("/{document_id}/chuong", response_model=APIResponse[Any])
 async def get_document_chapters(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
@@ -231,7 +230,6 @@ async def compile_document(document_id: str, current_user: UserInDB = Depends(ge
 
 @router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def toggle_star_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
     if not doc:
@@ -245,7 +243,6 @@ async def toggle_star_document(document_id: str, current_user: UserInDB = Depend
 
 @router.post("/{document_id}/chuyen-nhuong", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def transfer_document(document_id: str, new_owner_id: str = Query(...), current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
     if not doc:
@@ -253,7 +250,6 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     target = await db["users"].find_one({"_id": new_owner_id})
     if not target:
         raise HTTPException(status_code=404, detail="Không tìm thấy người nhận chuyển nhượng")
-    from datetime import datetime, timezone
     await db["documents"].update_one(
         {"_id": document_id},
         {"$set": {"author_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}}
@@ -262,7 +258,6 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
 
 @router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
 async def get_document_analytics(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
@@ -299,7 +294,6 @@ async def get_document_analytics(document_id: str, current_user: UserInDB = Depe
 
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    from core.database import db_client
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
@@ -326,7 +320,6 @@ async def update_author_note(document_id: str, req: AuthorNoteUpdate, current_us
     doc = await DocumentService.get_document_by_id(document_id, current_user)
     chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
     if req.chapter_index < 0 or req.chapter_index >= len(chapters):
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
     chapters[req.chapter_index]["author_note"] = req.note
     result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
@@ -370,7 +363,6 @@ async def update_chapter_paywall(document_id: str, chapter_index: int, req: Payw
     doc = await DocumentService.get_document_by_id(document_id, current_user)
     chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
     if chapter_index < 0 or chapter_index >= len(chapters):
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
     chapters[chapter_index]["is_premium"] = req.is_premium
     result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
@@ -390,3 +382,7 @@ class BroadcastRequest(BaseModel):
 @router.post("/{document_id}/thong-bao", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def broadcast_notification(document_id: str, req: BroadcastRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(data={"sent": True, "message": req.message}, message="Đã gửi thông báo đến độc giả")
+
+@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
+async def unlock_document(document_id: str, password: str = Body(..., embed=True), current_user: UserInDB = Depends(get_current_user_optional), db=Depends(get_db)):
+    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password, db=db), message="Mở khóa thành công", status=status.HTTP_200_OK)
