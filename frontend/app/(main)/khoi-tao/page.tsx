@@ -117,8 +117,8 @@ export default function CreateDocumentPage() {
             <label className="text-sm font-semibold text-black">Môi trường soạn thảo</label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { id: "json", label: "Notion-style Editor", desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng." },
-                { id: "latex", label: "LaTeX Editor", desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp." },
+                { id: "json", label: "Soạn thảo chuẩn", desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng." },
+                { id: "latex", label: "Soạn thảo LaTeX", desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp." },
               ].map((opt) => (
                 <button
                   key={opt.id}

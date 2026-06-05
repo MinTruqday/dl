@@ -17,7 +17,7 @@ import {
     exportToEpubAPI,
     checkDeepPlagiarismAPI
 } from "@/services/editor.service";
-import { grammarCheckAPI, getSynonymsAPI } from "@/services/inference.service";
+import { grammarCheckAPI, getSynonymsAPI, translateTextAPI } from "@/services/inference.service";
 import { API_URL, getAuthHeaders } from "@/services/authentication.service";
 import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock, Search, FileEdit, List } from "lucide-react";
 import MonacoEditor from "@monaco-editor/react";
@@ -67,6 +67,11 @@ export default function Editor({
   const [isFinding, setIsFinding] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<number>(1);
   const [localText, setLocalText] = useState(initialContent || "");
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
+  const [targetLang, setTargetLang] = useState("Tiếng Anh");
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [originalContentForUndo, setOriginalContentForUndo] = useState<string | null>(null);
+  const latexValueRef = useRef<string>(initialContent || "");
 
   useEffect(() => {
     if (!documentId) return;
@@ -371,6 +376,76 @@ ${latexCode}
     }
   };
 
+  const handleTranslate = async () => {
+    if (!editorRef.current && contentFormat === "json") return;
+    setIsTranslating(true);
+    setShowTranslateModal(false);
+    showToast(`Đang dịch sang ${targetLang}... Vui lòng đợi`, "info");
+    
+    try {
+      if (contentFormat === "latex") {
+         const currentText = latexValueRef.current;
+         const res = await translateTextAPI(currentText, targetLang);
+         const translated = res.translation || res.data?.translation || "";
+         if (translated) {
+             setOriginalContentForUndo(currentText);
+             latexValueRef.current = translated;
+             setLocalText(translated);
+             if (onSave) onSave(translated);
+             showToast("Đã dịch thành công", "success");
+         }
+      } else {
+         if (!editorRef.current) return;
+         const data = await editorRef.current.save();
+         setOriginalContentForUndo(JSON.stringify(data));
+         
+         const newBlocks = [];
+         for (const b of data.blocks) {
+             if (b.data?.text && typeof b.data.text === "string") {
+                 try {
+                     const res = await translateTextAPI(b.data.text, targetLang);
+                     const translated = res.translation || res.data?.translation;
+                     if (translated) {
+                         newBlocks.push({ ...b, data: { ...b.data, text: translated } });
+                     } else {
+                         newBlocks.push(b);
+                     }
+                 } catch (e) {
+                     newBlocks.push(b);
+                 }
+             } else {
+                 newBlocks.push(b);
+             }
+         }
+         
+         data.blocks = newBlocks;
+         await editorRef.current.render(data);
+         if (onSave) onSave(JSON.stringify(data));
+         showToast("Đã dịch thành công", "success");
+      }
+    } catch (err: any) {
+      showToast("Lỗi dịch thuật: " + err.message, "error");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleRevertTranslation = async () => {
+      if (!originalContentForUndo) return;
+      if (contentFormat === "latex") {
+          setLocalText(originalContentForUndo);
+          latexValueRef.current = originalContentForUndo;
+          if (onSave) onSave(originalContentForUndo);
+      } else {
+          if (!editorRef.current) return;
+          const data = JSON.parse(originalContentForUndo);
+          await editorRef.current.render(data);
+          if (onSave) onSave(originalContentForUndo);
+      }
+      setOriginalContentForUndo(null);
+      showToast("Đã hoàn tác về nguyên bản", "success");
+  };
+
   return (
     <div className={`flex flex-col w-full h-full bg-white relative font-sans ${isZenMode ? "fixed inset-0 z-50" : ""}`}>
       {!isZenMode && (
@@ -440,6 +515,14 @@ ${latexCode}
             >
               {isExtractingTags ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
               Tự động tạo thẻ
+            </button>
+            <button
+              onClick={() => originalContentForUndo ? handleRevertTranslation() : setShowTranslateModal(true)}
+              disabled={isTranslating}
+              className={`px-4 py-1.5 border border-zinc-200 text-xs font-bold active:scale-[0.98] flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-lg hover:bg-zinc-50 ${originalContentForUndo ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100" : "text-zinc-600"}`}
+            >
+              {isTranslating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Languages className="w-3.5 h-3.5" />}
+              {originalContentForUndo ? "Nguyên bản" : "Dịch tài liệu"}
             </button>
             <button
               onClick={handlePlagiarismScan}
@@ -533,11 +616,47 @@ ${latexCode}
           </div>
         )}
 
+        {showTranslateModal && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white border border-zinc-200 p-4 shadow-xl rounded-lg">
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-tight">Dịch tài liệu</span>
+                <button onClick={() => setShowTranslateModal(false)} className="text-zinc-400 p-1 hover:bg-zinc-100 rounded"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-zinc-600 font-medium">Sang:</span>
+                <select 
+                  className="px-3 py-1.5 text-xs border border-zinc-200 rounded focus:outline-none bg-white"
+                  value={targetLang}
+                  onChange={(e) => setTargetLang(e.target.value)}
+                >
+                  <option value="Tiếng Anh">Tiếng Anh</option>
+                  <option value="Tiếng Việt">Tiếng Việt</option>
+                  <option value="Tiếng Pháp">Tiếng Pháp</option>
+                  <option value="Tiếng Trung">Tiếng Trung</option>
+                  <option value="Tiếng Nhật">Tiếng Nhật</option>
+                  <option value="Tiếng Hàn">Tiếng Hàn</option>
+                </select>
+                <button 
+                  onClick={handleTranslate}
+                  disabled={isTranslating}
+                  className="px-4 py-1.5 bg-black text-white text-xs font-bold rounded-md hover:bg-zinc-800"
+                >
+                  Bắt đầu dịch
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className={`h-full overflow-y-auto flex justify-center bg-white ${isPreview ? "w-1/2 border-r border-zinc-200" : activeSidebar !== "none" ? "w-2/3" : "w-full"}`}>
           {contentFormat === "latex" ? (
             <LatexEditor 
-              initialContent={initialContent}
-              onChange={onSave}
+              initialContent={localText}
+              onChange={(val) => {
+                 latexValueRef.current = val;
+                 if (onSave) onSave(val);
+              }}
               setReadingTime={setReadingTime}
               setStats={setStats}
               setLastKeystroke={setLastKeystroke}

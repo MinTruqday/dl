@@ -408,6 +408,206 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
 
 from src.workflow.map_reduce import agent_summarize_long_document
 
+@tool
+async def create_document(title: str, description: str, content: str, format: str, config: RunnableConfig) -> str:
+    """Create a new document. 
+    format: must be 'json' (for Standard Editor) or 'latex' (for LaTeX Editor).
+    title: The title of the document.
+    description: A short summary.
+    content: The main body of the document.
+    """
+    token = config.get("configurable", {}).get("token")
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập"
+
+    headers = {"Authorization": token}
+    
+    import re
+    import unicodedata
+    import datetime
+    
+    slug = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
+    slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
+    slug = re.sub(r'[-\s]+', '-', slug)
+    
+    user_name = "Người dùng"
+    try:
+        res_profile = await _make_api_request("GET", f"{INTERNAL_API_URL}/ho-so/ca-nhan", headers=headers, timeout=10)
+        if res_profile.status_code == 200:
+            profile_data = res_profile.json().get("data", {})
+            user_name = profile_data.get("full_name") or profile_data.get("name") or "Người dùng"
+    except Exception as e:
+        logger.warning(f"Could not fetch user profile for author name: {e}")
+
+    if format == 'latex':
+        month_year = datetime.datetime.now().strftime("Tháng %m năm %Y")
+        content = f"""\\documentclass[12pt,a4paper]{{article}}
+\\usepackage{{graphicx}}
+
+\\title{{{title}}}
+\\author{{{user_name}}}
+\\date{{{month_year}}}
+
+\\begin{{document}}
+
+\\maketitle
+
+\\section{{Introduction}}
+
+{content}
+
+\\vspace{{1em}}
+\\noindent\\textit{{Nội dung được tạo bởi DocLib AI}}
+
+\\end{{document}}"""
+    elif format == 'json':
+        import json
+        blocks = []
+        for paragraph in content.split("\n\n"):
+            if paragraph.strip():
+                blocks.append({
+                    "type": "paragraph",
+                    "data": {
+                        "text": paragraph.strip()
+                    }
+                })
+        blocks.append({
+            "type": "paragraph",
+            "data": {
+                "text": "<i>Nội dung được tạo bởi DocLib AI</i>"
+            }
+        })
+        content = json.dumps({
+            "time": int(datetime.datetime.now().timestamp() * 1000),
+            "blocks": blocks,
+            "version": "2.29.1"
+        })
+
+    try:
+        create_payload = {
+            "title": title,
+            "slug": f"{slug}-{int(datetime.datetime.now().timestamp())}",
+            "description": description,
+            "visibility": "private",
+            "content_format": format,
+            "content": content,
+            "status": "draft"
+        }
+        res_create = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", headers=headers, json=create_payload)
+        if res_create.status_code in [200, 201]:
+            new_doc = res_create.json().get("data", {})
+            doc_id = new_doc.get("id") or new_doc.get("_id")
+            if doc_id:
+                return f"Đã tạo tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={doc_id})"
+            return "Tạo tài liệu thành công nhưng không lấy được ID."
+        return f"Lỗi tạo tài liệu mới (Mã lỗi: {res_create.status_code})"
+    except Exception as e:
+        return f"Lỗi hệ thống: {e}"
+
+@tool
+async def translate_document(document_id: str, target_language: str, config: RunnableConfig) -> str:
+    """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document."""
+    token = config.get("configurable", {}).get("token")
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập"
+
+    headers = {"Authorization": token}
+    
+    try:
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        if res.status_code != 200:
+            return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
+        doc_data = res.json().get("data", {})
+    except Exception as e:
+        return f"Lỗi hệ thống khi tải tài liệu: {e}"
+
+    original_content = doc_data.get("content", "")
+    format = doc_data.get("content_format", "json")
+    original_title = doc_data.get("title", "Tài liệu")
+    
+    if not original_content:
+        return "Tài liệu trống, không có nội dung để dịch."
+
+    import json
+    text_to_translate = ""
+    if format == 'json':
+        try:
+            parsed = json.loads(original_content)
+            blocks = parsed.get("blocks", [])
+            texts = []
+            for b in blocks:
+                text_content = b.get("data", {}).get("text", "")
+                if text_content:
+                    texts.append(text_content)
+            text_to_translate = "\n\n".join(texts)
+        except:
+            text_to_translate = str(original_content)
+    else:
+        text_to_translate = original_content
+
+    try:
+        payload = {"text": text_to_translate, "target_lang": target_language}
+        trans_res = await _make_api_request("POST", f"{INTERNAL_API_URL}/suy-luan/dich-thuat", headers=headers, json=payload, timeout=60)
+        if trans_res.status_code != 200:
+            return "Dịch thuật thất bại từ AI service."
+        translated_text = trans_res.json().get("translation", "")
+    except Exception as e:
+        return f"Lỗi trong quá trình dịch thuật: {e}"
+
+    if not translated_text:
+        return "Không có văn bản nào được dịch."
+
+    import datetime
+    new_title = f"[Bản dịch {target_language}] {original_title}"
+    
+    if format == 'json':
+        new_blocks = []
+        for p in translated_text.split("\n\n"):
+            if p.strip():
+                new_blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
+        new_blocks.append({
+            "type": "paragraph",
+            "data": {
+                "text": "<i>Nội dung được tạo bởi DocLib AI</i>"
+            }
+        })
+        new_content = json.dumps({
+            "time": int(datetime.datetime.now().timestamp() * 1000),
+            "blocks": new_blocks,
+            "version": "2.29.1"
+        })
+    else:
+        new_content = translated_text + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}"
+        
+    try:
+        import unicodedata
+        import re
+        import datetime
+        slug = unicodedata.normalize('NFKD', new_title).encode('ascii', 'ignore').decode('ascii')
+        slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
+        slug = re.sub(r'[-\s]+', '-', slug)
+        
+        create_payload = {
+            "title": new_title,
+            "slug": f"{slug}-{int(datetime.datetime.now().timestamp())}",
+            "description": f"Bản dịch sang {target_language} của tài liệu: {original_title}",
+            "visibility": "private",
+            "content_format": format,
+            "content": new_content,
+            "status": "draft"
+        }
+        res_create = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", headers=headers, json=create_payload)
+        if res_create.status_code in [200, 201]:
+            new_doc = res_create.json().get("data", {})
+            new_doc_id = new_doc.get("id") or new_doc.get("_id")
+            if new_doc_id:
+                return f"Đã dịch và tạo tài liệu thành công! Bạn có thể xem bản dịch tại đây: [Xem bản dịch](/sang-tac?tai-lieu={new_doc_id})"
+            return "Đã dịch và lưu thành công nhưng không lấy được ID."
+        return f"Dịch thành công nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
+    except Exception as e:
+        return f"Lỗi tạo tài liệu mới: {e}"
+
+
 tools = [
     agent_summarize_long_document,
     get_user_balance,
@@ -425,7 +625,9 @@ tools = [
     agent_peer_review,
     agent_transform_tone,
     create_document,
-    create_deposit_link
+    create_deposit_link,
+    create_document,
+    translate_document
 ]
 
 llama_model = settings.LLAMA_MODEL
