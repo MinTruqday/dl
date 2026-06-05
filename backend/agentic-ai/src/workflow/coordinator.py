@@ -51,7 +51,6 @@ async def supervisor_node(state: CoordinatorState):
         "CodeInterpreter": "code_interpreter",
         "SearchEngine": "search_engine",
         "ToolDispatcher": "action_agent",
-        "InternalAPI": "action_agent",
         "DraftGenerator": "draft_generator",
         "KnowledgeAgent": "knowledge_agent",
         "ReasoningAgent": "reasoning_agent"
@@ -175,7 +174,6 @@ def router(state: CoordinatorState):
             "CodeInterpreter": "code_interpreter",
             "SearchEngine": "search_engine",
             "ToolDispatcher": "action_agent",
-            "InternalAPI": "action_agent",
             "DraftGenerator": "draft_generator",
             "KnowledgeAgent": "knowledge_agent",
             "ReasoningAgent": "reasoning_agent"

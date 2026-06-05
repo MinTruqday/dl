@@ -54,7 +54,7 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query."""
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
                     return f"[INTERRUPT] Tác vụ {tool_name} yêu cầu xác nhận. Hệ thống đang chờ phê duyệt từ người dùng."
 
-                logger.info(f"InternalAPI: Invoking tool '{tool_name}' with params {tool_params}")
+                logger.info(f"ToolDispatcher: Invoking tool '{tool_name}' with params {tool_params}")
                 
                 try:
                     tool_result = await selected_tool.ainvoke(tool_params, config={"configurable": {"token": token}})
@@ -63,13 +63,13 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query."""
                     from langchain_core.messages import ToolMessage
                     messages.append(res)
                     messages.append(ToolMessage(content=f"Error executing tool: {str(e)}. Please fix the JSON payload and try again.", tool_call_id=tool_call["id"]))
-                    logger.warning(f"InternalAPI: Tool failed, retrying ({attempt+1}/3): {e}")
+                    logger.warning(f"ToolDispatcher: Tool failed, retrying ({attempt+1}/3): {e}")
                     if attempt == 2:
                         return f"Đã xảy ra lỗi khi thực thi thao tác sau 3 lần thử: {str(e)}"
 
                 
         except Exception as e:
-            logger.error(f"InternalAPI: Task execution failed: {e}")
+            logger.error(f"ToolDispatcher: Task execution failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 dispatcher = ToolDispatcher()
