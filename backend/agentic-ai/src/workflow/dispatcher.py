@@ -3,6 +3,8 @@ from loguru import logger
 from src.core.config import settings
 from src.tools.actions import tools, llm
 from langchain_core.messages import SystemMessage, HumanMessage
+from src.core.prompt_registry import prompt_registry, PromptType
+
 
 class ToolDispatcher:
     def __init__(self):
@@ -23,9 +25,7 @@ class ToolDispatcher:
         if not token and action != "public_query":
             return "Lỗi xác thực: Vui lòng đăng nhập để thực hiện thao tác với hệ thống."
             
-        system_prompt = f"""SYSTEM IDENTITY: DocLib Core System - API Tool Dispatcher.
-OBJECTIVE: Analyze the user intent and select the appropriate system tool for execution.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query."""
+        system_prompt = prompt_registry.get(PromptType.TOOL_DISPATCHER)
 
         try:
             messages = [

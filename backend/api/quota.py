@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from api.dependency import get_current_user, require_role
+from api.dependency import get_db, get_current_user, require_role
 from models.user import UserInDB, RoleEnum
 from models.quota import QuotaLimit
 from services.quota import QuotaService

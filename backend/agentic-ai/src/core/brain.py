@@ -7,7 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.core.config import settings
 
-_hf_endpoint = HuggingFaceEndpoint(
+_hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=settings.LLAMA_MODEL,
     huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1

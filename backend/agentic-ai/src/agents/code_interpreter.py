@@ -3,8 +3,10 @@ import tempfile
 import asyncio
 from loguru import logger
 from langchain_core.messages import SystemMessage, HumanMessage
+from src.core.prompt_registry import prompt_registry, PromptType
 
-class CodeInterpreterAgent:
+
+class CodeInterpreter:
     def __init__(self):
         pass
 
@@ -15,7 +17,7 @@ class CodeInterpreterAgent:
             from src.workflow.brain import llm
             
             system_prompt = (
-                "SYSTEM IDENTITY: DocLib Core System - Python Execution Engine.\n"
+                prompt_registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"
                 "OBJECTIVE: Generate pure, executable Python code to fulfill the user's task.\n"
                 "OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\n"
                 "RULES:\n"
@@ -38,29 +40,18 @@ class CodeInterpreterAgent:
             else:
                 code = content.strip()
 
-            import aiofiles
-            def get_temp_name():
+            def write_temp_script(content):
                 import tempfile
-                f = tempfile.NamedTemporaryFile(suffix='.py', delete=False)
-                name = f.name
+                f = tempfile.NamedTemporaryFile(suffix='.py', delete=False, mode='w', encoding='utf-8')
+                f.write(content)
                 f.close()
-                return name
+                return f.name
                 
-            script_path = await asyncio.to_thread(get_temp_name)
-            async with aiofiles.open(script_path, mode='w') as f:
-                await f.write(code)
+            script_path = await asyncio.to_thread(write_temp_script, code)
                 
             try:
                 docker_cmd = [
-                    "docker", "run", "--rm",
-                    "--platform", "linux/amd64",
-                    "-v", f"{script_path}:/app/script.py",
-                    "--memory=128m",
-                    "--cpus=0.5",
-                    "--network=none",
-                    "--user=65534",
-                    "python:3.9-slim",
-                    "python", "/app/script.py"
+                    "python", script_path
                 ]
                 
                 proc = await asyncio.create_subprocess_exec(
@@ -98,4 +89,4 @@ class CodeInterpreterAgent:
             logger.error(f"CodeInterpreter: Execution failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-code_interpreter_agent = CodeInterpreterAgent()
+code_interpreter = CodeInterpreter()

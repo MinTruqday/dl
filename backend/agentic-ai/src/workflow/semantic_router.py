@@ -3,8 +3,10 @@ from langchain_core.prompts import PromptTemplate
 from src.core.config import settings
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
+from src.core.prompt_registry import prompt_registry, PromptType
 
-class RouterAgent:
+
+class SemanticRouter:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
@@ -18,44 +20,7 @@ class RouterAgent:
 
     async def execute(self, query: str) -> dict:
         prompt = PromptTemplate(
-            template="""SYSTEM IDENTITY: DocLib Core System - Primary Router.
-OBJECTIVE: Analyze the user's intent and determine the primary processing route.
-OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
-
-ROUTES AVAILABLE:
-- "action": System operations, data mutations, wallet transactions, document management.
-- "knowledge": Information retrieval, academic questions, document querying, mathematical logic, code generation.
-- "chat": Casual conversation, greetings, pleasantries.
-
-RULES:
-1. Provide a step-by-step reasoning in the "reasoning" field.
-2. Return the chosen route in the "route" field.
-3. If the route is "chat", provide a direct response in the "answer" field. Otherwise, leave it empty.
-4. Output ONLY valid JSON.
-
-<example>
-<user_input>Create a new folder called Study Materials</user_input>
-<output>
-{{
-    "reasoning": "The user is requesting a system operation to create a new directory.",
-    "route": "action",
-    "answer": ""
-}}
-</output>
-</example>
-
-<example>
-<user_input>Summarize chapter 1 of Clean Code for me</user_input>
-<output>
-{{
-    "reasoning": "The user is asking for a document summary, which requires knowledge retrieval and analysis.",
-    "route": "knowledge",
-    "answer": ""
-}}
-</output>
-</example>
-
-USER INPUT: {question}""",
+            template=prompt_registry.get(PromptType.PRIMARY_ROUTER),
             input_variables=["question"]
         )
         try:
@@ -87,11 +52,11 @@ USER INPUT: {question}""",
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
                 
-            logger.info(f"RouterAgent: Classified request as route='{route}'")
+            logger.info(f"SemanticRouter: Classified request as route='{route}'")
             return {"route": route, "answer": answer}
             
         except Exception as e:
-            logger.error(f"RouterAgent: Routing failed: {e}")
+            logger.error(f"SemanticRouter: Routing failed: {e}")
             return {"route": "knowledge", "answer": ""}
 
-router_agent = RouterAgent()
+semantic_router = SemanticRouter()

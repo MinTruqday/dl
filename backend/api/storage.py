@@ -3,7 +3,7 @@ from typing import List, Any, Optional
 from core.response import APIResponse
 from models.user import UserInDB, RoleEnum
 from models.storage import StorageItemCreate, StorageItemUpdate, StorageItemResponse
-from api.dependency import require_role
+from api.dependency import get_db, require_role
 from services.storage import StorageService
 router = APIRouter(prefix='/luu-tru')
 

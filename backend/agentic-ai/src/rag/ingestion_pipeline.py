@@ -59,7 +59,7 @@ class IngestionPipeline:
                 llama_model = settings.LLAMA_MODEL
                 hf_token = settings.HF_TOKEN
                 
-                _hf = HuggingFaceEndpoint(repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
+                _hf = HuggingFaceEndpoint(task="conversational", repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
                 llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
                     template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: (Tên)\nTác giả: (Tác giả)\nNăm xuất bản/Bối cảnh: (Năm/Bối cảnh)\nTóm tắt nội dung chính: (Nội dung)\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
@@ -125,6 +125,7 @@ class IngestionPipeline:
             documents=texts,
             metadatas=metadatas
         )
+        await vector_store.wait_upsert()
 
         await self._db.documents.update_one(
             {"_id": __import__("bson").ObjectId(document_id)},

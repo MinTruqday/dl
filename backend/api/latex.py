@@ -16,7 +16,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Response
 from models.user import UserInDB, RoleEnum
-from api.dependency import require_role
+from api.dependency import get_db, require_role
 from models.latex import CompileRequest, FormatRequest, ExportRequest, AutoSaveRequest
 from services.latex import LatexService
 from core.response import APIResponse

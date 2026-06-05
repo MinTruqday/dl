@@ -3,7 +3,7 @@ from loguru import logger
 from tavily import TavilyClient
 from src.core.config import settings
 
-class SearchEngineAgent:
+class SearchEngine:
     def __init__(self):
         self.api_key_valid = settings.TAVILY_API_KEY is not None and len(settings.TAVILY_API_KEY) > 10
         if self.api_key_valid:
@@ -39,4 +39,4 @@ class SearchEngineAgent:
             logger.error(f"SearchEngine: Tavily search failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-search_engine_agent = SearchEngineAgent()
+search_engine = SearchEngine()

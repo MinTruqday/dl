@@ -1,6 +1,6 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from models.highlight import HighlightCreateRequest, HighlightNoteUpdateRequest, ReadingPreferenceUpdate
 from services.highlight import HighlightService

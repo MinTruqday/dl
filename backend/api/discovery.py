@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from models.user import UserInDB
-from api.dependency import get_current_user_optional
+from api.dependency import get_db, get_current_user_optional
 from core.response import APIResponse
 from services.document import DocumentService
 from services.ai import AIService

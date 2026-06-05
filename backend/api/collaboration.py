@@ -1,6 +1,6 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends
-from api.dependency import require_role
+from api.dependency import get_db, require_role
 from models.user import UserInDB, RoleEnum
 from models.document import CoauthorInviteRequest, CollaborationResponse, TransferOwnershipRequest, UpdateCollaboratorRoleRequest, CollabMemoCreateRequest, UpdateCollabAccessRequest, CreateDraftSnapshotRequest, CollabTaskCreateRequest, UpdateTaskStatusRequest, TaskCommentCreateRequest
 from core.response import APIResponse

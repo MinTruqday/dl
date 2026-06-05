@@ -431,7 +431,7 @@ tools = [
 llama_model = settings.LLAMA_MODEL
 hf_token = settings.HF_TOKEN
 
-_hf_endpoint = HuggingFaceEndpoint(
+_hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
     temperature=0.1

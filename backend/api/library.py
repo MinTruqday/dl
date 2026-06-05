@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from models.library import ReadingListCreate, BookmarkFolderCreate, BookmarkFolderAssign
 from core.response import APIResponse

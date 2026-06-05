@@ -9,6 +9,7 @@ def _sanitize_text(text: str) -> bool:
 
 import uuid
 from uuid6 import uuid7
+
 import re
 
 def _sanitize_text(text: str) -> bool:
@@ -17,7 +18,7 @@ def _sanitize_text(text: str) -> bool:
         return False
     return True
 
-import uuid7
+
 from typing import List, Dict
 from loguru import logger
 from src.core.config import settings

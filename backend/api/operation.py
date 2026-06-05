@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status
 from models.user import UserInDB, RoleEnum
-from api.dependency import require_role, get_current_user
+from api.dependency import get_db, require_role, get_current_user
 from core.response import APIResponse
 from services.operation import OperationService
 from services.withdrawal import WithdrawalService

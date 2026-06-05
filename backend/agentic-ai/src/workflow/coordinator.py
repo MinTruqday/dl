@@ -6,13 +6,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
 from src.workflow.brain import brain
-from src.agents.code_interpreter import code_interpreter_agent
-from src.tools.search_engine import search_engine_agent
+from src.agents.code_interpreter import code_interpreter
+from src.tools.search_engine import search_engine
 from src.workflow.dispatcher import dispatcher
-from src.agents.draft_generator import draft_generator_agent
-from src.agents.knowledge import knowledge_agent
-from src.agents.reasoning import reasoning_agent
-from src.workflow.aggregator import aggregator_agent
+from src.agents.draft_generator import draft_generator
+from src.agents.knowledge import knowledge
+from src.agents.reasoning import reasoning
+from src.workflow.aggregator import aggregator
 from uuid6 import uuid7
 
 from src.workflow.state import CoordinatorState
@@ -50,13 +50,13 @@ async def supervisor_node(state: CoordinatorState):
     route_map = {
         "CodeInterpreter": "code_interpreter",
         "SearchEngine": "search_engine",
-        "ToolDispatcher": "action_agent",
+        "ToolDispatcher": "action",
         "DraftGenerator": "draft_generator",
-        "KnowledgeAgent": "knowledge_agent",
-        "ReasoningAgent": "reasoning_agent"
+        "Knowledge": "knowledge",
+        "Reasoning": "reasoning"
     }
     
-    next_node = route_map.get(agent_name, "action_agent")
+    next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
 async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: str):
@@ -79,12 +79,14 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
             if agent_name == "ToolDispatcher":
                 token = getattr(req, "token", None)
                 res = await tool_callable.execute(task_desc, {}, req.user_id, token)
-            elif agent_name == "KnowledgeAgent":
+            elif agent_name == "Knowledge":
                 res = await tool_callable.execute(req)
             else:
                 res = await tool_callable.execute(task_desc)
             
-            prompt = f"Analyze if this execution result is a technical failure (e.g. stacktrace, obvious unhandled error, markdown formatting failure). Output 'FAIL' if it's broken, otherwise 'PASS'.\n\nResult:\n{res}"
+            from src.core.prompt_registry import prompt_registry, PromptType
+            prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
+            prompt = prompt_template.format(res=res)
             eval_res = await llm.ainvoke(prompt)
             
             if "FAIL" in eval_res.content.upper():
@@ -110,22 +112,22 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
         }
 
 async def code_interpreter_node(state: CoordinatorState):
-    return await execute_tool_node(state, code_interpreter_agent, "CodeInterpreter")
+    return await execute_tool_node(state, code_interpreter, "CodeInterpreter")
 
 async def search_engine_node(state: CoordinatorState):
-    return await execute_tool_node(state, search_engine_agent, "SearchEngine")
+    return await execute_tool_node(state, search_engine, "SearchEngine")
 
 async def action_agent_node(state: CoordinatorState):
     return await execute_tool_node(state, dispatcher, "ToolDispatcher")
 
 async def draft_generator_node(state: CoordinatorState):
-    return await execute_tool_node(state, draft_generator_agent, "DraftGenerator")
+    return await execute_tool_node(state, draft_generator, "DraftGenerator")
 
 async def knowledge_agent_node(state: CoordinatorState):
-    return await execute_tool_node(state, knowledge_agent, "KnowledgeAgent")
+    return await execute_tool_node(state, knowledge, "Knowledge")
 
 async def reasoning_agent_node(state: CoordinatorState):
-    return await execute_tool_node(state, reasoning_agent, "ReasoningAgent")
+    return await execute_tool_node(state, reasoning, "Reasoning")
 
 
 
@@ -173,12 +175,12 @@ def router(state: CoordinatorState):
         route_map = {
             "CodeInterpreter": "code_interpreter",
             "SearchEngine": "search_engine",
-            "ToolDispatcher": "action_agent",
+            "ToolDispatcher": "action",
             "DraftGenerator": "draft_generator",
-            "KnowledgeAgent": "knowledge_agent",
-            "ReasoningAgent": "reasoning_agent"
+            "Knowledge": "knowledge",
+            "Reasoning": "reasoning"
         }
-        target = route_map.get(agent_name, "action_agent")
+        target = route_map.get(agent_name, "action")
         sends.append(Send(target, {"req": state["req"], "steps": steps, "current_step_index": idx}))
     
     return sends
@@ -187,10 +189,10 @@ workflow = StateGraph(CoordinatorState)
 workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("code_interpreter", code_interpreter_node)
 workflow.add_node("search_engine", search_engine_node)
-workflow.add_node("action_agent", action_agent_node)
+workflow.add_node("action", action_agent_node)
 workflow.add_node("draft_generator", draft_generator_node)
-workflow.add_node("knowledge_agent", knowledge_agent_node)
-workflow.add_node("reasoning_agent", reasoning_agent_node)
+workflow.add_node("knowledge", knowledge_agent_node)
+workflow.add_node("reasoning", reasoning_agent_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
 workflow.add_node("aggregator", aggregator_node)
@@ -200,14 +202,15 @@ workflow.set_entry_point("supervisor")
 workflow.add_conditional_edges("supervisor", router, {
     "code_interpreter": "code_interpreter",
     "search_engine": "search_engine",
-    "action_agent": "action_agent",
+    "action": "action",
     "draft_generator": "draft_generator",
-    "knowledge_agent": "knowledge_agent",
-    "reasoning_agent": "reasoning_agent",
-    "aggregator": "aggregator"
+    "knowledge": "knowledge",
+    "reasoning": "reasoning",
+    "aggregator": "aggregator",
+    "trimmer": "trimmer"
 })
 
-for node in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent", "reasoning_agent"]:
+for node in ["code_interpreter", "search_engine", "action", "draft_generator", "knowledge", "reasoning"]:
     workflow.add_edge(node, "trimmer")
 
 workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "sanitizer"})
@@ -217,7 +220,7 @@ workflow.add_edge("aggregator", END)
 memory = MemorySaver()
 coordinator_app = workflow.compile(
     checkpointer=memory,
-    interrupt_before=["action_agent"]
+    interrupt_before=["action"]
 )
 
 class CoordinatorAgent:
@@ -250,7 +253,7 @@ class CoordinatorAgent:
                     steps = state_update.get("steps")
                     if steps and state_update.get("current_step_index") == 0:
                         yield {"type": "plan", "steps": steps}
-                elif node_name in ["code_interpreter", "search_engine", "action_agent", "draft_generator", "knowledge_agent", "reasoning_agent"]:
+                elif node_name in ["code_interpreter", "search_engine", "action", "draft_generator", "knowledge", "reasoning"]:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
                     else:
@@ -262,7 +265,7 @@ class CoordinatorAgent:
         if not final_results:
             final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống."]
             
-        async for chunk in aggregator_agent.aggregate_stream(req.query, final_results):
+        async for chunk in aggregator.aggregate_stream(req.query, final_results):
             yield {"type": "message", "chunk": chunk}
                         
         pass

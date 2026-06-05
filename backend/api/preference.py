@@ -1,6 +1,6 @@
 from typing import Any
 from fastapi import APIRouter, Depends
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from models.highlight import ReadingPreferenceUpdate
 from core.response import APIResponse

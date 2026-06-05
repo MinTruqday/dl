@@ -2,7 +2,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query, Request
 import json
 import asyncio
-from api.dependency import get_current_user, check_quota
+from api.dependency import get_db, get_current_user, check_quota
 from models.user import UserInDB
 from models.ai import AITextRequest, FlashcardRequest, FlashcardReviewRequest, AIMindmapRequest, AICitationRequest, AIToneRequest, AIReviewRequest, AISynthesisRequest
 from core.response import APIResponse

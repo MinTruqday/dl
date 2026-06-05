@@ -3,7 +3,7 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
 from fastapi.responses import StreamingResponse
 from models.user import UserInDB, ProfileUpdate, SettingsUpdate, BrandPageUpdate
-from api.dependency import get_current_user, RateLimiter
+from api.dependency import get_db, get_current_user, RateLimiter
 from services.profile import ProfileService
 from services.setting import SettingService
 from services.identity import IdentityService

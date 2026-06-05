@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from models.user import UserInDB, RoleEnum, UpdateRoleRequest, UpdateStatusRequest, ModerationActionRequest, NoteRequest
-from api.dependency import require_role, get_current_user
+from api.dependency import get_db, require_role, get_current_user
 from core.response import APIResponse
 from services.user import UserService
 from pydantic import BaseModel

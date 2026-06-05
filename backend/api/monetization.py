@@ -1,7 +1,7 @@
 from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends
-from api.dependency import get_current_user, require_role
+from api.dependency import get_db, get_current_user, require_role
 from models.user import UserInDB, RoleEnum
 from models.wallet import PlanCreate, TipRequest, DocumentPricingRequest, FlashSaleRequest
 from services.subscription import SubscriptionService

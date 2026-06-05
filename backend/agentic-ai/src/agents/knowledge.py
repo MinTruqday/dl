@@ -1,14 +1,14 @@
 from loguru import logger
-from src.workflow.graph import knowledge_agent_app
+from src.workflow.graph import knowledge_app
 
-class KnowledgeAgent:
+class Knowledge:
     def __init__(self):
         pass
 
     async def execute(self, req) -> str:
-        logger.info(f"KnowledgeAgent: Retrieving documents for query: {req.query}")
+        logger.info(f"Knowledge: Retrieving documents for query: {req.query}")
         try:
-            result = await knowledge_agent_app.ainvoke({
+            result = await knowledge_app.ainvoke({
                 "question": req.query,
                 "user_id": req.user_id,
                 "document_id": req.document_id,
@@ -20,7 +20,7 @@ class KnowledgeAgent:
             })
             return result.get("generation", "Không tìm thấy thông tin phù hợp trong tài liệu.")
         except Exception as e:
-            logger.error(f"KnowledgeAgent: Retrieval failed: {e}")
+            logger.error(f"Knowledge: Retrieval failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-knowledge_agent = KnowledgeAgent()
+knowledge = Knowledge()

@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Body, Depends, status
 from models.user import UserInDB, RoleEnum
-from api.dependency import get_current_user, require_role
+from api.dependency import get_db, get_current_user, require_role
 from services.publication import PublicationService
 from services.document import DocumentService
 from services.chapter import ChapterService

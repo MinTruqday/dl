@@ -1,6 +1,6 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, Query
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from models.library import PinnedDocumentRequest
 from core.response import APIResponse

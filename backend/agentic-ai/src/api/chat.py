@@ -7,6 +7,8 @@ from src.schemas.chat import ChatRequest
 
 from src.workflow.coordinator import coordinator
 from src.workflow.semantic_router import router_agent
+from src.core.prompt_registry import prompt_registry, PromptType
+
 
 router = APIRouter()
 
@@ -34,7 +36,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                 chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
                 
-                text_prompt = f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}"
+                text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                 if req.image_data:
                     content = [
                         {"type": "text", "text": text_prompt},
@@ -95,7 +97,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
                     
-                    text_prompt = f"SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.\nOBJECTIVE: Provide a concise and friendly response.\nOUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\nUSER QUERY: {req.query}"
+                    text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                     if req.image_data:
                         content = [
                             {"type": "text", "text": text_prompt},

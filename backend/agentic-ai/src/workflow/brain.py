@@ -7,7 +7,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
 from src.core.config import settings
 
-_hf_endpoint = HuggingFaceEndpoint(
+_hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=settings.LLAMA_MODEL,
     huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1
@@ -55,12 +55,12 @@ class AgenticBrain:
             steps = [{"agent": step["agent"], "task": step["task"]} for step in parsed_result.get("steps", [])]
             
             if not steps:
-                steps = [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này."}]
+                steps = [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này."}]
                 
             return steps
             
         except Exception as e:
             logger.error(f"Brain: Plan creation failed: {e}")
-            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
+            return [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
 
 brain = AgenticBrain()

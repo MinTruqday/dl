@@ -6,6 +6,8 @@ from src.core.config import settings
 from src.store.vector_store import vector_store
 
 from langchain_huggingface import ChatHuggingFace
+from src.core.prompt_registry import prompt_registry, PromptType
+
 _hf = HuggingFaceEndpoint(
     repo_id=settings.LLAMA_MODEL,
     huggingfacehub_api_token=settings.HF_TOKEN,
@@ -29,16 +31,7 @@ class RetrievalService:
         logger.info(f"Multi-query retrieval for: {question}")
         
         prompt = PromptTemplate(
-            template="""SYSTEM IDENTITY: DocLib Core System - Multi-Query Generator.
-OBJECTIVE: Generate 3 alternative versions of the given question to improve vector search recall.
-OUTPUT_LANGUAGE: Must exactly match the language of the original question.
-
-RULES:
-- Return ONLY a valid JSON array of strings. Do not include any explanations.
-- Example: ["query 1", "query 2", "query 3"]
-
-ORIGINAL QUESTION: {question}
-OUTPUT:""",
+            template=prompt_registry.get(PromptType.MULTI_QUERY),
             input_variables=["question"]
         )
         

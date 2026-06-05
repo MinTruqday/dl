@@ -18,6 +18,15 @@ app.include_router(finetune_router, tags=["Fine-tuning"])
 async def health_check():
     return {"status": "healthy"}
 
+@app.on_event("startup")
+async def startup_event():
+    from src.store.vector_store import vector_store
+    try:
+        await vector_store.ensure_collection()
+        logger.info("Qdrant collection ensured successfully.")
+    except Exception as e:
+        logger.error(f"Failed to ensure Qdrant collection: {e}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

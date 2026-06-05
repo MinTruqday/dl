@@ -11,8 +11,13 @@ class VectorStore:
     def __init__(self):
         self.client = AsyncQdrantClient(url=settings.QDRANT_URL, limits=httpx.Limits(max_connections=100, max_keepalive_connections=20), timeout=60.0)
         self.collection_name = "doclib"
-        self._upsert_queue = asyncio.Queue()
-        self._worker_task = asyncio.create_task(self._upsert_worker())
+        self._upsert_queue = None
+        self._worker_task = None
+
+    async def _init_worker(self):
+        if self._upsert_queue is None:
+            self._upsert_queue = asyncio.Queue()
+            self._worker_task = asyncio.create_task(self._upsert_worker())
         
     async def _upsert_worker(self):
         while True:
@@ -40,8 +45,13 @@ class VectorStore:
             raise
 
     async def upsert(self, ids: List[str], embeddings: List[List[float]], documents: List[str], metadatas: List[Dict]):
+        await self._init_worker()
         points = [PointStruct(id=ids[i], vector=embeddings[i], payload={"text": documents[i], **metadatas[i]}) for i in range(len(ids))]
         await self._upsert_queue.put({"collection_name": self.collection_name, "points": points})
+
+    async def wait_upsert(self):
+        if self._upsert_queue:
+            await self._upsert_queue.join()
 
     async def query(self, query_vector: List[float], document_id: Optional[str] = None, limit: int = 5) -> List[Dict]:
         query_filter = None

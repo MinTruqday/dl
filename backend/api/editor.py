@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from models.user import UserInDB, RoleEnum
-from api.dependency import require_role, get_current_user
+from api.dependency import get_db, require_role, get_current_user
 from services.editor import EditorService, manager
 from loguru import logger
 from services.document import DocumentService

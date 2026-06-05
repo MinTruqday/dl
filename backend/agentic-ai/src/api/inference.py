@@ -12,6 +12,8 @@ from huggingface_hub import AsyncInferenceClient
 import httpx
 import base64
 import asyncio
+from src.core.prompt_registry import prompt_registry, PromptType
+
 
 router = APIRouter()
 
@@ -45,7 +47,7 @@ async def generate_text(req: GenerationRequest):
 @router.post("/dich-thuat")
 async def translate_text(req: TranslationRequest):
     try:
-        prompt = f"OBJECTIVE: Translate the following text into {req.target_lang}. Output ONLY the translated text.\n\nTEXT:\n{req.text}"
+        prompt = prompt_registry.get(PromptType.TRANSLATE).format(target_lang=req.target_lang, text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) * 3,
@@ -79,7 +81,7 @@ async def analyze_sentiment(req: SentimentRequest):
 
         results = []
         for text in texts_to_analyze[:10]:
-            prompt = f"OBJECTIVE: Analyze the sentiment of the following text. Output ONLY one word: Positive, Negative, or Neutral.\n\nTEXT:\n{text}"
+            prompt = prompt_registry.get(PromptType.SENTIMENT_ANALYSIS).format(text=text)
             sentiment = await _chat_direct(
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=10,
@@ -96,7 +98,7 @@ async def analyze_sentiment(req: SentimentRequest):
         if score > 0.2: mood = "positive"
         elif score < -0.2: mood = "negative"
         
-        summary_prompt = f"OBJECTIVE: Based on the following reviews, write a one-sentence summary of the overall reader sentiment.\nOUTPUT_LANGUAGE: Must match the language of the reviews.\n\nREVIEWS: {'; '.join(texts_to_analyze[:5])}"
+        summary_prompt = prompt_registry.get(PromptType.SENTIMENT_SUMMARY).format(reviews="; ".join(texts_to_analyze[:5]))
         summary = await _chat_direct(
             messages=[{"role": "user", "content": summary_prompt}],
             max_tokens=100
@@ -124,7 +126,7 @@ async def generate_cover(req: CoverRequest):
         if not model_id:
             raise HTTPException(status_code=503, detail="Mô hình tạo ảnh chưa được cấu hình")
             
-        prompt = f"Book cover for {req.title}. Description: {req.description}. Style: {req.style}. High quality, cinematic."
+        prompt = prompt_registry.get(PromptType.IMAGE_COVER).format(title=req.title, description=req.description, style=req.style)
         
         try:
             image_data = await client.text_to_image(prompt, model=model_id)
@@ -149,7 +151,7 @@ async def generate_cover(req: CoverRequest):
 @router.post("/tao-ma-nguon")
 async def generate_code(req: CodeRequest):
     try:
-        prompt = f"OBJECTIVE: Write clean and efficient {req.language} code for the following request. Output ONLY the code block.\n\nREQUEST:\n{req.prompt}"
+        prompt = prompt_registry.get(PromptType.CODE_GENERATION).format(language=req.language, prompt=req.prompt)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -162,7 +164,7 @@ async def generate_code(req: CodeRequest):
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(req: GrammarRequest):
     try:
-        prompt = f"OBJECTIVE: Check and correct all spelling and grammar errors in the following text. Output ONLY the corrected text.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT:\n{req.text}"
+        prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) + 200,
@@ -183,7 +185,7 @@ async def grammar_check(req: GrammarRequest):
 @router.post("/tao-the-ghi-nho")
 async def generate_flashcard(req: FlashcardRequest):
     try:
-        prompt = f"OBJECTIVE: Create a high-quality flashcard with a front (question) and back (answer) based on the given text and context. Output ONLY valid JSON: {{'front': 'question', 'back': 'answer'}}.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nCONTEXT: {req.context}\nTEXT: {req.text}"
+        prompt = prompt_registry.get(PromptType.FLASHCARD_GENERATOR).format(context=req.context, text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -207,7 +209,7 @@ async def generate_flashcard(req: FlashcardRequest):
 @router.post("/tom-tat")
 async def summarize_text(req: SummarizeRequest):
     try:
-        prompt = f"OBJECTIVE: Provide a concise summary of the following content in {req.language}.\n\nTEXT:\n{req.text}"
+        prompt = prompt_registry.get(PromptType.SUMMARIZE).format(language=req.language, text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -237,21 +239,7 @@ async def check_plagiarism(req: GrammarRequest):
             }
         
         context = "\n".join([f"- Match (Score: {m['score']:.2f}): {m['text'][:200]}" for m in significant_matches])
-        prompt = f"""SYSTEM IDENTITY: DocLib Core System - Plagiarism Detection Engine.
-OBJECTIVE: Evaluate whether the similarity between the submitted text and matched sources indicates plagiarism.
-OUTPUT_LANGUAGE: Must match the language of the submitted text.
-
-SUBMITTED TEXT:
-{req.text[:1000]}
-
-MATCHED SOURCES:
-{context}
-
-INSTRUCTIONS:
-1. Evaluate whether the similarity is coincidental or indicates copying.
-2. Calculate a Plagiarism Score (0-100).
-3. Output ONLY valid JSON: {{'plagiarism_score': float, 'status': 'clean|warning|danger', 'message': 'text', 'matched_sources': []}}
-"""
+        prompt = prompt_registry.get(PromptType.PLAGIARISM_DETECTION).format(text=req.text[:1000], context=context)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -282,11 +270,11 @@ INSTRUCTIONS:
 async def unified_action(req: ActionRequest):
     try:
         prompts = {
-            "autocomplete": f"OBJECTIVE: Write one natural continuation sentence for the following text without repeating existing content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}",
-            "grammar": f"OBJECTIVE: Fix all grammar and spelling errors. Output ONLY the corrected text. OUTPUT_LANGUAGE: Must match the input text language.\nTEXT: {req.text}",
-            "summarize": f"OBJECTIVE: Provide a concise summary. OUTPUT_LANGUAGE: Must match the input text language.\nTEXT: {req.text}",
-            "ai_suggestions": f"OBJECTIVE: Based on the context, suggest 3 development directions for this content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}",
-            "check_logic": f"OBJECTIVE: Check for logical contradictions, plot holes, or character inconsistencies. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {req.context}\nTEXT: {req.text}"
+            "autocomplete": prompt_registry.get(PromptType.AUTOCOMPLETE).format(context=req.context, text=req.text),
+            "grammar": prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text),
+            "summarize": prompt_registry.get(PromptType.SUMMARIZE).format(language="the input language", text=req.text),
+            "ai_suggestions": prompt_registry.get(PromptType.AI_SUGGESTIONS).format(context=req.context, text=req.text),
+            "check_logic": prompt_registry.get(PromptType.CHECK_LOGIC).format(context=req.context, text=req.text)
         }
         
         prompt = prompts.get(req.action)
@@ -306,7 +294,7 @@ async def unified_action(req: ActionRequest):
 @router.post("/tu-dong-nghia")
 async def get_synonyms(req: GrammarRequest):
     try:
-        prompt = f"OBJECTIVE: Find synonyms for the following word or phrase. Output ONLY a comma-separated list.\nOUTPUT_LANGUAGE: Must match the language of the input.\n\nINPUT: {req.text}"
+        prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
@@ -319,7 +307,7 @@ async def get_synonyms(req: GrammarRequest):
 @router.post("/tao-ban-do-tu-duy")
 async def generate_mindmap(req: MindmapRequest):
     try:
-        prompt = f"OBJECTIVE: Analyze the following text and generate a mindmap structure with depth {req.depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{\"nodes\": [{{\"id\": \"root\", \"label\": \"node\"}}], \"edges\": [{{\"from\": \"root\", \"to\": \"node\"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {req.text[:2000]}"
+        prompt = prompt_registry.get(PromptType.MINDMAP).format(depth=req.depth, text=req.text[:2000])
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -351,7 +339,7 @@ async def suggest_citations(req: CitationRequest):
             meta = m.get("metadata", {})
             sources.append(f"Document: {meta.get('title', 'N/A')}, Author: {meta.get('author', 'N/A')}. Content: {m['text'][:200]}")
             
-        prompt = f"OBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {req.style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {req.text}\n\nREFERENCE SOURCES:\n" + "\n".join(sources)
+        prompt = prompt_registry.get(PromptType.SUGGEST_CITATIONS).format(style=req.style, text=req.text, sources="\\n".join(sources))
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
@@ -365,7 +353,7 @@ async def suggest_citations(req: CitationRequest):
 async def transform_tone(req: ToneRequest):
     try:
         action = "expand and transform" if req.expansion else "transform"
-        prompt = f"OBJECTIVE: {action.capitalize()} the following text to match the tone '{req.tone}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {req.text}"
+        prompt = prompt_registry.get(PromptType.TRANSFORM_TONE).format(action=action.capitalize(), tone=req.tone, text=req.text)
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000 if req.expansion else 500,
@@ -379,7 +367,7 @@ async def transform_tone(req: ToneRequest):
 async def peer_review(req: ReviewRequest):
     try:
         criteria_str = ", ".join(req.criteria) if req.criteria else "logic, clarity, persuasiveness"
-        prompt = f"SYSTEM IDENTITY: DocLib Core System - Content Review Engine.\nOBJECTIVE: Evaluate the following text based on these criteria: {criteria_str}. Provide a detailed report with Strengths, Weaknesses, and Improvement Suggestions.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {req.text[:3000]}"
+        prompt = prompt_registry.get(PromptType.CONTENT_REVIEW).format(criteria_str=criteria_str, text=req.text[:3000])
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
@@ -403,7 +391,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
             for m in matches:
                 all_context.append(f"[Từ tài liệu {doc_id}]: {m['text']}")
                 
-        prompt = f"OBJECTIVE: Synthesize information from multiple documents to answer the query: '{req.query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n" + "\n".join(all_context[:10])
+        prompt = prompt_registry.get(PromptType.MULTI_DOC_SYNTHESIS).format(query=req.query, context="\\n".join(all_context[:10]))
         result = await _chat_direct(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,

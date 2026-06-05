@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Request
 from core.response import APIResponse
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from models.wallet import TopupRequest
 from services.deposit import DepositService

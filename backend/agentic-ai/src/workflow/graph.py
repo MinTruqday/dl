@@ -145,7 +145,7 @@ async def retrieve_db(state: AgentState):
     all_raw_docs = []
     for q in list(dict.fromkeys(queries))[:3]: 
         try:
-            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), limit=10)
+            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), document_id=document_id, limit=10)
             for doc in results:
                 doc['_query'] = q
                 all_raw_docs.append(doc)
@@ -175,10 +175,10 @@ async def retrieve_db(state: AgentState):
     return {"documents": list(set(extracted_docs)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
-    from src.tools.search_engine import search_engine_agent
+    from src.tools.search_engine import search_engine
     question = state["question"]
     try:
-        results = await search_engine_agent.execute(question)
+        results = await search_engine.execute(question)
         return {"documents": [f"[Nguồn Internet]\n{results}"], "current_source": "internet"}
     except Exception as e:
         logger.error(f"Web search error: {e}")
@@ -278,9 +278,9 @@ async def grade_generation(state: AgentState):
         return {"hallucination_pass": "yes"}
         
     try:
-        from src.agents.reasoning import reasoning_agent
+        from src.agents.reasoning import reasoning
         docs_list = [{"text": d, "metadata": {"title": "Nguồn"}} for d in documents]
-        eval_res = await reasoning_agent.evaluate_quality(state["question"], generation, docs_list)
+        eval_res = await reasoning.evaluate_quality(state["question"], generation, docs_list)
         
         is_hallucination = False
         if eval_res.get("should_retry") or eval_res.get("grounding", 1.0) < 0.6:
@@ -330,4 +330,4 @@ workflow.add_conditional_edges("grade_documents", decide_after_grade, {"generate
 workflow.add_edge("transform_query", "retrieve_db")
 workflow.add_conditional_edges("generate", lambda s: "grade_generation" if s.get("use_smart") else END, {"grade_generation": "grade_generation", END: END})
 workflow.add_conditional_edges("grade_generation", check_hallucination, {"transform_query": "transform_query", END: END})
-knowledge_agent_app = workflow.compile()
+knowledge_app = workflow.compile()

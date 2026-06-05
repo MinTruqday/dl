@@ -6,10 +6,12 @@ import boto3
 import uuid
 from uuid6 import uuid7
 import asyncio
+from src.core.prompt_registry import prompt_registry, PromptType
 
-class DraftGeneratorAgent:
+
+class DraftGenerator:
     def __init__(self):
-        _hf_endpoint = HuggingFaceEndpoint(
+        _hf_endpoint = HuggingFaceEndpoint(task="conversational", 
             repo_id=settings.LLAMA_MODEL,
             huggingfacehub_api_token=settings.HF_TOKEN,
             temperature=0.3
@@ -19,14 +21,7 @@ class DraftGeneratorAgent:
     async def execute(self, task_description: str, format_type: str = "markdown") -> str:
         logger.info(f"DraftGenerator: Generating draft in format={format_type}")
         
-        system_prompt = f"""SYSTEM IDENTITY: DocLib Core System - Document Generation Engine.
-OBJECTIVE: Generate a comprehensive and professional document draft in {format_type} format.
-OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
-
-RULES:
-- Maintain a highly professional, academic, or formal tone depending on the context.
-- Ensure the output strictly conforms to the requested format ({format_type}).
-- If LaTeX is requested, return a fully compilable document structure."""
+        system_prompt = prompt_registry.get(PromptType.DOCUMENT_GENERATION).format(format_type=format_type)
         
         messages = [
             SystemMessage(content=system_prompt),
@@ -56,4 +51,4 @@ RULES:
             logger.error(f"DraftGenerator: Failed to generate draft: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-draft_generator_agent = DraftGeneratorAgent()
+draft_generator = DraftGenerator()

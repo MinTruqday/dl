@@ -1,6 +1,6 @@
 from typing import Any
 from fastapi import APIRouter, Depends
-from api.dependency import require_role, get_current_user
+from api.dependency import get_db, require_role, get_current_user
 from models.user import UserInDB, RoleEnum
 from models.document import ModerateDocumentRequest
 from core.response import APIResponse

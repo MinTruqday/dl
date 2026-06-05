@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status, Query
 from core.response import APIResponse
-from api.dependency import get_current_user
+from api.dependency import get_db, get_current_user
 from models.user import UserInDB
 from services.bookmark import BookmarkService
 from pydantic import BaseModel

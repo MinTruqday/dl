@@ -2,7 +2,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from models.user import UserInDB, RoleEnum
-from api.dependency import require_role
+from api.dependency import get_db, require_role
 from services.upload import UploadService
 router = APIRouter(prefix='/tai-len')
 from fastapi import HTTPException
