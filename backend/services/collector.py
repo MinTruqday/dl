@@ -45,19 +45,14 @@ class CollectorService:
             raise HTTPException(status_code=503, detail='Dịch vụ hàng đợi RabbitMQ hiện không sẵn sàng.')
         try:
             channel = await db_client.rabbitmq.channel()
-            queues = ['collect_list_queue', 'collect_detail_queue', 'download_processor_queue', 'nxbgd_queue', 'nxbst_queue', 'anna_archive_queue', 'ctan_queue']
-            for q_name in queues:
-                try:
-                    queue = await channel.declare_queue(q_name, durable=True)
-                    await queue.purge()
-                except Exception as ex:
-                    logger.warning(f'Could not purge queue {q_name}: {ex}')
+            # Stop logic shouldn't purge data to avoid data loss.
+            # We preserve existing queue messages to implement Graceful Shutdown.
             await channel.close()
-            logger.info('Purged all collector queues')
-            return {'status': 'success', 'message': 'Đã dừng và làm sạch toàn bộ hàng đợi thu thập.'}
+            logger.info('Collection paused. Existing queue messages preserved.')
+            return {'status': 'success', 'message': 'Đã gửi tín hiệu dừng thu thập (giữ nguyên dữ liệu hàng đợi chưa xử lý).'}
         except Exception as e:
-            logger.error(f'Failed to purge queues: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi khi làm sạch hàng đợi.')
+            logger.error(f'Failed to pause collection: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi khi gửi lệnh dừng thu thập.')
 
     @staticmethod
     async def get_collector_stats(db=None):

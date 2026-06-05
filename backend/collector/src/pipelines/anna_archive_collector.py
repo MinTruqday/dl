@@ -8,19 +8,13 @@ import re
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
 from loguru import logger
+import tempfile
 
 from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-]
+from src.core.browser import get_playwright_browser, get_stealth_context, download_file_with_retry
 
 class AnnaArchiveCollector:
     @staticmethod
@@ -32,8 +26,8 @@ class AnnaArchiveCollector:
         encoded = urllib.parse.quote(search_query)
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'])
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
             
@@ -123,15 +117,15 @@ class AnnaArchiveCollector:
                         return context
         except Exception as e:
             logger.error(f"FlareSolverr API error: {e}")
-        return await browser.new_context(user_agent=random.choice(USER_AGENTS))
+        return await get_stealth_context(browser)
 
     @staticmethod
     async def run_detail_collector(document_url: str):
         logger.info(f"[Detail Collector] Anna: {document_url}")
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'])
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
             
@@ -170,8 +164,8 @@ class AnnaArchiveCollector:
                         payload["cover_url"] = cover_src
                 
 
-                slow_link_xpath = 'xpath=//*[@id="md5-panel-downloads"]/div[2]/ul/li[1]/a'
-                slow_link_el = await page.query_selector(slow_link_xpath)
+                slow_link_css = 'a:has-text("Slow"), #md5-panel-downloads a[href*="/download"]'
+                slow_link_el = await page.query_selector(slow_link_css)
 
                 if slow_link_el:
                     slow_href = await slow_link_el.get_attribute("href")
@@ -193,19 +187,19 @@ class AnnaArchiveCollector:
                     
                     try:
                         download_link = None
-
-                        xpath_selector = "xpath=/html/body/main/div/p[3]/a"
+                        js_link_css = 'main p a[href*="http"]'
                         
-
                         logger.info("Playwright natively polling for JS countdown to finish")
                         for _ in range(60):
                             try:
-                                link_el = await page.query_selector(xpath_selector)
-                                if link_el:
+                                link_els = await page.query_selector_all(js_link_css)
+                                for link_el in link_els:
                                     href = await link_el.get_attribute("href")
                                     if href and href.startswith("http") and "annas-archive" not in href:
                                         download_link = href
                                         break
+                                if download_link:
+                                    break
                             except Exception as parse_err:
                                 logger.warning(f"Error parsing download link: {parse_err}")
                                 
@@ -226,11 +220,16 @@ class AnnaArchiveCollector:
                             logger.warning(f"Timeout waiting for JS Countdown link natively: {slow_url}")
                     except Exception as e:
                         logger.error(f"Failed to wait for download link: {e}")
-                else:
+                if not slow_link_el:
                     logger.warning(f"Slow download button not found on detail page: {document_url}")
-                
+                    await page.screenshot(path="/app/logs/anna_error.png", full_page=True)
+                    links = await page.evaluate("Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)")
+                    logger.warning(f"Available buttons/links text: {links}")
+                    await page.close()
+                    raise Exception("Slow download button not found")
             except Exception as e:
                 logger.error(f"[Anna Detail CCollector Error]: {e}")
+                raise
             finally:
                 await browser.close()
 
@@ -249,29 +248,22 @@ class AnnaArchiveCollector:
         ext = payload.get("content_format", "pdf")
         filename = payload.get("filename") or f"{slug}.{ext}"
         
-        import tempfile
         minio_url = None
         
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=300) as resp:
-                    if resp.status == 200:
-                        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                            while True:
-                                chunk = await resp.content.read(65536)
-                                if not chunk:
-                                    break
-                                tmp_file.write(chunk)
-                            target_local = tmp_file.name
-                                
-                        logger.info(f"[Anna Stream] Copied to temp file {target_local}")
-                        
-                        minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
-                        os.unlink(target_local)
-                    else:
-                        logger.error(f"[Anna Download Error] Cannot get. Code: {resp.status} - {url}")
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                target_local = tmp_file.name
+                
+            success = await download_file_with_retry(url, target_local)
+            if success:
+                logger.info(f"[Anna Stream] Downloaded to temp file {target_local}")
+                minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
+                
+            if os.path.exists(target_local):
+                os.unlink(target_local)
         except Exception as e:
-            logger.error(f"[Aiohttp Stream Error]: {e}")
+            logger.error(f"[Download Pipeline Error]: {e}")
+            raise
             
         if minio_url:
             logger.info(f"[Success] Document saved to MinIO: {minio_url}")

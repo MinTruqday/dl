@@ -15,14 +15,7 @@ from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-]
+from src.core.browser import get_playwright_browser, get_stealth_context, download_file_with_retry
 
 class CTANCollector:
     @staticmethod
@@ -30,8 +23,8 @@ class CTANCollector:
         logger.info(f"Starting CTAN Alphabetical List Collector")
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
             
@@ -43,15 +36,15 @@ class CTANCollector:
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
                     
-                    list_xpath = 'xpath=/html/body/div[2]/main/div[1]/a'
+                    list_css = 'main a[href*="/pkg/"]'
                     
                     try:
-                        await page.wait_for_selector('xpath=/html/body/div[2]/main/div[1]', timeout=15000)
+                        await page.wait_for_selector('main', timeout=15000)
                     except Exception as e:
                         logger.warning(f"Timeout or empty container for letter {letter}: {e}")
                         continue
                     
-                    book_nodes = await page.query_selector_all(list_xpath)
+                    book_nodes = await page.query_selector_all(list_css)
                     book_urls = set()
                     
                     for node in book_nodes:
@@ -68,6 +61,7 @@ class CTANCollector:
                             
             except Exception as e:
                 logger.error(f"[CTAN List Collector Error]: {e}")
+                raise
             finally:
                 await browser.close()
 
@@ -76,8 +70,8 @@ class CTANCollector:
         logger.info(f"[Detail Collector] CTAN: {book_url}")
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
             
@@ -88,17 +82,14 @@ class CTANCollector:
                 payload = {}
                 payload["source_url"] = book_url
                 
-                title_xpath = 'xpath=/html/body/div[2]/main/h1'
-                title_el = await page.query_selector(title_xpath)
+                title_el = await page.query_selector('main h1')
                 raw_title = await title_el.inner_text() if title_el else book_url.split("/")[-1]
                 payload["title"] = raw_title.strip()
                 
-                desc_xpath = 'xpath=/html/body/div[2]/main/div[1]/p[2]'
-                desc_el = await page.query_selector(desc_xpath)
+                desc_el = await page.query_selector('main p')
                 payload["description"] = await desc_el.inner_text() if desc_el else "No description available."
                 
-                author_xpath = 'xpath=/html/body/div[2]/main/div[1]/table/tbody/tr[6]/td[2]'
-                author_el = await page.query_selector(author_xpath)
+                author_el = await page.query_selector('main table td a[href*="/author/"]')
                 authors_list = []
                 if author_el:
                     raw_authors = await author_el.inner_text()
@@ -106,8 +97,7 @@ class CTANCollector:
                     authors_list = [a.strip() for a in split_authors if a.strip()]
                 payload["authors"] = authors_list if authors_list else ["Unknown Author"]
                 
-                download_xpath = 'xpath=/html/body/div[2]/main/div[1]/p[4]/a'
-                download_el = await page.query_selector(download_xpath)
+                download_el = await page.query_selector('main a[href$=".zip"], main a:has-text("Download")')
                 
                 if download_el:
                     download_link = await download_el.get_attribute("href")
@@ -129,6 +119,7 @@ class CTANCollector:
                 
             except Exception as e:
                 logger.error(f"[CTAN Detail Collector Error]: {e}")
+                raise
             finally:
                 await browser.close()
 
@@ -156,79 +147,71 @@ class CTANCollector:
         minio_url_book = None
         
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=300) as resp:
-                    if resp.status == 200:
-                        with open(target_zip_local, "wb") as f:
-                            while True:
-                                chunk = await resp.content.read(65536)
-                                if not chunk:
-                                    break
-                                f.write(chunk)
-                                
-                        logger.info(f"[CTAN Stream] Downloaded to temp: {target_zip_local}")
+            success = await download_file_with_retry(url, target_zip_local)
+            if success:
+                logger.info(f"[CTAN Stream] Downloaded to temp: {target_zip_local}")
+                
+                minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
-                        minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
-                        
-                        logger.info(f"Extracting ZIP archive")
-                        os.makedirs(extracted_folder_path, exist_ok=True)
-                        with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
-                            zip_ref.extractall(extracted_folder_path)
-                            
-                        search_root = extracted_folder_path
-                        contents = os.listdir(extracted_folder_path)
-                        if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
-                            search_root = os.path.join(extracted_folder_path, contents[0])
-                            logger.info(f"Detected nested folder: {contents[0]}, adjusting search root.")
+                logger.info(f"Extracting ZIP archive")
+                os.makedirs(extracted_folder_path, exist_ok=True)
+                with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
+                    zip_ref.extractall(extracted_folder_path)
+                    
+                search_root = extracted_folder_path
+                contents = os.listdir(extracted_folder_path)
+                if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
+                    search_root = os.path.join(extracted_folder_path, contents[0])
+                    logger.info(f"Detected nested folder: {contents[0]}, adjusting search root.")
 
-                        found_pdf = None
-                        for root, _, files in os.walk(search_root):
-                            for f in files:
-                                if f.lower().endswith(".pdf"):
-                                    if slug in f.lower() or "doc" in root.lower():
-                                        found_pdf = os.path.join(root, f)
-                                        break
-                            if found_pdf: break
-                        
-                        if found_pdf:
-                            pdf_filename = os.path.basename(found_pdf)
-                            minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
-                            logger.info(f"Found and uploaded primary PDF: {minio_url_pdf}")
-                            payload["pdf_url"] = minio_url_pdf
-                            
-                        md_content = f"# Source code for {title}\n\n"
-                        allowed_exts = {".tex", ".sty", ".cls", ".dtx", ".ins", ".bib", ".def"}
-                        for root_dir, _, files in os.walk(search_root):
-                            for f in files:
-                                ext = os.path.splitext(f)[1].lower()
-                                if ext in allowed_exts:
-                                    file_path = os.path.join(root_dir, f)
-                                    rel_path = os.path.relpath(file_path, search_root)
-                                    try:
-                                        with open(file_path, "r", encoding="utf-8") as text_file:
-                                            content = text_file.read()
-                                            md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
-                                    except UnicodeDecodeError:
-                                        pass
-                                    except Exception as e:
-                                        logger.warning(f"Failed to read {rel_path}: {e}")
-                                        
-                        md_filename = f"{slug}_source.md"
-                        md_path = os.path.join(temp_base, md_filename)
-                        with open(md_path, "w", encoding="utf-8") as md_f:
-                            md_f.write(md_content)
-                            
-                        minio_url_md = await storage.upload_local_file(f"documents/ctan/{md_filename}", md_path)
-                        logger.info(f"Compiled and uploaded Markdown source: {minio_url_md}")
-                        payload["markdown_url"] = minio_url_md
-                        
-                        logger.info(f"Successfully processed {filename}.")
-                    else:
-                        logger.error(f"[CTAN Download Error] Cannot get. Code: {resp.status} - {url}")
-                        return
+                found_pdf = None
+                for root, _, files in os.walk(search_root):
+                    for f in files:
+                        if f.lower().endswith(".pdf"):
+                            if slug in f.lower() or "doc" in root.lower():
+                                found_pdf = os.path.join(root, f)
+                                break
+                    if found_pdf: break
+                
+                if found_pdf:
+                    pdf_filename = os.path.basename(found_pdf)
+                    minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
+                    logger.info(f"Found and uploaded primary PDF: {minio_url_pdf}")
+                    payload["pdf_url"] = minio_url_pdf
+                    
+                md_content = f"# Source code for {title}\n\n"
+                allowed_exts = {".tex", ".sty", ".cls", ".dtx", ".ins", ".bib", ".def", ".pl", ".txt"}
+                for root_dir, _, files in os.walk(search_root):
+                    for f in files:
+                        ext = os.path.splitext(f)[1].lower()
+                        if ext in allowed_exts:
+                            file_path = os.path.join(root_dir, f)
+                            rel_path = os.path.relpath(file_path, search_root)
+                            try:
+                                with open(file_path, "r", encoding="utf-8") as text_file:
+                                    content = text_file.read()
+                                    md_content += f"## File: {rel_path}\n```latex\n{content}\n```\n\n"
+                            except UnicodeDecodeError:
+                                pass
+                            except Exception as e:
+                                logger.warning(f"Failed to read {rel_path}: {e}")
+                                
+                md_filename = f"{slug}_source.md"
+                md_path = os.path.join(temp_base, md_filename)
+                with open(md_path, "w", encoding="utf-8") as md_f:
+                    md_f.write(md_content)
+                    
+                minio_url_md = await storage.upload_local_file(f"documents/ctan/{md_filename}", md_path)
+                logger.info(f"Compiled and uploaded Markdown source: {minio_url_md}")
+                payload["markdown_url"] = minio_url_md
+                
+                logger.info(f"Successfully processed {filename}.")
+            else:
+                logger.error(f"[CTAN Download Error] Failed to download {url}")
+                return
         except Exception as e:
             logger.error(f"[Aiohttp/Extraction Error]: {e}")
-            return
+            raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
             

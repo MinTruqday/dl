@@ -1,30 +1,23 @@
 import urllib.parse
 import os
 import aiohttp
-import random
 import asyncio
 import hashlib
-from uuid import uuid4
+from uuid6 import uuid7
 from PIL import Image
 import requests
-from bs4 import BeautifulSoup
 import re
+import shutil
+import img2pdf
 from playwright.async_api import async_playwright, Response
 from playwright_stealth import stealth_async
 from loguru import logger
-import shutil
 
 from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-
-USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"
-]
+from src.core.browser import get_playwright_browser, get_stealth_context
 
 MIN_FILE_SIZE_BYTES = 5000
 
@@ -61,7 +54,7 @@ class NXBSTStreamState:
                             tile_num = int(match.group(2))
                             filename = f"nxbst_page_{page_num:04d}_tile{tile_num}.jpg"
                         else:
-                            filename = f"nxbst_page_unknown_{self.page_counter:04d}_{uuid4().hex[:4]}.jpg"
+                            filename = f"nxbst_page_unknown_{self.page_counter:04d}_{uuid7().hex[:4]}.jpg"
 
                         save_path = os.path.join(self.temp_dir, filename)
 
@@ -104,7 +97,7 @@ class NXBSTStreamState:
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
-        final_pdf_name = f"{slug}_{uuid4().hex[:6]}.pdf"
+        final_pdf_name = f"{slug}_{uuid7().hex[:6]}.pdf"
 
         temp_pdf_dir = tempfile.mkdtemp(prefix="nxbst_pdf_")
         pdf_path = os.path.join(temp_pdf_dir, final_pdf_name)
@@ -154,22 +147,30 @@ class NXBSTStreamState:
                             t4 = Image.open(tiles_dict['4']).convert("RGB")
                             merged.paste(t4, (width, height))
 
-                        images.append(merged)
+                        page_path = os.path.join(temp_pdf_dir, f"page_{p}.jpg")
+                        merged.save(page_path, "JPEG")
+                        images.append(page_path)
                     else:
                         for t in tiles_dict.values():
-                            images.append(Image.open(t).convert("RGB"))
+                            page_path = os.path.join(temp_pdf_dir, f"page_single_{p}_{uuid7().hex[:6]}.jpg")
+                            Image.open(t).convert("RGB").save(page_path, "JPEG")
+                            images.append(page_path)
                 except Exception as e:
                     logger.warning(f"Failed to merge tiles for page {p}: {e}")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
                     try:
-                        images.append(Image.open(f).convert("RGB"))
+                        page_path = os.path.join(temp_pdf_dir, f"page_unknown_{uuid7().hex[:6]}.jpg")
+                        Image.open(f).convert("RGB").save(page_path, "JPEG")
+                        images.append(page_path)
                     except Exception as e:
                         logger.error(f"Failed to load unknown tile: {e}")
 
             if images:
-                images[0].save(pdf_path, save_all=True, append_images=images[1:])
+                logger.info("Using img2pdf to compile pages to PDF")
+                with open(pdf_path, "wb") as f:
+                    f.write(img2pdf.convert(images))
                 logger.info(f"[NXBSTPDF SUCCESS] Created: {pdf_path}")
 
             logger.info(f"[NXBSTStorage] Uploading {final_pdf_name} to MinIO")
@@ -212,17 +213,8 @@ class NXBSTCollector:
         logger.info(f"Starting List Collection on NXBST {start_url}")
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    '--no-sandbox', 
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--js-flags=--max-old-space-size=4096'
-                ]
-            )
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
 
@@ -230,8 +222,8 @@ class NXBSTCollector:
                 await page.goto(start_url, timeout=60000)
                 await asyncio.sleep(5)
 
-                menu_xpath = 'xpath=//div[contains(@class, "left-menu-item")]//a[@href and not(contains(@href, "javascript"))]'
-                sub_cat_nodes = await page.query_selector_all(menu_xpath)
+                menu_css = '.left-menu-item a[href]:not([href*="javascript"])'
+                sub_cat_nodes = await page.query_selector_all(menu_css)
 
                 category_urls = set()
                 for node in sub_cat_nodes:
@@ -250,8 +242,8 @@ class NXBSTCollector:
                     while True:
                         logger.info(f"Scanning Page {current_page} of current category")
 
-                        document_nodes_xpath = 'xpath=//*[@id="main"]//a[contains(@href, "store_detail") or contains(@href, "/sach/")]'
-                        document_nodes = await page.query_selector_all(document_nodes_xpath)
+                        document_nodes_css = '#main a[href*="store_detail"], #main a[href*="/sach/"]'
+                        document_nodes = await page.query_selector_all(document_nodes_css)
 
                         found_documents = 0
                         for node in document_nodes:
@@ -283,7 +275,8 @@ class NXBSTCollector:
                         except Exception:
                             break
             except Exception as e:
-                logger.error(f"[NXBSTList Collector Error]: {e}")
+                logger.error(f"Error checking list detail: {e}")
+                raise
             finally:
                 await browser.close()
 
@@ -293,17 +286,8 @@ class NXBSTCollector:
         state_manager = NXBSTStreamState()
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    '--no-sandbox', 
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--js-flags=--max-old-space-size=4096'
-                ]
-            )
-            context = await browser.new_context(user_agent=random.choice(USER_AGENTS))
+            browser = await get_playwright_browser(p)
+            context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
 
@@ -313,19 +297,17 @@ class NXBSTCollector:
                 await page.goto(document_url, timeout=60000)
                 await asyncio.sleep(4)
 
-                title_xpath = 'xpath=//*[@id="detail"]/div[2]/div/h1'
-                title_el = await page.query_selector(title_xpath)
+                title_el = await page.query_selector('#detail h1')
                 raw_title = await title_el.inner_text() if title_el else document_url.split("/")[-1]
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", raw_title).strip()
 
-                author_xpath = 'xpath=//*[@id="detail"]/div[2]/div/div[1]/a'
-                author_el = await page.query_selector(author_xpath)
+                author_el = await page.query_selector('#detail .author a, #detail a[href*="author"]')
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
                 logger.info(f"Targeting document {raw_title} | Author: {raw_author}")
 
-                read_btn_xpath = 'xpath=//*[@id="whatchNow"]'
-                read_btn = await page.query_selector(read_btn_xpath)
+                read_btn_css = '#whatchNow, a:has-text("Đọc sách"), a:has-text("Xem ngay")'
+                read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
                     logger.info("Found watch/read button. Preparing to capture")
@@ -351,5 +333,6 @@ class NXBSTCollector:
                     logger.warning("Read/Watch Now button not found.")
             except Exception as e:
                 logger.error(f"[NXBSTDetail Collector Error]: {e}")
+                raise
             finally:
                 await browser.close()

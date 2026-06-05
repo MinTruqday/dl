@@ -2,19 +2,18 @@ import asyncio
 import os
 import re
 import hashlib
-import time
 import urllib.parse
 import shutil
-from uuid import uuid4
-from PIL import Image
+from uuid6 import uuid7
 
+import img2pdf
 from playwright.async_api import async_playwright, Response
 from loguru import logger
 
 from src.core.db import db_client
 from src.core.storage import storage
-from src.core.mq import mq_client
 from src.core.redis_client import dedup
+from src.core.browser import get_playwright_browser, get_stealth_context
 
 MIN_FILE_SIZE_BYTES = 20000
 
@@ -69,25 +68,8 @@ class NXBGDCollector:
 
     async def init_browser(self):
         self.p = await async_playwright().start()
-        self.browser = await self.p.chromium.launch(
-            headless=True,
-            args=[
-                '--disable-blink-features=AutomationControlled',
-                '--no-first-run',
-                '--disable-application-cache',
-                '--mute-audio',
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--js-flags=--max-old-space-size=4096'
-            ]
-        )
-        self.context = await self.browser.new_context(
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            viewport={'width': 1920, 'height': 1080},
-            ignore_https_errors=True
-        )
+        self.browser = await get_playwright_browser(self.p)
+        self.context = await get_stealth_context(self.browser)
         self.page = await self.context.new_page()
 
     async def close(self):
@@ -101,7 +83,7 @@ class NXBGDCollector:
     async def compile_and_upload(self, title: str):
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
-        final_pdf_name = f"{safe_title}_{uuid4().hex[:6]}.pdf"
+        final_pdf_name = f"{safe_title}_{uuid7().hex[:6]}.pdf"
         
         pdf_path = os.path.join(self.temp_dir, final_pdf_name)
         
@@ -116,18 +98,10 @@ class NXBGDCollector:
             return
 
         try:
-            logger.info(f"[NXBGD PDF] Compiling {len(image_files)} pages into '{final_pdf_name}'")
-            images = []
-            for f in image_files:
-                try:
-                    img = Image.open(f).convert("RGB")
-                    images.append(img)
-                except Exception as e:
-                    logger.error(f"Failed to open image {f}: {e}")
-
-            if images:
-                images[0].save(pdf_path, save_all=True, append_images=images[1:])
-                logger.info(f"[NXBGD PDF SUCCESS] Created: {pdf_path}")
+            logger.info(f"[NXBGD PDF] Compiling {len(image_files)} pages into '{final_pdf_name}' using img2pdf")
+            with open(pdf_path, "wb") as f:
+                f.write(img2pdf.convert(image_files))
+            logger.info(f"[NXBGD PDF SUCCESS] Created: {pdf_path}")
                 
             logger.info(f"[NXBGD Storage] Uploading {final_pdf_name} to MinIO")
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
@@ -154,7 +128,8 @@ class NXBGDCollector:
                     pass
                     
         except Exception as e:
-            logger.error(f"[NXBGD PDF Compile Error]: {e}")
+            logger.error(f"[NXBGD Collector Queue Error]: {e}")
+            raise
         finally:
 
             logger.info(f"[NXBGD Cleanup] Removing temporary folder: {self.temp_dir}")
@@ -227,7 +202,9 @@ class NXBGDCollector:
                             await viewer_page.goto(viewer_url, timeout=60000)
                             await asyncio.sleep(5)
                             
-                            for _ in range(40):
+                            last_page_count = 0
+                            stable_count = 0
+                            for _ in range(150):
                                 try:
                                     next_btn = await viewer_page.query_selector("button i.fa-angle-right")
                                     if next_btn:
@@ -237,7 +214,17 @@ class NXBGDCollector:
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
                                     logger.warning(f"Navigation error in viewer: {e}")
-                                await asyncio.sleep(2) 
+                                await asyncio.sleep(2)  
+                                
+                                current_pages = len(self.captured_hashes)
+                                if current_pages > 0 and current_pages == last_page_count:
+                                    stable_count += 1
+                                    if stable_count >= 4:
+                                        logger.info(f"Captured {current_pages} pages. No new pages detected, finishing document.")
+                                        break
+                                else:
+                                    stable_count = 0
+                                last_page_count = current_pages
                             
                             self.is_capturing = False
                             await self.compile_and_upload(full_title)
@@ -264,6 +251,7 @@ class NXBGDCollector:
 
         except Exception as e:
             logger.error(f"NXBGD Error: {e}")
+            raise
         finally:
             await self.close()
 

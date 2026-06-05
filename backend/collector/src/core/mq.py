@@ -16,12 +16,23 @@ class RabbitMQConnection:
             try:
                 self.connection = await aio_pika.connect_robust(self.url)
                 self.channel = await self.connection.channel()
-                await self.channel.declare_queue("collect_list_queue", durable=True)
-                await self.channel.declare_queue("collect_detail_queue", durable=True)
-                await self.channel.declare_queue("download_processor_queue", durable=True)
-                await self.channel.declare_queue("format_converter_queue", durable=True)
-                await self.channel.declare_queue("nxbgd_queue", durable=True)
-                logger.info("RabbitMQ Connected & Queues declared.")
+
+                dlx = await self.channel.declare_exchange('dlx_collector', aio_pika.ExchangeType.DIRECT)
+                dlq = await self.channel.declare_queue('dlq_collector_queue', durable=True)
+                await dlq.bind(dlx, 'dlq')
+                
+                queue_args = {'x-dead-letter-exchange': 'dlx_collector', 'x-dead-letter-routing-key': 'dlq'}
+
+                await self.channel.declare_queue("collect_list_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("collect_detail_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("download_processor_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("format_converter_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("nxbgd_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("nxbst_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("anna_archive_queue", durable=True, arguments=queue_args)
+                await self.channel.declare_queue("ctan_queue", durable=True, arguments=queue_args)
+                
+                logger.info("RabbitMQ Connected & Queues (with DLQ) declared.")
                 return
             except Exception as e:
                 logger.error(f"Failed to connect RabbitMQ (attempt {attempt + 1}/{max_retries}): {e}")
