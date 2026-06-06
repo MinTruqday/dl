@@ -5,6 +5,7 @@ import {
   getAdminUsersAPI,
   updateUserRoleAPI,
   updateUserStatusAPI,
+  deleteUserAPI,
 } from "@/services/user.service";
 import {
   Loader2,
@@ -14,6 +15,11 @@ import {
   Mail,
   ChevronRight,
   ShieldCheck,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/Auth";
 import { useToast } from "@/contexts/Toast";
@@ -39,6 +45,21 @@ export default function UsersManagementPage() {
     value: any;
   } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  const handleDeleteUser = async (user: any) => {
+    if (!window.confirm(`Xác nhận đưa tài khoản ${user.email} vào thùng rác?`)) return;
+    setIsUpdating(true);
+    try {
+      await deleteUserAPI(user._id);
+      showToast("Xóa tài khoản thành công", "success");
+      fetchData();
+    } catch (err: any) {
+      showToast(err.message || "Lỗi xóa tài khoản", "error");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     setIsRefreshing(true);
@@ -144,16 +165,16 @@ export default function UsersManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div className="overflow-y-auto custom-scrollbar flex-1">
             <table className="w-full text-left text-sm border-collapse">
               <thead className="sticky top-0 bg-zinc-50/90 backdrop-blur-sm z-10">
                 <tr className="border-b border-zinc-200 text-zinc-600 font-medium">
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">Thành viên hệ thống</th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">Quyền hạn truy cập</th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">Ngày tham gia</th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">Trạng thái vận hành</th>
-                  <th className="px-6 py-4 font-medium text-right whitespace-nowrap">Quản trị</th>
+                  <th className="w-[30%] px-6 py-4 font-medium whitespace-nowrap">Thành viên hệ thống</th>
+                  <th className="w-[20%] px-6 py-4 font-medium whitespace-nowrap">Quyền hạn truy cập</th>
+                  <th className="w-[20%] px-6 py-4 font-medium whitespace-nowrap">Ngày tham gia</th>
+                  <th className="w-[20%] px-6 py-4 font-medium whitespace-nowrap">Trạng thái vận hành</th>
+                  <th className="w-[10%] px-6 py-4 font-medium text-right whitespace-nowrap">Quản trị</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200">
@@ -208,29 +229,65 @@ export default function UsersManagementPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="inline-block px-2.5 py-1.5 bg-zinc-50 border border-zinc-200 rounded-xl">
-                        <span
-                          className={`text-xs font-semibold ${u.is_active ? "text-black" : "text-zinc-500"}`}
-                        >
-                          {u.is_active ? "Đang hoạt động" : "Đã khóa"}
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1.5 bg-white border border-zinc-200 rounded-xl shadow-sm">
+                        <div className={`w-2 h-2 rounded-full ${u.is_active ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"}`}></div>
+                        <span className={`text-[11px] font-bold uppercase tracking-widest ${u.is_active ? "text-black" : "text-red-500"}`}>
+                          {u.is_active ? "Hoạt động" : "Tạm khóa"}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="relative inline-block text-left">
                         <button
-                          onClick={() => setConfirmModal({ type: "status", user: u, value: !u.is_active })}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
-                            u.is_active
-                              ? "bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50 hover:text-black"
-                              : "bg-black text-white hover:bg-zinc-800"
-                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenDropdownId(openDropdownId === u._id ? null : u._id);
+                          }}
+                          className="p-1.5 text-zinc-400 hover:text-black hover:bg-zinc-100 rounded-full transition-colors"
                         >
-                          {u.is_active ? "Khóa" : "Kích hoạt"}
+                          <MoreVertical className="w-4 h-4" />
                         </button>
-                        <button className="px-3 py-1.5 text-xs font-semibold bg-white border border-zinc-200 text-zinc-500 rounded-xl hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">
-                          Cảnh báo
-                        </button>
+
+                        {openDropdownId === u._id && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); }} />
+                            <div className="absolute right-0 top-full mt-1 w-44 p-1.5 bg-white border border-zinc-200 rounded-2xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100">
+                            <button
+                              className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors flex items-center gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(null);
+                                setConfirmModal({ type: "status", user: u, value: !u.is_active });
+                              }}
+                            >
+                              {u.is_active ? <Lock className="w-3.5 h-3.5 text-zinc-500" /> : <Unlock className="w-3.5 h-3.5 text-zinc-500" />}
+                              {u.is_active ? "Khóa tài khoản" : "Kích hoạt"}
+                            </button>
+                            <button
+                              className="w-full text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors flex items-center gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(null);
+                                showToast("Tính năng cảnh báo đang được phát triển", "error");
+                              }}
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5 text-zinc-500" />
+                              Cảnh báo
+                            </button>
+                            <button
+                              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenDropdownId(null);
+                                handleDeleteUser(u);
+                              }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Xóa dữ liệu
+                            </button>
+                          </div>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

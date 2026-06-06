@@ -394,7 +394,7 @@ export default function WalletPage() {
 
       <div className="grid lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationFillMode: 'both' }}>
+          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="text-sm font-semibold text-black mb-1">Số dư hiện tại</div>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>

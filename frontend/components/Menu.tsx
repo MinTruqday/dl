@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   Files,
   Presentation,
+  Sparkles,
 } from "lucide-react";
 
 interface MenuProps {
@@ -129,6 +130,12 @@ export default function Menu({
             icon={MessageSquare}
             label="Tin nhắn"
             href="/tin-nhan"
+            requireAuth
+          />
+          <NavLink
+            icon={Sparkles}
+            label="Trò chuyện"
+            href="/tro-chuyen"
             requireAuth
           />
           <NavLink

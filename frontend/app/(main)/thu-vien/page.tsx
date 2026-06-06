@@ -229,7 +229,7 @@ export default function LibraryPage() {
             <div className="text-sm font-semibold text-black mb-1">
               Quản lý thư viện
             </div>
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-1 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
               {tabs.map((t) => (
                 <button
                   key={t.id}

@@ -106,7 +106,7 @@ export default function PaymentResultPage() {
           />
         </div>
 
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <h1 className="text-2xl font-semibold text-black tracking-tight">{current.title}</h1>
           <p className="text-sm font-medium text-zinc-500 max-w-md leading-relaxed">
             {current.description}
@@ -114,7 +114,7 @@ export default function PaymentResultPage() {
         </div>
 
         {paymentInfo && status === "success" && (
-          <div className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4">
+          <div className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
                 Mã giao dịch

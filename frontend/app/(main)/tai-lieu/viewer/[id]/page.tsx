@@ -593,7 +593,7 @@ export default function DocumentViewer() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center">
+        <main className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div
             className={`mx-auto bg-white border border-zinc-200 ${document?.content_format === "zip" ? "p-0 h-full max-w-full" : "p-12 md:p-24 min-h-full origin-top"} rounded-none ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-6xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
             style={{
@@ -678,7 +678,7 @@ export default function DocumentViewer() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {sidebarTab === "chat" ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               {messages.map((msg, i) => (

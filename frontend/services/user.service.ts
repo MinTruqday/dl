@@ -52,3 +52,15 @@ export async function searchUsersAPI(query: string, limit: number = 10) {
   return data;
 }
 
+export async function deleteUserAPI(userId: string) {
+  const token = getToken();
+  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
+  const res = await fetch(`${API_URL}/nguoi-dung/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Xóa người dùng thất bại");
+  return data;
+}
+

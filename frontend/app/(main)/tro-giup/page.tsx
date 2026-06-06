@@ -65,7 +65,7 @@ export default function HelpPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-20">
+        <div className="grid md:grid-cols-3 gap-6 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {[
             {
               icon: Book,
@@ -96,7 +96,7 @@ export default function HelpPage() {
           ))}
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <h2 className="text-2xl font-bold text-black border-b border-zinc-100 pb-6 tracking-tight">
             Câu hỏi thường gặp
           </h2>

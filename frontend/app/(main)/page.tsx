@@ -107,7 +107,7 @@ export default function ExplorePage() {
             <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
-            <nav className="flex flex-col gap-1.5">
+            <nav className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
               <button
                 onClick={() => setSelectedCategory(null)}
                 className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${!selectedCategory
