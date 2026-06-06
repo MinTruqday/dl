@@ -80,9 +80,9 @@ export default function ExplorePage() {
   }, [loadDocuments]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
       {banners.length > 0 ? (
-        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group">
+        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group animate-in fade-in slide-in-from-bottom-8 duration-300">
           <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
             {banners[0].image_url ? (
               <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
@@ -94,7 +94,7 @@ export default function ExplorePage() {
           </a>
         </div>
       ) : (
-        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center rounded-2xl">
+        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300">
           <p className="text-zinc-500 text-sm font-medium">
             Liên hệ quảng cáo với DocLib
           </p>
@@ -105,7 +105,7 @@ export default function ExplorePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
@@ -140,7 +140,7 @@ export default function ExplorePage() {
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="text-sm font-semibold text-black mb-1">
               Xu hướng
             </div>
@@ -178,7 +178,7 @@ export default function ExplorePage() {
 
         <main className="lg:col-span-9 space-y-6">
           {recommendations.length > 0 && !searchQuery && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-1">
                 <h2 className="text-base font-semibold text-black">
                   Gợi ý dành riêng cho bạn
@@ -221,7 +221,7 @@ export default function ExplorePage() {
             </section>
           )}
 
-          <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+          <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
                 {searchQuery

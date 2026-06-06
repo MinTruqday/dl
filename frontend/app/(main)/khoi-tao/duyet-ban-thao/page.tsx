@@ -47,11 +47,11 @@ export default function ApprovalPage() {
     <div className="space-y-6">
 
       {loading ? (
-        <div className="py-24 flex justify-center">
+        <div className="py-24 flex justify-center border border-zinc-200 bg-white rounded-2xl">
           <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
         </div>
       ) : pendingDocs.length === 0 ? (
-        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (

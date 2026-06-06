@@ -33,31 +33,51 @@ export default function DraftsPage() {
     <div className="space-y-6">
 
       {loading ? (
-        <div className="py-24 flex justify-center">
+        <div className="py-24 flex justify-center border border-zinc-200 bg-white rounded-2xl">
           <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
         </div>
       ) : drafts.length === 0 ? (
-        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white">
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {drafts.map((draft: any) => (
             <button
               key={draft._id || draft.id}
               onClick={() => router.push(`/sang-tac?tai-lieu=${draft._id || draft.id}`)}
-              className="group flex items-center justify-between p-4 border border-zinc-200 bg-white text-left rounded-none  "
+              className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden text-left"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 border border-zinc-200 bg-zinc-50 flex items-center justify-center shrink-0 rounded-none">
-                  <FileText className="w-4 h-4 text-zinc-400" />
+              <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-100 relative overflow-hidden">
+                {draft.cover_url ? (
+                  <img
+                    src={draft.cover_url}
+                    alt={draft.title}
+                    className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-zinc-300" />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3 flex flex-col flex-1 gap-2 w-full">
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md">Bản nháp</span>
                 </div>
-                <div className="space-y-1">
-                  <h4 className="font-semibold text-sm text-black truncate max-w-sm">{draft.title}</h4>
-                  <p className="text-xs font-medium text-zinc-500">Lần cuối: {new Date(draft.updated_at || draft.created_at).toLocaleDateString("vi-VN")}</p>
+                <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
+                  {draft.title}
+                </h3>
+                
+                <div className="text-xs text-zinc-500 flex items-center gap-1.5 mt-auto pt-3 border-t border-zinc-100">
+                  <span className="truncate text-black font-medium">Cập nhật</span>
+                  <span>•</span>
+                  <span className="shrink-0">
+                    {new Date(draft.updated_at || draft.created_at).toLocaleDateString("vi-VN")}
+                  </span>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-zinc-400 group- " />
             </button>
           ))}
         </div>

@@ -58,7 +58,7 @@ export default function CreationLayout({
         </aside>
 
         <main className="lg:col-span-9 h-full overflow-y-auto pr-2 custom-scrollbar">
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm min-h-full">
+          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm">
             {children}
           </div>
         </main>

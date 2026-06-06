@@ -988,21 +988,21 @@ export default function MessagesPage() {
 
       <div className="flex flex-1 min-h-0 gap-4">
         <div
-          className={`w-full md:w-[320px] lg:w-[380px] flex flex-col gap-2 shrink-0 ${selectedConv ? "hidden md:flex" : "flex"
+          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
-          <div className="h-[80px] px-4 bg-white border border-zinc-200 rounded-2xl shadow-sm flex items-center justify-between shrink-0">
-            <span className="text-xs font-semibold text-black uppercase tracking-wider">Hộp thư</span>
-            <div className="flex items-center gap-1.5">
-              <button onClick={openGroupModal} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Tạo nhóm thảo luận">
+          <div className="p-5 flex items-center justify-between shrink-0">
+            <h2 className="text-lg font-semibold text-black">Hộp thư</h2>
+            <div className="flex items-center gap-3">
+              <button onClick={openGroupModal} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all" title="Tạo nhóm thảo luận">
                 <Users className="w-4 h-4" />
               </button>
-              <button onClick={() => setShowNewChatModal(true)} className="p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black rounded-full transition-colors" title="Bắt đầu kết nối">
+              <button onClick={() => setShowNewChatModal(true)} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all" title="Bắt đầu kết nối">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto bg-white border border-zinc-200 rounded-2xl shadow-sm p-2 flex flex-col gap-1 overflow-x-hidden">
+          <div className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0">
             {loadingConv ? (
               <div className="p-12 flex flex-col items-center gap-4">
                 <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
@@ -1102,18 +1102,17 @@ export default function MessagesPage() {
                 );
               })
             ) : (
-              <div className="h-full flex flex-col items-center justify-center opacity-50">
-                <p className="text-xs font-medium text-black">Hộp thư rỗng</p>
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                <p className="text-sm font-medium text-zinc-500">Hộp thư rỗng</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className={`flex-1 flex flex-col min-w-0 ${selectedConv ? "gap-2" : ""} ${!selectedConv ? "hidden md:flex" : "flex"}`}>
+        <div className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
-            <>
-              <div className="h-[80px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col justify-center shrink-0 z-30 relative">
-                <div className="flex items-center justify-between px-4">
+            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4">
+              <div className="flex items-center justify-between shrink-0 relative z-30">
                   <div className="flex items-center gap-4">
                     <button onClick={() => setSelectedConv(null)} className="md:hidden p-2 text-zinc-500">
                       <ArrowLeft className="w-5 h-5" />
@@ -1228,10 +1227,8 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
+              <div className="flex-1 flex overflow-hidden border border-zinc-200 bg-white rounded-2xl relative">
 
-              </div>
-
-              <div className="flex-1 flex overflow-hidden bg-white border border-zinc-200 rounded-2xl shadow-sm relative">
                 <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 no-scrollbar relative">
                   {!(showSearchMsgBar || messages.some((m) => m.is_pinned)) && <div className="pt-2" />}
                   {(showSearchMsgBar || messages.some((m) => m.is_pinned)) && (
@@ -1612,7 +1609,7 @@ export default function MessagesPage() {
                 )}
               </div>
 
-              <div className="p-4 bg-white border border-zinc-200 rounded-2xl shadow-sm shrink-0 z-10 relative">
+              <div className="shrink-0 z-10 relative">
                 {isBlocked && (
                   <div className="mb-3 p-2 border border-zinc-200 bg-zinc-50 text-xs text-zinc-500 text-center font-medium">
                     Liên lạc đã bị khóa. Không thể truyền tin.
@@ -1736,7 +1733,7 @@ export default function MessagesPage() {
                   </button>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm">
               <p className="text-sm font-semibold text-black">DocLib Tin nhắn</p>

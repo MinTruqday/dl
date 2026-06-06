@@ -96,7 +96,7 @@ async def delete_folder(folder_id: str, current_user: UserInDB = Depends(get_cur
 @router.get("/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_my_documents(q: Optional[str] = None, cursor: Optional[str] = None, limit: int = Query(50, ge=1, le=100), current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(
-        data=await DocumentService.get_my_documents(current_user, q, cursor, limit, db=db),
+        data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
         message="Lấy danh sách tài liệu cá nhân thành công"
     )
 
@@ -113,14 +113,14 @@ async def get_document_by_id(
     password: Optional[str] = Header(None, alias="x-document-password"),
     current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
-    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password, db=db), message="Lấy thông tin tài liệu thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password), message="Lấy thông tin tài liệu thành công", status=status.HTTP_200_OK)
 
 @router.get("/d/{slug}", response_model=APIResponse[DocumentResponse])
 async def get_document_by_slug(
     slug: str,
     current_user: UserInDB = Depends(get_current_user_optional)
 ) -> Any:
-    return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user, db=db), message="Lấy tài liệu theo đường dẫn thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user), message="Lấy tài liệu theo đường dẫn thành công", status=status.HTTP_200_OK)
 
 @router.get("/{document_id}/chuong", response_model=APIResponse[Any])
 async def get_document_chapters(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
@@ -385,4 +385,4 @@ async def broadcast_notification(document_id: str, req: BroadcastRequest, curren
 
 @router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(document_id: str, password: str = Body(..., embed=True), current_user: UserInDB = Depends(get_current_user_optional), db=Depends(get_db)):
-    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password, db=db), message="Mở khóa thành công", status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_document_by_id(document_id, current_user, password), message="Mở khóa thành công", status=status.HTTP_200_OK)

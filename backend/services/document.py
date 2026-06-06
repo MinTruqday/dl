@@ -92,9 +92,14 @@ class DocumentService:
         return doc_doc
 
     @staticmethod
-    async def get_my_documents(current_user, cursor: str = None, limit: int = 50) -> list:
+    async def get_my_documents(current_user, q: str = None, cursor: str = None, limit: int = 50) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        if q:
+            query["$or"] = [
+                {"title": {"$regex": q, "$options": "i"}},
+                {"description": {"$regex": q, "$options": "i"}}
+            ]
         if cursor:
             query["_id"] = {"$lt": cursor}
             

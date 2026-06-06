@@ -223,27 +223,7 @@ export default function LibraryPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
-      <div className="mb-6 flex justify-end">
-        <div className="flex items-center gap-6">
-          <div className="flex border border-zinc-200 bg-white rounded-2xl overflow-hidden shadow-sm">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-500"
-                }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <div className="w-[1px] bg-zinc-200" />
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-500"
-                }`}
-            >
-              <ListIcon className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
+ 
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
@@ -327,215 +307,150 @@ export default function LibraryPage() {
 
         <main className="lg:col-span-9 space-y-6">
           {activeTab === "overview" && (
-            <>
-              <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold text-black">
-                    Đang đọc
-                  </h2>
-                  <button
-                    onClick={() => setActiveTab("history")}
-                    className="text-xs font-medium text-zinc-500"
-                  >
-                    Xem toàn bộ lịch sử
-                  </button>
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-lg font-semibold text-black">
+                  Đang đọc
+                </h2>
+                <div className="flex items-center gap-3">
+                  <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+                      <ListIcon className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+              </div>
 
-                {continueDocs.length > 0 ? (
-                  <div
-                    className={
-                      viewMode === "grid"
-                        ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-                        : "flex flex-col gap-4"
-                    }
-                  >
-                    {continueDocs.map((doc) => (
-                      <Link
-                        key={doc.document_id}
-                        href={`/tai-lieu/${doc.document_slug}`}
-                        className={`border border-zinc-200 bg-white group rounded-2xl hover:border-black transition-colors overflow-hidden ${viewMode === "grid"
-                            ? "flex flex-col"
-                            : "flex items-start gap-6 p-4"
-                          }`}
+              {continueDocs.length > 0 ? (
+                <div
+                  className={`grid gap-6 ${viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    : "grid-cols-1"
+                    }`}
+                >
+                  {continueDocs.map((doc) => (
+                    <Link
+                      key={doc.document_id}
+                      href={`/tai-lieu/${doc.document_slug}`}
+                      className={`group flex ${viewMode === "grid"
+                        ? "flex-col"
+                        : "flex-row gap-6 p-3"
+                        } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
+                    >
+                      <div
+                        className={`${viewMode === "grid"
+                          ? "aspect-[2/3] w-full border-b"
+                          : "w-24 h-36 shrink-0 rounded-xl"
+                          } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
                       >
-                        <div
-                          className={`${viewMode === "grid"
-                              ? "aspect-[3/4] border-b border-zinc-200"
-                              : "w-24 h-32 rounded-xl"
-                            } bg-zinc-50 overflow-hidden relative shrink-0`}
-                        >
-                          {doc.cover_url ? (
-                            <img
-                              src={
-                                doc.cover_url.startsWith("http")
-                                  ? doc.cover_url
-                                  : `${API_URL}/storage/${doc.cover_url}`
-                              }
-                              className="w-full h-full object-cover grayscale mix-blend-multiply"
-                              alt={doc.document_title}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <FileText className="w-8 h-8 text-zinc-400 stroke-[1]" />
-                            </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 w-full h-1 bg-zinc-200">
-                            <div
-                              className="h-full bg-black"
-                              style={{ width: `${doc.progress_percentage}%` }}
-                            />
+                        {doc.cover_url ? (
+                          <img
+                            src={
+                              doc.cover_url.startsWith("http")
+                                ? doc.cover_url
+                                : `${API_URL}/storage/${doc.cover_url}`
+                            }
+                            className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
+                            alt={doc.document_title}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-100">
+                            <FileText className="w-8 h-8 text-zinc-400 stroke-[1]" />
                           </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-zinc-200">
+                          <div
+                            className="h-full bg-black"
+                            style={{ width: `${doc.progress_percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className={`${viewMode === "grid" ? "p-3" : "flex-1 py-1"
+                          } flex flex-col flex-1 gap-2`}
+                      >
+                        <h3
+                          className={`${viewMode === "grid" ? "text-sm" : "text-base"
+                            } font-semibold text-black line-clamp-2 leading-snug`}
+                        >
+                          {doc.document_title}
+                        </h3>
+                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                          <span className="truncate text-black font-medium">{doc.progress_percentage}% hoàn tất</span>
                         </div>
                         <div
-                          className={`flex-1 min-w-0 ${viewMode === "grid"
-                              ? "p-4"
-                              : "flex flex-col justify-center h-32"
+                          className={`mt-auto pt-3 flex items-center justify-between ${viewMode === "grid" ? "border-t border-zinc-100" : ""
                             }`}
                         >
-                          <h4 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
-                            {doc.document_title}
-                          </h4>
-                          <div className="flex items-center justify-between mt-3">
-                            <p className="text-[11px] font-medium text-zinc-500">
-                              {doc.progress_percentage}% hoàn tất
-                            </p>
-                            <div className="text-[10px] font-semibold text-black bg-zinc-100 px-3 py-1.5 rounded-lg uppercase tracking-wider group-hover:bg-zinc-200 transition-colors">
-                              Tiếp tục
-                            </div>
+                          <span className="text-xs font-semibold text-black">
+                            Đang đọc
+                          </span>
+                          <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                            Tiếp tục
                           </div>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
-                    <p className="text-sm font-medium text-zinc-500">
-                      Chưa có dữ liệu
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold text-black">
-                    Thư mục và danh sách
-                  </h2>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setActiveTab("folders")}
-                      className="text-xs font-medium text-zinc-500"
-                    >
-                      Xem tất cả
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCreateType("folder");
-                        setIsCreateModalOpen(true);
-                      }}
-                      className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2 rounded-xl hover:bg-zinc-800 transition-colors"
-                    >
-                      Tạo mới
-                    </button>
-                  </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[...folders.slice(0, 2), ...readingLists.slice(0, 2)].length >
-                    0 ? (
-                    [...folders.slice(0, 2), ...readingLists.slice(0, 2)].map(
-                      (item) => (
-                        <Link
-                          key={item.id || item._id}
-                          href={
-                            item.id
-                              ? `/thu-vien/folder/${item.id}`
-                              : `/collection/${item._id}`
-                          }
-                          className="p-6 border border-zinc-200 bg-white flex flex-col justify-between group rounded-2xl hover:border-black transition-colors"
-                        >
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <h4 className="text-base font-semibold text-black line-clamp-1">
-                                {item.name}
-                              </h4>
-                              <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
-                            </div>
-                            {(item as any).description && (
-                              <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                                {(item as any).description}
-                              </p>
-                            )}
-                          </div>
-                          <div className="pt-6 mt-6 border-t border-zinc-100 flex items-center justify-between">
-                            <span className="text-xs font-medium text-zinc-500">
-                              {item.bookmark_ids?.length ||
-                                item.documents?.length ||
-                                0}{" "}
-                              tài liệu
-                            </span>
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                              {(item as any).is_public === undefined
-                                ? "Lưu trữ"
-                                : (item as any).is_public
-                                  ? "Công khai"
-                                  : "Riêng tư"}
-                            </span>
-                          </div>
-                        </Link>
-                      )
-                    )
-                  ) : (
-                    <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
-                      <p className="text-sm font-medium text-zinc-500">
-                        Chưa có dữ liệu
-                      </p>
-                    </div>
-                  )}
+              ) : (
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <p className="text-sm font-medium text-zinc-500">
+                    Chưa có dữ liệu
+                  </p>
                 </div>
-              </section>
-            </>
+              )}
+            </section>
           )}
 
           {activeTab === "history" && (
             <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Lịch sử đọc
                 </h2>
-                <button
-                  onClick={() => setIsClearModalOpen(true)}
-                  className="text-xs font-medium text-zinc-500 flex items-center gap-2"
-                >
-                  Xóa toàn bộ
-                </button>
+                <div className="flex items-center gap-3">
+                  <button title="Xóa toàn bộ" onClick={() => setIsClearModalOpen(true)} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
+                    <button onClick={() => setViewMode("grid")} className={`p-1.5 transition-colors ${viewMode === "grid" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setViewMode("list")} className={`p-1.5 transition-colors ${viewMode === "list" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+                      <ListIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div
-                className={
-                  viewMode === "grid"
-                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-                    : "flex flex-col gap-4"
-                }
+                className={`grid gap-6 ${viewMode === "grid"
+                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                  : "grid-cols-1"
+                  }`}
               >
                 {history.length > 0 ? (
                   history.map((item, idx) => (
                     <div
                       key={item.document_id + idx}
-                      className={`border border-zinc-200 bg-white relative group rounded-2xl hover:border-black transition-colors overflow-hidden ${isDeletingHistory === item.document_id
+                      className={`relative group flex ${viewMode === "grid"
+                        ? "flex-col"
+                        : "flex-row gap-6 p-3"
+                        } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden ${isDeletingHistory === item.document_id
                           ? "opacity-50"
                           : ""
-                        } ${viewMode === "grid"
-                          ? "flex flex-col"
-                          : "flex items-start gap-6 p-4"
                         }`}
                     >
                       <Link
                         href={`/tai-lieu/${item.document_slug}`}
-                        className={`block ${viewMode === "grid"
-                            ? "aspect-[3/4] border-b border-zinc-200"
-                            : "w-24 h-32 rounded-xl"
-                          } bg-zinc-50 overflow-hidden relative shrink-0`}
+                        className={`${viewMode === "grid"
+                          ? "aspect-[2/3] w-full border-b"
+                          : "w-24 h-36 shrink-0 rounded-xl"
+                          } border-zinc-200 bg-zinc-100 relative overflow-hidden block`}
                       >
                         {item.cover_url ? (
                           <img
@@ -544,11 +459,11 @@ export default function LibraryPage() {
                                 ? item.cover_url
                                 : `${API_URL}/storage/${item.cover_url}`
                             }
-                            className="w-full h-full object-cover grayscale mix-blend-multiply"
+                            className="w-full h-full object-cover grayscale mix-blend-multiply group-hover:scale-105 transition-transform duration-500"
                             alt=""
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-100">
                             <FileText className="w-8 h-8 text-zinc-400 stroke-[1]" />
                           </div>
                         )}
@@ -562,29 +477,39 @@ export default function LibraryPage() {
                         </div>
                       </Link>
                       <div
-                        className={`flex-1 min-w-0 flex flex-col justify-between ${viewMode === "grid" ? "p-4" : "h-32"
-                          }`}
+                        className={`${viewMode === "grid" ? "p-3" : "flex-1 py-1"
+                          } flex flex-col flex-1 gap-2`}
                       >
-                        <div>
-                          <Link href={`/tai-lieu/${item.document_slug}`}>
-                            <h4 className="text-sm font-semibold text-black line-clamp-2 leading-snug group-">
-                              {item.document_title}
-                            </h4>
-                          </Link>
-                          <p className="text-[11px] font-medium text-zinc-500 mt-2">
-                            Tiến độ: {item.progress_percentage || 0}%
-                          </p>
+                        <Link href={`/tai-lieu/${item.document_slug}`}>
+                          <h3
+                            className={`${viewMode === "grid" ? "text-sm" : "text-base"
+                              } font-semibold text-black line-clamp-2 leading-snug group-hover:underline`}
+                          >
+                            {item.document_title}
+                          </h3>
+                        </Link>
+                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                          <span className="truncate text-black font-medium">Tiến độ: {item.progress_percentage || 0}%</span>
+                          <span>•</span>
+                          <span className="shrink-0">
+                            {new Date(item.last_read_at).toLocaleDateString("vi-VN")}
+                          </span>
                         </div>
-                        <p className="text-[10px] font-medium text-zinc-400 mt-2">
-                          Lần cuối:{" "}
-                          {new Date(item.last_read_at).toLocaleDateString(
-                            "vi-VN"
-                          )}
-                        </p>
+                        <div
+                          className={`mt-auto pt-3 flex items-center justify-between ${viewMode === "grid" ? "border-t border-zinc-100" : ""
+                            }`}
+                        >
+                          <span className="text-xs font-semibold text-black">Đã xem</span>
+                          <Link href={`/tai-lieu/${item.document_slug}`}>
+                            <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                              Đọc lại
+                            </div>
+                          </Link>
+                        </div>
                       </div>
                       <button
                         onClick={() => handleDeleteHistoryItem(item.document_id)}
-                        className="absolute top-2 right-2 p-2 bg-white border border-zinc-200 text-zinc-400 rounded-xl hover:text-black transition-colors"
+                        className="absolute top-2 right-2 p-1.5 bg-white border border-zinc-200 text-zinc-400 rounded-xl hover:text-red-500 hover:border-red-200 shadow-sm transition-colors z-10"
                         title="Xóa khỏi lịch sử"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -604,47 +529,48 @@ export default function LibraryPage() {
 
           {activeTab === "folders" && (
             <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Thư mục lưu trữ
                 </h2>
-                <button
-                  onClick={() => {
-                    setCreateType("folder");
-                    setIsCreateModalOpen(true);
-                  }}
-                  className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2"
-                >
-                  Tạo thư mục
-                </button>
+                <div className="flex items-center gap-3">
+                  <button title="Tạo thư mục" onClick={() => { setCreateType("folder"); setIsCreateModalOpen(true); }} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {folders.length > 0 ? (
                   folders.map((folder) => (
                     <Link
                       key={folder.id}
                       href={`/thu-vien/folder/${folder.id}`}
-                      className="p-6 border border-zinc-200 bg-white flex flex-col justify-between h-40 group rounded-2xl hover:border-black transition-colors"
+                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
                     >
-                      <div className="flex justify-between items-start">
-                        <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
-                          {folder.name}
-                        </h4>
-                        <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
+                      <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex items-center justify-center">
+                        <FolderPlus className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
                       </div>
-                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-auto">
-                        <span className="text-xs font-medium text-zinc-500">
-                          {folder.bookmark_ids?.length || 0} tài liệu
-                        </span>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                          Dấu trang
-                        </span>
+                      <div className="p-3 flex flex-col flex-1 gap-2">
+                        <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
+                          {folder.name}
+                        </h3>
+                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                          <span className="truncate text-black font-medium">Dấu trang</span>
+                        </div>
+                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-zinc-100">
+                          <span className="text-xs font-semibold text-black">
+                            {folder.bookmark_ids?.length || 0} tài liệu
+                          </span>
+                          <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                            Mở
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <div className="col-span-full py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -656,54 +582,52 @@ export default function LibraryPage() {
 
           {activeTab === "lists" && (
             <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Danh sách đọc
                 </h2>
-                <button
-                  onClick={() => {
-                    setCreateType("list");
-                    setIsCreateModalOpen(true);
-                  }}
-                  className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2"
-                >
-                  Tạo danh sách
-                </button>
+                <div className="flex items-center gap-3">
+                  <button title="Tạo danh sách" onClick={() => { setCreateType("list"); setIsCreateModalOpen(true); }} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {readingLists.length > 0 ? (
                   readingLists.map((list) => (
                     <Link
                       key={list._id}
                       href={`/collection/${list._id}`}
-                      className="p-6 border border-zinc-200 bg-white flex flex-col justify-between min-h-[160px] group"
+                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
                     >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
-                            {list.name}
-                          </h4>
-                          <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
-                        </div>
-                        {list.description && (
-                          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                            {list.description}
-                          </p>
+                      <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                        {list.description ? (
+                          <p className="text-xs font-medium text-zinc-400 italic line-clamp-6 group-hover:text-black transition-colors duration-500">"{list.description}"</p>
+                        ) : (
+                          <Layers className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
                         )}
                       </div>
-                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-4">
-                        <span className="text-xs font-medium text-zinc-500">
-                          {list.documents?.length || 0} tài liệu
-                        </span>
-                        <span className="text-[10px] font-bold text-black uppercase tracking-widest">
-                          {list.is_public ? "Công khai" : "Riêng tư"}
-                        </span>
+                      <div className="p-3 flex flex-col flex-1 gap-2">
+                        <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
+                          {list.name}
+                        </h3>
+                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                          <span className="truncate text-black font-medium">{list.is_public ? "Công khai" : "Riêng tư"}</span>
+                        </div>
+                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-zinc-100">
+                          <span className="text-xs font-semibold text-black">
+                            {list.documents?.length || 0} tài liệu
+                          </span>
+                          <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                            Mở
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <div className="col-span-full py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
@@ -715,54 +639,52 @@ export default function LibraryPage() {
 
           {activeTab === "series" && (
             <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Chuỗi nội dung
                 </h2>
-                <button
-                  onClick={() => {
-                    setCreateType("series");
-                    setIsCreateModalOpen(true);
-                  }}
-                  className="h-9 px-4 bg-black text-white text-xs font-medium flex items-center gap-2"
-                >
-                  Khởi tạo chuỗi
-                </button>
+                <div className="flex items-center gap-3">
+                  <button title="Khởi tạo chuỗi" onClick={() => { setCreateType("series"); setIsCreateModalOpen(true); }} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {series.length > 0 ? (
                   series.map((s) => (
                     <Link
                       key={s._id}
                       href={`/series/${s._id}`}
-                      className="p-6 border border-zinc-200 bg-white flex flex-col justify-between min-h-[160px] group"
+                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
                     >
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-base font-semibold text-black line-clamp-2 leading-tight">
-                            {s.title}
-                          </h4>
-                          <ChevronRight className="w-5 h-5 text-zinc-400 group- " />
-                        </div>
-                        {s.description && (
-                          <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">
-                            {s.description}
-                          </p>
+                      <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                        {s.description ? (
+                          <p className="text-xs font-medium text-zinc-400 italic line-clamp-6 group-hover:text-black transition-colors duration-500">"{s.description}"</p>
+                        ) : (
+                          <Layers className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
                         )}
                       </div>
-                      <div className="pt-4 border-t border-zinc-100 flex items-center justify-between mt-4">
-                        <span className="text-xs font-medium text-zinc-500">
-                          {s.documents?.length || 0} tập
-                        </span>
-                        <span className="text-[10px] font-bold text-black uppercase tracking-widest">
-                          Chuỗi
-                        </span>
+                      <div className="p-3 flex flex-col flex-1 gap-2">
+                        <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
+                          {s.title}
+                        </h3>
+                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
+                          <span className="truncate text-black font-medium">Chuỗi tác phẩm</span>
+                        </div>
+                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-zinc-100">
+                          <span className="text-xs font-semibold text-black">
+                            {s.documents?.length || 0} tập
+                          </span>
+                          <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
+                            Mở
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="md:col-span-3 py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                  <div className="col-span-full py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
                     <p className="text-sm font-medium text-zinc-500">
                       Chưa có dữ liệu
                     </p>
