@@ -44,11 +44,7 @@ export default function HelpPage() {
   return (
     <>
       <div
-        className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans"
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(12px)",
-        }}
+        className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans animate-in fade-in slide-in-from-bottom-8 duration-300"
       >
         <div className="text-center mb-20 space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">

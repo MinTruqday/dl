@@ -473,7 +473,7 @@ export default function StudioCollabPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
-        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+        <aside className="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
             <h2 className="text-sm font-semibold text-black mb-1">
               Cài đặt tài liệu cộng tác
@@ -763,7 +763,7 @@ export default function StudioCollabPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+        <main className="lg:col-span-9 space-y-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {selectedDocumentId && contributionStats.length > 0 && (
             <div className="border border-zinc-200 bg-zinc-50 rounded-2xl shadow-sm p-5 space-y-4">
               <div className="flex items-center gap-2 mb-1">

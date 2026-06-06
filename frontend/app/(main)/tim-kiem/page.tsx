@@ -120,7 +120,7 @@ export default function SearchResultsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-3 space-y-12 animate-in fade-in ">
+        <aside className="lg:col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="space-y-6">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2 flex items-center justify-between">
               Bộ lọc nâng cao
@@ -263,7 +263,7 @@ export default function SearchResultsPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-6 animate-in slide-in-from-bottom-4 ">
+        <main className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div className="grid grid-cols-1 gap-6">
             {loading ? (
               <div className="grid grid-cols-1 gap-6">

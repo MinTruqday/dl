@@ -12,8 +12,8 @@ import {
   Search,
   X,
   Monitor,
+  MessageCircle,
 } from "lucide-react";
-import AiChat from "./AiChat";
 import { useAuth } from "@/contexts/Auth";
 import { useNotifications } from "@/contexts/Notification";
 
@@ -81,7 +81,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
             {onToggleSidebar && (
               <button
                 onClick={onToggleSidebar}
-                className="p-2 text-zinc-500 "
+                className="p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150"
                 aria-label="Mở trình đơn"
               >
                 <MenuIcon className="w-5 h-5" />
@@ -109,7 +109,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-zinc-200 rounded-2xl pl-12 pr-12 py-2 text-sm font-medium focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300 "
+                className="w-full bg-white border border-zinc-200 rounded-2xl pl-12 pr-12 py-2 text-sm font-medium transition-all duration-150 focus:bg-white focus:border-black focus:outline-none placeholder:text-zinc-300"
               />
               {searchQuery && (
                 <button
@@ -126,11 +126,13 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <AiChat />
+                <Link href="/tro-chuyen" className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150" title="DocLib AI">
+                  <MessageCircle className="w-5 h-5" />
+                </Link>
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-2 text-zinc-500  ${showNotifications ? "bg-zinc-100 text-black" : ""
+                    className={`relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${showNotifications ? "bg-zinc-100 text-black" : ""
                       }`}
                     aria-label="Thông báo"
                   >
@@ -158,7 +160,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-5 py-4 cursor-pointer  ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
+                                className={`px-5 py-4 cursor-pointer hover:bg-zinc-50 transition-all duration-150 ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
                                   }`}
                                 onClick={() => {
                                   if (!notif.is_read) markAsRead(notif._id);
@@ -191,7 +193,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/thong-bao"
                         onClick={() => setShowNotifications(false)}
-                        className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200  bg-zinc-50"
+                        className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-black transition-all duration-150"
                       >
                         Xem tất cả thông báo
                       </Link>
@@ -202,7 +204,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500  ${showUserMenu ? "bg-zinc-100 text-black" : ""
+                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${showUserMenu ? "bg-zinc-100 text-black" : ""
                       }`}
                   >
                     <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-2xl overflow-hidden">
@@ -230,7 +232,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block  ${showUserMenu ? "rotate-180 text-black" : ""
+                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform duration-150 ${showUserMenu ? "rotate-180 text-black" : ""
                         }`}
                     />
                   </button>
@@ -248,7 +250,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/ho-so"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 "
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 hover:text-black transition-all duration-150"
                       >
                         <User className="w-4 h-4" />
                         Hồ sơ cá nhân
@@ -256,7 +258,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <Link
                         href="/cai-dat"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 "
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 hover:text-black transition-all duration-150"
                       >
                         <Monitor className="w-4 h-4" />
                         Cài đặt hệ thống
@@ -264,7 +266,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       <div className="border-t border-zinc-200 my-2" />
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600  w-full text-left"
+                        className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 w-full text-left hover:bg-zinc-50 hover:text-black transition-all duration-150"
                       >
                         <LogOut className="w-4 h-4" />
                         Đăng xuất
@@ -277,13 +279,13 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
               <div className="flex items-center gap-2">
                 <Link
                   href="/dang-nhap"
-                  className="px-4 py-2 text-sm font-medium text-zinc-600 "
+                  className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-black transition-all duration-150"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/dang-ky"
-                  className="px-4 py-2 text-sm font-medium text-white bg-black  rounded-2xl"
+                  className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-zinc-800 rounded-2xl transition-all duration-150"
                 >
                   Đăng ký
                 </Link>

@@ -174,7 +174,7 @@ export default function DocumentDetailsPage() {
           <Report itemId={docData._id || docData.id} itemType="document" onClose={() => setShowReportModal(false)} />
         )}
 
-        <div className="flex flex-col md:flex-row gap-12 mb-16 items-start">
+        <div className="flex flex-col md:flex-row gap-12 mb-16 items-start animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="w-full md:w-64 shrink-0 flex justify-center md:justify-start">
             <div className="w-48 md:w-full aspect-[2/3] border border-zinc-200 bg-zinc-50 flex items-center justify-center rounded-none overflow-hidden relative">
               {docData.cover_image ? (
@@ -273,7 +273,7 @@ export default function DocumentDetailsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 items-start">
+        <div className="grid grid-cols-1 gap-12 items-start animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div className="w-full space-y-8">
             <div id="document-tabs" className="border-b border-zinc-200 flex gap-8 overflow-x-auto scrollbar-hide">
               {[

@@ -815,7 +815,7 @@ export default function MessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height)-48px)] flex flex-col font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showNewChatModal}
         onClose={() => setShowNewChatModal(false)}
@@ -988,7 +988,7 @@ export default function MessagesPage() {
 
       <div className="flex flex-1 min-h-0 gap-4">
         <div
-          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full ${selectedConv ? "hidden md:flex" : "flex"
+          className={`w-full md:w-[320px] lg:w-[380px] bg-white border border-zinc-200 rounded-2xl shadow-sm flex flex-col overflow-hidden shrink-0 self-start max-h-full animate-in fade-in slide-in-from-bottom-8 duration-300 ${selectedConv ? "hidden md:flex" : "flex"
             }`}
         >
           <div className="p-5 flex items-center justify-between shrink-0">
@@ -1002,7 +1002,7 @@ export default function MessagesPage() {
               </button>
             </div>
           </div>
-          <div className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0">
+          <div className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             {loadingConv ? (
               <div className="p-12 flex flex-col items-center gap-4">
                 <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
@@ -1111,7 +1111,7 @@ export default function MessagesPage() {
 
         <div className={`flex-1 flex flex-col min-w-0 ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {selectedConv ? (
-            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4">
+            <div className="flex-1 flex flex-col bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 overflow-hidden gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="flex items-center justify-between shrink-0 relative z-30">
                   <div className="flex items-center gap-4">
                     <button onClick={() => setSelectedConv(null)} className="md:hidden p-2 text-zinc-500">
@@ -1227,7 +1227,7 @@ export default function MessagesPage() {
                   </div>
                 </div>
 
-              <div className="flex-1 flex overflow-hidden border border-zinc-200 bg-white rounded-2xl relative">
+              <div className="flex-1 flex overflow-hidden border border-zinc-200 bg-white rounded-2xl relative animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
 
                 <div className="flex-1 overflow-y-auto px-4 pb-4 pt-2 no-scrollbar relative">
                   {!(showSearchMsgBar || messages.some((m) => m.is_pinned)) && <div className="pt-2" />}
@@ -1735,7 +1735,7 @@ export default function MessagesPage() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white border border-zinc-200 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300">
               <p className="text-sm font-semibold text-black">DocLib Tin nhắn</p>
               <p className="text-xs font-medium text-zinc-500 mt-1">Chọn một cuộc hội thoại từ hộp thư để bắt đầu kết nối</p>
             </div>

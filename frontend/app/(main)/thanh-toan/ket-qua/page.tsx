@@ -96,8 +96,7 @@ export default function PaymentResultPage() {
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="flex flex-col items-center justify-center min-h-[60vh] gap-8  "
-        style={{ opacity: visible ? 1 : 0 }}
+        className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in slide-in-from-bottom-8 duration-300"
       >
         <div
           className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-none`}

@@ -115,7 +115,7 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         {[
           { label: "Tổng lượt xem", val: stats?.total_views || 0, icon: Eye },
           { label: "Kinh nghiệm", val: stats?.total_points || 0, icon: Database },
@@ -131,7 +131,7 @@ export default function StatsPage() {
         ))}
       </div>
 
-      <div className="bg-white border border-zinc-200 p-6 flex flex-col md:flex-row items-center gap-4 rounded-2xl shadow-sm">
+      <div className="bg-white border border-zinc-200 p-6 flex flex-col md:flex-row items-center gap-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         <div className="flex-1 space-y-1 w-full">
           <h3 className="text-base font-medium text-black flex items-center gap-2"><RadioTower className="w-4 h-4 text-black" /> Thông báo tới độc giả (Broadcast)</h3>
           <p className="text-xs text-zinc-500">Gửi thông báo đẩy đến tất cả những người theo dõi tác phẩm này.</p>
@@ -153,7 +153,7 @@ export default function StatsPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
         <div className="p-6 border-b border-zinc-200 flex justify-between items-center">
           <h3 className="text-base font-medium text-black">Tác phẩm gần đây</h3>
           <button 

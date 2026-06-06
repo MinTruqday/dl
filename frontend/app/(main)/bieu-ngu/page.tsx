@@ -88,7 +88,7 @@ export default function BannerManagementPage() {
           </div>
         </header>
 
-        <div className="space-y-12 animate-in fade-in ">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <section>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1 space-y-4 p-6 border border-zinc-200 bg-white">

@@ -164,7 +164,7 @@ export default function NotificationsPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="flex border-b border-zinc-200 mb-6">
               <button
                 onClick={() => setActiveTab("all")}
@@ -264,7 +264,7 @@ export default function NotificationsPage() {
             )}
           </div>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="border border-zinc-200 bg-white p-6 space-y-6">
               <div>
                 <h3 className="text-sm font-semibold text-black flex items-center gap-2 mb-1">

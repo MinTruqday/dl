@@ -55,7 +55,7 @@ export default function ApprovalPage() {
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {pendingDocs.map((doc: any) => (
             <div key={doc._id} className="p-6 border border-zinc-200 bg-white space-y-4  ">
               <div className="flex items-start justify-between gap-4">

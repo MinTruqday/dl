@@ -81,8 +81,8 @@ export default function ExplorePage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
-      {banners.length > 0 ? (
-        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group animate-in fade-in slide-in-from-bottom-8 duration-300">
+      <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group animate-in fade-in duration-500">
+        {banners.length > 0 ? (
           <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
             {banners[0].image_url ? (
               <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
@@ -92,14 +92,12 @@ export default function ExplorePage() {
               </div>
             )}
           </a>
-        </div>
-      ) : (
-        <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 shadow-sm flex items-center justify-center rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300">
+        ) : (
           <p className="text-zinc-500 text-sm font-medium">
             Liên hệ quảng cáo với DocLib
           </p>
-        </div>
-      )}
+        )}
+      </div>
 
 
 
@@ -140,7 +138,7 @@ export default function ExplorePage() {
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="text-sm font-semibold text-black mb-1">
               Xu hướng
             </div>
@@ -184,12 +182,12 @@ export default function ExplorePage() {
                   Gợi ý dành riêng cho bạn
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
                     href={`/tai-lieu/${doc.slug}`}
-                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors group"
+                    className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 group"
                   >
                     <div className="w-20 h-28 shrink-0 bg-zinc-100 rounded-xl overflow-hidden relative">
                       {doc.cover_url ? (
@@ -258,7 +256,7 @@ export default function ExplorePage() {
                 className={`grid gap-6 ${viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                   : "grid-cols-1"
-                  }`}
+                  } animate-in fade-in slide-in-from-bottom-8 duration-300`} style={{ animationDelay: '150ms', animationFillMode: 'both' }}
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div
@@ -273,7 +271,7 @@ export default function ExplorePage() {
                 className={`grid gap-6 ${viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                   : "grid-cols-1"
-                  }`}
+                  } animate-in fade-in slide-in-from-bottom-8 duration-300`} style={{ animationDelay: '150ms', animationFillMode: 'both' }}
               >
                 {documents.map((document, i) => (
                   <Link
@@ -380,7 +378,7 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                 <p className="text-sm font-medium text-zinc-500">
                   Chưa có dữ liệu
                 </p>

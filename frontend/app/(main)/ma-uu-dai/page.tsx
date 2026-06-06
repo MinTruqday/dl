@@ -120,71 +120,122 @@ export default function ManageCouponsPage() {
   };
 
   return (
-    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
       <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-black">Danh sách ưu đãi</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex border border-zinc-200 bg-white rounded-xl overflow-hidden">
-            <button onClick={() => setViewMode("grid")} className={`p-2 ${viewMode === "grid" ? "bg-zinc-100 text-black" : "text-zinc-400 hover:bg-zinc-50"}`}><LayoutGrid className="w-4 h-4" /></button>
-            <div className="w-[1px] bg-zinc-200" />
-            <button onClick={() => setViewMode("list")} className={`p-2 ${viewMode === "list" ? "bg-zinc-100 text-black" : "text-zinc-400 hover:bg-zinc-50"}`}><ListIcon className="w-4 h-4" /></button>
-          </div>
-          <button onClick={() => setShowCreate(true)} className="h-9 px-4 bg-black text-white text-sm font-medium flex items-center gap-2 rounded-xl hover:bg-zinc-800 transition-colors">
-            <Plus className="w-4 h-4" /> Tạo mã mới
+        <div className="flex items-center gap-3">
+          <button title="Tạo mã ưu đãi" onClick={() => setShowCreate(true)} className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all duration-150">
+            <Plus className="w-4 h-4" />
           </button>
+          <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
+            <button onClick={() => setViewMode("grid")} className={`p-1.5 transition-all duration-150 ${viewMode === "grid" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button onClick={() => setViewMode("list")} className={`p-1.5 transition-all duration-150 ${viewMode === "list" ? "bg-white text-black shadow-sm" : "bg-transparent text-zinc-500 hover:text-black"}`}>
+              <ListIcon className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-          {[1, 2, 3].map((i) => (<div key={i} className="bg-zinc-50 border border-zinc-200 h-48" />))}
+        <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"}`}>
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className={`bg-zinc-50 border border-zinc-200 rounded-2xl ${
+                viewMode === "grid" ? "aspect-[2/3] w-full" : "h-36 w-full"
+              }`}
+            />
+          ))}
         </div>
       ) : coupons.length > 0 ? (
-        <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
+        <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" : "grid-cols-1"} animate-in fade-in slide-in-from-bottom-8 duration-300`} style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {coupons.map((c: any) => (
-            <div key={c.id} className={`border border-zinc-200 bg-white flex ${viewMode === "grid" ? "flex-col" : "flex-row"} overflow-hidden rounded-2xl group hover:shadow-sm transition-shadow`}>
-              <div className={`p-6 bg-zinc-50 flex justify-between items-start ${viewMode === "grid" ? "border-b border-zinc-200" : "border-r border-zinc-200 w-64"}`}>
-                <div>
-                  <span className="text-xl font-mono font-bold text-black block">{c.code}</span>
-                  <p className="text-xs font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block">-{c.discount_percent}%</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => toggleStatus(c.id)} className={`px-2 py-1 text-[9px] font-bold uppercase border rounded-md ${c.is_active ? "bg-black text-white border-black" : "bg-white text-zinc-400 border-zinc-200 hover:bg-zinc-50"}`}>{c.is_active ? "Active" : "Paused"}</button>
-                  <button onClick={() => setDeleteConfirm(c)} className="p-1 border border-zinc-200 bg-white text-zinc-400 rounded-md hover:bg-zinc-50 transition-colors"><Trash2 className="w-3 h-3" /></button>
+            <div
+              key={c.id}
+              className={`relative group flex ${viewMode === "grid"
+                ? "flex-col"
+                : "flex-row gap-6 p-3"
+                } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 overflow-hidden`}
+            >
+              <div
+                className={`${viewMode === "grid"
+                  ? "aspect-[2/3] w-full border-b border-zinc-200"
+                  : "w-24 h-36 shrink-0 rounded-xl"
+                  } bg-zinc-50 relative overflow-hidden flex flex-col items-center justify-center p-3 text-center`}
+              >
+                <span className="text-base font-mono font-bold text-black block truncate max-w-full">{c.code}</span>
+                <p className="text-[10px] font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block rounded">-{c.discount_percent}%</p>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-zinc-200">
+                  <div
+                    className="h-full bg-black"
+                    style={{ width: `${(c.used_count / (c.max_uses || 1)) * 100}%` }}
+                  />
                 </div>
               </div>
 
-              <div className="flex-1 flex flex-col">
-                <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-white text-[9px] font-bold uppercase tracking-tighter">
-                  <div className="flex items-center gap-2">
-                    {c.status === "pending" && <span className="text-amber-500 flex items-center gap-1"><Clock className="w-3 h-3" /> Pending</span>}
-                    {c.status === "approved" && <span className="text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> Approved</span>}
-                    {c.status === "rejected" && <span className="text-red-500 flex items-center gap-1"><Ban className="w-3 h-3" /> Rejected</span>}
+              <div
+                className={`${viewMode === "grid" ? "p-3" : "flex-1 py-1"
+                  } flex flex-col flex-1 gap-2`}
+              >
+                <h3
+                  className={`${viewMode === "grid" ? "text-sm" : "text-base"
+                    } font-semibold text-black line-clamp-2 leading-snug`}
+                >
+                  Mã: {c.code}
+                </h3>
+                
+                <div className="text-xs text-zinc-500 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    <span>Người tạo: <span className="text-black font-medium">{c.author_id}</span></span>
                   </div>
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    {c.target_type === "all" ? <Users className="w-3 h-3" /> : c.target_type === "new_user" ? <UserPlus className="w-3 h-3" /> : <Star className="w-3 h-3" />}
-                    <span>{c.target_type === "all" ? "Public" : c.target_type === "new_user" ? "Newbie" : "Premium"}</span>
+                  <div className="flex items-center gap-1.5">
+                    {c.target_type === "all" ? <Users className="w-4 h-4" /> : c.target_type === "new_user" ? <UserPlus className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+                    <span>Đối tượng: <span className="text-black font-medium">{c.target_type === "all" ? "Tất cả" : c.target_type === "new_user" ? "Mới" : "Premium"}</span></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Ticket className="w-4 h-4" />
+                    <span>Đã dùng: <span className="text-black font-medium">{c.used_count} / {c.max_uses}</span></span>
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500">
-                    <User className="w-3 h-3" /> ID: <span className="text-black font-semibold">{c.author_id}</span>
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-end mb-2 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                      <span>Redemption</span>
-                      <span className="text-black font-mono">{c.used_count} / {c.max_uses}</span>
-                    </div>
-                    <div className="w-full h-1 bg-zinc-100"><div className="bg-black h-full " style={{ width: `${(c.used_count / (c.max_uses || 1)) * 100}%` }} /></div>
-                  </div>
+                <div
+                  className={`mt-auto pt-3 flex items-center justify-between ${viewMode === "grid" ? "border-t border-zinc-100" : ""
+                    }`}
+                >
+                  <span className="text-xs font-semibold text-black flex items-center gap-1">
+                    {c.status === "pending" && <span className="text-amber-500 flex items-center gap-1"><Clock className="w-4 h-4" /> Chờ duyệt</span>}
+                    {c.status === "approved" && <span className="text-green-600 flex items-center gap-1"><Check className="w-4 h-4" /> Đã duyệt</span>}
+                    {c.status === "rejected" && <span className="text-red-500 flex items-center gap-1"><Ban className="w-4 h-4" /> Từ chối</span>}
+                  </span>
+                  
+                  <button
+                    onClick={() => toggleStatus(c.id)}
+                    className={`text-[10px] font-semibold transition-all duration-150 px-3 py-1.5 rounded-lg uppercase tracking-wider ${
+                      c.is_active
+                        ? "bg-black text-white hover:bg-zinc-800"
+                        : "bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+                    }`}
+                  >
+                    {c.is_active ? "Active" : "Paused"}
+                  </button>
                 </div>
               </div>
+
+              <button
+                onClick={() => setDeleteConfirm(c)}
+                className="absolute top-2 right-2 p-1.5 bg-white border border-zinc-200 text-zinc-400 rounded-xl hover:text-red-500 hover:border-red-200 shadow-sm transition-all duration-150 z-10"
+                title="Xóa mã ưu đãi"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <p className="text-sm font-medium text-zinc-500">
             Chưa có dữ liệu
           </p>

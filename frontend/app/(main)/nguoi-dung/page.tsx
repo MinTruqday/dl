@@ -109,7 +109,7 @@ export default function UsersManagementPage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
-      <div className="flex flex-col gap-6 h-full min-h-0">
+      <div className="flex flex-col gap-6 h-full min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
           <div className="relative w-full md:w-96">
             <div className="absolute left-4 top-1/2 -translate-y-1/2">

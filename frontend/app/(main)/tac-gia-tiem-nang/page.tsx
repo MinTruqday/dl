@@ -134,7 +134,7 @@ export default function PotentialAuthorPage() {
           </div>
         </header>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="flex border-b border-zinc-200 w-full md:w-auto">
             {[
               { id: "PENDING", label: "Đang chờ" },
@@ -167,7 +167,7 @@ export default function PotentialAuthorPage() {
           </div>
         </div>
 
-        <div className="border border-zinc-200 bg-white">
+        <div className="border border-zinc-200 bg-white animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>

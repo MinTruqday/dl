@@ -12,7 +12,6 @@ import {
 } from "@/services/library.service";
 import {
   getPinnedDocumentsAPI,
-  getContinueReadingAPI,
   getReadingHistoryAPI,
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
@@ -89,8 +88,8 @@ export default function LibraryPage() {
   const [visible, setVisible] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState<
-    "overview" | "history" | "folders" | "lists" | "series"
-  >("overview");
+    "history" | "folders" | "lists" | "series"
+  >("history");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createType, setCreateType] = useState<"folder" | "list" | "series">("folder");
@@ -116,9 +115,8 @@ export default function LibraryPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [pinnedRes, continueRes, foldersRes, historyRes, listsRes, seriesRes] = await Promise.all([
+      const [pinnedRes, foldersRes, historyRes, listsRes, seriesRes] = await Promise.all([
         getPinnedDocumentsAPI().catch(() => ({ data: [] })),
-        getContinueReadingAPI().catch(() => ({ data: [] })),
         getBookmarkFoldersAPI().catch(() => ({ data: [] })),
         getReadingHistoryAPI().catch(() => ({ data: [] })),
         getReadingListsAPI().catch(() => ({ data: [] })),
@@ -127,10 +125,11 @@ export default function LibraryPage() {
           : Promise.resolve({ data: [] }),
       ]);
 
+      const historyData = historyRes?.data || historyRes || [];
       setPinnedDocs(pinnedRes?.data || pinnedRes || []);
-      setContinueDocs(continueRes?.data || continueRes || []);
       setFolders(foldersRes?.data || foldersRes || []);
-      setHistory(historyRes?.data || historyRes || []);
+      setHistory(historyData);
+      setContinueDocs(historyData.filter((item: any) => item.progress_percentage > 0 && item.progress_percentage < 100).slice(0, 4));
       setReadingLists(listsRes?.data || listsRes || []);
       setSeries(seriesRes?.data || seriesRes || []);
     } catch (error) {
@@ -214,7 +213,6 @@ export default function LibraryPage() {
   }
 
   const tabs = [
-    { id: "overview", label: "Tổng quan" },
     { id: "history", label: "Lịch sử đọc" },
     { id: "folders", label: "Thư mục dấu trang" },
     { id: "lists", label: "Danh sách đọc" },
@@ -222,12 +220,12 @@ export default function LibraryPage() {
   ];
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
  
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="text-sm font-semibold text-black mb-1">
               Quản lý thư viện
             </div>
@@ -255,7 +253,7 @@ export default function LibraryPage() {
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="text-sm font-semibold text-black mb-1">
               Tài liệu đã ghim
             </div>
@@ -306,8 +304,8 @@ export default function LibraryPage() {
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-          {activeTab === "overview" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+          {activeTab === "history" && continueDocs.length > 0 && (
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Đang đọc
@@ -324,12 +322,12 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              {continueDocs.length > 0 ? (
                 <div
-                  className={`grid gap-6 ${viewMode === "grid"
+                  className={`grid gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300 ${viewMode === "grid"
                     ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                     : "grid-cols-1"
                     }`}
+                  style={{ animationDelay: '150ms', animationFillMode: 'both' }}
                 >
                   {continueDocs.map((doc) => (
                     <Link
@@ -396,18 +394,11 @@ export default function LibraryPage() {
                     </Link>
                   ))}
                 </div>
-              ) : (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
-                  <p className="text-sm font-medium text-zinc-500">
-                    Chưa có dữ liệu
-                  </p>
-                </div>
-              )}
             </section>
           )}
 
           {activeTab === "history" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Lịch sử đọc
@@ -428,10 +419,11 @@ export default function LibraryPage() {
               </div>
 
               <div
-                className={`grid gap-6 ${viewMode === "grid"
+                className={`grid gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300 ${viewMode === "grid"
                   ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
                   : "grid-cols-1"
                   }`}
+                style={{ animationDelay: '150ms', animationFillMode: 'both' }}
               >
                 {history.length > 0 ? (
                   history.map((item, idx) => (
@@ -528,7 +520,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "folders" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Thư mục lưu trữ
@@ -540,7 +532,7 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                 {folders.length > 0 ? (
                   folders.map((folder) => (
                     <Link
@@ -581,7 +573,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "lists" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Danh sách đọc
@@ -593,7 +585,7 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                 {readingLists.length > 0 ? (
                   readingLists.map((list) => (
                     <Link
@@ -638,7 +630,7 @@ export default function LibraryPage() {
           )}
 
           {activeTab === "series" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold text-black">
                   Chuỗi nội dung
@@ -650,7 +642,7 @@ export default function LibraryPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                 {series.length > 0 ? (
                   series.map((s) => (
                     <Link

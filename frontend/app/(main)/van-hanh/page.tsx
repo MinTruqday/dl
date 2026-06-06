@@ -157,7 +157,7 @@ export default function OperationDashboard() {
           </div>
         </header>
 
-        <div className="space-y-12 mb-16 animate-in fade-in ">
+        <div className="space-y-12 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <div className="space-y-12">
             <section className="space-y-6">
               <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3">Sức khỏe hệ thống</h2>
@@ -360,7 +360,7 @@ export default function OperationDashboard() {
           </div>
         </div>
 
-        <div className="space-y-12 animate-in fade-in ">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
           <section>
             <div className="flex flex-col gap-1 mb-6">
               <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 w-full">Hạn mức Trí tuệ nhân tạo (AI Quota)</h2>

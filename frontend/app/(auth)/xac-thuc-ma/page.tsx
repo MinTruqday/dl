@@ -67,7 +67,7 @@ export default function VerifyCodePage() {
       <Navigation />
 
       <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
-        <div className="w-full max-w-md w-full">
+        <div className="w-full max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-black">
           Xác thực mã

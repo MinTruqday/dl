@@ -38,52 +38,85 @@ export default function CouponApprovalPage() {
   };
 
   return (
-    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+    <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
       <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-black">Duyệt mã ưu đãi</h2>
-        </div>
+        <h2 className="text-lg font-semibold text-black">Duyệt mã ưu đãi</h2>
       </div>
 
       {loading ? (
-        <div className="py-24 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-400" /></div>
+        <div className="grid gap-6 grid-cols-1 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-zinc-50 border border-zinc-200 rounded-2xl h-36 w-full animate-pulse"
+            />
+          ))}
+        </div>
       ) : coupons.length === 0 ? (
-        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+        <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <p className="text-sm font-medium text-zinc-500">
             Chưa có dữ liệu
           </p>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-6 grid-cols-1 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {coupons.map((c: any) => (
-            <div key={c.id} className="border border-zinc-200 bg-white flex flex-col md:flex-row overflow-hidden rounded-2xl hover:shadow-sm transition-shadow">
-              <div className="p-6 bg-zinc-50 border-r border-zinc-200 w-full md:w-64">
-                <span className="text-xl font-mono font-bold text-black block">{c.code}</span>
-                <p className="text-xs font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block">-{c.discount_percent}%</p>
-                <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase">
-                   <Clock className="w-3 h-3 text-amber-500" /> Pending
-                </div>
+            <div
+              key={c.id}
+              className="relative group flex flex-row gap-6 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 overflow-hidden"
+            >
+              <div
+                className="w-24 h-36 shrink-0 rounded-xl bg-zinc-50 border-zinc-200 relative overflow-hidden flex flex-col items-center justify-center p-3 text-center"
+              >
+                <span className="text-base font-mono font-bold text-black block truncate max-w-full">{c.code}</span>
+                <p className="text-[10px] font-bold text-white bg-black px-2 py-0.5 mt-2 inline-block rounded">-{c.discount_percent}%</p>
               </div>
-              
-              <div className="flex-1 p-6 flex flex-col justify-between">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500">
-                      <User className="w-3 h-3" /> Tác giả: <span className="text-black font-semibold">{c.author_id}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500">
-                      {c.target_type === "all" ? <Users className="w-3 h-3" /> : c.target_type === "new_user" ? <UserPlus className="w-3 h-3" /> : <Star className="w-3 h-3" />}
-                      Đối tượng: <span className="text-black font-semibold uppercase">{c.target_type}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-medium text-zinc-500">
-                      <Ticket className="w-3 h-3" /> Lượt dùng tối đa: <span className="text-black font-semibold">{c.max_uses}</span>
-                    </div>
+
+              <div
+                className="flex-1 py-1 flex flex-col gap-2"
+              >
+                <h3
+                  className="text-base font-semibold text-black line-clamp-2 leading-snug"
+                >
+                  Mã: {c.code}
+                </h3>
+                
+                <div className="text-xs text-zinc-500 flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-4 h-4" />
+                    <span>Tác giả: <span className="text-black font-medium">{c.author_id}</span></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {c.target_type === "all" ? <Users className="w-4 h-4" /> : c.target_type === "new_user" ? <UserPlus className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+                    <span>Đối tượng: <span className="text-black font-medium uppercase">{c.target_type}</span></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Ticket className="w-4 h-4" />
+                    <span>Lượt dùng tối đa: <span className="text-black font-medium">{c.max_uses}</span></span>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-zinc-100">
-                  <button onClick={() => handleApprove(c.id, "reject")} className="flex-1 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest hover:bg-zinc-50 rounded-xl transition-colors">Từ chối</button>
-                  <button onClick={() => handleApprove(c.id, "approve")} className="flex-1 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest border border-black rounded-xl hover:bg-zinc-800 transition-colors">Phê duyệt</button>
+                <div
+                  className="mt-auto pt-3 flex items-center justify-between"
+                >
+                  <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
+                    <Clock className="w-4 h-4" /> Chờ duyệt
+                  </span>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleApprove(c.id, "reject")}
+                      className="text-[10px] font-semibold text-zinc-500 bg-zinc-100 hover:bg-zinc-200 transition-all duration-150 px-3 py-1.5 rounded-lg uppercase tracking-wider"
+                    >
+                      Từ chối
+                    </button>
+                    <button
+                      onClick={() => handleApprove(c.id, "approve")}
+                      className="text-[10px] font-semibold text-white bg-black hover:bg-zinc-800 transition-all duration-150 px-3 py-1.5 rounded-lg uppercase tracking-wider"
+                    >
+                      Duyệt
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

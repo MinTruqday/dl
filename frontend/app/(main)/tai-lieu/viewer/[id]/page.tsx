@@ -486,8 +486,7 @@ export default function DocumentViewer() {
 
   return (
     <div
-      className={`flex h-screen bg-white overflow-hidden  font-sans ${document?.is_protected ? "select-none" : ""}`}
-      style={{ opacity: visible ? 1 : 0 }}
+      className={`flex h-screen bg-white overflow-hidden font-sans animate-in fade-in slide-in-from-bottom-8 duration-300 ${document?.is_protected ? "select-none" : ""}`}
       onMouseUp={handleTextSelection}
     >
       <div className="w-16 border-r border-zinc-200 bg-white flex flex-col items-center py-6 gap-6 shrink-0">
@@ -681,7 +680,7 @@ export default function DocumentViewer() {
 
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
           {sidebarTab === "chat" ? (
-            <div className="space-y-6 animate-in fade-in">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -779,7 +778,7 @@ export default function DocumentViewer() {
               )}
             </div>
           ) : sidebarTab === "history" ? (
-            <div className="space-y-4 animate-in fade-in">
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
               {sessions.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center gap-4">
                   <History className="w-8 h-8 text-zinc-300" />

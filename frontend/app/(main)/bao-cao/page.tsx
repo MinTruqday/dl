@@ -105,7 +105,7 @@ export default function ReportsManagementPage() {
           </div>
         </header>
 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="flex border-b border-zinc-200 w-full md:w-auto">
             <div className="pb-3 px-4 text-sm font-medium border-b-2 border-black text-black whitespace-nowrap">
               Hàng đợi báo cáo
@@ -124,7 +124,7 @@ export default function ReportsManagementPage() {
           </div>
         </div>
 
-        <div className="border border-zinc-200 bg-white overflow-x-auto">
+        <div className="border border-zinc-200 bg-white overflow-x-auto animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50">

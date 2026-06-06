@@ -568,7 +568,7 @@ export default function DocumentsPage() {
         </Modal>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0" style={{ opacity: visible ? 1 : 0 }}>
-          <aside className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2">
+          <aside className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-4">
               <h3 className="text-sm font-semibold text-black flex items-center gap-2">
                 <Search className="w-4 h-4" /> Tìm kiếm tài liệu
@@ -622,7 +622,7 @@ export default function DocumentsPage() {
             </div>
           </aside>
 
-          <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden">
+          <main className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0 overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full">
                 <button 

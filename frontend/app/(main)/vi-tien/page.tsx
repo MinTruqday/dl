@@ -235,7 +235,7 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
       <Modal
         isOpen={showTopupModal}
         onClose={() => {
@@ -392,9 +392,9 @@ export default function WalletPage() {
         </ModalFooter>
       </Modal>
 
-      <div className="grid lg:grid-cols-12 gap-6" style={{ opacity: visible ? 1 : 0 }}>
+      <div className="grid lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm">
+          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationFillMode: 'both' }}>
             <div className="text-sm font-semibold text-black mb-1">Số dư hiện tại</div>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>
@@ -420,7 +420,7 @@ export default function WalletPage() {
           </div>
 
 
-          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm">
+          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="text-sm font-semibold text-black mb-1">
               Kích hoạt Voucher
             </div>
@@ -444,7 +444,7 @@ export default function WalletPage() {
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6">
+          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
                 Nhật ký giao dịch
@@ -454,18 +454,18 @@ export default function WalletPage() {
 
             <div>
               {isLoading ? (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                   <Loader2 className="animate-spin w-4 h-4 text-zinc-400 mb-2" />
                   <p className="text-sm font-medium text-zinc-500">Đang tải dữ liệu...</p>
                 </div>
               ) : history.length === 0 ? (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
+                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                   <p className="text-sm font-medium text-zinc-500">
                     Chưa có dữ liệu
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
                   {history.map((tx) => (
                     <div
                       key={tx._id}

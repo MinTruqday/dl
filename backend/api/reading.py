@@ -16,9 +16,7 @@ async def get_history(cursor: str=None, limit: int=Query(20), current_user: User
 async def update_progress(data: ProgressUpdate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await ReadingService.update_progress(data, current_user, db=db), message='Cập nhật tiến độ thành công')
 
-@router.get('/dang-doc', response_model=APIResponse[Any])
-async def get_continue_reading(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.get_continue_reading(current_user, db=db), message='Lấy danh sách đang đọc thành công')
+
 
 @router.post('/muc-tieu', response_model=APIResponse[Any])
 async def set_reading_goal(data: ReadingGoalCreate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

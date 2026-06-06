@@ -78,7 +78,7 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-2xl transition-all ${isOpen ? "px-6 gap-4 hover:bg-zinc-100" : "px-0 justify-center hover:bg-zinc-100"
+        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-2xl transition-all duration-150 ${isOpen ? "px-6 gap-4 hover:bg-zinc-100" : "px-0 justify-center hover:bg-zinc-100"
           } ${active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
             : "font-medium text-zinc-500 border-l-2 border-transparent"
@@ -86,14 +86,14 @@ export default function Menu({
       >
         <div className="flex items-center justify-center shrink-0 w-6">
           <Icon
-            className={`w-[18px] h-[18px] ${active
+            className={`w-[18px] h-[18px] transition-all duration-150 ${active
                 ? "text-black"
                 : "text-zinc-400 "
               }`}
           />
         </div>
         <span
-          className={`whitespace-nowrap overflow-hidden   font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
+          className={`whitespace-nowrap overflow-hidden transition-all duration-150 font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
             }`}
         >
           {label}
@@ -117,7 +117,7 @@ export default function Menu({
         className={`
           fixed left-2 md:left-4 top-[calc(var(--navbar-height)+16px)] md:top-[calc(var(--navbar-height)+32px)] bottom-2 md:bottom-4
           bg-white border border-zinc-200 rounded-2xl shadow-sm z-40
-          flex flex-col overflow-hidden font-sans
+          flex flex-col overflow-hidden font-sans transition-all duration-150
           animate-in fade-in slide-in-from-left-8 duration-300
           ${isOpen ? "w-[var(--sidebar-width-expanded)]" : "w-[var(--sidebar-width-collapsed)]"}
         `}

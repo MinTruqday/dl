@@ -59,7 +59,7 @@ export default function SeriesDetailPage() {
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
       <div
-        className="mb-12 flex items-center justify-between"
+        className="mb-12 flex items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-300"
       >
         <button
           onClick={() => router.push("/collection")}
@@ -83,7 +83,8 @@ export default function SeriesDetailPage() {
       </div>
 
       <div
-        className="mb-20 border-b border-zinc-100 pb-16"
+        className="mb-20 border-b border-zinc-100 pb-16 animate-in fade-in slide-in-from-bottom-8 duration-300"
+        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
       >
         <div className="max-w-4xl space-y-10">
           <div className="flex items-center gap-4">
@@ -106,7 +107,8 @@ export default function SeriesDetailPage() {
       </div>
 
       <div
-        className="w-full"
+        className="w-full animate-in fade-in slide-in-from-bottom-8 duration-300"
+        style={{ animationDelay: '300ms', animationFillMode: 'both' }}
       >
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">

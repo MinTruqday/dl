@@ -36,11 +36,7 @@ export default function TermsPage() {
   return (
     <>
       <div
-        className="max-w-3xl mx-auto px-4 py-12 md:py-20 "
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(16px)",
-        }}
+        className="max-w-3xl mx-auto px-4 py-12 md:py-20 animate-in fade-in slide-in-from-bottom-8 duration-300"
       >
         <div className="mb-16 border-b border-zinc-200 pb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black mb-4">
@@ -74,7 +70,7 @@ export default function TermsPage() {
           </div>
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {sections.map((section, i) => (
             <section key={i} className="space-y-4">
               <h2 className="text-xl font-bold text-black border-l-4 border-black pl-4">

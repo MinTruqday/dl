@@ -93,7 +93,7 @@ export default function CommentsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="bg-white border border-zinc-200 p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-zinc-200 p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         <div className="space-y-1">
           <h2 className="text-xl font-medium text-black flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Quản lý bình luận</h2>
           <p className="text-sm font-medium text-zinc-500">Theo dõi và phản hồi độc giả</p>
@@ -110,7 +110,7 @@ export default function CommentsPage() {
       </div>
 
       {selectedDocumentId ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {loadingComments ? (
             <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-zinc-300" /></div>
           ) : comments.length === 0 ? (

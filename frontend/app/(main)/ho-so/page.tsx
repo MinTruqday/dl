@@ -203,14 +203,14 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 font-sans text-black selection:bg-black selection:text-white">
+    <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
 
       <div
         className="grid lg:grid-cols-12 gap-6"
         style={{ opacity: visible ? 1 : 0 }}
       >
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5">
+          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full border border-zinc-200 overflow-hidden bg-zinc-50 flex items-center justify-center shrink-0">
@@ -268,7 +268,7 @@ export default function ProfilePage() {
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6">
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <h2 className="text-lg font-semibold text-black">

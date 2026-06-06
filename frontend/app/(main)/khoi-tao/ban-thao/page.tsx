@@ -41,7 +41,7 @@ export default function DraftsPage() {
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {drafts.map((draft: any) => (
             <button
               key={draft._id || draft.id}

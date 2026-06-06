@@ -40,14 +40,7 @@ export async function updateReadingProgressAPI(data: {
   return result;
 }
 
-export async function getContinueReadingAPI() {
-  const res = await fetch(`${API_URL}/doc/dang-doc`, {
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách đang đọc");
-  return data;
-}
+
 
 export async function setReadingGoalAPI(data: {
   target_documents?: number;

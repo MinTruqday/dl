@@ -57,7 +57,7 @@ export default function CreateDocumentPage() {
 
   return (
     <form onSubmit={handleCreate} className="space-y-8">
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
 
         <div className="space-y-6">
           <div className="space-y-2">

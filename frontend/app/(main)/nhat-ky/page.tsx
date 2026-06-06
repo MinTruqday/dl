@@ -50,7 +50,7 @@ export default function LogsPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-black">
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
-        <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div>
             <h1 className="text-3xl font-semibold text-black">Nhật ký hệ thống</h1>
             <p className="text-sm text-zinc-500 mt-1">Lưu trữ hoạt động quản trị và kiểm duyệt</p>
@@ -66,7 +66,7 @@ export default function LogsPage() {
           </div>
         </header>
 
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <h2 className="text-sm font-semibold text-black">Bản ghi nhật ký ({activityLogs.length})</h2>
           
           <div className="border border-zinc-200 bg-white overflow-x-auto">

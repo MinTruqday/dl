@@ -312,7 +312,7 @@ export default function SettingsPage() {
       <div
         className="grid lg:grid-cols-12 gap-12"
       >
-        <aside className="lg:col-span-3 space-y-12">
+        <aside className="lg:col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="space-y-4">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
               Cài đặt
@@ -354,7 +354,7 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 space-y-6">
+        <main className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {activeSection === "appearance" && (
             <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">

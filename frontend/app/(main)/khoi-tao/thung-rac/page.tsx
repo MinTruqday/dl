@@ -38,7 +38,7 @@ export default function TrashPage() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm flex items-center justify-between">
+      <div className="bg-white border border-zinc-200 p-8 rounded-2xl shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         <div className="space-y-1">
           <h2 className="text-xl font-medium text-black">Thùng rác nội dung</h2>
           <p className="text-sm font-medium text-zinc-500">Tài liệu đã tạm thời bị gỡ bỏ</p>
@@ -46,7 +46,7 @@ export default function TrashPage() {
         <Trash2 className="w-6 h-6 text-zinc-400" />
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         {loading ? (
           <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-400" /></div>
         ) : !Array.isArray(trash) || trash.length === 0 ? (

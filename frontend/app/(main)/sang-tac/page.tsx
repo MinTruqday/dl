@@ -1412,8 +1412,7 @@ function StudioContent() {
       </Modal>
 
       <div 
-        className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
+        className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 animate-in fade-in slide-in-from-bottom-8 duration-300"
       >
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
@@ -1490,8 +1489,8 @@ function StudioContent() {
       </div>
 
       <div 
-        className="flex flex-1 overflow-hidden delay-75 w-full"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(10px)" }}
+        className="flex flex-1 overflow-hidden w-full animate-in fade-in slide-in-from-bottom-8 duration-300"
+        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
       >
         <main className="flex-1 w-full flex flex-col bg-white overflow-hidden relative border border-zinc-200 rounded-2xl shadow-sm">
               <div className="h-12 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0">

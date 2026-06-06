@@ -473,8 +473,8 @@ export default function StoragePage() {
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 font-sans text-black selection:bg-black selection:text-white">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
-        <main className={`flex flex-col gap-6 h-full min-h-0 overflow-y-auto custom-scrollbar pb-6 pr-2 ${detailsItem ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
-          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4">
+        <main className={`flex flex-col gap-6 h-full min-h-0 overflow-y-auto custom-scrollbar pb-6 pr-2 animate-in fade-in slide-in-from-bottom-8 duration-300 ${detailsItem ? 'lg:col-span-8' : 'lg:col-span-12'}`} style={{ animationFillMode: 'both' }}>
+          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm text-zinc-600">
@@ -553,7 +553,7 @@ export default function StoragePage() {
             </div>
           </div>
 
-          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col flex-1 min-h-0">
+          <div className="border border-zinc-200 bg-white rounded-2xl shadow-sm p-5 flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             {viewMode === 'files' && (
               <div className="mb-4 flex gap-2 items-center flex-wrap">
                 <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-[300px]">

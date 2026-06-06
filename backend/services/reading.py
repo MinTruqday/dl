@@ -48,22 +48,7 @@ class ReadingService:
             await db['users'].update_one({'_id': user_id}, {'$addToSet': {'badges': {'name': 'Mọt Sách', 'awarded_at': now}}})
         return {'status': 'success', 'current_streak': current_streak}
 
-    @staticmethod
-    async def get_continue_reading(current_user, db=None) -> list:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        history = await db['reading_history'].find({'user_id': str(current_user.id), 'progress_percentage': {'$lt': 100, '$gt': 0}}).sort('last_read_at', -1).limit(3).to_list(length=3)
-        if not history:
-            return []
-        doc_ids = [h['document_id'] for h in history]
-        docs = await db['documents'].find({'_id': {'$in': doc_ids}}, {'title': 1, 'slug': 1, 'cover_url': 1}).to_list(length=len(doc_ids))
-        doc_map = {str(d['_id']): d for d in docs}
-        result = []
-        for h in history:
-            doc = doc_map.get(h['document_id'])
-            if doc:
-                result.append({'document_id': h['document_id'], 'document_title': doc.get('title', ''), 'document_slug': doc.get('slug', ''), 'cover_url': doc.get('cover_url'), 'progress_percentage': h.get('progress_percentage', 0), 'current_chapter_slug': h.get('current_chapter_slug'), 'last_read_at': h['last_read_at'].isoformat() if isinstance(h.get('last_read_at'), datetime) else ''})
-        return result
+
 
     @staticmethod
     async def set_reading_goal(data, current_user, db=None) -> dict:
