@@ -14,7 +14,7 @@ class CodeInterpreter:
         logger.info(f"CodeInterpreter: Processing task (Docker Sandbox): {task_desc}")
         
         try:
-            from src.workflow.brain import llm
+            from src.agents.planning import llm
             
             system_prompt = (
                 prompt_registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"

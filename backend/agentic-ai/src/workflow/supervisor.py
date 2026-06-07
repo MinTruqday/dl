@@ -5,44 +5,43 @@ from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from loguru import logger
 
-from src.workflow.brain import brain
+from src.agents.planning import planning
 from src.agents.code_interpreter import code_interpreter
-from src.tools.search_engine import search_engine
-from src.workflow.dispatcher import dispatcher
-from src.agents.draft_generator import draft_generator
+from src.agents.search_engine import search_engine
+from src.agents.action import action
 from src.agents.knowledge import knowledge
 from src.agents.reasoning import reasoning
-from src.workflow.aggregator import aggregator
+from src.agents.response_generator import response_generator
 from uuid6 import uuid7
 
-from src.workflow.state import CoordinatorState
+from src.workflow.state import ActingState
 
-async def supervisor_node(state: CoordinatorState):
+async def supervisor_node(state: ActingState):
     start_time = state.get("start_time")
     if not start_time:
         start_time = time.time()
         
     if time.time() - start_time > 45:
         logger.error("Execution exceeded 45 seconds budget.")
-        return {"next_node": "aggregator", "error": "Yêu cầu quá phức tạp, đã vượt quá ngân sách thời gian xử lý (45s)"}
+        return {"next_node": "trimmer", "error": "Yêu cầu quá phức tạp, đã vượt quá ngân sách thời gian xử lý (45s)"}
 
     steps = state.get("steps", [])
     idx = state.get("current_step_index", 0)
     replan_count = state.get("replan_count", 0)
     
     if replan_count > 6:
-        return {"steps": steps, "current_step_index": len(steps), "next_node": "aggregator", "error": "Tool budget exceeded"}
+        return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "error": "Tool budget exceeded"}
         
     if not steps:
-        steps = await brain.create_plan(state["req"])
+        steps = await planning.create_plan(state["req"])
         idx = 0
         
     if state.get("error"):
-        logger.warning(f"Coordinator: Skipping further tools due to error: {state.get('error')}")
-        return {"steps": steps, "current_step_index": len(steps), "next_node": "aggregator", "start_time": start_time}
+        logger.warning(f"Acting: Skipping further tools due to error: {state.get('error')}")
+        return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "start_time": start_time}
         
     if idx >= len(steps):
-        return {"steps": steps, "current_step_index": idx, "next_node": "aggregator"}
+        return {"steps": steps, "current_step_index": idx, "next_node": "trimmer"}
         
     current_step = steps[idx]
     agent_name = current_step.get("agent", "ToolDispatcher")
@@ -51,7 +50,6 @@ async def supervisor_node(state: CoordinatorState):
         "CodeInterpreter": "code_interpreter",
         "SearchEngine": "search_engine",
         "ToolDispatcher": "action",
-        "DraftGenerator": "draft_generator",
         "Knowledge": "knowledge",
         "Reasoning": "reasoning"
     }
@@ -59,7 +57,7 @@ async def supervisor_node(state: CoordinatorState):
     next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
-async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: str):
+async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
     
@@ -101,40 +99,39 @@ async def execute_tool_node(state: CoordinatorState, tool_callable, agent_name: 
             final_res = f"Không thể thực thi tác vụ này sau 3 lần thử. Trả về lỗi:\n{final_res}"
             
         return {
+            "current_step_index": idx + 1,
             "consolidated_results": [f"Step {idx+1} result ({agent_name}):\n{final_res}"],
             "last_agent_result": final_res
         }
     except Exception as e:
-        logger.error(f"Coordinator: Node execution failed: {e}")
+        logger.error(f"Acting: Node execution failed: {e}")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e)
         }
 
-async def code_interpreter_node(state: CoordinatorState):
+async def code_interpreter_node(state: ActingState):
     return await execute_tool_node(state, code_interpreter, "CodeInterpreter")
 
-async def search_engine_node(state: CoordinatorState):
+async def search_engine_node(state: ActingState):
     return await execute_tool_node(state, search_engine, "SearchEngine")
 
-async def action_agent_node(state: CoordinatorState):
-    return await execute_tool_node(state, dispatcher, "ToolDispatcher")
+async def action_agent_node(state: ActingState):
+    return await execute_tool_node(state, action, "ToolDispatcher")
 
-async def draft_generator_node(state: CoordinatorState):
-    return await execute_tool_node(state, draft_generator, "DraftGenerator")
 
-async def knowledge_agent_node(state: CoordinatorState):
+async def knowledge_agent_node(state: ActingState):
     return await execute_tool_node(state, knowledge, "Knowledge")
 
-async def reasoning_agent_node(state: CoordinatorState):
+async def reasoning_agent_node(state: ActingState):
     return await execute_tool_node(state, reasoning, "Reasoning")
 
 
 
-async def trimmer_node(state: CoordinatorState):
+async def trimmer_node(state: ActingState):
     results = state.get("consolidated_results", [])
     if not results:
-        return {"next_node": "aggregator"}
+        return {"next_node": "trimmer"}
         
     total_length = sum(len(str(r)) for r in results)
     if total_length > 10000:
@@ -144,53 +141,32 @@ async def trimmer_node(state: CoordinatorState):
         combined = "\n\n".join(results)
         chunks = splitter.split_text(combined)
         trimmed = chunks[0] + "\n[Nội dung đã được cắt bớt do quá dài]" if chunks else combined
-        return {"consolidated_results": [trimmed], "next_node": "aggregator"}
+        return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         
-    return {"next_node": "aggregator"}
+    return {"next_node": "trimmer"}
 
-def trimmer_router(state: CoordinatorState):
+def trimmer_router(state: ActingState):
     return state.get("next_node", "aggregator")
 
-async def sanitizer_node(state: CoordinatorState):
+async def sanitizer_node(state: ActingState):
     req = state.get("req")
     if req:
         if hasattr(req, "token"): req.token = None
         if hasattr(req, "user_id"): req.user_id = None
         if hasattr(req, "session_id"): req.session_id = None
-    return {"req": req, "next_node": "aggregator"}
+    return {"req": req, "next_node": "trimmer"}
 
-async def aggregator_node(state: CoordinatorState):
+async def aggregator_node(state: ActingState):
     return {"final_answer": ""}
 
-def router(state: CoordinatorState):
-    steps = state.get("steps", [])
-    if not steps:
-        return "supervisor"
-    if state.get("consolidated_results"):
-        return "trimmer"
-        
-    sends = []
-    for idx, step in enumerate(steps):
-        agent_name = step.get("agent", "ToolDispatcher")
-        route_map = {
-            "CodeInterpreter": "code_interpreter",
-            "SearchEngine": "search_engine",
-            "ToolDispatcher": "action",
-            "DraftGenerator": "draft_generator",
-            "Knowledge": "knowledge",
-            "Reasoning": "reasoning"
-        }
-        target = route_map.get(agent_name, "action")
-        sends.append(Send(target, {"req": state["req"], "steps": steps, "current_step_index": idx}))
-    
-    return sends
+def router(state: ActingState):
+    return state.get("next_node", "aggregator")
 
-workflow = StateGraph(CoordinatorState)
+workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("code_interpreter", code_interpreter_node)
 workflow.add_node("search_engine", search_engine_node)
 workflow.add_node("action", action_agent_node)
-workflow.add_node("draft_generator", draft_generator_node)
 workflow.add_node("knowledge", knowledge_agent_node)
 workflow.add_node("reasoning", reasoning_agent_node)
 workflow.add_node("trimmer", trimmer_node)
@@ -203,32 +179,31 @@ workflow.add_conditional_edges("supervisor", router, {
     "code_interpreter": "code_interpreter",
     "search_engine": "search_engine",
     "action": "action",
-    "draft_generator": "draft_generator",
     "knowledge": "knowledge",
     "reasoning": "reasoning",
     "aggregator": "aggregator",
     "trimmer": "trimmer"
 })
 
-for node in ["code_interpreter", "search_engine", "action", "draft_generator", "knowledge", "reasoning"]:
-    workflow.add_edge(node, "trimmer")
+for node in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
+    workflow.add_edge(node, "supervisor")
 
 workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "sanitizer"})
 workflow.add_edge("sanitizer", "aggregator")
 workflow.add_edge("aggregator", END)
 
 memory = MemorySaver()
-coordinator_app = workflow.compile(
+supervisor_app = workflow.compile(
     checkpointer=memory,
     interrupt_before=["action"]
 )
 
-class CoordinatorAgent:
+class Supervisor:
     def __init__(self):
-        self.app = coordinator_app
+        self.app = supervisor_app
 
     async def execute_plan(self, req):
-        logger.info("Coordinator: Starting LangGraph execution flow")
+        logger.info("Acting: Starting LangGraph execution flow")
         yield {"type": "status", "node": "Phân tích yêu cầu"}
         
         initial_state = {
@@ -253,7 +228,7 @@ class CoordinatorAgent:
                     steps = state_update.get("steps")
                     if steps and state_update.get("current_step_index") == 0:
                         yield {"type": "plan", "steps": steps}
-                elif node_name in ["code_interpreter", "search_engine", "action", "draft_generator", "knowledge", "reasoning"]:
+                elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
                     else:
@@ -265,8 +240,8 @@ class CoordinatorAgent:
         if not final_results:
             final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống."]
             
-        async for chunk in aggregator.aggregate_stream(req.query, final_results):
+        async for chunk in response_generator.aggregate_stream(req.query, final_results):
             yield {"type": "message", "chunk": chunk}
                         
         pass
-coordinator = CoordinatorAgent()
+supervisor = Supervisor()

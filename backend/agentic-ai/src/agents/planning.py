@@ -16,7 +16,7 @@ llm = ChatHuggingFace(llm=_hf_endpoint)
 
 from src.schemas.plan import PlanStep, ExecutionPlan
 
-class AgenticBrain:
+class Planning:
     def __init__(self):
         self.llm = llm
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
@@ -26,11 +26,11 @@ class AgenticBrain:
         try:
             return await self.llm.ainvoke(messages)
         except (httpx.TimeoutException, httpx.HTTPStatusError, Exception) as primary_err:
-            logger.warning(f"Brain: Primary LLM failed ({primary_err}).")
+            logger.warning(f"Planning: Primary LLM failed ({primary_err}).")
             raise primary_err
         
     async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info(f"Brain: Creating structured plan for query: {req.query}")
+        logger.info(f"Planning: Creating structured plan for query: {req.query}")
         
         from src.core.prompt_registry import prompt_registry, PromptType
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
@@ -60,7 +60,7 @@ class AgenticBrain:
             return steps
             
         except Exception as e:
-            logger.error(f"Brain: Plan creation failed: {e}")
-            return [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
+            logger.error(f"Planning: Plan creation failed: {e}")
+            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
 
-brain = AgenticBrain()
+planning = Planning()

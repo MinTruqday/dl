@@ -1,12 +1,12 @@
 import json
 from loguru import logger
 from src.core.config import settings
-from src.tools.actions import tools, llm
+from src.tools.api_tools import tools, llm
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.core.prompt_registry import prompt_registry, PromptType
 
 
-class ToolDispatcher:
+class Action:
     def __init__(self):
         self.base_url = settings.INTERNAL_API_URL
         self.tool_map = {t.name: t for t in tools}
@@ -72,4 +72,4 @@ class ToolDispatcher:
             logger.error(f"ToolDispatcher: Task execution failed: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-dispatcher = ToolDispatcher()
+action = Action()

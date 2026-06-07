@@ -10,7 +10,6 @@ class PromptType(Enum):
     OPTIMIZE_QUERY = "optimize_query"
     GENERATE_DIRECT = "generate_direct"
     SYNTHESIS = "synthesis"
-    DRAFT_GENERATOR = "draft_generator"
     CODE_INTERPRETER = "code_interpreter"
     SELF_REFLECTION = "self_reflection"
     PRIMARY_ROUTER = "primary_router"

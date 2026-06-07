@@ -175,7 +175,7 @@ async def retrieve_db(state: AgentState):
     return {"documents": list(set(extracted_docs)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
-    from src.tools.search_engine import search_engine
+    from src.agents.search_engine import search_engine
     question = state["question"]
     try:
         results = await search_engine.execute(question)

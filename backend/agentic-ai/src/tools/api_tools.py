@@ -505,6 +505,67 @@ async def create_document(title: str, description: str, content: str, format: st
         return f"Lỗi hệ thống: {e}"
 
 @tool
+async def update_document(document_id: str, new_content: str, config: RunnableConfig) -> str:
+    """Update an existing document's content by its ID. Replaces the entire document content with new_content."""
+    token = config.get("configurable", {}).get("token")
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập"
+
+    headers = {"Authorization": token}
+    
+    try:
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        if res.status_code != 200:
+            return f"Lỗi bảo mật hoặc tài liệu không tồn tại. (Mã lỗi: {res.status_code})"
+        doc_data = res.json().get("data", {})
+    except Exception as e:
+        return f"Lỗi hệ thống khi tải tài liệu: {e}"
+
+    format = doc_data.get("content_format", "json")
+    
+    if format == 'json':
+        import json, datetime
+        blocks = []
+        for p in new_content.split("\n\n"):
+            if p.strip():
+                blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
+        blocks.append({
+            "type": "paragraph",
+            "data": {
+                "text": "<i>Nội dung đã được chỉnh sửa bởi DocLib AI</i>"
+            }
+        })
+        final_content = json.dumps({
+            "time": int(datetime.datetime.now().timestamp() * 1000),
+            "blocks": blocks,
+            "version": "2.29.1"
+        })
+    elif format == 'latex':
+        if '\\end{document}' in new_content:
+            final_content = new_content.replace('\\end{document}', '\\vspace{1em}\n\\noindent\\textit{Nội dung đã được chỉnh sửa bởi DocLib AI}\n\\end{document}')
+        else:
+            final_content = new_content + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung đã được chỉnh sửa bởi DocLib AI}"
+    else:
+        final_content = new_content
+        
+    try:
+        payload = {
+            "content": final_content
+        }
+        res_update = await _make_api_request("PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, json=payload)
+        if res_update.status_code in [200, 201]:
+            import langchain
+            try:
+                if langchain.llm_cache:
+                    langchain.llm_cache.clear()
+            except Exception as e:
+                pass
+            return f"Đã cập nhật tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
+        return f"Lỗi cập nhật tài liệu (Mã lỗi: {res_update.status_code})"
+    except Exception as e:
+        return f"Lỗi hệ thống: {e}"
+
+@tool
 async def translate_document(document_id: str, target_language: str, config: RunnableConfig) -> str:
     """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document."""
     token = config.get("configurable", {}).get("token")
@@ -576,8 +637,13 @@ async def translate_document(document_id: str, target_language: str, config: Run
             "blocks": new_blocks,
             "version": "2.29.1"
         })
+    elif format == 'latex':
+        if '\\end{document}' in translated_text:
+            new_content = translated_text.replace('\\end{document}', '\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}\n\\end{document}')
+        else:
+            new_content = translated_text + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}"
     else:
-        new_content = translated_text + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}"
+        new_content = translated_text + "\n\n(Nội dung được tạo bởi DocLib AI)"
         
     try:
         import unicodedata
@@ -625,8 +691,8 @@ tools = [
     agent_peer_review,
     agent_transform_tone,
     create_document,
+    update_document,
     create_deposit_link,
-    create_document,
     translate_document
 ]
 

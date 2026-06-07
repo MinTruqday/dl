@@ -24,7 +24,7 @@ class SemanticRouter:
             input_variables=["question"]
         )
         try:
-            from src.workflow.brain import llm
+            from src.agents.planning import llm
             from pydantic import BaseModel, Field
             
             class RouteDecision(BaseModel):

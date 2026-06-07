@@ -23,14 +23,14 @@ class SummarizeState(TypedDict):
     chunk: str
 
 async def summarize_node(state: SummarizeState):
-    from src.workflow.brain import llm
+    from src.agents.planning import llm
     from langchain_core.messages import HumanMessage
     prompt = f"Tóm tắt chi tiết đoạn tài liệu sau đây bằng tiếng Việt:\n\n{state['chunk']}"
     res = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"summaries": [res.content]}
 
 async def reduce_node(state: MapReduceState):
-    from src.workflow.brain import llm
+    from src.agents.planning import llm
     from langchain_core.messages import HumanMessage
     combined = "\n\n---\n\n".join(state["summaries"])
     prompt = f"Dựa vào các bản tóm tắt thành phần dưới đây, hãy tổng hợp thành một bản tóm tắt hoàn chỉnh, mạch lạc và đầy đủ thông tin nhất:\n\n{combined}"
@@ -52,7 +52,7 @@ map_reduce_app = mr_graph.compile()
 @tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     """Sử dụng công cụ này để đọc và tóm tắt toàn bộ một tài liệu khổng lồ (Map-Reduce)."""
-    from src.tools.actions import _get_doc_text
+    from src.tools.api_tools import _get_doc_text
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Không tìm thấy token."

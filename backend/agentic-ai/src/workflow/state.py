@@ -36,7 +36,7 @@ class AgentState(TypedDict):
     image_data: str
     file_data: str
 
-class CoordinatorState(TypedDict):
+class ActingState(TypedDict):
     req: Any
     steps: List[Dict[str, str]]
     current_step_index: int

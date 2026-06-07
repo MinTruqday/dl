@@ -5,8 +5,8 @@ import json
 from loguru import logger
 from src.schemas.chat import ChatRequest
 
-from src.workflow.coordinator import coordinator
-from src.workflow.semantic_router import router_agent
+from src.workflow.supervisor import supervisor
+from src.agents.semantic_router import semantic_router
 from src.core.prompt_registry import prompt_registry, PromptType
 
 
@@ -21,7 +21,17 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         req.token = bearer_token
 
     try:
-        route_data = await router_agent.execute(req.query)
+        if req.document_id:
+            from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
+            try:
+                doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{req.document_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
+                if doc_res.status_code not in [200, 201]:
+                    return {"answer": "Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu này hoặc tài liệu không tồn tại.", "route": "error"}
+            except Exception as e:
+                logger.error(f"Error checking document access: {e}")
+                return {"answer": "Lỗi: Không thể xác thực quyền truy cập tài liệu lúc này.", "route": "error"}
+                
+        route_data = await semantic_router.execute(req.query)
         route = route_data["route"]
         final_answer = ""
         
@@ -48,7 +58,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 res = await chat_llm.ainvoke([HumanMessage(content=content)])
                 final_answer = res.content
         else:
-            async for event in coordinator.execute_plan(req):
+            async for event in supervisor.execute_plan(req):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
                 
@@ -73,12 +83,24 @@ async def stream_endpoint(req: ChatRequest, request: Request):
         from src.memory.manager import memory_manager
         
         try:
+            if req.document_id:
+                from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
+                try:
+                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{req.document_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
+                    if doc_res.status_code not in [200, 201]:
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu này hoặc tài liệu không tồn tại.'})}\n\n"
+                        return
+                except Exception as e:
+                    logger.error(f"Error checking document access: {e}")
+                    yield f"event: message\ndata: {json.dumps({'chunk': 'Lỗi: Không thể xác thực quyền truy cập tài liệu lúc này.'})}\n\n"
+                    return
+                    
             if req.session_id:
                 history = await memory_manager.get_short_term(req.session_id)
                 if history:
                     req.conversation_history = history
             
-            route_data = await router_agent.execute(req.query)
+            route_data = await semantic_router.execute(req.query)
             route = route_data["route"]
             final_answer = ""
             
@@ -115,7 +137,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     await memory_manager.save_short_term(req.session_id, {"role": "user", "content": req.query})
                     await memory_manager.save_short_term(req.session_id, {"role": "assistant", "content": final_answer})
             else:
-                async for event in coordinator.execute_plan(req):
+                async for event in supervisor.execute_plan(req):
                     event_type = event["type"]
                 
                     if event_type == "status":
