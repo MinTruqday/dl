@@ -73,14 +73,15 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         
         replan_count = 0
         final_res = ""
+        current_task = task_desc
         while replan_count < 3:
             if agent_name == "ToolDispatcher":
                 token = getattr(req, "token", None)
-                res = await tool_callable.execute(task_desc, {}, req.user_id, token)
+                res = await tool_callable.execute(current_task, {}, req.user_id, token)
             elif agent_name == "Knowledge":
                 res = await tool_callable.execute(req)
             else:
-                res = await tool_callable.execute(task_desc)
+                res = await tool_callable.execute(current_task)
             
             from src.core.prompt_registry import prompt_registry, PromptType
             prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
@@ -89,7 +90,14 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
-                logger.warning(f"Self-reflection failed for {agent_name}, retrying {replan_count}/3")
+                logger.warning(f"Self-reflection failed for {agent_name}, replanning {replan_count}/3")
+                replan_prompt = (
+                    f"The following task failed:\n{current_task}\n\n"
+                    f"Error result:\n{res}\n\n"
+                    "Rewrite the task description to fix the issue. Output only the revised task."
+                )
+                replan_res = await llm.ainvoke(replan_prompt)
+                current_task = replan_res.content.strip() or current_task
                 final_res = res
             else:
                 final_res = res
@@ -134,13 +142,22 @@ async def trimmer_node(state: ActingState):
         return {"next_node": "trimmer"}
         
     total_length = sum(len(str(r)) for r in results)
-    if total_length > 10000:
-        logger.info(f"Trimming consolidated results (Length: {total_length})")
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
-        splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=0)
-        combined = "\n\n".join(results)
-        chunks = splitter.split_text(combined)
-        trimmed = chunks[0] + "\n[Nội dung đã được cắt bớt do quá dài]" if chunks else combined
+    if total_length > 12000:
+        logger.info(f"Summarizing consolidated results (Length: {total_length})")
+        try:
+            from src.workflow.brain import llm
+            combined = "\n\n".join(str(r) for r in results)
+            summary_prompt = (
+                "Summarize the following agent execution results concisely, "
+                "preserving all key facts, numbers, IDs, and structured data. "
+                "Output in the same language as the input.\n\n"
+                f"{combined[:20000]}"
+            )
+            summary_res = await llm.ainvoke(summary_prompt)
+            trimmed = summary_res.content.strip()
+        except Exception as e:
+            logger.warning(f"Summarization failed, falling back to truncation: {e}")
+            trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         
     return {"next_node": "trimmer"}
@@ -218,7 +235,7 @@ class Supervisor:
         }
         
         final_results = []
-        config = {"configurable": {"thread_id": req.session_id or str(uuid7())}}
+        config = {"configurable": {"thread_id": req.session_id or str(uuid7())}, "recursion_limit": 25}
         async for output in self.app.astream(initial_state, config=config):
             for node_name, state_update in output.items():
                 if "consolidated_results" in state_update:

@@ -332,7 +332,7 @@ export default function TroChuyenPage() {
         session_id: sessionId,
         conversation_history: messages.slice(-8),
         user_id: user?.id || user?._id || "guest",
-        document_id: documentId || undefined,
+        document_ids: documentId ? [documentId] : [],
         image_data: selectedImage?.data,
         file_data: selectedFile?.data,
       });

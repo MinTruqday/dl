@@ -1,7 +1,18 @@
 import time
+import re
 from loguru import logger
 from typing import List
 from src.core.prompt_registry import prompt_registry, PromptType
+
+_INJECTION_PATTERN = re.compile(
+    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?token"
+    r"|ignore (previous|above|all)|jailbreak|do anything now|dan mode"
+    r"|bypass (safety|filter|restriction))",
+    re.IGNORECASE
+)
+
+def _contains_injection(text: str) -> bool:
+    return bool(_INJECTION_PATTERN.search(text))
 
 
 class ResponseGenerator:
@@ -11,16 +22,18 @@ class ResponseGenerator:
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
         logger.info(f"ResponseGenerator: Consolidating results for query: {query[:50]}")
         
+        if _contains_injection(query):
+            logger.warning(f"ResponseGenerator: Possible prompt injection detected in query")
+            yield "Yêu cầu này vi phạm chính sách sử dụng. Vui lòng đặt câu hỏi khác."
+            return
+        
         try:
             from src.agents.planning import llm
             from langchain_core.messages import HumanMessage
             
             gathered_data = "\n\n".join(consolidated_results)
             if len(gathered_data) > 12000:
-                from langchain_text_splitters import RecursiveCharacterTextSplitter
-                splitter = RecursiveCharacterTextSplitter(chunk_size=12000, chunk_overlap=0)
-                chunks = splitter.split_text(gathered_data)
-                gathered_data = chunks[0] + "\n[Nội dung đã được cắt bớt do quá dài]" if chunks else ""
+                gathered_data = gathered_data[:12000]
                 
             final_prompt = prompt_registry.get(PromptType.AGGREGATOR).format(query=query, gathered_data=gathered_data)
             

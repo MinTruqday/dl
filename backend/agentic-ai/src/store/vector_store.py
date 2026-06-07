@@ -2,7 +2,7 @@ import httpx
 import asyncio
 import os
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+from qdrant_client.http.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, MatchAny
 from typing import List, Dict, Optional
 from loguru import logger
 from src.core.config import settings
@@ -53,10 +53,10 @@ class VectorStore:
         if self._upsert_queue:
             await self._upsert_queue.join()
 
-    async def query(self, query_vector: List[float], document_id: Optional[str] = None, limit: int = 5) -> List[Dict]:
+    async def query(self, query_vector: List[float], document_ids: Optional[List[str]] = None, limit: int = 5) -> List[Dict]:
         query_filter = None
-        if document_id:
-            query_filter = Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))])
+        if document_ids:
+            query_filter = Filter(must=[FieldCondition(key="document_id", match=MatchAny(any=document_ids))])
         
         try:
             results = await self.client.search(

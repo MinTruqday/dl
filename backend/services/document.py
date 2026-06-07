@@ -133,6 +133,16 @@ class DocumentService:
             if db_updated and str(db_updated).split('+')[0] != str(content_in.expected_version).split('+')[0]:
                 raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác.")
             
+        if document.get("content"):
+            await db["document_revisions"].insert_one({
+                "document_id": document_id,
+                "author_id": str(current_user.id),
+                "content": document.get("content"),
+                "content_format": document.get("content_format"),
+                "created_at": datetime.now(timezone.utc),
+                "note": "Auto-saved revision before update"
+            })
+
         await docs_collection.update_one(
             {"_id": document_id},
             {"$set": {
@@ -173,6 +183,16 @@ class DocumentService:
                 raise HTTPException(status_code=400, detail="Đường dẫn tài liệu này đã tồn tại.")
                 
         if update_data:
+            if doc.get("content") and "content" in update_data:
+                await db["document_revisions"].insert_one({
+                    "document_id": document_id,
+                    "author_id": str(current_user.id),
+                    "content": doc.get("content"),
+                    "content_format": doc.get("content_format"),
+                    "created_at": datetime.now(timezone.utc),
+                    "note": "Auto-saved revision before update"
+                })
+            
             update_data["updated_at"] = datetime.now(timezone.utc)
             await docs_col.update_one({"_id": document_id}, {"$set": update_data})
             

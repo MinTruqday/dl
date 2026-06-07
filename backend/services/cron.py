@@ -50,7 +50,38 @@ async def integrity_monitor_worker(db=None):
         checked_count += 1
     return checked_count
 
+async def orphaned_file_cleanup_worker(db=None):
+    from core.database import db_client
+    from core.storage import delete_file
+    from datetime import datetime, timezone, timedelta
+    if db is None:
+        db = db_client.mongodb.get_default_database()
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    query = {
+        'status': 'pending',
+        'created_at': {'$lt': cutoff}
+    }
+    orphans = await db['uploads'].find(query).to_list(length=200)
+    deleted_count = 0
+    for orphan in orphans:
+        try:
+            file_path = orphan.get('file_path') or orphan.get('url')
+            if file_path:
+                try:
+                    await delete_file(file_path)
+                except Exception as e:
+                    logger.warning(f"Cron Service: Could not delete orphan file {file_path}: {e}")
+            await db['uploads'].delete_one({'_id': orphan['_id']})
+            deleted_count += 1
+            logger.info(f"Cron Service: Deleted orphaned upload {orphan['_id']}")
+        except Exception as e:
+            logger.error(f"Cron Service: Failed to cleanup orphan {orphan.get('_id')}: {e}")
+    return deleted_count
+
+_cleanup_tick = 0
+
 async def run_cron_jobs(db=None):
+    global _cleanup_tick
     logger.info('Cron Service: Starting background automation tasks')
     while True:
         try:
@@ -66,6 +97,12 @@ async def run_cron_jobs(db=None):
             integrity_count = await integrity_monitor_worker()
             if integrity_count > 0:
                 logger.info(f'Cron Service: Integrity Monitor checked {integrity_count} documents')
+            _cleanup_tick += 1
+            if _cleanup_tick >= 1440:
+                _cleanup_tick = 0
+                orphan_count = await orphaned_file_cleanup_worker()
+                if orphan_count > 0:
+                    logger.info(f'Cron Service: Cleaned {orphan_count} orphaned uploads')
         except Exception as e:
             logger.error(f'Cron Service Error: {str(e)}')
         await asyncio.sleep(60)

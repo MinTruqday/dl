@@ -4,7 +4,7 @@ from typing import Optional
 class ChatRequest(BaseModel):
     query: str
     user_id: str
-    document_id: Optional[str] = None
+    document_ids: Optional[list] = []
     useWeb: bool = False
     useSmart: bool = False
     image_data: Optional[str] = None

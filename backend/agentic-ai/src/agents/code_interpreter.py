@@ -33,12 +33,16 @@ class CodeInterpreter:
             response = await llm.ainvoke(messages)
             content = response.content.strip()
             
-            if "```python" in content:
-                code = content.split("```python")[1].split("```")[0].strip()
-            elif "```" in content:
-                code = content.split("```")[1].strip()
+            import re
+            match = re.search(r"```[pP]ython(.*?)```", content, re.DOTALL)
+            if match:
+                code = match.group(1).strip()
             else:
-                code = content.strip()
+                match = re.search(r"```(.*?)```", content, re.DOTALL)
+                if match:
+                    code = match.group(1).strip()
+                else:
+                    code = content.strip()
 
             def write_temp_script(content):
                 import tempfile
@@ -51,7 +55,18 @@ class CodeInterpreter:
                 
             try:
                 docker_cmd = [
-                    "python", script_path
+                    "docker", "run", "--rm",
+                    "-v", f"{script_path}:/app/script.py:ro",
+                    "--network", "none",
+                    "--memory", "128m",
+                    "--memory-swap", "128m",
+                    "--cpus", "0.5",
+                    "--pids-limit", "64",
+                    "--read-only",
+                    "--tmpfs", "/tmp:size=50m,noexec,nosuid",
+                    "--cap-drop", "ALL",
+                    "python:3.9-slim",
+                    "python", "/app/script.py"
                 ]
                 
                 proc = await asyncio.create_subprocess_exec(
@@ -67,10 +82,15 @@ class CodeInterpreter:
                     await proc.communicate()
                     return "Security error: Code execution exceeded the allowed time limit (timeout 15s)."
                 
+                MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
-                    final_res = f"Execution output:\n{stdout.decode()}\n"
+                    out = stdout[:MAX_OUTPUT]
+                    final_res = f"Execution output:\n{out.decode(errors='replace')}\n"
+                    if len(stdout) > MAX_OUTPUT:
+                        final_res += "[Output truncated at 512KB]"
                 else:
-                    final_res = f"Execution error:\n{stderr.decode()}\n"
+                    err = stderr[:MAX_OUTPUT]
+                    final_res = f"Execution error:\n{err.decode(errors='replace')}\n"
                     
             finally:
                 def remove_if_exists(path):

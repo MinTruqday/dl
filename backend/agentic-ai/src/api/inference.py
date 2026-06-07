@@ -415,3 +415,13 @@ async def extract_text(req: dict):
     except Exception as e:
         logger.error(f"Inference: Extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này.")
+
+@router.delete("/vector/{document_id}")
+async def delete_vector_document(document_id: str):
+    try:
+        from src.store.vector_store import vector_store
+        await vector_store.delete_by_document(document_id)
+        return {"status": "success", "message": f"Deleted vectors for {document_id}"}
+    except Exception as e:
+        logger.error(f"Inference: Vector delete failed for {document_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

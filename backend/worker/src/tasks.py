@@ -9,9 +9,48 @@ from core.config import settings
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
 
-celery_app = Celery("doclib_tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
+from kombu import Exchange, Queue
 
-@celery_app.task(name="src.tasks.compile_document_tectonic")
+celery_app = Celery("doclib_tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
+celery_app.conf.task_acks_late = True
+celery_app.conf.worker_prefetch_multiplier = 1
+
+celery_app.conf.task_queues = (
+    Queue('celery', Exchange('celery'), routing_key='celery',
+          queue_arguments={'x-dead-letter-exchange': 'dlx',
+                           'x-dead-letter-routing-key': 'dlq'}),
+    Queue('dlq', Exchange('dlx'), routing_key='dlq'),
+)
+
+@celery_app.task(
+    name="src.tasks.hard_delete_document_task",
+    acks_late=True,
+    reject_on_worker_lost=True,
+    max_retries=3,
+    default_retry_delay=10
+)
+def hard_delete_document_task(document_id: str, user_id: str):
+    logger.info(f"Saga: Hard deleting document {document_id}")
+    import httpx
+    try:
+        from core.database import db_client
+        # Although we are in a worker, we might need an event loop or just call synchronous requests if not async.
+        # But this is Celery (sync task).
+        rag_url = settings.AGENTIC_AI_URL
+        if rag_url:
+            httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
+        logger.info(f"Saga: Hard delete cleanup successful for {document_id}")
+    except Exception as e:
+        logger.error(f"Saga: Hard delete failed for {document_id}: {e}")
+        raise hard_delete_document_task.retry(exc=e)
+
+@celery_app.task(
+    name="src.tasks.compile_document_tectonic",
+    acks_late=True,
+    reject_on_worker_lost=True,
+    max_retries=2,
+    default_retry_delay=10
+)
 def compile_document_tectonic(document_id, tex_content):
     logger.info(f"Task: compile_document_tectonic started for document {document_id}")
     with tempfile.TemporaryDirectory() as temp_dir:

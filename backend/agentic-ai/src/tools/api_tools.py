@@ -1,19 +1,47 @@
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+import asyncio
+from loguru import logger
+from typing import Optional
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+_http_client: Optional[httpx.AsyncClient] = None
+
+def _get_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient(
+            limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
+            timeout=httpx.Timeout(30.0)
+        )
+    return _http_client
+
 async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
-    async with httpx.AsyncClient() as client:
-        response = await client.request(method, url, **kwargs)
-        if response.status_code in [429, 500, 502, 503, 504]:
-            response.raise_for_status()
-        return response
+    from uuid6 import uuid7
+    if method.upper() in ["POST", "PUT", "PATCH", "DELETE"]:
+        headers = kwargs.get("headers", {})
+        if "Idempotency-Key" not in headers:
+            headers["Idempotency-Key"] = str(uuid7())
+        kwargs["headers"] = headers
 
+    max_retries = 3 if method.upper() == "GET" else 1
+    client = _get_client()
+    for attempt in range(max_retries):
+        try:
+            response = await client.request(method, url, **kwargs)
+            if response.status_code not in [429, 500, 502, 503, 504]:
+                return response
+            if attempt == max_retries - 1:
+                response.raise_for_status()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise e
+        await asyncio.sleep(2 ** attempt)
+    return response
 
 import jwt
 def _check_admin(token: str) -> bool:
     try:
-        payload = jwt.decode(token, options={"verify_signature": False})
+        from src.core.config import settings
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "student")
         return role in ["admin", "teacher"]
     except:
@@ -79,12 +107,14 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
+    if not code or not code.strip():
+        return "Lỗi: Mã voucher không hợp lệ"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("POST", 
-                f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma", 
-                json={"code": code}, 
-                headers=headers, 
+        response = await _make_api_request("POST",
+                f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma",
+                json={"code": code.strip()},
+                headers=headers,
                 timeout=30
             )
         if response.status_code == 200:
@@ -123,20 +153,35 @@ async def send_virtual_tip(target_user_id: str, amount: int, config: RunnableCon
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để gửi tặng dl"
+    if amount <= 0:
+        return "Lỗi: Số dl phải lớn hơn 0"
     headers = {"Authorization": token}
+
+    balance_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=10)
+    if balance_res.status_code != 200:
+        return "Không thể kiểm tra số dư trước khi giao dịch. Hãy thử lại."
+    current_balance = balance_res.json().get("data", {}).get("balance", 0)
+    if current_balance < amount:
+        return f"Số dư không đủ: hiện có {current_balance} dl, cần {amount} dl"
+
+    from uuid6 import uuid7
+    saga_id = str(uuid7())
+    logger.info(f"Saga [{saga_id}]: Initiating tip transfer {amount} dl -> {target_user_id}")
     try:
-        response = await _make_api_request("POST", 
-                f"{INTERNAL_API_URL}/vi-tien/tien-ung-ho/{target_user_id}?amount={amount}", 
-                headers=headers, 
+        response = await _make_api_request("POST",
+                f"{INTERNAL_API_URL}/vi-tien/tien-ung-ho/{target_user_id}?amount={amount}",
+                headers=headers,
                 timeout=30
             )
         if response.status_code == 200:
+            logger.info(f"Saga [{saga_id}]: Completed successfully")
             return f"Đã gửi tặng thành công {amount} dl tới người dùng {target_user_id}"
         data = response.json()
+        logger.warning(f"Saga [{saga_id}]: Failed - {data}")
         return f"Lỗi giao dịch: {data.get('detail', 'Số dư không đủ hoặc người dùng không tồn tại')}"
     except Exception as e:
-        logger.error(f"Error calling tip API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
+        logger.error(f"Saga [{saga_id}]: Exception - {e}")
+        return "Hệ thống đang gặp sự cố. Giao dịch chưa được thực hiện."
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
@@ -191,20 +236,17 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
-    if not _check_admin(token):
-        return "UnauthorizedException: Bạn không có quyền xóa tài liệu này."
 
     headers = {"Authorization": token}
     try:
-        import langchain
-        try:
-            if langchain.llm_cache:
-                langchain.llm_cache.clear()
-                logger.info("Cleared Semantic Cache due to document update")
-        except Exception as e:
-            pass
         response = await _make_api_request("DELETE", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=30)
         if response.status_code == 200:
+            try:
+                from src.store.vector_store import vector_store
+                await vector_store.delete_by_document(document_id)
+                logger.info(f"Vector store cleaned for document {document_id}")
+            except Exception as ve:
+                logger.warning(f"Vector cleanup failed for {document_id}: {ve}")
             return "Đã xóa tài liệu thành công"
         return "Xóa tài liệu thất bại"
     except Exception as e:
@@ -217,18 +259,10 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực"
-    if not _check_admin(token):
-        return "UnauthorizedException: Bạn không có quyền khôi phục tài liệu này."
 
     headers = {"Authorization": token}
     try:
-        import langchain
-        try:
-            if langchain.llm_cache:
-                langchain.llm_cache.clear()
-                logger.info("Cleared Semantic Cache due to document update")
-        except Exception as e:
-            pass
+        # cache invalidation is now handled per-document
         response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, timeout=30)
         if response.status_code == 200:
             return "Đã khôi phục tài liệu thành công"
@@ -243,8 +277,6 @@ async def create_document(title: str, content: str, config: RunnableConfig) -> s
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
-    if not _check_admin(token):
-        return "UnauthorizedException: Bạn không có quyền xóa tài liệu này."
 
     headers = {"Authorization": token}
     
@@ -298,7 +330,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
 
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": f"Bearer {token}"}, timeout=30)
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": token}, timeout=30)
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
@@ -554,12 +586,6 @@ async def update_document(document_id: str, new_content: str, config: RunnableCo
         }
         res_update = await _make_api_request("PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, json=payload)
         if res_update.status_code in [200, 201]:
-            import langchain
-            try:
-                if langchain.llm_cache:
-                    langchain.llm_cache.clear()
-            except Exception as e:
-                pass
             return f"Đã cập nhật tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
         return f"Lỗi cập nhật tài liệu (Mã lỗi: {res_update.status_code})"
     except Exception as e:
@@ -693,7 +719,8 @@ tools = [
     create_document,
     update_document,
     create_deposit_link,
-    translate_document
+    translate_document,
+    extract_structured_data
 ]
 
 llama_model = settings.LLAMA_MODEL

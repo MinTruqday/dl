@@ -46,6 +46,18 @@ llama_client = AsyncInferenceClient(
 )
 
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
+
+try:
+    _fallback_client = AsyncInferenceClient(
+        model=settings.FALLBACK_MODEL,
+        token=settings.HF_TOKEN,
+    )
+    _fallback_llm = HFInferenceChat(client=_fallback_client, model=settings.FALLBACK_MODEL)
+    llm = llm.with_fallbacks([_fallback_llm])
+    logger.info(f"LLM fallback chain configured: primary -> {settings.FALLBACK_MODEL}")
+except Exception as e:
+    logger.warning(f"Failed to configure LLM fallback: {e}")
+
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 async def contextualize_question(state: AgentState):
@@ -109,7 +121,22 @@ def _mask_pii(text: str) -> str:
 
 async def retrieve_db(state: AgentState):
     question = state["question"]
-    document_id = state.get("document_id")
+    document_ids = state.get("document_ids", [])
+
+    if document_ids and len(document_ids) >= 2:
+        logger.info(f"Using cross-document retrieval for {len(document_ids)} docs")
+        try:
+            raw_docs = await retrieval_service.cross_document_retrieve(question, document_ids, k=6)
+            extracted_docs = []
+            for doc in raw_docs:
+                meta = doc.get('metadata', {})
+                title = meta.get('title', 'Tài liệu')
+                file_url = meta.get('file_url', '')
+                extracted_docs.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
+            return {"documents": list(set(extracted_docs)), "current_source": "db"}
+        except Exception as e:
+            logger.error(f"Cross-document retrieval error: {e}")
+
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
         template=prompt_registry.get(PromptType.RETRIEVAL_STRATEGY),
@@ -145,7 +172,7 @@ async def retrieve_db(state: AgentState):
     all_raw_docs = []
     for q in list(dict.fromkeys(queries))[:3]: 
         try:
-            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), document_id=document_id, limit=10)
+            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), document_ids=document_ids, limit=10)
             for doc in results:
                 doc['_query'] = q
                 all_raw_docs.append(doc)
@@ -156,10 +183,10 @@ async def retrieve_db(state: AgentState):
         if reranker:
             try:
                 pairs = [[doc['_query'], doc.get('text', '')] for doc in all_raw_docs]
-                scores = reranker.predict(pairs)
+                scores = await asyncio.to_thread(reranker.predict, pairs)
                 scored_docs = list(zip(all_raw_docs, scores))
                 scored_docs.sort(key=lambda x: x[1], reverse=True)
-                top_docs = [doc for doc, score in scored_docs[:3]]
+                top_docs = retrieval_service._lost_in_the_middle_reorder([doc for doc, score in scored_docs[:6]])[:3]
             except Exception as e:
                 logger.error(f"Reranking error in KG: {e}")
                 top_docs = all_raw_docs[:3]
@@ -264,7 +291,8 @@ async def generate(state: AgentState):
     try:
         response = await llm_generate.ainvoke([HumanMessage(content=content)])
         generation = response.content
-        mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
+        await mem0_manager.search_and_resolve_conflicts(question, user_id)
+        await mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception as e:
         logger.error(f"Generate error: {e}")

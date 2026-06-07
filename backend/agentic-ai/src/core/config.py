@@ -5,12 +5,14 @@ from typing import Optional
 
 class Settings(BaseModel):
     PROJECT_NAME: str = "DocLib"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "default_secret_key_for_jwt_verification")
 
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")
 
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
+    FALLBACK_MODEL: str = os.getenv("LLM_FALLBACK_MODEL", "Qwen/Qwen3.6-35B-A3B")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")

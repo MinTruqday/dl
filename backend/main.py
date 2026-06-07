@@ -15,6 +15,14 @@ import asyncio
 import os
 import sys
 import time
+import uuid
+import contextvars
+
+trace_id_ctx_var = contextvars.ContextVar("trace_id", default="")
+
+def trace_id_filter(record):
+    record["extra"]["trace_id"] = trace_id_ctx_var.get()
+    return True
 
 from api.authentication import router as auth_router
 from api.document import router as document_router
@@ -60,8 +68,8 @@ from api.storage import router as storage_router
 from api.finetune import router as finetune_router
 
 logger.remove()
-logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
-logger.add("logs/backend.log", rotation="10 MB", level="INFO")
+logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
+logger.add("logs/backend.log", rotation="10 MB", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION, docs_url="/docs", redoc_url="/redoc")
 
@@ -186,11 +194,16 @@ async def global_exception_handler(request: Request, exc: Exception):
     return response
 
 @app.middleware("http")
-async def add_process_time_header(request, call_next):
+async def add_process_time_header(request: Request, call_next):
+    trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    trace_id_ctx_var.set(trace_id)
+    
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
+    
     response.headers["X-Process-Time"] = str(process_time)
+    response.headers["X-Request-ID"] = trace_id
     return response
 
 instrumentator = Instrumentator().instrument(app)

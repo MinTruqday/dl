@@ -11,7 +11,7 @@ class Knowledge:
             result = await knowledge_app.ainvoke({
                 "question": req.query,
                 "user_id": req.user_id,
-                "document_id": req.document_id,
+                "document_ids": getattr(req, 'document_ids', []),
                 "use_smart": req.useSmart,
                 "use_web": req.useWeb,
                 "chat_history": req.conversation_history or [],
