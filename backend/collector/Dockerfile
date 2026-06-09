@@ -13,5 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN playwright install chromium
 
 COPY src/ ./src/
-COPY main.py .
-CMD ["xvfb-run", "-a", "python", "-u", "main.py"]
+CMD ["xvfb-run", "-a", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8200"]

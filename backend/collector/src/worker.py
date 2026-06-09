@@ -94,7 +94,7 @@ async def run_worker():
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info("Shutdown signal received, shutting down gracefully")
+        logger.info("Shutdown signal received, shutting down gracefully...")
         stop_event.set()
 
     import signal
@@ -105,6 +105,6 @@ async def run_worker():
         
     await stop_event.wait()
     
-    logger.info("Closing MQ connection")
+    logger.info("Closing MQ connection...")
     await mq_client.connection.close()
     logger.info("Shutdown complete.")

@@ -86,6 +86,3 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to create Finetune MongoDB indexes: {e}")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

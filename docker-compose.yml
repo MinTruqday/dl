@@ -215,9 +215,8 @@ services:
       - minio
     volumes:
       - ./backend/collector/src:/app/src
-      - ./backend/collector/api.py:/app/api.py
       - ./backend/logs:/app/logs
-    command: bash -c "xvfb-run -a uvicorn api:app --host 0.0.0.0 --port 8300 > /app/logs/collector_startup.log 2>&1"
+    command: bash -c "xvfb-run -a uvicorn src.main:app --host 0.0.0.0 --port 8300 > /app/logs/collector_startup.log 2>&1"
     networks:
       - doclib_network
 
