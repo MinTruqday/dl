@@ -310,6 +310,46 @@ services:
     networks:
       - doclib_network
 
+  content:
+    build:
+      context: ./backend/content
+      dockerfile: Dockerfile
+    container_name: doclib_content
+    restart: unless-stopped
+    ports:
+      - "8800:8800"
+    environment:
+      - REDIS_URI=redis://redis:6379/0
+      - MONGODB_URI=mongodb://root:example@mongodb:27017/
+      - MONGODB_DB_NAME=doclib_db
+      - SECRET_KEY=${SECRET_KEY}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - MINIO_REGION=${MINIO_REGION}
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - doclib_network
+
+  websocket:
+    build:
+      context: ./backend/websocket
+      dockerfile: Dockerfile
+    container_name: doclib_websocket
+    restart: unless-stopped
+    ports:
+      - "8900:8900"
+    environment:
+      - REDIS_URI=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - redis
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge

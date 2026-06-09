@@ -1,20 +1,33 @@
-from core.database import db_client
-from bson import ObjectId
-from datetime import datetime, timezone
-from fastapi import HTTPException
 from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, WebSocket, WebSocketDisconnect
 from core.response import APIResponse
-from api.dependency import get_db, get_current_user_optional, get_current_user, require_role
-from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, Header, Body, Request
+from api.dependency import get_current_user, require_role
 from models.user import UserInDB, RoleEnum
-from services.document import DocumentService
-from services.series import SeriesService
-from services.chapter import ChapterService
+from core.config import settings
+import httpx
+import websockets
+import asyncio
+
+CONTENT_URL = settings.CONTENT_SERVICE_URL
+CONTENT_WS_URL = CONTENT_URL.replace("http://", "ws://").replace("https://", "wss://")
+
+async def _proxy(method: str, path: str, **kwargs):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            res = await client.request(method, f"{CONTENT_URL}{path}", **kwargs)
+            if res.status_code >= 400:
+                raise HTTPException(status_code=res.status_code, detail=res.json().get("detail", "Lỗi"))
+            return res.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Lỗi kết nối Content Service: {e}")
+
+from models.user import UserInDB, RoleEnum
 from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, DocumentUpdate, CoauthorInviteRequest, DocumentPasswordRequest
 from models.series import SeriesCreateRequest, SeriesResponse
-from pydantic import BaseModel
-
-router = APIRouter(prefix="/tai-lieu")
+router = APIRouter(prefix='/tai-lieu')
+(prefix="/tai-lieu")
 
 @router.post("/", response_model=APIResponse[DocumentResponse])
 async def create_document(
@@ -48,11 +61,14 @@ async def list_documents(
     category: Optional[str] = None,
     tag: Optional[str] = None
 ) -> Any:
-    return APIResponse(data=await DocumentService.list_documents(limit, cursor, q, sort_by, category, tag), message="Lấy danh sách tài liệu thành công", status=status.HTTP_200_OK)
-
-class FolderCreate(BaseModel):
-    name: str
-    parent_id: Optional[str] = None
+    # Auto-generated proxy
+    url_path = f"/tai-lieu/"
+    # Replace path vars
+    import re
+    for var in re.findall(r'{(.*?)}', url_path):
+        url_path = url_path.replace(f"{{var}}", str(locals().get(var, '')))
+    
+    return await _proxy("GET", url_path, headers={})
 
 @router.get("/thu-muc", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_folders(parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)):
@@ -128,11 +144,14 @@ async def get_document_chapters(document_id: str, current_user: UserInDB = Depen
 
 @router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
-    return APIResponse(
-        data=await DocumentService.get_document_preview(slug),
-        message="Lấy bản xem trước tài liệu thành công"
-    )
-
+    # Auto-generated proxy
+    url_path = f"/tai-lieu/xem-truoc/{slug}"
+    # Replace path vars
+    import re
+    for var in re.findall(r'{(.*?)}', url_path):
+        url_path = url_path.replace(f"{{var}}", str(locals().get(var, '')))
+    
+    return await _proxy("GET", url_path, headers={})
 
 @router.get("/chuoi-tai-lieu/ca-nhan", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
@@ -143,10 +162,14 @@ async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
 
 @router.get("/chuoi-tai-lieu/{series_id}", response_model=APIResponse[Any])
 async def get_series_by_id(series_id: str):
-    return APIResponse(
-        data=await SeriesService.get_series_by_id(series_id),
-        message="Lấy chi tiết chuỗi tài liệu thành công"
-    )
+    # Auto-generated proxy
+    url_path = f"/tai-lieu/chuoi-tai-lieu/{series_id}"
+    # Replace path vars
+    import re
+    for var in re.findall(r'{(.*?)}', url_path):
+        url_path = url_path.replace(f"{{var}}", str(locals().get(var, '')))
+    
+    return await _proxy("GET", url_path, headers={})
 
 @router.post("/chuoi-tai-lieu", response_model=APIResponse[Any], status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):

@@ -26,38 +26,6 @@ async def _proxy(method: str, path: str, **kwargs):
         except httpx.RequestError as e:
             raise HTTPException(status_code=503, detail=f"Không thể kết nối đến Contact Service: {e}")
 
-@router.websocket('/ws/{user_id}')
-async def websocket_proxy(websocket: WebSocket, user_id: str, token: str = Query(...)):
-    await websocket.accept()
-    try:
-        async with websockets.connect(f"{CONTACT_WS_URL}/tro-chuyen/ws/{user_id}?token={token}") as target_ws:
-            async def forward_client_to_target():
-                try:
-                    while True:
-                        msg = await websocket.receive_text()
-                        await target_ws.send(msg)
-                except Exception:
-                    pass
-
-            async def forward_target_to_client():
-                try:
-                    while True:
-                        msg = await target_ws.recv()
-                        await websocket.send_text(msg)
-                except Exception:
-                    pass
-
-            await asyncio.gather(
-                forward_client_to_target(),
-                forward_target_to_client()
-            )
-    except Exception:
-        pass
-    finally:
-        try:
-            await websocket.close()
-        except:
-            pass
 
 @router.post('/tin-nhan', response_model=APIResponse[Any])
 async def send_message(req: MessageCreate, current_user: UserInDB = Depends(get_current_user)):

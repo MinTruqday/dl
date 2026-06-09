@@ -1,11 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, BackgroundTasks
-from typing import List, Any, Optional
+from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, WebSocket, WebSocketDisconnect
 from core.response import APIResponse
+from api.dependency import get_current_user, require_role
+from models.user import UserInDB, RoleEnum
+from core.config import settings
+import httpx
+import websockets
+import asyncio
+
+CONTENT_URL = settings.CONTENT_SERVICE_URL
+CONTENT_WS_URL = CONTENT_URL.replace("http://", "ws://").replace("https://", "wss://")
+
+async def _proxy(method: str, path: str, **kwargs):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            res = await client.request(method, f"{CONTENT_URL}{path}", **kwargs)
+            if res.status_code >= 400:
+                raise HTTPException(status_code=res.status_code, detail=res.json().get("detail", "Lỗi"))
+            return res.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Lỗi kết nối Content Service: {e}")
+
 from models.user import UserInDB, RoleEnum
 from models.storage import StorageItemCreate, StorageItemUpdate, StorageItemResponse
-from api.dependency import get_db, require_role
-from services.storage import StorageService
 router = APIRouter(prefix='/luu-tru')
+(prefix='/luu-tru')
 
 @router.post('/thu-muc', response_model=APIResponse[StorageItemResponse])
 async def create_folder(data: StorageItemCreate=Body(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):

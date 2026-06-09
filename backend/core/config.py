@@ -54,6 +54,8 @@ class Settings(BaseModel):
     AUTHENTICATION_SERVICE_URL: str = os.getenv("AUTHENTICATION_SERVICE_URL")
     CONTACT_SERVICE_URL: str = os.getenv("CONTACT_SERVICE_URL")
     SIGNAL_SERVICE_URL: str = os.getenv("SIGNAL_SERVICE_URL")
+    CONTENT_SERVICE_URL: str = os.getenv("CONTENT_SERVICE_URL")
+    WEBSOCKET_SERVICE_URL: str = os.getenv("WEBSOCKET_SERVICE_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))

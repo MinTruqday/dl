@@ -1,40 +1,32 @@
 from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, WebSocket, WebSocketDisconnect
 from core.response import APIResponse
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
+from api.dependency import get_current_user, require_role
 from models.user import UserInDB, RoleEnum
-from api.dependency import get_db, require_role, get_current_user
-from services.editor import EditorService, manager
-from loguru import logger
-from services.document import DocumentService
+from core.config import settings
+import httpx
+import websockets
+import asyncio
+
+CONTENT_URL = settings.CONTENT_SERVICE_URL
+CONTENT_WS_URL = CONTENT_URL.replace("http://", "ws://").replace("https://", "wss://")
+
+async def _proxy(method: str, path: str, **kwargs):
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            res = await client.request(method, f"{CONTENT_URL}{path}", **kwargs)
+            if res.status_code >= 400:
+                raise HTTPException(status_code=res.status_code, detail=res.json().get("detail", "Lỗi"))
+            return res.json()
+        except HTTPException:
+            raise
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=503, detail=f"Lỗi kết nối Content Service: {e}")
+
+from models.user import UserInDB, RoleEnum
 from models.chapter import ChapterCreate
 from models.editor import PlagiarismCheckRequest, KeystrokeSyncRequest, InlineSuggestionRequest, ResolveSuggestionRequest, PomodoroSyncRequest, FindReplaceRequest, AutoSaveRequest, CoverGenerateRequest, AISuggestionRequest, InlineCommentRequest, VersionDiffRequest
 router = APIRouter(prefix='/soan-thao')
-
-@router.websocket('/o-cam/{document_id}')
-async def editor_websocket(websocket: WebSocket, document_id: str, db=Depends(get_db)):
-    try:
-        await manager.connect(websocket, document_id)
-        while True:
-            data = await websocket.receive_text()
-            await manager.broadcast(data.encode('utf-8'), document_id, websocket)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, document_id)
-    except Exception as e:
-        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
-        manager.disconnect(websocket, document_id)
-
-@router.websocket('/o-cam-crdt/{document_id}')
-async def editor_crdt_websocket(websocket: WebSocket, document_id: str, db=Depends(get_db)):
-    try:
-        await manager.connect(websocket, document_id)
-        while True:
-            data = await websocket.receive_bytes()
-            await manager.broadcast(data, document_id, websocket)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, document_id)
-    except Exception as e:
-        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
-        manager.disconnect(websocket, document_id)
 
 @router.post('/{document_id}/kiem-tra-dao-van', response_model=APIResponse[Any])
 async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)):
