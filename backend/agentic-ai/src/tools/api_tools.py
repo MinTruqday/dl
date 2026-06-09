@@ -42,8 +42,8 @@ def _check_admin(token: str) -> bool:
     try:
         from src.core.config import settings
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        role = payload.get("role", "student")
-        return role in ["admin", "teacher"]
+        role = payload.get("role", "guest")
+        return role in ["admin", "moderator"]
     except:
         return False
 
@@ -337,26 +337,9 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         logger.error(f"Error fetching doc: {e}")
     return ""
 
-from src.api.inference import generate_mindmap, suggest_citations, peer_review, transform_tone
-from src.schemas.inference import MindmapRequest, CitationRequest, ReviewRequest, ToneRequest
+from src.api.inference import suggest_citations, peer_review, transform_tone
+from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
-@tool
-async def agent_generate_mindmap(document_id: str, config: RunnableConfig) -> str:
-    """Generate a mindmap structure for a document by its ID."""
-    token = config.get("configurable", {}).get("token")
-    text = await _get_doc_text(document_id, token)
-    if not text: return "Không tìm thấy nội dung tài liệu."
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
-    safe_text = splitter.split_text(text)[0] if text else ""
-    try:
-        req = MindmapRequest(text=safe_text, depth=2)
-        data = await generate_mindmap(req)
-        import json
-        return f"Đã tạo cấu trúc bản đồ tư duy thành công:\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
-    except Exception as e:
-        logger.error(f"Error in mindmap: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
@@ -712,7 +695,6 @@ tools = [
     delete_document,
     restore_document,
     get_document_analytics,
-    agent_generate_mindmap,
     agent_suggest_citations,
     agent_peer_review,
     agent_transform_tone,

@@ -20,27 +20,6 @@ export async function smartSearchAIAPI(query: string) {
   return data;
 }
 
-export async function generateFlashcardAPI(documentId: string, text: string, context: string = "") {
-  const res = await fetch(`${API_URL}/ai/tai-lieu/${documentId}/the-ghi-nho`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, context }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo flashcard thất bại");
-  return data;
-}
-
-export async function reviewFlashcardAPI(cardId: string, quality: number) {
-  const res = await fetch(`${API_URL}/ai/the-ghi-nho/on-tap`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ card_id: cardId, quality }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Ghi nhận ôn tập thất bại");
-  return data;
-}
 
 export async function getAiSessionsAPI(documentId?: string) {
   const url = documentId 
@@ -112,16 +91,6 @@ export async function translateTextAPI(text: string, targetLang: string = "vi") 
   return await processTextAPI(text, "translate", "", targetLang);
 }
 
-export async function generateMindmapAPI(text: string, depth: number = 2) {
-  const res = await fetch(`${API_URL}/ai/tao-ban-do-tu-duy`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ text, depth }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo bản đồ tư duy thất bại");
-  return data;
-}
 
 export async function suggestCitationsAPI(text: string, style: string = "APA") {
   const res = await fetch(`${API_URL}/ai/trich-dan-thong-minh`, {

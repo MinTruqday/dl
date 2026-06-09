@@ -4,8 +4,8 @@ from loguru import logger
 from src.core.config import settings
 from src.schemas.inference import (
     GenerationRequest, TranslationRequest, SentimentRequest,
-    CoverRequest, CodeRequest, GrammarRequest, FlashcardRequest,
-    SummarizeRequest, ActionRequest, MindmapRequest, CitationRequest,
+    CoverRequest, CodeRequest, GrammarRequest,
+    SummarizeRequest, ActionRequest, CitationRequest,
     ToneRequest, ReviewRequest, SynthesisRequest
 )
 from huggingface_hub import AsyncInferenceClient
@@ -13,7 +13,6 @@ import httpx
 import base64
 import asyncio
 from src.core.prompt_registry import prompt_registry, PromptType
-
 
 router = APIRouter()
 
@@ -182,29 +181,6 @@ async def grammar_check(req: GrammarRequest):
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
-@router.post("/tao-the-ghi-nho")
-async def generate_flashcard(req: FlashcardRequest):
-    try:
-        prompt = prompt_registry.get(PromptType.FLASHCARD_GENERATOR).format(context=req.context, text=req.text)
-        result = await _chat_direct(
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=300,
-            temperature=0.4
-        )
-        try:
-            import json as json_mod
-            import re
-            json_match = re.search(r"\{.*\}", result, re.DOTALL)
-            if json_match:
-                return json_mod.loads(json_match.group())
-        except Exception as err:
-            logger.warning(f"Failed to parse JSON for flashcard: {err}")
-        if ":" in result:
-            parts = result.split(":", 1)
-            return {"front": parts[0].strip(), "back": parts[1].strip()}
-        return {"front": "Kiến thức quan trọng", "back": result.strip()}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
 @router.post("/tom-tat")
 async def summarize_text(req: SummarizeRequest):
@@ -304,26 +280,6 @@ async def get_synonyms(req: GrammarRequest):
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
-@router.post("/tao-ban-do-tu-duy")
-async def generate_mindmap(req: MindmapRequest):
-    try:
-        prompt = prompt_registry.get(PromptType.MINDMAP).format(depth=req.depth, text=req.text[:2000])
-        result = await _chat_direct(
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=1024,
-            temperature=0.2
-        )
-        try:
-            import json as json_mod
-            import re
-            json_match = re.search(r"\{.*\}", result, re.DOTALL)
-            if json_match:
-                return json_mod.loads(json_match.group())
-        except Exception as err:
-            logger.warning(f"Failed to parse JSON for mindmap: {err}")
-        return {"error": "Không thể tạo cấu trúc bản đồ tư duy"}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
 @router.post("/trich-dan-thong-minh")
 async def suggest_citations(req: CitationRequest):

@@ -26,10 +26,6 @@ class CodeRequest(BaseModel):
 class GrammarRequest(BaseModel):
     text: str
 
-class FlashcardRequest(BaseModel):
-    text: str
-    context: str = ""
-
 class SummarizeRequest(BaseModel):
     text: str
     language: str = "auto"
@@ -38,10 +34,6 @@ class ActionRequest(BaseModel):
     action: str
     text: str
     context: Optional[str] = ""
-
-class MindmapRequest(BaseModel):
-    text: str
-    depth: int = 2
 
 class CitationRequest(BaseModel):
     text: str

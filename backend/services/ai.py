@@ -51,52 +51,6 @@ class AIService:
             logger.error(f'AI: Text processing failed for action {req.action}: {e}')
             raise HTTPException(status_code=500, detail='Lỗi khi xử lý văn bản với AI.')
 
-    @staticmethod
-    async def generate_flashcard(document_id: str, text: str, context: str, current_user, db=None):
-        from services.quota import QuotaService
-        rag_url = getattr(settings, 'AGENTIC_AI_URL', None)
-        if not rag_url:
-            raise HTTPException(status_code=503, detail='Dịch vụ AI hiện chưa được cấu hình.')
-        try:
-            resp = await make_ai_request(f'{rag_url}/inference/tao-the-ghi-nho', {'text': text, 'context': context})
-            data = resp.json()
-            if db is None:
-                db = db_client.mongodb.get_default_database()
-            flashcard = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'front': data.get('front'), 'back': data.get('back'), 'created_at': datetime.now(timezone.utc)}
-            await db['flashcards'].insert_one(flashcard)
-            await QuotaService.consume_request(str(current_user.id))
-            return data
-        except Exception as e:
-            logger.error(f'AI: Flashcard generation failed: {e}')
-            raise HTTPException(status_code=500, detail='Không thể kết nối đến dịch vụ AI.')
-
-    @staticmethod
-    async def review_flashcard(card_id: str, quality: int, current_user, db=None):
-        import math
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        card = await db['flashcards'].find_one({'_id': card_id, 'user_id': str(current_user.id)})
-        if not card:
-            raise HTTPException(status_code=404, detail='Không tìm thấy flashcard.')
-        rep = card.get('repetitions', 0)
-        ef = card.get('easiness_factor', 2.5)
-        interval = card.get('interval', 1)
-        if quality >= 3:
-            if rep == 0:
-                interval = 1
-            elif rep == 1:
-                interval = 6
-            else:
-                interval = math.ceil(interval * ef)
-            rep += 1
-        else:
-            rep = 0
-            interval = 1
-        ef = max(1.3, ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)))
-        next_review = datetime.now(timezone.utc) + timedelta(days=interval)
-        await db['flashcards'].update_one({'_id': card_id}, {'$set': {'repetitions': rep, 'easiness_factor': ef, 'interval': interval, 'next_review': next_review}})
-        logger.info(f'AI: Flashcard {card_id} reviewed by user {current_user.id} (quality: {quality})')
-        return {'message': 'Đã cập nhật lịch ôn tập.', 'next_review': next_review.isoformat()}
 
     @staticmethod
     async def check_grammar(text: str, db=None) -> dict:
@@ -172,17 +126,6 @@ class AIService:
             logger.error(f'AI: Text completion failed: {e}')
         return 'Lỗi kết nối đến máy chủ AI.'
 
-    @staticmethod
-    async def generate_mindmap(text: str, depth: int, current_user, db=None) -> dict:
-        from services.quota import QuotaService
-        rag_url = getattr(settings, 'AGENTIC_AI_URL', None)
-        try:
-            resp = await make_ai_request(f'{rag_url}/inference/tao-ban-do-tu-duy', {'text': text, 'depth': depth}, timeout=60.0)
-            await QuotaService.consume_request(str(current_user.id))
-            return resp.json()
-        except Exception as e:
-            logger.error(f'AI: Mindmap generation failed: {e}')
-        return {'error': 'Không thể tạo bản đồ tư duy vào lúc này.'}
 
     @staticmethod
     async def suggest_citations(text: str, style: str, current_user, db=None) -> dict:

@@ -29,13 +29,13 @@ class PromptType(Enum):
     IMAGE_COVER = "image_cover"
     CODE_GENERATION = "code_generation"
     GRAMMAR_CHECK = "grammar_check"
-    FLASHCARD_GENERATOR = "flashcard_generator"
+
     SUMMARIZE = "summarize"
     AUTOCOMPLETE = "autocomplete"
     AI_SUGGESTIONS = "ai_suggestions"
     CHECK_LOGIC = "check_logic"
     SYNONYMS = "synonyms"
-    MINDMAP = "mindmap"
+
     SUGGEST_CITATIONS = "suggest_citations"
     TRANSFORM_TONE = "transform_tone"
     MULTI_DOC_SYNTHESIS = "multi_doc_synthesis"
@@ -384,13 +384,11 @@ RULES:
         PromptType.IMAGE_COVER: "Book cover for {title}. Description: {description}. Style: {style}. High quality, cinematic.",
         PromptType.CODE_GENERATION: "SYSTEM IDENTITY: DocLib Core System - Code Generation Engine.\nOBJECTIVE: Write clean and efficient {language} code for the following request. Output ONLY the code block.\n\nREQUEST:\n{prompt}",
         PromptType.GRAMMAR_CHECK: "SYSTEM IDENTITY: DocLib Core System - Grammar Engine.\nOBJECTIVE: Check and correct all spelling and grammar errors in the following text. Output ONLY the corrected text.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT:\n{text}",
-        PromptType.FLASHCARD_GENERATOR: "SYSTEM IDENTITY: DocLib Core System - Learning Engine.\nOBJECTIVE: Create a high-quality flashcard with a front (question) and back (answer) based on the given text and context. Output ONLY valid JSON: {{'front': 'question', 'back': 'answer'}}.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.SUMMARIZE: "SYSTEM IDENTITY: DocLib Core System - Summary Engine.\nOBJECTIVE: Provide a concise summary of the following content in {language}.\n\nTEXT:\n{text}",
         PromptType.AUTOCOMPLETE: "SYSTEM IDENTITY: DocLib Core System - Autocomplete Engine.\nOBJECTIVE: Write one natural continuation sentence for the following text without repeating existing content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.AI_SUGGESTIONS: "SYSTEM IDENTITY: DocLib Core System - Ideation Engine.\nOBJECTIVE: Based on the context, suggest 3 development directions for this content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.CHECK_LOGIC: "SYSTEM IDENTITY: DocLib Core System - Logic Engine.\nOBJECTIVE: Check for logical contradictions, plot holes, or character inconsistencies. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.SYNONYMS: "SYSTEM IDENTITY: DocLib Core System - Thesaurus Engine.\nOBJECTIVE: Find synonyms for the following word or phrase. Output ONLY a comma-separated list.\nOUTPUT_LANGUAGE: Must match the language of the input.\n\nINPUT: {text}",
-        PromptType.MINDMAP: 'SYSTEM IDENTITY: DocLib Core System - Mindmap Engine.\nOBJECTIVE: Analyze the following text and generate a mindmap structure with depth {depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{"nodes": [{{"id": "root", "label": "node"}}], "edges": [{{"from": "root", "to": "node"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {text}',
         PromptType.SUGGEST_CITATIONS: "SYSTEM IDENTITY: DocLib Core System - Citation Engine.\nOBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {text}\n\nREFERENCE SOURCES:\n{sources}",
         PromptType.TRANSFORM_TONE: "SYSTEM IDENTITY: DocLib Core System - Tone Engine.\nOBJECTIVE: {action} the following text to match the tone '{tone}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {text}",
         PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple documents to answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}",

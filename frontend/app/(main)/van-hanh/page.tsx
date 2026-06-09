@@ -364,7 +364,7 @@ export default function OperationDashboard() {
           <section>
             <div className="flex flex-col gap-1 mb-6">
               <h2 className="text-sm font-semibold text-black border-b border-zinc-200 pb-3 w-full">Hạn mức Trí tuệ nhân tạo (AI Quota)</h2>
-              <p className="text-[10px] text-zinc-500 font-medium">Áp dụng cho toàn bộ tính năng: Chat, Tìm kiếm thông minh, Tóm tắt, Phân tích cảm quan và Flashcards</p>
+              <p className="text-[10px] text-zinc-500 font-medium">Áp dụng cho toàn bộ tính năng: Chat, Tìm kiếm thông minh, Tóm tắt, Phân tích cảm quan</p>
             </div>
             
             {quotaLoading ? (

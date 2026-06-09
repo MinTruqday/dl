@@ -9,17 +9,7 @@ class AITextRequest(BaseModel):
     context: Optional[str] = ""
     target_lang: Optional[str] = "Vietnamese"
 
-class FlashcardRequest(BaseModel):
-    text: str
-    context: str = ""
 
-class FlashcardReviewRequest(BaseModel):
-    card_id: str
-    quality: int
-
-class AIMindmapRequest(BaseModel):
-    text: str
-    depth: int = 2
 
 class AICitationRequest(BaseModel):
     text: str

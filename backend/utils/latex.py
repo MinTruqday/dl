@@ -210,7 +210,7 @@ LATEX_PACKAGES = [
     {'label': 'bclogo', 'insertText': 'bclogo', 'detail': 'Tạo hộp văn bản có biểu tượng (bclogo)', 'type': 'snippet', 'category': 'package'},
     {'label': 'csvsimple', 'insertText': 'csvsimple', 'detail': 'Đọc và xử lý tệp CSV đơn giản', 'type': 'snippet', 'category': 'package'},
     {'label': 'moodle', 'insertText': 'moodle', 'detail': 'Tạo đề thi trắc nghiệm xuất ra hệ thống Moodle LMS', 'type': 'snippet', 'category': 'package'},
-    {'label': 'flashcards', 'insertText': 'flashcards', 'detail': 'Làm thẻ ghi nhớ Flashcards', 'type': 'snippet', 'category': 'package'},
+
     {'label': 'ticket', 'insertText': 'ticket', 'detail': 'Tạo thẻ tên, nhãn dán, danh thiếp', 'type': 'snippet', 'category': 'package'},
     {'label': 'moderncv', 'insertText': 'moderncv', 'detail': 'Thiết lập định dạng CV/Resume hiện đại', 'type': 'snippet', 'category': 'package'},
     {'label': 'xwatermark', 'insertText': 'xwatermark', 'detail': 'Đóng dấu bản quyền nâng cao (Watermark)', 'type': 'snippet', 'category': 'package'},
@@ -2666,7 +2666,7 @@ LATEX_COMMANDS = [
     {'label': 'polymer bond', 'insertText': '-[@{${1:op},.75}]${2:value}-[@{${3:cl},0.5}]', 'detail': 'Vẽ liên kết lặp lại', 'type': 'snippet', 'category': 'command'},
     {'label': '\\setpolymerbracket', 'insertText': '\\setpolymerbracket{${1:value}}{${2:value}}', 'detail': 'Thiết lập kiểu ngoặc cho chuỗi Polymer', 'type': 'snippet', 'category': 'command'},
     {'label': '\\charge', 'insertText': '\\charge{${1:number}=${2:value}}{${3:value}}', 'detail': 'Thêm điện tích cho nguyên tử', 'type': 'snippet', 'category': 'command'},
-    {'label': 'mindmap style', 'insertText': 'mindmap, concept color=${1:blue!20}', 'detail': 'Kích hoạt phong cách sơ đồ tư duy', 'type': 'snippet', 'category': 'command'},
+
     {'label': 'concept', 'insertText': 'node[concept] {${1:text}}', 'detail': 'Tạo một nút ý tưởng chính', 'type': 'snippet', 'category': 'command'},
     {'label': 'child concept', 'insertText': 'child[concept color=${1:green!20}] { node[concept] {${2:value}} }', 'detail': 'Thêm một nhánh ý tưởng con', 'type': 'snippet', 'category': 'command'},
     {'label': 'extra concept', 'insertText': 'node[extra concept] {${1:text}}', 'detail': 'Tạo nút ý tưởng bổ sung nằm ngoài nhánh', 'type': 'snippet', 'category': 'command'},
@@ -2931,7 +2931,7 @@ LATEX_ENVIRONMENTS = [
     {'label': 'kvmap', 'insertText': 'kvmap', 'detail': 'Tạo môi trường vẽ bìa Karnaugh', 'type': 'snippet', 'category': 'environment'},
     {'label': 'quiz', 'insertText': 'quiz', 'detail': 'Tạo môi trường chứa câu hỏi trắc nghiệm', 'type': 'snippet', 'category': 'environment'},
     {'label': 'multi', 'insertText': 'multi', 'detail': 'Tạo môi trường một câu hỏi trắc nghiệm', 'type': 'snippet', 'category': 'environment'},
-    {'label': 'flashcard', 'insertText': 'flashcard', 'detail': 'Tạo môi trường một thẻ ghi nhớ', 'type': 'snippet', 'category': 'environment'},
+
     {'label': 'bclogo', 'insertText': 'bclogo', 'detail': 'Tạo môi trường hộp văn bản có logo', 'type': 'snippet', 'category': 'environment'},
     {'label': 'threeparttable', 'insertText': 'threeparttable', 'detail': 'Tạo môi trường bảng có chú thích đồng bộ', 'type': 'snippet', 'category': 'environment'},
     {'label': 'tablenotes', 'insertText': 'tablenotes', 'detail': 'Tạo môi trường chứa chú thích của bảng', 'type': 'snippet', 'category': 'environment'},

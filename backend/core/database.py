@@ -90,8 +90,6 @@ async def setup_indexes():
         await db["editor_comments"].create_index([("document_id", 1), ("block_id", 1)], background=True)
         await db["document_versions"].create_index([("document_id", 1), ("created_at", -1)], background=True)
         
-        await db["flashcards"].create_index([("user_id", 1), ("document_id", 1)], background=True)
-        await db["flashcards"].create_index([("next_review", 1)], background=True)
         
         await db["conversations"].create_index([("participants", 1), ("updated_at", -1)], background=True)
         
