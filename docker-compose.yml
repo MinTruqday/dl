@@ -234,6 +234,25 @@ services:
     networks:
       - doclib_network
 
+  finance:
+    build:
+      context: ./backend/finance
+      dockerfile: Dockerfile
+    container_name: doclib_finance
+    restart: always
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8400:8400"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/finance/src:/app/src
+      - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge

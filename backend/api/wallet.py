@@ -1,67 +1,56 @@
 from typing import Any
 from core.response import APIResponse
-from fastapi import APIRouter, Depends, Query
-from api.dependency import get_db, get_current_user
+from fastapi import APIRouter, Depends, Query, HTTPException
+from api.dependency import get_current_user
 from models.user import UserInDB
 from models.wallet import RedeemVoucherRequest, TipRequest
-from services.wallet import WalletService
-from services.donation import DonationService
-from services.purchase import PurchaseService
-from services.withdrawal import WithdrawalService
+import httpx
+
+from core.config import settings
+FINANCE_URL = settings.FINANCE_SERVICE_URL
 router = APIRouter(prefix='/vi-tien')
 
+async def _proxy_request(method, url, **kwargs):
+    async with httpx.AsyncClient() as client:
+        res = await client.request(method, f"{FINANCE_URL}{url}", **kwargs)
+        if res.status_code >= 400:
+            raise HTTPException(status_code=res.status_code, detail=res.json().get("detail", "Lỗi từ dịch vụ tài chính"))
+        return res.json()
+
 @router.get('/so-du', response_model=APIResponse[Any])
-async def get_balance(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.get_balance(current_user, db=db), message='Lấy số dư ví thành công')
+async def get_balance(current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("GET", "/vi-tien/so-du", headers={"X-User-Id": str(current_user.id)})
 
 @router.post('/ma-qua-tang/doi-ma', response_model=APIResponse[Any])
-async def redeem_voucher(req: RedeemVoucherRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.redeem_voucher(req, current_user, db=db), message='Đổi voucher thành công')
+async def redeem_voucher(req: RedeemVoucherRequest, current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("POST", "/vi-tien/ma-qua-tang/doi-ma", json=req.model_dump(), headers={"X-User-Id": str(current_user.id)})
 
 @router.get('/lich-su', response_model=APIResponse[Any])
-async def get_history(cursor: str=Query(None), limit: int=Query(30, ge=1, le=100), tx_type: str=Query(None), skip: int=Query(0, ge=0), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.get_history(current_user, cursor, limit, tx_type, skip, db=db), message='Lấy lịch sử giao dịch thành công')
+async def get_history(cursor: str=Query(None), limit: int=Query(30, ge=1, le=100), tx_type: str=Query(None), skip: int=Query(0, ge=0), current_user: UserInDB=Depends(get_current_user)):
+    params = {"cursor": cursor, "limit": limit, "tx_type": tx_type, "skip": skip}
+    params = {k: v for k, v in params.items() if v is not None}
+    return await _proxy_request("GET", "/vi-tien/lich-su", params=params, headers={"X-User-Id": str(current_user.id)})
 
 @router.post('/tien-ung-ho/{target_user_id}', response_model=APIResponse[Any])
-async def virtual_tip(target_user_id: str, req: TipRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await DonationService.virtual_tip(target_user_id, req.amount, current_user, req.message, db=db), message='Gửi tiền ủng hộ thành công')
+async def virtual_tip(target_user_id: str, req: TipRequest, current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("POST", f"/vi-tien/tien-ung-ho/{target_user_id}", json=req.model_dump(), headers={"X-User-Id": str(current_user.id)})
 
 @router.get('/nguoi-ung-ho-hang-dau', response_model=APIResponse[Any])
-async def get_top_donators(db=Depends(get_db)):
-    return APIResponse(data=await DonationService.get_top_donators(db=db), message='Lấy danh sách người ủng hộ hàng đầu thành công')
+async def get_top_donators():
+    return await _proxy_request("GET", "/vi-tien/nguoi-ung-ho-hang-dau")
 
 @router.get('/doanh-thu', response_model=APIResponse[Any])
-async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    from core.database import db_client
-    db = db_client.mongodb.get_default_database()
-    revenue_data = await WithdrawalService.get_revenue(current_user, db=db)
-    author_id = str(current_user.id)
-    docs = await db['documents'].find({'author_id': author_id, 'is_deleted': {'$ne': True}}).sort('views', -1).to_list(length=50)
-    total_views = 0
-    doc_list = []
-    for d in docs:
-        views = d.get('views', 0)
-        total_views += views
-        review_pipeline = [{'$match': {'document_id': str(d['_id'])}}, {'$group': {'_id': None, 'avg': {'$avg': '$rating'}}}]
-        rev = await db['reviews'].aggregate(review_pipeline).to_list(length=1)
-        avg_rating = rev[0]['avg'] if rev else 0
-        doc_list.append({'id': str(d['_id']), 'title': d.get('title', ''), 'views': views, 'rating': round(avg_rating, 1) if avg_rating else 0, 'status': d.get('status', 'draft')})
-    user_doc = await db['users'].find_one({'_id': author_id})
-    total_points = user_doc.get('points', 0) if user_doc else 0
-    revenue_data['total_views'] = total_views
-    revenue_data['total_points'] = total_points
-    revenue_data['documents'] = doc_list
-    revenue_data['available_balance'] = user_doc.get('wallet_balance', 0) if user_doc else 0
-    return APIResponse(data=revenue_data, message='Lấy số liệu doanh thu thành công')
+async def get_revenue(current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("GET", "/vi-tien/doanh-thu", headers={"X-User-Id": str(current_user.id)})
 
 @router.post('/giao-dich-mua/tai-lieu/{document_id}', response_model=APIResponse[Any])
-async def purchase_document(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.purchase_document(document_id, current_user, db=db), message='Mua tài liệu thành công')
+async def purchase_document(document_id: str, current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("POST", f"/vi-tien/giao-dich-mua/tai-lieu/{document_id}", headers={"X-User-Id": str(current_user.id)})
 
 @router.post('/giao-dich-mua/tai-lieu/{document_id}/chuong/{chapter_id}', response_model=APIResponse[Any])
-async def purchase_chapter(document_id: str, chapter_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.purchase_chapter(document_id, chapter_id, current_user, db=db), message='Mua chương thành công')
+async def purchase_chapter(document_id: str, chapter_id: str, current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("POST", f"/vi-tien/giao-dich-mua/tai-lieu/{document_id}/chuong/{chapter_id}", headers={"X-User-Id": str(current_user.id)})
 
 @router.post('/giao-dich-mua/{purchase_id}/huy-bo', response_model=APIResponse[Any])
-async def cancel_purchase(purchase_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Hủy mua thành công')
+async def cancel_purchase(purchase_id: str, current_user: UserInDB=Depends(get_current_user)):
+    return await _proxy_request("POST", f"/vi-tien/giao-dich-mua/{purchase_id}/huy-bo", headers={"X-User-Id": str(current_user.id)})

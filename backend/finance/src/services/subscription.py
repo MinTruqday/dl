@@ -1,11 +1,11 @@
-from core.database import db_client
+from src.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone, timedelta
 import uuid
 from uuid6 import uuid7
 from loguru import logger
-from models.wallet import Transaction, TransactionType
-from models.user import UserInDB
+from src.schemas.wallet import Transaction, TransactionType
+from src.schemas.user import UserInDB
 
 class SubscriptionService:
 

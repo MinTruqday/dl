@@ -4,7 +4,6 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import get_db, require_role, get_current_user
 from core.response import APIResponse
 from services.operation import OperationService
-from services.withdrawal import WithdrawalService
 from services.user import UserService
 from models.operation import CampaignRequest, ApplicationReviewRequest
 router = APIRouter(prefix='/van-hanh')
@@ -22,8 +21,13 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(data=await OperationService.toggle_maintenance_mode(enabled, db=db), message='Cập nhật trạng thái bảo trì thành công')
 
 @router.get('/rut-tien', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def get_withdrawals_list(status: str='PENDING', db=Depends(get_db)):
-    return APIResponse(data=await WithdrawalService.get_withdrawal_queue(status, db=db), message='Lấy danh sách thanh toán thành công')
+async def get_withdrawals_list(status: str='PENDING'):
+    import httpx
+    from core.config import settings
+    async with httpx.AsyncClient() as client:
+        res = await client.get(f"{settings.FINANCE_SERVICE_URL}/rut-tien/hang-doi", params={"status": status})
+        data = res.json().get("data", res.json())
+        return APIResponse(data=data, message='Lấy danh sách thanh toán thành công')
 
 @router.post('/sao-luu', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def trigger_backup(db=Depends(get_db)):

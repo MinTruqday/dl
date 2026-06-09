@@ -1,12 +1,12 @@
 from typing import Any, Optional
-from core.database import db_client
+from src.core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 import uuid
 from uuid6 import uuid7
 from loguru import logger
-from models.wallet import CouponStatus, CouponTargetType
-from models.user import RoleEnum
+from src.schemas.wallet import CouponStatus, CouponTargetType
+from src.schemas.user import RoleEnum
 
 class CouponService:
 

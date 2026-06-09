@@ -3,8 +3,8 @@ from datetime import datetime, timezone, timedelta
 import uuid
 from uuid6 import uuid7
 from fastapi import HTTPException
-from core.database import db_client
-from models.wallet import Transaction, TransactionType
+from src.core.database import db_client
+from src.schemas.wallet import Transaction, TransactionType
 from loguru import logger
 
 class PurchaseService:

@@ -48,7 +48,9 @@ class Settings(BaseModel):
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     CORE_BACKEND_URL: Optional[str] = os.getenv("CORE_BACKEND_URL")
-    COMPILER_SERVICE_URL: str = os.getenv("COMPILER_SERVICE_URL", "http://compiler:8200")
+    COLLECTOR_SERVICE_URL: str = os.getenv("COLLECTOR_SERVICE_URL")
+    COMPILER_SERVICE_URL: str = os.getenv("COMPILER_SERVICE_URL")
+    FINANCE_SERVICE_URL: str = os.getenv("FINANCE_SERVICE_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
