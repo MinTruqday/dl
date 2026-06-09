@@ -39,6 +39,7 @@ class PromptType(Enum):
     SUGGEST_CITATIONS = "suggest_citations"
     TRANSFORM_TONE = "transform_tone"
     MULTI_DOC_SYNTHESIS = "multi_doc_synthesis"
+    EVAL_JUDGE = "eval_judge"
 
 
 class PromptRegistry:
@@ -392,7 +393,28 @@ RULES:
         PromptType.MINDMAP: 'SYSTEM IDENTITY: DocLib Core System - Mindmap Engine.\nOBJECTIVE: Analyze the following text and generate a mindmap structure with depth {depth}. Output ONLY a single valid JSON object with no markdown or extra text. JSON structure: {{"nodes": [{{"id": "root", "label": "node"}}], "edges": [{{"from": "root", "to": "node"}}]}}.\nOUTPUT_LANGUAGE: Labels must match the language of the input text.\n\nTEXT: {text}',
         PromptType.SUGGEST_CITATIONS: "SYSTEM IDENTITY: DocLib Core System - Citation Engine.\nOBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {text}\n\nREFERENCE SOURCES:\n{sources}",
         PromptType.TRANSFORM_TONE: "SYSTEM IDENTITY: DocLib Core System - Tone Engine.\nOBJECTIVE: {action} the following text to match the tone '{tone}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {text}",
-        PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple documents to answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}"
+        PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple documents to answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}",
+
+        PromptType.EVAL_JUDGE: """SYSTEM IDENTITY: DocLib Core System - Evaluation Judge Engine.
+OBJECTIVE: Score the quality of an AI-generated response compared to the expected answer on three criteria.
+OUTPUT_LANGUAGE: You must output ONLY a valid JSON object.
+
+CRITERIA:
+- accuracy (0-10): How factually correct is the response?
+- completeness (0-10): Does the response cover all key points from the expected answer?
+- relevance (0-10): How directly does the response address the original question?
+
+RULES:
+- Output ONLY valid JSON matching the schema exactly.
+- Do NOT include any explanation outside the JSON.
+
+JSON SCHEMA:
+{{"accuracy": <int 0-10>, "completeness": <int 0-10>, "relevance": <int 0-10>, "explanation": "<one sentence>"}}
+
+QUESTION: {instruction}
+EXPECTED ANSWER: {expected}
+AI RESPONSE: {actual}
+JSON SCORE:"""
     }
 
 

@@ -350,18 +350,14 @@ async def deploy_model(job_id: str, req: dict):
 
 @router.post("/job/{job_id}/evaluate")
 async def evaluate_model(job_id: str, req: dict):
-    from src.training.evaluator import evaluate_model_full
+    from src.harness.evaluation_harness import evaluation_harness
     db = get_db()
     job = await db["finetune_jobs"].find_one({"_id": job_id, "user_id": req.get("user_id")})
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy công việc.")
-    model = job.get("merged_model_name") or job.get("base_model")
-    judge_model = req.get("judge_model", settings.LLAMA_MODEL)
+    model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
-    result = await evaluate_model_full(
-        test_samples=req.get("test_samples", []),
-        model_name=model,
-        hf_token=getattr(settings, "HF_TOKEN", None),
-        judge_model=judge_model if use_judge else None
-    )
+    evaluation_harness._dataset = req.get("test_samples", [])
+    result = await evaluation_harness.run_benchmark(model_name=model_name, use_judge=use_judge)
     return result
+

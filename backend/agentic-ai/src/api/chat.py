@@ -8,17 +8,26 @@ from src.schemas.chat import ChatRequest
 from src.workflow.supervisor import supervisor
 from src.agents.semantic_router import semantic_router
 from src.core.prompt_registry import prompt_registry, PromptType
+from src.harness.security_harness import security_harness
+from src.harness.agentops_harness import agentops_harness
+from src.harness.context_harness import context_harness
+from src.harness.orchestration_harness import orchestration_harness
 
 
 router = APIRouter()
+
 
 @router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
-        bearer_token = token.replace("Bearer ", "")
+        req.token = token.replace("Bearer ", "")
 
-        req.token = bearer_token
+    scan = security_harness.scan_input(req.query, user_id=req.user_id or "")
+    if not scan.passed:
+        return {"answer": "Yêu cầu của bạn chứa nội dung không được phép.", "route": "blocked"}
+
+    req.query = scan.sanitized_text
 
     try:
         if req.document_ids:
@@ -31,11 +40,11 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 except Exception as e:
                     logger.error(f"Error checking document access for {doc_id}: {e}")
                     return {"answer": f"Lỗi: Không thể xác thực quyền truy cập tài liệu {doc_id} lúc này.", "route": "error"}
-                
+
         route_data = await semantic_router.execute(req.query)
         route = route_data["route"]
         final_answer = ""
-        
+
         if route == "chat":
             final_answer = route_data.get("answer", "")
             if not final_answer:
@@ -43,10 +52,10 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 from huggingface_hub import AsyncInferenceClient
                 from src.core.config import settings
                 from langchain_core.messages import HumanMessage
-                
+
                 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                 chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
-                
+
                 text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                 if req.image_data:
                     content = [
@@ -55,14 +64,15 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     ]
                 else:
                     content = text_prompt
-                    
+
                 res = await chat_llm.ainvoke([HumanMessage(content=content)])
                 final_answer = res.content
         else:
             async for event in supervisor.execute_plan(req):
                 if event["type"] == "message":
                     final_answer += event.get("chunk", "")
-                
+
+        final_answer = security_harness.scan_output(final_answer)
         return {
             "answer": final_answer or "Hệ thống đang gặp sự cố, vui lòng thử lại sau.",
             "route": "agentic_ai"
@@ -71,6 +81,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         logger.error(f"Execution error in /chat: {e}")
         return {"answer": "Hệ thống đang gặp sự cố, vui lòng thử lại sau.", "route": "error"}
 
+
 @router.post("/luong-du-lieu")
 async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
@@ -78,11 +89,29 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
     async def response_generator():
         if bearer_token:
-
             req.token = bearer_token
 
-        from src.memory.manager import memory_manager
-        
+        session_id = req.session_id or ""
+        user_id = req.user_id or ""
+
+        scan = security_harness.scan_input(req.query, session_id=session_id, user_id=user_id)
+        if not scan.passed:
+            agentops_harness.record_security_event(
+                session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
+            )
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Yeu cau cua ban chua noi dung khong duoc phep.'})}\n\n"
+            yield "event: done\ndata: [DONE]\n\n"
+            return
+
+        if scan.violations:
+            agentops_harness.record_security_event(
+                session_id, "pii_redacted", scan.risk_score, scan.violations
+            )
+
+        req.query = scan.sanitized_text
+
+        agentops_harness.record_session_start(session_id, user_id, req.query)
+
         try:
             if req.document_ids:
                 from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
@@ -90,37 +119,43 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     try:
                         doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
                         if doc_res.status_code not in [200, 201]:
-                            yield f"event: message\ndata: {json.dumps({'chunk': f'Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu {doc_id}.'})}\n\n"
+                            yield f"event: message\ndata: {json.dumps({'chunk': f'Loi bao mat: Ban khong co quyen truy cap vao tai lieu {doc_id}.'})}\n\n"
+                            agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
                         logger.error(f"Error checking document access for {doc_id}: {e}")
-                        yield f"event: message\ndata: {json.dumps({'chunk': f'Lỗi: Không thể xác thực quyền truy cập tài liệu {doc_id}.'})}\n\n"
+                        yield f"event: message\ndata: {json.dumps({'chunk': f'Loi: Khong the xac thuc quyen truy cap tai lieu {doc_id}.'})}\n\n"
+                        agentops_harness.record_session_end(session_id, "failed")
                         return
-                    
-            if req.session_id:
-                history = await memory_manager.get_short_term(req.session_id)
-                if history:
-                    req.conversation_history = history
-            
+
+            ctx = await context_harness.build_context(
+                session_id=session_id,
+                user_id=user_id,
+                query=req.query,
+                document_ids=req.document_ids,
+            )
+            req.conversation_history = ctx.chat_history
+
             route_data = await semantic_router.execute(req.query)
             route = route_data["route"]
             final_answer = ""
-            
+
             if route == "chat":
-                yield f"event: status\ndata: {json.dumps({'node': 'Đang phản hồi trực tiếp'})}\n\n"
-                
+                yield f"event: status\ndata: {json.dumps({'node': 'Dang phan hoi truc tiep'})}\n\n"
+
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
                     yield f"event: message\ndata: {json.dumps({'chunk': fast_answer})}\n\n"
+                    final_answer = fast_answer
                 else:
                     from src.utils.hf import HFInferenceChat
                     from huggingface_hub import AsyncInferenceClient
                     from src.core.config import settings
                     from langchain_core.messages import HumanMessage
-                    
+
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
-                    
+
                     text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
                     if req.image_data:
                         content = [
@@ -129,15 +164,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         ]
                     else:
                         content = text_prompt
-                        
+
                     async for chunk in chat_llm.astream([HumanMessage(content=content)]):
                         if chunk.content:
                             final_answer += chunk.content
                             yield f"event: message\ndata: {json.dumps({'chunk': chunk.content})}\n\n"
-                            
-                if req.session_id:
-                    await memory_manager.save_short_term(req.session_id, {"role": "user", "content": req.query})
-                    await memory_manager.save_short_term(req.session_id, {"role": "assistant", "content": final_answer})
+
             else:
                 import asyncio
 
@@ -151,7 +183,9 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 hb_task = asyncio.create_task(heartbeat_sender())
 
                 async def drain_supervisor():
-                    async for event in supervisor.execute_plan(req):
+                    async for event in orchestration_harness.run(
+                        supervisor.execute_plan, req, session_id
+                    ):
                         await heartbeat_queue.put(event)
                     await heartbeat_queue.put({"type": "__done__"})
 
@@ -165,15 +199,21 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         if event_type == "__done__":
                             break
                         elif event_type == "heartbeat":
-                            yield f"event: heartbeat\ndata: {{}}\n\n"
+                            yield "event: heartbeat\ndata: {}\n\n"
                         elif event_type == "status":
                             yield f"event: status\ndata: {json.dumps({'node': event['node']})}\n\n"
                         elif event_type == "plan":
                             yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
                         elif event_type == "tool_result":
-                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoàn thành')})}\n\n"
+                            agentops_harness.record_tool_call(
+                                session_id,
+                                event.get("agent", "unknown"),
+                                duration_ms=0,
+                                success=True,
+                            )
+                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoan thanh')})}\n\n"
                         elif event_type == "message":
-                            final_answer += event['chunk']
+                            final_answer += event["chunk"]
                             yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"
                         elif event_type == "error":
                             yield f"event: message\ndata: {json.dumps({'chunk': event['message']})}\n\n"
@@ -181,14 +221,20 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     hb_task.cancel()
                     exec_task.cancel()
 
-                if req.session_id and final_answer:
-                    await memory_manager.save_short_term(req.session_id, {"role": "user", "content": req.query})
-                    await memory_manager.save_short_term(req.session_id, {"role": "assistant", "content": final_answer})
-                    
+            if final_answer:
+                final_answer = security_harness.scan_output(final_answer, session_id=session_id)
+
+            if session_id and final_answer:
+                await context_harness.save_turn(session_id, "user", req.query)
+                await context_harness.save_turn(session_id, "assistant", final_answer)
+
+            agentops_harness.record_session_end(session_id, "done")
+
         except Exception as e:
             logger.exception(f"Stream execution error: {e}")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống đang gặp sự cố, vui lòng thử lại sau.'})}\n\n"
-            
+            agentops_harness.record_session_end(session_id, "failed")
+            yield f"event: message\ndata: {json.dumps({'chunk': 'He thong dang gap su co, vui long thu lai sau.'})}\n\n"
+
         yield "event: done\ndata: [DONE]\n\n"
-        
+
     return StreamingResponse(response_generator(), media_type="text/event-stream")

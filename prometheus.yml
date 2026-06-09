@@ -6,3 +6,8 @@ scrape_configs:
     metrics_path: '/metrics'
     static_configs:
       - targets: ['backend:8000']
+
+  - job_name: 'doclib-agentic-ai'
+    metrics_path: '/harness/metrics'
+    static_configs:
+      - targets: ['agentic-ai:8000']

@@ -17,6 +17,9 @@ from src.api.chat import router as chat_router
 from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
+from src.harness.agentops_harness import agentops_harness
+from src.harness.orchestration_harness import orchestration_harness
+from src.harness.evaluation_harness import evaluation_harness
 
 app = FastAPI(title="DocLib Agentic AI")
 
@@ -37,6 +40,26 @@ async def add_trace_id_header(request: Request, call_next):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/harness/metrics")
+async def harness_metrics():
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse(
+        content=agentops_harness.get_prometheus_metrics(),
+        media_type="text/plain; version=0.0.4",
+    )
+
+
+@app.get("/harness/status")
+async def harness_status():
+    return {
+        "orchestration": {
+            "active_sessions": orchestration_harness.get_active_sessions(),
+            "circuit_breaker": orchestration_harness.get_circuit_status(),
+        },
+        "evaluation": evaluation_harness.get_dashboard_metrics(),
+    }
 
 @app.on_event("startup")
 async def startup_event():
