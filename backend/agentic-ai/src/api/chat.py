@@ -13,9 +13,7 @@ from src.harness.agentops_harness import agentops_harness
 from src.harness.context_harness import context_harness
 from src.harness.orchestration_harness import orchestration_harness
 
-
 router = APIRouter()
-
 
 @router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):

@@ -22,15 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wallet_router, tags=["Wallet"])
-app.include_router(deposit_router, tags=["Deposit"])
-app.include_router(withdrawal_router, tags=["Withdrawal"])
-app.include_router(coupon_router, tags=["Coupon"])
-app.include_router(monetization_router, tags=["Monetization"])
+app.include_router(wallet_router)
+app.include_router(deposit_router)
+app.include_router(withdrawal_router)
+app.include_router(coupon_router)
+app.include_router(monetization_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Starting Finance Service")
+    logger.info("Starting DocLib Finance")
     from src.core.database import connect_to_mongo
     await connect_to_mongo()
 
@@ -41,4 +41,4 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "finance"}
+    return {"status": "ok", "service": "DocLib Finance"}

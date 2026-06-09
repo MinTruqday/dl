@@ -105,6 +105,6 @@ async def run_worker():
         
     await stop_event.wait()
     
-    logger.info("Closing MQ connection...")
+    logger.info("Closing MQ connection")
     await mq_client.connection.close()
     logger.info("Shutdown complete.")

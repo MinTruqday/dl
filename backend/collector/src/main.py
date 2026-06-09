@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.router import router
 
-app = FastAPI(title="DocLib Collector API")
+app = FastAPI(title="DocLib Collector")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,5 +24,5 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "collector"}
+    return {"status": "ok", "service": "DocLib Collector"}
 

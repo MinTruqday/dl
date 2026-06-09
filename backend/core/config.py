@@ -51,6 +51,7 @@ class Settings(BaseModel):
     COLLECTOR_SERVICE_URL: str = os.getenv("COLLECTOR_SERVICE_URL")
     COMPILER_SERVICE_URL: str = os.getenv("COMPILER_SERVICE_URL")
     FINANCE_SERVICE_URL: str = os.getenv("FINANCE_SERVICE_URL")
+    AUTHENTICATION_SERVICE_URL: str = os.getenv("AUTHENTICATION_SERVICE_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT"))

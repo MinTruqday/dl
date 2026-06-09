@@ -34,8 +34,6 @@ def hard_delete_document_task(document_id: str, user_id: str):
     import httpx
     try:
         from core.database import db_client
-        # Although we are in a worker, we might need an event loop or just call synchronous requests if not async.
-        # But this is Celery (sync task).
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)

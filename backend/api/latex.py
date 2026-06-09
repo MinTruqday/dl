@@ -18,21 +18,6 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import get_db, require_role
 from pydantic import BaseModel, Field
 
-class CompileRequest(BaseModel):
-    content: str = Field(..., max_length=100000)
-    is_fragment: bool = False
-
-class FormatRequest(BaseModel):
-    content: str = Field(..., max_length=100000)
-
-class ExportRequest(BaseModel):
-    content: str = Field(..., max_length=100000)
-    format: str = "docx"
-
-class AutoSaveRequest(BaseModel):
-    document_id: str
-    content: str
-
 import httpx
 from core.config import settings
 from datetime import datetime, timezone

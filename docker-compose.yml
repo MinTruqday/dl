@@ -253,6 +253,25 @@ services:
     networks:
       - doclib_network
 
+  authentication:
+    build:
+      context: ./backend/authentication
+      dockerfile: Dockerfile
+    container_name: doclib_authentication
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8500:8500"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/authentication/src:/app/src
+      - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge
