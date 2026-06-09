@@ -1,9 +1,9 @@
-from core.database import db_client
-from core.config import settings
+from src.core.database import db_client
+from src.core.config import settings
 from fastapi import HTTPException
 from datetime import datetime, timezone
 from loguru import logger
-from models.quota import QuotaLimit, GlobalQuotaConfig
+from src.schemas.quota import QuotaLimit, GlobalQuotaConfig
 import json
 
 class QuotaService:

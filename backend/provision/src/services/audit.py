@@ -1,4 +1,4 @@
-from core.database import db_client
+from src.core.database import db_client
 from datetime import datetime, timezone
 from loguru import logger
 

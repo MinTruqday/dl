@@ -315,22 +315,17 @@ services:
       context: ./backend/content
       dockerfile: Dockerfile
     container_name: doclib_content
-    restart: unless-stopped
+    restart: always
+    env_file:
+      - .env
     ports:
       - "8800:8800"
-    environment:
-      - REDIS_URI=redis://redis:6379/0
-      - MONGODB_URI=mongodb://root:example@mongodb:27017/
-      - MONGODB_DB_NAME=doclib_db
-      - SECRET_KEY=${SECRET_KEY}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
-      - MINIO_REGION=${MINIO_REGION}
     depends_on:
       - redis
       - mongodb
+    volumes:
+      - ./backend/content/src:/app/src
+      - ./backend/logs:/app/logs
     networks:
       - doclib_network
 
@@ -339,14 +334,35 @@ services:
       context: ./backend/websocket
       dockerfile: Dockerfile
     container_name: doclib_websocket
-    restart: unless-stopped
+    restart: always
+    env_file:
+      - .env
     ports:
       - "8900:8900"
-    environment:
-      - REDIS_URI=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       - redis
+    volumes:
+      - ./backend/websocket/src:/app/src
+      - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
+
+  provision:
+    build:
+      context: ./backend/provision
+      dockerfile: Dockerfile
+    container_name: doclib_provision
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8950:8950"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/provision/src:/app/src
+      - ./backend/logs:/app/logs
     networks:
       - doclib_network
 

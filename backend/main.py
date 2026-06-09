@@ -47,13 +47,9 @@ from api.collector import router as collector_router
 from api.library import router as library_router
 from api.feedback import router as feedback_router
 from api.ai import router as ai_router
-from api.operation import router as operation_router
 from api.draft import router as draft_router
 from api.report import router as report_router
-from api.audit import router as audit_router
-from api.telemetry import router as telemetry_router
 from api.banner import router as banner_router
-from api.user import router as user_router
 from api.discovery import router as discovery_router
 from api.passkey import router as passkey_router
 from api.publication import router as publish_router
@@ -63,7 +59,6 @@ from api.compilation import router as compilation_router
 from api.bookmark import router as bookmark_router
 from api.pin import router as pin_router
 from api.preference import router as preference_router
-from api.quota import router as quota_router
 from api.storage import router as storage_router
 from api.finetune import router as finetune_router
 
@@ -243,13 +238,9 @@ app.include_router(notification_router)
 app.include_router(message_router)
 app.include_router(collector_router)
 app.include_router(withdrawal_router)
-app.include_router(operation_router)
 app.include_router(draft_router)
 app.include_router(report_router)
-app.include_router(audit_router)
-app.include_router(telemetry_router)
 app.include_router(banner_router)
-app.include_router(user_router)
 app.include_router(discovery_router)
 app.include_router(passkey_router)
 app.include_router(publish_router)
@@ -259,7 +250,6 @@ app.include_router(compilation_router)
 app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(preference_router)
-app.include_router(quota_router)
 app.include_router(storage_router)
 app.include_router(finetune_router)
 

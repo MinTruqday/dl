@@ -5,7 +5,7 @@ from typing import Optional
 
 class Settings(BaseModel):
     PROJECT_NAME: str = "DocLib"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "default_secret_key_for_jwt_verification")
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
 
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     REDIS_URI: str = os.getenv("REDIS_URI")

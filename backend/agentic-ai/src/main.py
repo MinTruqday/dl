@@ -18,6 +18,7 @@ from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
 from src.api.history import router as history_router
+from src.api.quota import router as quota_router
 from src.harness.agentops_harness import agentops_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
@@ -30,6 +31,7 @@ app.include_router(ingest_router, tags=["Ingestion"])
 app.include_router(feedback_router, tags=["Feedback"])
 app.include_router(finetune_router, tags=["Fine-tuning"])
 app.include_router(history_router, tags=["History"])
+app.include_router(quota_router)
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
