@@ -14,4 +14,4 @@ COPY src/ ./src/
 RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
 USER doclibuser
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8800"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8350"]

@@ -400,7 +400,7 @@ async def analyze_document(req: dict):
         logger.error(f"Inference: Document analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
-@router.delete("/vector/{document_id}")
+@router.delete("/vecto/{document_id}")
 async def delete_vector_document(document_id: str):
     try:
         from src.store.vector_store import vector_store

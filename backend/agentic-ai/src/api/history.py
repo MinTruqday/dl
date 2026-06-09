@@ -69,7 +69,7 @@ async def delete_session(session_id: str, user_id: str, db=Depends(get_db)):
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return {"status": "success"}
 
-@router.post("/{session_id}/message", response_model=Dict[str, Any])
+@router.post("/{session_id}/tro-chuyen", response_model=Dict[str, Any])
 async def add_message(session_id: str, data: dict, db=Depends(get_db)):
     user_id = data.get('user_id')
     role = data.get('role')

@@ -37,12 +37,12 @@ async def get_recent_items(limit: int=20, current_user: UserInDB=Depends(require
     items = await StorageService.get_recent_items(current_user.id, limit, db=db)
     return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Lấy danh sách gần đây thành công', status=200)
 
-@router.get('/quota', response_model=APIResponse[Any])
+@router.get('/han-muc', response_model=APIResponse[Any])
 async def get_storage_quota(current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     data = await StorageService.get_storage_quota(current_user.id, db=db)
     return APIResponse(data=data, message='Lấy hạn mức thành công', status=200)
 
-@router.post('/tap-tin/{item_id}/shortcut', response_model=APIResponse[StorageItemResponse])
+@router.post('/tap-tin/{item_id}/loi-tat', response_model=APIResponse[StorageItemResponse])
 async def create_shortcut(item_id: str, target_parent_id: Optional[str]=Body(None, embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     from fastapi import HTTPException
     item = await StorageService.create_shortcut(item_id, target_parent_id, current_user.id, db=db)
@@ -114,7 +114,7 @@ async def copy_item(item_id: str, target_parent_id: Optional[str]=Body(None, emb
         raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
     return APIResponse(data=StorageItemResponse(**item.dict()), message='Sao chép thành công', status=201)
 
-@router.post('/tap-tin/{item_id}/version', response_model=APIResponse[StorageItemResponse])
+@router.post('/tap-tin/{item_id}/phien-ban', response_model=APIResponse[StorageItemResponse])
 async def add_version(item_id: str, url: str=Body(..., embed=True), size: int=Body(..., embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     item = await StorageService.add_version(item_id, current_user.id, url, size, db=db)
     if not item:

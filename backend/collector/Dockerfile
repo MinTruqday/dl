@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN playwright install chromium
 
 COPY src/ ./src/
-CMD ["xvfb-run", "-a", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8200"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8150"]

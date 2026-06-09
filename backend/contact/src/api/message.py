@@ -9,7 +9,7 @@ from src.core.database import db_client
 from loguru import logger
 import json
 import asyncio
-router = APIRouter(prefix='/tro-chuyen')
+router = APIRouter(prefix='/nhan-tin')
 
 @router.post('/tin-nhan', response_model=APIResponse[Any])
 async def send_message(req: MessageCreate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

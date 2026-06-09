@@ -14,8 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(latex.router, prefix="/compile/latex")
-app.include_router(editorjs.router, prefix="/compile/editorjs")
+app.include_router(latex.router, prefix="/bien-dich/latex")
+app.include_router(editorjs.router, prefix="/bien-dich/editorjs")
 
 @app.on_event("startup")
 async def startup_event():

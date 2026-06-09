@@ -6,7 +6,7 @@ from loguru import logger
 
 router = APIRouter()
 
-@router.post("/compile")
+@router.post("/bien-dich")
 async def compile_editorjs_to_pdf(req: EditorJSCompileRequest):
     """Biên dịch EditorJS blocks → PDF qua LaTeX."""
     try:
@@ -24,7 +24,7 @@ async def compile_editorjs_to_pdf(req: EditorJSCompileRequest):
             raise HTTPException(status_code=400, detail=e.args[0])
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/export/{format}")
+@router.post("/xuat/{format}")
 async def export_editorjs(format: str, req: EditorJSCompileRequest):
     """Xuất EditorJS blocks sang DOCX hoặc HTML."""
     if format not in ["docx", "html"]:
@@ -46,7 +46,7 @@ async def export_editorjs(format: str, req: EditorJSCompileRequest):
         logger.error(f"EditorJS export error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/preview-latex")
+@router.post("/xem-truoc-latex")
 async def preview_latex_source(req: EditorJSCompileRequest):
     """Trả về mã LaTeX được sinh ra từ EditorJS blocks (dùng để debug)."""
     latex = EditorJSEngine.to_latex(

@@ -227,8 +227,7 @@ async def compile_document(document_id: str, current_user: UserInDB = Depends(ge
         message="Biên dịch tài liệu thành công"
     )
 
-
-@router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+@router.post("/{document_id}/gan-sao", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def toggle_star_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
@@ -329,7 +328,7 @@ class DRMSettingsUpdate(BaseModel):
     disable_copy: bool = False
     hide_from_search: bool = False
 
-@router.put("/{document_id}/drm", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+@router.put("/{document_id}/ban-quyen", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def update_drm_settings(document_id: str, req: DRMSettingsUpdate, current_user: UserInDB = Depends(get_current_user)):
     result = await DocumentService.update_document(document_id, DocumentUpdate(
         drm_settings={"disable_copy": req.disable_copy, "hide_from_search": req.hide_from_search}
@@ -339,7 +338,7 @@ async def update_drm_settings(document_id: str, req: DRMSettingsUpdate, current_
 class TagsUpdate(BaseModel):
     tags: List[str]
 
-@router.put("/{document_id}/tags", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
+@router.put("/{document_id}/the", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def update_tags(document_id: str, req: TagsUpdate, current_user: UserInDB = Depends(get_current_user)):
     result = await DocumentService.update_document(document_id, DocumentUpdate(tags=req.tags), current_user)
     return APIResponse(data=result, message="Cập nhật thẻ thành công")

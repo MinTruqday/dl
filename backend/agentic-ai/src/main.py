@@ -26,12 +26,12 @@ from src.harness.evaluation_harness import evaluation_harness
 
 app = FastAPI(title="DocLib Agentic AI")
 
-app.include_router(inference_router, prefix="/inference", tags=["Inference"])
-app.include_router(chat_router, tags=["Chat"])
-app.include_router(ingest_router, tags=["Ingestion"])
-app.include_router(feedback_router, tags=["Feedback"])
-app.include_router(finetune_router, tags=["Fine-tuning"])
-app.include_router(history_router, tags=["History"])
+app.include_router(inference_router, prefix="/suy-luan", tags=["Suy Luận"])
+app.include_router(chat_router, tags=["Trò Chuyện"])
+app.include_router(ingest_router, tags=["Nạp Dữ Liệu"])
+app.include_router(feedback_router, tags=["Phản Hồi"])
+app.include_router(finetune_router, tags=["Huấn Luyện"])
+app.include_router(history_router, tags=["Lịch Sử"])
 app.include_router(quota_router)
 
 @app.middleware("http")
