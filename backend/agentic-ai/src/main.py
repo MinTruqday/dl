@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request
 from loguru import logger
 import uuid
@@ -36,10 +37,13 @@ app.include_router(quota_router)
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
     trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    trace_id_ctx_var.set(trace_id)
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = trace_id
-    return response
+    token = trace_id_ctx_var.set(trace_id)
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = trace_id
+        return response
+    finally:
+        trace_id_ctx_var.reset(token)
 
 @app.get("/health")
 async def health_check():

@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 from loguru import logger
 
-from core.config import settings
+from src.core.config import settings
 
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
@@ -33,7 +33,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     logger.info(f"Saga: Hard deleting document {document_id}")
     import httpx
     try:
-        from core.database import db_client
+        from src.core.database import db_client
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
