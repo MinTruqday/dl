@@ -1,6 +1,6 @@
-from core.database import db_client
-from models.message import MessageInDB
-from models.user import UserInDB
+from src.core.database import db_client
+from src.schemas.message import MessageInDB
+from src.schemas.user import UserInDB
 from datetime import datetime, timezone
 import asyncio
 

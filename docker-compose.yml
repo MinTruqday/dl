@@ -272,6 +272,44 @@ services:
     networks:
       - doclib_network
 
+  contact:
+    build:
+      context: ./backend/contact
+      dockerfile: Dockerfile
+    container_name: doclib_contact
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8600:8600"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/contact/src:/app/src
+      - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
+
+  signal:
+    build:
+      context: ./backend/signal
+      dockerfile: Dockerfile
+    container_name: doclib_signal
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8700:8700"
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/signal/src:/app/src
+      - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
+
 networks:
   doclib_network:
     driver: bridge

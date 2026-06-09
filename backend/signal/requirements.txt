@@ -1,0 +1,12 @@
+fastapi==0.109.2
+uvicorn[standard]==0.27.0.post1
+motor==3.6.0
+redis==5.0.1
+python-multipart==0.0.9
+pydantic[email]==2.9.0
+pydantic==2.9.0
+PyJWT==2.8.0
+sse-starlette==2.0.0
+httpx==0.27.0
+loguru==0.7.2
+uuid6==2024.1.12
