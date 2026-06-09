@@ -118,3 +118,29 @@ class LatexEngine:
                     os.remove(filepath)
                 except Exception as e:
                     logger.warning(f"LatexEngine: Không thể dọn dẹp file {filepath}: {e}")
+
+    @staticmethod
+    def format_latex(content: str) -> dict:
+        lines = content.split('\n')
+        formatted = []
+        indent_level = 0
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('\\end{'):
+                indent_level = max(0, indent_level - 1)
+            formatted.append('    ' * indent_level + stripped)
+            if stripped.startswith('\\begin{') and (not stripped.startswith('\\begin{document}')):
+                indent_level += 1
+        return {'formatted_content': '\n'.join(formatted)}
+
+    @staticmethod
+    def export_project_zip(content: str) -> bytes:
+        import io
+        import zipfile
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr('main.tex', content.encode('utf-8'))
+            zip_file.writestr('README.md', 'Exported from DocLib Studio'.encode('utf-8'))
+            zip_file.writestr('.gitignore', '*.pdf\n*.aux\n*.log\n*.out'.encode('utf-8'))
+        return zip_buffer.getvalue()
+

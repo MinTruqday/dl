@@ -99,11 +99,6 @@ async def setup_indexes():
         await db["messages"].create_index([("content", "text")], background=True)
         await db["messages"].create_index([("self_destruct_at", 1)], expireAfterSeconds=0, background=True)
         
-        await db["finetune_datasets"].create_index([("user_id", 1), ("created_at", -1)], background=True)
-        await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
-        await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
-        await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-        
         await db["storage_items"].create_index([("owner_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)
         await db["storage_items"].create_index([("shared_with.user_id", 1), ("parent_id", 1), ("is_trashed", 1)], background=True)
         await db["storage_items"].create_index([("url", 1)], background=True)

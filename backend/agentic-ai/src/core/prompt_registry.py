@@ -40,7 +40,7 @@ class PromptType(Enum):
     TRANSFORM_TONE = "transform_tone"
     MULTI_DOC_SYNTHESIS = "multi_doc_synthesis"
     EVAL_JUDGE = "eval_judge"
-
+    STORAGE_FILE_ANALYSIS = "storage_file_analysis"
 
 class PromptRegistry:
     _prompts = {
@@ -412,7 +412,34 @@ JSON SCHEMA:
 QUESTION: {instruction}
 EXPECTED ANSWER: {expected}
 AI RESPONSE: {actual}
-JSON SCORE:"""
+JSON SCORE:""",
+        
+        PromptType.STORAGE_FILE_ANALYSIS: """SYSTEM IDENTITY: DocLib Core System - Document Analysis Engine.
+OBJECTIVE: Analyze the provided document text and extract metadata including summary, filename, tags, entities, moderation status, and folder routing.
+OUTPUT_LANGUAGE: Must be Vietnamese unless specified otherwise.
+OUTPUT_FORMAT: You must output ONLY a valid JSON object matching the schema below. No explanations.
+
+JSON SCHEMA:
+{{
+    "summary": "<2-3 câu tóm tắt nội dung>",
+    "suggested_name": "<Tên file ngắn gọn, đúng trọng tâm, bắt buộc phải có đuôi .{ext}>",
+    "tags": ["<tag1>", "<tag2>", "<tag3>"],
+    "entities": {{
+        "people": [],
+        "organizations": [],
+        "dates": [],
+        "amounts": []
+    }},
+    "is_safe": <boolean, false nếu chứa nội dung bạo lực, 18+ hoặc vi phạm pháp luật>,
+    "target_folder_id": "<ID thư mục phù hợp nhất từ danh sách {folder_str}, hoặc 'NONE' nếu không phù hợp>"
+}}
+
+FILE EXTENSION: {ext}
+FOLDER OPTIONS: {folder_str}
+
+DOCUMENT TEXT:
+{context}
+"""
     }
 
 

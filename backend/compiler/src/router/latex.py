@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi.responses import Response
-from src.models.latex import CompileRequest
+from src.schemas.latex import CompileRequest
 from src.services.latex_engine import LatexEngine
 from loguru import logger
 import httpx
@@ -34,3 +34,13 @@ async def export_document(format: str, req: CompileRequest):
     except Exception as e:
         logger.error(f"Export error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/format")
+async def format_latex(req: CompileRequest):
+    return LatexEngine.format_latex(req.content)
+
+@router.post("/export-zip")
+async def export_project_zip(req: CompileRequest):
+    zip_bytes = LatexEngine.export_project_zip(req.content)
+    return Response(content=zip_bytes, media_type="application/x-zip-compressed")
+

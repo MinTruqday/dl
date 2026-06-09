@@ -372,6 +372,34 @@ async def extract_text(req: dict):
         logger.error(f"Inference: Extraction failed: {e}")
         raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này.")
 
+@router.post("/phan-tich-tai-lieu")
+async def analyze_document(req: dict):
+    try:
+        context = req.get("context", "")
+        ext = req.get("ext", "txt")
+        folder_str = req.get("folder_str", "Không có")
+        
+        prompt = prompt_registry.get(PromptType.STORAGE_FILE_ANALYSIS).format(
+            ext=ext, folder_str=folder_str, context=context[:3000]
+        )
+        
+        result = await _chat_direct(
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1000,
+            temperature=0.2
+        )
+        
+        import json as json_mod
+        import re
+        json_match = re.search(r"\{.*\}", result, re.DOTALL)
+        if json_match:
+            return json_mod.loads(json_match.group())
+        else:
+            raise ValueError("LLM did not return JSON")
+    except Exception as e:
+        logger.error(f"Inference: Document analysis failed: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
+
 @router.delete("/vector/{document_id}")
 async def delete_vector_document(document_id: str):
     try:

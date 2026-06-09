@@ -17,6 +17,7 @@ from src.api.chat import router as chat_router
 from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
+from src.api.history import router as history_router
 from src.harness.agentops_harness import agentops_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
@@ -28,6 +29,7 @@ app.include_router(chat_router, tags=["Chat"])
 app.include_router(ingest_router, tags=["Ingestion"])
 app.include_router(feedback_router, tags=["Feedback"])
 app.include_router(finetune_router, tags=["Fine-tuning"])
+app.include_router(history_router, tags=["History"])
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
@@ -64,11 +66,25 @@ async def harness_status():
 @app.on_event("startup")
 async def startup_event():
     from src.store.vector_store import vector_store
+    from motor.motor_asyncio import AsyncIOMotorClient
+    from src.core.config import settings
     try:
         await vector_store.ensure_collection()
         logger.info("Qdrant collection ensured successfully.")
     except Exception as e:
         logger.error(f"Failed to ensure Qdrant collection: {e}")
+        
+    try:
+        if settings.MONGODB_URI:
+            client = AsyncIOMotorClient(settings.MONGODB_URI)
+            db = client.get_default_database()
+            await db["finetune_datasets"].create_index([("user_id", 1), ("created_at", -1)], background=True)
+            await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
+            await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
+            await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
+            logger.info("Finetune MongoDB indexes created successfully.")
+    except Exception as e:
+        logger.error(f"Failed to create Finetune MongoDB indexes: {e}")
 
 if __name__ == "__main__":
     import uvicorn

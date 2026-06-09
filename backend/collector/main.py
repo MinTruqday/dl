@@ -6,7 +6,7 @@ from src.pipelines.anna_archive_collector import AnnaArchiveCollector
 from src.pipelines.nxbgd_collector import NXBGDCollector
 from src.pipelines.nxbst_collector import NXBSTCollector
 from src.pipelines.ctan_collector import CTANCollector
-async def main():
+async def run_worker():
     import sys
     logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="INFO")
     logger.add("logs/backend.log", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - {message}", rotation="10 MB", level="INFO")
@@ -98,15 +98,13 @@ async def main():
         stop_event.set()
 
     import signal
-    loop = asyncio.get_event_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, signal_handler)
+    
+    # loop = asyncio.get_event_loop()
+    # for sig in (signal.SIGINT, signal.SIGTERM):
+    #     loop.add_signal_handler(sig, signal_handler)
         
     await stop_event.wait()
     
     logger.info("Closing MQ connection...")
     await mq_client.connection.close()
     logger.info("Shutdown complete.")
-
-if __name__ == "__main__":
-    asyncio.run(main())

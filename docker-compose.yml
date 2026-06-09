@@ -206,6 +206,8 @@ services:
     restart: always
     env_file:
       - .env
+    ports:
+      - "8200:8200"
     depends_on:
       - rabbitmq
       - mongodb
@@ -213,8 +215,9 @@ services:
       - minio
     volumes:
       - ./backend/collector/src:/app/src
+      - ./backend/collector/api.py:/app/api.py
       - ./backend/logs:/app/logs
-    command: bash -c "xvfb-run -a python -u main.py > /app/logs/collector_startup.log 2>&1"
+    command: bash -c "xvfb-run -a uvicorn api:app --host 0.0.0.0 --port 8300 > /app/logs/collector_startup.log 2>&1"
     networks:
       - doclib_network
 
@@ -225,7 +228,7 @@ services:
     container_name: doclib_compiler
     restart: always
     ports:
-      - "8200:8200"
+      - "8300:8300"
     volumes:
       - ./backend/compiler/src:/app/src
       - tectonic_cache:/home/doclibuser/.cache/Tectonic
