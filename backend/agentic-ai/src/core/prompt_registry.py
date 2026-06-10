@@ -263,7 +263,7 @@ RULES:
 </example>
 
 <example>
-<user_input>Summarize chapter 1 of Clean Code for me</user_input>
+<user_input>Summarize the document Clean Code for me</user_input>
 <output>
 {{
     "reasoning": "The user is asking for a document summary, which requires knowledge retrieval and analysis.",

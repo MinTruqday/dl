@@ -5,8 +5,8 @@ from models.user import UserInDB, RoleEnum
 from api.dependency import get_db, get_current_user, require_role
 from services.publication import PublicationService
 from services.document import DocumentService
-from services.chapter import ChapterService
-from models.document import SchedulePublishRequest, PremiumConfigRequest, SeoMetadataRequest
+from services.document import DocumentService
+from models.document import SchedulePublishRequest, SeoMetadataRequest
 from pydantic import BaseModel
 router = APIRouter(prefix='/xuat-ban')
 
@@ -18,13 +18,6 @@ async def publish_document(document_id: str, current_user: UserInDB=Depends(get_
 async def schedule_publish(document_id: str, req: SchedulePublishRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await PublicationService.schedule_publish(document_id, req.publish_at, current_user, db=db), message='Lên lịch xuất bản tài liệu thành công', status=200)
 
-@router.post('/{document_id}/tinh-phi', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
-async def config_premium(document_id: str, req: PremiumConfigRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PublicationService.config_premium(document_id, req.premium_chapters, current_user, db=db), message='Thiết lập chương tính phí thành công', status=200)
-
-@router.post('/{document_id}/doc-thu', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
-async def set_free_preview(document_id: str, chapter_ids: List[str]=Body(...), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ChapterService.set_free_preview(document_id, chapter_ids, current_user, db=db), message='Thiết lập chương đọc thử thành công', status=200)
 
 @router.put('/{document_id}/seo', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])
 async def update_seo_metadata(document_id: str, req: SeoMetadataRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

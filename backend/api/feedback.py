@@ -2,7 +2,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends
 from api.dependency import get_db, get_current_user
 from models.user import UserInDB
-from models.review import RatingRequest, ChapterRatingRequest
+from models.review import RatingRequest
 from models.feedback import ReportRequest, TypoReportRequest
 from core.response import APIResponse
 from services.review import ReviewService
@@ -16,10 +16,6 @@ async def report_content(req: ReportRequest, current_user: UserInDB=Depends(get_
 @router.post('/tai-lieu/{document_id}/danh-gia', response_model=APIResponse[Any])
 async def rate_document(document_id: str, data: RatingRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await ReviewService.rate_document(document_id, data, current_user, db=db), message='Đánh giá tài liệu thành công')
-
-@router.post('/tai-lieu/{document_id}/chuong/danh-gia', response_model=APIResponse[Any])
-async def rate_chapter(document_id: str, data: ChapterRatingRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReviewService.rate_chapter(document_id, data, current_user, db=db), message='Đánh giá chương thành công')
 
 @router.post('/tai-lieu/{document_id}/loi-chinh-ta', response_model=APIResponse[Any])
 async def report_typo(document_id: str, data: TypoReportRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

@@ -316,13 +316,9 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, timeout=30)
         if response.status_code == 200:
             data = response.json().get("data", {})
-            dropoff = data.get("dropoff_data", [])
-            if not dropoff:
-                return "Chưa có dữ liệu thống kê cho tài liệu này"
-            res = f"Phân tích độc giả cho tài liệu {document_id}:\n"
-            for ch in dropoff:
-                res += f"- {ch.get('chapter_title')}: {ch.get('readers_started')} người đọc, tỉ lệ bỏ dở {ch.get('dropoff_rate')}%\n"
-            return res
+            readers = data.get("readers_started", 0)
+            rate = data.get("dropoff_rate", 0)
+            return f"Phân tích độc giả cho tài liệu {document_id}:\n- {readers} người đọc, tỉ lệ bỏ dở {rate}%"
         return "Không thể lấy dữ liệu thống kê"
     except Exception as e:
         logger.error(f"Error getting analytics: {e}")

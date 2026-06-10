@@ -14,7 +14,7 @@ class CollectorStorage:
         self.secret_key = os.environ.get("MINIO_SECRET_KEY")
         
         if not self.access_key or not self.secret_key:
-            raise ValueError("MINIO_ACCESS_KEY or MINIO_SECRET_KEY is not set in environment variables.")
+            raise ValueError("MINIO_ACCESS_KEY or MINIO_SECRET_KEY is not set in environment variables")
 
         self.bucket = os.environ.get("MINIO_BUCKET_NAME", "doclib-books")
         self.public_url = os.environ.get("MINIO_PUBLIC_URL", "http://localhost:9000")
@@ -37,7 +37,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info(f"Bucket {self.bucket} not found. Creating...")
+            logger.info(f"Bucket {self.bucket} not found, creating")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 

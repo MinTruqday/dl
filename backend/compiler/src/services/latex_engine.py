@@ -80,7 +80,7 @@ class LatexEngine:
                     process.kill()
                 except Exception as e:
                     logger.warning(f"LatexEngine: Lỗi khi kill process: {e}")
-            raise Exception("Quá thời gian biên dịch tài liệu LaTeX (Max 30s).")
+            raise Exception("Quá thời gian biên dịch tài liệu LaTeX")
             
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):

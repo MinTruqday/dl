@@ -5,7 +5,6 @@ import uuid
 
 class HighlightCreateRequest(BaseModel):
     text: str
-    chapter_slug: str = ""
     color: str = "#e4e4e7"
     start_offset: int = 0
     end_offset: int = 0

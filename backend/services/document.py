@@ -114,7 +114,7 @@ class DocumentService:
                 "cover_url": b.get("cover_url"),
                 "views": b.get("views", 0),
                 "average_rating": b.get("average_rating"),
-                "chapters_count": len(b.get("chapters", [])),
+
                 "created_at": b["created_at"].isoformat() if isinstance(b.get("created_at"), datetime) else b.get("created_at"),
             }
             for b in docs

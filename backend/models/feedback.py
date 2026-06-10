@@ -6,8 +6,6 @@ from uuid6 import uuid7
 
 class TypoReportRequest(BaseModel):
     document_id: Optional[str] = None
-    chapter_id: Optional[str] = None
-    chapter_slug: Optional[str] = None
     selected_text: Optional[str] = None
     text_excerpt: Optional[str] = None
     suggested_text: Optional[str] = None

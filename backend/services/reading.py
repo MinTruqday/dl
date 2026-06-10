@@ -28,7 +28,7 @@ class ReadingService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
-        await db['reading_history'].update_one({'user_id': user_id, 'document_id': data.document_id}, {'$set': {'progress_percentage': min(100.0, max(0.0, data.progress_percentage)), 'current_chapter_slug': data.current_chapter_slug, 'last_read_at': now}}, upsert=True)
+        await db['reading_history'].update_one({'user_id': user_id, 'document_id': data.document_id}, {'$set': {'progress_percentage': min(100.0, max(0.0, data.progress_percentage)), 'last_read_at': now}}, upsert=True)
         user = await db['users'].find_one({'_id': user_id}, {'reading_stats': 1})
         stats = user.get('reading_stats', {})
         last_date = stats.get('last_read_date')
@@ -71,7 +71,7 @@ class ReadingService:
     async def search_in_document(document_id: str, query: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        doc = await db['documents'].find_one({'_id': document_id}, {'content': 1, 'title': 1, 'chapters': 1})
+        doc = await db['documents'].find_one({'_id': document_id}, {'content': 1, 'title': 1})
         if not doc:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại.')
         content = doc.get('content', '')

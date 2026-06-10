@@ -28,7 +28,7 @@ async def trigger_collection(req: CollectionRequest):
         queue_name = 'ctan_queue'
         payload['pages'] = pages
     else:
-        raise HTTPException(status_code=400, detail=f"Nguồn thu thập '{source}' không được hỗ trợ.")
+        raise HTTPException(status_code=400, detail=f"Nguồn thu thập '{source}' không được hỗ trợ")
         
     try:
         await mq_client.publish(queue_name, payload)
@@ -36,7 +36,7 @@ async def trigger_collection(req: CollectionRequest):
         return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Đã kích hoạt tiến trình thu thập dữ liệu từ {source}.'}
     except Exception as e:
         logger.error(f"Failed to trigger collection: {e}")
-        raise HTTPException(status_code=500, detail='Không thể gửi lệnh thu thập vào hàng đợi xử lý.')
+        raise HTTPException(status_code=500, detail='Không thể gửi lệnh thu thập vào hàng đợi xử lý')
 
 @router.post('/dung')
 async def stop_collection():
@@ -44,10 +44,10 @@ async def stop_collection():
         if mq_client.channel:
             await mq_client.channel.close()
         logger.info('Collection paused. Existing queue messages preserved.')
-        return {'status': 'success', 'message': 'Đã gửi tín hiệu dừng thu thập (giữ nguyên dữ liệu hàng đợi chưa xử lý).'}
+        return {'status': 'success', 'message': 'Đã gửi tín hiệu dừng thu thập'}
     except Exception as e:
         logger.error(f'Failed to pause collection: {e}')
-        raise HTTPException(status_code=500, detail='Lỗi khi gửi lệnh dừng thu thập.')
+        raise HTTPException(status_code=500, detail='Lỗi khi gửi lệnh dừng thu thập')
 
 @router.get('/thong-ke')
 async def get_collector_stats():

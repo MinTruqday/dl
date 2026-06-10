@@ -16,7 +16,7 @@ class VersionsService:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail='Không tìm thấy tài liệu.')
-        await db['document_versions'].insert_one({'document_id': document_id, 'author_id': str(current_user.id), 'note': version_note, 'snapshot': {'title': doc.get('title'), 'description': doc.get('description'), 'content': doc.get('content', ''), 'chapters': doc.get('chapters', []), 'cover_url': doc.get('cover_url'), 'tags': doc.get('tags', []), 'categories': doc.get('categories', [])}, 'created_at': datetime.now(timezone.utc)})
+        await db['document_versions'].insert_one({'document_id': document_id, 'author_id': str(current_user.id), 'note': version_note, 'snapshot': {'title': doc.get('title'), 'description': doc.get('description'), 'content': doc.get('content', ''), 'cover_url': doc.get('cover_url'), 'tags': doc.get('tags', []), 'categories': doc.get('categories', [])}, 'created_at': datetime.now(timezone.utc)})
         logger.info(f'Versioning: Snapshot created for document {document_id} by {current_user.id}')
         return {'message': 'Đã lưu phiên bản thành công.'}
 

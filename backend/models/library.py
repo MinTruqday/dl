@@ -31,7 +31,6 @@ class TypographyRequest(BaseModel):
 class ProgressUpdate(BaseModel):
     document_id: str
     progress_percentage: float
-    current_chapter_slug: str
 
 class ReadingGoalCreate(BaseModel):
     target_documents: int

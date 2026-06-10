@@ -301,7 +301,7 @@ class NXBSTCollector:
                 raw_title = await title_el.inner_text() if title_el else document_url.split("/")[-1]
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", raw_title).strip()
 
-                author_el = await page.query_selector('#detail .author a, #detail a[href*="author"]')
+                author_el = await page.query_selector('#detail .author a,
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
                 logger.info(f"Targeting document {raw_title} | Author: {raw_author}")

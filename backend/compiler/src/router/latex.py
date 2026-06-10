@@ -21,7 +21,7 @@ async def compile_latex(req: CompileRequest):
 @router.post("/export/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
-        raise HTTPException(status_code=400, detail="Định dạng không hỗ trợ.")
+        raise HTTPException(status_code=400, detail="Định dạng không hỗ trợ")
     
     try:
         file_bytes = await LatexEngine.export_to_format(req.content, format)

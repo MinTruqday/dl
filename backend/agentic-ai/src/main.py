@@ -24,12 +24,12 @@ from src.harness.evaluation_harness import evaluation_harness
 
 app = FastAPI(title="DocLib Agentic AI")
 
-app.include_router(inference_router, prefix="/inference", tags=["Inference"])
-app.include_router(chat_router, tags=["Chat"])
-app.include_router(ingest_router, tags=["Ingestion"])
-app.include_router(feedback_router, tags=["Feedback"])
-app.include_router(finetune_router, tags=["Fine-tuning"])
-app.include_router(history_router, tags=["History"])
+app.include_router(inference_router)
+app.include_router(chat_router)
+app.include_router(ingest_router)
+app.include_router(feedback_router)
+app.include_router(finetune_router)
+app.include_router(history_router)
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
@@ -43,7 +43,6 @@ async def add_trace_id_header(request: Request, call_next):
 async def health_check():
     return {"status": "healthy"}
 
-
 @app.get("/harness/metrics")
 async def harness_metrics():
     from fastapi.responses import PlainTextResponse
@@ -51,7 +50,6 @@ async def harness_metrics():
         content=agentops_harness.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
     )
-
 
 @app.get("/harness/status")
 async def harness_status():
@@ -65,12 +63,13 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("DocLib Agentic AI initialized")
     from src.store.vector_store import vector_store
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.core.config import settings
     try:
         await vector_store.ensure_collection()
-        logger.info("Qdrant collection ensured successfully.")
+        logger.info("Qdrant collection ensured successfully")
     except Exception as e:
         logger.error(f"Failed to ensure Qdrant collection: {e}")
         
@@ -82,7 +81,6 @@ async def startup_event():
             await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("Finetune MongoDB indexes created successfully.")
+            logger.info("Finetune MongoDB indexes created successfully")
     except Exception as e:
         logger.error(f"Failed to create Finetune MongoDB indexes: {e}")
-

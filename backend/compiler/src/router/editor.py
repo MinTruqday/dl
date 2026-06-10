@@ -1,0 +1,129 @@
+from typing import Any, List, Optional
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, Header
+from loguru import logger
+
+from src.schemas.editor import (
+    PlagiarismCheckRequest, KeystrokeSyncRequest, InlineSuggestionRequest, 
+    ResolveSuggestionRequest, PomodoroSyncRequest, FindReplaceRequest, 
+    AutoSaveRequest, CoverGenerateRequest, AISuggestionRequest, 
+    InlineCommentRequest, VersionDiffRequest
+)
+from src.services.editor import EditorService, manager
+
+router = APIRouter(prefix='/soan-thao')
+
+class AuthenticatedUser:
+    def __init__(self, user_id: str, user_name: str = "User"):
+        self.id = user_id
+        self.full_name = user_name
+
+def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("User")):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Missing X-User-ID header from API Gateway")
+    return AuthenticatedUser(user_id=x_user_id, user_name=x_user_name)
+
+@router.websocket('/o-cam/{document_id}')
+async def editor_websocket(websocket: WebSocket, document_id: str):
+    try:
+        await manager.connect(websocket, document_id)
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(data.encode('utf-8'), document_id, websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, document_id)
+    except Exception as e:
+        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
+        manager.disconnect(websocket, document_id)
+
+@router.websocket('/o-cam-crdt/{document_id}')
+async def editor_crdt_websocket(websocket: WebSocket, document_id: str):
+    try:
+        await manager.connect(websocket, document_id)
+        while True:
+            data = await websocket.receive_bytes()
+            await manager.broadcast(data, document_id, websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, document_id)
+    except Exception as e:
+        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
+        manager.disconnect(websocket, document_id)
+
+@router.post('/{document_id}/kiem-tra-dao-van')
+async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Phân tích đạo văn nội bộ thành công', "status": 200}
+
+@router.post('/{document_id}/dong-bo-thao-tac')
+async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.sync_keystroke_buffer(document_id, payload.model_dump(), current_user), "message": 'Đồng bộ bộ đệm gõ phím thành công', "status": 200}
+
+@router.get('/latex')
+async def get_latex():
+    return {"data": await EditorService.get_latex(), "message": 'Lấy mã nguồn LaTeX thành công', "status": 200}
+
+@router.post('/tai-lieu/{document_id}/goi-y')
+async def add_inline_suggestion(document_id: str, payload: InlineSuggestionRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.add_inline_suggestion(document_id, payload.model_dump(), current_user), "message": 'Thêm gợi ý nội dòng thành công', "status": 201}
+
+@router.put('/goi-y/{suggestion_id}/giai-quyet')
+async def resolve_suggestion(suggestion_id: str, payload: ResolveSuggestionRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.resolve_suggestion(suggestion_id, payload.model_dump(), current_user), "message": 'Xử lý gợi ý thành công', "status": 200}
+
+@router.post('/pomodoro')
+async def sync_pomodoro_session(payload: PomodoroSyncRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.sync_pomodoro_session(payload.model_dump(), current_user), "message": 'Đồng bộ phiên Pomodoro thành công', "status": 200}
+
+@router.post('/{document_id}/tu-dong-luu')
+async def auto_save_draft(document_id: str, payload: AutoSaveRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.auto_save_draft(document_id, payload.content, current_user), "message": 'Tự động lưu bản nháp thành công', "status": 200}
+
+@router.post('/{document_id}/gui-duyet')
+async def submit_for_review(document_id: str, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.submit_for_review(document_id, current_user), "message": 'Gửi tài liệu để xem xét thành công', "status": 201}
+
+@router.post('/{document_id}/kiem-tra-dao-van-chuyen-sau')
+async def check_deep_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Kiểm tra đạo văn chuyên sâu thành công', "status": 200}
+
+@router.post('/{document_id}/thay-the-toan-cuc')
+async def global_find_replace(document_id: str, payload: FindReplaceRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.global_find_replace(document_id, payload.search, payload.replace, payload.match_case, current_user), "message": 'Thay thế toàn cục thành công', "status": 200}
+
+@router.post('/{document_id}/anh-bia/tao-ai')
+async def generate_cover(document_id: str, payload: CoverGenerateRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.generate_cover(document_id, payload.style, current_user, agentic_ai_url), "message": 'Khởi tạo ảnh bìa AI thành công', "status": 200}
+
+@router.post('/{document_id}/goi-y-ai')
+async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.get_ai_suggestions(document_id, payload.context, current_user, agentic_ai_url), "message": 'Lấy gợi ý AI thành công', "status": 200}
+
+@router.post('/{document_id}/tom-tat')
+async def summarize_document(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.summarize_document(document_id, current_user, agentic_ai_url), "message": 'Tóm tắt tài liệu thành công', "status": 200}
+
+@router.post('/{document_id}/phan-tich-the')
+async def extract_smart_tags(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.extract_smart_tags(document_id, current_user, agentic_ai_url), "message": 'Tự động phân tích thẻ thành công', "status": 200}
+
+@router.post('/{document_id}/kiem-tra-logic')
+async def check_logic(document_id: str, payload: dict, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.check_logic(document_id, payload.get('content', ''), current_user, agentic_ai_url), "message": 'Kiểm tra tính nhất quán thành công', "status": 200}
+
+@router.post('/{document_id}/kiem-tra-ngu-phap')
+async def check_grammar(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+    return {"data": await EditorService.check_grammar(document_id, current_user, agentic_ai_url), "message": 'Kiểm tra ngữ pháp thành công', "status": 200}
+
+@router.post('/{document_id}/binh-luan')
+async def add_inline_comment(document_id: str, payload: InlineCommentRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.add_inline_comment(document_id, payload.model_dump(), current_user), "message": 'Thêm nhận xét thành công', "status": 200}
+
+@router.get('/{document_id}/binh-luan')
+async def get_inline_comments(document_id: str, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.get_inline_comments(document_id, current_user), "message": 'Lấy danh sách nhận xét thành công', "status": 200}
+
+@router.put('/binh-luan/{comment_id}/giai-quyet')
+async def resolve_comment(comment_id: str, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.resolve_comment(comment_id, current_user), "message": 'Đã xử lý nhận xét', "status": 200}
+
+@router.post('/{document_id}/so-sanh-phien-ban')
+async def get_version_diff(document_id: str, payload: VersionDiffRequest, current_user = Depends(get_current_user)):
+    return {"data": await EditorService.get_version_diff(document_id, payload.version_id_a, payload.version_id_b, current_user), "message": 'Lấy dữ liệu so sánh phiên bản thành công', "status": 200}

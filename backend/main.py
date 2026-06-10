@@ -28,7 +28,7 @@ from api.authentication import router as auth_router
 from api.document import router as document_router
 from api.upload import router as upload_router
 from api.profile import router as profile_router
-from api.editor import router as editor_router
+
 from api.version import router as version_router
 from api.review import router as review_router
 from api.highlight import router as highlight_router
@@ -59,7 +59,7 @@ from api.passkey import router as passkey_router
 from api.publication import router as publish_router
 from api.coupon import router as coupon_router
 from api.collaboration import router as collaboration_router
-from api.compilation import router as compilation_router
+
 from api.bookmark import router as bookmark_router
 from api.pin import router as pin_router
 from api.preference import router as preference_router
@@ -230,7 +230,7 @@ app.include_router(document_router)
 app.include_router(review_router)
 app.include_router(version_router)
 app.include_router(latex_router)
-app.include_router(editor_router)
+
 app.include_router(monetization_router)
 app.include_router(reading_router)
 app.include_router(highlight_router)
@@ -255,7 +255,7 @@ app.include_router(passkey_router)
 app.include_router(publish_router)
 app.include_router(coupon_router)
 app.include_router(collaboration_router)
-app.include_router(compilation_router)
+
 app.include_router(bookmark_router)
 app.include_router(pin_router)
 app.include_router(preference_router)

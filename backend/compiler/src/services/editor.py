@@ -3,13 +3,12 @@ from datetime import datetime, timezone
 from loguru import logger
 from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from bson import ObjectId
-from core.database import db_client
-from core.config import settings
 import os
 import json
 import httpx
 import uuid
 from uuid6 import uuid7
+
 
 class ConnectionManager:
 
@@ -42,7 +41,9 @@ class ConnectionManager:
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)
+
 manager = ConnectionManager()
+
 
 class EditorService:
 
@@ -52,23 +53,21 @@ class EditorService:
         if not content or len(content.split()) < 10:
             return {'duplication_score': 0.0, 'status': 'clean'}
         try:
-            if db is None:
-                db = db_client.mongodb.get_default_database()
             documents = await db['documents'].find({'$text': {'$search': content[:100]}}).limit(1).to_list(1)
             if documents and str(documents[0]['_id']) != document_id:
-                return {'duplication_score': 85.5, 'matched_with': documents[0].get('title', 'Tài liệu không xác định'), 'status': 'warning'}
+                return {'duplication_score': 85.5, 'matched_with': documents[0].get('title', 'Unknown'), 'status': 'warning'}
             return {'duplication_score': 0.0, 'status': 'clean'}
         except Exception as e:
             logger.error(f'Plagiarism check error: {e}')
             return {'duplication_score': 0.0, 'status': 'clean', 'error': str(e)}
 
     @staticmethod
-    async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, db=None):
+    async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, redis_client=None, db=None):
         try:
-            if db_client.redis:
+            if redis_client:
                 user_id = str(current_user.id)
-                await db_client.redis.publish(f'editor:{document_id}:keystroke', str(payload))
-                await db_client.redis.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
+                await redis_client.publish(f'editor:{document_id}:keystroke', str(payload))
+                await redis_client.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
             return {'status': 'synced_redis', 'timestamp': payload.get('timestamp')}
         except Exception as e:
             logger.error(f'Error syncing keystrokes: {e}')
@@ -76,60 +75,69 @@ class EditorService:
 
     @staticmethod
     async def get_latex(db=None):
-        from utils.latex import LATEX_COMMANDS, LATEX_PACKAGES, LATEX_ENVIRONMENTS
+        from src.services.latex_snippets import LATEX_COMMANDS, LATEX_PACKAGES, LATEX_ENVIRONMENTS
         return {'snippets': LATEX_COMMANDS + LATEX_PACKAGES + LATEX_ENVIRONMENTS}
 
     @staticmethod
     async def add_inline_suggestion(document_id: str, payload: dict, current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db['editor_suggestions'].insert_one({'document_id': str(document_id), 'reviewer_id': user_id, 'selected_text': payload.get('selected_text'), 'suggested_text': payload.get('suggested_text'), 'comment': payload.get('comment'), 'status': 'pending', 'created_at': datetime.now(timezone.utc)})
+        await db['editor_suggestions'].insert_one({
+            'document_id': str(document_id),
+            'reviewer_id': user_id,
+            'selected_text': payload.get('selected_text'),
+            'suggested_text': payload.get('suggested_text'),
+            'comment': payload.get('comment'),
+            'status': 'pending',
+            'created_at': datetime.now(timezone.utc)
+        })
         logger.info(f'Inline suggestion added for document {document_id} by user {user_id}')
-        return {'message': 'Đã thêm gợi ý chỉnh sửa thành công.'}
+        return {'message': 'Goi y chinh sua da duoc them thanh cong'}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         sug = await db['editor_suggestions'].find_one({'_id': ObjectId(suggestion_id)})
         if not sug:
-            raise HTTPException(status_code=404, detail='Không tìm thấy gợi ý.')
+            raise HTTPException(status_code=404, detail='Khong tim thay goi y')
         doc = await db['documents'].find_one({'_id': sug['document_id']})
         if doc and str(doc.get('author_id')) != user_id and sug.get('reviewer_id') != user_id:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý gợi ý này.')
+            raise HTTPException(status_code=403, detail='Ban khong co quyen xu ly goi y nay')
 
-        await db['editor_suggestions'].update_one({'_id': ObjectId(suggestion_id)}, {'$set': {'status': payload.get('action', 'rejected'), 'resolved_at': datetime.now(timezone.utc)}})
+        await db['editor_suggestions'].update_one(
+            {'_id': ObjectId(suggestion_id)},
+            {'$set': {'status': payload.get('action', 'rejected'), 'resolved_at': datetime.now(timezone.utc)}}
+        )
         logger.info(f'Suggestion {suggestion_id} resolved by user {user_id}')
-        action_map = {'accepted': 'chấp nhận', 'rejected': 'từ chối'}
+        action_map = {'accepted': 'chap nhan', 'rejected': 'tu choi'}
         action_vn = action_map.get(payload.get('action'), payload.get('action'))
-        return {'message': f'Đã {action_vn} gợi ý thành công.'}
+        return {'message': f'Da {action_vn} goi y thanh cong'}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db['pomodoro_sessions'].insert_one({'user_id': user_id, 'document_id': str(payload.get('document_id')), 'duration_minutes': payload.get('duration'), 'words_written': payload.get('words_written'), 'created_at': datetime.now(timezone.utc)})
+        await db['pomodoro_sessions'].insert_one({
+            'user_id': user_id,
+            'document_id': str(payload.get('document_id')),
+            'duration_minutes': payload.get('duration'),
+            'words_written': payload.get('words_written'),
+            'created_at': datetime.now(timezone.utc)
+        })
         logger.info(f'Pomodoro session recorded for user {user_id}')
         return {'status': 'recorded'}
 
     @staticmethod
     async def auto_save_draft(document_id: str, content: dict, current_user, db=None):
         import re
-        import json
+
         if isinstance(content, str):
-            content = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</>', '', content, flags=re.IGNORECASE|re.DOTALL)
+            content = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</\1>', '', content, flags=re.IGNORECASE | re.DOTALL)
             content = re.sub(r' on\w+\s*=', ' ', content, flags=re.IGNORECASE)
         elif isinstance(content, dict):
             content_str = json.dumps(content)
-            content_str = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</>', '', content_str, flags=re.IGNORECASE|re.DOTALL)
+            content_str = re.sub(r'<(script|iframe|object|embed|applet|style|link|meta)(.*?)>(.*?)</\1>', '', content_str, flags=re.IGNORECASE | re.DOTALL)
             content_str = re.sub(r' on\w+\s*=', ' ', content_str, flags=re.IGNORECASE)
             content = json.loads(content_str)
 
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         toc = []
         words = 0
@@ -141,37 +149,51 @@ class EditorService:
             blocks = parsed.get('blocks', [])
             for block in blocks:
                 if block.get('type') == 'header':
-                    toc.append({'id': block.get('id'), 'text': block.get('data', {}).get('text', ''), 'level': block.get('data', {}).get('level', 1)})
+                    toc.append({
+                        'id': block.get('id'),
+                        'text': block.get('data', {}).get('text', ''),
+                        'level': block.get('data', {}).get('level', 1)
+                    })
                 if 'data' in block and 'text' in block['data']:
                     words += len(str(block['data']['text']).split())
         except Exception as e:
             logger.error(f'Error parsing draft content for document {document_id}: {e}')
+
         reading_time_minutes = max(1, words // 200)
-        await db['documents'].update_one({'_id': document_id, '$or': [{'author_id': user_id}, {'co_authors': user_id}]}, {'$set': {'draft_content': content, 'toc': toc, 'reading_time_minutes': reading_time_minutes, 'updated_at': datetime.now(timezone.utc)}})
-        return {'message': 'Tự động lưu bản nháp thành công.', 'timestamp': str(datetime.now(timezone.utc))}
+        await db['documents'].update_one(
+            {'_id': document_id, '$or': [{'author_id': user_id}, {'co_authors': user_id}]},
+            {'$set': {
+                'draft_content': content,
+                'toc': toc,
+                'reading_time_minutes': reading_time_minutes,
+                'updated_at': datetime.now(timezone.utc)
+            }}
+        )
+        return {'message': 'Tu dong luu ban nhap thanh cong', 'timestamp': str(datetime.now(timezone.utc))}
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db['documents'].update_one({'_id': document_id, 'author_id': user_id}, {'$set': {'editor_review_status': 'pending_review'}})
+        await db['documents'].update_one(
+            {'_id': document_id, 'author_id': user_id},
+            {'$set': {'editor_review_status': 'pending_review'}}
+        )
         logger.info(f'Document {document_id} submitted for review by user {user_id}')
-        return {'message': 'Tài liệu đã được gửi và đang chờ kiểm duyệt.'}
+        return {'message': 'Tai lieu da duoc gui va dang cho kiem duyet'}
 
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user, db=None):
         import re
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         document = await db['documents'].find_one({'_id': str(document_id), 'author_id': user_id})
         if not document:
-            raise HTTPException(status_code=403, detail='Không có quyền thao tác hoặc tài liệu không tồn tại')
+            raise HTTPException(status_code=403, detail='Khong co quyen thao tac hoac tai lieu khong ton tai')
+
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
         new_title = pattern.sub(replace_term, document.get('title', ''))
         new_desc = pattern.sub(replace_term, document.get('description', ''))
+
         content = document.get('content')
         new_content = None
         if content and isinstance(content, dict) and ('blocks' in content):
@@ -185,34 +207,38 @@ class EditorService:
                     new_block['data']['items'] = [pattern.sub(replace_term, item) for item in block['data']['items']]
                 new_blocks.append(new_block)
             new_content['blocks'] = new_blocks
+
         update_data = {'title': new_title, 'description': new_desc, 'updated_at': datetime.now(timezone.utc)}
         if new_content:
             update_data['content'] = new_content
         await db['documents'].update_one({'_id': str(document_id)}, {'$set': update_data})
-        await db['document_versions'].insert_one({'document_id': str(document_id), 'author_id': user_id, 'action': 'GLOBAL_REPLACE', 'details': f"Replaced '{search_term}' with '{replace_term}'", 'created_at': datetime.now(timezone.utc)})
+        await db['document_versions'].insert_one({
+            'document_id': str(document_id),
+            'author_id': user_id,
+            'action': 'GLOBAL_REPLACE',
+            'details': f"Replaced '{search_term}' with '{replace_term}'",
+            'created_at': datetime.now(timezone.utc)
+        })
         logger.info(f'Global find/replace executed for document {document_id} by user {user_id}')
-        return {'message': 'Thay thế nội dung toàn cục thành công.', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay the noi dung toan cuc thanh cong', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
-    async def get_ai_suggestions(document_id: str, context: str, current_user, db=None) -> dict:
-        from services.ai import AIService
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
-        rag_url = settings.AGENTIC_AI_URL
         async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f'{rag_url}/inference/hanh-dong', json={'action': 'ai_suggestions', 'text': context, 'context': doc.get('title', '')})
+            resp = await client.post(
+                f'{agentic_ai_url}/inference/hanh-dong',
+                json={'action': 'ai_suggestions', 'text': context, 'context': doc.get('title', '')}
+            )
             if resp.status_code == 200:
                 return {'suggestions': resp.json().get('result', '')}
-        return {'suggestions': 'Không thể lấy gợi ý vào lúc này.'}
+        return {'suggestions': 'Khong the lay goi y vao luc nay'}
 
     @staticmethod
-    async def summarize_document(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def summarize_document(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
+            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
         content = doc.get('draft_content') or doc.get('content', '')
         text = ''
         try:
@@ -227,27 +253,27 @@ class EditorService:
         except:
             text = str(content)
         if len(text.split()) < 20:
-            raise HTTPException(status_code=400, detail='Văn bản quá ngắn để tóm tắt')
-        rag_url = settings.AGENTIC_AI_URL
+            raise HTTPException(status_code=400, detail='Van ban qua ngan de tom tat')
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f'{rag_url}/inference/hanh-dong', json={'action': 'summarize', 'text': text[:5000], 'context': doc.get('title', '')})
+                resp = await client.post(
+                    f'{agentic_ai_url}/inference/hanh-dong',
+                    json={'action': 'summarize', 'text': text[:5000], 'context': doc.get('title', '')}
+                )
                 if resp.status_code == 200:
-                    summary = resp.json().get('result', 'Đã tóm tắt tài liệu thành công.')
+                    summary = resp.json().get('result', 'Da tom tat tai lieu thanh cong')
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
             logger.error(f'Summarization error: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
-        raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
+            raise HTTPException(status_code=500, detail='Loi ket noi AI Service')
+        raise HTTPException(status_code=500, detail='Khong the tom tat tai lieu')
 
     @staticmethod
-    async def extract_smart_tags(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def extract_smart_tags(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
+            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
         content = doc.get('draft_content') or doc.get('content', '')
         text = ''
         try:
@@ -260,10 +286,12 @@ class EditorService:
                     text += str(block['data']['text']) + ' '
         except:
             pass
-        rag_url = settings.AGENTIC_AI_URL
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f'{rag_url}/inference/hanh-dong', json={'action': 'extract_tags', 'text': text[:3000], 'context': 'Trả về 5 thẻ (tags) cho văn bản này dưới dạng mảng JSON.'})
+                resp = await client.post(
+                    f'{agentic_ai_url}/inference/hanh-dong',
+                    json={'action': 'extract_tags', 'text': text[:3000], 'context': 'Tra ve 5 the (tags) cho van ban nay duoi dang mang JSON'}
+                )
                 if resp.status_code == 200:
                     tags = resp.json().get('result', [])
                     if isinstance(tags, str):
@@ -273,22 +301,28 @@ class EditorService:
                     return {'tags': tags}
         except Exception as e:
             logger.error(f'Tag extraction error: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
-        raise HTTPException(status_code=500, detail='Không thể phân tích thẻ')
+            raise HTTPException(status_code=500, detail='Loi ket noi AI Service')
+        raise HTTPException(status_code=500, detail='Khong the phan tich the')
 
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         comment_id = str(uuid7())
-        comment = {'_id': comment_id, 'document_id': document_id, 'user_id': str(current_user.id), 'user_name': current_user.full_name, 'block_id': data['block_id'], 'text': data['text'], 'selected_text': data.get('selected_text', ''), 'status': 'open', 'created_at': datetime.now(timezone.utc)}
+        comment = {
+            '_id': comment_id,
+            'document_id': document_id,
+            'user_id': str(current_user.id),
+            'user_name': current_user.full_name,
+            'block_id': data['block_id'],
+            'text': data['text'],
+            'selected_text': data.get('selected_text', ''),
+            'status': 'open',
+            'created_at': datetime.now(timezone.utc)
+        }
         await db['editor_comments'].insert_one(comment)
-        return {'_id': comment_id, 'message': 'Đã thêm nhận xét thành công.'}
+        return {'_id': comment_id, 'message': 'Da them nhan xet thanh cong'}
 
     @staticmethod
     async def get_inline_comments(document_id: str, current_user, db=None) -> List[dict]:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         cursor = db['editor_comments'].find({'document_id': document_id, 'status': 'open'}).sort('created_at', -1)
         comments = await cursor.to_list(length=100)
         for c in comments:
@@ -301,86 +335,97 @@ class EditorService:
 
     @staticmethod
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         comment = await db['editor_comments'].find_one({'_id': comment_id})
         if not comment:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail='Không tìm thấy bình luận.')
-            
+            raise HTTPException(status_code=404, detail='Khong tim thay binh luan')
+
         doc = await db['documents'].find_one({'_id': comment['document_id']})
         if doc and str(doc.get('author_id')) != str(current_user.id) and comment.get('user_id') != str(current_user.id):
-            from fastapi import HTTPException
-            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý bình luận này.')
-            
-        await db['editor_comments'].update_one({'_id': comment_id}, {'$set': {'status': 'resolved', 'resolved_by': str(current_user.id), 'resolved_at': datetime.now(timezone.utc)}})
-        return {'message': 'Đã xử lý nhận xét.'}
+            raise HTTPException(status_code=403, detail='Ban khong co quyen xu ly binh luan nay')
+
+        await db['editor_comments'].update_one(
+            {'_id': comment_id},
+            {'$set': {'status': 'resolved', 'resolved_by': str(current_user.id), 'resolved_at': datetime.now(timezone.utc)}}
+        )
+        return {'message': 'Da xu ly nhan xet'}
 
     @staticmethod
     async def get_version_diff(document_id: str, version_id_a: str, version_id_b: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
         v_a = await db['document_versions'].find_one({'_id': version_id_a})
         v_b = await db['document_versions'].find_one({'_id': version_id_b})
         if not v_a or not v_b:
-            raise HTTPException(status_code=404, detail='Không tìm thấy phiên bản để so sánh.')
-        return {'version_a': v_a.get('content'), 'version_b': v_b.get('content'), 'timestamp_a': v_a.get('created_at'), 'timestamp_b': v_b.get('created_at')}
+            raise HTTPException(status_code=404, detail='Khong tim thay phien ban de so sanh')
+        return {
+            'version_a': v_a.get('content'),
+            'version_b': v_b.get('content'),
+            'timestamp_a': v_a.get('created_at'),
+            'timestamp_b': v_b.get('created_at')
+        }
 
     @staticmethod
-    async def check_deep_plagiarism(document_id: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def check_deep_plagiarism(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại.')
+            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
         content = str(doc.get('content', ''))
         try:
-            rag_url = settings.AGENTIC_AI_URL
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.post(f'{rag_url}/inference/kiem-tra-dao-van', json={'text': content[:5000]})
+                resp = await client.post(
+                    f'{agentic_ai_url}/inference/kiem-tra-dao-van',
+                    json={'text': content[:5000]}
+                )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
             logger.error(f'Deep plagiarism check failed: {e}')
-        return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn. Vui lòng thử lại sau.'}
+        return {'plagiarism_score': None, 'status': 'error', 'message': 'Khong the ket noi voi may chu phan tich dao van'}
 
     @staticmethod
-    async def check_logic(document_id: str, content: str, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def check_logic(document_id: str, content: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
-        previous_chapters = '\n'.join([ch.get('content', '') for ch in doc.get('chapters', [])])
-        rag_url = settings.AGENTIC_AI_URL
+        previous_content = doc.get('content', '')
         async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f'{rag_url}/inference/hanh-dong', json={'action': 'check_logic', 'text': content, 'context': previous_chapters[:2000]})
+            resp = await client.post(
+                f'{agentic_ai_url}/inference/hanh-dong',
+                json={'action': 'check_logic', 'text': content, 'context': previous_content[:2000]}
+            )
             if resp.status_code == 200:
                 conflicts = resp.json().get('result', '')
                 return {'conflicts': [conflicts] if conflicts else []}
         return {'conflicts': []}
 
     @staticmethod
-    async def check_grammar(document_id: str, chapter_id: str, current_user, db=None) -> dict:
-        from services.ai import AIService
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def check_grammar(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại.')
-        chapter = next((ch for ch in doc.get('chapters', []) if ch.get('id') == chapter_id), None)
-        if not chapter:
-            raise HTTPException(status_code=404, detail='Chương không tồn tại.')
-        return await AIService.check_grammar(chapter.get('content', ''))
+            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+        content = doc.get('content', '')
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f'{agentic_ai_url}/inference/kiem-tra-ngu-phap',
+                json={'text': content[:5000]}
+            )
+            if resp.status_code == 200:
+                return resp.json()
+        return {'corrected_text': '', 'score': 0, 'message': 'Khong the kiem tra ngu phap luc nay'}
 
     @staticmethod
-    async def generate_cover(document_id: str, style: str, current_user, db=None) -> dict:
-        from services.ai import AIService
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+    async def generate_cover(document_id: str, style: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại.')
-        data = await AIService.generate_cover(doc.get('title', ''), doc.get('description', ''), style)
-        if data.get('cover_url'):
-            await db['documents'].update_one({'_id': document_id}, {'$set': {'cover_url': data['cover_url'], 'updated_at': datetime.now(timezone.utc)}})
-            logger.info(f'Workspace: Cover generated for {document_id}')
-        return data
+            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f'{agentic_ai_url}/inference/tao-anh-bia',
+                json={'title': doc.get('title', ''), 'description': doc.get('description', ''), 'style': style}
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('cover_url'):
+                    await db['documents'].update_one(
+                        {'_id': document_id},
+                        {'$set': {'cover_url': data['cover_url'], 'updated_at': datetime.now(timezone.utc)}}
+                    )
+                    logger.info(f'Cover generated for {document_id}')
+                return data
+        return {'cover_url': None, 'message': 'Khong the tao anh bia luc nay'}

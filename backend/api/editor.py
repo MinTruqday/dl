@@ -6,8 +6,8 @@ from api.dependency import get_db, require_role, get_current_user
 from services.editor import EditorService, manager
 from loguru import logger
 from services.document import DocumentService
-from models.chapter import ChapterCreate
 from models.editor import PlagiarismCheckRequest, KeystrokeSyncRequest, InlineSuggestionRequest, ResolveSuggestionRequest, PomodoroSyncRequest, FindReplaceRequest, AutoSaveRequest, CoverGenerateRequest, AISuggestionRequest, InlineCommentRequest, VersionDiffRequest
+
 router = APIRouter(prefix='/soan-thao')
 
 @router.websocket('/o-cam/{document_id}')
@@ -76,17 +76,13 @@ async def check_deep_plagiarism(document_id: str, current_user: UserInDB=Depends
 async def global_find_replace(document_id: str, payload: FindReplaceRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)):
     return APIResponse(data=await EditorService.global_find_replace(document_id, payload.search, payload.replace, payload.match_case, current_user, db=db), message='Thay thế toàn cục thành công', status=200)
 
-@router.get('/{document_id}/ngu-phap/{chapter_id}', response_model=APIResponse[Any])
-async def check_grammar(document_id: str, chapter_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await EditorService.check_grammar(document_id, chapter_id, current_user, db=db), message='Kiểm tra ngữ pháp hoàn tất')
+
 
 @router.post('/{document_id}/anh-bia/tao-ai', response_model=APIResponse[Any])
 async def generate_cover(document_id: str, payload: CoverGenerateRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
     return APIResponse(data=await EditorService.generate_cover(document_id, payload.style, current_user, db=db), message='Khởi tạo ảnh bìa AI thành công')
 
-@router.post('/{document_id}/chuong', response_model=APIResponse[Any])
-async def add_chapter(document_id: str, chapter_in: ChapterCreate, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
-    return APIResponse(data=await DocumentService.add_chapter(document_id, chapter_in, current_user, db=db), message='Thêm chương mới thành công', status=201)
+
 
 @router.put('/{document_id}/anh-bia', response_model=APIResponse[Any])
 async def update_cover(document_id: str, cover_url: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:

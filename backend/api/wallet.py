@@ -58,10 +58,6 @@ async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depen
 async def purchase_document(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await PurchaseService.purchase_document(document_id, current_user, db=db), message='Mua tài liệu thành công')
 
-@router.post('/giao-dich-mua/tai-lieu/{document_id}/chuong/{chapter_id}', response_model=APIResponse[Any])
-async def purchase_chapter(document_id: str, chapter_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.purchase_chapter(document_id, chapter_id, current_user, db=db), message='Mua chương thành công')
-
 @router.post('/giao-dich-mua/{purchase_id}/huy-bo', response_model=APIResponse[Any])
 async def cancel_purchase(purchase_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Hủy mua thành công')

@@ -5,7 +5,6 @@ import uuid
 from uuid6 import uuid7
 from enum import Enum
 
-from .chapter import ChapterBase
 
 class DocumentStatus(str, Enum):
     DRAFT = "draft"
@@ -43,7 +42,6 @@ class DocumentBase(BaseModel):
     pages_count: Optional[int] = 0
     preview_pages: int = 5
     scheduled_publish_at: Optional[datetime] = None
-    chapters: List[ChapterBase] = []
     coauthors: List[str] = []
     is_deleted: bool = False
     deleted_at: Optional[datetime] = None
@@ -72,7 +70,6 @@ class DocumentUpdate(BaseModel):
     price_dl: Optional[int] = None
     folder_id: Optional[str] = None
     drm_settings: Optional[dict] = None
-    chapters: Optional[List[Any]] = None
     publish_at: Optional[datetime] = None
     scheduled_publish_at: Optional[datetime] = None
     is_nsfw: Optional[bool] = None
@@ -110,9 +107,6 @@ class DocumentPasswordRequest(BaseModel):
 
 class SchedulePublishRequest(BaseModel):
     publish_at: str
-
-class PremiumConfigRequest(BaseModel):
-    premium_chapters: List[str]
 
 class SeoMetadataRequest(BaseModel):
     tags: List[str] = []

@@ -15,7 +15,7 @@ class HighlightService:
         color = data.get('color', '#e4e4e7')
         if color not in ALLOWED_HIGHLIGHT_COLORS:
             color = '#e4e4e7'
-        highlight = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'chapter_slug': data.get('chapter_slug', ''), 'text': data['text'], 'color': color, 'start_offset': data.get('start_offset', 0), 'end_offset': data.get('end_offset', 0), 'note': data.get('note', ''), 'created_at': datetime.now(timezone.utc)}
+        highlight = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'text': data['text'], 'color': color, 'start_offset': data.get('start_offset', 0), 'end_offset': data.get('end_offset', 0), 'note': data.get('note', ''), 'created_at': datetime.now(timezone.utc)}
         await db['highlights'].insert_one(highlight)
         logger.info(f'Social: User {current_user.id} created a highlight in document {document_id}')
         return highlight
@@ -25,7 +25,7 @@ class HighlightService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         highlights = await db['highlights'].find({'user_id': str(current_user.id), 'document_id': document_id}).sort('created_at', -1).to_list(length=200)
-        return [{'_id': str(h['_id']), 'chapter_slug': h.get('chapter_slug', ''), 'text': h.get('text', ''), 'color': h.get('color', '#e4e4e7'), 'start_offset': h.get('start_offset', 0), 'end_offset': h.get('end_offset', 0), 'note': h.get('note', ''), 'created_at': h['created_at'].isoformat() if isinstance(h.get('created_at'), datetime) else h.get('created_at')} for h in highlights]
+        return [{'_id': str(h['_id']), 'text': h.get('text', ''), 'color': h.get('color', '#e4e4e7'), 'start_offset': h.get('start_offset', 0), 'end_offset': h.get('end_offset', 0), 'note': h.get('note', ''), 'created_at': h['created_at'].isoformat() if isinstance(h.get('created_at'), datetime) else h.get('created_at')} for h in highlights]
 
     @staticmethod
     async def update_highlight_note(highlight_id: str, note: str, current_user, db=None) -> dict:

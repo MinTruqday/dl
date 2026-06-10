@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, 
 from models.user import UserInDB, RoleEnum
 from services.document import DocumentService
 from services.series import SeriesService
-from services.chapter import ChapterService
 from models.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, DocumentUpdate, CoauthorInviteRequest, DocumentPasswordRequest
 from models.series import SeriesCreateRequest, SeriesResponse
 from pydantic import BaseModel
@@ -122,10 +121,6 @@ async def get_document_by_slug(
 ) -> Any:
     return APIResponse(data=await DocumentService.get_document_by_slug(slug, current_user), message="Lấy tài liệu theo đường dẫn thành công", status=status.HTTP_200_OK)
 
-@router.get("/{document_id}/chuong", response_model=APIResponse[Any])
-async def get_document_chapters(document_id: str, current_user: UserInDB = Depends(get_current_user_optional)):
-    return APIResponse(data=await ChapterService.get_document_chapters(document_id, current_user), message="Lấy danh sách chương thành công", status=200)
-
 @router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
@@ -206,13 +201,6 @@ async def set_document_password(document_id: str, req: DocumentPasswordRequest, 
         message="Thiết lập mật khẩu tài liệu thành công"
     )
 
-@router.get("/{document_id}/phan-tich/roi-rot", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def get_document_dropoff(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await ChapterService.get_document_dropoff(document_id, current_user),
-        message="Lấy tỷ lệ rơi rớt độc giả thành công"
-    )
-
 @router.get("/{document_id}/nhat-ky-hoat-dong", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def get_document_audit_logs(document_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
@@ -263,8 +251,8 @@ async def get_document_analytics(document_id: str, current_user: UserInDB = Depe
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
     views = doc.get("views", 0)
-    chapters = doc.get("chapters", [])
-    total_words = sum(ch.get("word_count", 0) for ch in chapters) if chapters else 0
+    content = doc.get("content", "")
+    total_words = len(content.split()) if content else 0
     avg_read_time_min = max(1, total_words // 200)
     comment_count = await db["comments"].count_documents({"item_id": document_id, "item_type": "document"})
     bookmark_count = await db["bookmarks"].count_documents({"document_id": document_id})
@@ -289,7 +277,6 @@ async def get_document_analytics(document_id: str, current_user: UserInDB = Depe
         "reviews": review_count,
         "avg_rating": round(avg_rating, 1) if avg_rating else 0,
         "purchases": purchase_count,
-        "chapter_count": len(chapters),
     }, message="Lấy phân tích độc giả thành công")
 
 @router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
@@ -310,20 +297,6 @@ async def get_document_academic(document_id: str, current_user: UserInDB = Depen
         "readability_score": round(readability_score, 1),
         "content_format": doc.get("content_format", "html"),
     }, message="Lấy chỉ số học thuật thành công")
-
-class AuthorNoteUpdate(BaseModel):
-    chapter_index: int
-    note: str
-
-@router.put("/{document_id}/ghi-chu-tac-gia", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def update_author_note(document_id: str, req: AuthorNoteUpdate, current_user: UserInDB = Depends(get_current_user)):
-    doc = await DocumentService.get_document_by_id(document_id, current_user)
-    chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
-    if req.chapter_index < 0 or req.chapter_index >= len(chapters):
-        raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
-    chapters[req.chapter_index]["author_note"] = req.note
-    result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
-    return APIResponse(data=result, message="Cập nhật ghi chú tác giả thành công")
 
 class DRMSettingsUpdate(BaseModel):
     disable_copy: bool = False
@@ -354,19 +327,6 @@ async def schedule_publish(document_id: str, req: ScheduleUpdate, current_user: 
         scheduled_publish_at=req.publish_at
     ), current_user)
     return APIResponse(data=result, message="Lên lịch xuất bản thành công")
-
-class PaywallUpdate(BaseModel):
-    is_premium: bool
-
-@router.put("/{document_id}/chuong/{chapter_index}/tra-phi", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def update_chapter_paywall(document_id: str, chapter_index: int, req: PaywallUpdate, current_user: UserInDB = Depends(get_current_user)):
-    doc = await DocumentService.get_document_by_id(document_id, current_user)
-    chapters = doc.get("chapters", []) if isinstance(doc, dict) else getattr(doc, "chapters", []) or []
-    if chapter_index < 0 or chapter_index >= len(chapters):
-        raise HTTPException(status_code=400, detail="Chỉ số chương không hợp lệ")
-    chapters[chapter_index]["is_premium"] = req.is_premium
-    result = await DocumentService.update_document(document_id, DocumentUpdate(chapters=chapters), current_user)
-    return APIResponse(data=result, message="Cập nhật phân quyền trả phí thành công")
 
 class NSFWUpdate(BaseModel):
     is_nsfw: bool

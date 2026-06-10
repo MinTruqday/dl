@@ -30,7 +30,3 @@ class RatingRequest(BaseModel):
     content: Optional[str] = None
     review_text: Optional[str] = None
 
-class ChapterRatingRequest(BaseModel):
-    chapter_id: Optional[str] = None
-    chapter_slug: Optional[str] = None
-    rating: int

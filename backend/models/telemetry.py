@@ -14,7 +14,6 @@ class TelemetryEvent(BaseModel):
 class ReadingSession(BaseModel):
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
     document_id: str
-    chapter_index: int
     user_id: Optional[str] = None
     device_fingerprint: str
     start_time: datetime = Field(default_factory=datetime.utcnow)

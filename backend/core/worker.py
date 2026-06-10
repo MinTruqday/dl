@@ -108,7 +108,7 @@ async def process_document_publish(message: AbstractIncomingMessage):
             if not document or not author:
                 return
                 
-            total_words = sum(len(c.get("content", "").split()) for c in document.get("chapters", []))
+            total_words = len(document.get("content", "").split())
             base_price = max(10, total_words // 1000 * 5)
             
             try:

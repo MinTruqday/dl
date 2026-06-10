@@ -51,15 +51,6 @@ class PublicationService:
         return {'message': 'Đã hẹn giờ xuất bản thành công.'}
 
     @staticmethod
-    async def config_premium(document_id: str, premium_chapters: list, current_user, db=None):
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        user_id = str(current_user.id)
-        await db['documents'].update_one({'_id': document_id, 'author_id': user_id}, {'$set': {'premium_chapters': premium_chapters}})
-        logger.info(f'Premium config updated for document {document_id} by user {user_id}')
-        return {'message': 'Đã thiết lập chương tính phí.'}
-
-    @staticmethod
     async def publish_document(document_id: str, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()

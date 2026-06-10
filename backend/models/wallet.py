@@ -36,7 +36,7 @@ class Transaction(BaseModel):
 class PurchaseRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     user_id: str
-    item_type: str = "chapter"
+    item_type: str = "document"
     item_id: str
     price_paid: int
     purchased_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
