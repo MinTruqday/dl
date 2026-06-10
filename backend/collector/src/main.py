@@ -1,15 +1,14 @@
-import os
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.api.router import router
 
-app = FastAPI(title="DocLib Collector")
+app = FastAPI(title="DocLib Collector API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,5 +24,5 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "DocLib Collector"}
+    return {"status": "ok", "service": "collector"}
 

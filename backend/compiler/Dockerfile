@@ -5,8 +5,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
     fonts-wine ttf-mscorefonts-installer \
-    && fc-cache -f -v \
-    && ARCH=$(uname -m) && \
+    && fc-cache -f -v \calhost:3000/dang-nhap?email=admin%40doclib.com&password=admin
+&& ARCH=$(uname -m) && \
     if [ "$ARCH" = "aarch64" ]; then \
     URL="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-aarch64-unknown-linux-musl.tar.gz"; \
     else \
@@ -23,4 +23,4 @@ COPY src/ ./src/
 RUN useradd -m doclibuser && chown -R doclibuser:doclibuser /app
 USER doclibuser
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8200"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8300"]

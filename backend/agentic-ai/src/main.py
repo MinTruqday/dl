@@ -1,4 +1,3 @@
-import os
 from fastapi import FastAPI, Request
 from loguru import logger
 import uuid
@@ -19,31 +18,26 @@ from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
 from src.api.history import router as history_router
-from src.api.quota import router as quota_router
 from src.harness.agentops_harness import agentops_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
 
 app = FastAPI(title="DocLib Agentic AI")
 
-app.include_router(inference_router, prefix="/suy-luan", tags=["Suy Luận"])
-app.include_router(chat_router, tags=["Trò Chuyện"])
-app.include_router(ingest_router, tags=["Nạp Dữ Liệu"])
-app.include_router(feedback_router, tags=["Phản Hồi"])
-app.include_router(finetune_router, tags=["Huấn Luyện"])
-app.include_router(history_router, tags=["Lịch Sử"])
-app.include_router(quota_router)
+app.include_router(inference_router, prefix="/inference", tags=["Inference"])
+app.include_router(chat_router, tags=["Chat"])
+app.include_router(ingest_router, tags=["Ingestion"])
+app.include_router(feedback_router, tags=["Feedback"])
+app.include_router(finetune_router, tags=["Fine-tuning"])
+app.include_router(history_router, tags=["History"])
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
     trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    token = trace_id_ctx_var.set(trace_id)
-    try:
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = trace_id
-        return response
-    finally:
-        trace_id_ctx_var.reset(token)
+    trace_id_ctx_var.set(trace_id)
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = trace_id
+    return response
 
 @app.get("/health")
 async def health_check():

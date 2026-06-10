@@ -59,154 +59,154 @@ export default function RegisterPage() {
       <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
         <div className="w-full max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
 
-      {registeredEmail && (
-        <Passkey
-          email={registeredEmail}
-          onClose={() => router.push("/dang-nhap")}
-          onSuccess={() => router.push("/dang-nhap")}
-        />
-      )}
-      
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-black">
-          Đăng ký
-        </h2>
-        <p className="mt-2 text-sm text-zinc-500">
-          Đã có tài khoản?{" "}
-          <a href="/dang-nhap" className="font-medium text-black underline">
-            Đăng nhập ngay
-          </a>
-        </p>
-      </div>
+          {registeredEmail && (
+            <Passkey
+              email={registeredEmail}
+              onClose={() => router.push("/dang-nhap")}
+              onSuccess={() => router.push("/dang-nhap")}
+            />
+          )}
 
-      <div className="w-full">
-        <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
-          <form className="space-y-6" onSubmit={handleRegister}>
-            <div>
-              <label
-                htmlFor="full_name"
-                className="block text-sm font-medium text-black"
-              >
-                Tên hiển thị
-              </label>
-              <div className="mt-2">
-                <input
-                  id="full_name"
-                  name="full_name"
-                  type="text"
-                  required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-              </div>
-            </div>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold tracking-tight text-black">
+              Đăng ký
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500">
+              Đã có tài khoản?{" "}
+              <a href="/dang-nhap" className="font-medium text-black underline">
+                Đăng nhập ngay
+              </a>
+            </p>
+          </div>
 
-            <div>
-              <label
-                htmlFor="slug"
-                className="block text-sm font-medium text-black"
-              >
-                Tên tài khoản
-              </label>
-              <div className="mt-2 flex">
-                <span className="inline-flex items-center px-4 border border-r-0 border-zinc-200 bg-zinc-50 text-zinc-500 text-sm rounded-l-2xl">
-                  @
-                </span>
-                <input
-                  id="slug"
-                  name="slug"
-                  type="text"
-                  required
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  className="flex-1 min-w-0 block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-r-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-black"
-              >
-                Địa chỉ email
-              </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-black"
-              >
-                Mật khẩu
-              </label>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-start mt-4">
-              <div className="flex items-center h-5">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  required
-                  className="h-4 w-4 border border-zinc-300 rounded-lg text-black focus:ring-0 cursor-pointer"
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="terms" className="text-zinc-600">
-                  Tôi đồng ý với các{" "}
-                  <button
-                    type="button"
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-black font-medium underline"
+          <div className="w-full">
+            <div className="bg-white py-10 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
+              <form className="space-y-6" onSubmit={handleRegister}>
+                <div>
+                  <label
+                    htmlFor="full_name"
+                    className="block text-sm font-medium text-black"
                   >
-                    Điều khoản và quy định
-                  </button>{" "}
-                  của nền tảng
-                </label>
-              </div>
-            </div>
+                    Tên hiển thị
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="full_name"
+                      name="full_name"
+                      type="text"
+                      required
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black rounded-2xl disabled:bg-zinc-200 disabled:text-zinc-500"
-              >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {loading ? "Đang xử lý" : "Đăng ký"}
-              </button>
+                <div>
+                  <label
+                    htmlFor="slug"
+                    className="block text-sm font-medium text-black"
+                  >
+                    Tên tài khoản
+                  </label>
+                  <div className="mt-2 flex">
+                    <span className="inline-flex items-center px-4 border border-r-0 border-zinc-200 bg-zinc-50 text-zinc-500 text-sm rounded-l-2xl">
+                      @
+                    </span>
+                    <input
+                      id="slug"
+                      name="slug"
+                      type="text"
+                      required
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      className="flex-1 min-w-0 block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-r-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-black"
+                  >
+                    Địa chỉ email
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-black"
+                  >
+                    Mật khẩu
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-start mt-4">
+                  <div className="flex items-center h-5">
+                    <input
+                      id="terms"
+                      name="terms"
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      required
+                      className="h-4 w-4 border border-zinc-300 rounded-lg text-black focus:ring-0 cursor-pointer"
+                    />
+                  </div>
+                  <div className="ml-3 text-sm">
+                    <label htmlFor="terms" className="text-zinc-600">
+                      Tôi đồng ý với các{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-black font-medium underline"
+                      >
+                        Điều khoản và quy định
+                      </button>{" "}
+                      của nền tảng
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex justify-center items-center gap-3 h-12 text-sm font-medium text-white bg-black rounded-2xl disabled:bg-zinc-200 disabled:text-zinc-500"
+                  >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading ? "Đang xử lý" : "Đăng ký"}
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-      </div>
       </div>
 
       <Modal

@@ -147,161 +147,161 @@ export default function LoginPage() {
       <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
         <div className="w-full max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
 
-      {pendingPasskeyEmail && (
-        <Passkey
-          email={pendingPasskeyEmail}
-          onClose={() => router.push("/")}
-          onSuccess={() => router.push("/")}
-        />
-      )}
-      
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-black">
-          Đăng nhập
-        </h2>
-        <p className="mt-2 text-sm text-zinc-500">
-          Chưa có tài khoản?{" "}
-          <a href="/dang-ky" className="font-medium text-black underline">
-            Đăng ký ngay
-          </a>
-        </p>
-      </div>
+          {pendingPasskeyEmail && (
+            <Passkey
+              email={pendingPasskeyEmail}
+              onClose={() => router.push("/")}
+              onSuccess={() => router.push("/")}
+            />
+          )}
 
-      <div className="w-full space-y-6">
-        <div className="bg-white p-6 sm:p-8 border border-zinc-200 rounded-2xl">
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-black"
-              >
-                Email hoặc tên tài khoản
-              </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-              </div>
-            </div>
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold tracking-tight text-black">
+              Đăng nhập
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500">
+              Chưa có tài khoản?{" "}
+              <a href="/dang-ky" className="font-medium text-black underline">
+                Đăng ký ngay
+              </a>
+            </p>
+          </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-black"
-              >
-                Mật khẩu
-              </label>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setPassword(e.target.value)
-                  }
-                  className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
-                />
-                <div className="mt-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-xs font-medium text-zinc-500 underline"
+          <div className="w-full space-y-6">
+            <div className="bg-white p-6 sm:p-8 border border-zinc-200 rounded-2xl">
+              <form className="space-y-6" onSubmit={handleLogin}>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-black"
                   >
-                    {showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    Email hoặc tên tài khoản
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="email"
+                      name="email"
+                      type="text"
+                      autoComplete="username"
+                      required
+                      value={email}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setEmail(e.target.value)
+                      }
+                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-black"
+                  >
+                    Mật khẩu
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setPassword(e.target.value)
+                      }
+                      className="appearance-none block w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl placeholder-zinc-400 focus:outline-none focus:ring-0 focus:border-zinc-200 text-sm text-black"
+                    />
+                    <div className="mt-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-xs font-medium text-zinc-500 underline"
+                      >
+                        {showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded-lg cursor-pointer"
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="ml-2 block text-sm text-zinc-600"
+                    >
+                      Ghi nhớ đăng nhập
+                    </label>
+                  </div>
+
+                  <div className="text-sm">
+                    <a
+                      href="/quen-mat-khau"
+                      className="font-medium text-black underline"
+                    >
+                      Quên mật khẩu?
+                    </a>
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-2xl text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-black focus:ring-0 border border-zinc-300 rounded-lg cursor-pointer"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-zinc-600"
+            <div className="bg-white py-8 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!email) {
+                      showToast(
+                        "Vui lòng nhập email trước để dùng Passkey",
+                        "error",
+                      );
+                      return;
+                    }
+                    await completePasskeyLogin(email);
+                  }}
+                  className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
                 >
-                  Ghi nhớ đăng nhập
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="/quen-mat-khau"
-                  className="font-medium text-black underline"
+                  <KeyRound className="w-5 h-5 text-black" />
+                  Passkey
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const url = await getGoogleLoginUrlAPI();
+                      window.location.href = url;
+                    } catch (err: any) {
+                      showToast("Không thể kết nối với Google", "error");
+                    }
+                  }}
+                  className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
                 >
-                  Quên mật khẩu?
-                </a>
+                  <GoogleIcon />
+                  Google
+                </button>
               </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-2xl text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
-              >
-                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div className="bg-white py-8 px-6 sm:px-12 border border-zinc-200 rounded-2xl">
-          <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!email) {
-                    showToast(
-                      "Vui lòng nhập email trước để dùng Passkey",
-                      "error",
-                    );
-                    return;
-                  }
-                  await completePasskeyLogin(email);
-                }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
-              >
-                <KeyRound className="w-5 h-5 text-black" />
-                Passkey
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const url = await getGoogleLoginUrlAPI();
-                    window.location.href = url;
-                  } catch (err: any) {
-                    showToast("Không thể kết nối với Google", "error");
-                  }
-                }}
-                className="w-full inline-flex justify-center items-center h-12 border border-zinc-200 rounded-2xl bg-white text-sm font-medium text-black gap-2 hover:bg-zinc-50 transition-colors"
-              >
-                <GoogleIcon />
-                Google
-              </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

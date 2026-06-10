@@ -70,9 +70,9 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:8080"
+      - "--entrypoints.web.address=:8000"
     ports:
-      - "8080:8080"
+      - "8000:8000"
       - "8081:8080" # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -131,11 +131,11 @@ services:
     container_name: doclib_agentic_ai
     restart: always
     ports:
-      - "8100:8100"
+      - "8400:8400"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`, `/tro-chuyen`, `/nap-du-lieu`, `/tai-lieu`, `/phan-hoi`, `/huan-luyen`, `/lich-su`, `/han-muc`)"
-      - "traefik.http.services.ai.loadbalancer.server.port=8100"
+      - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env
     depends_on:
@@ -205,11 +205,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8150:8150"
+      - "8250:8250"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
-      - "traefik.http.services.collector.loadbalancer.server.port=8150"
+      - "traefik.http.services.collector.loadbalancer.server.port=8250"
     depends_on:
       - rabbitmq
       - mongodb
@@ -218,7 +218,7 @@ services:
     volumes:
       - ./backend/collector/src:/app/src
       - ./backend/logs/collector:/app/logs
-    command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8150 > /app/logs/collector_startup.log 2>&1"
+    command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8250 > /app/logs/collector_startup.log 2>&1"
     networks:
       - doclib_network
 
@@ -229,11 +229,11 @@ services:
     container_name: doclib_compiler
     restart: always
     ports:
-      - "8200:8200"
+      - "8300:8300"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.compiler.rule=PathPrefix(`/bien-dich`)"
-      - "traefik.http.services.compiler.loadbalancer.server.port=8200"
+      - "traefik.http.services.compiler.loadbalancer.server.port=8300"
     depends_on:
       - rabbitmq
       - mongodb
@@ -253,11 +253,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8400:8400"
+      - "8350:8350"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.finance.rule=PathPrefix(`/vi-tien`, `/nap-tien`, `/rut-tien`, `/ma-uu-dai`, `/kiem-tien`)"
-      - "traefik.http.services.finance.loadbalancer.server.port=8400"
+      - "traefik.http.services.finance.loadbalancer.server.port=8350"
     depends_on:
       - mongodb
       - redis
@@ -276,11 +276,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8050:8050"
+      - "8500:8500"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/xac-thuc`, `/dinh-danh`)"
-      - "traefik.http.services.auth.loadbalancer.server.port=8050"
+      - "traefik.http.services.auth.loadbalancer.server.port=8500"
     depends_on:
       - mongodb
       - redis
@@ -299,11 +299,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8300:8300"
+      - "8100:8100"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.contact.rule=PathPrefix(`/nhan-tin`)"
-      - "traefik.http.services.contact.loadbalancer.server.port=8300"
+      - "traefik.http.services.contact.loadbalancer.server.port=8100"
     depends_on:
       - mongodb
       - redis
@@ -322,11 +322,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8500:8500"
+      - "8150:8150"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.signal.rule=PathPrefix(`/thong-bao`)"
-      - "traefik.http.services.signal.loadbalancer.server.port=8500"
+      - "traefik.http.services.signal.loadbalancer.server.port=8150"
     depends_on:
       - mongodb
       - redis
@@ -345,11 +345,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8350:8350"
+      - "8450:8450"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`, `/danh-gia`, `/phien-ban`, `/doc`, `/danh-dau`, `/thu-vien`, `/tai-len`, `/kham-pha`, `/xuat-tai-lieu`, `/cong-tac`, `/xuat-ban`, `/luu-tru`, `/neu-bat`, `/soan-thao`, `/ban-nhap`, `/ghim`, `/han-muc`)"
-      - "traefik.http.services.content.loadbalancer.server.port=8350"
+      - "traefik.http.services.content.loadbalancer.server.port=8450"
     depends_on:
       - redis
       - mongodb
@@ -368,11 +368,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8250:8250"
+      - "8200:8200"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ws.rule=PathPrefix(`/tro-chuyen`, `/editor`)"
-      - "traefik.http.services.ws.loadbalancer.server.port=8250"
+      - "traefik.http.services.ws.loadbalancer.server.port=8200"
     depends_on:
       - redis
     volumes:
@@ -390,11 +390,11 @@ services:
     env_file:
       - .env
     ports:
-      - "8450:8450"
+      - "8050:8050"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.provision.rule=PathPrefix(`/nguoi-dung`, `/nhat-ky`, `/do-luong`, `/van-hanh`)"
-      - "traefik.http.services.provision.loadbalancer.server.port=8450"
+      - "traefik.http.services.provision.loadbalancer.server.port=8050"
     depends_on:
       - mongodb
       - redis

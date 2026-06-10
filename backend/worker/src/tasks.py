@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 from loguru import logger
 
-from src.core.config import settings
+from core.config import settings
 
 CELERY_BROKER_URL = settings.RABBITMQ_URI
 CELERY_RESULT_BACKEND = settings.REDIS_URI
@@ -33,7 +33,9 @@ def hard_delete_document_task(document_id: str, user_id: str):
     logger.info(f"Saga: Hard deleting document {document_id}")
     import httpx
     try:
-        from src.core.database import db_client
+        from core.database import db_client
+        # Although we are in a worker, we might need an event loop or just call synchronous requests if not async.
+        # But this is Celery (sync task).
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)

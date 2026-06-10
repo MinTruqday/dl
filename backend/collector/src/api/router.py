@@ -57,7 +57,7 @@ async def get_collector_stats():
     total_collected = await db['documents'].count_documents({'author_id': {'$regex': '.*collector.*'}})
     return {'total_documents_collected': total_collected, 'active_sources': ['AnnaArchive', 'NXBST', 'NXBGD', 'CTAN'], 'status': 'operational'}
 
-@router.get('/nhat-ky')
+@router.get('/logs')
 async def get_collector_logs():
     log_file = 'logs/backend.log'
     logs = []
