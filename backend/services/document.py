@@ -1,6 +1,5 @@
 from bson import ObjectId
 from core.publication import trigger_document_publish_job
-from services.compilation import CompilationService
 from passlib.context import CryptContext
 from core.storage import upload_file
 from typing import List, Any
@@ -590,25 +589,4 @@ class DocumentService:
             "mentions": b.get("views", 0),
             "average_rating": b.get("average_rating", 0)
         } for b in documents]
-
-    @staticmethod
-    async def compile_document(document_id: str, current_user) -> dict:
-        db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
-        
-        content = doc.get("content", "")
-        pdf_data = await CompilationService.compile_latex_to_pdf(content)
-        
-        filename = f"documents/{uuid7().hex}.pdf"
-        await upload_file(pdf_data, filename, "application/pdf")
-        
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {"$set": {"pdf_path": filename, "compiled_at": datetime.now(timezone.utc)}}
-        )
-        
-        logger.info(f"Compilation: Document {document_id} compiled successfully to {filename}")
-        return {"status": "success", "pdf_path": filename, "message": "Biên dịch tài liệu thành công."}
 

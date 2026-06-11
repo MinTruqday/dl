@@ -2,7 +2,6 @@ import asyncio
 import logging
 from config.settings import settings
 from core.database import db_client
-from services.rag import RagService
 import os
 
 logging.basicConfig(level=logging.INFO)

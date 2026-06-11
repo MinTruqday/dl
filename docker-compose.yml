@@ -63,7 +63,7 @@ services:
       - doclib_network
 
   traefik:
-    image: traefik:v2.10
+    image: traefik:latest
     container_name: doclib_traefik
     restart: always
     command:
@@ -134,7 +134,7 @@ services:
       - "8400:8400"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`, `/tro-chuyen`, `/nap-du-lieu`, `/tai-lieu`, `/phan-hoi`, `/huan-luyen`, `/lich-su`, `/han-muc`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/han-muc`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env
@@ -374,7 +374,7 @@ services:
       - "8200:8200"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ws.rule=PathPrefix(`/tin-nhan`, `/soan-thao`)"
+      - "traefik.http.routers.ws.rule=PathPrefix(`/tin-nhan`) || PathPrefix(`/soan-thao`)"
       - "traefik.http.services.ws.loadbalancer.server.port=8200"
     depends_on:
       - redis
@@ -420,7 +420,7 @@ services:
       - "8080:8000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/xac-thuc`, `/dinh-danh`, `/tai-lieu`, `/kham-pha`, `/bieu-ngu`, `/vi-tien`, `/nap-tien`, `/nhan-tin`, `/thong-bao`, `/nguoi-dung`, `/danh-gia`, `/phien-ban`, `/doc`, `/danh-dau`, `/thu-vien`, `/tai-len`, `/xuat-tai-lieu`, `/cong-tac`, `/xuat-ban`, `/luu-tru`, `/neu-bat`, `/soan-thao`, `/ban-nhap`, `/ghim`, `/han-muc`, `/rut-tien`, `/ma-uu-dai`, `/kiem-tien`)"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
     depends_on:
       - mongodb
@@ -430,6 +430,8 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/logs:/app/logs
+    networks:
+      - doclib_network
 
 networks:
   doclib_network:

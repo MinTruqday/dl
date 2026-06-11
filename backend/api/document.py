@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/tai-lieu")
 
-@router.post("/", response_model=APIResponse[DocumentResponse])
+@router.post("", response_model=APIResponse[DocumentResponse])
 async def create_document(
     doc_in: DocumentCreate,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))
@@ -38,7 +38,7 @@ async def update_document(
 ) -> Any:
     return APIResponse(data=await DocumentService.update_document(document_id, doc_update, current_user), message="Cập nhật thông tin tài liệu thành công", status=status.HTTP_200_OK)
 
-@router.get("/", response_model=APIResponse[List[DocumentResponse]])
+@router.get("", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
     limit: int = 10, 
     cursor: Optional[str] = None,
@@ -208,12 +208,7 @@ async def get_document_audit_logs(document_id: str, current_user: UserInDB = Dep
         message="Lấy nhật ký hoạt động tài liệu thành công"
     )
 
-@router.post("/{document_id}/bien-dich", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
-async def compile_document(document_id: str, current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await DocumentService.compile_document(document_id, current_user),
-        message="Biên dịch tài liệu thành công"
-    )
+
 
 
 @router.post("/{document_id}/star", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])

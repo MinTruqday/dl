@@ -39,14 +39,10 @@ from api.deposit import router as deposit_router
 from api.reading import router as reading_router
 from api.monetization import router as monetization_router
 from api.withdrawal import router as withdrawal_router
-from api.rag import router as rag_router
-from api.inference import router as inference_router
 from api.message import router as message_router
-from api.latex import router as latex_router
 from api.collector import router as collector_router
 from api.library import router as library_router
 from api.feedback import router as feedback_router
-from api.ai import router as ai_router
 from api.operation import router as operation_router
 from api.draft import router as draft_router
 from api.report import router as report_router
@@ -229,16 +225,12 @@ app.include_router(upload_router)
 app.include_router(document_router)
 app.include_router(review_router)
 app.include_router(version_router)
-app.include_router(latex_router)
 
 app.include_router(monetization_router)
 app.include_router(reading_router)
 app.include_router(highlight_router)
 app.include_router(library_router)
 app.include_router(feedback_router)
-app.include_router(ai_router)
-app.include_router(rag_router)
-app.include_router(inference_router)
 app.include_router(notification_router)
 app.include_router(message_router)
 app.include_router(collector_router)
