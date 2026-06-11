@@ -33,12 +33,9 @@ from api.version import router as version_router
 from api.review import router as review_router
 from api.highlight import router as highlight_router
 from api.notification import router as notification_router
-from api.wallet import router as wallet_router
 from api.export import router as export_router
-from api.deposit import router as deposit_router
 from api.reading import router as reading_router
 from api.monetization import router as monetization_router
-from api.withdrawal import router as withdrawal_router
 from api.message import router as message_router
 from api.collector import router as collector_router
 from api.library import router as library_router
@@ -53,7 +50,6 @@ from api.user import router as user_router
 from api.discovery import router as discovery_router
 from api.passkey import router as passkey_router
 from api.publication import router as publish_router
-from api.coupon import router as coupon_router
 from api.collaboration import router as collaboration_router
 
 from api.bookmark import router as bookmark_router
@@ -218,8 +214,6 @@ async def shutdown_event():
 
 app.include_router(auth_router)
 app.include_router(profile_router)
-app.include_router(wallet_router)
-app.include_router(deposit_router)
 app.include_router(export_router)
 app.include_router(upload_router)
 app.include_router(document_router)
@@ -234,7 +228,6 @@ app.include_router(feedback_router)
 app.include_router(notification_router)
 app.include_router(message_router)
 app.include_router(collector_router)
-app.include_router(withdrawal_router)
 app.include_router(operation_router)
 app.include_router(draft_router)
 app.include_router(report_router)
@@ -245,7 +238,6 @@ app.include_router(user_router)
 app.include_router(discovery_router)
 app.include_router(passkey_router)
 app.include_router(publish_router)
-app.include_router(coupon_router)
 app.include_router(collaboration_router)
 
 app.include_router(bookmark_router)

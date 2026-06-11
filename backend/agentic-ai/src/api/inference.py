@@ -40,7 +40,7 @@ async def generate_text(req: GenerationRequest):
         )
         return {"result": result}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/dich-thuat")
 async def translate_text(req: TranslationRequest):
@@ -53,7 +53,7 @@ async def translate_text(req: TranslationRequest):
         )
         return {"translation": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/phan-tich-cam-xuc")
 async def analyze_sentiment(req: SentimentRequest):
@@ -115,7 +115,7 @@ async def analyze_sentiment(req: SentimentRequest):
         }
     except Exception as e:
         logger.error(f"Inference: Sentiment analysis failed: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 
 @router.post("/tao-ma-nguon")
@@ -129,7 +129,7 @@ async def generate_code(req: CodeRequest):
         )
         return {"code": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(req: GrammarRequest):
@@ -150,7 +150,7 @@ async def grammar_check(req: GrammarRequest):
             "message": "Đã hoàn thành kiểm tra ngữ pháp và tính toán độ chính xác."
         }
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 
 @router.post("/tom-tat")
@@ -164,7 +164,7 @@ async def summarize_text(req: SummarizeRequest):
         )
         return {"summary": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(req: GrammarRequest):
@@ -211,7 +211,7 @@ async def check_plagiarism(req: GrammarRequest):
         }
     except Exception as e:
         logger.error(f"Inference: Real plagiarism check failed: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/hanh-dong")
 async def unified_action(req: ActionRequest):
@@ -236,7 +236,7 @@ async def unified_action(req: ActionRequest):
         return {"result": result.strip()}
     except Exception as e:
         logger.error(f"Inference: Action {req.action} failed: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/tu-dong-nghia")
 async def get_synonyms(req: GrammarRequest):
@@ -249,7 +249,7 @@ async def get_synonyms(req: GrammarRequest):
         )
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 
 @router.post("/trich-dan-thong-minh")
@@ -274,7 +274,7 @@ async def suggest_citations(req: CitationRequest):
         )
         return {"citations": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/bien-doi-van-ban")
 async def transform_tone(req: ToneRequest):
@@ -288,7 +288,7 @@ async def transform_tone(req: ToneRequest):
         )
         return {"transformed_text": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/tham-dinh-noi-dung")
 async def peer_review(req: ReviewRequest):
@@ -302,7 +302,7 @@ async def peer_review(req: ReviewRequest):
         )
         return {"review_report": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/tong-hop-da-tai-lieu")
 async def multi_doc_synthesis(req: SynthesisRequest):
@@ -326,7 +326,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
         )
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
+        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict):
@@ -341,7 +341,7 @@ async def extract_text(req: dict):
         return {"extracted_text": extracted_text}
     except Exception as e:
         logger.error(f"Inference: Extraction failed: {e}")
-        raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này.")
+        raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này")
 
 @router.post("/phan-tich-tai-lieu")
 async def analyze_document(req: dict):

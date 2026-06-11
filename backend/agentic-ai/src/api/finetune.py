@@ -88,7 +88,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
     finally:
         active_jobs.pop(job_id, None)
 
-@router.post("/dataset")
+@router.post("/tap-du-lieu")
 async def create_dataset(req: dict):
     db = get_db()
     doc = {
@@ -100,33 +100,33 @@ async def create_dataset(req: dict):
     await db["finetune_datasets"].insert_one(doc)
     return doc
 
-@router.get("/dataset")
+@router.get("/tap-du-lieu")
 async def list_datasets(user_id: str):
     return await get_db()["finetune_datasets"].find({"user_id": user_id}).sort("created_at", -1).to_list(length=100)
 
-@router.get("/dataset/{dataset_id}")
+@router.get("/tap-du-lieu/{dataset_id}")
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await get_db()["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     return doc
 
-@router.delete("/dataset/{dataset_id}")
+@router.delete("/tap-du-lieu/{dataset_id}")
 async def delete_dataset(dataset_id: str, user_id: str):
     db = get_db()
     result = await db["finetune_datasets"].delete_one({"_id": dataset_id, "user_id": user_id})
     if result.deleted_count > 0:
         await db["finetune_samples"].delete_many({"dataset_id": dataset_id})
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+    raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
 
-@router.post("/dataset/{dataset_id}/samples")
+@router.post("/tap-du-lieu/{dataset_id}/mau")
 async def add_samples(dataset_id: str, req: dict):
     db = get_db()
     user_id = req.get("user_id")
     dataset = await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id})
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     docs = [{"_id": str(uuid7()), "dataset_id": dataset_id, "instruction": s.get("instruction", ""), "input": s.get("input", ""), "output": s.get("output", ""), "created_at": datetime.now(timezone.utc)} for s in req.get("samples", [])]
     if docs:
         await db["finetune_samples"].insert_many(docs)
@@ -134,25 +134,25 @@ async def add_samples(dataset_id: str, req: dict):
     await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}})
     return {"added": len(docs), "total": total}
 
-@router.get("/dataset/{dataset_id}/samples")
+@router.get("/tap-du-lieu/{dataset_id}/mau")
 async def get_samples(dataset_id: str, user_id: str, skip: int = 0, limit: int = 50):
     db = get_db()
     if not await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id}):
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     return await db["finetune_samples"].find({"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit)).to_list(length=int(limit))
 
-@router.delete("/dataset/{dataset_id}/samples/{sample_id}")
+@router.delete("/tap-du-lieu/{dataset_id}/mau/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     db = get_db()
     if not await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id}):
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     if (await db["finetune_samples"].delete_one({"_id": sample_id, "dataset_id": dataset_id})).deleted_count > 0:
         total = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
         await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}})
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy mẫu.")
+    raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
 
-@router.post("/import/feedback")
+@router.post("/nhap/phan-hoi")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -179,7 +179,7 @@ async def import_feedback(req: dict):
         await db["finetune_datasets"].update_one({"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}})
     return {"dataset_id": ds_id, "imported": len(samples)}
 
-@router.post("/import/documents")
+@router.post("/nhap/tai-lieu")
 async def import_docs(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
@@ -226,13 +226,13 @@ async def import_docs(req: dict):
         await db["finetune_datasets"].update_one({"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}})
     return {"dataset_id": ds_id, "imported": len(samples)}
 
-@router.post("/job")
+@router.post("/cong-viec")
 async def create_job(req: dict):
     db = get_db()
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
     dataset = await db["finetune_datasets"].find_one({"_id": ds_id, "user_id": user_id})
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     if dataset.get("sample_count", 0) < 10:
         return {"error": "insufficient_samples"}
     job_id = str(uuid7())
@@ -250,12 +250,12 @@ async def create_job(req: dict):
     await db["finetune_datasets"].update_one({"_id": ds_id}, {"$set": {"status": "training"}})
     return job
 
-@router.post("/job/{job_id}/start")
+@router.post("/cong-viec/{job_id}/bat-dau")
 async def start_job(job_id: str, req: dict):
     db = get_db()
     job = await db["finetune_jobs"].find_one({"_id": job_id, "user_id": req.get("user_id")})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
     if job_id in active_jobs:
         return {"error": "Công việc đang chạy."}
     samples = await db["finetune_samples"].find({"dataset_id": job["dataset_id"]}).to_list(length=10000)
@@ -275,18 +275,18 @@ async def start_job(job_id: str, req: dict):
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "running", "started_at": datetime.now(timezone.utc)}})
     return {"status": "started", "job_id": job_id}
 
-@router.get("/job")
+@router.get("/cong-viec")
 async def list_jobs(user_id: str):
     return await get_db()["finetune_jobs"].find({"user_id": user_id}).sort("created_at", -1).to_list(length=100)
 
-@router.get("/job/{job_id}")
+@router.get("/cong-viec/{job_id}")
 async def get_job(job_id: str, user_id: str):
     job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
     return job
 
-@router.post("/job/{job_id}/cancel")
+@router.post("/cong-viec/{job_id}/huy-bo")
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
     result = await db["finetune_jobs"].update_one(
@@ -296,21 +296,21 @@ async def cancel_job(job_id: str, req: dict):
     if result.modified_count > 0:
         active_jobs.pop(job_id, None)
         return {"status": "cancelled"}
-    raise HTTPException(status_code=400, detail="Không thể hủy công việc này.")
+    raise HTTPException(status_code=400, detail="Không thể hủy công việc này")
 
-@router.post("/job/{job_id}/deploy")
+@router.post("/cong-viec/{job_id}/trien-khai")
 async def deploy_model(job_id: str, req: dict):
     db = get_db()
     job = await db["finetune_jobs"].find_one({"_id": job_id, "user_id": req.get("user_id"), "status": "completed"})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc hoàn thành.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy công việc hoàn thành")
     model_name = job.get("merged_model_name", job["job_name"])
     gguf_path = job.get("gguf_path")
     merged_path = job.get("merged_path")
     
     hf_token = getattr(settings, "HF_TOKEN", None)
     if not hf_token:
-        raise HTTPException(status_code=500, detail="Thiếu HF_TOKEN để tải mô hình lên HuggingFace Hub.")
+        raise HTTPException(status_code=500, detail="Thiếu HF_TOKEN để tải mô hình lên HuggingFace Hub")
 
     try:
         from huggingface_hub import HfApi
@@ -348,13 +348,13 @@ async def deploy_model(job_id: str, req: dict):
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})
     return {"status": "deployed", "model_name": model_name}
 
-@router.post("/job/{job_id}/evaluate")
+@router.post("/cong-viec/{job_id}/danh-gia")
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation_harness import evaluation_harness
     db = get_db()
     job = await db["finetune_jobs"].find_one({"_id": job_id, "user_id": req.get("user_id")})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc.")
+        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation_harness._dataset = req.get("test_samples", [])
