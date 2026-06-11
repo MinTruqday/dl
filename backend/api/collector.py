@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import httpx
 from core.config import settings
 
-COLLECTOR_URL = "http://collector:8300"
+COLLECTOR_URL = settings.COLLECTOR_URL
 
 class CollectionRequest(BaseModel):
     source: str

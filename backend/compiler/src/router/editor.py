@@ -9,6 +9,7 @@ from src.schemas.editor import (
     InlineCommentRequest, VersionDiffRequest
 )
 from src.services.editor import EditorService, manager
+from src.config import settings
 
 router = APIRouter(prefix='/soan-thao')
 
@@ -81,7 +82,7 @@ async def submit_for_review(document_id: str, current_user = Depends(get_current
     return {"data": await EditorService.submit_for_review(document_id, current_user), "message": 'Gửi tài liệu để xem xét thành công', "status": 201}
 
 @router.post('/{document_id}/kiem-tra-dao-van-chuyen-sau')
-async def check_deep_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def check_deep_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Kiểm tra đạo văn chuyên sâu thành công', "status": 200}
 
 @router.post('/{document_id}/thay-the-toan-cuc')
@@ -89,27 +90,27 @@ async def global_find_replace(document_id: str, payload: FindReplaceRequest, cur
     return {"data": await EditorService.global_find_replace(document_id, payload.search, payload.replace, payload.match_case, current_user), "message": 'Thay thế toàn cục thành công', "status": 200}
 
 @router.post('/{document_id}/anh-bia/tao-ai')
-async def generate_cover(document_id: str, payload: CoverGenerateRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def generate_cover(document_id: str, payload: CoverGenerateRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.generate_cover(document_id, payload.style, current_user, agentic_ai_url), "message": 'Khởi tạo ảnh bìa AI thành công', "status": 200}
 
 @router.post('/{document_id}/goi-y-ai')
-async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.get_ai_suggestions(document_id, payload.context, current_user, agentic_ai_url), "message": 'Lấy gợi ý AI thành công', "status": 200}
 
 @router.post('/{document_id}/tom-tat')
-async def summarize_document(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def summarize_document(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.summarize_document(document_id, current_user, agentic_ai_url), "message": 'Tóm tắt tài liệu thành công', "status": 200}
 
 @router.post('/{document_id}/phan-tich-the')
-async def extract_smart_tags(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def extract_smart_tags(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.extract_smart_tags(document_id, current_user, agentic_ai_url), "message": 'Tự động phân tích thẻ thành công', "status": 200}
 
 @router.post('/{document_id}/kiem-tra-logic')
-async def check_logic(document_id: str, payload: dict, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def check_logic(document_id: str, payload: dict, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.check_logic(document_id, payload.get('content', ''), current_user, agentic_ai_url), "message": 'Kiểm tra tính nhất quán thành công', "status": 200}
 
 @router.post('/{document_id}/kiem-tra-ngu-phap')
-async def check_grammar(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header("http://localhost:8002")):
+async def check_grammar(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.check_grammar(document_id, current_user, agentic_ai_url), "message": 'Kiểm tra ngữ pháp thành công', "status": 200}
 
 @router.post('/{document_id}/binh-luan')

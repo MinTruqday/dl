@@ -39,7 +39,7 @@ from datetime import datetime, timezone
 import hashlib
 import base64
 
-COMPILER_URL = settings.COMPILER_SERVICE_URL if hasattr(settings, 'COMPILER_SERVICE_URL') else 'http://compiler:8200'
+COMPILER_URL = settings.COMPILER_URL
 
 router = APIRouter(prefix='/soan-thao-latex')
 

@@ -36,7 +36,7 @@ COPY --chown=appuser:appuser src/ ./src/
 
 USER appuser
 
-EXPOSE 8100
+EXPOSE 8400
 
-CMD ["gunicorn", "src.main:app", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "-b", "--host", "0.0.0.0", "--port", "8100", "--timeout", "1200"]
+CMD ["gunicorn", "src.main:app", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "-b", "--host", "0.0.0.0", "--port", "8400", "--timeout", "1200"]
 

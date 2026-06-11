@@ -16,7 +16,7 @@ def trace_id_filter(record):
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
 
-from src.router import latex, editor
+from src.router import latex, editor, editorjs
 
 app = FastAPI(title="DocLib Compiler Service")
 
@@ -29,6 +29,7 @@ app.add_middleware(
 )
 
 app.include_router(latex.router, prefix="/compile/latex", tags=["LaTeX"])
+app.include_router(editorjs.router, prefix="/compile/editorjs", tags=["EditorJS"])
 app.include_router(editor.router, tags=["Editor"])
 
 

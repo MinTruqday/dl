@@ -6,6 +6,7 @@ import asyncio
 import glob
 import re
 from loguru import logger
+
 class LatexEngine:
     DANGEROUS_PATTERNS = [
         r"\\input\s*\{?\s*/", r"\\include\s*\{?\s*/",
@@ -18,7 +19,7 @@ class LatexEngine:
     async def compile_to_pdf(content: str) -> bytes:
         for pattern in LatexEngine.DANGEROUS_PATTERNS:
             if re.search(pattern, content):
-                raise Exception({"error": "Bảo mật: Mã LaTeX chứa các tập lệnh đọc file hoặc ghi file không được phép."})
+                raise Exception({"error": "Bảo mật: Mã LaTeX chứa các tập lệnh đọc file hoặc ghi file không được phép"})
 
         job_id = str(uuid7())
         temp_dir = tempfile.gettempdir()

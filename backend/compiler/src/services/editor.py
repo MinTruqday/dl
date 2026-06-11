@@ -91,26 +91,26 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Inline suggestion added for document {document_id} by user {user_id}')
-        return {'message': 'Goi y chinh sua da duoc them thanh cong'}
+        return {'message': 'Gợi ý chỉnh sửa đã được thêm thành công'}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
         user_id = str(current_user.id)
         sug = await db['editor_suggestions'].find_one({'_id': ObjectId(suggestion_id)})
         if not sug:
-            raise HTTPException(status_code=404, detail='Khong tim thay goi y')
+            raise HTTPException(status_code=404, detail='Không tìm thấy gợi ý')
         doc = await db['documents'].find_one({'_id': sug['document_id']})
         if doc and str(doc.get('author_id')) != user_id and sug.get('reviewer_id') != user_id:
-            raise HTTPException(status_code=403, detail='Ban khong co quyen xu ly goi y nay')
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý gợi ý này')
 
         await db['editor_suggestions'].update_one(
             {'_id': ObjectId(suggestion_id)},
             {'$set': {'status': payload.get('action', 'rejected'), 'resolved_at': datetime.now(timezone.utc)}}
         )
         logger.info(f'Suggestion {suggestion_id} resolved by user {user_id}')
-        action_map = {'accepted': 'chap nhan', 'rejected': 'tu choi'}
+        action_map = {'accepted': 'chấp nhận', 'rejected': 'từ chối'}
         action_vn = action_map.get(payload.get('action'), payload.get('action'))
-        return {'message': f'Da {action_vn} goi y thanh cong'}
+        return {'message': f'Đã {action_vn} gợi ý thành công'}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
@@ -169,7 +169,7 @@ class EditorService:
                 'updated_at': datetime.now(timezone.utc)
             }}
         )
-        return {'message': 'Tu dong luu ban nhap thanh cong', 'timestamp': str(datetime.now(timezone.utc))}
+        return {'message': 'Tự động lưu bản nháp thành công', 'timestamp': str(datetime.now(timezone.utc))}
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
@@ -179,7 +179,7 @@ class EditorService:
             {'$set': {'editor_review_status': 'pending_review'}}
         )
         logger.info(f'Document {document_id} submitted for review by user {user_id}')
-        return {'message': 'Tai lieu da duoc gui va dang cho kiem duyet'}
+        return {'message': 'Tài liệu đã được gửi và đang chờ kiểm duyệt'}
 
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user, db=None):
@@ -187,7 +187,7 @@ class EditorService:
         user_id = str(current_user.id)
         document = await db['documents'].find_one({'_id': str(document_id), 'author_id': user_id})
         if not document:
-            raise HTTPException(status_code=403, detail='Khong co quyen thao tac hoac tai lieu khong ton tai')
+            raise HTTPException(status_code=403, detail='Không có quyền thao tác hoặc tài liệu không tồn tại')
 
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
@@ -220,7 +220,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Global find/replace executed for document {document_id} by user {user_id}')
-        return {'message': 'Thay the noi dung toan cuc thanh cong', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -232,13 +232,13 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {'suggestions': resp.json().get('result', '')}
-        return {'suggestions': 'Khong the lay goi y vao luc nay'}
+        return {'suggestions': 'Không thể lấy gợi ý vào lúc này'}
 
     @staticmethod
     async def summarize_document(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         content = doc.get('draft_content') or doc.get('content', '')
         text = ''
         try:
@@ -253,7 +253,7 @@ class EditorService:
         except:
             text = str(content)
         if len(text.split()) < 20:
-            raise HTTPException(status_code=400, detail='Van ban qua ngan de tom tat')
+            raise HTTPException(status_code=400, detail='Văn bản quá ngắn để tóm tắt')
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
@@ -261,19 +261,19 @@ class EditorService:
                     json={'action': 'summarize', 'text': text[:5000], 'context': doc.get('title', '')}
                 )
                 if resp.status_code == 200:
-                    summary = resp.json().get('result', 'Da tom tat tai lieu thanh cong')
+                    summary = resp.json().get('result', 'Đã tóm tắt tài liệu thành công')
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
             logger.error(f'Summarization error: {e}')
-            raise HTTPException(status_code=500, detail='Loi ket noi AI Service')
-        raise HTTPException(status_code=500, detail='Khong the tom tat tai lieu')
+            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
+        raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
 
     @staticmethod
     async def extract_smart_tags(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         content = doc.get('draft_content') or doc.get('content', '')
         text = ''
         try:
@@ -301,8 +301,8 @@ class EditorService:
                     return {'tags': tags}
         except Exception as e:
             logger.error(f'Tag extraction error: {e}')
-            raise HTTPException(status_code=500, detail='Loi ket noi AI Service')
-        raise HTTPException(status_code=500, detail='Khong the phan tich the')
+            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
+        raise HTTPException(status_code=500, detail='Không thể phân tích thẻ')
 
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user, db=None) -> dict:
@@ -319,7 +319,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         }
         await db['editor_comments'].insert_one(comment)
-        return {'_id': comment_id, 'message': 'Da them nhan xet thanh cong'}
+        return {'_id': comment_id, 'message': 'Đã thêm nhận xét thành công'}
 
     @staticmethod
     async def get_inline_comments(document_id: str, current_user, db=None) -> List[dict]:
@@ -337,24 +337,24 @@ class EditorService:
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
         comment = await db['editor_comments'].find_one({'_id': comment_id})
         if not comment:
-            raise HTTPException(status_code=404, detail='Khong tim thay binh luan')
+            raise HTTPException(status_code=404, detail='Không tìm thấy bình luận')
 
         doc = await db['documents'].find_one({'_id': comment['document_id']})
         if doc and str(doc.get('author_id')) != str(current_user.id) and comment.get('user_id') != str(current_user.id):
-            raise HTTPException(status_code=403, detail='Ban khong co quyen xu ly binh luan nay')
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý bình luận này')
 
         await db['editor_comments'].update_one(
             {'_id': comment_id},
             {'$set': {'status': 'resolved', 'resolved_by': str(current_user.id), 'resolved_at': datetime.now(timezone.utc)}}
         )
-        return {'message': 'Da xu ly nhan xet'}
+        return {'message': 'Đã xử lý nhận xét'}
 
     @staticmethod
     async def get_version_diff(document_id: str, version_id_a: str, version_id_b: str, current_user, db=None) -> dict:
         v_a = await db['document_versions'].find_one({'_id': version_id_a})
         v_b = await db['document_versions'].find_one({'_id': version_id_b})
         if not v_a or not v_b:
-            raise HTTPException(status_code=404, detail='Khong tim thay phien ban de so sanh')
+            raise HTTPException(status_code=404, detail='Không tìm thấy phiên bản để so sánh')
         return {
             'version_a': v_a.get('content'),
             'version_b': v_b.get('content'),
@@ -366,7 +366,7 @@ class EditorService:
     async def check_deep_plagiarism(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         content = str(doc.get('content', ''))
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -378,7 +378,7 @@ class EditorService:
                     return resp.json()
         except Exception as e:
             logger.error(f'Deep plagiarism check failed: {e}')
-        return {'plagiarism_score': None, 'status': 'error', 'message': 'Khong the ket noi voi may chu phan tich dao van'}
+        return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn'}
 
     @staticmethod
     async def check_logic(document_id: str, content: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -398,7 +398,7 @@ class EditorService:
     async def check_grammar(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         content = doc.get('content', '')
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
@@ -407,13 +407,13 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {'corrected_text': '', 'score': 0, 'message': 'Khong the kiem tra ngu phap luc nay'}
+        return {'corrected_text': '', 'score': 0, 'message': 'Không thể kiểm tra ngữ pháp lúc này'}
 
     @staticmethod
     async def generate_cover(document_id: str, style: str, current_user, agentic_ai_url: str, db=None) -> dict:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tai lieu khong ton tai')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f'{agentic_ai_url}/inference/tao-anh-bia',
@@ -428,4 +428,4 @@ class EditorService:
                     )
                     logger.info(f'Cover generated for {document_id}')
                 return data
-        return {'cover_url': None, 'message': 'Khong the tao anh bia luc nay'}
+        return {'cover_url': None, 'message': 'Không thể tạo ảnh bìa lúc này'}
