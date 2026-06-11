@@ -50,6 +50,9 @@ class Settings(BaseModel):
     CORE_BACKEND_URL: Optional[str] = os.getenv("CORE_BACKEND_URL")
     COMPILER_URL: str = os.getenv("COMPILER_URL")
     COLLECTOR_URL: str = os.getenv("COLLECTOR_URL")
+    CONTACT_URL: str = os.getenv("CONTACT_URL")
+    FINANCE_URL: str = os.getenv("FINANCE_URL")
+    SIGNAL_URL: str = os.getenv("SIGNAL_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
