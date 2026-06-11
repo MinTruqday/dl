@@ -29,7 +29,7 @@ export default function HelpPage() {
     },
     {
       q: "dl là gì?",
-      a: "dl là đơn vị tích lũy trong hệ thống, dùng để mua các tài liệu hoặc ủng hộ các tác giả.",
+      a: "dl là đơn vị tích lũy trong hệ thống, dùng để mua các tài liệu.",
     },
     {
       q: "Cộng tác viên là gì?",

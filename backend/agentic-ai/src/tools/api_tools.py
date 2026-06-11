@@ -147,41 +147,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         logger.error(f"Error calling revenue API: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-@tool
-async def send_virtual_tip(target_user_id: str, amount: int, config: RunnableConfig) -> str:
-    """Send a virtual tip in dl currency to another user or author."""
-    token = config.get("configurable", {}).get("token")
-    if not token:
-        return "Lỗi xác thực: Vui lòng đăng nhập để gửi tặng dl"
-    if amount <= 0:
-        return "Lỗi: Số dl phải lớn hơn 0"
-    headers = {"Authorization": token}
 
-    balance_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=10)
-    if balance_res.status_code != 200:
-        return "Không thể kiểm tra số dư trước khi giao dịch. Hãy thử lại."
-    current_balance = balance_res.json().get("data", {}).get("balance", 0)
-    if current_balance < amount:
-        return f"Số dư không đủ: hiện có {current_balance} dl, cần {amount} dl"
-
-    from uuid6 import uuid7
-    saga_id = str(uuid7())
-    logger.info(f"Saga [{saga_id}]: Initiating tip transfer {amount} dl -> {target_user_id}")
-    try:
-        response = await _make_api_request("POST",
-                f"{INTERNAL_API_URL}/vi-tien/tien-ung-ho/{target_user_id}?amount={amount}",
-                headers=headers,
-                timeout=30
-            )
-        if response.status_code == 200:
-            logger.info(f"Saga [{saga_id}]: Completed successfully")
-            return f"Đã gửi tặng thành công {amount} dl tới người dùng {target_user_id}"
-        data = response.json()
-        logger.warning(f"Saga [{saga_id}]: Failed - {data}")
-        return f"Lỗi giao dịch: {data.get('detail', 'Số dư không đủ hoặc người dùng không tồn tại')}"
-    except Exception as e:
-        logger.error(f"Saga [{saga_id}]: Exception - {e}")
-        return "Hệ thống đang gặp sự cố. Giao dịch chưa được thực hiện."
 
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
@@ -676,7 +642,6 @@ tools = [
     get_transaction_history,
     redeem_voucher,
     get_revenue_report,
-    send_virtual_tip,
     get_my_documents,
     read_document,
     get_trash_documents,

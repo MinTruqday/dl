@@ -3,9 +3,8 @@ from core.response import APIResponse
 from fastapi import APIRouter, Depends
 from api.dependency import get_db, get_current_user, require_role
 from models.user import UserInDB, RoleEnum
-from models.wallet import PlanCreate, TipRequest, DocumentPricingRequest, FlashSaleRequest
+from models.wallet import PlanCreate, DocumentPricingRequest, FlashSaleRequest
 from services.subscription import SubscriptionService
-from services.donation import DonationService
 from services.pricing import PricingService
 from services.withdrawal import WithdrawalService
 router = APIRouter(prefix='/kiem-tien')
@@ -41,13 +40,7 @@ async def resume_subscription(subscription_id: str, current_user: UserInDB=Depen
 async def cancel_subscription(subscription_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await SubscriptionService.cancel_subscription(subscription_id, current_user, db=db), message='Hủy hội viên thành công')
 
-@router.post('/ung-ho', response_model=APIResponse[Any])
-async def tip(req: TipRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    receiver = req.receiver_id or req.author_id
-    if not receiver:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail='Thiếu mã người nhận (receiver_id hoặc author_id).')
-    return APIResponse(data=await DonationService.virtual_tip(receiver, req.amount, current_user, req.message, db=db), message='Ủng hộ tác giả thành công')
+
 
 @router.put('/tai-lieu/{document_id}/gia-ban', response_model=APIResponse[Any])
 async def set_document_pricing(document_id: str, data: DocumentPricingRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

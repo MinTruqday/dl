@@ -60,16 +60,6 @@ export async function unlockPostAPI(postId: string) {
   return data;
 }
 
-export async function virtualTipAPI(targetUserId: string, amount: number) {
-  const res = await fetch(`${API_URL}/vi-tien/tien-ung-ho/${targetUserId}`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ amount }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Gửi tiền ủng hộ thất bại");
-  return data;
-}
 
 export async function getAuthorStatsAPI() {
   const res = await fetch(`${API_URL}/vi-tien/doanh-thu`, {

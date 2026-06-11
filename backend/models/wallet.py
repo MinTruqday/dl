@@ -53,12 +53,6 @@ class Voucher(BaseModel):
     class Config:
         populate_by_name = True
 
-class TipRequest(BaseModel):
-    receiver_id: Optional[str] = None
-    author_id: Optional[str] = None
-    amount: int = Field(..., gt=0)
-    message: Optional[str] = None
-
 class RedeemVoucherRequest(BaseModel):
     code: str
 

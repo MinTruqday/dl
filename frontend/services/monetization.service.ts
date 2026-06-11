@@ -33,16 +33,6 @@ export async function subscribeToAuthorAPI(planId: string) {
   return data;
 }
 
-export async function tipAuthorAPI(authorId: string, amount: number, message: string = "") {
-  const res = await fetch(`${API_URL}/kiem-tien/ung-ho`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ author_id: authorId, amount, message }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Ủng hộ tác giả thất bại");
-  return data;
-}
 
 export async function setDocumentPricingAPI(documentId: string, priceDl: number, isDrmProtected: boolean = true) {
   const res = await fetch(`${API_URL}/kiem-tien/tai-lieu/${documentId}/gia-ban`, {
