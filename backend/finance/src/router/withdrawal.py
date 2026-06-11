@@ -2,9 +2,10 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, require_role, get_current_user
 from src.schemas.user import UserInDB, RoleEnum
-from src.core.response import APIResponse
+from core.response import APIResponse
 from src.services.withdrawal import WithdrawalService
 from src.schemas.withdrawal import WithdrawalRequest
+
 router = APIRouter(prefix='/rut-tien')
 
 @router.post('', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR]))])

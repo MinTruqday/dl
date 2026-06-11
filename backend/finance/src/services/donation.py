@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from src.core.database import db_client
+from core.database import db_client
 from src.schemas.wallet import Transaction, TransactionType
 from loguru import logger
 

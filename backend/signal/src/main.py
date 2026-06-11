@@ -7,19 +7,18 @@ import sys
 
 trace_id_ctx_var = contextvars.ContextVar("trace_id", default="")
 
+
 def trace_id_filter(record):
     record["extra"]["trace_id"] = trace_id_ctx_var.get()
     return True
 
+
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
 
-from src.router.wallet import router as wallet_router
-from src.router.deposit import router as deposit_router
-from src.router.withdrawal import router as withdrawal_router
-from src.router.coupon import router as coupon_router
+from src.router.notification import router as notification_router
 
-app = FastAPI(title="DocLib Finance")
+app = FastAPI(title="DocLib Signal Service")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,10 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wallet_router)
-app.include_router(deposit_router)
-app.include_router(withdrawal_router)
-app.include_router(coupon_router)
+app.include_router(notification_router)
+
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
@@ -42,10 +39,12 @@ async def add_trace_id_header(request: Request, call_next):
     response.headers["X-Request-ID"] = trace_id
     return response
 
+
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Finance initialized")
+    logger.info("DocLib Signal Service initialized")
+
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "finance"}
+    return {"status": "ok", "service": "signal"}

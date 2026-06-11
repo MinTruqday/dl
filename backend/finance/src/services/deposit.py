@@ -1,4 +1,4 @@
-from src.core.config import settings
+from core.config import settings
 import hmac
 import hashlib
 import json
@@ -6,7 +6,7 @@ import httpx
 import random
 from datetime import datetime, timezone
 from fastapi import HTTPException, Response
-from src.core.database import db_client
+from core.database import db_client
 from src.schemas.wallet import Transaction, TransactionType
 from loguru import logger
 

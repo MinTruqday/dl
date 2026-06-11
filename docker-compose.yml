@@ -141,6 +141,34 @@ services:
     depends_on:
       - mongodb
       - redis
+    volumes:
+      - ./backend/finance/src:/app/src
+      - ./backend/core:/app/core
+      - ./backend/logs/finance:/app/logs
+    networks:
+      - doclib_network
+
+  signal:
+    build:
+      context: ./backend/signal
+      dockerfile: Dockerfile
+    container_name: doclib_signal
+    restart: always
+    ports:
+      - "8150:8150"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.signal.rule=PathPrefix(`/thong-bao`)"
+      - "traefik.http.services.signal.loadbalancer.server.port=8150"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend/signal/src:/app/src
+      - ./backend/core:/app/core
+      - ./backend/logs/signal:/app/logs
     networks:
       - doclib_network
 

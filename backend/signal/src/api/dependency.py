@@ -5,7 +5,6 @@ import jwt
 from core.security import SECRET_KEY, ALGORITHM
 from core.database import db_client
 from src.schemas.user import UserInDB, RoleEnum
-import time
 from core.config import settings
 from loguru import logger
 
@@ -51,11 +50,7 @@ async def get_current_user_optional(token: Optional[str]=Depends(OAuth2PasswordB
     except HTTPException:
         return None
 
-async def get_current_user_token_param(token: str) -> UserInDB:
-    return await get_current_user(token)
-
 def require_role(required_roles: List[RoleEnum]):
-
     async def role_checker(current_user: UserInDB=Depends(get_current_user)) -> UserInDB:
         if current_user.role == RoleEnum.ADMIN:
             return current_user
@@ -64,43 +59,3 @@ def require_role(required_roles: List[RoleEnum]):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
         return current_user
     return role_checker
-
-class RateLimiter:
-
-    def __init__(self, calls: int, period: int):
-        self.calls = calls
-        self.period = period
-
-    async def __call__(self, request: Request):
-        if settings.MONGODB_DB_NAME == 'doclib_test':
-            return True
-        if not db_client.redis:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail='Tính năng này đang bảo trì, vui lòng quay lại sau')
-        client_ip = request.client.host if request.client else 'unknown'
-        path = request.url.path
-        key = f'rate_limit:{client_ip}:{path}'
-        current = await db_client.redis.get(key)
-        if current is not None and int(current) >= self.calls:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail='Thao tác quá nhanh, vui lòng thử lại sau')
-        pipe = db_client.redis.pipeline()
-        pipe.incr(key)
-        pipe.expire(key, self.period)
-        await pipe.execute()
-        return True
-
-def require_permissions(required_permissions: List[str]):
-
-    async def permission_checker(current_user: UserInDB=Depends(get_current_user)) -> UserInDB:
-        user_perms = current_user.permissions or []
-        if current_user.role == RoleEnum.ADMIN:
-            return current_user
-        missing = [p for p in required_permissions if p not in user_perms]
-        if missing:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Quyền bị từ chối. Thiếu quyền: {', '.join(missing)}")
-        return current_user
-    return permission_checker
-
-async def check_quota(current_user: UserInDB=Depends(get_current_user)):
-    from services.quota import QuotaService
-    await QuotaService.check_quota(str(current_user.id), current_user.role.value)
-    return current_user

@@ -1,4 +1,4 @@
-from src.core.database import db_client
+from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 from uuid6 import uuid7
