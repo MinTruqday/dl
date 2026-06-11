@@ -1,49 +1,12 @@
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 from loguru import logger
-from fastapi import WebSocket, WebSocketDisconnect, HTTPException
 from bson import ObjectId
 import os
 import json
 import httpx
 import uuid
 from uuid6 import uuid7
-
-
-class ConnectionManager:
-
-    def __init__(self, db=None):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-
-    async def connect(self, websocket: WebSocket, room_id: str, db=None):
-        await websocket.accept()
-        if room_id not in self.active_connections:
-            self.active_connections[room_id] = []
-        self.active_connections[room_id].append(websocket)
-        logger.info(f'Client joined room {room_id}. Total: {len(self.active_connections[room_id])}')
-
-    def disconnect(self, websocket: WebSocket, room_id: str, db=None):
-        if room_id in self.active_connections and websocket in self.active_connections[room_id]:
-            self.active_connections[room_id].remove(websocket)
-            if not self.active_connections[room_id]:
-                del self.active_connections[room_id]
-            logger.info(f'Client left room {room_id}')
-
-    async def broadcast(self, message: bytes, room_id: str, sender: WebSocket, db=None):
-        if room_id in self.active_connections:
-            dead_connections = []
-            for connection in self.active_connections[room_id]:
-                if connection != sender:
-                    try:
-                        await connection.send_bytes(message)
-                    except Exception as e:
-                        logger.error(f'Error broadcasting to client in {room_id}: {e}')
-                        dead_connections.append(connection)
-            for dead in dead_connections:
-                self.disconnect(dead, room_id)
-
-manager = ConnectionManager()
-
 
 class EditorService:
 

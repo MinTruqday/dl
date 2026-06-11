@@ -75,7 +75,7 @@ export default function Editor({
 
   useEffect(() => {
     if (!documentId) return;
-    let wsUrl = (API_URL || "").replace("http", "ws") + `/soan-thao/o-cam-crdt/${documentId}`;
+    let wsUrl = `ws://localhost:8200/soan-thao/ws-crdt/${documentId}`;
     let ws: WebSocket;
     try {
       ws = new WebSocket(wsUrl);

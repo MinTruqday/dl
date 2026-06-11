@@ -7,7 +7,6 @@ import re
 from uuid6 import uuid7
 from loguru import logger
 
-
 class EditorJSEngine:
 
     @staticmethod
@@ -43,7 +42,6 @@ class EditorJSEngine:
         t = block.get('type', '')
         d = block.get('data', {})
         s, san, rb = EditorJSEngine._s, EditorJSEngine._san, EditorJSEngine._render_block
-
 
         if t == 'paragraph':
             align = d.get('alignment', d.get('align', 'left'))
@@ -83,7 +81,6 @@ class EditorJSEngine:
         if t == 'raw':
             return san(s(d.get('html', '')))
 
-
         if t in ('list', 'nestedList'):
             tag = 'ol' if d.get('style', 'unordered') == 'ordered' else 'ul'
             return EditorJSEngine._render_list_items(d.get('items', []), tag)
@@ -95,7 +92,6 @@ class EditorJSEngine:
                 txt = san(s(item.get('text', item.get('content', ''))))
                 parts.append(f'<p style="margin:2px 0">{chk} {txt}</p>')
             return ''.join(parts)
-
 
         if t in ('code', 'inlineCode'):
             return f'<pre><code>{_html.escape(s(d.get("code", d.get("text", ""))))}</code></pre>'
@@ -114,7 +110,6 @@ class EditorJSEngine:
 
         if t == 'mermaid':
             return f'<pre style="background:#f4f4f4;padding:1em;font-family:monospace;font-size:9pt">[Mermaid]\n{_html.escape(s(d.get("code", "")))}</pre>'
-
 
         if t in ('image', 'simpleImage', 'imageCrop', 'imageWithLink'):
             url = san(s(d.get('file', {}).get('url', d.get('url', ''))))
@@ -186,7 +181,6 @@ class EditorJSEngine:
         if t == 'chart':
             return f'<div style="border:1px solid #ddd;padding:8px;text-align:center;color:#888">[Chart ({san(s(d.get("type","bar")))}): {san(s(d.get("title","")))}]</div>'
 
-
         if t == 'columns':
             cols = d.get('cols', d.get('blocks', []))
             col_html = []
@@ -194,7 +188,6 @@ class EditorJSEngine:
                 inner = ''.join(rb(b) for b in col.get('blocks', []))
                 col_html.append(f'<td style="vertical-align:top;padding:4px;width:{100//max(len(cols),1)}%">{inner}</td>')
             return f'<table style="width:100%;border-collapse:collapse"><tr>{"".join(col_html)}</tr></table>'
-
 
         if t == 'button':
             link = san(s(d.get('link', '')))
@@ -275,7 +268,6 @@ class EditorJSEngine:
 
         if t == 'comment':
             return f'<p style="color:#888;font-style:italic">&#128172; {san(s(d.get("author","")))} : {san(s(d.get("text",d.get("content",""))))}</p>'
-
 
         if t in ('undo', 'dragDrop', 'multiBlockSelection', 'premium',
                  'alignment', 'indent', 'style', 'notice', 'anchor',

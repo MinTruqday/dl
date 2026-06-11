@@ -3,7 +3,7 @@ import { API_URL, getToken } from "./authentication.service";
 export const getConversationsAPI = async () => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/hoi-thoai`, {
+  const res = await fetch(`${API_URL}/tin-nhan/hoi-thoai`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -18,7 +18,7 @@ export const getMessagesAPI = async (
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  let url = `${API_URL}/tro-chuyen/tin-nhan/${otherUserId}?limit=${limit}`;
+  let url = `${API_URL}/tin-nhan/tin-nhan/${otherUserId}?limit=${limit}`;
   if (cursor) {
     url += `&cursor=${cursor}`;
   }
@@ -39,7 +39,7 @@ export const sendMessageAPI = async (
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tin-nhan`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tin-nhan`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export const sendMessageAPI = async (
 export const togglePinAPI = async (messageId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/ghim/${messageId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/ghim/${messageId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -74,7 +74,7 @@ export const togglePinAPI = async (messageId: string) => {
 export const editMessageAPI = async (messageId: string, content: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/chinh-sua/${messageId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/chinh-sua/${messageId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export const editMessageAPI = async (messageId: string, content: string) => {
 export const recallMessageAPI = async (messageId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tin-nhan/${messageId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tin-nhan/${messageId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -102,7 +102,7 @@ export const recallMessageAPI = async (messageId: string) => {
 export const searchMessagesAPI = async (otherUserId: string, q: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tim-kiem/${otherUserId}?q=${encodeURIComponent(q)}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tim-kiem/${otherUserId}?q=${encodeURIComponent(q)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -113,7 +113,7 @@ export const searchMessagesAPI = async (otherUserId: string, q: string) => {
 export const addReactionAPI = async (messageId: string, reaction: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tin-nhan/${messageId}/cam-xuc`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tin-nhan/${messageId}/cam-xuc`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -129,7 +129,7 @@ export const addReactionAPI = async (messageId: string, reaction: string) => {
 export const markAsReadAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/doc-tin-nhan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/doc-tin-nhan/${otherUserId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -141,7 +141,7 @@ export const markAsReadAPI = async (otherUserId: string) => {
 export const shareDocumentAPI = async (receiverId: string, documentId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/chia-se-tai-lieu/${receiverId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/chia-se-tai-lieu/${receiverId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -157,7 +157,7 @@ export const shareDocumentAPI = async (receiverId: string, documentId: string) =
 export const getSharedAttachmentsAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tai-lieu-chia-se/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tai-lieu-chia-se/${otherUserId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -168,7 +168,7 @@ export const getSharedAttachmentsAPI = async (otherUserId: string) => {
 export const blockUserAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/chan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/chan/${otherUserId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -180,7 +180,7 @@ export const blockUserAPI = async (otherUserId: string) => {
 export const unblockUserAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/bo-chan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/bo-chan/${otherUserId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -192,7 +192,7 @@ export const unblockUserAPI = async (otherUserId: string) => {
 export const getBlockedStatusAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/trang-thai-chan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/trang-thai-chan/${otherUserId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -203,7 +203,7 @@ export const getBlockedStatusAPI = async (otherUserId: string) => {
 export const togglePinConversationAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/ghim-hoi-thoai/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/ghim-hoi-thoai/${otherUserId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -215,7 +215,7 @@ export const togglePinConversationAPI = async (otherUserId: string) => {
 export const translateMessageAPI = async (messageId: string, targetLang: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/dich/${messageId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/dich/${messageId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -231,7 +231,7 @@ export const translateMessageAPI = async (messageId: string, targetLang: string)
 export const createGroupAPI = async (groupName: string, memberIds: string[]) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/nhom`, {
+  const res = await fetch(`${API_URL}/tin-nhan/nhom`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -247,7 +247,7 @@ export const createGroupAPI = async (groupName: string, memberIds: string[]) => 
 export const saveDraftAPI = async (otherUserId: string, content: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/nhap-tin-nhan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/nhap-tin-nhan/${otherUserId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -263,7 +263,7 @@ export const saveDraftAPI = async (otherUserId: string, content: string) => {
 export const getDraftAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/nhap-tin-nhan/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/nhap-tin-nhan/${otherUserId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -274,7 +274,7 @@ export const getDraftAPI = async (otherUserId: string) => {
 export const toggleSelfDestructAPI = async (otherUserId: string, seconds: number) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tu-huy/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tu-huy/${otherUserId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -290,7 +290,7 @@ export const toggleSelfDestructAPI = async (otherUserId: string, seconds: number
 export const toggleMuteAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/tat-am/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/tat-am/${otherUserId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -302,7 +302,7 @@ export const toggleMuteAPI = async (otherUserId: string) => {
 export const getConversationSettingsAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/cai-dat/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/cai-dat/${otherUserId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -312,7 +312,7 @@ export const getConversationSettingsAPI = async (otherUserId: string) => {
 export const deleteConversationAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/tro-chuyen/hoi-thoai/${otherUserId}`, {
+  const res = await fetch(`${API_URL}/tin-nhan/hoi-thoai/${otherUserId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });

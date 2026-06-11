@@ -26,7 +26,6 @@ class PromptType(Enum):
     TRANSLATE = "translate"
     SENTIMENT_ANALYSIS = "sentiment_analysis"
     SENTIMENT_SUMMARY = "sentiment_summary"
-    IMAGE_COVER = "image_cover"
     CODE_GENERATION = "code_generation"
     GRAMMAR_CHECK = "grammar_check"
 
@@ -381,7 +380,6 @@ RULES:
         PromptType.TRANSLATE: "SYSTEM IDENTITY: DocLib Core System - Translation Engine.\nOBJECTIVE: Translate the following text into {target_lang}. Output ONLY the translated text.\n\nTEXT:\n{text}",
         PromptType.SENTIMENT_ANALYSIS: "SYSTEM IDENTITY: DocLib Core System - Sentiment Engine.\nOBJECTIVE: Analyze the sentiment of the following text. Output ONLY one word: Positive, Negative, or Neutral.\n\nTEXT:\n{text}",
         PromptType.SENTIMENT_SUMMARY: "SYSTEM IDENTITY: DocLib Core System - Sentiment Engine.\nOBJECTIVE: Based on the following reviews, write a one-sentence summary of the overall reader sentiment.\nOUTPUT_LANGUAGE: Must match the language of the reviews.\n\nREVIEWS: {reviews}",
-        PromptType.IMAGE_COVER: "Book cover for {title}. Description: {description}. Style: {style}. High quality, cinematic.",
         PromptType.CODE_GENERATION: "SYSTEM IDENTITY: DocLib Core System - Code Generation Engine.\nOBJECTIVE: Write clean and efficient {language} code for the following request. Output ONLY the code block.\n\nREQUEST:\n{prompt}",
         PromptType.GRAMMAR_CHECK: "SYSTEM IDENTITY: DocLib Core System - Grammar Engine.\nOBJECTIVE: Check and correct all spelling and grammar errors in the following text. Output ONLY the corrected text.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT:\n{text}",
         PromptType.SUMMARIZE: "SYSTEM IDENTITY: DocLib Core System - Summary Engine.\nOBJECTIVE: Provide a concise summary of the following content in {language}.\n\nTEXT:\n{text}",

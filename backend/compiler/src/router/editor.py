@@ -1,5 +1,5 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header
 from loguru import logger
 
 from src.schemas.editor import (
@@ -8,7 +8,7 @@ from src.schemas.editor import (
     AutoSaveRequest, CoverGenerateRequest, AISuggestionRequest, 
     InlineCommentRequest, VersionDiffRequest
 )
-from src.services.editor import EditorService, manager
+from src.services.editor import EditorService
 from src.config import settings
 
 router = APIRouter(prefix='/soan-thao')
@@ -22,32 +22,6 @@ def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("U
     if not x_user_id:
         raise HTTPException(status_code=401, detail="Missing X-User-ID header from API Gateway")
     return AuthenticatedUser(user_id=x_user_id, user_name=x_user_name)
-
-@router.websocket('/o-cam/{document_id}')
-async def editor_websocket(websocket: WebSocket, document_id: str):
-    try:
-        await manager.connect(websocket, document_id)
-        while True:
-            data = await websocket.receive_text()
-            await manager.broadcast(data.encode('utf-8'), document_id, websocket)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, document_id)
-    except Exception as e:
-        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
-        manager.disconnect(websocket, document_id)
-
-@router.websocket('/o-cam-crdt/{document_id}')
-async def editor_crdt_websocket(websocket: WebSocket, document_id: str):
-    try:
-        await manager.connect(websocket, document_id)
-        while True:
-            data = await websocket.receive_bytes()
-            await manager.broadcast(data, document_id, websocket)
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, document_id)
-    except Exception as e:
-        logger.error(f'WebSocket/CRDT error for document {document_id}: {e}')
-        manager.disconnect(websocket, document_id)
 
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user = Depends(get_current_user)):

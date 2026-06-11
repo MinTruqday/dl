@@ -4,9 +4,9 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates fontconfig pandoc ghostscript \
-    fonts-wine ttf-mscorefonts-installer \
+    fonts-wine \
     libpango-1.0-0 libpangoft2-1.0-0 libpangocairo-1.0-0 \
-    libcairo2 libgdk-pixbuf2.0-0 libffi-dev \
+    libcairo2 libgdk-pixbuf-2.0-0 libffi-dev \
     fonts-dejavu fonts-liberation fonts-noto-cjk \
     && fc-cache -f -v \
     && ARCH=$(uname -m) && \

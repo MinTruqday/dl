@@ -84,12 +84,6 @@ async def check_grammar(payload: dict, current_user: UserInDB = Depends(require_
     res = await _proxy_request("POST", url, json_data={"text": payload.get("text")})
     return APIResponse(data=res, message="Kiểm tra ngữ pháp thành công")
 
-@router.post("/tao-anh-bia", response_model=APIResponse[Any])
-async def generate_cover(payload: dict, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))):
-    url = f"{AGENTIC_AI_URL}/inference/tao-anh-bia"
-    res = await _proxy_request("POST", url, json_data=payload)
-    return APIResponse(data=res, message="Tạo ảnh bìa thành công")
-
 @router.post("/tao-ma-nguon", response_model=APIResponse[Any])
 async def generate_code(payload: dict, current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))):
     url = f"{AGENTIC_AI_URL}/inference/tao-ma-nguon"

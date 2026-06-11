@@ -3,8 +3,7 @@ from typing import Optional, List, Any
 from loguru import logger
 from src.core.config import settings
 from src.schemas.inference import (
-    GenerationRequest, TranslationRequest, SentimentRequest,
-    CoverRequest, CodeRequest, GrammarRequest,
+    GenerationRequest, TranslationRequest, SentimentRequest, CodeRequest, GrammarRequest,
     SummarizeRequest, ActionRequest, CitationRequest,
     ToneRequest, ReviewRequest, SynthesisRequest
 )
@@ -118,34 +117,6 @@ async def analyze_sentiment(req: SentimentRequest):
         logger.error(f"Inference: Sentiment analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
-@router.post("/tao-anh-bia")
-async def generate_cover(req: CoverRequest):
-    try:
-        model_id = settings.IMAGE_GEN_MODEL
-        if not model_id:
-            raise HTTPException(status_code=503, detail="Mô hình tạo ảnh chưa được cấu hình")
-            
-        prompt = prompt_registry.get(PromptType.IMAGE_COVER).format(title=req.title, description=req.description, style=req.style)
-        
-        try:
-            image_data = await client.text_to_image(prompt, model=model_id)
-            import io
-            buffered = io.BytesIO()
-            image_data.save(buffered, format="JPEG")
-            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-            
-            return {
-                "cover_url": f"data:image/jpeg;base64,{img_str}",
-                "message": "Đã tạo ảnh bìa thành công"
-            }
-        except Exception as e:
-            logger.error(f"Inference: Image generation failed for model {model_id}: {e}")
-            return {
-                "cover_url": "https://placehold.co/600x400?text=Loi+Tao+Anh",
-                "message": "Gặp sự cố khi gọi mô hình tạo ảnh"
-            }
-    except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau.")
 
 @router.post("/tao-ma-nguon")
 async def generate_code(req: CodeRequest):

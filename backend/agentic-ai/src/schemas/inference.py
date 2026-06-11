@@ -14,11 +14,6 @@ class SentimentRequest(BaseModel):
     texts: Optional[List[str]] = None
     document_id: Optional[str] = None
 
-class CoverRequest(BaseModel):
-    title: str
-    description: str = ""
-    style: str = "photorealistic"
-
 class CodeRequest(BaseModel):
     prompt: str
     language: str = "python"

@@ -697,8 +697,7 @@ tools = [
     create_document,
     update_document,
     create_deposit_link,
-    translate_document,
-    extract_structured_data
+    translate_document
 ]
 
 llama_model = settings.LLAMA_MODEL

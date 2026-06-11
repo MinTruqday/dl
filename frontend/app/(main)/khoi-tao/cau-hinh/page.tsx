@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { getMyDocumentsAPI, updateDRMSettingsAPI, updateTagsAPI, updateNSFWAPI, updateDocumentAPI, getFoldersAPI, transferDocumentAPI } from "@/services/document.service";
 import { getCollaboratorsAPI, inviteCollaboratorAPI, removeCollaboratorAPI } from "@/services/collaboration.service";
 import { createCouponAPI, getCouponsAPI } from "@/services/coupon.service";
-import { generateAICoverAPI } from "@/services/inference.service";
 import { ingestDocumentAPI } from "@/services/rag.service";
 import { API_URL } from "@/services/authentication.service";
 import { useToast } from "@/contexts/Toast";
@@ -24,7 +23,6 @@ export default function ConfigPage() {
   const [newTagInput, setNewTagInput] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
   const [isIngesting, setIsIngesting] = useState(false);
-  const [generatingCover, setGeneratingCover] = useState(false);
   const [isNsfw, setIsNsfw] = useState(false);
   const [drmCopy, setDrmCopy] = useState(false);
   const [drmSearch, setDrmSearch] = useState(false);
@@ -152,18 +150,7 @@ export default function ConfigPage() {
       showToast("AI đã cập nhật nội dung mới", "success");
     } catch (e: any) { showToast(e.message || "Đồng bộ AI thất bại", "error"); }
     finally { setIsIngesting(false); }
-  };
-
-  const handleGenerateAICover = async () => {
-    if (!selectedDocumentId) return;
-    setGeneratingCover(true);
-    try {
-      await generateAICoverAPI(selectedDocumentId);
-      showToast("Ảnh bìa AI đã được khởi tạo và cập nhật", "success");
-      fetchInitData();
-    } catch (e: any) { showToast(e.message || "Tạo ảnh bìa thất bại", "error"); }
-    finally { setGeneratingCover(false); }
-  };
+  };;
 
   const handleInviteCollab = async () => {
     if (!inviteEmail.trim() || !selectedDocumentId) return;
