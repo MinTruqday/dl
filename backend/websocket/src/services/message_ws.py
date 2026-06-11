@@ -93,9 +93,7 @@ class MessageConnectionManager:
     async def _handle_ws_action(self, user_id: str, payload: dict):
         action = payload.get('action')
         data = payload.get('data', {})
-        if action == 'send_message':
-            await self._action_send_message(user_id, data)
-        elif action == 'mark_read':
+        if action == 'mark_read':
             await self._action_mark_read(user_id, data)
         elif action == 'typing':
             await self._action_typing(user_id, data)
@@ -135,36 +133,7 @@ class MessageConnectionManager:
         for ws in disconnected:
             self.disconnect(user_id, ws)
 
-    async def _action_send_message(self, sender_id: str, data: dict):
-        if not db_client.mongodb:
-            return
-        db = db_client.mongodb.get_default_database()
-        
-        # Get sender info
-        sender_doc = await db['users'].find_one({'_id': sender_id})
-        sender_name = sender_doc.get('full_name', 'User') if sender_doc else 'User'
-        
-        receiver_id = data.get('receiver_id')
-        content = data.get('content', '')
-        if not receiver_id or not content:
-            return
-            
-        import datetime
-        message_doc = {
-            'sender_id': sender_id,
-            'receiver_id': receiver_id,
-            'content': content,
-            'created_at': datetime.datetime.now(datetime.timezone.utc),
-            'is_read': False,
-            'is_pinned': False,
-            'reactions': {},
-            'is_recalled': False
-        }
-        result = await db['messages'].insert_one(message_doc)
-        message_doc['_id'] = str(result.inserted_id)
-        
-        await self.send_personal_message({'type': 'new_message', 'data': message_doc}, receiver_id)
-        await self.send_personal_message({'type': 'message_sent_ack', 'data': message_doc}, sender_id)
+
 
     async def _action_mark_read(self, user_id: str, data: dict):
         other_user_id = data.get('other_user_id')

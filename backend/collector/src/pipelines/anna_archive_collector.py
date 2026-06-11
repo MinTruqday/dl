@@ -14,7 +14,7 @@ from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-from src.core.browser import get_playwright_browser, get_stealth_context, download_file_with_retry
+from src.core.browser import managed_browser, get_stealth_context, download_file_with_retry
 
 class AnnaArchiveCollector:
     @staticmethod
@@ -25,8 +25,7 @@ class AnnaArchiveCollector:
             logger.info("Starting general paginated collection on Anna's Archive")
         encoded = urllib.parse.quote(search_query)
         
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -86,8 +85,6 @@ class AnnaArchiveCollector:
                     page_num += 1
             except Exception as e:
                 logger.error(f"Error in Anna's Archive list collector pipeline: {e}")
-            finally:
-                await browser.close()
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -123,8 +120,7 @@ class AnnaArchiveCollector:
     async def run_detail_collector(document_url: str):
         logger.info(f"[Detail Collector] Anna: {document_url}")
         
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -230,8 +226,6 @@ class AnnaArchiveCollector:
             except Exception as e:
                 logger.error(f"[Anna Detail CCollector Error]: {e}")
                 raise
-            finally:
-                await browser.close()
 
     @staticmethod
     async def run_download_processor(payload: dict):

@@ -241,7 +241,7 @@ class EditorJSEngine:
         if t == 'personality':
             photo = san(s(d.get('photo', '')))
             img = f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;margin-right:8px;vertical-align:middle"/>' if photo else ''
-            return f'<div style="border:1px solid #eee;padding:8px">{img}<strong>{san(s(d.get("name",")))}</strong><br/><small>{san(s(d.get("description","")))}</small></div>'
+            return f'<div style="border:1px solid #eee;padding:8px">{img}<strong>{san(s(d.get("name","")))}</strong><br/><small>{san(s(d.get("description","")))}</small></div>'
 
         if t in ('countdown', 'progressBar', 'progress'):
             label = san(s(d.get('label', d.get('title', ''))))

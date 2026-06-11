@@ -34,16 +34,16 @@ class Settings(BaseModel):
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
 
-    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
-    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
-    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))
-    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
+    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA", "0.5"))
+    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS", "384"))
+    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
+    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS", "10"))
 
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
 
     QDRANT_URL: str = os.getenv("QDRANT_URL")
     QDRANT_HOST: str = os.getenv("QDRANT_HOST")
-    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
+    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
 
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
@@ -52,7 +52,7 @@ class Settings(BaseModel):
     COLLECTOR_URL: str = os.getenv("COLLECTOR_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")

@@ -13,7 +13,7 @@ from loguru import logger
 from src.core.db import db_client
 from src.core.storage import storage
 from src.core.redis_client import dedup
-from src.core.browser import get_playwright_browser, get_stealth_context
+from src.core.browser import managed_browser, get_stealth_context
 
 MIN_FILE_SIZE_BYTES = 20000
 
@@ -67,18 +67,16 @@ class NXBGDCollector:
             logger.warning(f"Error handling NXBGD response: {e}")
 
     async def init_browser(self):
-        self.p = await async_playwright().start()
-        self.browser = await get_playwright_browser(self.p)
+        self._browser_cm = managed_browser()
+        self.browser = await self._browser_cm.__aenter__()
         self.context = await get_stealth_context(self.browser)
         self.page = await self.context.new_page()
 
     async def close(self):
         if self.context:
             await self.context.close()
-        if self.browser:
-            await self.browser.close()
-        if self.p:
-            await self.p.stop()
+        if hasattr(self, '_browser_cm'):
+            await self._browser_cm.__aexit__(None, None, None)
 
     async def compile_and_upload(self, title: str):
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]

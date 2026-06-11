@@ -15,15 +15,14 @@ from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-from src.core.browser import get_playwright_browser, get_stealth_context, download_file_with_retry
+from src.core.browser import managed_browser, get_stealth_context, download_file_with_retry
 
 class CTANCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
         logger.info(f"Starting CTAN Alphabetical List Collector")
         
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -62,15 +61,12 @@ class CTANCollector:
             except Exception as e:
                 logger.error(f"[CTAN List Collector Error]: {e}")
                 raise
-            finally:
-                await browser.close()
 
     @staticmethod
     async def run_detail_collector(book_url: str):
         logger.info(f"[Detail Collector] CTAN: {book_url}")
         
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -120,8 +116,6 @@ class CTANCollector:
             except Exception as e:
                 logger.error(f"[CTAN Detail Collector Error]: {e}")
                 raise
-            finally:
-                await browser.close()
 
     @staticmethod
     async def run_download_processor(payload: dict):

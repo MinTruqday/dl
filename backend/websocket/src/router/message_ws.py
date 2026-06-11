@@ -3,6 +3,8 @@ from loguru import logger
 import json
 import asyncio
 import time
+import jwt
+from core.config import settings
 from src.services.message_ws import message_manager
 from src.core.database import db_client
 
@@ -10,9 +12,18 @@ router = APIRouter()
 
 @router.websocket('/ws/{user_id}')
 async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Query(None)):
-    # Simple validation if token matches user_id logic, omitted for now since it's just router.
-    # In full system, token should be verified against auth service.
     if not token:
+        await websocket.close(code=1008)
+        return
+
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        if payload.get("sub") != user_id:
+            logger.warning(f"WS Token validation failed: sub {payload.get('sub')} != {user_id}")
+            await websocket.close(code=1008)
+            return
+    except Exception as e:
+        logger.error(f"WS Token validation error for {user_id}: {e}")
         await websocket.close(code=1008)
         return
 

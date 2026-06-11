@@ -17,7 +17,7 @@ from src.core.mq import mq_client
 from src.core.redis_client import dedup
 from src.core.storage import storage
 from src.core.db import db_client
-from src.core.browser import get_playwright_browser, get_stealth_context
+from src.core.browser import managed_browser, get_stealth_context
 
 MIN_FILE_SIZE_BYTES = 5000
 
@@ -212,8 +212,7 @@ class NXBSTCollector:
         start_url = "https://stbook.vn/"
         logger.info(f"Starting List Collection on NXBST {start_url}")
 
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -277,16 +276,13 @@ class NXBSTCollector:
             except Exception as e:
                 logger.error(f"Error checking list detail: {e}")
                 raise
-            finally:
-                await browser.close()
 
     @staticmethod
     async def run_detail_collector(document_url: str):
         logger.info(f"[Detail Collector] NXBST {document_url}")
         state_manager = NXBSTStreamState()
 
-        async with async_playwright() as p:
-            browser = await get_playwright_browser(p)
+        async with managed_browser() as browser:
             context = await get_stealth_context(browser)
             page = await context.new_page()
             await stealth_async(page)
@@ -301,7 +297,7 @@ class NXBSTCollector:
                 raw_title = await title_el.inner_text() if title_el else document_url.split("/")[-1]
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", raw_title).strip()
 
-                author_el = await page.query_selector('#detail .author a,
+                author_el = await page.query_selector('#detail .author a')
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
                 logger.info(f"Targeting document {raw_title} | Author: {raw_author}")
@@ -334,5 +330,3 @@ class NXBSTCollector:
             except Exception as e:
                 logger.error(f"[NXBSTDetail Collector Error]: {e}")
                 raise
-            finally:
-                await browser.close()
