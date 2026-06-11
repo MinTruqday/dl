@@ -271,36 +271,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
         logger.error(f"Error restoring document: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-@tool
-async def create_document(title: str, content: str, config: RunnableConfig) -> str:
-    """Create a new document with the provided title and content."""
-    token = config.get("configurable", {}).get("token")
-    if not token:
-        return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": token}
-    
-    import re
-    import unicodedata
-    slug = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
-    slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
-    slug = re.sub(r'[-\s]+', '-', slug)
-    
-    payload = {
-        "title": title,
-        "slug": slug,
-        "content": content,
-        "content_format": "html"
-    }
-    try:
-        response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", json=payload, headers=headers, timeout=30)
-        if response.status_code == 201:
-            data = response.json().get("data", {})
-            return f"Đã tạo tài liệu/bài đăng thành công! ID tài liệu: {data.get('_id', data.get('id'))}"
-        return f"Tạo tài liệu thất bại: {response.text}"
-    except Exception as e:
-        logger.error(f"Error creating document: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
 @tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
@@ -414,9 +385,6 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         logger.error(f"Error calling deposit API: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
 
-
-
-
 from src.workflow.map_reduce import agent_summarize_long_document
 
 @tool
@@ -426,6 +394,8 @@ async def create_document(title: str, description: str, content: str, format: st
     title: The title of the document.
     description: A short summary.
     content: The main body of the document.
+             For 'latex', this MUST be a full valid LaTeX document (including \\documentclass, \\usepackage, etc.).
+             For 'json', this MUST be a valid JSON string representing EditorJS data, containing a 'blocks' array. Example: {"blocks": [{"type": "header", "data": {"text": "Title", "level": 2}}, {"type": "paragraph", "data": {"text": "Hello"}}]}
     """
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -451,48 +421,34 @@ async def create_document(title: str, description: str, content: str, format: st
         logger.warning(f"Could not fetch user profile for author name: {e}")
 
     if format == 'latex':
-        month_year = datetime.datetime.now().strftime("Tháng %m năm %Y")
-        content = f"""\\documentclass[12pt,a4paper]{{article}}
-\\usepackage{{graphicx}}
-
-\\title{{{title}}}
-\\author{{{user_name}}}
-\\date{{{month_year}}}
-
-\\begin{{document}}
-
-\\maketitle
-
-\\section{{Introduction}}
-
-{content}
-
-\\vspace{{1em}}
-\\noindent\\textit{{Nội dung được tạo bởi DocLib AI}}
-
-\\end{{document}}"""
+        if '\\documentclass' not in content:
+            month_year = datetime.datetime.now().strftime("Tháng %m năm %Y")
+            content = f"\\documentclass[12pt,a4paper]{{article}}\n\\usepackage{{graphicx}}\n\\usepackage{{amsmath}}\n\\title{{{title}}}\n\\author{{{user_name}}}\n\\date{{{month_year}}}\n\\begin{{document}}\n\\maketitle\n\n{content}\n\\end{{document}}"
     elif format == 'json':
         import json
-        blocks = []
-        for paragraph in content.split("\n\n"):
-            if paragraph.strip():
-                blocks.append({
-                    "type": "paragraph",
-                    "data": {
-                        "text": paragraph.strip()
-                    }
-                })
-        blocks.append({
-            "type": "paragraph",
-            "data": {
-                "text": "<i>Nội dung được tạo bởi DocLib AI</i>"
-            }
-        })
-        content = json.dumps({
-            "time": int(datetime.datetime.now().timestamp() * 1000),
-            "blocks": blocks,
-            "version": "2.29.1"
-        })
+        try:
+            parsed = json.loads(content)
+            if "blocks" not in parsed:
+                parsed["blocks"] = [{"type": "paragraph", "data": {"text": content}}]
+            parsed["time"] = int(datetime.datetime.now().timestamp() * 1000)
+            if "version" not in parsed:
+                parsed["version"] = "2.29.1"
+            content = json.dumps(parsed)
+        except:
+            blocks = []
+            for paragraph in content.split("\n\n"):
+                if paragraph.strip():
+                    blocks.append({
+                        "type": "paragraph",
+                        "data": {
+                            "text": paragraph.strip()
+                        }
+                    })
+            content = json.dumps({
+                "time": int(datetime.datetime.now().timestamp() * 1000),
+                "blocks": blocks,
+                "version": "2.29.1"
+            })
 
     try:
         create_payload = {
@@ -516,8 +472,37 @@ async def create_document(title: str, description: str, content: str, format: st
         return f"Lỗi hệ thống: {e}"
 
 @tool
-async def update_document(document_id: str, new_content: str, config: RunnableConfig) -> str:
-    """Update an existing document's content by its ID. Replaces the entire document content with new_content."""
+async def read_document(document_id: str, config: RunnableConfig) -> str:
+    """Read the content of a document by its ID. Use this before updating a document so you know its current content."""
+    token = config.get("configurable", {}).get("token")
+    if not token:
+        return "Lỗi xác thực: Vui lòng đăng nhập"
+
+    headers = {"Authorization": token}
+    try:
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        if res.status_code != 200:
+            return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
+        doc_data = res.json().get("data", {})
+    except Exception as e:
+        return f"Lỗi hệ thống khi tải tài liệu: {e}"
+
+    format = doc_data.get("content_format", "json")
+    content = doc_data.get("content", "")
+    
+    if format == 'json':
+        return f"Định dạng: Standard Editor (json)\nNội dung (RAW JSON EditorJS - Hãy giữ nguyên hoặc chỉnh sửa cấu trúc blocks này):\n{content}"
+    elif format == 'latex':
+        return f"Định dạng: LaTeX Editor\nNội dung (Full LaTeX Source):\n{content}"
+    else:
+        return f"Định dạng: Khác ({format})\nNội dung:\n{content}"
+
+@tool
+async def update_document(document_id: str, new_content: str = None, title: str = None, description: str = None, config: RunnableConfig = None) -> str:
+    """Update an existing document's content, title, or description by its ID. Only provide the fields you want to update.
+    - If format is 'json', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
+    - If format is 'latex', new_content MUST be the full LaTeX source code.
+    """
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
@@ -532,37 +517,43 @@ async def update_document(document_id: str, new_content: str, config: RunnableCo
     except Exception as e:
         return f"Lỗi hệ thống khi tải tài liệu: {e}"
 
-    format = doc_data.get("content_format", "json")
-    
-    if format == 'json':
-        import json, datetime
-        blocks = []
-        for p in new_content.split("\n\n"):
-            if p.strip():
-                blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
-        blocks.append({
-            "type": "paragraph",
-            "data": {
-                "text": "<i>Nội dung đã được chỉnh sửa bởi DocLib AI</i>"
-            }
-        })
-        final_content = json.dumps({
-            "time": int(datetime.datetime.now().timestamp() * 1000),
-            "blocks": blocks,
-            "version": "2.29.1"
-        })
-    elif format == 'latex':
-        if '\\end{document}' in new_content:
-            final_content = new_content.replace('\\end{document}', '\\vspace{1em}\n\\noindent\\textit{Nội dung đã được chỉnh sửa bởi DocLib AI}\n\\end{document}')
+    payload = {}
+    if title:
+        payload["title"] = title
+    if description:
+        payload["description"] = description
+
+    if new_content:
+        format = doc_data.get("content_format", "json")
+        if format == 'json':
+            import json, datetime
+            try:
+                # Try to parse to ensure it's valid JSON from AI
+                parsed = json.loads(new_content)
+                if "blocks" not in parsed:
+                    parsed["blocks"] = [{"type": "paragraph", "data": {"text": new_content}}]
+                parsed["time"] = int(datetime.datetime.now().timestamp() * 1000)
+                final_content = json.dumps(parsed)
+            except:
+                blocks = []
+                for p in new_content.split("\n\n"):
+                    if p.strip():
+                        blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
+                final_content = json.dumps({
+                    "time": int(datetime.datetime.now().timestamp() * 1000),
+                    "blocks": blocks,
+                    "version": "2.29.1"
+                })
+        elif format == 'latex':
+            final_content = new_content
         else:
-            final_content = new_content + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung đã được chỉnh sửa bởi DocLib AI}"
-    else:
-        final_content = new_content
+            final_content = new_content
+        payload["content"] = final_content
         
+    if not payload:
+        return "Không có thông tin nào được cập nhật."
+
     try:
-        payload = {
-            "content": final_content
-        }
         res_update = await _make_api_request("PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, json=payload)
         if res_update.status_code in [200, 201]:
             return f"Đã cập nhật tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
@@ -687,6 +678,7 @@ tools = [
     get_revenue_report,
     send_virtual_tip,
     get_my_documents,
+    read_document,
     get_trash_documents,
     delete_document,
     restore_document,
