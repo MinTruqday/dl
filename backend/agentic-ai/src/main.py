@@ -66,7 +66,7 @@ async def startup_event():
     logger.info("DocLib Agentic AI initialized")
     from src.store.vector_store import vector_store
     from motor.motor_asyncio import AsyncIOMotorClient
-    from src.core.config import settings
+    from core.config import settings
     try:
         await vector_store.ensure_collection()
         logger.info("Qdrant collection ensured successfully")

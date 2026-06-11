@@ -9,7 +9,7 @@ from src.schemas.editor import (
     InlineCommentRequest, VersionDiffRequest
 )
 from src.services.editor import EditorService
-from src.config import settings
+from core.config import settings
 
 router = APIRouter(prefix='/soan-thao')
 

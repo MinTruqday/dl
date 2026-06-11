@@ -2,7 +2,7 @@ from loguru import logger
 from typing import List, Dict
 import json
 from langchain_huggingface import HuggingFaceEndpoint
-from src.core.config import settings
+from core.config import settings
 from src.core.prompt_registry import prompt_registry, PromptType
 
 

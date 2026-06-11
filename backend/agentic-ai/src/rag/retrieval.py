@@ -3,7 +3,7 @@ from typing import List, Dict, Optional
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 from src.store.vector_store import vector_store
 
 from langchain_huggingface import ChatHuggingFace

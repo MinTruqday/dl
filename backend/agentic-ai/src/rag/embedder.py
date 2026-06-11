@@ -6,7 +6,7 @@ import asyncio
 from typing import List
 from loguru import logger
 from sentence_transformers import SentenceTransformer
-from src.core.config import settings
+from core.config import settings
 
 class EmbeddingService:
     def __init__(self):

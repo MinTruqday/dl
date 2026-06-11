@@ -5,7 +5,7 @@ import uuid
 from uuid6 import uuid7
 from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.config import settings
+from core.config import settings
 
 router = APIRouter(prefix="/lich-su")
 

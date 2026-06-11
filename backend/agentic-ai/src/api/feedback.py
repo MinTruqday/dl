@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from datetime import datetime, timezone
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.config import settings
+from core.config import settings
 from src.schemas.feedback import FeedbackRequest
 
 router = APIRouter()

@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
-from src.config import settings
+from core.config import settings
 from loguru import logger
 
 class DatabaseClient:

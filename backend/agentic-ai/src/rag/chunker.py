@@ -21,7 +21,7 @@ def _sanitize_text(text: str) -> bool:
 
 from typing import List, Dict
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 
 try:
     from chonkie import SemanticChunker, TokenChunker

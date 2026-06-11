@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
-from src.core.config import settings
+from core.config import settings
 from datetime import datetime, timezone
 from uuid6 import uuid7
 from datasets import Dataset

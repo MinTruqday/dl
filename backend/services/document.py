@@ -1,4 +1,3 @@
-from services.editor import EditorService
 from bson import ObjectId
 from core.publication import trigger_document_publish_job
 from services.compilation import CompilationService
@@ -562,10 +561,6 @@ class DocumentService:
         )
         logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
         return {"message": "Đã giải quyết tranh chấp bản quyền thành công."}
-
-    @staticmethod
-    async def generate_ai_cover(document_id: str, current_user) -> dict:
-        return await EditorService.generate_cover(document_id, "minimalist", current_user)
 
     @staticmethod
     async def get_trending_tags(limit: int = 10) -> List[str]:

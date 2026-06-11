@@ -61,7 +61,7 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
-    from src.core.config import settings
+    from core.config import settings
     from src.core.prompt_registry import prompt_registry, PromptType
     from huggingface_hub import AsyncInferenceClient
 
@@ -162,7 +162,7 @@ class EvaluationHarness:
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
-        from src.core.config import settings
+        from core.config import settings
         from huggingface_hub import AsyncInferenceClient
 
         if not self._dataset:

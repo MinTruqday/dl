@@ -1,7 +1,7 @@
 import json
 from loguru import logger
 from typing import Dict, List, Optional
-from src.core.config import settings
+from core.config import settings
 from datetime import datetime, timezone
 import redis
 

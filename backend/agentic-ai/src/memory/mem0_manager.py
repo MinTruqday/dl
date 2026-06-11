@@ -1,7 +1,7 @@
 from loguru import logger
 from typing import List, Dict
 import os
-from src.core.config import settings
+from core.config import settings
 
 
 try:

@@ -50,7 +50,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             if not final_answer:
                 from src.utils.hf import HFInferenceChat
                 from huggingface_hub import AsyncInferenceClient
-                from src.core.config import settings
+                from core.config import settings
                 from langchain_core.messages import HumanMessage
 
                 llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
@@ -150,7 +150,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 else:
                     from src.utils.hf import HFInferenceChat
                     from huggingface_hub import AsyncInferenceClient
-                    from src.core.config import settings
+                    from core.config import settings
                     from langchain_core.messages import HumanMessage
 
                     llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)

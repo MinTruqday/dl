@@ -4,7 +4,7 @@ import boto3
 from pathlib import Path
 from loguru import logger
 from typing import Dict, List
-from src.core.config import settings
+from core.config import settings
 
 
 class DocumentParser:

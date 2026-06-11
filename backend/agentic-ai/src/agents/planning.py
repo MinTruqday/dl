@@ -5,7 +5,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_core.output_parsers import JsonOutputParser
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 
 _hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=settings.LLAMA_MODEL,

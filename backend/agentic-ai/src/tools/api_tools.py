@@ -40,7 +40,7 @@ async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
 import jwt
 def _check_admin(token: str) -> bool:
     try:
-        from src.core.config import settings
+        from core.config import settings
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
         return role in ["admin", "moderator"]
@@ -52,7 +52,7 @@ from langchain_core.tools import tool
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
 

@@ -40,7 +40,7 @@ class ContextHarness:
     def _get_redis(self):
         if self._redis_client is None:
             try:
-                from src.core.config import settings
+                from core.config import settings
                 import redis.asyncio as aioredis
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception as e:

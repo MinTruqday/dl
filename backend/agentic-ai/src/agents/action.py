@@ -1,6 +1,6 @@
 import json
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 from src.tools.api_tools import tools, llm
 from langchain_core.messages import SystemMessage, HumanMessage
 from src.core.prompt_registry import prompt_registry, PromptType

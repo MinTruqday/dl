@@ -1,6 +1,6 @@
 from loguru import logger
 from langchain_core.prompts import PromptTemplate
-from src.core.config import settings
+from core.config import settings
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
 from src.core.prompt_registry import prompt_registry, PromptType

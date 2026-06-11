@@ -5,7 +5,7 @@ import json
 import asyncio
 from src.core.database import db_client
 import httpx
-from src.config import settings
+from core.config import settings
 
 class MessageConnectionManager:
     def __init__(self):

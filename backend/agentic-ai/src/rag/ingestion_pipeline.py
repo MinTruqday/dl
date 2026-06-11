@@ -4,7 +4,7 @@ from uuid6 import uuid7
 from typing import Dict, List, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 from src.rag.chunker import chunker
 from src.rag.embedder import embedding_service
 from src.store.vector_store import vector_store

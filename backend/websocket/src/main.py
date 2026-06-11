@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.router import editor_ws, message_ws
-from src.config import settings
+from core.config import settings
 from src.core.database import db_client
 
 app = FastAPI(title="DocLib WebSocket")

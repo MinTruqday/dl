@@ -5,7 +5,7 @@ from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, MatchAny
 from typing import List, Dict, Optional
 from loguru import logger
-from src.core.config import settings
+from core.config import settings
 
 class VectorStore:
     def __init__(self):
