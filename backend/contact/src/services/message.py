@@ -30,7 +30,7 @@ class MessageService:
             if existing:
                 existing['_id'] = str(existing['_id'])
                 return existing
-        user_doc = await db['users'].find_one({'_id': receiver_id}, {'blocked_users': 1})
+        user_doc = await db['user_contact_profiles'].find_one({'_id': receiver_id})
         if user_doc and sender_id in user_doc.get('blocked_users', []):
             raise Exception('Bạn đã bị chặn bởi người dùng này.')
         self_destruct_at = None
@@ -83,7 +83,16 @@ class MessageService:
                 for p in conv.get('participants', []):
                     if p != str(current_user.id):
                         other_user_ids.append(p)
-        users_list = await db['users'].find({'_id': {'$in': other_user_ids}}, {'username': 1, 'avatar_url': 1, 'full_name': 1}).to_list(length=len(other_user_ids)) if other_user_ids else []
+        import httpx
+        users_list = []
+        if other_user_ids:
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post("http://provision:8450/nguoi-dung/noi-bo/nhieu-nguoi-dung", json=other_user_ids, timeout=5.0)
+                    if resp.status_code == 200:
+                        users_list = resp.json().get('data', [])
+            except Exception:
+                pass
         user_map = {str(u['_id']): u for u in users_list}
         groups_list = await db['message_groups'].find({'members': str(current_user.id)}).to_list(length=100)
         group_map = {str(g['_id']): g for g in groups_list}
@@ -262,22 +271,22 @@ class MessageService:
     async def block_user(other_user_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'blocked_users': other_user_id}})
+        await db['user_contact_profiles'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'blocked_users': other_user_id}}, upsert=True)
         return {'status': 'blocked', 'other_user_id': other_user_id}
 
     @staticmethod
     async def unblock_user(other_user_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$pull': {'blocked_users': other_user_id}})
+        await db['user_contact_profiles'].update_one({'_id': str(current_user.id)}, {'$pull': {'blocked_users': other_user_id}})
         return {'status': 'unblocked', 'other_user_id': other_user_id}
 
     @staticmethod
     async def check_blocked_status(user_id: str, other_user_id: str, db=None) -> bool:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user_doc = await db['users'].find_one({'_id': user_id}, {'blocked_users': 1})
-        other_user_doc = await db['users'].find_one({'_id': other_user_id}, {'blocked_users': 1})
+        user_doc = await db['user_contact_profiles'].find_one({'_id': user_id})
+        other_user_doc = await db['user_contact_profiles'].find_one({'_id': other_user_id})
         user_blocked_other = other_user_id in user_doc.get('blocked_users', []) if user_doc else False
         other_blocked_user = user_id in other_user_doc.get('blocked_users', []) if other_user_doc else False
         return user_blocked_other or other_blocked_user

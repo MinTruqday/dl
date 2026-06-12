@@ -28,8 +28,8 @@ class PurchaseService:
         if price <= 0:
             if should_close_session: await session.abort_transaction(); await session.end_session()
             return {'message': 'Tài liệu này được cung cấp miễn phí.', 'status': 'free'}
-        user = await db['users'].find_one({'_id': str(current_user.id)})
-        if not user or user.get('wallet_balance', 0) < price:
+        wallet = await db['wallets'].find_one({'_id': str(current_user.id)})
+        if not wallet or wallet.get('balance', 0) < price:
             if should_close_session: await session.abort_transaction(); await session.end_session()
             raise HTTPException(status_code=400, detail=f'Số dư ví không đủ để mua tài liệu này (Cần {price} dl).')
         lock = None
@@ -44,12 +44,12 @@ class PurchaseService:
             author_id = doc.get('author_id')
             
             try:
-                deduct_result = await db['users'].update_one({'_id': str(current_user.id), 'wallet_balance': {'$gte': price}}, {'$inc': {'wallet_balance': -price}}, session=session)
+                deduct_result = await db['wallets'].update_one({'_id': str(current_user.id), 'balance': {'$gte': price}}, {'$inc': {'balance': -price}}, session=session)
                 if deduct_result.modified_count == 0:
                     if should_close_session: await session.abort_transaction()
                     raise HTTPException(status_code=400, detail=f'Số dư ví không đủ để mua tài liệu này (Cần {price} dl).')
                 if author_id:
-                    await db['users'].update_one({'_id': author_id}, {'$inc': {'wallet_balance': price}}, session=session)
+                    await db['wallets'].update_one({'_id': author_id}, {'$inc': {'balance': price}}, upsert=True, session=session)
                 await db['purchases'].insert_one({'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'item_type': 'document', 'price': price, 'purchased_at': datetime.now(timezone.utc)}, session=session)
                 tx_buyer = Transaction(user_id=str(current_user.id), type=TransactionType.WITHDRAW, amount=-price, note=f"Mua tài liệu: {doc.get('title', document_id)}")
                 tx_seller = Transaction(user_id=author_id, type=TransactionType.RECEIVE, amount=price, note=f"Bán tài liệu: {doc.get('title', document_id)}")
@@ -66,10 +66,22 @@ class PurchaseService:
                     await db['notifications'].insert_one(notification, session=session)
                     if hasattr(db_client, 'redis') and db_client.redis:
                         try:
-                            import json
-                            await db_client.redis.publish(f'user_notifications:{author_id}', json.dumps({'title': notification['title'], 'body': notification['body']}))
+                            import httpx
+                            from core.config import settings
+                            if settings.SIGNAL_URL:
+                                async with httpx.AsyncClient() as client:
+                                    await client.post(
+                                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                        json={
+                                            "target_user_id": author_id,
+                                            "title": notification['title'],
+                                            "body": notification['body'],
+                                            "type": 'purchase'
+                                        },
+                                        timeout=3.0
+                                    )
                         except Exception as e:
-                            logger.error(f"Redis publish failed: {e}")
+                            logger.error(f"Notification failed: {e}")
                 logger.info(f'Purchase: Document {document_id} purchased by user {current_user.id} for {price} dl')
                 return {'message': 'Mua tài liệu thành công.', 'status': 'purchased'}
             except HTTPException:
@@ -116,9 +128,9 @@ class PurchaseService:
         author_id = doc.get('author_id') if doc else None
         
         try:
-            await db['users'].update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': price}}, session=session)
+            await db['wallets'].update_one({'_id': str(current_user.id)}, {'$inc': {'balance': price}}, upsert=True, session=session)
             if author_id:
-                deduct_result = await db['users'].update_one({'_id': author_id, 'wallet_balance': {'$gte': price}}, {'$inc': {'wallet_balance': -price}}, session=session)
+                deduct_result = await db['wallets'].update_one({'_id': author_id, 'balance': {'$gte': price}}, {'$inc': {'balance': -price}}, session=session)
                 if deduct_result.modified_count == 0:
                     if should_close_session: await session.abort_transaction()
                     raise HTTPException(status_code=400, detail='Không thể hoàn tiền vì tác giả đã rút hoặc số dư tác giả không đủ.')

@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
@@ -51,8 +51,23 @@ class UserService:
         warning = {'_id': str(uuid7()), 'user_id': user_id, 'moderator_id': str(current_moderator.id), 'reason': reason, 'created_at': datetime.now(timezone.utc)}
         await db['warnings'].insert_one(warning)
         await db['audit_logs'].insert_one({'action': 'WARN_USER', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'reason': reason, 'timestamp': datetime.now(timezone.utc)})
-        if db_client.redis:
-            await db_client.redis.publish(f'user_notifications:{user_id}', json.dumps({'title': 'Cảnh báo hệ thống', 'body': f'Bạn nhận được cảnh báo: {reason}'}))
+        try:
+            import httpx
+            from core.config import settings
+            if settings.SIGNAL_URL:
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        json={
+                            "target_user_id": user_id,
+                            "title": 'Cảnh báo hệ thống',
+                            "body": f'Bạn nhận được cảnh báo: {reason}',
+                            "type": 'WARNING'
+                        },
+                        timeout=3.0
+                    )
+        except Exception as e:
+            logger.warning(f'Notification failed: {e}')
         logger.info(f'User {user_id} warned by {current_moderator.id}')
         return {'message': 'Đã gửi cảnh báo thành công.'}
 
@@ -159,3 +174,70 @@ class UserService:
         if res.modified_count > 0:
             logger.info(f'Cron Service: Automatically unlocked {res.modified_count} accounts.')
         return res.modified_count
+
+    @staticmethod
+    async def internal_get_user_by_id(user_id: str, db=None) -> Optional[Dict[str, Any]]:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        user = await db['users'].find_one({'_id': user_id}, {'password_hash': 0, 'passkeys': 0})
+        if not user:
+            return None
+        user['_id'] = str(user['_id'])
+        if isinstance(user.get('created_at'), datetime):
+            user['created_at'] = user['created_at'].isoformat()
+        if isinstance(user.get('updated_at'), datetime):
+            user['updated_at'] = user['updated_at'].isoformat()
+        return user
+
+    @staticmethod
+    async def internal_get_users_by_ids(user_ids: List[str], db=None) -> List[Dict[str, Any]]:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        users = await db['users'].find({'_id': {'$in': user_ids}}, {'password_hash': 0, 'passkeys': 0}).to_list(length=len(user_ids))
+        for user in users:
+            user['_id'] = str(user['_id'])
+            if isinstance(user.get('created_at'), datetime):
+                user['created_at'] = user['created_at'].isoformat()
+            if isinstance(user.get('updated_at'), datetime):
+                user['updated_at'] = user['updated_at'].isoformat()
+        return users
+
+    @staticmethod
+    async def internal_get_user_by_email(email: str, db=None) -> Optional[Dict[str, Any]]:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        user = await db['users'].find_one({'email': email})
+        if not user:
+            return None
+        user['_id'] = str(user['_id'])
+        if isinstance(user.get('created_at'), datetime):
+            user['created_at'] = user['created_at'].isoformat()
+        if isinstance(user.get('updated_at'), datetime):
+            user['updated_at'] = user['updated_at'].isoformat()
+        return user
+
+    @staticmethod
+    async def internal_get_user_by_slug(slug: str, db=None) -> Optional[Dict[str, Any]]:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        user = await db['users'].find_one({'slug': slug})
+        if not user:
+            return None
+        user['_id'] = str(user['_id'])
+        if isinstance(user.get('created_at'), datetime):
+            user['created_at'] = user['created_at'].isoformat()
+        if isinstance(user.get('updated_at'), datetime):
+            user['updated_at'] = user['updated_at'].isoformat()
+        return user
+
+    @staticmethod
+    async def internal_create_user(user_data: Dict[str, Any], db=None) -> str:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+        user_id = str(uuid7())
+        user_data['_id'] = user_id
+        user_data['created_at'] = datetime.now(timezone.utc)
+        user_data['is_active'] = True
+        user_data['wallet_balance'] = 0
+        await db['users'].insert_one(user_data)
+        return user_id

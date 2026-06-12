@@ -29,8 +29,8 @@ class ReadingService:
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
         await db['reading_history'].update_one({'user_id': user_id, 'document_id': data.document_id}, {'$set': {'progress_percentage': min(100.0, max(0.0, data.progress_percentage)), 'last_read_at': now}}, upsert=True)
-        user = await db['users'].find_one({'_id': user_id}, {'reading_stats': 1})
-        stats = user.get('reading_stats', {})
+        profile = await db['user_content_profiles'].find_one({'_id': user_id}, {'reading_stats': 1})
+        stats = profile.get('reading_stats', {}) if profile else {}
         last_date = stats.get('last_read_date')
         current_streak = stats.get('current_streak', 0)
         longest_streak = stats.get('longest_streak', 0)
@@ -43,9 +43,9 @@ class ReadingService:
                 current_streak = 1
             if current_streak > longest_streak:
                 longest_streak = current_streak
-            await db['users'].update_one({'_id': user_id}, {'$set': {'reading_stats.last_read_date': today_date, 'reading_stats.current_streak': current_streak, 'reading_stats.longest_streak': longest_streak}})
+            await db['user_content_profiles'].update_one({'_id': user_id}, {'$set': {'reading_stats.last_read_date': today_date, 'reading_stats.current_streak': current_streak, 'reading_stats.longest_streak': longest_streak}}, upsert=True)
         if data.progress_percentage >= 100:
-            await db['users'].update_one({'_id': user_id}, {'$addToSet': {'badges': {'name': 'Mọt Sách', 'awarded_at': now}}})
+            await db['user_content_profiles'].update_one({'_id': user_id}, {'$addToSet': {'badges': {'name': 'Mọt Sách', 'awarded_at': now}}}, upsert=True)
         return {'status': 'success', 'current_streak': current_streak}
 
 
@@ -101,7 +101,7 @@ class ReadingService:
             update_data['line_height'] = data.line_height
         if data.letter_spacing is not None:
             update_data['letter_spacing'] = data.letter_spacing
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$set': {'typography': update_data}})
+        await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$set': {'typography': update_data}}, upsert=True)
         return {'status': 'success', 'typography': update_data}
 
     @staticmethod

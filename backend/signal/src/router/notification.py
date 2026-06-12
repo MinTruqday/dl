@@ -24,6 +24,6 @@ async def mark_all_as_read(current_user: UserInDB=Depends(get_current_user), db=
 async def delete_notification(notif_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await NotificationService.delete_notification(notif_id, str(current_user.id), db), message='Xóa thông báo thành công')
 
-@router.post('/noi-bo/kich-hoat', response_model=APIResponse[Any], include_in_schema=False)
-async def internal_create_notification(data: NotificationCreate, db=Depends(get_db)):
+@router.post('/kich-hoat', response_model=APIResponse[Any], include_in_schema=False)
+async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(data=await NotificationService.create_notification(data, db), message='Tạo thông báo thành công', status=201)

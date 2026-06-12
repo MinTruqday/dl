@@ -39,15 +39,29 @@ class WithdrawalService:
             if should_close_session: await session.abort_transaction(); await session.end_session()
             raise HTTPException(status_code=400, detail='Số tiền rút tối thiểu là 100,000 dl.')
             
-        wallet = await db['users'].find_one({'_id': str(current_user.id)})
-        if not wallet or wallet.get('wallet_balance', 0) < amount:
+        wallet = await db['wallets'].find_one({'_id': str(current_user.id)})
+        if not wallet or wallet.get('balance', 0) < amount:
             if should_close_session: await session.abort_transaction(); await session.end_session()
             raise HTTPException(status_code=400, detail='Số dư không đủ để thực hiện yêu cầu rút tiền.')
 
         now = datetime.now(timezone.utc)
+        
+        user_info = {}
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                # We assume provision is available at provision:8450
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{current_user.id}", timeout=3.0)
+                if resp.status_code == 200:
+                    user_info = resp.json().get('data') or {}
+        except Exception as e:
+            logger.warning(f"Failed to fetch user info from provision: {e}")
 
-        if wallet.get('last_password_change'):
-            last_pw = wallet['last_password_change'].replace(tzinfo=timezone.utc) if wallet['last_password_change'].tzinfo is None else wallet['last_password_change']
+        if user_info.get('last_password_change'):
+            last_pw_str = user_info['last_password_change']
+            last_pw = datetime.fromisoformat(last_pw_str)
+            if last_pw.tzinfo is None:
+                last_pw = last_pw.replace(tzinfo=timezone.utc)
             if (now - last_pw).total_seconds() < 86400:
                 if should_close_session: await session.abort_transaction(); await session.end_session()
                 raise HTTPException(status_code=403, detail='Không thể rút tiền trong vòng 24h sau khi đổi mật khẩu để bảo vệ tài sản.')
@@ -75,7 +89,7 @@ class WithdrawalService:
 
         withdrawal_id = str(uuid7())
         try:
-            deduct_result = await db['users'].update_one({'_id': str(current_user.id), 'wallet_balance': {'$gte': amount}}, {'$inc': {'wallet_balance': -amount}}, session=session)
+            deduct_result = await db['wallets'].update_one({'_id': str(current_user.id), 'balance': {'$gte': amount}}, {'$inc': {'balance': -amount}}, session=session)
             if deduct_result.modified_count == 0:
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=400, detail='Số dư không đủ để thực hiện yêu cầu rút tiền.')
@@ -164,7 +178,7 @@ class WithdrawalService:
                 raise HTTPException(status_code=400, detail="Không thể cập nhật trạng thái yêu cầu.")
                 
             if status == 'REJECTED':
-                await db['users'].update_one({'_id': withdrawal.get('user_id')}, {'$inc': {'wallet_balance': withdrawal.get('amount', 0)}}, session=session)
+                await db['wallets'].update_one({'_id': withdrawal.get('user_id')}, {'$inc': {'balance': withdrawal.get('amount', 0)}}, upsert=True, session=session)
                 refund_transaction = Transaction(user_id=withdrawal.get('user_id'), amount=withdrawal.get('amount', 0), type=TransactionType.REFUND, note=f'Hoàn tiền yêu cầu rút tiền {withdrawal_id}', reference_id=withdrawal_id)
                 await db['transactions'].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
                 
@@ -213,7 +227,7 @@ class WithdrawalService:
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=400, detail="Không thể cập nhật trạng thái yêu cầu.")
                 
-            await db['users'].update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': withdrawal.get('amount', 0)}}, session=session)
+            await db['wallets'].update_one({'_id': str(current_user.id)}, {'$inc': {'balance': withdrawal.get('amount', 0)}}, upsert=True, session=session)
             refund_transaction = Transaction(user_id=str(current_user.id), amount=withdrawal.get('amount', 0), type=TransactionType.TOPUP, note=f'Hủy yêu cầu rút tiền {withdrawal_id}', reference_id=withdrawal_id)
             await db['transactions'].insert_one(refund_transaction.model_dump(by_alias=True), session=session)
             

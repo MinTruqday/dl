@@ -39,12 +39,23 @@ async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depen
         rev = await db['reviews'].aggregate(review_pipeline).to_list(length=1)
         avg_rating = rev[0]['avg'] if rev else 0
         doc_list.append({'id': str(d['_id']), 'title': d.get('title', ''), 'views': views, 'rating': round(avg_rating, 1) if avg_rating else 0, 'status': d.get('status', 'draft')})
-    user_doc = await db['users'].find_one({'_id': author_id})
-    total_points = user_doc.get('points', 0) if user_doc else 0
+    import httpx
+    user_doc = {}
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{author_id}", timeout=3.0)
+            if resp.status_code == 200:
+                user_doc = resp.json().get('data') or {}
+    except Exception:
+        pass
+        
+    total_points = user_doc.get('points', 0)
     revenue_data['total_views'] = total_views
     revenue_data['total_points'] = total_points
     revenue_data['documents'] = doc_list
-    revenue_data['available_balance'] = user_doc.get('wallet_balance', 0) if user_doc else 0
+    
+    wallet = await db['wallets'].find_one({'_id': author_id})
+    revenue_data['available_balance'] = wallet.get('balance', 0) if wallet else 0
     return APIResponse(data=revenue_data, message='Lấy số liệu doanh thu thành công')
 
 @router.post('/giao-dich-mua/tai-lieu/{document_id}', response_model=APIResponse[Any])

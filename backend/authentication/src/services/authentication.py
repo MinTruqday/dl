@@ -30,32 +30,66 @@ class AuthenticationService:
         config = await db['settings'].find_one({'_id': 'system_config'})
         if config and (not config.get('registration_enabled', True)):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Cổng đăng ký thành viên hiện đang tạm đóng theo yêu cầu của hệ thống. Vui lòng quay lại sau.')
-        users_col = db['users']
-        if await users_col.find_one({'email': user_in.email}):
-            raise HTTPException(status_code=400, detail='Địa chỉ Email này đã được sử dụng bởi một tài khoản khác.')
-        if await users_col.find_one({'slug': user_in.slug}):
-            raise HTTPException(status_code=400, detail='Đường dẫn hồ sơ (slug) này đã tồn tại trên hệ thống.')
-        tos_accepted_at = datetime.now(timezone.utc) if user_in.agreed_to_terms else None
-        user_doc = UserInDB(**user_in.model_dump(exclude={'password', 'agreed_to_terms', 'tos_accepted_at'}), password_hash=get_password_hash(user_in.password), tos_accepted_at=tos_accepted_at)
-        await users_col.insert_one(user_doc.model_dump(by_alias=True))
+        import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    "http://provision:8450/nguoi-dung/noi-bo/tao-moi",
+                    json={
+                        "email": user_in.email,
+                        "full_name": user_in.full_name,
+                        "slug": user_in.slug,
+                        "role": "READER"
+                    },
+                    timeout=5.0
+                )
+                if resp.status_code == 400:
+                    # Provision will validate uniqueness
+                    detail = resp.json().get('detail') if resp.json() else 'Lỗi hệ thống'
+                    raise HTTPException(status_code=400, detail=detail)
+                elif resp.status_code != 201:
+                    raise HTTPException(status_code=500, detail='Lỗi hệ thống')
+                user_id = resp.json().get('data', {}).get('user_id')
+        except httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ quản lý người dùng")
+
+        auth_cred = {
+            "_id": user_id,
+            "email": user_in.email,
+            "password_hash": get_password_hash(user_in.password),
+            "passkeys": []
+        }
+        await db['auth_credentials'].insert_one(auth_cred)
+
         await db['audit_logs'].insert_one({'action': 'REGISTER_USER', 'actor_email': user_in.email, 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'New user registered: {user_in.email} from {client_ip}')
-        return user_doc
+        return {"email": user_in.email, "full_name": user_in.full_name, "slug": user_in.slug, "role": "READER", "id": user_id}
 
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str, db=None):
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         is_email = '@' in username
-        if is_email:
-            user_doc = await db['users'].find_one({'email': username})
-            if not user_doc:
-                raise HTTPException(status_code=401, detail='Địa chỉ Email này không tồn tại trên hệ thống.')
-        else:
-            user_doc = await db['users'].find_one({'slug': username})
-            if not user_doc:
-                raise HTTPException(status_code=401, detail='Tên tài khoản này không tồn tại trên hệ thống.')
-        if not verify_password(password, user_doc['password_hash']):
+        import httpx
+        user_doc = None
+        try:
+            async with httpx.AsyncClient() as client:
+                if is_email:
+                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{username}", timeout=3.0)
+                else:
+                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/slug/{username}", timeout=3.0)
+                if resp.status_code == 200:
+                    user_doc = resp.json().get('data')
+        except Exception:
+            pass
+
+        if not user_doc:
+            raise HTTPException(status_code=401, detail='Tài khoản hoặc Email không tồn tại trên hệ thống.')
+
+        auth_cred = await db['auth_credentials'].find_one({"_id": str(user_doc['_id'])})
+        password_hash = auth_cred.get('password_hash') if auth_cred else "invalid"
+
+        if not verify_password(password, password_hash):
             await db['audit_logs'].insert_one({'action': 'LOGIN_FAILED_WRONG_PASSWORD', 'actor_email': user_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
             logger.warning(f'Login failed: Incorrect password for - {username} from {client_ip}')
             raise HTTPException(status_code=401, detail='Mật khẩu bạn nhập không chính xác.')
@@ -68,7 +102,7 @@ class AuthenticationService:
             await db_client.redis.setex(f'session_meta:{session_id}', 604800, client_ip)
         access_token = create_access_token(data={'sub': user_doc['email'], 'sid': session_id})
         logger.info(f'User logged in: {username} from {client_ip}')
-        return {'access_token': access_token, 'token_type': 'bearer', 'user': {'email': user_doc['email'], 'has_passkey': len(user_doc.get('passkeys', [])) > 0}}
+        return {'access_token': access_token, 'token_type': 'bearer', 'user': {'email': user_doc['email'], 'has_passkey': len(auth_cred.get('passkeys', [])) > 0}}
 
     @staticmethod
     async def revoke_all_sessions(current_user: UserInDB, db=None):
@@ -104,7 +138,9 @@ class AuthenticationService:
         token_doc = await db['password_reset_tokens'].find_one({'token': token, 'used': False})
         if not token_doc or token_doc.get('expires_at') < datetime.now(timezone.utc):
             raise HTTPException(status_code=400, detail='Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.')
-        await db['users'].update_one({'email': token_doc['email']}, {'$set': {'password_hash': get_password_hash(new_password), 'updated_at': datetime.now(timezone.utc)}})
+        auth_cred = await db['auth_credentials'].find_one({'email': token_doc['email']})
+        if auth_cred:
+            await db['auth_credentials'].update_one({'email': token_doc['email']}, {'$set': {'password_hash': get_password_hash(new_password)}})
         await db['password_reset_tokens'].update_one({'_id': token_doc['_id']}, {'$set': {'used': True}})
         await db['audit_logs'].insert_one({'action': 'RESET_PASSWORD_SUCCESS', 'actor_email': token_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f"Password reset success for: {token_doc['email']} from {client_ip}")
@@ -120,14 +156,6 @@ class AuthenticationService:
         return {'status': 'ok', 'message': 'Mã xác thực hợp lệ.'}
 
     @staticmethod
-    async def get_featured_authors(limit: int=5, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        cursor = db['users'].find({'role': RoleEnum.AUTHOR, 'is_active': True}).limit(limit)
-        authors = await cursor.to_list(length=limit)
-        return [{'_id': str(a['_id']), 'full_name': a.get('full_name'), 'slug': a.get('slug'), 'avatar_url': a.get('avatar_url'), 'bio': a.get('bio', 'Chưa có thông tin giới thiệu.')} for a in authors]
-
-    @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
         if not user_doc.get('is_active', True):
             raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa.')
@@ -137,7 +165,9 @@ class AuthenticationService:
             await db_client.redis.sadd(f'user_sessions:{user_id_str}', session_id)
             await db_client.redis.setex(f'session_meta:{session_id}', 604800, client_ip)
         access_token = create_access_token(data={'sub': user_doc['email'], 'sid': session_id})
-        return {'access_token': access_token, 'token_type': 'bearer', 'user': {'email': user_doc['email'], 'has_passkey': len(user_doc.get('passkeys', [])) > 0}}
+        auth_cred = await db['auth_credentials'].find_one({"_id": str(user_doc['_id'])})
+        has_passkey = len(auth_cred.get('passkeys', [])) > 0 if auth_cred else False
+        return {'access_token': access_token, 'token_type': 'bearer', 'user': {'email': user_doc['email'], 'has_passkey': has_passkey}}
 
     @staticmethod
     async def handle_google_callback(code: str, client_ip: str, db=None):
@@ -162,8 +192,36 @@ class AuthenticationService:
             config = await db['settings'].find_one({'_id': 'system_config'})
             if config and (not config.get('registration_enabled', True)):
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Hệ thống hiện đang tạm đóng cổng đăng ký mới (bao gồm cả Google). Vui lòng quay lại sau.')
-            user_id = str(uuid7())
-            user_doc = {'_id': user_id, 'email': email, 'full_name': google_user.get('name'), 'avatar_url': google_user.get('picture'), 'slug': google_user.get('email').split('@')[0] + '_' + secrets.token_hex(2), 'password_hash': 'google_oauth_no_password', 'role': RoleEnum.READER, 'is_active': True, 'created_at': datetime.now(timezone.utc), 'updated_at': datetime.now(timezone.utc)}
-            await users_col.insert_one(user_doc)
+            import httpx
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.post(
+                        "http://provision:8450/nguoi-dung/noi-bo/tao-moi",
+                        json={
+                            "email": email,
+                            "full_name": google_user.get('name'),
+                            "slug": google_user.get('email').split('@')[0] + '_' + secrets.token_hex(2),
+                            "role": "READER"
+                        },
+                        timeout=5.0
+                    )
+                    if resp.status_code != 201:
+                        raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tạo tài khoản')
+                    user_id = resp.json().get('data', {}).get('user_id')
+                    
+                    auth_cred = {
+                        "_id": user_id,
+                        "email": email,
+                        "password_hash": 'google_oauth_no_password',
+                        "passkeys": []
+                    }
+                    await db['auth_credentials'].insert_one(auth_cred)
+                    user_doc = {
+                        "_id": user_id,
+                        "email": email,
+                        "is_active": True
+                    }
+            except httpx.RequestError:
+                raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ quản lý người dùng")
             logger.info(f'New user created via Google login: {email}')
         return await AuthenticationService.issue_token_for_user(user_doc, client_ip)

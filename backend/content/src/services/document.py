@@ -153,7 +153,7 @@ class DocumentService:
                 import httpx
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
+                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Tài liệu được cập nhật",
@@ -348,7 +348,16 @@ class DocumentService:
         if not document:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
-        target_user = await db["users"].find_one({"email": email})
+        import httpx
+        target_user = None
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                if resp.status_code == 200:
+                    target_user = resp.json().get('data')
+        except Exception as e:
+            logger.warning(f"Failed to fetch user by email: {e}")
+            
         if not target_user:
             raise HTTPException(status_code=404, detail="Email không tồn tại.")
             
@@ -409,7 +418,15 @@ class DocumentService:
             document["views"] = document.get("views", 0) + 1
         document = serialize_document(document)
         
-        author = await db["users"].find_one({"_id": document["author_id"]})
+        import httpx
+        author = None
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{document['author_id']}", timeout=3.0)
+                if resp.status_code == 200:
+                    author = resp.json().get('data')
+        except Exception as e:
+            logger.warning(f"Failed to fetch author: {e}")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),

@@ -21,10 +21,6 @@ async def get_maintenance_status(db=Depends(get_db)):
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(data=await OperationService.toggle_maintenance_mode(enabled, db=db), message='Cập nhật trạng thái bảo trì thành công')
 
-@router.get('/rut-tien', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def get_withdrawals_list(status: str='PENDING', db=Depends(get_db)):
-    return APIResponse(data=await WithdrawalService.get_withdrawal_queue(status, db=db), message='Lấy danh sách thanh toán thành công')
-
 @router.post('/sao-luu', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(data=await OperationService.trigger_backup(db=db), message='Đã khởi tạo quá trình sao lưu hệ thống')

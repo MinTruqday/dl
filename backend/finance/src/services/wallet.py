@@ -11,8 +11,8 @@ class WalletService:
     async def get_balance(current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        fresh_user = await db['users'].find_one({'_id': str(current_user.id)})
-        return {'balance': fresh_user.get('wallet_balance', 0) if fresh_user else 0}
+        wallet = await db['wallets'].find_one({'_id': str(current_user.id)})
+        return {'balance': wallet.get('balance', 0) if wallet else 0}
 
     @staticmethod
     async def redeem_voucher(req, current_user, db=None, session=None):
@@ -53,7 +53,7 @@ class WalletService:
             should_close_session = True
             
         vouchers = db['vouchers']
-        users = db['users']
+        wallets = db['wallets']
         transactions = db['transactions']
         
         try:
@@ -71,18 +71,30 @@ class WalletService:
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=400, detail='Mã nạp vừa được sử dụng bởi người dùng khác')
                 
-            await users.update_one({'_id': str(current_user.id)}, {'$inc': {'wallet_balance': bonus_dl}}, session=session)
+            await wallets.update_one({'_id': str(current_user.id)}, {'$inc': {'balance': bonus_dl}}, upsert=True, session=session)
             tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi voucher: {req.code}')
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
             
             if should_close_session:
                 await session.commit_transaction()
                 
-            if db_client.redis:
-                try:
-                    await db_client.redis.publish(f'user_notifications:{current_user.id}', json.dumps({'title': 'Nạp dl thành công', 'body': f'Tài khoản vừa được cộng thêm {bonus_dl} dl.'}))
-                except Exception as e:
-                    logger.warning(f'Redis publish notification failed: {e}')
+            try:
+                import httpx
+                from core.config import settings
+                if settings.SIGNAL_URL:
+                    async with httpx.AsyncClient() as client:
+                        await client.post(
+                            f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                            json={
+                                "target_user_id": str(current_user.id),
+                                "title": 'Nạp dl thành công',
+                                "body": f'Tài khoản vừa được cộng thêm {bonus_dl} dl.',
+                                "type": 'topup'
+                            },
+                            timeout=3.0
+                        )
+            except Exception as e:
+                logger.warning(f'Notification failed: {e}')
             logger.info(f'User {current_user.id} redeemed voucher {req.code} for {bonus_dl} dl')
             return {'message': 'Đổi voucher thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:

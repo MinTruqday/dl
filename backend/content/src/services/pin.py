@@ -10,10 +10,10 @@ class PinService:
     async def get_pinned_documents(current_user, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db['users'].find_one({'_id': str(current_user.id)}, {'pinned_documents': 1})
-        if not user or 'pinned_documents' not in user:
+        profile = await db['user_content_profiles'].find_one({'_id': str(current_user.id)}, {'pinned_documents': 1})
+        if not profile or 'pinned_documents' not in profile:
             return []
-        pinned_data = user['pinned_documents']
+        pinned_data = profile['pinned_documents']
         doc_ids = []
         pinned_at_map = {}
         for item in pinned_data:
@@ -37,7 +37,7 @@ class PinService:
     async def pin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'pinned_documents': {'document_id': document_id, 'pinned_at': datetime.now(timezone.utc)}}})
+        await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'pinned_documents': {'document_id': document_id, 'pinned_at': datetime.now(timezone.utc)}}}, upsert=True)
         logger.info(f'Pin: Document {document_id} pinned by {current_user.id}')
         return {'status': 'success', 'message': 'Đã ghim tài liệu thành công.'}
 
@@ -45,12 +45,12 @@ class PinService:
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$pull': {'pinned_documents': document_id}})
+        await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$pull': {'pinned_documents': document_id}}, upsert=True)
         return {'status': 'success', 'message': 'Đã bỏ ghim tài liệu thành công.'}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db['users'].update_one({'_id': str(current_user.id)}, {'$set': {'pinned_documents': document_ids}})
+        await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$set': {'pinned_documents': document_ids}}, upsert=True)
         return {'status': 'success', 'message': 'Đã cập nhật danh sách ghim thành công.'}

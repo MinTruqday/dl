@@ -158,10 +158,9 @@ class DepositService:
             should_close_session = True
 
         orders = db['orders']
-        users = db['users']
+        wallets = db['wallets']
         transactions = db['transactions']
         
-        # Kiểm tra trước để tránh tốn tài nguyên
         order = await orders.find_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}})
         if not order:
             logger.warning(f'Order {order_code} not found or already processed')
@@ -188,15 +187,30 @@ class DepositService:
                     await session.abort_transaction()
                 logger.warning(f'Order {order_code} status update failed (already processed?)')
                 return
-            await users.update_one({'_id': user_id}, {'$inc': {'wallet_balance': dl_to_add}}, session=session)
+            await wallets.update_one({'_id': user_id}, {'$inc': {'balance': dl_to_add}}, upsert=True, session=session)
             tx = Transaction(user_id=user_id, type=TransactionType.TOPUP, amount=dl_to_add, note=f"Nạp tiền qua payOS: {order['amount']} VNĐ")
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
             
             if should_close_session:
                 await session.commit_transaction()
                 
-            if getattr(db_client, 'redis', None):
-                await db_client.redis.publish(f'user_notifications:{user_id}', json.dumps({'title': 'Nạp tiền thành công', 'body': f'Tài khoản vừa được cộng thêm {dl_to_add} dl.'}))
+            try:
+                import httpx
+                from core.config import settings
+                if settings.SIGNAL_URL:
+                    async with httpx.AsyncClient() as client:
+                        await client.post(
+                            f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                            json={
+                                "target_user_id": user_id,
+                                "title": 'Nạp tiền thành công',
+                                "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl.',
+                                "type": 'topup'
+                            },
+                            timeout=3.0
+                        )
+            except Exception as e:
+                logger.warning(f'Notification failed: {e}')
             logger.info(f'Added {dl_to_add} dl to user {user_id} (Order {order_code}) (atomic)')
         except Exception as e:
             if should_close_session:

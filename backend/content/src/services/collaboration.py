@@ -20,7 +20,15 @@ class CollaborationService:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập.')
-        invitee = await db['users'].find_one({'email': invitee_email})
+        import httpx
+        invitee = None
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{invitee_email}", timeout=3.0)
+                if resp.status_code == 200:
+                    invitee = resp.json().get('data')
+        except Exception:
+            pass
         if not invitee:
             raise HTTPException(status_code=404, detail='Không tìm thấy người dùng với email này.')
         invitee_id = str(invitee['_id'])
@@ -71,7 +79,15 @@ class CollaborationService:
         invites = await db['collaboration_invites'].find({'document_id': document_id, 'status': 'ACCEPTED'}).to_list(length=100)
         collaborators = []
         for inv in invites:
-            user_info = await db['users'].find_one({'_id': inv['invitee_id']})
+            import httpx
+            user_info = None
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{inv['invitee_id']}", timeout=3.0)
+                    if resp.status_code == 200:
+                        user_info = resp.json().get('data')
+            except Exception:
+                pass
             if user_info:
                 collaborators.append({'collaboration_id': inv['_id'], 'user_id': inv['invitee_id'], 'email': user_info.get('email', ''), 'full_name': user_info.get('full_name', 'Người dùng'), 'role': inv.get('role', 'editor')})
         return collaborators
@@ -109,7 +125,15 @@ class CollaborationService:
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền chuyển sở hữu.')
-        target_user = await db['users'].find_one({'_id': target_user_id})
+        import httpx
+        target_user = None
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{target_user_id}", timeout=3.0)
+                if resp.status_code == 200:
+                    target_user = resp.json().get('data')
+        except Exception:
+            pass
         if not target_user:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người nhận chuyển nhượng.')
         if target_user_id not in doc.get('coauthors', []):

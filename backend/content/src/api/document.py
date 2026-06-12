@@ -230,7 +230,15 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
     if not doc:
         raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền")
-    target = await db["users"].find_one({"_id": new_owner_id})
+    import httpx
+    target = None
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{new_owner_id}", timeout=3.0)
+            if resp.status_code == 200:
+                target = resp.json().get('data')
+    except Exception:
+        pass
     if not target:
         raise HTTPException(status_code=404, detail="Không tìm thấy người nhận chuyển nhượng")
     await db["documents"].update_one(
@@ -336,6 +344,31 @@ class BroadcastRequest(BaseModel):
 
 @router.post("/{document_id}/thong-bao", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def broadcast_notification(document_id: str, req: BroadcastRequest, current_user: UserInDB = Depends(get_current_user)):
+    db = db_client.mongodb.get_default_database()
+    doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+    
+    libraries = await db["libraries"].find({"document_id": document_id}).to_list(length=1000)
+    
+    import httpx
+    from core.config import settings
+    if settings.SIGNAL_URL:
+        async with httpx.AsyncClient() as client:
+            for lib in libraries:
+                try:
+                    await client.post(
+                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        json={
+                            "target_user_id": lib["user_id"],
+                            "title": f"Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
+                            "body": req.message,
+                            "type": "SYSTEM"
+                        },
+                        timeout=3.0
+                    )
+                except Exception as e:
+                    pass
     return APIResponse(data={"sent": True, "message": req.message}, message="Đã gửi thông báo đến độc giả")
 
 @router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])

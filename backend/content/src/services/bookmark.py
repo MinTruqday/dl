@@ -12,28 +12,26 @@ class BookmarkService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        user = await db['users'].find_one({'_id': user_id}, {'bookmarks': 1})
-        if not user:
-            raise HTTPException(status_code=404, detail='Không tìm thấy người dùng.')
-        bookmarks = user.get('bookmarks', [])
+        profile = await db['user_content_profiles'].find_one({'_id': user_id}, {'bookmarks': 1})
+        bookmarks = profile.get('bookmarks', []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
             message = 'Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ.'
             is_bookmarked = False
-            await db['users'].update_one({'_id': user_id}, {'$pull': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
+            await db['user_content_profiles'].update_one({'_id': user_id}, {'$pull': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}}, upsert=True)
         else:
             bookmarks.append(document_id)
             message = 'Đã thêm tài liệu vào danh sách lưu trữ.'
             is_bookmarked = True
-            await db['users'].update_one({'_id': user_id}, {'$addToSet': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
+            await db['user_content_profiles'].update_one({'_id': user_id}, {'$addToSet': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}}, upsert=True)
         return {'status': 'success', 'message': message, 'is_bookmarked': is_bookmarked}
 
     @staticmethod
     async def get_bookmarks(current_user, limit: int=100, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db['users'].find_one({'_id': str(current_user.id)}, {'bookmarks': 1})
-        bookmark_ids = user.get('bookmarks', []) if user else []
+        profile = await db['user_content_profiles'].find_one({'_id': str(current_user.id)}, {'bookmarks': 1})
+        bookmark_ids = profile.get('bookmarks', []) if profile else []
         if not bookmark_ids:
             return []
         docs = await db['documents'].find({'_id': {'$in': bookmark_ids}}).limit(limit).to_list(length=limit)

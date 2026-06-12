@@ -42,3 +42,35 @@ async def add_moderator_note(user_id: str, req: NoteRequest, current_user: UserI
 @router.get('/tim-kiem', response_model=APIResponse[Any])
 async def search_users(q: str='', limit: int=10, db=Depends(get_db)):
     return APIResponse(data=await UserService.search_users(q, limit, db=db), message='Tìm kiếm người dùng thành công')
+
+@router.get('/noi-bo/{user_id}', response_model=APIResponse[Any], include_in_schema=False)
+async def internal_get_user(user_id: str, db=Depends(get_db)):
+    user = await UserService.internal_get_user_by_id(user_id, db)
+    return APIResponse(data=user, message='Lấy thông tin người dùng thành công')
+
+@router.post('/noi-bo/nhieu-nguoi-dung', response_model=APIResponse[Any], include_in_schema=False)
+async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
+    users = await UserService.internal_get_users_by_ids(user_ids, db)
+    return APIResponse(data=users, message='Lấy danh sách người dùng thành công')
+
+@router.get('/noi-bo/email/{email}', response_model=APIResponse[Any], include_in_schema=False)
+async def internal_get_user_by_email(email: str, db=Depends(get_db)):
+    user = await UserService.internal_get_user_by_email(email, db)
+    return APIResponse(data=user, message='Lấy thông tin người dùng qua email thành công')
+
+@router.get('/noi-bo/slug/{slug}', response_model=APIResponse[Any], include_in_schema=False)
+async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
+    user = await UserService.internal_get_user_by_slug(slug, db)
+    return APIResponse(data=user, message='Lấy thông tin người dùng qua slug thành công')
+
+class InternalCreateUserRequest(BaseModel):
+    email: str
+    password_hash: Optional[str] = None
+    full_name: str
+    role: str = "READER"
+    slug: str
+    
+@router.post('/noi-bo/tao-moi', response_model=APIResponse[Any], include_in_schema=False)
+async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
+    user_id = await UserService.internal_create_user(req.dict(), db)
+    return APIResponse(data={"user_id": user_id}, message='Tạo người dùng thành công', status=201)

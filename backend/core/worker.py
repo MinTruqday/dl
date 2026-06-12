@@ -55,11 +55,24 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                         {"$set": {"status": "published", "file_url": file_key}}
                     )
                     
-                    if author_id and db_client.redis:
-                        await db_client.redis.publish(
-                            f"user_notifications:{author_id}", 
-                            json.dumps({"title": "Biên dịch tài liệu thành công", "body": f"Bản in PDF chất lượng cao cho tài liệu {document_id} đã sẵn sàng."})
-                        )
+                    if author_id:
+                        try:
+                            import httpx
+                            from core.config import settings
+                            if settings.SIGNAL_URL:
+                                async with httpx.AsyncClient() as client:
+                                    await client.post(
+                                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                        json={
+                                            "target_user_id": author_id,
+                                            "title": "Biên dịch tài liệu thành công",
+                                            "body": f"Bản in PDF chất lượng cao cho tài liệu {document_id} đã sẵn sàng.",
+                                            "type": "SYSTEM"
+                                        },
+                                        timeout=3.0
+                                    )
+                        except Exception as e:
+                            logger.error(f"Notification failed: {e}")
                 else:
                     logger.error(f"Worker: PDF compilation failed for {document_id}: {stderr.decode()}")
                     await documents_collection.update_one(
@@ -67,11 +80,24 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                         {"$set": {"status": "error_compilation"}}
                     )
                     
-                    if author_id and db_client.redis:
-                        await db_client.redis.publish(
-                            f"user_notifications:{author_id}", 
-                            json.dumps({"title": "Lỗi biên dịch tài liệu", "body": f"Tệp nguồn của {document_id} gặp lỗi cú pháp. Không thể xuất bản tập tin PDF."})
-                        )
+                    if author_id:
+                        try:
+                            import httpx
+                            from core.config import settings
+                            if settings.SIGNAL_URL:
+                                async with httpx.AsyncClient() as client:
+                                    await client.post(
+                                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                        json={
+                                            "target_user_id": author_id,
+                                            "title": "Lỗi biên dịch tài liệu",
+                                            "body": f"Tệp nguồn của {document_id} gặp lỗi cú pháp. Không thể xuất bản tập tin PDF.",
+                                            "type": "SYSTEM"
+                                        },
+                                        timeout=3.0
+                                    )
+                        except Exception as e:
+                            logger.error(f"Notification failed: {e}")
                 
         except Exception as e:
             logger.error(f"Worker: Queue error: {str(e)}")
@@ -100,10 +126,16 @@ async def process_document_publish(message: AbstractIncomingMessage):
             
             db = db_client.mongodb.get_default_database()
             docs_col = db["documents"]
-            users_col = db["users"]
-            
             document = await docs_col.find_one({"_id": document_id})
-            author = await users_col.find_one({"_id": author_id})
+            import httpx
+            author = None
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{author_id}", timeout=3.0)
+                    if resp.status_code == 200:
+                        author = resp.json().get('data')
+            except Exception:
+                pass
             
             if not document or not author:
                 return
@@ -121,9 +153,27 @@ async def process_document_publish(message: AbstractIncomingMessage):
             )
             
             followers = author.get("followers", [])
-            for follower_id in followers:
-                noti = {"title": "Tài liệu mới xuất bản", "body": f"Tác giả {author.get('full_name')} vừa ra mắt tài liệu {document.get('title')}", "document_id": document_id}
-                await db_client.redis.publish(f"user_notifications:{follower_id}", json.dumps(noti))
+            try:
+                import httpx
+                from core.config import settings
+                if settings.SIGNAL_URL:
+                    async with httpx.AsyncClient() as client:
+                        for follower_id in followers:
+                            try:
+                                await client.post(
+                                    f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                    json={
+                                        "target_user_id": follower_id,
+                                        "title": "Tài liệu mới xuất bản",
+                                        "body": f"Tác giả {author.get('full_name')} vừa ra mắt tài liệu {document.get('title')}",
+                                        "type": "SYSTEM"
+                                    },
+                                    timeout=3.0
+                                )
+                            except Exception:
+                                pass
+            except Exception as e:
+                logger.error(f"Notification failed: {e}")
                 
             logger.info(f"Worker: Background publication complete for document {document_id}")
             
