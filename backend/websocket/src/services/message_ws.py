@@ -123,8 +123,13 @@ class MessageConnectionManager:
                     except Exception:
                         disconnected.append(ws)
         active_finetunes = await db['finetune_jobs'].find({'status': {'$in': ['running', 'pending']}}).to_list(50)
-        active_collectors = await db['collection_jobs'].find({'status': {'$in': ['running', 'pending']}}).to_list(50)
-        job_payload = json.dumps({'type': 'global_sync_jobs', 'data': {'finetune': [{'id': str(j['_id']), 'progress': j.get('progress', 0), 'status': j['status']} for j in active_finetunes], 'collector': [{'id': str(j['_id']), 'progress': j.get('progress', 0), 'status': j['status']} for j in active_collectors]}})
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.get(f"{settings.COLLECTOR_URL}/noi-bo/cong-viec-dang-chay", timeout=3.0)
+                active_collectors = res.json() if res.status_code == 200 else []
+        except Exception:
+            active_collectors = []
+        job_payload = json.dumps({'type': 'global_sync_jobs', 'data': {'finetune': [{'id': str(j['_id']), 'progress': j.get('progress', 0), 'status': j['status']} for j in active_finetunes], 'collector': active_collectors}})
         for ws in list(ws_set):
             try:
                 await ws.send_text(job_payload)

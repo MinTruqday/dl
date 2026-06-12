@@ -31,7 +31,7 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception as e:
-        logger.error(f"Browser error: {e}")
+        logger.error(f"Lỗi trình duyệt: {e}")
         raise
     finally:
         if browser:
@@ -73,5 +73,5 @@ async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300,
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 ** attempt)
             else:
-                logger.error(f"Failed to download {url} after {max_retries} attempts.")
+                logger.error(f"Failed to download {url} after {max_retries} attempts")
     return False

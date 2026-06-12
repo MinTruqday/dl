@@ -37,7 +37,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info(f"Bucket {self.bucket} not found, creating")
+            logger.info(f"Không tìm thấy không gian lưu trữ {self.bucket}, đang tiến hành tạo mới")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -54,7 +54,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"Failed to upload local file {local_file_path} to MinIO: {e}")
+            logger.error(f"Tải tệp {local_file_path} lên hệ thống lưu trữ thất bại: {e}")
             raise e
 
 storage = CollectorStorage()

@@ -64,7 +64,7 @@ class CTANCollector:
 
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info(f"[Detail Collector] CTAN: {book_url}")
+        logger.info(f"[Thu thập chi tiết] CTAN: {book_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -101,7 +101,7 @@ class CTANCollector:
                         full_download_url = "https://www.ctan.org" + download_link if download_link.startswith("/") else download_link
                         payload["download_link"] = full_download_url
                         
-                        logger.info(f"Successfully extracted completed download link: {full_download_url}")
+                        logger.info(f"Đã trích xuất thành công completed download link: {full_download_url}")
                         
                         slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
                         payload["filename"] = f"{slug}.zip"
@@ -114,7 +114,7 @@ class CTANCollector:
                     logger.warning(f"Download button not found at specified XPath on detail page: {book_url}")
                 
             except Exception as e:
-                logger.error(f"[CTAN Detail Collector Error]: {e}")
+                logger.error(f"[Lỗi thu thập chi tiết CTAN]: {e}")
                 raise
 
     @staticmethod
@@ -156,7 +156,7 @@ class CTANCollector:
                 contents = os.listdir(extracted_folder_path)
                 if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
                     search_root = os.path.join(extracted_folder_path, contents[0])
-                    logger.info(f"Detected nested folder: {contents[0]}, adjusting search root.")
+                    logger.info(f"Detected nested folder: {contents[0]}, adjusting search root")
 
                 found_pdf = None
                 for root, _, files in os.walk(search_root):
@@ -199,7 +199,7 @@ class CTANCollector:
                 logger.info(f"Compiled and uploaded Markdown source: {minio_url_md}")
                 payload["markdown_url"] = minio_url_md
                 
-                logger.info(f"Successfully processed {filename}.")
+                logger.info(f"Successfully processed {filename}")
             else:
                 logger.error(f"[CTAN Download Error] Failed to download {url}")
                 return

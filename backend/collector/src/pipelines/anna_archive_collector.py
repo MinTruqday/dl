@@ -80,11 +80,11 @@ class AnnaArchiveCollector:
                     
                     logger.info(f"Successfully published {new_urls_found} new items from page {page_num}")
                     if page_num >= pages:
-                        logger.info(f"Reached requested limit of {pages} pages, terminating.")
+                        logger.info(f"Đã đạt giới hạn yêu cầu {pages} pages, terminating")
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Error in Anna's Archive list collector pipeline: {e}")
+                logger.error(f"Tiến trình thu thập danh sách Anna's Archive gặp lỗi: {e}")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -118,7 +118,7 @@ class AnnaArchiveCollector:
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Detail Collector] Anna: {document_url}")
+        logger.info(f"[Thu thập chi tiết] Anna: {document_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -203,7 +203,7 @@ class AnnaArchiveCollector:
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info(f"Successfully extracted completed download link: {download_link}")
+                            logger.info(f"Đã trích xuất thành công completed download link: {download_link}")
                             
                             ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'pdf'
                             if len(ext) > 4 or "/" in ext: ext = 'pdf'

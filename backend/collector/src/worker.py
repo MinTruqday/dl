@@ -86,7 +86,7 @@ async def run_worker():
     await queue_nxbgd.consume(lambda m: process_msg_with_sem(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
-    logger.info("DocLib Collector 0.1a initialized - Listening to collector events from RabbitMQ")
+    logger.info("Hệ thống thu thập DocLib 0.1a đã khởi động - Đang lắng nghe tín hiệu từ RabbitMQ")
 
     stop_event = asyncio.Event()
 

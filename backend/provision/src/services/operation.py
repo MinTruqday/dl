@@ -190,13 +190,17 @@ class OperationService:
 
     @staticmethod
     async def get_collector_stats(db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        total_docs = await db['documents'].count_documents({})
-        total_assets = await db['archives'].count_documents({})
-        recent_crawls = await db['documents'].find({}, {'created_at': 1}).sort('created_at', -1).limit(1).to_list(length=1)
-        last_crawl = recent_crawls[0]['created_at'].isoformat() if recent_crawls else datetime.now(timezone.utc).isoformat()
-        return {'total_documents': total_docs, 'total_assets': total_assets, 'collector_status': 'RUNNING', 'last_crawl': last_crawl, 'storage_usage_mb': round(total_docs * 0.1, 2)}
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{settings.COLLECTOR_URL}/thong-ke", timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json()
+        except Exception as e:
+            logger.error(f"Cannot fetch collector stats: {e}")
+        return {'total_documents': 0, 'total_assets': 0, 'collector_status': 'OFFLINE', 'last_crawl': None, 'storage_usage_mb': 0}
 
     @staticmethod
     async def handle_bug_report(data: dict, current_moderator, db=None) -> dict:

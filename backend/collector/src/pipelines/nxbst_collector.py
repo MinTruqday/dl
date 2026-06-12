@@ -61,17 +61,17 @@ class NXBSTStreamState:
                         with open(save_path, 'wb') as f:
                             f.write(body)
 
-                        logger.info(f"[NXBSTStream] Captured {filename}: {url[-50:]}")
+                        logger.info(f"[Luồng NXBST] Đã thu thập {filename}: {url[-50:]}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.error(f"[NXBSTStreamState] Inner exception: {e}")
+                    logger.error(f"[Trạng thái luồng NXBST] Lỗi vòng lặp trong: {e}")
         except Exception as e:
-            logger.error(f"[NXBSTStreamState] Outer exception: {e}")
+            logger.error(f"[Trạng thái luồng NXBST] Lỗi vòng lặp ngoài: {e}")
 
     async def process_viewer(self, page):
         try:
-            logger.info("Initializing viewer processing loop")
+            logger.info("Đang khởi tạo vòng lặp xử lý trình xem tài liệu")
             consecutive_fails = 0
             previous_count = self.page_counter
 
@@ -85,14 +85,14 @@ class NXBSTStreamState:
                     previous_count = self.page_counter
                 else:
                     consecutive_fails += 1
-                    logger.warning(f"No new pages captured, retry {consecutive_fails}/6")
+                    logger.warning(f"Không bắt được trang mới nào, đang thử lại lần {consecutive_fails}/6")
                     await asyncio.sleep(2)
 
                 if consecutive_fails > 6:
-                    logger.info("End of document detected or network Stream stopped.")
+                    logger.info("Phát hiện kết thúc tài liệu hoặc luồng mạng đã dừng")
                     break
         except Exception as e:
-            logger.error(f"Viewer loop error: {e}")
+            logger.error(f"Tiến trình xem tài liệu gặp lỗi: {e}")
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -118,13 +118,13 @@ class NXBSTStreamState:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning(f"Skipping PDF {title}: No pages collected.")
+            logger.warning(f"Đang bỏ qua PDF {title}: Không thu thập được trang nào")
             return
 
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info(f"[NXBSTPDF] Compiling {len(sorted_pages)} pages with tile matrix 1/2/3/4 '{final_pdf_name}'")
+            logger.info(f"[NXBST PDF] Đang tổng hợp {len(sorted_pages)} trang với ma trận ghép \'final_pdf_name\'")
 
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
@@ -156,7 +156,7 @@ class NXBSTStreamState:
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
                 except Exception as e:
-                    logger.warning(f"Failed to merge tiles for page {p}: {e}")
+                    logger.warning(f"Không thể gộp các mảnh ghép cho trang {p}: {e}")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -165,15 +165,15 @@ class NXBSTStreamState:
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
                     except Exception as e:
-                        logger.error(f"Failed to load unknown tile: {e}")
+                        logger.error(f"Lỗi khi tải mảnh ghép không xác định: {e}")
 
             if images:
-                logger.info("Using img2pdf to compile pages to PDF")
+                logger.info("Đang sử dụng img2pdf để tổng hợp các trang thành PDF")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info(f"[NXBSTPDF SUCCESS] Created: {pdf_path}")
+                logger.info(f"[NXBSTPDF THÀNH CÔNG] Đã tạo: {pdf_path}")
 
-            logger.info(f"[NXBSTStorage] Uploading {final_pdf_name} to MinIO")
+            logger.info(f"[Lưu trữ NXBST] Đang tải {final_pdf_name} lên MinIO")
             minio_url = await storage.upload_local_file(f"documents/nxbst/{final_pdf_name}", pdf_path)
 
             if minio_url:
@@ -199,7 +199,7 @@ class NXBSTStreamState:
                 os.remove(pdf_path)
 
         except Exception as e:
-            logger.error(f"[NXBSTPDF Compile Error]: {e}")
+            logger.error(f"[Lỗi biên dịch PDF NXBST]: {e}")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -210,7 +210,7 @@ class NXBSTCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
         start_url = "https://stbook.vn/"
-        logger.info(f"Starting List Collection on NXBST {start_url}")
+        logger.info(f"Bắt đầu thu thập danh sách từ NXBST {start_url}")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -230,16 +230,16 @@ class NXBSTCollector:
                     if href and ('/category/' in href or '/chuyen-muc/' in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info(f"Successfully extracted {len(category_urls)} category URLs including Kho tài liệu")
+                logger.info(f"Đã trích xuất {len(category_urls)} liên kết danh mục bao gồm Kho tài liệu")
 
                 for cat_url in category_urls:
-                    logger.info(f"Scanning Category: {cat_url}")
+                    logger.info(f"Đang quét Danh mục: {cat_url}")
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
 
                     current_page = 1
                     while True:
-                        logger.info(f"Scanning Page {current_page} of current category")
+                        logger.info(f"Đang quét Trang {current_page} của danh mục hiện tại")
 
                         document_nodes_css = '#main a[href*="store_detail"], #main a[href*="/sach/"]'
                         document_nodes = await page.query_selector_all(document_nodes_css)
@@ -254,10 +254,10 @@ class NXBSTCollector:
                                     await mq_client.publish("collect_detail_queue", {"url": full_url, "source": "NXBST"})
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info(f"Pushed {found_documents} documents to MQ from page {current_page}.")
+                        logger.info(f"Đã chuyển {found_documents} tài liệu vào hàng chờ từ trang {current_page}")
                         
                         if current_page >= pages:
-                            logger.info(f"Reached requested limit of {pages} pages for this category.")
+                            logger.info(f"Đã đạt giới hạn {pages} trang cho danh mục này")
                             break
 
                         next_page_idx = current_page + 1
@@ -274,12 +274,12 @@ class NXBSTCollector:
                         except Exception:
                             break
             except Exception as e:
-                logger.error(f"Error checking list detail: {e}")
+                logger.error(f"Kiểm tra danh sách chi tiết gặp lỗi: {e}")
                 raise
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Detail Collector] NXBST {document_url}")
+        logger.info(f"[Thu thập chi tiết] NXBST {document_url}")
         state_manager = NXBSTStreamState()
 
         async with managed_browser() as browser:
@@ -300,13 +300,13 @@ class NXBSTCollector:
                 author_el = await page.query_selector('#detail .author a')
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info(f"Targeting document {raw_title} | Author: {raw_author}")
+                logger.info(f"Đang xử lý tài liệu {raw_title} | Tác giả: {raw_author}")
 
                 read_btn_css = '#whatchNow, a:has-text("Đọc sách"), a:has-text("Xem ngay")'
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("Found watch/read button. Preparing to capture")
+                    logger.info("Đã tìm thấy nút Đọc. Đang chuẩn bị thu thập")
 
                     import tempfile
                     state_manager.temp_dir = tempfile.mkdtemp(prefix=f"nxbst_{safe_title[:20]}_")
@@ -314,7 +314,7 @@ class NXBSTCollector:
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
 
-                    logger.info("Initializing background network Stream capture")
+                    logger.info("Đang khởi tạo tiến trình bắt luồng mạng ngầm")
                     state_manager.is_capturing = True
 
                     await read_btn.click()
@@ -326,7 +326,7 @@ class NXBSTCollector:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Read/Watch Now button not found.")
+                    logger.warning("Không tìm thấy nút Đọc/Xem ngay")
             except Exception as e:
-                logger.error(f"[NXBSTDetail Collector Error]: {e}")
+                logger.error(f"[Lỗi thu thập chi tiết NXBST]: {e}")
                 raise

@@ -92,7 +92,7 @@ class NXBGDCollector:
         ])
 
         if not image_files:
-            logger.warning(f"Skipping PDF {title}: No pages collected.")
+            logger.warning(f"Đang bỏ qua PDF {title}: Không thu thập được trang nào")
             return
 
         try:
@@ -155,7 +155,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
                 
-                logger.info(f"Found {len(document_urls)} documents on current page for grade All.")
+                logger.info(f"Found {len(document_urls)} documents on current page for grade All")
                 
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
@@ -175,7 +175,7 @@ class NXBGDCollector:
                             full_title = res_name
                             
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f"Skipping {full_title}, already in Redis Queue.")
+                                logger.info(f"Skipping {full_title}, already in Redis Queue")
                                 continue
                                 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -218,7 +218,7 @@ class NXBGDCollector:
                                 if current_pages > 0 and current_pages == last_page_count:
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(f"Captured {current_pages} pages. No new pages detected, finishing document.")
+                                        logger.info(f"Captured {current_pages} pages. No new pages detected, finishing document")
                                         break
                                 else:
                                     stable_count = 0
@@ -240,7 +240,7 @@ class NXBGDCollector:
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Reached end of pagination or next button not found.")
+                        logger.info("Reached end of pagination or next button not found")
                 except Exception as e:
                     logger.error(f"Pagination error: {e}")
                     has_next = False
@@ -254,6 +254,6 @@ class NXBGDCollector:
             await self.close()
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Starting NXBGD Collection queue for grade All")
+    logger.info(f"Bắt đầu thu thập NXBGD queue for grade All")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()
