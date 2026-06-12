@@ -117,7 +117,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
     result = await db["finetune_datasets"].delete_one({"_id": dataset_id, "user_id": user_id})
     if result.deleted_count > 0:
         await db["finetune_samples"].delete_many({"dataset_id": dataset_id})
-        return {"Thành công": True}
+        return {"success": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
 
 @router.post("/tap-du-lieu/{dataset_id}/mau")
@@ -149,7 +149,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     if (await db["finetune_samples"].delete_one({"_id": sample_id, "dataset_id": dataset_id})).deleted_count > 0:
         total = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
         await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}})
-        return {"Thành công": True}
+        return {"success": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
 
 @router.post("/nhap/phan-hoi")

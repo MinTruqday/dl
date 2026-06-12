@@ -50,7 +50,7 @@ class ScanResult:
 class SecurityHarness:
     def __init__(self):
         self._compiled_injection = [
-            re.compile(p, re.IGNORECASE re.DOTALL)
+            re.compile(p, re.IGNORECASE | re.DOTALL)
             for p in PROMPT_INJECTION_PATTERNS
         ]
         self._compiled_credential = [

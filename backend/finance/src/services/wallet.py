@@ -15,13 +15,13 @@ class WalletService:
         return {'balance': wallet.get('balance', 0) if wallet else 0}
 
     @staticmethod
-    async def redeem_voucher(req, current_user, db=None, session=None):
+    async def redeem_coupon(req, current_user, db=None, session=None):
         should_close_session = False
-        lock_key = f'lock:voucher:{req.code}'
+        lock_key = f'lock:coupon:{req.code}'
         is_locked = False
         
         if db_client.redis:
-            user_rl_key = f'rl:voucher:{current_user.id}'
+            user_rl_key = f'rl:coupon:{current_user.id}'
             try:
                 attempts = await db_client.redis.incr(user_rl_key)
                 if attempts == 1:
@@ -31,7 +31,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập Redis thất bại: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
         
         if db_client.redis:
             try:
@@ -52,27 +52,27 @@ class WalletService:
             session.start_transaction()
             should_close_session = True
             
-        vouchers = db['vouchers']
+        coupons = db['coupons']
         wallets = db['wallets']
         transactions = db['transactions']
         
         try:
-            voucher = await vouchers.find_one({'code': req.code}, session=session)
-            if not voucher:
+            coupon = await coupons.find_one({'code': req.code}, session=session)
+            if not coupon:
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=404, detail='Mã nạp không hợp lệ hoặc không tồn tại')
-            if voucher.get('is_used'):
+            if coupon.get('is_used'):
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=400, detail='Mã nạp này đã được sử dụng trước đó')
             
-            bonus_dl = voucher.get('amount_dl', voucher.get('amount_dls', 0))
-            result = await vouchers.update_one({'_id': voucher['_id'], 'is_used': False}, {'$set': {'is_used': True, 'used_by': str(current_user.id), 'used_at': datetime.now(timezone.utc)}}, session=session)
+            bonus_dl = coupon.get('amount_dl', coupon.get('amount_dls', 0))
+            result = await coupons.update_one({'_id': coupon['_id'], 'is_used': False}, {'$set': {'is_used': True, 'used_by': str(current_user.id), 'used_at': datetime.now(timezone.utc)}}, session=session)
             if result.modified_count == 0:
                 if should_close_session: await session.abort_transaction()
                 raise HTTPException(status_code=400, detail='Mã nạp vừa được sử dụng bởi người dùng khác')
                 
             await wallets.update_one({'_id': str(current_user.id)}, {'$inc': {'balance': bonus_dl}}, upsert=True, session=session)
-            tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi voucher: {req.code}')
+            tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi coupon: {req.code}')
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
             
             if should_close_session:
@@ -87,7 +87,7 @@ class WalletService:
                             f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                             json={
                                 "target_user_id": str(current_user.id),
-                                "title": 'Nạp dl thành công',
+                                "title": 'Nạp dl success',
                                 "body": f'Tài khoản vừa được cộng thêm {bonus_dl} dl',
                                 "type": 'topup'
                             },
@@ -96,7 +96,7 @@ class WalletService:
             except Exception as e:
                 logger.warning(f'Không thể gửi thông báo: {e}')
             logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
-            return {'message': 'Đổi mã quà tặng thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
+            return {'message': 'Đổi mã quà tặng success', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:
             raise
         except Exception as e:

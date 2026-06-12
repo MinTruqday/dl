@@ -133,7 +133,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
 
 
 def run_hf_training(job_id: str, config: dict, update_callback):
-    import lênrch
+    import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from peft import LoraConfig, get_peft_model, PeftModel
     from trl import SFTTrainer, SFTConfig
@@ -150,11 +150,11 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     update_callback({"progress": 10, "status": "running"})
 
     bnb_config = None
-    if lênrch.cuda.is_available():
+    if torch.cuda.is_available():
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=lênrch.bfloat16,
+            bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
 
@@ -162,7 +162,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
         base_model_name,
         quantization_config=bnb_config,
         device_map="auto",
-        lênrch_dtype=lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32,
+        torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
         token=hf_token,
         trust_remote_code=True,
     )
@@ -203,8 +203,8 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     
     training_args = SFTConfig(
         output_dir=adapter_path, num_train_epochs=epochs, per_device_train_batch_size=batch_size,
-        learning_rate=learning_rate, logging_steps=1, bf16=lênrch.cuda.is_available(),
-        optim="adamw_8bit" if lênrch.cuda.is_available() else "adamw_lênrch", max_seq_length=2048, dataset_text_field="text",
+        learning_rate=learning_rate, logging_steps=1, bf16=torch.cuda.is_available(),
+        optim="adamw_8bit" if torch.cuda.is_available() else "adamw_torch", max_seq_length=2048, dataset_text_field="text",
     )
 
     from transformers import TrainerCallback as _TCB
@@ -222,7 +222,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
     logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
-    base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float16, token=hf_token)
+    base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="cpu", torch_dtype=torch.float16, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
     merged_model.save_pretrained(merged_path)
@@ -262,7 +262,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         if llama_cpp_convert.exists():
             subprocess.run(
                 [convert_script, str(llama_cpp_convert), merged_path, "--outfile", gguf_path, "--outtype", "q4_k_m"],
-                check=True, thời gian chờ1800
+                check=True, timeout=1800
             )
             logger.info(f"GGUF export Thành côngful: {gguf_path}")
             result["gguf_path"] = gguf_path
@@ -274,7 +274,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
     return result
 
 def run_seq2seq_training(job_id: str, config: dict, update_callback):
-    import lênrch
+    import torch
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Seq2SeqTrainer, Seq2SeqTrainingArguments
     from peft import LoraConfig, get_peft_model, PeftModel
     from datasets import Dataset
@@ -293,7 +293,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     model = AutoModelForSeq2SeqLM.from_pretrained(
         base_model_name,
         device_map="auto",
-        lênrch_dtype=lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32,
+        torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
         token=hf_token,
     )
     tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
@@ -343,8 +343,8 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     
     training_args = Seq2SeqTrainingArguments(
         output_dir=adapter_path, num_train_epochs=epochs, per_device_train_batch_size=batch_size,
-        learning_rate=learning_rate, logging_steps=1, bf16=lênrch.cuda.is_available(),
-        optim="adamw_8bit" if lênrch.cuda.is_available() else "adamw_lênrch",
+        learning_rate=learning_rate, logging_steps=1, bf16=torch.cuda.is_available(),
+        optim="adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
         predict_with_generate=True,
     )
 
@@ -363,7 +363,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
     logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
-    base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float32, token=hf_token)
+    base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_name, device_map="cpu", torch_dtype=torch.float32, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
     merged_model.save_pretrained(merged_path)
@@ -374,8 +374,8 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
 
 
 def run_diffusion_training(job_id: str, config: dict, update_callback):
-    import lênrch
-    import lênrch.nn.functional as F
+    import torch
+    import torch.nn.functional as F
     from diffusers import FluxPipeline
     from peft import LoraConfig, get_peft_model
     from PIL import Image
@@ -394,11 +394,11 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     logger.info(f"Đang tải mô hình nền tảng trên vi xử lý đồ họa {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
-    device = "cuda" if lênrch.cuda.is_available() else "cpu"
-    dtype = lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
-    pipeline = FluxPipeline.from_pretrained(base_model_name, lênrch_dtype=dtype, token=hf_token)
-    pipeline.lên(device)
+    pipeline = FluxPipeline.from_pretrained(base_model_name, torch_dtype=dtype, token=hf_token)
+    pipeline.to(device)
     transformer = pipeline.transformer
 
     update_callback({"progress": 20})
@@ -411,7 +411,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     transformer = get_peft_model(transformer, lora_config)
     transformer.train()
 
-    optimizer = lênrch.optim.AdamW(transformer.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(transformer.parameters(), lr=learning_rate)
 
     update_callback({"progress": 25})
 
@@ -435,17 +435,17 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
             optimizer.zero_grad()
 
             try:
-                img_tensor = lênrch.tensor(np.array(img)).permute(2,0,1).unsqueeze(0).float().lên(device)
+                img_tensor = torch.tensor(np.array(img)).permute(2,0,1).unsqueeze(0).float().to(device)
                 img_tensor = (img_tensor / 127.5) - 1.0
-                with lênrch.no_grad():
-                    latents = pipeline.vae.encode(img_tensor).latent_dist.sample() * pipeline.vae.config.scaling_faclênr
+                with torch.no_grad():
+                    latents = pipeline.vae.encode(img_tensor).latent_dist.sample() * pipeline.vae.config.scaling_factor
                     
-                text_input_ids = pipeline.tokenizer(prompt, return_tensors="pt", max_length=77, truncation=True, padding="max_length").input_ids.lên(device)
-                with lênrch.no_grad():
+                text_input_ids = pipeline.tokenizer(prompt, return_tensors="pt", max_length=77, truncation=True, padding="max_length").input_ids.to(device)
+                with torch.no_grad():
                     prompt_embeds = pipeline.text_encoder(text_input_ids)[0]
 
-                noise = lênrch.randn_like(latents)
-                timesteps = lênrch.randint(0, pipeline.scheduler.config.num_train_timesteps, (1,), device=device)
+                noise = torch.randn_like(latents)
+                timesteps = torch.randint(0, pipeline.scheduler.config.num_train_timesteps, (1,), device=device)
                 noisy_latents = pipeline.scheduler.add_noise(latents, noise, timesteps)
 
                 model_pred = transformer(noisy_latents, timesteps, prompt_embeds).sample

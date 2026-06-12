@@ -36,7 +36,7 @@ class CitationRequest(BaseModel):
 
 class ToneRequest(BaseModel):
     text: str
-    lênne: str
+    tone: str
     expansion: bool = False
 
 class ReviewRequest(BaseModel):

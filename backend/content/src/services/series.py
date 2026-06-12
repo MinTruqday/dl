@@ -26,7 +26,7 @@ class SeriesService:
         if series['document_ids']:
             await db['documents'].update_many({'_id': {'$in': series['document_ids']}, 'author_id': str(current_user.id)}, {'$set': {'series_id': series_id}})
         logger.info(f'Người dùng {current_user.id} vừa tạo bộ tài liệu {series_id}')
-        return {'message': 'Tạo chuỗi tài liệu thành công', 'series_id': series_id}
+        return {'message': 'Tạo chuỗi tài liệu success', 'series_id': series_id}
 
     @staticmethod
     async def get_my_series(current_user, db=None) -> list:
@@ -65,7 +65,7 @@ class SeriesService:
         update_fields['updated_at'] = datetime.now(timezone.utc)
         await db['series'].update_one({'_id': series_id}, {'$set': update_fields})
         logger.info(f'Người dùng {current_user.id} vừa cập nhật bộ tài liệu {series_id}')
-        return {'message': 'Cập nhật chuỗi tài liệu thành công', 'series_id': series_id}
+        return {'message': 'Cập nhật chuỗi tài liệu success', 'series_id': series_id}
 
     @staticmethod
     async def delete_series(series_id: str, current_user, db=None) -> dict:

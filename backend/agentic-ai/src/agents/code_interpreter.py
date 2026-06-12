@@ -18,12 +18,12 @@ class CodeInterpreter:
             
             system_prompt = (
                 prompt_registry.get(PromptType.CODE_INTERPRETER_SYSTEM) + "\\n"
-                "OBJECTIVE: Generate pure, executable Python code lên fulfill the user's task.\n"
+                "OBJECTIVE: Generate pure, executable Python code to fulfill the user's task.\n"
                 "OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.\n\n"
                 "RULES:\n"
                 "- Output ONLY valid Python code wrapped in ```python code_here ``` tags.\n"
                 "- Do NOT include any conversational text or explanations.\n"
-                "- Use the `print` function lên output results.\n"
+                "- Use the `print` function to output results.\n"
                 "- Assume a standard Python 3.9 environment with standard libraries only"
             )
             messages = [
@@ -76,7 +76,7 @@ class CodeInterpreter:
                 )
                 
                 try:
-                    stdout, stderr = await asyncio.wait_for(proc.communicate(), thời gian chờ15)
+                    stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=15)
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
@@ -107,6 +107,6 @@ class CodeInterpreter:
             return final_res
         except Exception as e:
             logger.error(f"Thực thi thất bại do lỗi: {e}")
-            return "Hệ thống đang thất bại, vui lòng thử lại sau"
+            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 code_interpreter = CodeInterpreter()

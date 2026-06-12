@@ -18,10 +18,10 @@ class CouponService:
         coupon = {'_id': str(uuid7()), 'author_id': str(current_user.id), 'code': data['code'].upper(), 'discount_percent': min(100, max(1, data.get('discount_percent', 10))), 'max_uses': data.get('max_uses', 100), 'used_count': 0, 'document_id': data.get('document_id'), 'target_type': data.get('target_type', CouponTargetType.ALL), 'status': status, 'expires_at': datetime.fromisoformat(data['expires_at']) if data.get('expires_at') else None, 'is_active': True, 'created_at': datetime.now(timezone.utc)}
         existing = await db['coupons'].find_one({'code': coupon['code']})
         if existing:
-            raise HTTPException(status_code=400, detail='Mã ưu đãi này đã tồn tại trên hệ thống')
+            raise HTTPException(status_code=400, detail='Mã quà tặng này đã tồn tại trên hệ thống')
         await db['coupons'].insert_one(coupon)
-        logger.info(f"Người dùng {current_user.id} vừa tạo mã giảm giá {coupon['code']} với trạng thái {status}")
-        return {'message': f'Đã tạo mã ưu đãi, trạng thái hiện tại: {status}', 'coupon_id': coupon['_id']}
+        logger.info(f"Người dùng {current_user.id} vừa tạo mã quà tặng {coupon['code']} với trạng thái {status}")
+        return {'message': f'Đã tạo mã quà tặng, trạng thái hiện tại: {status}', 'coupon_id': coupon['_id']}
 
     @staticmethod
     async def get_coupons(current_user, db=None) -> list:
@@ -42,9 +42,9 @@ class CouponService:
         status = CouponStatus.APPROVED if action == 'approve' else CouponStatus.REJECTED
         res = await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'status': status}})
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy mã ưu đãi')
-        logger.info(f'Quản trị viên {current_user.id} đã {action} mã giảm giá {coupon_id}')
-        return {'message': f"Đã {('duyệt' if action == 'approve' else 'từ chối')} mã ưu đãi"}
+            raise HTTPException(status_code=404, detail='Không tìm thấy mã quà tặng')
+        logger.info(f'Quản trị viên {current_user.id} đã {action} mã quà tặng {coupon_id}')
+        return {'message': f"Đã {('duyệt' if action == 'approve' else 'từ chối')} mã quà tặng"}
 
     @staticmethod
     async def validate_coupon(code: str, user: Any, document_id: Optional[str]=None, db=None) -> dict:
@@ -52,13 +52,13 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         coupon = await db['coupons'].find_one({'code': code.upper(), 'is_active': True, 'status': CouponStatus.APPROVED})
         if not coupon:
-            raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại hoặc chưa được duyệt')
+            raise HTTPException(status_code=404, detail='Mã quà tặng không tồn tại hoặc chưa được duyệt')
         if coupon.get('expires_at') and coupon['expires_at'].replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail='Mã ưu đãi đã hết hạn')
+            raise HTTPException(status_code=400, detail='Mã quà tặng đã hết hạn')
         if coupon.get('used_count', 0) >= coupon.get('max_uses', 0):
-            raise HTTPException(status_code=400, detail='Mã ưu đãi đã hết lượt sử dụng')
+            raise HTTPException(status_code=400, detail='Mã quà tặng đã hết lượt sử dụng')
         if coupon.get('document_id') and coupon['document_id'] != document_id:
-            raise HTTPException(status_code=400, detail='Mã ưu đãi không áp dụng cho tài liệu này')
+            raise HTTPException(status_code=400, detail='Mã quà tặng không áp dụng cho tài liệu này')
         target = coupon.get('target_type', CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
             purchase_count = await db['purchases'].count_documents({'user_id': str(user.id)})
@@ -78,11 +78,11 @@ class CouponService:
             query['author_id'] = str(current_user.id)
         coupon = await db['coupons'].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại')
+            raise HTTPException(status_code=404, detail='Mã quà tặng không tồn tại')
         new_status = not coupon.get('is_active', True)
         await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'is_active': new_status}})
-        logger.info(f'Mã giảm giá {coupon_id} đã được chuyển sang trạng thái {new_status}')
-        return {'message': 'Cập nhật trạng thái mã ưu đãi thành công', 'is_active': new_status}
+        logger.info(f'Mã quà tặng {coupon_id} đã được chuyển sang trạng thái {new_status}')
+        return {'message': 'Cập nhật trạng thái mã quà tặng thành công', 'is_active': new_status}
 
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user, db=None) -> dict:
@@ -93,6 +93,6 @@ class CouponService:
             query['author_id'] = str(current_user.id)
         res = await db['coupons'].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại')
-        logger.info(f'Người dùng {current_user.id} đã xóa mã giảm giá {coupon_id}')
-        return {'message': 'Đã xóa mã ưu đãi khỏi hệ thống'}
+            raise HTTPException(status_code=404, detail='Mã quà tặng không tồn tại')
+        logger.info(f'Người dùng {current_user.id} đã xóa mã quà tặng {coupon_id}')
+        return {'message': 'Đã xóa mã quà tặng khỏi hệ thống'}

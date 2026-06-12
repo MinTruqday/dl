@@ -21,7 +21,7 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content, 'format': format_type})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail=f'Máy chủ thất bại trong quá trình xuất tệp {format_type}')
+                    raise HTTPException(status_code=422, detail=f'Máy chủ gặp sự cố trong quá trình xuất tệp {format_type}')
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(status_code=408, detail=f'Hệ thống mất quá nhiều thời gian để xuất tệp {format_type} nên đã tự động ngắt')
@@ -223,7 +223,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
-        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay thế nội dung toàn cục success', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:

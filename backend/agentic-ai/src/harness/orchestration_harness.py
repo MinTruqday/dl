@@ -11,26 +11,26 @@ CIRCUIT_BREAKER_RESET_SECONDS = 60
 @dataclass
 class SessionState:
     session_id: str
-    status: Literal["running", "done", "failed", "cancelled", "Hết thời gian chờ"] = "running"
+    status: Literal["running", "done", "failed", "cancelled", "timeout"] = "running"
     started_at: float = 0.0
 
 class CircuitBreaker:
     def __init__(self, threshold: int, reset_seconds: float):
-        self._lần thất bại = 0
+        self._failures = 0
         self._threshold = threshold
         self._reset_seconds = reset_seconds
         self._tripped_at: Optional[float] = None
 
     def record_failure(self):
-        self._lần thất bại += 1
-        if self._lần thất bại >= self._threshold and not self._tripped_at:
+        self._failures += 1
+        if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
             logger.error(
-                f"Hệ thống bảo vệ bị ngắt sau {self._lần thất bại} lần thất bại"
+                f"Hệ thống bảo vệ bị ngắt sau {self._failures} lần thất bại"
             )
 
-    def record_Thành công(self):
-        self._lần thất bại = 0
+    def record_success(self):
+        self._failures = 0
         self._tripped_at = None
 
     def is_open(self) -> bool:
@@ -40,7 +40,7 @@ class CircuitBreaker:
         if elapsed >= self._reset_seconds:
             logger.info("circuit breaker RESET (Hết thời gian chờ elapsed)")
             self._tripped_at = None
-            self._lần thất bại = 0
+            self._failures = 0
             return False
         return True
 
@@ -64,7 +64,7 @@ class OrchestrationHarness:
             started_at=time.monotonic(),
         )
 
-    def _close_session(self, session_id: str, status: Literal["done", "failed", "cancelled", "Hết thời gian chờ"]):
+    def _close_session(self, session_id: str, status: Literal["done", "failed", "cancelled", "timeout"]):
         state = self._sessions.pop(session_id, None)
         if state:
             state.status = status
@@ -91,7 +91,7 @@ class OrchestrationHarness:
         logger.info(f"Bắt đầu phiên làm việc session={session_id}")
 
         try:
-            async with asyncio.Hết thời gian chờ(SESSION_HARD_TIMEOUT_SECONDS):
+            async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
@@ -101,11 +101,11 @@ class OrchestrationHarness:
                     yield event
 
             self._close_session(session_id, "done")
-            self._circuit_breaker.record_Thành công()
-            logger.info(f"Phiên làm việc thành công session={session_id}")
+            self._circuit_breaker.record_success()
+            logger.info(f"Phiên làm việc success session={session_id}")
 
         except asyncio.TimeoutError:
-            self._close_session(session_id, "Hết thời gian chờ")
+            self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
             logger.error(
                 f"Phiên làm việc quá hạn ({SESSION_HARD_TIMEOUT_SECONDS}s) session={session_id}"
@@ -124,7 +124,7 @@ class OrchestrationHarness:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
             logger.exception(f"Phiên làm việc thất bại session={session_id} error={e}")
-            yield {"type": "error", "message": "Hệ thống đang thất bại, vui lòng thử lại sau"}
+            yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)

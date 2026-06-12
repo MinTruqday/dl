@@ -126,7 +126,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập Redis thất bại: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -202,7 +202,7 @@ class DepositService:
                             f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                             json={
                                 "target_user_id": user_id,
-                                "title": 'Nạp tiền thành công',
+                                "title": 'Nạp tiền success',
                                 "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl',
                                 "type": 'topup'
                             },

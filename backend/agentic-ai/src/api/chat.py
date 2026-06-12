@@ -34,7 +34,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
             for doc_id in req.document_ids:
                 try:
-                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, thời gian chờ10)
+                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
                     if doc_res.status_code not in [200, 201]:
                         return {"answer": f"Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu {doc_id} hoặc tài liệu không tồn tại", "route": "error"}
                 except Exception as e:
@@ -74,12 +74,12 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "Hệ thống đang thất bại, vui lòng thử lại sau",
+            "answer": final_answer or "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
             "route": "agentic_ai"
         }
     except Exception as e:
         logger.error(f"Execution error in /chat: {e}")
-        return {"answer": "Hệ thống đang thất bại, vui lòng thử lại sau", "route": "error"}
+        return {"answer": "Hệ thống đang gặp sự cố, vui lòng thử lại sau", "route": "error"}
 
 
 @router.post("/luong-du-lieu")
@@ -117,7 +117,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
                 for doc_id in req.document_ids:
                     try:
-                        doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, thời gian chờ10)
+                        doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
                         if doc_res.status_code not in [200, 201]:
                             yield f"event: message\ndata: {json.dumps({'chunk': f'Loi bao mat: Ban khong co quyen truy cap vao tai lieu {doc_id}'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
@@ -208,8 +208,8 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             agentops_harness.record_tool_call(
                                 session_id,
                                 event.get("agent", "unknown"),
-                                thời gian0,
-                                Thành công=True,
+                                duration_ms=0,
+                                success=True,
                             )
                             yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoan thanh')})}\n\n"
                         elif event_type == "message":

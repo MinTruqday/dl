@@ -9,7 +9,7 @@ from core.config import settings
 
 class VectorStore:
     def __init__(self):
-        self.client = AsyncQdrantClient(url=settings.QDRANT_URL, limits=httpx.Limits(max_connections=100, max_keepalive_connections=20), thời gian chờ60.0)
+        self.client = AsyncQdrantClient(url=settings.QDRANT_URL, limits=httpx.Limits(max_connections=100, max_keepalive_connections=20), timeout=60.0)
         self.collection_name = "doclib"
         self._upsert_queue = None
         self._worker_task = None

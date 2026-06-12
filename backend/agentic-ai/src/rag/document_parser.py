@@ -1,6 +1,6 @@
 import tempfile
 import asyncio
-import bolên3
+import boto3
 from pathlib import Path
 from loguru import logger
 from typing import Dict, List
@@ -375,7 +375,7 @@ class DocumentParser:
                 logger.error(f"Phát hiện nỗ lực duyệt qua đường dẫn trong khóa đối tượng: {object_key}")
                 return None, ""
 
-            s3 = bolên3.client(
+            s3 = boto3.client(
                 "s3",
                 endpoint_url=self._minio_base,
                 aws_access_key_id=self._minio_access,

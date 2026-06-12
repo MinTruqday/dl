@@ -180,7 +180,7 @@ class IngestionPipeline:
             top_contents = os.listdir(extract_path)
             if len(top_contents) == 1 and os.path.isdir(os.path.join(extract_path, top_contents[0])):
                 search_root = os.path.join(extract_path, top_contents[0])
-                logger.info(f"Navigating inlên nested folder: {top_contents[0]}")
+                logger.info(f"Navigating into nested folder: {top_contents[0]}")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
@@ -220,8 +220,8 @@ class IngestionPipeline:
 
             logger.info(f"Đang tải xuống từ không gian lưu trữ {bucket}, key={object_key}")
 
-            import bolên3
-            s3 = bolên3.client(
+            import boto3
+            s3 = boto3.client(
                 "s3",
                 endpoint_url=self._minio_base,
                 aws_access_key_id=access_key,

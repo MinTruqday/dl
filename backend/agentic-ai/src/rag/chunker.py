@@ -47,7 +47,7 @@ class AdvancedSemanticChunker:
                 self.type = "chonkie_semantic"
                 logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
             except Exception as e:
-                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back lên TokenChunker")
+                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back to TokenChunker")
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
                     self.type = "chonkie_token"

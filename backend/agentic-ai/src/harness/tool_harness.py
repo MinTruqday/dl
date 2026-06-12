@@ -10,17 +10,17 @@ RETRY_BASE_DELAY_SECONDS = 0.5
 
 @dataclass
 class ToolResult:
-    Thành công: bool
+    success: bool
     data: Any
-    lỗi: str = ""
+    error: str = ""
     duration_ms: int = 0
-    lần thử: int = 1
+    attempt: int = 1
 
 @dataclass
 class ToolDefinition:
     name: str
     callable: Callable
-    Hết thời gian chờ_seconds: float = DEFAULT_TOOL_TIMEOUT_SECONDS
+    timeout_seconds: float = DEFAULT_TOOL_TIMEOUT_SECONDS
     max_retries: int = DEFAULT_MAX_RETRIES
     is_async: bool = True
 
@@ -32,18 +32,18 @@ class ToolHarness:
         self,
         name: str,
         callable_fn: Callable,
-        Hết thời gian chờ_seconds: float = DEFAULT_TOOL_TIMEOUT_SECONDS,
+        timeout_seconds: float = DEFAULT_TOOL_TIMEOUT_SECONDS,
         max_retries: int = DEFAULT_MAX_RETRIES,
         is_async: bool = True,
     ):
         self._registry[name] = ToolDefinition(
             name=name,
             callable=callable_fn,
-            Hết thời gian chờ_seconds=Hết thời gian chờ_seconds,
-            max_số lần thử lạimax_retries,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info(f"Đã đăng ký công cụ{name} thời gian chờ{Hết thời gian chờ_seconds}s số lần thử lại{max_retries}")
+        logger.info(f"Đã đăng ký công cụ {name} thời gian chờ {timeout_seconds}s số lần thử lại {max_retries}")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -58,7 +58,7 @@ class ToolHarness:
         definition = self._registry.get(tool_name)
         if not definition:
             logger.error(f"tool={tool_name!r} Chưa được đăng ký session={session_id}")
-            return ToolResult(Thành công=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký")
+            return ToolResult(success=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký")
 
         start_ms = time.monotonic()
         last_error = ""
@@ -68,11 +68,11 @@ class ToolHarness:
             try:
                 if definition.is_async:
                     coro = definition.callable(*args, **kwargs)
-                    result_data = await asyncio.wait_for(coro, thời gian chờdefinition.Hết thời gian chờ_seconds)
+                    result_data = await asyncio.wait_for(coro, timeout=definition.timeout_seconds)
                 else:
                     result_data = await asyncio.wait_for(
                         asyncio.to_thread(definition.callable, *args, **kwargs),
-                        thời gian chờdefinition.Hết thời gian chờ_seconds,
+                        timeout=definition.timeout_seconds,
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
@@ -81,14 +81,14 @@ class ToolHarness:
                     f"lần thử thứ{attempt} thời gian{duration_ms}"
                 )
                 return ToolResult(
-                    Thành công=True,
+                    success=True,
                     data=result_data,
-                    thời gianduration_ms,
-                    lần thử=attempt,
+                    duration_ms=duration_ms,
+                    attempt=attempt,
                 )
 
             except asyncio.TimeoutError:
-                last_error = f"Timeout after {definition.Hết thời gian chờ_seconds}s"
+                last_error = f"Timeout after {definition.timeout_seconds}s"
                 logger.warning(
                     f"Hết thời gian chờ tool={tool_name} session={session_id} lần thử thứ{attempt}"
                 )
@@ -110,11 +110,11 @@ class ToolHarness:
             f"session={session_id} với lỗi{last_error!r} thời gian{duration_ms}"
         )
         return ToolResult(
-            Thành công=False,
+            success=False,
             data=None,
             error=last_error,
-            thời gianduration_ms,
-            lần thử=attempt,
+            duration_ms=duration_ms,
+            attempt=attempt,
         )
 
     def list_tools(self) -> list[str]:

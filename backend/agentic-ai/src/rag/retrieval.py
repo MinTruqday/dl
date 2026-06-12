@@ -23,7 +23,7 @@ class RetrievalService:
         try:
             from sentence_transformers import CrossEncoder
             self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) Thành công")
+            logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) thành công")
         except Exception as e:
             self.reranker = None
             logger.error(f"Failed to load reranker: {e}")
@@ -112,7 +112,7 @@ class RetrievalService:
         decompose_prompt = (
             f"Given the question: {question}\n"
             f"There are {len(document_ids)} tài liệu with IDs: {document_ids}\n"
-            "For each document, generate one specific sub-query lên retrieve the most relevant passage. "
+            "For each document, generate one specific sub-query to retrieve the most relevant passage. "
             "Output as a JSON array of strings, one per document, in the same order"
         )
         sub_queries = [question] * len(document_ids)

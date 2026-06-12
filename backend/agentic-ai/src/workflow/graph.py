@@ -259,7 +259,7 @@ async def generate_direct(state: AgentState):
         return {"generation": response.content}
     except Exception as e:
         logger.error(f"Generate direct lỗi: {e}")
-        return {"generation": "Hệ thống đang thất bại, vui lòng thử lại sau"}
+        return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def generate(state: AgentState):
     question = state["question"]
@@ -296,7 +296,7 @@ async def generate(state: AgentState):
         return {"generation": generation}
     except Exception as e:
         logger.error(f"Generate lỗi: {e}")
-        return {"generation": "Hệ thống đang thất bại, vui lòng thử lại sau"}
+        return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def grade_generation(state: AgentState):
     documents = state.get("documents", [])

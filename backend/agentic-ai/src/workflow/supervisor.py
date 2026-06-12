@@ -94,7 +94,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 replan_prompt = (
                     f"The following task thất bại:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
-                    "Rewrite the task description lên fix the issue. Output only the revised task"
+                    "Rewrite the task description to fix the issue. Output only the revised task"
                 )
                 replan_res = await llm.ainvoke(replan_prompt)
                 current_task = replan_res.content.strip() or current_task
@@ -247,7 +247,7 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "Hệ thống đang thất bại, vui lòng thử lại sau"}
+                        yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
                         

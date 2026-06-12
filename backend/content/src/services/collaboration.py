@@ -150,7 +150,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['collaboration_status'].update_one({'document_id': document_id, 'user_id': str(current_user.id)}, {'$set': {'last_seen': datetime.now(timezone.utc), 'full_name': current_user.full_name}}, upsert=True)
-        return {'message': 'Cập nhật trạng thái trực tuyến thành công'}
+        return {'message': 'Cập nhật trạng thái trực tuyến success'}
 
     @staticmethod
     async def get_online_collaborators(document_id: str, db=None) -> list:
@@ -180,7 +180,7 @@ class CollaborationService:
             raise HTTPException(status_code=400, detail='Vai trò cộng tác không hợp lệ')
         await db['collaboration_invites'].update_one({'_id': collaboration_id}, {'$set': {'role': role}})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Cập nhật vai trò', f"Đã thay đổi vai trò của cộng tác viên có ID {invite['invitee_id']} sang {role}")
-        return {'message': 'Cập nhật vai trò cộng tác viên thành công'}
+        return {'message': 'Cập nhật vai trò cộng tác viên success'}
 
     @staticmethod
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
@@ -191,7 +191,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         memo = {'_id': str(uuid7()), 'document_id': document_id, 'sender_name': current_user.full_name, 'sender_id': str(current_user.id), 'message': message, 'timestamp': datetime.now(timezone.utc)}
         await db['collaboration_memos'].insert_one(memo)
-        return {'message': 'Gửi tin nhắn trao đổi thành công', 'memo': memo}
+        return {'message': 'Gửi tin nhắn trao đổi success', 'memo': memo}
 
     @staticmethod
     async def get_memos(document_id: str, current_user, db=None) -> list:
@@ -214,7 +214,7 @@ class CollaborationService:
             raise HTTPException(status_code=400, detail='Mức quyền truy cập không hợp lệ')
         await db['documents'].update_one({'_id': document_id}, {'$set': {'collab_access_level': access_level}})
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Cài đặt quyền', f'Đã cập nhật mức độ tiếp cận tài liệu thành: {access_level}')
-        return {'message': 'Cập nhật quyền truy cập mặc định thành công', 'collab_access_level': access_level}
+        return {'message': 'Cập nhật quyền truy cập mặc định success', 'collab_access_level': access_level}
 
     @staticmethod
     async def get_sent_pending_invites(document_id: str, current_user, db=None) -> list:
@@ -382,7 +382,7 @@ class CollaborationService:
             raise HTTPException(status_code=403, detail='Bạn không hiện có quyền chỉnh sửa nhiệm vụ này')
         await db['collaboration_tasks'].update_one({'_id': task_id}, {'$set': {'is_done': is_done}})
         await CollaborationService.log_activity(task['document_id'], current_user.full_name, 'Cập nhật nhiệm vụ', f"Đã đánh dấu nhiệm vụ '{task['task_desc']}' thành {('Hoàn thành' if is_done else 'Chưa xong')}")
-        return {'message': 'Cập nhật nhiệm vụ thành công'}
+        return {'message': 'Cập nhật nhiệm vụ success'}
 
     @staticmethod
     async def add_task_comment(task_id: str, comment_text: str, current_user, db=None) -> dict:

@@ -41,7 +41,7 @@ class PurchaseRecord(BaseModel):
     price_paid: int
     purchased_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class Voucher(BaseModel):
+class Coupon(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     code: str
     amount_dl: int = Field(default=0, alias="amount_dl")
@@ -53,7 +53,7 @@ class Voucher(BaseModel):
     class Config:
         populate_by_name = True
 
-class RedeemVoucherRequest(BaseModel):
+class RedeemCouponRequest(BaseModel):
     code: str
 
 class PlanCreate(BaseModel):
@@ -74,7 +74,7 @@ class TopupRequest(BaseModel):
     amount: int = Field(..., gt=0)
     method: str = "payos"
 
-class VoucherCreateRequest(BaseModel):
+class CouponCreateRequest(BaseModel):
     code: str
     amount_dl: int = Field(..., gt=0)
     expires_at: datetime

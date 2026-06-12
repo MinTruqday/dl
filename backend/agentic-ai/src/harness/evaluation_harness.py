@@ -235,7 +235,7 @@ class EvaluationHarness:
             "results": results,
         }
         logger.info(
-            f"Thành công đánh giá mô hình: {model_name} "
+            f"Đánh giá thành công mô hình: {model_name} "
             f"số lượng: {len(results)}, điểm BLEU trung bình: {avg_bleu}, điểm ROUGE trung bình: {avg_rouge}"
         )
         return summary

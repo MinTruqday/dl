@@ -34,7 +34,7 @@ class RabbitMQConnection:
                 await self.channel.declare_queue("anna_archive_queue", durable=True, arguments=queue_args)
                 await self.channel.declare_queue("ctan_queue", durable=True, arguments=queue_args)
                 
-                logger.info("Kết nối RabbitMQ thành công và đã khởi tạo các hàng đợi (bao gồm DLQ)")
+                logger.info("Kết nối RabbitMQ thành công và đã khởi tạo các hàng đợi")
                 return
             except Exception as e:
                 logger.error(f"Kết nối RabbitMQ thất bại (lần thử {attempt + 1}/{max_retries}): {e}")

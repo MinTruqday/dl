@@ -77,10 +77,10 @@ class AgentOpsHarness:
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
         logger.info(
-            f"Đã kết thúc phiên {session_id} với trạng thái {status}"
-            f"thời gian{metrics.total_duration_ms} "
-            f"tool_calls={metrics.total_tool_calls} llm_calls={metrics.total_llm_calls} "
-            f"tokens_in={metrics.total_tokens_in} tokens_out={metrics.total_tokens_out}"
+            f"Đã kết thúc phiên {session_id} với trạng thái {status}. "
+            f"Thời gian: {metrics.total_duration_ms}ms, "
+            f"số lần gọi công cụ: {metrics.total_tool_calls}, số lần gọi LLM: {metrics.total_llm_calls}, "
+            f"tokens đầu vào: {metrics.total_tokens_in}, tokens đầu ra: {metrics.total_tokens_out}"
         )
         asyncio.create_task(self._flush_session(session_id))
 
@@ -89,8 +89,8 @@ class AgentOpsHarness:
         session_id: str,
         tool_name: str,
         duration_ms: int,
-        Thành công: bool,
-        lỗi: str = "",
+        success: bool,
+        error: str = "",
     ):
         metrics = self._sessions.get(session_id)
         if metrics:
@@ -98,13 +98,13 @@ class AgentOpsHarness:
             breakdown = metrics.tool_call_breakdown.setdefault(tool_name, {"count": 0, "errors": 0, "total_ms": 0})
             breakdown["count"] += 1
             breakdown["total_ms"] += duration_ms
-            if not Thành công:
+            if not success:
                 breakdown["errors"] += 1
-        log_fn = logger.info if Thành công else logger.warning
+        log_fn = logger.info if success else logger.warning
         log_fn(
-            f"Công cụ {tool_name} được gọi trong phiên {session_id}"
-            f"thời gian{duration_ms} Thành công={Thành công}"
-            + (f" error={error!r}" if error else "")
+            f"Công cụ {tool_name} được gọi trong phiên {session_id}. "
+            f"Thời gian: {duration_ms}ms, thành công: {success}"
+            + (f", lỗi: {error!r}" if error else "")
         )
 
     def record_llm_call(
@@ -122,9 +122,9 @@ class AgentOpsHarness:
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
         logger.info(
-            f"Mô hình {model} được gọi trong phiên {session_id}"
-            f"prompt_tokens={prompt_tokens} completion_tokens={completion_tokens} "
-            f"thời gian{duration_ms}"
+            f"Mô hình {model} được gọi trong phiên {session_id}. "
+            f"Tokens đầu vào: {prompt_tokens}, tokens đầu ra: {completion_tokens}. "
+            f"Thời gian: {duration_ms}ms"
         )
 
     def record_security_event(
@@ -138,8 +138,8 @@ class AgentOpsHarness:
         if metrics:
             metrics.security_violations += 1
         logger.warning(
-            f"Sự kiện bảo mật {event_type} phát sinh trong phiên {session_id}"
-            f"risk_score={risk_score:.2f} violations={violations or []}"
+            f"Sự kiện bảo mật {event_type} phát sinh trong phiên {session_id}. "
+            f"Điểm rủi ro: {risk_score:.2f}, vi phạm: {violations or []}"
         )
 
     async def _flush_session(self, session_id: str):

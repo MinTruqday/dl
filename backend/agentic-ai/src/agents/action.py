@@ -50,7 +50,7 @@ class Action:
                     
                 selected_tool = self.tool_map[tool_name]
                 
-                REQUIRES_APPROVAL_TOOLS = ["delete_document", "restore_document", "create_document", "send_virtual_tip", "redeem_voucher"]
+                REQUIRES_APPROVAL_TOOLS = ["delete_document", "restore_document", "create_document", "send_virtual_tip", "redeem_coupon"]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
                     return f"Tác vụ {tool_name} cần bạn phê duyệt để tiếp tục"
 
@@ -62,7 +62,7 @@ class Action:
                 except Exception as e:
                     from langchain_core.messages import ToolMessage
                     messages.append(res)
-                    messages.append(ToolMessage(content=f"Lỗi khi thực thi công cụ {str(e)}, vui lòng kiểm tra lại dữ liệu gửi lên", tool_call_id=tool_call["id"]))
+                    messages.append(ToolMessage(content=f"Lỗi khi thực thi công cụ {str(e)}, vui lòng kiểm tra lại dữ liệu gửi tool", tool_call_id=tool_call["id"]))
                     logger.warning(f"Công cụ gặp sự cố, đang thử lại ({attempt+1}/3): {e}")
                     if attempt == 2:
                         return f"Đã xảy ra lỗi khi thực thi thao tác sau 3 lần thử: {str(e)}"

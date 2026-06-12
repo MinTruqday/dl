@@ -43,6 +43,6 @@ class ResponseGenerator:
             
         except Exception as e:
             logger.error(f"Lỗi tạo phản hồi: {str(e)}")
-            yield "Hệ thống đang thất bại, vui lòng thử lại sau"
+            yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 response_generator = ResponseGenerator()

@@ -53,4 +53,4 @@ class PinService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$set': {'pinned_documents': document_ids}}, upsert=True)
-        return {'status': 'success', 'message': 'Cập nhật danh sách ghim thành công'}
+        return {'status': 'success', 'message': 'Cập nhật danh sách ghim success'}

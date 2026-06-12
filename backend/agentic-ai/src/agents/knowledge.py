@@ -21,6 +21,6 @@ class Knowledge:
             return result.get("generation", "Không tìm thấy thông tin phù hợp trong tài liệu")
         except Exception as e:
             logger.error(f"Lỗi truy xuất hệ thống tri thức: {e}")
-            return "Hệ thống đang thất bại, vui lòng thử lại sau"
+            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 knowledge = Knowledge()

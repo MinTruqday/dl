@@ -72,7 +72,7 @@ map_reduce_app = mr_graph.compile()
 
 @tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
-    """Sử dụng công cụ này để đọc và tóm tắt lênàn bộ một tài liệu khổng lồ (Map-Reduce)"""
+    """Sử dụng công cụ này để đọc và tóm tắt toàn bộ một tài liệu khổng lồ (Map-Reduce)"""
     from src.tools.api_tools import _get_doc_text
     token = config.get("configurable", {}).get("token")
     if not token:
@@ -81,4 +81,4 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     if not text: return "Không tìm thấy nội dung tài liệu"
     
     res = await map_reduce_app.ainvoke({"document_text": text, "chunks": [], "summaries": [], "final_summary": ""})
-    return f"Bản tóm tắt lênàn bộ tài liệu:\n\n{res['final_summary']}"
+    return f"Bản tóm tắt toàn bộ tài liệu:\n\n{res['final_summary']}"
