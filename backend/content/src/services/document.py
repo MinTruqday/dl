@@ -16,7 +16,6 @@ from fastapi import HTTPException, status
 from core.database import db_client
 from src.schemas.document import DocumentCreate, DocumentInDB, DocumentStatus, DocumentContentUpdate
 from loguru import logger
-from src.services.notification import NotificationService
 
 def serialize_document(document):
     if not document:
@@ -149,7 +148,23 @@ class DocumentService:
                 "updated_at": datetime.now(timezone.utc)
             }}
         )
-        await NotificationService.notify_document_update(document_id, document.get("title", "Tài liệu"), str(current_user.id), current_user.full_name)
+        if settings.SIGNAL_URL:
+            try:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
+                        json={
+                            "target_user_id": str(current_user.id),
+                            "title": "Tài liệu được cập nhật",
+                            "body": f"Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật.",
+                            "type": "DOCUMENT_UPDATE"
+                        },
+                        timeout=3.0
+                    )
+            except Exception as e:
+                logger.error(f"Lỗi khi gửi thông báo cập nhật tài liệu {document_id}: {e}")
+        
         logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
         
         if hasattr(db_client, 'redis') and db_client.redis:

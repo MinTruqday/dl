@@ -488,31 +488,6 @@ services:
       - "traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`, `/danh-gia`, `/phien-ban`, `/doc`, `/danh-dau`, `/thu-vien`, `/tai-len`, `/kham-pha`, `/xuat-tai-lieu`, `/cong-tac`, `/xuat-ban`, `/luu-tru`, `/neu-bat`, `/soan-thao`, `/ban-nhap`, `/ghim`, `/han-muc`)"
       - "traefik.http.services.content.loadbalancer.server.port=8450"
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: doclib_backend
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8080:8000"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=PathPrefix(`/`)"
-      - "traefik.http.services.backend.loadbalancer.server.port=8000"
-    depends_on:
-      - mongodb
-      - redis
-      - rabbitmq
-      - minio
-    volumes:
-      - ./backend:/app
-      - ./backend/logs:/app/logs
-    networks:
-      - doclib_network
-
 networks:
   doclib_network:
     driver: bridge
