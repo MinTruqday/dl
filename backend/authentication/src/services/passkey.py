@@ -67,7 +67,7 @@ class PasskeyService:
                 await db_client.redis.delete(f'passkey_reg_challenge:{email}')
             except Exception as e:
                 logger.error(f'Không thể xóa khóa thử thách đăng ký Redis của {email}: {e}')
-        return {'message': 'Đăng ký Passkey success'}
+        return {'message': 'Đăng ký Passkey thành công'}
 
     @staticmethod
     async def login_begin(email: str, db=None):

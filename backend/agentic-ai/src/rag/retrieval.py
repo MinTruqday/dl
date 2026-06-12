@@ -23,7 +23,7 @@ class RetrievalService:
         try:
             from sentence_transformers import CrossEncoder
             self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) thành công")
+            logger.info(f"Loaded Reranker model {settings.RERANKER_MODEL} thành công")
         except Exception as e:
             self.reranker = None
             logger.error(f"Failed to load reranker: {e}")
@@ -76,7 +76,7 @@ class RetrievalService:
         return unique_documents[:k]
 
     async def retrieve(self, query: str, document_ids: Optional[List[str]] = None, k: int = 5) -> List[Dict]:
-        logger.info(f"Đang truy xuất thông tin cho {query} (document_ids: {document_ids})")
+        logger.info(f"Đang truy xuất thông tin cho '{query}' với danh sách tài liệu: {document_ids}")
         
         from src.rag.embedder import embedding_service
         query_vector = embedding_service.embed_query(query)

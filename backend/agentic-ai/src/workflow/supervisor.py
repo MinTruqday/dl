@@ -143,7 +143,7 @@ async def trimmer_node(state: ActingState):
         
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info(f"Đang tóm tắt các kết quả đã được tổng hợp (Length: {total_length})")
+        logger.info(f"Đang tóm tắt các kết quả đã được tổng hợp với số lượng: {total_length}")
         try:
             from src.workflow.brain import llm
             combined = "\n\n".join(str(r) for r in results)

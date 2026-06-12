@@ -55,7 +55,7 @@ async def init_db():
             if i == max_retries - 1:
                 logger.error(f"Không thể kết nối với RabbitMQ sau {max_retries} lần thử: {e}")
                 raise e
-            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} thất bại, đang thử lại sau 5 giây... ({e})")
+            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} thất bại do lỗi: {e}, đang thử lại sau 5 giây...")
             await asyncio.sleep(5)
     
     await setup_indexes()

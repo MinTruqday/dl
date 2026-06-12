@@ -63,7 +63,7 @@ class Action:
                     from langchain_core.messages import ToolMessage
                     messages.append(res)
                     messages.append(ToolMessage(content=f"Lỗi khi thực thi công cụ {str(e)}, vui lòng kiểm tra lại dữ liệu gửi tool", tool_call_id=tool_call["id"]))
-                    logger.warning(f"Công cụ gặp sự cố, đang thử lại ({attempt+1}/3): {e}")
+                    logger.warning(f"Công cụ gặp sự cố, đang thử lại lần {attempt+1}/3: {e}")
                     if attempt == 2:
                         return f"Đã xảy ra lỗi khi thực thi thao tác sau 3 lần thử: {str(e)}"
 

@@ -19,11 +19,11 @@ async def validate_svg(file: UploadFile):
 @router.post('/hinh-anh', response_model=APIResponse[Any])
 async def upload_image(file: UploadFile=File(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
     await validate_svg(file)
-    return APIResponse(data=await UploadService.upload_image(file, db=db), message='Tải hình ảnh lên success', status=201)
+    return APIResponse(data=await UploadService.upload_image(file, db=db), message='Tải hình ảnh lên thành công', status=201)
 
 @router.post('/tai-lieu', response_model=APIResponse[Any])
 async def upload_document(file: UploadFile=File(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
-    return APIResponse(data=await UploadService.upload_document(file, db=db), message='Tải tài liệu lên success', status=201)
+    return APIResponse(data=await UploadService.upload_document(file, db=db), message='Tải tài liệu lên thành công', status=201)
 
 @router.post('/tap-tin', response_model=APIResponse[Any])
 async def upload_asset(file: UploadFile=File(...), current_user: UserInDB=Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
@@ -32,11 +32,11 @@ async def upload_asset(file: UploadFile=File(...), current_user: UserInDB=Depend
     quota = await StorageService.get_storage_quota(current_user.id, db=db)
     if quota['used'] >= quota['limit']:
         raise HTTPException(status_code=400, detail='Đã vượt quá hạn mức lưu trữ 1GB vui lòng dọn dẹp bớt tệp tin')
-    return APIResponse(data=await UploadService.upload_document(file, db=db), message='Tải tập tin lên success', status=201)
+    return APIResponse(data=await UploadService.upload_document(file, db=db), message='Tải tập tin lên thành công', status=201)
 
 @router.get('/luu-tru/{file_path:path}', response_model=APIResponse[Any])
 async def get_presigned_download_url(file_path: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
-    return APIResponse(data=await UploadService.get_presigned_url(file_path, db=db), message='Tạo liên kết tải tập tin success', status=200)
+    return APIResponse(data=await UploadService.get_presigned_url(file_path, db=db), message='Tạo liên kết tải tập tin thành công', status=200)
 
 @router.post('/phan-doan', response_model=APIResponse[Any])
 async def upload_chunk(file: UploadFile=File(...), upload_id: str=Form(...), chunk_index: int=Form(...), total_chunks: int=Form(...), filename: str=Form(...), current_user: UserInDB=Depends(require_role([RoleEnum.READER, RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)) -> Any:
@@ -66,5 +66,5 @@ async def upload_chunk(file: UploadFile=File(...), upload_id: str=Form(...), chu
         import shutil
         shutil.rmtree(chunk_dir)
         os.remove(final_path)
-        return APIResponse(data=result, message='Tải tập tin lên success', status=201)
-    return APIResponse(data={'uploaded': chunk_index}, message='Tải phân đoạn success', status=200)
+        return APIResponse(data=result, message='Tải tập tin lên thành công', status=201)
+    return APIResponse(data={'uploaded': chunk_index}, message='Tải phân đoạn thành công', status=200)

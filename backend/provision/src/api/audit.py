@@ -8,4 +8,4 @@ router = APIRouter(prefix='/nhat-ky')
 
 @router.get('/kiem-duyet-vien', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_moderator_activity(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await UserService.get_moderator_activity_log(str(current_user.id), db=db), message='Tải nhật ký hoạt động success')
+    return APIResponse(data=await UserService.get_moderator_activity_log(str(current_user.id), db=db), message='Tải nhật ký hoạt động thành công')

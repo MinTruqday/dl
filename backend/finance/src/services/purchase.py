@@ -83,14 +83,14 @@ class PurchaseService:
                         except Exception as e:
                             logger.error(f"Không thể gửi thông báo: {e}")
                 logger.info(f'Người dùng {current_user.id} đã mua tài liệu {document_id} với giá {price} dl')
-                return {'message': 'Thanh toán mua tài liệu success', 'status': 'purchased'}
+                return {'message': 'Thanh toán mua tài liệu thành công', 'status': 'purchased'}
             except HTTPException:
                 raise
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
                 logger.error(f'Giao dịch mua tài liệu của người dùng {current_user.id} thất bại: {e}')
-                raise HTTPException(status_code=500, detail='Giao dịch không success, vui lòng thử lại sau')
+                raise HTTPException(status_code=500, detail='Giao dịch không thành công, vui lòng thử lại sau')
             finally:
                 if should_close_session:
                     await session.end_session()
@@ -142,14 +142,14 @@ class PurchaseService:
             
             if should_close_session:
                 await session.commit_transaction()
-            return {'message': 'Hoàn tiền success', 'refunded_amount': price}
+            return {'message': 'Hoàn tiền thành công', 'refunded_amount': price}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
             logger.error(f'Quá trình hoàn tiền thất bại: {e}')
-            raise HTTPException(status_code=500, detail='Hoàn tiền không success')
+            raise HTTPException(status_code=500, detail='Hoàn tiền không thành công')
         finally:
             if should_close_session:
                 await session.end_session()

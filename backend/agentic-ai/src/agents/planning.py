@@ -26,7 +26,7 @@ class Planning:
         try:
             return await self.llm.ainvoke(messages)
         except (httpx.TimeoutException, httpx.HTTPStatusError, Exception) as primary_err:
-            logger.warning(f"Mô hình ngôn ngữ chính thất bại ({primary_err})")
+            logger.warning(f"Mô hình ngôn ngữ chính thất bại do lỗi: {primary_err}")
             raise primary_err
         
     async def create_plan(self, req) -> List[Dict[str, str]]:

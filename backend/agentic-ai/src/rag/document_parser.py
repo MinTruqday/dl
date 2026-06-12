@@ -35,7 +35,7 @@ class DocumentParser:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info(f"Đã tải công cụ PaddleOCR (ngôn ngữ: {lang})")
+            logger.info(f"Đã tải công cụ PaddleOCR với ngôn ngữ: {lang}")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -50,7 +50,7 @@ class DocumentParser:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info(f"Đã tải công cụ PPStructure (bố cục + bảng + OCR, ngôn ngữ: {lang})")
+            logger.info(f"Đã tải công cụ PPStructure hỗ trợ bố cục, bảng, OCR với ngôn ngữ: {lang}")
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
@@ -397,7 +397,7 @@ class DocumentParser:
                     ext = mapped_ext
                     break
 
-            logger.info(f"Đã tải xuống {len(data)} byte từ MinIO (định dạng: {ext})")
+            logger.info(f"Đã tải xuống {len(data)} byte từ MinIO định dạng: {ext}")
             return data, ext
 
         except Exception as e:

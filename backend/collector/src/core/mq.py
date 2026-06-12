@@ -37,7 +37,7 @@ class RabbitMQConnection:
                 logger.info("Kết nối RabbitMQ thành công và đã khởi tạo các hàng đợi")
                 return
             except Exception as e:
-                logger.error(f"Kết nối RabbitMQ thất bại (lần thử {attempt + 1}/{max_retries}): {e}")
+                logger.error(f"Kết nối RabbitMQ thất bại ở lần thử {attempt + 1}/{max_retries}: {e}")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)

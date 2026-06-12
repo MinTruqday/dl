@@ -86,7 +86,7 @@ class AdvancedSemanticChunker:
                     "metadata": chunk_meta
                 })
                 
-            logger.info(f"Chonkie chunking complete. Total chunks: {len(chunks)} ({self.type})")
+            logger.info(f"Chonkie chunking complete. Total chunks: {len(chunks)}, type: {self.type}")
             return chunks
             
         except Exception as e:

@@ -68,7 +68,7 @@ class SearchEngine:
                     return result
                 logger.warning("Không tìm thấy kết quả trên Tavily, hệ thống tự động chuyển sang DuckDuckGo")
             except Exception as e:
-                logger.warning(f"Tìm kiếm qua Tavily thất bại ({e}), hệ thống tự động chuyển sang DuckDuckGo")
+                logger.warning(f"Tìm kiếm qua Tavily thất bại do lỗi: {e}, hệ thống tự động chuyển sang DuckDuckGo")
 
         result = await self._duckduckgo_search(query)
         if result:

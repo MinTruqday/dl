@@ -34,7 +34,7 @@ async def trigger_collection(req: CollectionRequest):
     try:
         await mq_client.publish(queue_name, payload)
         logger.info(f"Tiến trình thu thập {payload['job_id']} đã được bật cho nguồn {source}")
-        return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy cho nguồn {source}'}
+        return {'status': 'thành công', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy cho nguồn {source}'}
     except Exception as e:
         logger.error(f"Bật tiến trình thu thập thất bại: {e}")
         raise HTTPException(status_code=500, detail='Hệ thống không thể chuyển lệnh thu thập vào hàng đợi xử lý')
@@ -45,7 +45,7 @@ async def stop_collection():
         if mq_client.channel:
             await mq_client.channel.close()
         logger.info('Đã tạm dừng thu thập, các tác vụ trong hàng chờ vẫn được bảo lưu an toàn')
-        return {'status': 'success', 'message': 'Tín hiệu dừng thu thập đã được hệ thống tiếp nhận'}
+        return {'status': 'thành công', 'message': 'Tín hiệu dừng thu thập đã được hệ thống tiếp nhận'}
     except Exception as e:
         logger.error(f'Lỗi khi tạm dừng thu thập: {e}')
         raise HTTPException(status_code=500, detail='Quá trình truyền tín hiệu dừng thu thập thất bại')

@@ -17,7 +17,7 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             tmp.write(file_bytes)
             tmp_path = tmp.name
             
-        logger.info(f"Đang trích xuất văn bản từ tệp tải lên: {filename} ({ext})")
+        logger.info(f"Đang trích xuất văn bản từ tệp tải lên: {filename}, định dạng: {ext}")
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content

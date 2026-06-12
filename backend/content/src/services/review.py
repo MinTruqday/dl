@@ -13,7 +13,7 @@ class ReviewService:
             db = db_client.mongodb.get_default_database()
         await db['reviews'].update_one({'user_id': str(current_user.id), 'document_id': document_id}, {'$set': {'rating': rating_data.rating, 'review_text': rating_data.review_text, 'created_at': datetime.now(timezone.utc)}}, upsert=True)
         logger.info(f'Người dùng {current_user.id} đã đánh giá tài liệu {document_id}')
-        return {'status': 'success'}
+        return {'status': 'thành công'}
 
     @staticmethod
     async def report_typo(document_id: str, data, current_user, db=None) -> dict:

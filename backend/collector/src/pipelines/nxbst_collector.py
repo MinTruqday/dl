@@ -230,7 +230,7 @@ class NXBSTCollector:
                     if href and ('/category/' in href or '/chuyen-muc/' in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info(f"Lấy được {len(category_urls)} link danh mục (có cả Kho tài liệu)")
+                logger.info(f"Lấy được {len(category_urls)} link danh mục bao gồm cả Kho tài liệu")
 
                 for cat_url in category_urls:
                     logger.info(f"Đang vào danh mục: {cat_url}")

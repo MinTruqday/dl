@@ -223,7 +223,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
-        return {'message': 'Thay thế nội dung toàn cục success', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:

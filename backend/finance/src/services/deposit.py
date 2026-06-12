@@ -97,12 +97,12 @@ class DepositService:
                     raise HTTPException(status_code=400, detail="Chữ ký số không hợp lệ")
                     
                 paid_amount = webhook_data.get('amount', 0)
-                await DepositService.process_success_order(order_code, paid_amount)
+                await DepositService.process_thành công_order(order_code, paid_amount)
             except HTTPException:
                 raise
             except Exception as e:
                 logger.exception(f'Gặp lỗi khi xử lý thông báo từ payOS: {e}')
-        return Response(content=json.dumps({'code': '00', 'desc': 'success'}), media_type='application/json', status_code=200)
+        return Response(content=json.dumps({'code': '00', 'desc': 'thành công'}), media_type='application/json', status_code=200)
 
     @staticmethod
     async def verify_deposit(order_code: int, current_user, db=None):
@@ -136,7 +136,7 @@ class DepositService:
                 payment_data = res_data.get('data', {})
                 status = payment_data.get('status', 'UNKNOWN')
                 if status == 'PAID':
-                    await DepositService.process_success_order(order_code, payment_data.get('amountPaid', 0))
+                    await DepositService.process_thành công_order(order_code, payment_data.get('amountPaid', 0))
                 return {'order_code': order_code, 'status': status, 'amount': payment_data.get('amount', 0), 'amount_paid': payment_data.get('amountPaid', 0)}
             else:
                 raise HTTPException(status_code=400, detail='Không thể kiểm tra trạng thái thanh toán')
@@ -147,7 +147,7 @@ class DepositService:
             raise HTTPException(status_code=500, detail='Lỗi kiểm tra trạng thái thanh toán')
 
     @staticmethod
-    async def process_success_order(order_code: int, paid_amount: int=None, db=None, session=None):
+    async def process_thành công_order(order_code: int, paid_amount: int=None, db=None, session=None):
         should_close_session = False
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -170,7 +170,7 @@ class DepositService:
             return
             
         if paid_amount is not None and paid_amount < order.get('amount', 0):
-            logger.warning(f"Số tiền thanh toán cho đơn hàng {order_code} ({paid_amount}) chưa đủ yêu cầu")
+            logger.warning(f"Số tiền thanh toán cho đơn hàng {order_code} là {paid_amount} chưa đủ yêu cầu")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -180,7 +180,7 @@ class DepositService:
         user_id = order['user_id']
         
         try:
-            result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'success', 'updated_at': datetime.now(timezone.utc)}}, session=session)
+            result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'thành công', 'updated_at': datetime.now(timezone.utc)}}, session=session)
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
@@ -202,7 +202,7 @@ class DepositService:
                             f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                             json={
                                 "target_user_id": user_id,
-                                "title": 'Nạp tiền success',
+                                "title": 'Nạp tiền thành công',
                                 "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl',
                                 "type": 'topup'
                             },

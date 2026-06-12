@@ -38,7 +38,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("circuit breaker RESET (Hết thời gian chờ elapsed)")
+            logger.info("circuit breaker RESET do hết thời gian chờ")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -78,7 +78,7 @@ class OrchestrationHarness:
         if self._circuit_breaker.is_open():
             remaining = int(self._circuit_breaker.remaining_seconds())
             logger.error(
-                f"Hệ thống bảo vệ đã kích hoạt chặn yêu cầu session={session_id} "
+                f"Hệ thống bảo vệ đã kích hoạt chặn yêu cầu session={session_id}"
                 f"retry_after={remaining}s"
             )
             yield {

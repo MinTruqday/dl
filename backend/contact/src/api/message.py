@@ -36,15 +36,15 @@ async def publish_personal_message(message: dict, receiver_id: str):
 async def send_message(req: MessageCreate, current_user = Depends(get_current_user)):
     msg = await MessageService.send_message(req.receiver_id, req.content, current_user, req.image_url, req.reply_to_id, req.audio_url, req.client_msg_id)
     await publish_personal_message({'type': 'new_message', 'data': msg}, req.receiver_id)
-    return APIResponse(data=msg, message='Gửi tin nhắn success', status=201)
+    return APIResponse(data=msg, message='Gửi tin nhắn thành công', status=201)
 
 @router.get('/tin-nhan/{other_user_id}', response_model=APIResponse[Any])
 async def get_messages(other_user_id: str, cursor: str=None, limit: int=Query(50), current_user = Depends(get_current_user)):
-    return APIResponse(data=await MessageService.get_messages(other_user_id, current_user, limit, cursor), message='Lấy lịch sử tin nhắn success', status=200)
+    return APIResponse(data=await MessageService.get_messages(other_user_id, current_user, limit, cursor), message='Lấy lịch sử tin nhắn thành công', status=200)
 
 @router.get('/hoi-thoai', response_model=APIResponse[Any])
 async def get_conversations(current_user = Depends(get_current_user)):
-    return APIResponse(data=await MessageService.get_conversations(current_user), message='Lấy danh sách hội thoại success', status=200)
+    return APIResponse(data=await MessageService.get_conversations(current_user), message='Lấy danh sách hội thoại thành công', status=200)
 
 @router.post('/ghim/{message_id}', response_model=APIResponse[Any])
 async def toggle_pin(message_id: str, current_user = Depends(get_current_user)):
@@ -55,7 +55,7 @@ async def toggle_pin(message_id: str, current_user = Depends(get_current_user)):
         return APIResponse(message='Bạn chỉ có thể ghim tối đa 3 tin nhắn', status=400)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
     await publish_personal_message({'type': 'message_pinned', 'data': result}, other_id)
-    return APIResponse(data=result['is_pinned'], message='Cập nhật trạng thái ghim success', status=200)
+    return APIResponse(data=result['is_pinned'], message='Cập nhật trạng thái ghim thành công', status=200)
 
 @router.put('/chinh-sua/{message_id}', response_model=APIResponse[Any])
 async def edit_message(message_id: str, req: dict, current_user = Depends(get_current_user)):
@@ -67,7 +67,7 @@ async def edit_message(message_id: str, req: dict, current_user = Depends(get_cu
         return APIResponse(message='Không thể chỉnh sửa tin nhắn này', status=403)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
     await publish_personal_message({'type': 'message_edited', 'data': result}, other_id)
-    return APIResponse(data=result, message='Chỉnh sửa tin nhắn success', status=200)
+    return APIResponse(data=result, message='Chỉnh sửa tin nhắn thành công', status=200)
 
 @router.delete('/tin-nhan/{message_id}', response_model=APIResponse[Any])
 async def recall_message(message_id: str, current_user = Depends(get_current_user)):
@@ -80,7 +80,7 @@ async def recall_message(message_id: str, current_user = Depends(get_current_use
 
 @router.get('/tim-kiem/{other_user_id}', response_model=APIResponse[Any])
 async def search_messages(other_user_id: str, q: str=Query(...), current_user = Depends(get_current_user)):
-    return APIResponse(data=await MessageService.search_messages(other_user_id, q, current_user), message='Tìm kiếm tin nhắn success')
+    return APIResponse(data=await MessageService.search_messages(other_user_id, q, current_user), message='Tìm kiếm tin nhắn thành công')
 
 @router.post('/tin-nhan/{message_id}/cam-xuc', response_model=APIResponse[Any])
 async def add_reaction(message_id: str, req: dict, current_user = Depends(get_current_user)):
@@ -107,11 +107,11 @@ async def share_document(receiver_id: str, req: dict, current_user = Depends(get
     if not result:
         return APIResponse(message='Không tìm thấy tài liệu chia sẻ', status=404)
     await publish_personal_message({'type': 'new_message', 'data': result}, receiver_id)
-    return APIResponse(data=result, message='Chia sẻ tài liệu success', status=201)
+    return APIResponse(data=result, message='Chia sẻ tài liệu thành công', status=201)
 
 @router.get('/tai-lieu-chia-se/{other_user_id}', response_model=APIResponse[Any])
 async def get_shared_attachments(other_user_id: str, current_user = Depends(get_current_user)):
-    return APIResponse(data=await MessageService.get_shared_attachments(other_user_id, current_user), message='Lấy tệp chia sẻ success')
+    return APIResponse(data=await MessageService.get_shared_attachments(other_user_id, current_user), message='Lấy tệp chia sẻ thành công')
 
 @router.post('/chan/{other_user_id}', response_model=APIResponse[Any])
 async def block_user(other_user_id: str, current_user = Depends(get_current_user)):
@@ -124,11 +124,11 @@ async def unblock_user(other_user_id: str, current_user = Depends(get_current_us
 @router.get('/trang-thai-chan/{other_user_id}', response_model=APIResponse[Any])
 async def get_blocked_status(other_user_id: str, current_user = Depends(get_current_user)):
     blocked = await MessageService.check_blocked_status(str(current_user.id), other_user_id)
-    return APIResponse(data={'is_blocked': blocked}, message='Lấy trạng thái chặn success')
+    return APIResponse(data={'is_blocked': blocked}, message='Lấy trạng thái chặn thành công')
 
 @router.post('/ghim-hoi-thoai/{other_user_id}', response_model=APIResponse[Any])
 async def toggle_pin_conversation(other_user_id: str, current_user = Depends(get_current_user)):
-    return APIResponse(data=await MessageService.toggle_pin_conversation(other_user_id, current_user), message='Cập nhật ghim hội thoại success')
+    return APIResponse(data=await MessageService.toggle_pin_conversation(other_user_id, current_user), message='Cập nhật ghim hội thoại thành công')
 
 @router.post('/dich/{message_id}', response_model=APIResponse[Any])
 async def translate_message(message_id: str, req: dict, current_user = Depends(get_current_user)):
@@ -139,7 +139,7 @@ async def translate_message(message_id: str, req: dict, current_user = Depends(g
     other_id = result.get('receiver_id')
     if other_id:
         await publish_personal_message({'type': 'message_translated', 'data': {**result, 'message_id': message_id}}, other_id)
-    return APIResponse(data=result, message='Dịch tin nhắn success')
+    return APIResponse(data=result, message='Dịch tin nhắn thành công')
 
 @router.post('/nhom', response_model=APIResponse[Any])
 async def create_group(req: dict, current_user = Depends(get_current_user)):
@@ -148,7 +148,7 @@ async def create_group(req: dict, current_user = Depends(get_current_user)):
     if not group_name:
         return APIResponse(message='Tên nhóm không được để trống', status=400)
     result = await MessageService.create_group(group_name, member_ids, current_user)
-    return APIResponse(data=result, message='Tạo nhóm thảo luận success', status=201)
+    return APIResponse(data=result, message='Tạo nhóm thảo luận thành công', status=201)
 
 @router.post('/nhap-tin-nhan/{other_user_id}', response_model=APIResponse[Any])
 async def save_draft(other_user_id: str, req: dict, current_user = Depends(get_current_user)):
@@ -159,14 +159,14 @@ async def save_draft(other_user_id: str, req: dict, current_user = Depends(get_c
 @router.get('/nhap-tin-nhan/{other_user_id}', response_model=APIResponse[Any])
 async def get_draft(other_user_id: str, current_user = Depends(get_current_user)):
     result = await MessageService.get_draft(other_user_id, current_user)
-    return APIResponse(data=result, message='Lấy tin nhắn nháp success')
+    return APIResponse(data=result, message='Lấy tin nhắn nháp thành công')
 
 @router.post('/tu-huy/{other_user_id}', response_model=APIResponse[Any])
 async def toggle_self_destruct(other_user_id: str, req: dict, current_user = Depends(get_current_user)):
     seconds = req.get('seconds', 0)
     result = await MessageService.toggle_self_destruct(other_user_id, seconds, current_user)
     await publish_personal_message({'type': 'conversation_settings_updated', 'data': {'self_destruct_seconds': seconds}}, other_user_id)
-    return APIResponse(data=result, message='Cập nhật bộ tự hủy success')
+    return APIResponse(data=result, message='Cập nhật bộ tự hủy thành công')
 
 @router.post('/tat-am/{other_user_id}', response_model=APIResponse[Any])
 async def toggle_mute(other_user_id: str, current_user = Depends(get_current_user)):
@@ -178,9 +178,9 @@ async def get_conversation_settings(other_user_id: str, current_user = Depends(g
     result = await MessageService.get_conversation_settings(other_user_id, current_user)
     is_online = False
     result['is_online'] = is_online
-    return APIResponse(data=result, message='Lấy cài đặt success')
+    return APIResponse(data=result, message='Lấy cài đặt thành công')
 
 @router.delete('/hoi-thoai/{other_user_id}', response_model=APIResponse[Any])
 async def delete_conversation(other_user_id: str, current_user = Depends(get_current_user)):
     result = await MessageService.delete_conversation(other_user_id, current_user)
-    return APIResponse(data=result, message='Xóa cuộc hội thoại success')
+    return APIResponse(data=result, message='Xóa cuộc hội thoại thành công')
