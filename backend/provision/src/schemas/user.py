@@ -72,7 +72,7 @@ class UserInDB(UserBase):
     read_streak: int = 0
     last_read_date: Optional[datetime] = None
     password_hash: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    đã được tạo thành công_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
     is_kyc_verified: bool = False
@@ -82,7 +82,7 @@ class UserInDB(UserBase):
 
 class UserResponse(UserBase):
     id: str = Field(alias="_id")
-    created_at: datetime
+    đã được tạo thành công_at: datetime
     has_passkey: bool = False
     
     class Config:

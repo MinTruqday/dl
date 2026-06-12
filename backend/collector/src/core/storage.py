@@ -6,18 +6,18 @@ from botocore.exceptions import ClientError
 
 class CollectorStorage:
     def __init__(self):
-        endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
+        endpoint = settings.MINIO_ENDPOINT or "minio:9000"
         if not endpoint.startswith("http"):
-            endpoint = endpoint if endpoint.startswith("http") else f"http://{endpoint}"
+            endpoint = f"http://{endpoint}"
             
         self.endpoint = endpoint
-        self.access_key = os.environ.get("MINIO_ACCESS_KEY")
-        self.secret_key = os.environ.get("MINIO_SECRET_KEY")
+        self.access_key = settings.MINIO_ACCESS_KEY
+        self.secret_key = settings.MINIO_SECRET_KEY
         
         if not self.access_key or not self.secret_key:
-            raise ValueError("Biến môi trường MINIO_ACCESS_KEY hoặc MINIO_SECRET_KEY chưa được thiết lập")
+            raise ValueError("Hệ thống thiếu cấu hình MINIO_ACCESS_KEY hoặc MINIO_SECRET_KEY")
 
-        self.bucket = os.environ.get("MINIO_BUCKET_NAME", "doclib-books")
+        self.bucket = settings.MINIO_BUCKET_NAME
         self.public_url = settings.MINIO_PUBLIC_URL
         
         self.session = aioboto3.Session()

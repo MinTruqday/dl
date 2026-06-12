@@ -61,13 +61,13 @@ class NXBSTStreamState:
                         with open(save_path, 'wb') as f:
                             f.write(body)
 
-                        logger.info(f"[Quy trình NXBST] Đã thu thập {filename}: {url[-50:]}")
+                        logger.info(f"Đã thu thập {filename}: {url[-50:]}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.error(f"[Trạng thái luồng NXBST] Lỗi vòng lặp bên trong: {e}")
+                    logger.error(f"Lỗi vòng lặp bên trong: {e}")
         except Exception as e:
-            logger.error(f"[Trạng thái luồng NXBST] Lỗi vòng lặp bên ngoài: {e}")
+            logger.error(f"Lỗi vòng lặp bên ngoài: {e}")
 
     async def process_viewer(self, page):
         try:
@@ -124,7 +124,7 @@ class NXBSTStreamState:
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info(f"[NXBST PDF] Đang gom {len(sorted_pages)} trang bằng ma trận ghép \'final_pdf_name\'")
+            logger.info(f"Đang gom {len(sorted_pages)} trang bằng ma trận ghép \'final_pdf_name\'")
 
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
@@ -171,9 +171,9 @@ class NXBSTStreamState:
                 logger.info("Đang dùng img2pdf để tạo file PDF")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info(f"[PDF NXBST] Đã tạo: {pdf_path}")
+                logger.info(f"Đã tạo: {pdf_path}")
 
-            logger.info(f"[Lưu trữ] Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
+            logger.info(f"Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
             minio_url = await storage.upload_local_file(f"documents/nxbst/{final_pdf_name}", pdf_path)
 
             if minio_url:
@@ -199,7 +199,7 @@ class NXBSTStreamState:
                 os.remove(pdf_path)
 
         except Exception as e:
-            logger.error(f"[Lỗi đóng gói PDF]: {e}")
+            logger.error(f"Gặp lỗi: {e}")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -279,7 +279,7 @@ class NXBSTCollector:
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Tải dữ liệu] NXBST {document_url}")
+        logger.info(f"Đang xử lý chi tiết tài liệu NXBST: {document_url}")
         state_manager = NXBSTStreamState()
 
         async with managed_browser() as browser:
@@ -328,5 +328,5 @@ class NXBSTCollector:
                 else:
                     logger.warning("Tìm mãi không thấy nút Đọc/Xem ngay")
             except Exception as e:
-                logger.error(f"[Lỗi thu thập chi tiết NXBST]: {e}")
+                logger.error(f"Gặp lỗi: {e}")
                 raise

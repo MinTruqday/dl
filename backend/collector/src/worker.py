@@ -91,11 +91,11 @@ async def run_worker():
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info("Shutdown signal received, shutting down gracefully")
+        logger.info("Nhận được lệnh tắt, đang từ từ dừng các tiến trình")
         stop_event.set()
 
     await stop_event.wait()
 
-    logger.info("Closing MQ connection")
+    logger.info("Đang đóng kết nối MQ")
     await mq_client.connection.close()
-    logger.info("Shutdown complete")
+    logger.info("Đã tắt hệ thống an toàn")

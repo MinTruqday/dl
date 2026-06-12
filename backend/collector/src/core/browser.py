@@ -67,7 +67,7 @@ async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300,
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error(f"[Lỗi tải xuống] Mã lỗi: {resp.status} - {url}")
+                        logger.error(f"Mã lỗi: {resp.status} - {url}")
         except Exception as e:
             logger.warning(f"Lần thử thứ {attempt+1}/{max_retries} bị lỗi với {url}: {e}")
             if attempt < max_retries - 1:

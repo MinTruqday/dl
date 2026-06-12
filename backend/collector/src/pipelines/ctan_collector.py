@@ -59,12 +59,12 @@ class CTANCollector:
                             await dedup.mark_collected("ctan_url", url)
                             
             except Exception as e:
-                logger.error(f"[Quét danh sách CTAN bị lỗi]: {e}")
+                logger.error(f"Gặp lỗi: {e}")
                 raise
 
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info(f"[Tải dữ liệu] CTAN: {book_url}")
+        logger.info(f"Đang xử lý chi tiết sách CTAN: {book_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -114,7 +114,7 @@ class CTANCollector:
                     logger.warning(f"Tìm mỏi mắt không thấy nút tải ở XPath trên trang: {book_url}")
                 
             except Exception as e:
-                logger.error(f"[Lỗi thu thập chi tiết CTAN]: {e}")
+                logger.error(f"Gặp lỗi: {e}")
                 raise
 
     @staticmethod
@@ -126,10 +126,10 @@ class CTANCollector:
         title = payload.get("title", "package")
         
         if not url:
-            logger.error(f"[Tải dữ liệu] URL tải trọng không hợp lệ: {title}")
+            logger.error(f"URL tải trọng không hợp lệ: {title}")
             return
             
-        logger.info(f"[Tải dữ liệu] Đang tiến hành tải file thực tế và giải nén: {title}")
+        logger.info(f"Đang tiến hành tải file thực tế và giải nén: {title}")
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
@@ -143,7 +143,7 @@ class CTANCollector:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info(f"[Quy trình CTAN] Đã tải về bộ nhớ tạm: {target_zip_local}")
+                logger.info(f"Đã tải về bộ nhớ tạm: {target_zip_local}")
                 
                 minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
@@ -201,16 +201,16 @@ class CTANCollector:
                 
                 logger.info(f"Xử lý êm xuôi {filename}")
             else:
-                logger.error(f"[Lỗi tải xuống CTAN] Tải thất bại {url}")
+                logger.error(f"Tải thất bại {url}")
                 return
         except Exception as e:
-            logger.error(f"[Lỗi mạng hoặc lúc trích xuất]: {e}")
+            logger.error(f"Gặp lỗi: {e}")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
             
         if minio_url_book:
-            logger.info(f"[Thành công] Đã lưu bộ dữ liệu lên hệ thống lưu trữ: {minio_url_book}")
+            logger.info(f"Đã lưu bộ dữ liệu lên hệ thống lưu trữ: {minio_url_book}")
             
             book_document = {
                 "title": title,

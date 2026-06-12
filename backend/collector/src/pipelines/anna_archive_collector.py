@@ -119,7 +119,7 @@ class AnnaArchiveCollector:
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Tải dữ liệu] Anna: {document_url}")
+        logger.info(f"Đang xử lý chi tiết sách Anna: {document_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -225,7 +225,7 @@ class AnnaArchiveCollector:
                     await page.close()
                     raise Exception("Slow download button not found")
             except Exception as e:
-                logger.error(f"[Lỗi thu thập chi tiết Anna]: {e}")
+                logger.error(f"Gặp lỗi: {e}")
                 raise
 
     @staticmethod
@@ -234,10 +234,10 @@ class AnnaArchiveCollector:
         title = payload.get("title", "document")
         
         if not url:
-            logger.error(f"[Tải dữ liệu] URL tải trọng không hợp lệ: {title}")
+            logger.error(f"URL tải trọng không hợp lệ: {title}")
             return
             
-        logger.info(f"[Tải dữ liệu] Đang tải file sách: {title}")
+        logger.info(f"Đang tải file sách: {title}")
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "pdf")
@@ -251,17 +251,17 @@ class AnnaArchiveCollector:
                 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info(f"[Quy trình Anna] Đã tải về tệp tạm thời {target_local}")
+                logger.info(f"Đã tải về tệp tạm thời {target_local}")
                 minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
                 
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception as e:
-            logger.error(f"[Lỗi quy trình tải xuống]: {e}")
+            logger.error(f"Gặp lỗi: {e}")
             raise
             
         if minio_url:
-            logger.info(f"[Thành công] Tài liệu đã được lưu lên hệ thống lưu trữ: {minio_url}")
+            logger.info(f"Tài liệu đã được lưu lên hệ thống lưu trữ: {minio_url}")
             
             document_metadata = {
                 "title": title,

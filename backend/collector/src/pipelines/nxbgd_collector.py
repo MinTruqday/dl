@@ -58,7 +58,7 @@ class NXBGDCollector:
                         with open(save_path, 'wb') as f:
                             f.write(body)
                         
-                        logger.info(f"[Quy trình NXBGD] Chụp xong trang #{self.page_counter}: {filename}")
+                        logger.info(f"Chụp xong trang #{self.page_counter}: {filename}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
@@ -96,12 +96,12 @@ class NXBGDCollector:
             return
 
         try:
-            logger.info(f"[NXBGD PDF] Đang gom {len(image_files)} trang thành '{final_pdf_name}' using img2pdf")
+            logger.info(f"Đang gom {len(image_files)} trang thành '{final_pdf_name}' bằng thư viện img2pdf")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info(f"[PDF NXBGD] Đã tạo PDF: {pdf_path}")
+            logger.info(f"Đã tạo PDF: {pdf_path}")
                 
-            logger.info(f"[Lưu trữ] Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
+            logger.info(f"Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
             
             if minio_url:
@@ -126,11 +126,11 @@ class NXBGDCollector:
                     pass
                     
         except Exception as e:
-            logger.error(f"[Lỗi hàng đợi thu thập NXBGD]: {e}")
+            logger.error(f"Gặp lỗi: {e}")
             raise
         finally:
 
-            logger.info(f"[Dọn dẹp NXBGD] Đang xóa thư mục tạm: {self.temp_dir}")
+            logger.info(f"Đang xóa thư mục tạm: {self.temp_dir}")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
@@ -240,7 +240,7 @@ class NXBGDCollector:
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Reached end of pagination or next button not found")
+                        logger.info("Đã đến trang cuối hoặc không tìm thấy nút chuyển trang")
                 except Exception as e:
                     logger.error(f"Lỗi khi chuyển trang: {e}")
                     has_next = False

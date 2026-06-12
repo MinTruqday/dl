@@ -28,7 +28,7 @@ class UserService:
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'role': role, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
-        logger.info(f'Tài khoản: Phân quyền của người dùng {user_id} đã đổi thành {role}')
+        logger.info(f'Phân quyền của người dùng {user_id} đã đổi thành {role}')
         return {'message': f'Hệ thống đã cập nhật vai trò của người dùng thành {role}'}
 
     @staticmethod
@@ -38,7 +38,7 @@ class UserService:
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'is_active': is_active, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
-        logger.info(f'Tài khoản: Trạng thái tài khoản {user_id} đã đổi thành {is_active}')
+        logger.info(f'Trạng thái tài khoản {user_id} đã đổi thành {is_active}')
         return {'message': 'Trạng thái hoạt động của tài khoản đã được cập nhật'}
 
     @staticmethod
@@ -78,7 +78,7 @@ class UserService:
         lock_until = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
         await db['users'].update_one({'_id': user_id}, {'$set': {'is_active': False, 'locked_until': lock_until, 'lock_reason': reason, 'updated_at': datetime.now(timezone.utc)}})
         await db['audit_logs'].insert_one({'action': 'LOCK_USER', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'reason': reason, 'duration': duration_hours, 'timestamp': datetime.now(timezone.utc)})
-        logger.info(f'Quản trị: Người dùng {user_id} đã bị cấm {duration_hours} tiếng bởi {current_moderator.id}')
+        logger.info(f'Người dùng {user_id} đã bị cấm {duration_hours} tiếng bởi {current_moderator.id}')
         return {'message': f'Tài khoản đã bị tạm khóa trong vòng {duration_hours} giờ tới'}
 
     @staticmethod
@@ -88,7 +88,7 @@ class UserService:
         await db['users'].update_one({'_id': user_id}, {'$set': {'is_shadowbanned': is_banned, 'updated_at': datetime.now(timezone.utc)}})
         action = 'SHADOWBAN' if is_banned else 'UNSHADOWBAN'
         await db['audit_logs'].insert_one({'action': action, 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
-        logger.info(f'Quản trị: Người dùng {user_id} đã được {action.lower()} bởi {current_moderator.id}')
+        logger.info(f'Người dùng {user_id} đã được {action.lower()} bởi {current_moderator.id}')
         return {'message': 'Trạng thái hạn chế (shadowban) của người dùng đã được thay đổi'}
 
     @staticmethod
@@ -97,7 +97,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         await db['users'].update_one({'_id': user_id}, {'$set': {'kyc_status': status, 'is_kyc_verified': status == 'VERIFIED', 'updated_at': datetime.now(timezone.utc)}})
         await db['audit_logs'].insert_one({'action': f'KYC_{status}', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
-        logger.info(f'Quản trị: Thông tin KYC của {user_id} đã cập nhật thành {status} bởi {current_moderator.id}')
+        logger.info(f'Thông tin KYC của {user_id} đã cập nhật thành {status} bởi {current_moderator.id}')
         return {'message': 'Hồ sơ định danh (KYC) của người dùng đã được cập nhật'}
 
     @staticmethod
@@ -112,7 +112,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['moderator_notes'].insert_one({'_id': str(uuid7()), 'user_id': user_id, 'moderator_id': str(current_moderator.id), 'note': note, 'created_at': datetime.now(timezone.utc)})
-        logger.info(f'Quản trị: Vừa thêm ghi chú cho người dùng {user_id} bởi {current_moderator.id}')
+        logger.info(f'Vừa thêm ghi chú cho người dùng {user_id} bởi {current_moderator.id}')
         return {'message': 'Ghi chú điều hành đã được lưu lại'}
 
     @staticmethod
@@ -142,7 +142,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reports'].update_one({'_id': report_id}, {'$set': {'status': 'resolved', 'action_taken': action, 'resolved_by': str(current_moderator.id), 'resolved_at': datetime.now(timezone.utc)}})
-        logger.info(f"Quản trị: Báo cáo {report_id} đã xử lý xong với hình thức '{action}' bởi {current_moderator.id}")
+        logger.info(f"Báo cáo {report_id} đã xử lý xong với hình thức '{action}' bởi {current_moderator.id}")
         return {'message': 'Báo cáo vi phạm đã được xử lý'}
 
     @staticmethod

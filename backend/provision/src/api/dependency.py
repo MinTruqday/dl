@@ -38,7 +38,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         user_id_str = str(user_doc['_id'])
         is_valid_session = await db_client.redis.sismember(f'user_sessions:{user_id_str}', session_id)
         if not is_valid_session:
-            logger.warning(f'Cảnh báo: Người dùng {email}')
+            logger.warning(f'Người dùng {email}')
             raise credentials_exception
     else:
         import httpx
@@ -72,7 +72,7 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(f'Từ chối: Người dùng {current_user.email} đang có quyền {current_user.role}, trong khi yêu cầu cần {required_roles}')
+            logger.warning(f'Người dùng {current_user.email} đang có quyền {current_user.role}, trong khi yêu cầu cần {required_roles}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
         return current_user
     return role_checker

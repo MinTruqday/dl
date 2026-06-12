@@ -3,9 +3,11 @@ import os
 import json
 from loguru import logger
 
+from core.config import settings
+
 class RabbitMQConnection:
     def __init__(self):
-        self.url = os.environ.get("RABBITMQ_URI")
+        self.url = settings.RABBITMQ_URI
         self.connection = None
         self.channel = None
 
@@ -49,7 +51,7 @@ class RabbitMQConnection:
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
-            logger.debug(f"[MQ] Đã điều phối tới {queue_name}: {payload.get('url', payload.get('title', 'ping'))}")
+            logger.debug(f"Đã điều phối tới {queue_name}: {payload.get('url', payload.get('title', 'ping'))}")
         except Exception as e:
             logger.error(f"Phân phối sự kiện tới {queue_name} thất bại: {e}")
 
