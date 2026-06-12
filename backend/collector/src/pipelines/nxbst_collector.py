@@ -65,13 +65,13 @@ class NXBSTStreamState:
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.error(f"Lỗi vòng lặp bên trong: {e}")
+                    logger.error('Lỗi vòng lặp bên trong')
         except Exception as e:
-            logger.error(f"Lỗi vòng lặp bên ngoài: {e}")
+            logger.error('Lỗi vòng lặp bên ngoài')
 
     async def process_viewer(self, page):
         try:
-            logger.info("Đang chuẩn bị vòng lặp để xử lý trang đọc tài liệu")
+            logger.info('Chuẩn bị xử lý trang đọc tài liệu')
             consecutive_fails = 0
             previous_count = self.page_counter
 
@@ -92,7 +92,7 @@ class NXBSTStreamState:
                     logger.info("Đã quét toàn bộ tài liệu hoặc kết nối mạng bị gián đoạn")
                     break
         except Exception as e:
-            logger.error(f"Lỗi trong lúc đọc tài liệu: {e}")
+            logger.error('Lỗi đọc tài liệu')
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -118,7 +118,7 @@ class NXBSTStreamState:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning(f"Bỏ qua quyển PDF {title}: vì không lấy được trang nội dung nào")
+            logger.warning(f"Bỏ qua PDF {title} vì không có nội dung")
             return
 
         images = []
@@ -156,7 +156,7 @@ class NXBSTStreamState:
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
                 except Exception as e:
-                    logger.warning(f"Lỗi ghép ảnh cho trang {p}: {e}")
+                    logger.warning(f'Lỗi ghép ảnh trang {p}')
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -165,7 +165,7 @@ class NXBSTStreamState:
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
                     except Exception as e:
-                        logger.error(f"Lỗi tải các khối ảnh lạ: {e}")
+                        logger.error('Lỗi tải khối ảnh lạ')
 
             if images:
                 logger.info("Đang dùng img2pdf để tạo file PDF")
@@ -173,14 +173,14 @@ class NXBSTStreamState:
                     f.write(img2pdf.convert(images))
                 logger.info(f"Đã tạo: {pdf_path}")
 
-            logger.info(f"Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
+            logger.info(f'Đẩy file {final_pdf_name} lên lưu trữ')
             minio_url = await storage.upload_local_file(f"tài liệu/nxbst/{final_pdf_name}", pdf_path)
 
             if minio_url:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Đã trích xuất via NXBSTCollector Bot",
+                    "description": "Trích xuất qua NXBSTCollector Bot",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Chính trị quốc gia Sự thật", author],
                     "content": None,
@@ -199,7 +199,7 @@ class NXBSTStreamState:
                 os.remove(pdf_path)
 
         except Exception as e:
-            logger.error(f"Gặp lỗi: {e}")
+            logger.error('Lỗi hệ thống')
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -230,7 +230,7 @@ class NXBSTCollector:
                     if href and ('/category/' in href or '/chuyen-muc/' in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info(f"Lấy được {len(category_urls)} link danh mục bao gồm cả Kho tài liệu")
+                logger.info(f'Lấy {len(category_urls)} link danh mục thành công')
 
                 for cat_url in category_urls:
                     logger.info(f"Đang vào danh mục: {cat_url}")
@@ -254,10 +254,10 @@ class NXBSTCollector:
                                     await mq_client.publish("collect_detail_queue", {"url": full_url, "source": "NXBST"})
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info(f"Vừa đẩy {found_documents} tài liệu từ trang {current_page}")
+                        logger.info(f'Đẩy {found_documents} tài liệu từ trang {current_page}')
                         
                         if current_page >= pages:
-                            logger.info(f"Đã đủ số lượng {pages} trang cho danh mục này")
+                            logger.info(f'Đã đủ {pages} trang cho danh mục')
                             break
 
                         next_page_idx = current_page + 1
@@ -274,12 +274,12 @@ class NXBSTCollector:
                         except Exception:
                             break
             except Exception as e:
-                logger.error(f"Lỗi lúc vào xem chi tiết danh sách: {e}")
+                logger.error('Lỗi xem chi tiết danh sách')
                 raise
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"Đang xử lý chi tiết tài liệu NXBST: {document_url}")
+        logger.info(f'Xử lý chi tiết tài liệu NXBST {document_url}')
         state_manager = NXBSTStreamState()
 
         async with managed_browser() as browser:
@@ -306,7 +306,7 @@ class NXBSTCollector:
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("Đã tìm thấy nút Đọc, chuẩn bị thu thập nội dung")
+                    logger.info('Tìm thấy nút Đọc chuẩn bị thu thập nội dung')
 
                     import tempfile
                     state_manager.temp_dir = tempfile.mkdtemp(prefix=f"nxbst_{safe_title[:20]}_")
@@ -326,7 +326,7 @@ class NXBSTCollector:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Không tìm thấy nút Đọc hoặc Xem ngay trên trang")
+                    logger.warning('Không tìm thấy nút Đọc hoặc Xem ngay')
             except Exception as e:
-                logger.error(f"Gặp lỗi: {e}")
+                logger.error('Lỗi hệ thống')
                 raise

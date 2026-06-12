@@ -31,19 +31,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception as e:
-        logger.error(f"Lỗi trình duyệt: {e}")
+        logger.error('Lỗi trình duyệt')
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception as e:
-                logger.warning(f"Lỗi lúc tắt trình duyệt: {e}")
+                logger.warning('Lỗi tắt trình duyệt')
         if playwright:
             try:
                 await playwright.stop()
             except Exception as e:
-                logger.warning(f"Lỗi lúc dừng playwright: {e}")
+                logger.warning('Lỗi dừng Playwright')
 
 async def get_stealth_context(browser):
     context = await browser.new_context(
@@ -67,11 +67,11 @@ async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300,
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error(f"Mã lỗi: {resp.status} - {url}")
+                        logger.error(f'Mã lỗi {resp.status} {url}')
         except Exception as e:
-            logger.warning(f"Lần thử thứ {attempt+1}/{max_retries} thất bại với {url}: {e}")
+            logger.warning(f'Lần thử thứ {attempt+1}/{max_retries} thất bại với {url}')
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 ** attempt)
             else:
-                logger.error(f"Tải thất bại xuống {url} sau {max_retries} lần thử")
+                logger.error(f'Tải thất bại {url} sau {max_retries} lần thử')
     return False

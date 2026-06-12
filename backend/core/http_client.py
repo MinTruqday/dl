@@ -27,7 +27,7 @@ class CircuitBreaker:
         self.last_failure_time = time.time()
         if self.failure_count >= self.max_failures:
             self.state = "OPEN"
-            logger.warning("Hệ thống tạm ngắt kết nối với dịch vụ AI do xảy ra sự cố liên tục")
+            logger.warning('Ngắt kết nối dịch vụ AI')
 
 ai_circuit_breaker = CircuitBreaker()
 

@@ -22,8 +22,6 @@ async def redeem_coupon(payload: RedeemCouponRequest, current_user: UserInDB=Dep
 async def get_history(cursor: str=Query(None), limit: int=Query(30, ge=1, le=100), tx_type: str=Query(None), skip: int=Query(0, ge=0), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await WalletService.get_history(current_user, skip=skip, limit=limit, db=db), message='Đã tải lịch sử giao dịch')
 
-
-
 @router.get('/doanh-thu', response_model=APIResponse[Any])
 async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     from core.database import db_client
@@ -65,4 +63,4 @@ async def purchase_document(document_id: str, current_user: UserInDB=Depends(get
 
 @router.post('/giao-dich-mua/{purchase_id}/huy-bo', response_model=APIResponse[Any])
 async def cancel_purchase(purchase_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Đã hủy mua thành công')
+    return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Đã hủy mua tài liẹu')

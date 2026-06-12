@@ -56,11 +56,11 @@ class AnnaArchiveCollector:
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
                     except Exception as e:
-                        logger.error(f"Lỗi hoặc hết giờ khi đang lấy link MD5 ở trang {page_num}: {e}")
+                        logger.error(f'Lỗi lấy link MD5 trang {page_num}')
                     
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
-                        logger.warning(f"Trang này không có link MD5 {page_num}, nên dừng việc quét danh sách lại")
+                        logger.warning(f'Không có link MD5 trang {page_num} dừng quét danh sách')
                         break
                     
                     document_urls = set()
@@ -79,13 +79,13 @@ class AnnaArchiveCollector:
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
                     
-                    logger.info(f"Vừa đẩy {new_urls_found} tài liệu mới từ trang {page_num} vào hàng đợi")
+                    logger.info(f'Đẩy {new_urls_found} tài liệu mới từ trang {page_num} vào hàng đợi')
                     if page_num >= pages:
-                        logger.info(f"Đã đủ số lượng {pages} trang yêu cầu, đang dừng tiến trình")
+                        logger.info(f'Đã đủ {pages} trang dừng tiến trình')
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Quy trình lấy danh sách từ Anna's Archive thất bại: {e}")
+                logger.error('Lỗi lấy danh sách Anna Archive')
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -114,7 +114,7 @@ class AnnaArchiveCollector:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception as e:
-            logger.error(f"Không thể gọi FlareSolverr vì lỗi: {e}")
+            logger.error('Lỗi gọi FlareSolverr')
         return await get_stealth_context(browser)
 
     @staticmethod
@@ -198,13 +198,13 @@ class AnnaArchiveCollector:
                                 if download_link:
                                     break
                             except Exception as parse_err:
-                                logger.warning(f"Không thể lấy được link tải vì lỗi: {parse_err}")
+                                logger.warning('Lỗi lấy link tải')
                                 
                             await page.wait_for_timeout(5000)
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info(f"Đã lấy được link tải: {download_link}")
+                            logger.info(f'Lấy link tải {download_link} thành công')
                             
                             ext = payload["download_link"].split('')[-1][:4] if '' in payload["download_link"].split('/')[-1] else 'pdf'
                             if len(ext) > 4 or "/" in ext: ext = 'pdf'
@@ -216,16 +216,16 @@ class AnnaArchiveCollector:
                         else:
                             logger.warning(f"Hết thời gian chờ xử lý đếm ngược bằng JS: {slow_url}")
                     except Exception as e:
-                        logger.error(f"Chờ liên kết tải xuống thất bại: {e}")
+                        logger.error('Lỗi chờ liên kết tải xuống')
                 if not slow_link_el:
-                    logger.warning(f"Không tìm thấy nút tải trên trang: {document_url}")
+                    logger.warning(f'Không tìm thấy nút tải trang {document_url}')
                     await page.screenshot(path="/app/logs/anna_error.png", full_page=True)
                     links = await page.evaluate("Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)")
                     logger.warning(f"Các nút có thể bấm được trên trang: {links}")
                     await page.close()
-                    raise Exception("Không tìm thấy nút tải chậm")
+                    raise Exception('Không tìm thấy nút tải chậm')
             except Exception as e:
-                logger.error(f"Gặp lỗi: {e}")
+                logger.error('Lỗi hệ thống')
                 raise
 
     @staticmethod
@@ -234,7 +234,7 @@ class AnnaArchiveCollector:
         title = payload.get("title", "document")
         
         if not url:
-            logger.error(f"URL tải trọng không hợp lệ: {title}")
+            logger.error(f'URL tải trọng không hợp lệ {title}')
             return
             
         logger.info(f"Đang tải file sách: {title}")
@@ -251,22 +251,22 @@ class AnnaArchiveCollector:
                 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info(f"Đã tải về tệp tạm thời {target_local}")
+                logger.info(f'Tải tệp tạm thời {target_local} thành công')
                 minio_url = await storage.upload_local_file(f"tài liệu/anna_archive/{filename}", target_local)
                 
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception as e:
-            logger.error(f"Gặp lỗi: {e}")
+            logger.error('Lỗi hệ thống')
             raise
             
         if minio_url:
-            logger.info(f"Tài liệu đã được lưu lên hệ thống lưu trữ: {minio_url}")
+            logger.info(f'Lưu tài liệu lên lưu trữ thành công {minio_url}')
             
             document_metadata = {
                 "title": title,
                 "slug": slug,
-                "description": f"Đã trích xuất via Anna's Archive bot",
+                "description": "Trích xuất qua Anna Archive bot",
                 "file_url": minio_url,
                 "pdf_url": minio_url if ext.lower() == "pdf" else None,
                 "tags": ["Anna's Archive", payload.get("author", "Unknown")],

@@ -27,22 +27,22 @@ class WalletService:
                 if attempts == 1:
                     await db_client.redis.expire(user_rl_key, 300)
                 if attempts > 10:
-                    raise HTTPException(status_code=429, detail="Bạn đã thao tác quá nhiều lần, vui lòng thử lại sau 5 phút")
+                    raise HTTPException(status_code=429, detail='Thao tác quá nhiều lần vui lòng thử lại sau 5 phút')
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập bộ nhớ đệm gặp sự cố: {e}")
+                logger.exception('Lỗi giới hạn truy cập bộ đệm')
         
         if db_client.redis:
             try:
                 is_locked = await db_client.redis.set(lock_key, 'locked', nx=True, ex=10)
                 if not is_locked:
-                    raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail='Mã nạp này đang được xử lý, vui lòng chờ giây lát')
+                    raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail='Mã nạp đang được xử lý')
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f'Không thể khóa phiên làm việc trên bộ nhớ đệm: {e}')
-                raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm, vui lòng thử lại sau")
+                logger.exception('Lỗi khóa phiên làm việc trên bộ nhớ đệm')
+                raise HTTPException(status_code=500, detail='Lỗi kết nối bộ đệm')
 
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -63,13 +63,13 @@ class WalletService:
                 raise HTTPException(status_code=404, detail='Mã nạp không hợp lệ hoặc không tồn tại')
             if coupon.get('is_used'):
                 if should_close_session: await session.abort_transaction()
-                raise HTTPException(status_code=400, detail='Mã nạp này đã được sử dụng trước đó')
+                raise HTTPException(status_code=400, detail='Mã nạp đã được sử dụng')
             
             bonus_dl = coupon.get('amount_dl', coupon.get('amount_dls', 0))
             result = await coupons.update_one({'_id': coupon['_id'], 'is_used': False}, {'$set': {'is_used': True, 'used_by': str(current_user.id), 'used_at': datetime.now(timezone.utc)}}, session=session)
             if result.modified_count == 0:
                 if should_close_session: await session.abort_transaction()
-                raise HTTPException(status_code=400, detail='Mã nạp vừa được sử dụng bởi người dùng khác')
+                raise HTTPException(status_code=400, detail='Mã nạp đã được sử dụng bởi người dùng khác')
                 
             await wallets.update_one({'_id': str(current_user.id)}, {'$inc': {'balance': bonus_dl}}, upsert=True, session=session)
             tx = Transaction(user_id=str(current_user.id), type=TransactionType.TOPUP, amount=bonus_dl, note=f'Đổi coupon: {req.code}')
@@ -94,16 +94,16 @@ class WalletService:
                             timeout=3.0
                         )
             except Exception as e:
-                logger.warning(f'Không thể gửi thông báo: {e}')
-            logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
+                logger.warning('Lỗi gửi thông báo')
+            logger.info(f'Người dùng {current_user.id} đổi mã quà tặng {req.code} nhận {bonus_dl} dl')
             return {'message': 'Đổi mã quà tặng thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Không thể đổi mã quà tặng: {e}')
-            raise HTTPException(status_code=500, detail="Hệ thống bảo trì, thử lại sau")
+            logger.exception('Lỗi đổi mã quà tặng')
+            raise HTTPException(status_code=500, detail='Hệ thống bảo trì')
         finally:
             if should_close_session:
                 await session.end_session()
@@ -111,7 +111,7 @@ class WalletService:
                 try:
                     await db_client.redis.delete(lock_key)
                 except Exception as e:
-                    logger.error(f'Không thể mở khóa phiên làm việc trên bộ nhớ đệm: {e}')
+                    logger.error('Lỗi mở khóa phiên làm việc trên bộ nhớ đệm')
 
     @staticmethod
     async def get_history(current_user, cursor: str=None, limit: int=30, tx_type: str=None, skip: int=0, db=None):
@@ -124,7 +124,7 @@ class WalletService:
             try:
                 query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except Exception as e:
-                logger.warning(f'Định dạng con trỏ phân trang không hợp lệ: {e}')
+                logger.warning('Định dạng con trỏ phân trang không hợp lệ')
         tx_cursor = db['transactions'].find(query).sort('created_at', -1)
         if skip > 0:
             tx_cursor = tx_cursor.skip(skip)

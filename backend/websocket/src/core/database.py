@@ -14,7 +14,7 @@ class DatabaseClient:
             self.redis = redis.from_url(settings.REDIS_URI, decode_responses=True)
             logger.info("Đã kết nối với hệ thống cơ sở dữ liệu và bộ nhớ đệm")
         except Exception as e:
-            logger.error(f"Không thể kết nối đến cơ sở dữ liệu hệ thống: {e}")
+            logger.error('Lỗi kết nối cơ sở dữ liệu')
 
     async def disconnect(self):
         if self.mongodb:

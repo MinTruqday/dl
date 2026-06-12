@@ -40,7 +40,7 @@ class CTANCollector:
                     try:
                         await page.wait_for_selector('main', timeout=15000)
                     except Exception as e:
-                        logger.warning(f"Hết giờ hoặc không có dữ liệu cho ký tự {letter}: {e}")
+                        logger.warning(f'Không có dữ liệu cho ký tự {letter}')
                         continue
                     
                     book_nodes = await page.query_selector_all(list_css)
@@ -59,7 +59,7 @@ class CTANCollector:
                             await dedup.mark_collected("ctan_url", url)
                             
             except Exception as e:
-                logger.error(f"Gặp lỗi: {e}")
+                logger.error('Lỗi hệ thống')
                 raise
 
     @staticmethod
@@ -111,10 +111,10 @@ class CTANCollector:
                     else:
                         logger.warning(f"Link tải bị trống trên trang: {book_url}")
                 else:
-                    logger.warning(f"Không tìm thấy nút tải qua XPath trên trang: {book_url}")
+                    logger.warning(f'Không tìm thấy nút tải trang {book_url}')
                 
             except Exception as e:
-                logger.error(f"Gặp lỗi: {e}")
+                logger.error('Lỗi hệ thống')
                 raise
 
     @staticmethod
@@ -126,10 +126,10 @@ class CTANCollector:
         title = payload.get("title", "package")
         
         if not url:
-            logger.error(f"URL tải trọng không hợp lệ: {title}")
+            logger.error(f'URL tải trọng không hợp lệ {title}')
             return
             
-        logger.info(f"Đang tiến hành tải file thực tế và giải nén: {title}")
+        logger.info(f'Tải và giải nén file {title}')
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
@@ -143,7 +143,7 @@ class CTANCollector:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info(f"Đã tải về bộ nhớ tạm: {target_zip_local}")
+                logger.info(f'Tải về bộ nhớ tạm {target_zip_local} thành công')
                 
                 minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
@@ -156,7 +156,7 @@ class CTANCollector:
                 contents = os.listdir(extracted_folder_path)
                 if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
                     search_root = os.path.join(extracted_folder_path, contents[0])
-                    logger.info(f"Có thư mục lồng nhau: {contents[0]}, hệ thống đang tự động căn chỉnh lại")
+                    logger.info(f'Căn chỉnh thư mục lồng nhau {contents[0]}')
 
                 found_pdf = None
                 for root, _, files in os.walk(search_root):
@@ -170,7 +170,7 @@ class CTANCollector:
                 if found_pdf:
                     pdf_filename = os.path.basename(found_pdf)
                     minio_url_pdf = await storage.upload_local_file(f"tài liệu/ctan/{pdf_filename}", found_pdf)
-                    logger.info(f"Đã lấy và tải file PDF chính lên: {minio_url_pdf}")
+                    logger.info(f'Tải file PDF lên lưu trữ thành công {minio_url_pdf}')
                     payload["pdf_url"] = minio_url_pdf
                     
                 md_content = f"# Source code for {title}\n\n"
@@ -188,7 +188,7 @@ class CTANCollector:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.warning(f"Đọc file thất bại {rel_path}: {e}")
+                                logger.warning(f'Lỗi đọc file {rel_path}')
                                 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)

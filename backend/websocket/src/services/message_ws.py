@@ -48,7 +48,7 @@ class MessageConnectionManager:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.error(f'Hệ thống lắng nghe tín hiệu của bộ nhớ đệm đã ngừng hoạt động: {e}')
+            logger.error('Lỗi hệ thống lắng nghe tín hiệu bộ đệm')
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

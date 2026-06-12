@@ -19,11 +19,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Qu
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning(f"Kết nối bị từ chối do thông tin xác thực không trùng khớp")
+            logger.warning('Từ chối kết nối do thông tin xác thực không trùng khớp')
             await websocket.close(code=1008)
             return
     except Exception as e:
-        logger.error(f"Quá trình xác thực token kết nối cho {user_id} thất bại: {e}")
+        logger.error(f'Xác thực token kết nối cho {user_id} thất bại')
         await websocket.close(code=1008)
         return
 
@@ -66,5 +66,5 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Qu
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception as e:
-        logger.error(f"Lỗi khi xử lý tin nhắn trực tiếp của người dùng {user_id}: {e}")
+        logger.error(f'Lỗi xử lý tin nhắn trực tiếp của {user_id}')
         message_manager.disconnect(user_id, websocket)

@@ -41,7 +41,7 @@ async def init_db():
             logger.info("Khởi tạo cụm máy chủ cơ sở dữ liệu thành công")
             await asyncio.sleep(3)
         except Exception as e:
-            logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc thất bại: {e}")
+            logger.warning('Khởi tạo cụm máy chủ thất bại')
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
     
@@ -49,13 +49,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Kết nối thành công với hệ thống hàng đợi")
+            logger.info('Kết nối hệ thống hàng đợi thành công')
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error(f"Không thể kết nối với hệ thống hàng đợi sau {max_retries} lần thử: {e}")
+                logger.error(f'Lỗi kết nối hệ thống hàng đợi sau {max_retries} lần')
                 raise e
-            logger.warning(f"Thử kết nối hệ thống hàng đợi lần thứ {i+1} thất bại do lỗi: {e}, đang thử lại sau 5 giây")
+            logger.warning(f'Lỗi kết nối hệ thống hàng đợi lần {i+1}')
             await asyncio.sleep(5)
     
     await setup_indexes()
@@ -107,7 +107,7 @@ async def setup_indexes():
 
         logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
-        logger.error(f"Không thể tạo chỉ mục cơ sở dữ liệu: {e}")
+        logger.error('Lỗi tạo chỉ mục cơ sở dữ liệu')
 
 async def close_db():
     if db_client.mongodb:

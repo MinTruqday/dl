@@ -31,7 +31,7 @@ async def initialize_bucket():
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError:
-        logger.info(f"Không tìm thấy không gian lưu trữ {MINIO_BUCKET_NAME}, đang tiến hành khởi tạo")
+        logger.info(f'Khởi tạo không gian lưu trữ {MINIO_BUCKET_NAME}')
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
         logger.info(f"Đã tạo không gian lưu trữ {MINIO_BUCKET_NAME}")
 

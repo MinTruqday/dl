@@ -5,7 +5,7 @@ from core.database import db_client
 
 async def publish_compile_task(document_id: str, author_id: str, content_raw: str):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi, không thể thêm tác vụ biên dịch vào hàng đợi")
+        logger.error('Lỗi kết nối hệ thống hàng đợi thêm tác vụ biên dịch thất bại')
         return False
         
     try:
@@ -29,12 +29,12 @@ async def publish_compile_task(document_id: str, author_id: str, content_raw: st
             )
             return True
     except Exception as e:
-        logger.error(f"Không thể khởi tạo tiến trình của công cụ biên dịch: {str(e)}")
+        logger.error('Lỗi khởi tạo tiến trình biên dịch')
         return False
 
 async def trigger_document_publish_job(document_id: str, author_id: str):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi, không thể thêm tác vụ xuất bản vào hàng đợi")
+        logger.error('Lỗi kết nối hệ thống hàng đợi thêm tác vụ xuất bản thất bại')
         return False
         
     try:
@@ -57,12 +57,12 @@ async def trigger_document_publish_job(document_id: str, author_id: str):
             )
             return True
     except Exception as e:
-        logger.error(f"Không thể khởi tạo tiến trình xuất bản: {str(e)}")
+        logger.error('Lỗi khởi tạo tiến trình xuất bản')
         return False
 
 async def publish_event(queue_name: str, payload: dict):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi, không thể thêm sự kiện vào hàng đợi")
+        logger.error('Lỗi kết nối hệ thống hàng đợi thêm sự kiện thất bại')
         return False
         
     try:
@@ -75,5 +75,5 @@ async def publish_event(queue_name: str, payload: dict):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error(f"Lỗi phát hành sự kiện {queue_name}: {str(e)}")
+        logger.error(f'Lỗi phát hành sự kiện {queue_name}')
         return False

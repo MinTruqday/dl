@@ -22,5 +22,5 @@ async def send_internal_notification(user_id: str, title: str, body: str, notif_
             response.raise_for_status()
             return True
     except Exception as e:
-        logger.error(f"Không thể gửi thông báo tới {user_id}: {e}")
+        logger.error(f'Lỗi gửi thông báo tới {user_id}')
         return False

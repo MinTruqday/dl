@@ -15,15 +15,15 @@ class DocLibDatabase:
             logger.success(f"Đã thêm mới tài liệu mang mã: {res.inserted_id}")
             return str(res.inserted_id)
         except Exception as e:
-            logger.error(f"Lỗi: {e}")
+            logger.error('Lỗi thêm tài liệu')
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
         try:
             from bson import ObjectId
             await self.db.documents.update_one({"_id": ObjectId(document_id)}, {"$set": update_data})
-            logger.success(f"Đã cập nhật tài liệu mang mã: {document_id}")
+            logger.success(f'Cập nhật tài liệu {document_id} thành công')
         except Exception as e:
-            logger.error(f"Lỗi: {e}")
+            logger.error('Lỗi cập nhật tài liệu')
 
 db_client = DocLibDatabase()

@@ -16,7 +16,7 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error(f"Lỗi lúc xử lý lệnh: {e}\nPayload: {message.body.decode()}")
+            logger.error('Lỗi xử lý lệnh')
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)
@@ -86,16 +86,16 @@ async def run_worker():
     await queue_nxbgd.consume(lambda m: process_msg_with_sem(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
-    logger.info("Hệ thống thu thập DocLib 0.1a đã khởi động - Đang lắng nghe tín hiệu từ RabbitMQ")
+    logger.info('Hệ thống thu thập DocLib khởi động lắng nghe tín hiệu RabbitMQ thành công')
 
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info("Nhận được lệnh tắt, đang từ từ dừng các tiến trình")
+        logger.info('Nhận lệnh tắt đang dừng tiến trình')
         stop_event.set()
 
     await stop_event.wait()
 
-    logger.info("Đang đóng kết nối MQ")
+    logger.info('Đóng kết nối MQ')
     await mq_client.connection.close()
-    logger.info("Đã tắt hệ thống an toàn")
+    logger.info('Tắt hệ thống an toàn thành công')

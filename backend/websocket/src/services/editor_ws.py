@@ -28,7 +28,7 @@ class ConnectionManager:
                     try:
                         await connection.send_bytes(message)
                     except Exception as e:
-                        logger.error(f'Hệ thống không thể phát tín hiệu đến thiết bị trong phòng {room_id}: {e}')
+                        logger.error(f'Lỗi phát tín hiệu phòng {room_id}')
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)
