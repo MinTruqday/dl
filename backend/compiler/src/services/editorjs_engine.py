@@ -277,7 +277,7 @@ class EditorJSEngine:
                  'linkSearch', 'template'):
             return ''
 
-        logger.warning(f'EditorJSEngine: Block type không nhận ra: "{t}" – bỏ qua')
+        logger.warning(f'Hệ thống bỏ qua khối nội dung không hợp lệ có loại là {t}')
         return ''
 
     @staticmethod
@@ -343,7 +343,7 @@ class EditorJSEngine:
 
             if not os.path.exists(pdf_path):
                 error_msg = stderr.decode('utf-8') if stderr else "Không rõ lỗi."
-                logger.error(f"EditorJSEngine: Lỗi xuất PDF: {error_msg}")
+                logger.error(f"Quá trình xuất PDF bằng EditorJS thất bại: {error_msg}")
                 raise Exception({
                     "error": "Không thể biên dịch EditorJS sang PDF.",
                     "logs": error_msg[-2048:]
@@ -357,7 +357,7 @@ class EditorJSEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.warning(f"EditorJSEngine: Lỗi khi kill process: {e}")
+                    logger.warning(f"Không thể dừng tiến trình EditorJS: {e}")
             raise Exception("Quá thời gian biên dịch tài liệu EditorJS")
 
         finally:
@@ -365,4 +365,4 @@ class EditorJSEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"EditorJSEngine: Không thể dọn dẹp file {filepath}: {e}")
+                    logger.warning(f"Không thể dọn dẹp các tệp tạm {filepath} của EditorJS: {e}")

@@ -14,6 +14,9 @@ from kombu import Exchange, Queue
 celery_app = Celery("doclib_tasks", broker=CELERY_BROKER_URL, backend=CELERY_RESULT_BACKEND)
 celery_app.conf.task_acks_late = True
 celery_app.conf.worker_prefetch_multiplier = 1
+celery_app.conf.worker_log_format = "%(asctime)s | %(levelname)s | %(message)s"
+celery_app.conf.worker_task_log_format = "%(asctime)s | %(levelname)s | %(message)s"
+celery_app.conf.worker_log_color = False
 
 celery_app.conf.task_queues = (
     Queue('celery', Exchange('celery'), routing_key='celery',
@@ -30,18 +33,16 @@ celery_app.conf.task_queues = (
     default_retry_delay=10
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info(f"Saga: Hard deleting document {document_id}")
+    logger.info(f"Đang tiến hành xóa vĩnh viễn tài liệu {document_id}")
     import httpx
     try:
         from core.database import db_client
-        # Although we are in a worker, we might need an event loop or just call synchronous requests if not async.
-        # But this is Celery (sync task).
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
-        logger.info(f"Saga: Hard delete cleanup successful for {document_id}")
+        logger.info(f"Dọn dẹp và xóa vĩnh viễn tài liệu {document_id} thành công")
     except Exception as e:
-        logger.error(f"Saga: Hard delete failed for {document_id}: {e}")
+        logger.error(f"Xóa vĩnh viễn tài liệu {document_id} thất bại vì lỗi {e}")
         raise hard_delete_document_task.retry(exc=e)
 
 @celery_app.task(
@@ -52,7 +53,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info(f"Task: compile_document_tectonic started for document {document_id}")
+    logger.info(f"Bắt đầu xử lý tài liệu {document_id} bằng Tectonic")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -62,7 +63,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
             
         try:
-            logger.debug(f"Running Tectonic for document {document_id}")
+            logger.debug(f"Đang chạy Tectonic để xử lý tài liệu {document_id}")
             process = subprocess.run(
                 ["tectonic", "--synctex", "--keep-logs", "-Z", "continue-on-errors", "--outdir", temp_dir, tex_path],
                 capture_output=True,
@@ -71,19 +72,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
             
             if not os.path.exists(pdf_path):
-                logger.error(f"Tectonic compilation failed for document {document_id}")
+                logger.error(f"Biên dịch Tectonic thất bại đối với tài liệu {document_id}")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
-                return {"status": "error", "error": "Compilation failed", "logs": log_content, "document_id": document_id}
+                return {"status": "error", "error": "Biên dịch thất bại", "logs": log_content, "document_id": document_id}
                 
-            logger.info(f"Task: compile_document_tectonic completed successfully for document {document_id}")
+            logger.info(f"Đã xử lý xong tài liệu {document_id} bằng Tectonic")
             
             return {"status": "success", "pdf_path": pdf_path, "document_id": document_id, "logs": process.stdout}
         except subprocess.TimeoutExpired:
-            logger.error(f"Tectonic compilation timed out for document {document_id}")
-            return {"status": "error", "error": "Quá thời gian biên dịch cho phép (60s). Có thể tài liệu chứa vòng lặp vô hạn.", "document_id": document_id}
+            logger.error(f"Biên dịch Tectonic quá thời gian cho phép đối với tài liệu {document_id}")
+            return {"status": "error", "error": "Quá thời gian biên dịch cho phép, có thể tài liệu chứa vòng lặp vô hạn", "document_id": document_id}
         except Exception as e:
-            logger.exception(f"Error in compile_document_tectonic: {e}")
+            logger.exception(f"Biên dịch Tectonic thất bại: {e}")
             return {"status": "error", "error": str(e), "document_id": document_id}

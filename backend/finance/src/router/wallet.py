@@ -1,3 +1,4 @@
+from core.config import settings
 from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
@@ -43,7 +44,7 @@ async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depen
     user_doc = {}
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{author_id}", timeout=3.0)
+            resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{author_id}", timeout=3.0)
             if resp.status_code == 200:
                 user_doc = resp.json().get('data') or {}
     except Exception:

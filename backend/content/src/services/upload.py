@@ -18,9 +18,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'MinIO image upload error: {e}')
+            logger.error(f'Sự cố khi tải hình ảnh lên MinIO: {e}')
             raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tải hình ảnh lên MinIO')
-        logger.info(f'Image uploaded to MinIO: {filename}')
+        logger.info(f'Đã tải hình ảnh lên MinIO với tên {filename}')
         return {'url': filename, 'filename': filename}
 
     @staticmethod
@@ -30,15 +30,15 @@ class UploadService:
         if ext == 'svg' or 'svg' in file.content_type.lower():
             raise HTTPException(status_code=400, detail='SVG upload is blocked.')
         if ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail=f'Hệ thống không hỗ trợ định dạng .{ext}')
+            raise HTTPException(status_code=400, detail=f'Rất tiếc hệ thống hiện tại chưa hỗ trợ định dạng .{ext}')
         filename = f'documents/{uuid7().hex}.{ext}'
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'MinIO document upload error: {e}')
+            logger.error(f'Sự cố khi tải tài liệu lên MinIO: {e}')
             raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tải tài liệu lên MinIO')
-        logger.info(f'Document uploaded to MinIO: {filename}')
+        logger.info(f'Đã tải tài liệu lên MinIO với tên {filename}')
         return {'url': filename, 'filename': filename, 'extension': ext}
 
     @staticmethod
@@ -49,5 +49,5 @@ class UploadService:
             url = await generate_presigned_url(file_path, 3600)
             return {'download_url': url}
         except Exception as e:
-            logger.error(f'MinIO presigned url error: {e}')
+            logger.error(f'Không thể tạo liên kết tải xuống MinIO: {e}')
             raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tạo liên kết tải về')

@@ -21,14 +21,14 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content, 'format': format_type})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail=f'Lỗi hệ thống khi xuất file {format_type}')
+                    raise HTTPException(status_code=422, detail=f'Máy chủ gặp sự cố trong quá trình xuất tệp {format_type}')
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail=f'Quá thời gian xử lý khi xuất file {format_type}')
+            raise HTTPException(status_code=408, detail=f'Hệ thống mất quá nhiều thời gian để xuất tệp {format_type} nên đã tự động ngắt')
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Compilation: System error during {format_type} export: {e}')
+            logger.error(f'Hệ thống gặp lỗi nghiêm trọng trong lúc xuất tệp {format_type}: {e}')
             raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình xuất tài liệu')
 
     @staticmethod
@@ -47,7 +47,7 @@ class EditorService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Compilation: System error during EditorJS compilation: {e}')
+            logger.error(f'Hệ thống gặp lỗi khi biên dịch EditorJS: {e}')
             raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình biên dịch tài liệu EditorJS')
 
     @staticmethod
@@ -61,7 +61,7 @@ class EditorService:
                 return {'duplication_score': 85.5, 'matched_with': documents[0].get('title', 'Unknown'), 'status': 'warning'}
             return {'duplication_score': 0.0, 'status': 'clean'}
         except Exception as e:
-            logger.error(f'Plagiarism check error: {e}')
+            logger.error(f'Lỗi khi kiểm tra đạo văn: {e}')
             return {'duplication_score': 0.0, 'status': 'clean', 'error': str(e)}
 
     @staticmethod
@@ -73,7 +73,7 @@ class EditorService:
                 await redis_client.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
             return {'status': 'synced_redis', 'timestamp': payload.get('timestamp')}
         except Exception as e:
-            logger.error(f'Error syncing keystrokes: {e}')
+            logger.error(f'Gặp lỗi trong quá trình đồng bộ thao tác gõ phím: {e}')
             return {'status': 'sync_failed', 'error': str(e)}
 
     @staticmethod
@@ -93,7 +93,7 @@ class EditorService:
             'status': 'pending',
             'created_at': datetime.now(timezone.utc)
         })
-        logger.info(f'Inline suggestion added for document {document_id} by user {user_id}')
+        logger.info(f'Người dùng {user_id} vừa thêm gợi ý chỉnh sửa cho tài liệu {document_id}')
         return {'message': 'Gợi ý chỉnh sửa đã được thêm thành công'}
 
     @staticmethod
@@ -110,7 +110,7 @@ class EditorService:
             {'_id': ObjectId(suggestion_id)},
             {'$set': {'status': payload.get('action', 'rejected'), 'resolved_at': datetime.now(timezone.utc)}}
         )
-        logger.info(f'Suggestion {suggestion_id} resolved by user {user_id}')
+        logger.info(f'Người dùng {user_id} đã giải quyết xong gợi ý chỉnh sửa {suggestion_id}')
         action_map = {'accepted': 'chấp nhận', 'rejected': 'từ chối'}
         action_vn = action_map.get(payload.get('action'), payload.get('action'))
         return {'message': f'Đã {action_vn} gợi ý thành công'}
@@ -125,7 +125,7 @@ class EditorService:
             'words_written': payload.get('words_written'),
             'created_at': datetime.now(timezone.utc)
         })
-        logger.info(f'Pomodoro session recorded for user {user_id}')
+        logger.info(f'Đã ghi nhận một phiên học Pomodoro cho người dùng {user_id}')
         return {'status': 'recorded'}
 
     @staticmethod
@@ -160,7 +160,7 @@ class EditorService:
                 if 'data' in block and 'text' in block['data']:
                     words += len(str(block['data']['text']).split())
         except Exception as e:
-            logger.error(f'Error parsing draft content for document {document_id}: {e}')
+            logger.error(f'Không thể phân tích nội dung nháp của tài liệu {document_id}: {e}')
 
         reading_time_minutes = max(1, words // 200)
         await db['documents'].update_one(
@@ -181,7 +181,7 @@ class EditorService:
             {'_id': document_id, 'author_id': user_id},
             {'$set': {'editor_review_status': 'pending_review'}}
         )
-        logger.info(f'Document {document_id} submitted for review by user {user_id}')
+        logger.info(f'Tài liệu {document_id} đã được gửi để chờ phê duyệt bởi {user_id}')
         return {'message': 'Tài liệu đã được gửi và đang chờ kiểm duyệt'}
 
     @staticmethod
@@ -222,7 +222,7 @@ class EditorService:
             'details': f"Replaced '{search_term}' with '{replace_term}'",
             'created_at': datetime.now(timezone.utc)
         })
-        logger.info(f'Global find/replace executed for document {document_id} by user {user_id}')
+        logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
         return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
@@ -268,7 +268,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
-            logger.error(f'Summarization error: {e}')
+            logger.error(f'Quá trình tóm tắt tự động thất bại: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
         raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
 
@@ -303,7 +303,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$addToSet': {'tags': {'$each': tags}}})
                     return {'tags': tags}
         except Exception as e:
-            logger.error(f'Tag extraction error: {e}')
+            logger.error(f'Không thể trích xuất thẻ tự động: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
         raise HTTPException(status_code=500, detail='Không thể phân tích thẻ')
 
@@ -380,7 +380,7 @@ class EditorService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f'Deep plagiarism check failed: {e}')
+            logger.error(f'Kiểm tra đạo văn chuyên sâu thất bại: {e}')
         return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn'}
 
     @staticmethod
@@ -429,6 +429,6 @@ class EditorService:
                         {'_id': document_id},
                         {'$set': {'cover_url': data['cover_url'], 'updated_at': datetime.now(timezone.utc)}}
                     )
-                    logger.info(f'Cover generated for {document_id}')
+                    logger.info(f'Đã tạo xong ảnh bìa cho tài liệu {document_id}')
                 return data
         return {'cover_url': None, 'message': 'Không thể tạo ảnh bìa lúc này'}

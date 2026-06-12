@@ -88,7 +88,7 @@ class MessageService:
         if other_user_ids:
             try:
                 async with httpx.AsyncClient() as client:
-                    resp = await client.post("http://provision:8450/nguoi-dung/noi-bo/nhieu-nguoi-dung", json=other_user_ids, timeout=5.0)
+                    resp = await client.post("{settings.PROVISION_URL}/nguoi-dung/noi-bo/nhieu-nguoi-dung", json=other_user_ids, timeout=5.0)
                     if resp.status_code == 200:
                         users_list = resp.json().get('data', [])
             except Exception:

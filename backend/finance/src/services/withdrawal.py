@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
@@ -50,12 +51,11 @@ class WithdrawalService:
         try:
             import httpx
             async with httpx.AsyncClient() as client:
-                # We assume provision is available at provision:8450
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{current_user.id}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{current_user.id}", timeout=3.0)
                 if resp.status_code == 200:
                     user_info = resp.json().get('data') or {}
         except Exception as e:
-            logger.warning(f"Failed to fetch user info from provision: {e}")
+            logger.warning(f"Lỗi khi đồng bộ thông tin người dùng từ máy chủ nội bộ: {e}")
 
         if user_info.get('last_password_change'):
             last_pw_str = user_info['last_password_change']
@@ -103,14 +103,14 @@ class WithdrawalService:
                 await session.commit_transaction()
                 
             masked_bank_info = bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
-            logger.info(f'Withdrawal: Requested by user {current_user.id} for {amount} dl. Bank: {masked_bank_info}')
+            logger.info(f'Người dùng {current_user.id} vừa yêu cầu rút {amount} dl về tài khoản {masked_bank_info}')
             return {'message': 'Yêu cầu rút tiền đã được gửi thành công.', 'withdrawal_id': withdrawal_id}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Withdrawal: Request failed for user {current_user.id}: {e}')
+            logger.exception(f'Yêu cầu rút tiền của người dùng {current_user.id} thất bại: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             if should_close_session:
@@ -189,14 +189,14 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
                 
-            logger.info(f'Audit: Withdrawal {withdrawal_id} {status} by moderator {current_moderator.id}')
+            logger.info(f'Điều phối viên {current_moderator.id} đã chuyển trạng thái yêu cầu rút tiền {withdrawal_id} thành {status}')
             return {'message': f'Đã {status.lower()} yêu cầu rút tiền thành công.'}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Withdrawal: Verify failed for {withdrawal_id}: {e}')
+            logger.exception(f'Lỗi trong quá trình xác thực yêu cầu rút tiền {withdrawal_id}: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             if should_close_session:
@@ -234,14 +234,14 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
                 
-            logger.info(f'Withdrawal: {withdrawal_id} cancelled by user {current_user.id}')
+            logger.info(f'Người dùng {current_user.id} đã tự hủy yêu cầu rút tiền {withdrawal_id}')
             return {'message': 'Đã hủy yêu cầu rút tiền thành công.'}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Withdrawal: Cancel failed for {withdrawal_id}: {e}')
+            logger.exception(f'Không thể hủy yêu cầu rút tiền {withdrawal_id}: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau.')
         finally:
             if should_close_session:

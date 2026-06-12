@@ -64,5 +64,5 @@ class NotificationService:
                     json.dumps({'title': data.title, 'body': data.body})
                 )
             except Exception as e:
-                logger.error(f'Redis publish failed: {e}')
+                logger.error(f'Không thể đẩy dữ liệu lên Redis vì lỗi {e}')
         return {'id': notif_id}

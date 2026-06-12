@@ -18,8 +18,6 @@ class MessageConnectionManager:
             return
         if not db_client.redis:
             return
-        # Create a new non-decoded redis client for pubsub if needed, or use the existing
-        # db_client.redis is already initialized.
         self._pubsub = db_client.redis.pubsub()
         await self._pubsub.psubscribe('chat_delivery:*')
         self._listener_task = asyncio.create_task(self._global_listener())
@@ -50,7 +48,7 @@ class MessageConnectionManager:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.error(f'Global Redis listener crashed: {e}')
+            logger.error(f'Hệ thống lắng nghe tín hiệu của Redis đã ngừng hoạt động: {e}')
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

@@ -67,20 +67,20 @@ class DepositService:
                 )
                 return {'checkout_url': checkout_url, 'order_code': order_code}
             else:
-                logger.error(f'payOS create payment failed: {res_data}')
+                logger.error(f'Không thể tạo liên kết thanh toán payOS: {res_data}')
                 await db['orders'].update_one({'order_code': order_code}, {'$set': {'status': 'FAILED'}})
                 raise HTTPException(status_code=400, detail=res_data.get('desc', 'Lỗi khởi tạo thanh toán payOS'))
         except HTTPException:
             raise
         except Exception as e:
             await db['orders'].update_one({'order_code': order_code}, {'$set': {'status': 'FAILED'}})
-            logger.exception(f'payOS connection error: {e}')
+            logger.exception(f'Không thể kết nối với hệ thống payOS: {e}')
             raise HTTPException(status_code=500, detail='Không thể kết nối với hệ thống thanh toán, vui lòng thử lại sau')
 
     @staticmethod
     async def deposit_webhook(request, db=None):
         data = await request.json()
-        logger.info(f'Received payOS webhook: {json.dumps(data, default=str)}')
+        logger.info(f'Nhận được thông báo từ payOS với dữ liệu {json.dumps(data, default=str)}')
         if data.get('code') == '00' and data.get('data'):
             webhook_data = data['data']
             order_code = webhook_data.get('orderCode')
@@ -101,7 +101,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f'payOS webhook processing error: {e}')
+                logger.exception(f'Gặp lỗi khi xử lý thông báo từ payOS: {e}')
         return Response(content=json.dumps({'code': '00', 'desc': 'success'}), media_type='application/json', status_code=200)
 
     @staticmethod
@@ -126,7 +126,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Redis rate limit failed: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -143,7 +143,7 @@ class DepositService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception(f'payOS verify error: {e}')
+            logger.exception(f'Lỗi khi xác minh giao dịch payOS: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kiểm tra trạng thái thanh toán')
 
     @staticmethod
@@ -163,7 +163,7 @@ class DepositService:
         
         order = await orders.find_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}})
         if not order:
-            logger.warning(f'Order {order_code} not found or already processed')
+            logger.warning(f'Đơn hàng {order_code} không tồn tại hoặc đã được xử lý từ trước')
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -180,12 +180,11 @@ class DepositService:
         user_id = order['user_id']
         
         try:
-            # Idempotent update
             result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'success', 'updated_at': datetime.now(timezone.utc)}}, session=session)
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.warning(f'Order {order_code} status update failed (already processed?)')
+                logger.warning(f'Không thể cập nhật trạng thái đơn hàng {order_code} có thể do đã được xử lý')
                 return
             await wallets.update_one({'_id': user_id}, {'$inc': {'balance': dl_to_add}}, upsert=True, session=session)
             tx = Transaction(user_id=user_id, type=TransactionType.TOPUP, amount=dl_to_add, note=f"Nạp tiền qua payOS: {order['amount']} VNĐ")
@@ -211,11 +210,11 @@ class DepositService:
                         )
             except Exception as e:
                 logger.warning(f'Notification failed: {e}')
-            logger.info(f'Added {dl_to_add} dl to user {user_id} (Order {order_code}) (atomic)')
+            logger.info(f'Đã cộng thêm {dl_to_add} dl cho người dùng {user_id} từ đơn hàng {order_code}')
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Order processing failed for {order_code}: {e}')
+            logger.exception(f'Gặp sự cố khi xử lý đơn hàng {order_code}: {e}')
             raise HTTPException(status_code=500, detail="Lỗi hệ thống tạm thời")
         finally:
             if should_close_session:

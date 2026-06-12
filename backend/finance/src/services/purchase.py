@@ -82,14 +82,14 @@ class PurchaseService:
                                     )
                         except Exception as e:
                             logger.error(f"Notification failed: {e}")
-                logger.info(f'Purchase: Document {document_id} purchased by user {current_user.id} for {price} dl')
+                logger.info(f'Người dùng {current_user.id} đã mua tài liệu {document_id} với giá {price} dl')
                 return {'message': 'Mua tài liệu thành công.', 'status': 'purchased'}
             except HTTPException:
                 raise
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error(f'Document purchase transaction failed for user {current_user.id}: {e}')
+                logger.error(f'Giao dịch mua tài liệu của người dùng {current_user.id} thất bại: {e}')
                 raise HTTPException(status_code=500, detail='Giao dịch thất bại. Vui lòng thử lại sau.')
             finally:
                 if should_close_session:
@@ -148,7 +148,7 @@ class PurchaseService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f'Refund failed: {e}')
+            logger.error(f'Quá trình hoàn tiền thất bại: {e}')
             raise HTTPException(status_code=500, detail='Hoàn tiền thất bại.')
         finally:
             if should_close_session:

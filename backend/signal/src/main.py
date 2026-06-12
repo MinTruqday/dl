@@ -14,11 +14,11 @@ def trace_id_filter(record):
 
 
 logger.remove()
-logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
+logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", filter=trace_id_filter, level="INFO")
 
 from src.router.notification import router as notification_router
 
-app = FastAPI(title="DocLib Signal Service")
+app = FastAPI(title="DocLib Signal")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,9 +42,9 @@ async def add_trace_id_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Signal Service initialized")
+    logger.info("Dịch vụ thông báo DocLib đã khởi động")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "signal"}
+    return {"status": "Hệ thống hoạt động bình thường", "service": "signal"}

@@ -31,7 +31,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Redis rate limit failed: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
         
         if db_client.redis:
             try:
@@ -41,7 +41,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f'Redis set lock failed: {e}')
+                logger.exception(f'Không thể khóa phiên làm việc trên Redis: {e}')
                 raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm, vui lòng thử lại sau")
 
         if db is None:
@@ -95,14 +95,14 @@ class WalletService:
                         )
             except Exception as e:
                 logger.warning(f'Notification failed: {e}')
-            logger.info(f'User {current_user.id} redeemed voucher {req.code} for {bonus_dl} dl')
+            logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
             return {'message': 'Đổi voucher thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Voucher redeem failed: {e}')
+            logger.exception(f'Không thể đổi mã quà tặng: {e}')
             raise HTTPException(status_code=500, detail="Hệ thống bảo trì, thử lại sau")
         finally:
             if should_close_session:
@@ -111,7 +111,7 @@ class WalletService:
                 try:
                     await db_client.redis.delete(lock_key)
                 except Exception as e:
-                    logger.error(f'Failed to release Redis lock: {e}')
+                    logger.error(f'Không thể mở khóa phiên làm việc trên Redis: {e}')
 
     @staticmethod
     async def get_history(current_user, cursor: str=None, limit: int=30, tx_type: str=None, skip: int=0, db=None):
@@ -124,7 +124,7 @@ class WalletService:
             try:
                 query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except Exception as e:
-                logger.warning(f'Invalid cursor format: {e}')
+                logger.warning(f'Định dạng con trỏ phân trang không hợp lệ: {e}')
         tx_cursor = db['transactions'].find(query).sort('created_at', -1)
         if skip > 0:
             tx_cursor = tx_cursor.skip(skip)

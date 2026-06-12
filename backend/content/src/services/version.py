@@ -17,7 +17,7 @@ class VersionsService:
         if not doc:
             raise HTTPException(status_code=404, detail='Không tìm thấy tài liệu.')
         await db['document_versions'].insert_one({'document_id': document_id, 'author_id': str(current_user.id), 'note': version_note, 'snapshot': {'title': doc.get('title'), 'description': doc.get('description'), 'content': doc.get('content', ''), 'cover_url': doc.get('cover_url'), 'tags': doc.get('tags', []), 'categories': doc.get('categories', [])}, 'created_at': datetime.now(timezone.utc)})
-        logger.info(f'Versioning: Snapshot created for document {document_id} by {current_user.id}')
+        logger.info(f'Người dùng {current_user.id} vừa lưu bản nháp cho tài liệu {document_id}')
         return {'message': 'Đã lưu phiên bản thành công.'}
 
     @staticmethod
@@ -44,5 +44,5 @@ class VersionsService:
         else:
             update_data = {**snapshot, 'updated_at': datetime.now(timezone.utc)}
         await db['documents'].update_one({'_id': version['document_id']}, {'$set': update_data})
-        logger.info(f"Versioning: Document {version['document_id']} restored to version {version_id} by {current_user.id}")
+        logger.info(f"Người dùng {current_user.id} đã khôi phục tài liệu {version['document_id']} về phiên bản {version_id}")
         return {'message': 'Đã khôi phục phiên bản thành công.'}

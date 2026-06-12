@@ -34,7 +34,7 @@ class AuthenticationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    "http://provision:8450/nguoi-dung/noi-bo/tao-moi",
+                    "{settings.PROVISION_URL}/nguoi-dung/noi-bo/tao-moi",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -44,7 +44,7 @@ class AuthenticationService:
                     timeout=5.0
                 )
                 if resp.status_code == 400:
-                    # Provision will validate uniqueness
+                    
                     detail = resp.json().get('detail') if resp.json() else 'Lỗi hệ thống'
                     raise HTTPException(status_code=400, detail=detail)
                 elif resp.status_code != 201:
@@ -62,7 +62,7 @@ class AuthenticationService:
         await db['auth_credentials'].insert_one(auth_cred)
 
         await db['audit_logs'].insert_one({'action': 'REGISTER_USER', 'actor_email': user_in.email, 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
-        logger.info(f'New user registered: {user_in.email} from {client_ip}')
+        logger.info(f'Người dùng mới {user_in.email} vừa đăng ký từ {client_ip}')
         return {"email": user_in.email, "full_name": user_in.full_name, "slug": user_in.slug, "role": "READER", "id": user_id}
 
     @staticmethod
@@ -75,9 +75,9 @@ class AuthenticationService:
         try:
             async with httpx.AsyncClient() as client:
                 if is_email:
-                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{username}", timeout=3.0)
+                    resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{username}", timeout=3.0)
                 else:
-                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/slug/{username}", timeout=3.0)
+                    resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/slug/{username}", timeout=3.0)
                 if resp.status_code == 200:
                     user_doc = resp.json().get('data')
         except Exception:
@@ -91,7 +91,7 @@ class AuthenticationService:
 
         if not verify_password(password, password_hash):
             await db['audit_logs'].insert_one({'action': 'LOGIN_FAILED_WRONG_PASSWORD', 'actor_email': user_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
-            logger.warning(f'Login failed: Incorrect password for - {username} from {client_ip}')
+            logger.warning(f'Đăng nhập thất bại do sai mật khẩu cho tài khoản {username} từ {client_ip}')
             raise HTTPException(status_code=401, detail='Mật khẩu bạn nhập không chính xác.')
         if not user_doc.get('is_active', True):
             raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên.')
@@ -101,7 +101,7 @@ class AuthenticationService:
             await db_client.redis.sadd(f'user_sessions:{user_id_str}', session_id)
             await db_client.redis.setex(f'session_meta:{session_id}', 604800, client_ip)
         access_token = create_access_token(data={'sub': user_doc['email'], 'sid': session_id})
-        logger.info(f'User logged in: {username} from {client_ip}')
+        logger.info(f'Tài khoản {username} vừa đăng nhập từ {client_ip}')
         return {'access_token': access_token, 'token_type': 'bearer', 'user': {'email': user_doc['email'], 'has_passkey': len(auth_cred.get('passkeys', [])) > 0}}
 
     @staticmethod
@@ -113,7 +113,7 @@ class AuthenticationService:
         for sid in sessions:
             await db_client.redis.delete(f'session_meta:{sid}')
         await db_client.redis.delete(f'user_sessions:{user_id_str}')
-        logger.info(f'All sessions revoked for user {user_id_str}')
+        logger.info(f'Đã vô hiệu hóa toàn bộ phiên đăng nhập của {user_id_str}')
         return {'message': 'Bạn đã đăng xuất khỏi tất cả các thiết bị thành công.'}
 
     @staticmethod
@@ -123,7 +123,7 @@ class AuthenticationService:
         import httpx
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
                 user = resp.json().get('data') if resp.status_code == 200 else None
         except Exception:
             user = None
@@ -134,7 +134,7 @@ class AuthenticationService:
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception as e:
-                logger.error(f'Failed to send reset email to {email}: {e}')
+                logger.error(f'Không thể gửi thư khôi phục mật khẩu đến {email}: {e}')
         return {'status': 'ok', 'message': 'Yêu cầu đã được ghi nhận. Nếu Email tồn tại trên hệ thống, mã xác thực sẽ được gửi tới bạn trong giây lát.'}
 
     @staticmethod
@@ -149,7 +149,7 @@ class AuthenticationService:
             await db['auth_credentials'].update_one({'email': token_doc['email']}, {'$set': {'password_hash': get_password_hash(new_password)}})
         await db['password_reset_tokens'].update_one({'_id': token_doc['_id']}, {'$set': {'used': True}})
         await db['audit_logs'].insert_one({'action': 'RESET_PASSWORD_SUCCESS', 'actor_email': token_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
-        logger.info(f"Password reset success for: {token_doc['email']} from {client_ip}")
+        logger.info(f"Tài khoản {token_doc['email']} đã đổi mật khẩu thành công từ {client_ip}")
         return {'status': 'ok', 'message': 'Mật khẩu của bạn đã được thay đổi thành công.'}
 
     @staticmethod
@@ -185,7 +185,7 @@ class AuthenticationService:
             token_resp = await client.post('https://oauth2.googleapis.com/token', data={'code': code, 'client_id': google_client_id, 'client_secret': google_client_secret, 'redirect_uri': redirect_uri, 'grant_type': 'authorization_code'})
             token_data = token_resp.json()
             if 'access_token' not in token_data:
-                logger.error(f'Google OAuth failed: {token_data}')
+                logger.error(f'Xác thực qua Google thất bại: {token_data}')
                 raise HTTPException(status_code=400, detail='Quá trình xác thực với Google thất bại. Vui lòng thử lại.')
             user_resp = await client.get('https://www.googleapis.com/oauth2/v3/userinfo', headers={'Authorization': f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
@@ -194,7 +194,7 @@ class AuthenticationService:
         email = google_user.get('email')
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
                 user_doc = resp.json().get('data') if resp.status_code == 200 else None
         except Exception:
             user_doc = None
@@ -206,7 +206,7 @@ class AuthenticationService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        "http://provision:8450/nguoi-dung/noi-bo/tao-moi",
+                        "{settings.PROVISION_URL}/nguoi-dung/noi-bo/tao-moi",
                         json={
                             "email": email,
                             "full_name": google_user.get('name'),
@@ -233,5 +233,5 @@ class AuthenticationService:
                     }
             except httpx.RequestError:
                 raise HTTPException(status_code=500, detail="Không thể kết nối đến dịch vụ quản lý người dùng")
-            logger.info(f'New user created via Google login: {email}')
+            logger.info(f'Tạo mới tài khoản qua Google cho {email}')
         return await AuthenticationService.issue_token_for_user(user_doc, client_ip)

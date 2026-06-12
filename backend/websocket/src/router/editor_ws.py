@@ -14,5 +14,5 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.error(f'WebSocket error for document {document_id}: {e}')
+        logger.error(f'Đường truyền trực tiếp cho tài liệu {document_id} bị gián đoạn: {e}')
         manager.disconnect(websocket, document_id)

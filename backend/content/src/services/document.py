@@ -85,7 +85,7 @@ class DocumentService:
 
         doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info(f"Workspace: Document created {doc_doc.id} by author {current_user.id}")
+        logger.info(f"Tác giả {current_user.id} vừa tạo tài liệu {doc_doc.id}")
         return doc_doc
 
     @staticmethod
@@ -163,9 +163,9 @@ class DocumentService:
                         timeout=3.0
                     )
             except Exception as e:
-                logger.error(f"Lỗi khi gửi thông báo cập nhật tài liệu {document_id}: {e}")
+                logger.error(f"Không thể gửi thông báo cập nhật cho tài liệu {document_id}: {e}")
         
-        logger.info(f"Workspace: Document content updated {document_id} by {current_user.id}")
+        logger.info(f"Người dùng {current_user.id} vừa cập nhật nội dung tài liệu {document_id}")
         
         if hasattr(db_client, 'redis') and db_client.redis:
             await db_client.redis.delete(f"document:{document_id}")
@@ -295,7 +295,7 @@ class DocumentService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu.")
             
-        logger.info(f"Workspace: Document {document_id} moved to trash by {current_user.id}")
+        logger.info(f"Người dùng {current_user.id} đã chuyển tài liệu {document_id} vào thùng rác")
         return {"message": "Đã chuyển tài liệu vào thùng rác."}
 
     @staticmethod
@@ -308,7 +308,7 @@ class DocumentService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong thùng rác.")
             
-        logger.info(f"Workspace: Document {document_id} restored by {current_user.id}")
+        logger.info(f"Người dùng {current_user.id} đã khôi phục tài liệu {document_id}")
         return {"message": "Đã khôi phục tài liệu thành công."}
 
     @staticmethod
@@ -338,7 +338,7 @@ class DocumentService:
             {"_id": document_id},
             {"$set": {"access_password_hash": hashed, "is_password_protected": True, "updated_at": datetime.now(timezone.utc)}}
         )
-        logger.info(f"Workspace: Password protection enabled for {document_id}")
+        logger.info(f"Đã bật bảo vệ bằng mật khẩu cho tài liệu {document_id}")
         return {"message": "Đã thiết lập mật khẩu bảo vệ tài liệu."}
 
     @staticmethod
@@ -352,11 +352,11 @@ class DocumentService:
         target_user = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
                 if resp.status_code == 200:
                     target_user = resp.json().get('data')
         except Exception as e:
-            logger.warning(f"Failed to fetch user by email: {e}")
+            logger.warning(f"Lỗi khi tra cứu thông tin người dùng bằng email: {e}")
             
         if not target_user:
             raise HTTPException(status_code=404, detail="Email không tồn tại.")
@@ -365,7 +365,7 @@ class DocumentService:
             return {"message": "Người này đã là đồng tác giả."}
             
         await db["documents"].update_one({"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}})
-        logger.info(f"Workspace: Coauthor {target_user['_id']} invited to {document_id}")
+        logger.info(f"Đã mời đồng tác giả {target_user['_id']} tham gia tài liệu {document_id}")
         return {"message": f"Đã thêm {target_user['full_name']} làm đồng tác giả."}
 
     @staticmethod
@@ -422,11 +422,11 @@ class DocumentService:
         author = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{document['author_id']}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{document['author_id']}", timeout=3.0)
                 if resp.status_code == 200:
                     author = resp.json().get('data')
         except Exception as e:
-            logger.warning(f"Failed to fetch author: {e}")
+            logger.warning(f"Không thể tải thông tin tác giả: {e}")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -455,7 +455,7 @@ class DocumentService:
                 f.write(b"</body></html>")
             
         mem_zip.seek(0)
-        logger.info(f"Workspace: EPUB exported for {document_id}")
+        logger.info(f"Đã xuất tài liệu {document_id} sang định dạng EPUB")
         return mem_zip.read()
 
     @staticmethod
@@ -566,7 +566,7 @@ class DocumentService:
             doc = await db["documents"].find_one({"_id": document_id})
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("author_id"))
-                logger.info(f"Moderation: Triggered publish job for approved document {document_id}")
+                logger.info(f"Hệ thống đang tiến hành xuất bản tài liệu {document_id} sau khi được phê duyệt")
         
         await db["audit_logs"].insert_one({
             "action": f"DOCUMENT_{status_val}", 
@@ -575,7 +575,7 @@ class DocumentService:
             "reason": reason, 
             "timestamp": datetime.now(timezone.utc)
         })
-        logger.info(f"Moderation: Document {document_id} {status_val.lower()} by {current_moderator.id}")
+        logger.info(f"Điều phối viên {current_moderator.id} đã đổi trạng thái tài liệu {document_id} thành {status_val.lower()}")
         return {"message": f"Đã {status_val.lower()} tài liệu thành công."}
 
     @staticmethod
@@ -590,7 +590,7 @@ class DocumentService:
                 "resolved_at": datetime.now(timezone.utc)
             }}
         )
-        logger.info(f"Moderation: Copyright dispute {dispute_id} resolved by {current_moderator.id}")
+        logger.info(f"Điều phối viên {current_moderator.id} đã giải quyết tranh chấp bản quyền {dispute_id}")
         return {"message": "Đã giải quyết tranh chấp bản quyền thành công."}
 
     @staticmethod

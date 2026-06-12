@@ -14,7 +14,7 @@ class PublicationService:
         if not doc:
             raise HTTPException(status_code=403, detail='Không tìm thấy tài liệu hoặc bạn không có quyền truy cập.')
         await db['documents'].update_one({'_id': str(document_id)}, {'$set': {'seo_tags': seo_data.get('tags', []), 'seo_keywords': seo_data.get('keywords', []), 'seo_slug': seo_data.get('slug', ''), 'meta_description': seo_data.get('description', ''), 'updated_at': datetime.now(timezone.utc)}})
-        logger.info(f'SEO metadata updated for document {document_id} by user {user_id}')
+        logger.info(f'Người dùng {user_id} đã cập nhật thông tin SEO cho tài liệu {document_id}')
         return {'message': 'Đã cập nhật thông tin thành công.'}
 
     @staticmethod
@@ -38,7 +38,7 @@ class PublicationService:
             logger.error('textstat library not found')
             return {'error': 'Tính năng phân tích độ đọc chưa khả dụng.'}
         except Exception as e:
-            logger.error(f'Readability analysis error: {e}')
+            logger.error(f'Lỗi khi phân tích mức độ dễ đọc: {e}')
             return {'error': 'Lỗi trong quá trình phân tích nội dung.'}
 
     @staticmethod
@@ -47,7 +47,7 @@ class PublicationService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         await db['documents'].update_one({'_id': document_id, 'author_id': user_id}, {'$set': {'scheduled_publish_at': datetime.fromisoformat(publish_at)}})
-        logger.info(f'Document {document_id} scheduled for publish at {publish_at} by user {user_id}')
+        logger.info(f'Tài liệu {document_id} được đặt lịch xuất bản vào lúc {publish_at} bởi {user_id}')
         return {'message': 'Đã hẹn giờ xuất bản thành công.'}
 
 
@@ -63,5 +63,5 @@ class PublicationService:
         from core.publication import trigger_document_publish_job
         await trigger_document_publish_job(document_id, user_id)
         await docs_collection.update_one({'_id': document_id}, {'$set': {'status': 'processing_publish', 'updated_at': datetime.now(timezone.utc)}})
-        logger.info(f'Workspace: Document publishing triggered {document_id}')
+        logger.info(f'Hệ thống bắt đầu quá trình xuất bản tài liệu {document_id}')
         return await docs_collection.find_one({'_id': document_id})

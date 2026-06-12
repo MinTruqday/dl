@@ -43,7 +43,7 @@ class CouponService:
         res = await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'status': status}})
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy mã ưu đãi')
-        logger.info(f'Monetization: Admin {current_user.id} {action}ed coupon {coupon_id}')
+        logger.info(f'Quản trị viên {current_user.id} đã {action} mã giảm giá {coupon_id}')
         return {'message': f"Đã {('duyệt' if action == 'approve' else 'từ chối')} mã ưu đãi thành công"}
 
     @staticmethod
@@ -81,7 +81,7 @@ class CouponService:
             raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại')
         new_status = not coupon.get('is_active', True)
         await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'is_active': new_status}})
-        logger.info(f'Monetization: Coupon {coupon_id} toggled to {new_status}')
+        logger.info(f'Mã giảm giá {coupon_id} đã được chuyển sang trạng thái {new_status}')
         return {'message': 'Đã cập nhật trạng thái mã ưu đãi', 'is_active': new_status}
 
     @staticmethod
@@ -94,5 +94,5 @@ class CouponService:
         res = await db['coupons'].delete_one(query)
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại')
-        logger.info(f'Monetization: Coupon {coupon_id} deleted by user {current_user.id}')
+        logger.info(f'Người dùng {current_user.id} đã xóa mã giảm giá {coupon_id}')
         return {'message': 'Đã xóa mã ưu đãi thành công'}

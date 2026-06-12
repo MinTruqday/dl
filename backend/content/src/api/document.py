@@ -234,7 +234,7 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     target = None
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{new_owner_id}", timeout=3.0)
+            resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{new_owner_id}", timeout=3.0)
             if resp.status_code == 200:
                 target = resp.json().get('data')
     except Exception:

@@ -31,7 +31,7 @@ class Transaction(BaseModel):
     amount: int
     reference_id: Optional[str] = None
     note: str
-    đã được tạo thành công_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class PurchaseRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
@@ -48,7 +48,7 @@ class Voucher(BaseModel):
     is_used: bool = False
     used_by: Optional[str] = None
     used_at: Optional[datetime] = None
-    đã được tạo thành công_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Config:
         populate_by_name = True
@@ -71,12 +71,12 @@ class FlashSaleRequest(BaseModel):
     expires_at: str
 
 class TopupRequest(BaseModel):
-    amount: int = Field(, gt=0)
+    amount: int = Field(..., gt=0)
     method: str = "payos"
 
 class VoucherCreateRequest(BaseModel):
     code: str
-    amount_dl: int = Field(, gt=0)
+    amount_dl: int = Field(..., gt=0)
     expires_at: datetime
 
 class CouponCreateRequest(BaseModel):

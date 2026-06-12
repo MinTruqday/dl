@@ -1,3 +1,4 @@
+from core.config import settings
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
@@ -24,7 +25,7 @@ class CollaborationService:
         invitee = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{invitee_email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{invitee_email}", timeout=3.0)
                 if resp.status_code == 200:
                     invitee = resp.json().get('data')
         except Exception:
@@ -43,7 +44,7 @@ class CollaborationService:
         invite = {'_id': str(uuid7()), 'document_id': document_id, 'document_title': doc.get('title', 'Tài liệu không tên'), 'inviter_id': str(current_user.id), 'inviter_name': current_user.full_name, 'invitee_id': invitee_id, 'role': role, 'status': 'PENDING', 'created_at': datetime.now(timezone.utc)}
         await db['collaboration_invites'].insert_one(invite)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Gửi lời mời', f'Đã gửi lời mời cộng tác tới {invitee_email} với vai trò {role}')
-        logger.info(f'Workspace: User {current_user.id} invited {invitee_id} to collaborate on {document_id}')
+        logger.info(f'Người dùng {current_user.id} vừa mời {invitee_id} cùng chỉnh sửa tài liệu {document_id}')
         return {'message': 'Đã gửi lời mời cộng tác thành công.', 'invite_id': invite['_id']}
 
     @staticmethod
@@ -66,7 +67,7 @@ class CollaborationService:
         if status == 'ACCEPTED':
             await db['documents'].update_one({'_id': invite['document_id']}, {'$push': {'coauthors': str(current_user.id)}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Chấp nhận' if status == 'ACCEPTED' else 'Từ chối', 'Đã chấp nhận lời mời cộng tác' if status == 'ACCEPTED' else 'Đã từ chối lời mời cộng tác')
-        logger.info(f'Workspace: User {current_user.id} {status} collaboration invite {invite_id}')
+        logger.info(f'Người dùng {current_user.id} đã {status} lời mời cộng tác {invite_id}')
         return {'message': f"Đã {('chấp nhận' if status == 'ACCEPTED' else 'từ chối')} lời mời cộng tác."}
 
     @staticmethod
@@ -83,7 +84,7 @@ class CollaborationService:
             user_info = None
             try:
                 async with httpx.AsyncClient() as client:
-                    resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{inv['invitee_id']}", timeout=3.0)
+                    resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{inv['invitee_id']}", timeout=3.0)
                     if resp.status_code == 200:
                         user_info = resp.json().get('data')
             except Exception:
@@ -105,7 +106,7 @@ class CollaborationService:
         await db['documents'].update_one({'_id': invite['document_id']}, {'$pull': {'coauthors': invite['invitee_id']}})
         await db['collaboration_invites'].delete_one({'_id': collaboration_id})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Xóa cộng tác viên', f"Đã xóa cộng tác viên có ID {invite['invitee_id']}")
-        logger.info(f"Workspace: Collaborator {invite['invitee_id']} removed from document {invite['document_id']} by owner {current_user.id}")
+        logger.info(f"Chủ sở hữu {current_user.id} đã xóa người cộng tác {invite['invitee_id']} khỏi tài liệu {invite['document_id']}")
         return {'message': 'Đã xóa cộng tác viên thành công.'}
 
     @staticmethod
@@ -129,7 +130,7 @@ class CollaborationService:
         target_user = None
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/{target_user_id}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{target_user_id}", timeout=3.0)
                 if resp.status_code == 200:
                     target_user = resp.json().get('data')
         except Exception:
@@ -141,7 +142,7 @@ class CollaborationService:
         await db['documents'].update_one({'_id': document_id}, {'$set': {'author_id': target_user_id, 'updated_at': datetime.now(timezone.utc)}, '$pull': {'coauthors': target_user_id}})
         await db['documents'].update_one({'_id': document_id}, {'$push': {'coauthors': str(current_user.id)}})
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Chuyển sở hữu', f"Đã chuyển quyền sở hữu tài liệu cho {target_user.get('full_name')}")
-        logger.info(f'Workspace: Ownership of document {document_id} transferred from {current_user.id} to {target_user_id}')
+        logger.info(f'Đã chuyển quyền sở hữu tài liệu {document_id} từ {current_user.id} sang {target_user_id}')
         return {'message': 'Đã chuyển quyền sở hữu tài liệu thành công.'}
 
     @staticmethod

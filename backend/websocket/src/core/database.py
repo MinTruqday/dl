@@ -14,7 +14,7 @@ class DatabaseClient:
             self.redis = redis.from_url(settings.REDIS_URI, decode_responses=True)
             logger.info("Connected to MongoDB and Redis")
         except Exception as e:
-            logger.error(f"Failed to connect to databases: {e}")
+            logger.error(f"Không thể kết nối đến cơ sở dữ liệu hệ thống: {e}")
 
     async def disconnect(self):
         if self.mongodb:
