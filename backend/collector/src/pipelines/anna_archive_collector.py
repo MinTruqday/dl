@@ -1,3 +1,4 @@
+from core.config import settings
 import urllib.parse
 import os
 import aiohttp
@@ -20,9 +21,9 @@ class AnnaArchiveCollector:
     @staticmethod
     async def run_list_collector(search_query: str = "", pages: int = 0):
         if search_query:
-            logger.info(f"Starting paginated search on Anna's Archive: {search_query}")
+            logger.info(f"Bắt đầu tìm kiếm phân trang trên Anna's Archive: {search_query}")
         else:
-            logger.info("Starting general paginated collection on Anna's Archive")
+            logger.info("Bắt đầu thu thập hàng loạt từ Anna's Archive")
         encoded = urllib.parse.quote(search_query)
         
         async with managed_browser() as browser:
@@ -35,14 +36,14 @@ class AnnaArchiveCollector:
                 
                 while True:
                     search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
-                    logger.info(f"Navigating to page {page_num}: {search_url}")
+                    logger.info(f"Đang chuyển sang trang {page_num}: {search_url}")
                     
                     await page.goto(search_url, timeout=60000, wait_until='domcontentloaded')
                     content = await page.content()
                     
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Search page blocked by security shield, attempting FlareSolverr bypass")
-                        flaresolverr_url = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
+                        logger.info("Trang tìm kiếm bị tường lửa chặn, đang thử dùng FlareSolverr")
+                        flaresolverr_url = settings.FLARESOLVERR_URL
                         async with aiohttp.ClientSession() as session:
                             async with session.post(flaresolverr_url, json={"cmd": "request.get", "url": search_url, "maxTimeout": 60000}) as resp:
                                 if resp.status == 200:
@@ -55,11 +56,11 @@ class AnnaArchiveCollector:
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
                     except Exception as e:
-                        logger.error(f"Timeout or error waiting for MD5 links on page {page_num}: {e}")
+                        logger.error(f"Lỗi hoặc hết giờ khi đang lấy link MD5 ở trang {page_num}: {e}")
                     
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
-                        logger.warning(f"No MD5 links found on page {page_num}, terminating pagination")
+                        logger.warning(f"Trang này không có link MD5 {page_num}, nên dừng việc quét danh sách lại")
                         break
                     
                     document_urls = set()
@@ -69,7 +70,7 @@ class AnnaArchiveCollector:
                             full_url = "https://annas-archive.gl" + href if href.startswith("/") else href
                             document_urls.add(full_url)
                     
-                    logger.info(f"Found {len(document_urls)} MD5 links on page {page_num}")
+                    logger.info(f"Lấy được {len(document_urls)} link MD5 ở trang {page_num}")
                     new_urls_found = 0
                     
                     for url in document_urls:
@@ -78,19 +79,19 @@ class AnnaArchiveCollector:
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
                     
-                    logger.info(f"Successfully published {new_urls_found} new items from page {page_num}")
+                    logger.info(f"Vừa đẩy {new_urls_found} tài liệu mới từ trang {page_num} vào hàng đợi")
                     if page_num >= pages:
-                        logger.info(f"Đã đạt giới hạn yêu cầu {pages} pages, terminating")
+                        logger.info(f"Đã đủ số lượng {pages} trang yêu cầu, đang dừng tiến trình")
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Tiến trình thu thập danh sách Anna's Archive gặp lỗi: {e}")
+                logger.error(f"Quy trình lấy danh sách từ Anna's Archive bị lỗi: {e}")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
-        logger.info("Using FlareSolverr to fetch clearance cookies and userAgent")
+        logger.info("Đang gọi FlareSolverr để lấy cookie và userAgent hợp lệ")
         try:
-            flare_url = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
+            flare_url = settings.FLARESOLVERR_URL
             async with aiohttp.ClientSession() as session:
                 async with session.post(flare_url, json={"cmd": "request.get", "url": url, "maxTimeout": 60000}) as resp:
                     if resp.status == 200:
@@ -113,12 +114,12 @@ class AnnaArchiveCollector:
                             await context.add_cookies(formatted_cookies)
                         return context
         except Exception as e:
-            logger.error(f"FlareSolverr API error: {e}")
+            logger.error(f"Không thể gọi FlareSolverr vì lỗi: {e}")
         return await get_stealth_context(browser)
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"[Thu thập chi tiết] Anna: {document_url}")
+        logger.info(f"[Tải dữ liệu] Anna: {document_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -130,7 +131,7 @@ class AnnaArchiveCollector:
                 content = await page.content()
                 
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Detail page blocked, applying FlareSolverr clearance cookies")
+                    logger.info("Trang chi tiết bị chặn, đang dùng FlareSolverr để vượt qua")
                     await page.close()
                     await context.close()
                     
@@ -151,7 +152,7 @@ class AnnaArchiveCollector:
                 author_el = await page.query_selector('div.italic')
                 payload["author"] = await author_el.inner_text() if author_el else "Unknown"
                 
-                logger.info(f"Extracted Title: {payload['title']}, Author: {payload['author']}")
+                logger.info(f"Lấy thông tin sách: {payload['title']}, Author: {payload['author']}")
                 
                 cover_el = await page.query_selector('img[src*="covers/"]') or await page.query_selector('img[src*="isbn"]') or await page.query_selector('div > img')
                 if cover_el:
@@ -166,13 +167,13 @@ class AnnaArchiveCollector:
                 if slow_link_el:
                     slow_href = await slow_link_el.get_attribute("href")
                     slow_url = "https://annas-archive.gl" + slow_href if slow_href.startswith("/") else slow_href
-                    logger.info(f"Navigating to download page: {slow_url}")
+                    logger.info(f"Đang mở trang chứa link tải: {slow_url}")
                     
                     await page.goto(slow_url, timeout=60000)
                     content = await page.content()
                     
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Download page blocked, applying FlareSolverr clearance cookies")
+                        logger.info("Trang tải bị chặn, đang dùng FlareSolverr để vượt qua")
                         await page.close()
                         await context.close()
                         
@@ -185,7 +186,7 @@ class AnnaArchiveCollector:
                         download_link = None
                         js_link_css = 'main p a[href*="http"]'
                         
-                        logger.info("Playwright natively polling for JS countdown to finish")
+                        logger.info("Đang chờ bộ đếm thời gian JS chạy xong")
                         for _ in range(60):
                             try:
                                 link_els = await page.query_selector_all(js_link_css)
@@ -197,13 +198,13 @@ class AnnaArchiveCollector:
                                 if download_link:
                                     break
                             except Exception as parse_err:
-                                logger.warning(f"Error parsing download link: {parse_err}")
+                                logger.warning(f"Không thể lấy được link tải vì lỗi: {parse_err}")
                                 
                             await page.wait_for_timeout(5000)
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info(f"Đã trích xuất thành công completed download link: {download_link}")
+                            logger.info(f"Đã lấy được link tải: {download_link}")
                             
                             ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'pdf'
                             if len(ext) > 4 or "/" in ext: ext = 'pdf'
@@ -213,18 +214,18 @@ class AnnaArchiveCollector:
                             
                             await mq_client.publish("download_processor_queue", payload)
                         else:
-                            logger.warning(f"Timeout waiting for JS Countdown link natively: {slow_url}")
+                            logger.warning(f"Hết thời gian chờ xử lý đếm ngược bằng JS: {slow_url}")
                     except Exception as e:
-                        logger.error(f"Failed to wait for download link: {e}")
+                        logger.error(f"Chờ liên kết tải xuống thất bại: {e}")
                 if not slow_link_el:
-                    logger.warning(f"Slow download button not found on detail page: {document_url}")
+                    logger.warning(f"Không tìm thấy nút tải trên trang: {document_url}")
                     await page.screenshot(path="/app/logs/anna_error.png", full_page=True)
                     links = await page.evaluate("Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)")
-                    logger.warning(f"Available buttons/links text: {links}")
+                    logger.warning(f"Các nút có thể bấm được trên trang: {links}")
                     await page.close()
                     raise Exception("Slow download button not found")
             except Exception as e:
-                logger.error(f"[Anna Detail CCollector Error]: {e}")
+                logger.error(f"[Lỗi thu thập chi tiết Anna]: {e}")
                 raise
 
     @staticmethod
@@ -233,10 +234,10 @@ class AnnaArchiveCollector:
         title = payload.get("title", "document")
         
         if not url:
-            logger.error(f"[Download Processor] Invalid payload URL: {title}")
+            logger.error(f"[Tải dữ liệu] URL tải trọng không hợp lệ: {title}")
             return
             
-        logger.info(f"[Download Processor] Processing physical download: {title}")
+        logger.info(f"[Tải dữ liệu] Đang tải file sách: {title}")
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "pdf")
@@ -250,17 +251,17 @@ class AnnaArchiveCollector:
                 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info(f"[Anna Stream] Downloaded to temp file {target_local}")
+                logger.info(f"[Quy trình Anna] Đã tải về tệp tạm thời {target_local}")
                 minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
                 
             if os.path.exists(target_local):
                 os.unlink(target_local)
         except Exception as e:
-            logger.error(f"[Download Pipeline Error]: {e}")
+            logger.error(f"[Lỗi quy trình tải xuống]: {e}")
             raise
             
         if minio_url:
-            logger.info(f"[Success] Document saved to MinIO: {minio_url}")
+            logger.info(f"[Thành công] Tài liệu đã được lưu lên hệ thống lưu trữ: {minio_url}")
             
             document_metadata = {
                 "title": title,

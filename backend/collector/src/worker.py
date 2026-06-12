@@ -16,7 +16,7 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error(f"Error processing message: {e}\nPayload: {message.body.decode()}")
+            logger.error(f"Lỗi lúc xử lý lệnh: {e}\nPayload: {message.body.decode()}")
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)

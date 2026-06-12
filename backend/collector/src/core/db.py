@@ -11,18 +11,18 @@ class DocLibDatabase:
     async def insert_document(self, document_data: dict):
         try:
             res = await self.db.documents.insert_one(document_data)
-            logger.success(f"[DB] Inserted document ID: {res.inserted_id}")
+            logger.success(f"[Hệ thống] Đã thêm mới tài liệu mang mã: {res.inserted_id}")
             return str(res.inserted_id)
         except Exception as e:
-            logger.error(f"[DB Error] {e}")
+            logger.error(f"[Lỗi Database] {e}")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
         try:
             from bson import ObjectId
             await self.db.documents.update_one({"_id": ObjectId(document_id)}, {"$set": update_data})
-            logger.success(f"[DB] Updated document ID: {document_id}")
+            logger.success(f"[Hệ thống] Đã cập nhật tài liệu mang mã: {document_id}")
         except Exception as e:
-            logger.error(f"[DB Update Error] {e}")
+            logger.error(f"[Lỗi cập nhật Database] {e}")
 
 db_client = DocLibDatabase()

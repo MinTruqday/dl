@@ -53,6 +53,8 @@ class Settings(BaseModel):
     CONTACT_URL: str = os.getenv("CONTACT_URL")
     FINANCE_URL: str = os.getenv("FINANCE_URL")
     SIGNAL_URL: str = os.getenv("SIGNAL_URL")
+    PROVISION_URL: str = os.getenv("PROVISION_URL", "http://provision:8450")
+    FLARESOLVERR_URL: str = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))

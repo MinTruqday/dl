@@ -25,7 +25,7 @@ async def warn_user(user_id: str, req: ModerationActionRequest, current_user: Us
 
 @router.post('/{user_id}/khoa', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def lock_user(user_id: str, req: ModerationActionRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await UserService.lock_user(user_id, req.reason, req.duration_hours, current_user, db=db), message='Tài khoản đã bị khóa theo yêu cầu')
+    return APIResponse(data=await UserService.lock_user(user_id, req.reason, req.duration_hours, current_user, db=db), message='Tài khoản đã bị cấm theo yêu cầu')
 
 @router.post('/{user_id}/shadowban', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def shadowban_user(user_id: str, is_banned: bool, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

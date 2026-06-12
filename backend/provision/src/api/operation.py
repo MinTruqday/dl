@@ -27,7 +27,7 @@ async def trigger_backup(db=Depends(get_db)):
 
 @router.post('/khoa-api', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_api_key(name: str, db=Depends(get_db)):
-    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='Khóa API mới đã được tạo thành công')
+    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='API Key mới đã được tạo thành công')
 
 @router.post('/tiep-thi/chien-dich', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):

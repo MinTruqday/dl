@@ -1,3 +1,4 @@
+from core.config import settings
 import os
 from loguru import logger
 import aioboto3
@@ -7,17 +8,17 @@ class CollectorStorage:
     def __init__(self):
         endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
         if not endpoint.startswith("http"):
-            endpoint = f"http://{endpoint}"
+            endpoint = endpoint if endpoint.startswith("http") else f"http://{endpoint}"
             
         self.endpoint = endpoint
         self.access_key = os.environ.get("MINIO_ACCESS_KEY")
         self.secret_key = os.environ.get("MINIO_SECRET_KEY")
         
         if not self.access_key or not self.secret_key:
-            raise ValueError("MINIO_ACCESS_KEY or MINIO_SECRET_KEY is not set in environment variables")
+            raise ValueError("Biến môi trường MINIO_ACCESS_KEY hoặc MINIO_SECRET_KEY chưa được thiết lập")
 
         self.bucket = os.environ.get("MINIO_BUCKET_NAME", "doclib-books")
-        self.public_url = os.environ.get("MINIO_PUBLIC_URL", "http://localhost:9000")
+        self.public_url = settings.MINIO_PUBLIC_URL
         
         self.session = aioboto3.Session()
         self._storage_client = None
@@ -54,7 +55,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"Tải tệp {local_file_path} lên hệ thống lưu trữ thất bại: {e}")
+            logger.error(f"Đẩy file {local_file_path} lên MinIO thất bại: {e}")
             raise e
 
 storage = CollectorStorage()

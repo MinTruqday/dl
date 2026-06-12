@@ -1,3 +1,4 @@
+from core.config import settings
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 import os
@@ -32,26 +33,26 @@ async def trigger_collection(req: CollectionRequest):
         
     try:
         await mq_client.publish(queue_name, payload)
-        logger.info(f"Tiến trình thu thập {payload['job_id']} đã được kích hoạt cho nguồn {source}")
+        logger.info(f"Tiến trình thu thập {payload['job_id']} đã được bật cho nguồn {source}")
         return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy thành công cho nguồn {source}'}
     except Exception as e:
-        logger.error(f"Kích hoạt tiến trình thu thập thất bại: {e}")
-        raise HTTPException(status_code=500, detail='Hệ thống không thể chuyển lệnh thu thập vào hàng chờ xử lý')
+        logger.error(f"Bật tiến trình thu thập bị lỗi: {e}")
+        raise HTTPException(status_code=500, detail='Hệ thống không thể chuyển lệnh thu thập vào hàng đợi xử lý')
 
 @router.post('/dung')
 async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info('Tiến trình thu thập đã tạm dừng. Các lệnh trong hàng chờ vẫn được giữ nguyên')
+        logger.info('Đã tạm ngưng thu thập. Các tác vụ trong hàng chờ vẫn được bảo lưu nhé')
         return {'status': 'success', 'message': 'Tín hiệu dừng thu thập đã được hệ thống tiếp nhận'}
     except Exception as e:
-        logger.error(f'Tạm dừng tiến trình thu thập thất bại: {e}')
+        logger.error(f'Tạm dừng thu thập bị lỗi: {e}')
         raise HTTPException(status_code=500, detail='Quá trình truyền tín hiệu dừng thu thập gặp sự cố')
 
 @router.get('/noi-bo/cong-viec-dang-chay')
 async def get_active_jobs():
-    mongo_uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/doclib")
+    mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
     db = client.get_default_database()
     active_collectors = await db['collection_jobs'].find({'status': {'$in': ['running', 'pending']}}).to_list(50)
@@ -60,7 +61,7 @@ async def get_active_jobs():
 
 @router.get('/thong-ke')
 async def get_collector_stats():
-    mongo_uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017/doclib")
+    mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
     db = client.get_default_database()
     total_docs = await db['documents'].count_documents({})

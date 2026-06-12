@@ -40,7 +40,7 @@ async def add_trace_id_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Hệ thống thu thập DocLib đã khởi động thành công")
+    logger.info("Hệ thống thu thập DocLib đã lên sóng")
     from src.worker import run_worker
     asyncio.create_task(run_worker())
 

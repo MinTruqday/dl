@@ -20,7 +20,7 @@ from src.core.browser import managed_browser, get_stealth_context, download_file
 class CTANCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
-        logger.info(f"Starting CTAN Alphabetical List Collector")
+        logger.info(f"Bắt đầu thu thập danh sách bảng chữ cái CTAN")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -30,7 +30,7 @@ class CTANCollector:
             try:
                 for letter in string.ascii_uppercase:
                     search_url = f"https://www.ctan.org/pkg/:{letter}"
-                    logger.info(f"Scanning CTAN Category: {letter} -> {search_url}")
+                    logger.info(f"Đang duyệt danh mục CTAN: {letter} -> {search_url}")
                     
                     await page.goto(search_url, timeout=60000)
                     await page.wait_for_timeout(2000)
@@ -40,7 +40,7 @@ class CTANCollector:
                     try:
                         await page.wait_for_selector('main', timeout=15000)
                     except Exception as e:
-                        logger.warning(f"Timeout or empty container for letter {letter}: {e}")
+                        logger.warning(f"Hết giờ hoặc không có dữ liệu cho ký tự {letter}: {e}")
                         continue
                     
                     book_nodes = await page.query_selector_all(list_css)
@@ -52,19 +52,19 @@ class CTANCollector:
                             full_url = "https://www.ctan.org" + href if href.startswith("/") else href
                             book_urls.add(full_url)
                     
-                    logger.info(f"Found {len(book_urls)} packages for letter {letter}")
+                    logger.info(f"Gom được {len(book_urls)} gói cho ký tự {letter}")
                     for url in book_urls:
                         if not await dedup.is_collected("ctan_url", url):
                             await mq_client.publish("collect_detail_queue", {"url": url, "source": "CTAN"})
                             await dedup.mark_collected("ctan_url", url)
                             
             except Exception as e:
-                logger.error(f"[CTAN List Collector Error]: {e}")
+                logger.error(f"[Quét danh sách CTAN bị lỗi]: {e}")
                 raise
 
     @staticmethod
     async def run_detail_collector(book_url: str):
-        logger.info(f"[Thu thập chi tiết] CTAN: {book_url}")
+        logger.info(f"[Tải dữ liệu] CTAN: {book_url}")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -101,7 +101,7 @@ class CTANCollector:
                         full_download_url = "https://www.ctan.org" + download_link if download_link.startswith("/") else download_link
                         payload["download_link"] = full_download_url
                         
-                        logger.info(f"Đã trích xuất thành công completed download link: {full_download_url}")
+                        logger.info(f"Đã lấy được link tải: {full_download_url}")
                         
                         slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
                         payload["filename"] = f"{slug}.zip"
@@ -109,9 +109,9 @@ class CTANCollector:
                         
                         await mq_client.publish("download_processor_queue", {**payload, "source": "CTAN"})
                     else:
-                        logger.warning(f"Download link attribute empty on detail page: {book_url}")
+                        logger.warning(f"Link tải bị trống trên trang: {book_url}")
                 else:
-                    logger.warning(f"Download button not found at specified XPath on detail page: {book_url}")
+                    logger.warning(f"Tìm mỏi mắt không thấy nút tải ở XPath trên trang: {book_url}")
                 
             except Exception as e:
                 logger.error(f"[Lỗi thu thập chi tiết CTAN]: {e}")
@@ -126,10 +126,10 @@ class CTANCollector:
         title = payload.get("title", "package")
         
         if not url:
-            logger.error(f"[Download Processor] Invalid payload URL: {title}")
+            logger.error(f"[Tải dữ liệu] URL tải trọng không hợp lệ: {title}")
             return
             
-        logger.info(f"[Download Processor] Processing physical download and extraction: {title}")
+        logger.info(f"[Tải dữ liệu] Đang tiến hành tải file thực tế và giải nén: {title}")
         
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         filename = payload.get("filename") or f"{slug}.zip"
@@ -143,11 +143,11 @@ class CTANCollector:
         try:
             success = await download_file_with_retry(url, target_zip_local)
             if success:
-                logger.info(f"[CTAN Stream] Downloaded to temp: {target_zip_local}")
+                logger.info(f"[Quy trình CTAN] Đã tải về bộ nhớ tạm: {target_zip_local}")
                 
                 minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
-                logger.info(f"Extracting ZIP archive")
+                logger.info(f"Đang xả nén file ZIP")
                 os.makedirs(extracted_folder_path, exist_ok=True)
                 with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                     zip_ref.extractall(extracted_folder_path)
@@ -156,7 +156,7 @@ class CTANCollector:
                 contents = os.listdir(extracted_folder_path)
                 if len(contents) == 1 and os.path.isdir(os.path.join(extracted_folder_path, contents[0])):
                     search_root = os.path.join(extracted_folder_path, contents[0])
-                    logger.info(f"Detected nested folder: {contents[0]}, adjusting search root")
+                    logger.info(f"Có thư mục lồng nhau: {contents[0]}, hệ thống đang tự động căn chỉnh lại")
 
                 found_pdf = None
                 for root, _, files in os.walk(search_root):
@@ -170,7 +170,7 @@ class CTANCollector:
                 if found_pdf:
                     pdf_filename = os.path.basename(found_pdf)
                     minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
-                    logger.info(f"Found and uploaded primary PDF: {minio_url_pdf}")
+                    logger.info(f"Đã lấy và tải file PDF chính lên: {minio_url_pdf}")
                     payload["pdf_url"] = minio_url_pdf
                     
                 md_content = f"# Source code for {title}\n\n"
@@ -188,7 +188,7 @@ class CTANCollector:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.warning(f"Failed to read {rel_path}: {e}")
+                                logger.warning(f"Đọc file thất bại {rel_path}: {e}")
                                 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -196,21 +196,21 @@ class CTANCollector:
                     md_f.write(md_content)
                     
                 minio_url_md = await storage.upload_local_file(f"documents/ctan/{md_filename}", md_path)
-                logger.info(f"Compiled and uploaded Markdown source: {minio_url_md}")
+                logger.info(f"Đã đóng gói và đẩy file Markdown lên: {minio_url_md}")
                 payload["markdown_url"] = minio_url_md
                 
-                logger.info(f"Successfully processed {filename}")
+                logger.info(f"Xử lý êm xuôi {filename}")
             else:
-                logger.error(f"[CTAN Download Error] Failed to download {url}")
+                logger.error(f"[Lỗi tải xuống CTAN] Tải thất bại {url}")
                 return
         except Exception as e:
-            logger.error(f"[Aiohttp/Extraction Error]: {e}")
+            logger.error(f"[Lỗi mạng hoặc lúc trích xuất]: {e}")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)
             
         if minio_url_book:
-            logger.info(f"[Success] Package saved to MinIO: {minio_url_book}")
+            logger.info(f"[Thành công] Đã lưu bộ dữ liệu lên hệ thống lưu trữ: {minio_url_book}")
             
             book_document = {
                 "title": title,

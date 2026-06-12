@@ -58,13 +58,13 @@ class NXBGDCollector:
                         with open(save_path, 'wb') as f:
                             f.write(body)
                         
-                        logger.info(f"[NXBGD Stream] Captured page #{self.page_counter}: {filename}")
+                        logger.info(f"[Quy trình NXBGD] Chụp xong trang #{self.page_counter}: {filename}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.warning(f"Failed to capture NXBGD response body: {e}")
+                    logger.warning(f"Không bắt được dữ liệu trả về từ NXBGD: {e}")
         except Exception as e:
-            logger.warning(f"Error handling NXBGD response: {e}")
+            logger.warning(f"Xử lý phản hồi từ NXBGD gặp sự cố: {e}")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -92,16 +92,16 @@ class NXBGDCollector:
         ])
 
         if not image_files:
-            logger.warning(f"Đang bỏ qua PDF {title}: Không thu thập được trang nào")
+            logger.warning(f"Bỏ qua quyển PDF {title}: vì không lấy được trang nội dung nào")
             return
 
         try:
-            logger.info(f"[NXBGD PDF] Compiling {len(image_files)} pages into '{final_pdf_name}' using img2pdf")
+            logger.info(f"[NXBGD PDF] Đang gom {len(image_files)} trang thành '{final_pdf_name}' using img2pdf")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info(f"[NXBGD PDF SUCCESS] Created: {pdf_path}")
+            logger.info(f"[PDF NXBGD] Đã tạo PDF: {pdf_path}")
                 
-            logger.info(f"[NXBGD Storage] Uploading {final_pdf_name} to MinIO")
+            logger.info(f"[Lưu trữ] Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
             minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
             
             if minio_url:
@@ -126,22 +126,22 @@ class NXBGDCollector:
                     pass
                     
         except Exception as e:
-            logger.error(f"[NXBGD Collector Queue Error]: {e}")
+            logger.error(f"[Lỗi hàng đợi thu thập NXBGD]: {e}")
             raise
         finally:
 
-            logger.info(f"[NXBGD Cleanup] Removing temporary folder: {self.temp_dir}")
+            logger.info(f"[Dọn dẹp NXBGD] Đang xóa thư mục tạm: {self.temp_dir}")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.warning(f"Failed to clean up temp dir {self.temp_dir}: {e}")
+                logger.warning(f"Lỗi khi xóa thư mục tạm {self.temp_dir}: {e}")
 
     async def execute(self):
         await self.init_browser()
         
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
-            logger.info(f"Visiting root URL OLM: {url}")
+            logger.info(f"Đang truy cập URL gốc OLM: {url}")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
             
@@ -155,11 +155,11 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
                 
-                logger.info(f"Found {len(document_urls)} documents on current page for grade All")
+                logger.info(f"Tìm thấy {len(document_urls)} tài liệu trên trang hiện tại cho tất cả các lớp")
                 
                 for doc_url in document_urls:
                     full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
-                    logger.info(f"Checking document detail: {full_doc_url}")
+                    logger.info(f"Đang xem thông tin tài liệu: {full_doc_url}")
                     
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -175,7 +175,7 @@ class NXBGDCollector:
                             full_title = res_name
                             
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f"Skipping {full_title}, already in Redis Queue")
+                                logger.info(f"Đang bỏ qua {full_title}, tài liệu đã tồn tại trong hàng đợi Redis")
                                 continue
                                 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -211,14 +211,14 @@ class NXBGDCollector:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.warning(f"Navigation error in viewer: {e}")
+                                    logger.warning(f"Lỗi điều hướng trong trình xem tài liệu: {e}")
                                 await asyncio.sleep(2)  
                                 
                                 current_pages = len(self.captured_hashes)
                                 if current_pages > 0 and current_pages == last_page_count:
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(f"Captured {current_pages} pages. No new pages detected, finishing document")
+                                        logger.info(f"Đã thu thập {current_pages} trang, không phát hiện trang mới, hoàn tất tài liệu")
                                         break
                                 else:
                                     stable_count = 0
@@ -228,7 +228,7 @@ class NXBGDCollector:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.error(f"Error checking document detail: {e}")
+                        logger.error(f"Kiểm tra chi tiết tài liệu gặp lỗi: {e}")
                         
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -242,18 +242,18 @@ class NXBGDCollector:
                         has_next = False
                         logger.info("Reached end of pagination or next button not found")
                 except Exception as e:
-                    logger.error(f"Pagination error: {e}")
+                    logger.error(f"Lỗi khi chuyển trang: {e}")
                     has_next = False
                     
                 break
 
         except Exception as e:
-            logger.error(f"NXBGD Error: {e}")
+            logger.error(f"Nguồn NXBGD báo lỗi: {e}")
             raise
         finally:
             await self.close()
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Bắt đầu thu thập NXBGD queue for grade All")
+    logger.info(f"Bắt đầu kéo dữ liệu từ NXBGD cho toàn bộ các lớp")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

@@ -20,16 +20,16 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         email: str = payload.get('sub')
         session_id: str = payload.get('sid')
         if email is None or session_id is None:
-            logger.warning(f"Token payload missing 'sub' or 'sid'")
+            logger.warning("Token đăng nhập bị thiếu 'sub' hoặc 'sid'")
             raise credentials_exception
     except jwt.PyJWTError as e:
-        logger.warning(f'JWT Decode error: {str(e)}')
+        logger.warning(f'Lỗi khi giải mã JWT: {str(e)}')
         raise credentials_exception
     if db_client.redis:
         import httpx
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
                 user_doc = resp.json().get('data') if resp.status_code == 200 else None
         except Exception:
             user_doc = None
@@ -38,17 +38,18 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         user_id_str = str(user_doc['_id'])
         is_valid_session = await db_client.redis.sismember(f'user_sessions:{user_id_str}', session_id)
         if not is_valid_session:
-            logger.warning(f'Security: Revoked session attempt for user {email}')
+            logger.warning(f'Cảnh báo: Người dùng {email}')
             raise credentials_exception
-    import httpx
+    else:
+        import httpx
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                resp = await client.get(f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
                 user_doc = resp.json().get('data') if resp.status_code == 200 else None
         except Exception:
             user_doc = None
     if user_doc is None:
-        logger.warning(f'User not found for email: {email}')
+        logger.warning(f'Không có tài khoản nào ứng với email: {email}')
         raise credentials_exception
     user_id_str = str(user_doc['_id'])
     user_doc['_id'] = user_id_str
@@ -71,7 +72,7 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(f'Role Access Denied: User {current_user.email} has role {current_user.role}, but need {required_roles}')
+            logger.warning(f'Từ chối: Người dùng {current_user.email} đang có quyền {current_user.role}, trong khi yêu cầu cần {required_roles}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
         return current_user
     return role_checker
