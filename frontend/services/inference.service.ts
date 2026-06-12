@@ -11,17 +11,6 @@ export async function translateTextAPI(text: string, targetLang: string = "vi") 
   return data;
 }
 
-export async function generateAICoverAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/suy-luan/tao-anh-bia`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo ảnh bìa AI thất bại");
-  return data;
-}
-
 export async function analyzeSentimentAPI(text: string) {
   const res = await fetch(`${API_URL}/suy-luan/phan-tich-cam-xuc`, {
     method: "POST",

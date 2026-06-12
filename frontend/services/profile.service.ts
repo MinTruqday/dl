@@ -27,17 +27,6 @@ export async function updateMyProfileAPI(data: {
   return result;
 }
 
-export async function applyAuthorAPI(data: any) {
-  const res = await fetch(`${API_URL}/ho-so/tac-gia-tiem-nang`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Gửi đơn ứng tuyển tác giả tiềm năng thất bại");
-  return result;
-}
-
 export async function getUserProfileAPI(slug: string) {
   const res = await fetch(`${API_URL}/ho-so/thanh-vien/${slug}`, {
     headers: getAuthHeaders(),

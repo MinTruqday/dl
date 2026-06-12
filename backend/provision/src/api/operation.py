@@ -6,7 +6,7 @@ from core.response import APIResponse
 from src.services.operation import OperationService
 from src.services.withdrawal import WithdrawalService
 from src.services.user import UserService
-from src.schemas.operation import CampaignRequest, ApplicationReviewRequest
+from src.schemas.operation import CampaignRequest
 router = APIRouter(prefix='/van-hanh')
 
 @router.get('/chi-so', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
@@ -33,13 +33,6 @@ async def create_api_key(name: str, db=Depends(get_db)):
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
     return APIResponse(data=await OperationService.create_marketing_campaign(payload.model_dump(), db=db), message='Đã tạo chiến dịch tiếp thị mới', status=201)
 
-@router.get('/don-ung-tuyen/tac-gia', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def get_author_applications(status: str='PENDING', db=Depends(get_db)):
-    return APIResponse(data=await OperationService.get_author_applications(status, db=db), message='Đã tải danh sách đơn ứng tuyển')
-
-@router.put('/don-ung-tuyen/tac-gia/{application_id}/xet-duyet', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
-async def review_author_application(application_id: str, payload: ApplicationReviewRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await OperationService.review_author_application(application_id, payload.status, payload.reason or '', str(current_user.id), db=db), message='Đã xét duyệt đơn ứng tuyển')
 
 @router.get('/cau-hinh', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_system_config(db=Depends(get_db)):

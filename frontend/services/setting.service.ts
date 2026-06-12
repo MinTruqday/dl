@@ -74,32 +74,3 @@ export async function updateProfileAPI(data: any) {
   return result;
 }
 
-export async function applyAuthorAPI(data: any) {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/ho-so/tac-gia-tiem-nang`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-  const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Gửi đơn ứng tuyển tác giả tiềm năng thất bại");
-  return result;
-}
-
-export async function becomeAuthorAPI() {
-  const token = getToken();
-  if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/ho-so/tro-thanh-tac-gia`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Nâng cấp tác giả thất bại");
-  return result;
-}

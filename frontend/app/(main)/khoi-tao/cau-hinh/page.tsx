@@ -288,46 +288,6 @@ export default function ConfigPage() {
             </button>
           </div>
           
-          <div className="h-px bg-zinc-200" />
-          
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-              <div className="space-y-3">
-                <h2 className="text-xl font-medium text-black flex items-center gap-2"><Sparkles className="w-5 h-5" /> Ảnh bìa nghệ thuật</h2>
-                <p className="text-sm font-medium text-zinc-500 leading-relaxed max-w-md">Hệ thống phân tích nội dung để tạo ảnh bìa nghệ thuật phản ánh linh hồn tác phẩm.</p>
-              </div>
-              <button
-                onClick={handleGenerateAICover}
-                disabled={generatingCover || !selectedDocumentId}
-                className="h-10 border border-zinc-200 text-black px-6 text-sm font-medium flex items-center gap-2 rounded-xl hover:bg-zinc-50 disabled:opacity-50 whitespace-nowrap"
-              >
-                {generatingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                {selectedDocument?.cover_url ? "Tái tạo ảnh bìa" : "Tạo ảnh bìa AI"}
-              </button>
-            </div>
-
-            <div className="relative max-w-[280px] rounded-xl overflow-hidden border border-zinc-200">
-               <div className="aspect-[3/4] bg-zinc-50 relative flex items-center justify-center">
-                  {selectedDocument?.cover_url ? (
-                    <img
-                      src={selectedDocument.cover_url.startsWith("http") ? selectedDocument.cover_url : `${API_URL}/storage/${selectedDocument.cover_url}`}
-                      alt={selectedDocument.title}
-                      className="w-full h-full object-cover grayscale"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center gap-3">
-                      <Sparkles className="w-6 h-6 text-zinc-400" />
-                      <p className="text-sm font-medium text-zinc-500">Chưa có ảnh bìa</p>
-                    </div>
-                  )}
-               </div>
-               {selectedDocument?.cover_url && (
-                 <div className="absolute top-3 right-3 bg-white border border-zinc-200 px-2 py-1 rounded-lg">
-                    <p className="text-xs font-medium text-zinc-700">Ảnh AI</p>
-                 </div>
-               )}
-            </div>
-          </div>
           
           <div className="h-px bg-zinc-200" />
           

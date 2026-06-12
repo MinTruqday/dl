@@ -38,25 +38,6 @@ class OperationService:
         logger.info(f'Người dùng {user_id} trạng thái cập nhật thành {is_active}')
         return {'message': 'Đã cập nhật trạng thái hoạt động của tài khoản'}
 
-    @staticmethod
-    async def get_author_applications(status: str='PENDING', db=None) -> list:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        apps = await db['author_applications'].find({'status': status}).sort('created_at', -1).to_list(length=100)
-        return [{**a, '_id': str(a['_id'])} for a in apps]
-
-    @staticmethod
-    async def review_author_application(application_id: str, status: str, reason: str, reviewer_id: str, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        app = await db['author_applications'].find_one({'_id': application_id})
-        if not app:
-            raise HTTPException(status_code=404, detail='Không tìm thấy hồ sơ đăng ký này')
-        await db['author_applications'].update_one({'_id': application_id}, {'$set': {'status': status, 'reason': reason, 'reviewed_by': reviewer_id, 'reviewed_at': datetime.now(timezone.utc)}})
-        if status == 'APPROVED':
-            await db['users'].update_one({'_id': app['user_id']}, {'$set': {'role': RoleEnum.AUTHOR}})
-        logger.info(f'Đơn đăng ký tác giả {application_id} đã chuyển sang trạng thái {status} bởi {reviewer_id}')
-        return {'message': f'Đã cập nhật trạng thái yêu cầu đăng ký thành {status.lower()}'}
 
     @staticmethod
     async def toggle_maintenance_mode(enabled: bool, message: str='', db=None) -> dict:

@@ -11,8 +11,6 @@ import {
   Wallet,
   Settings,
   PenTool,
-  Shield,
-  UserCheck,
   AlertTriangle,
   Users,
   Ticket,
@@ -218,12 +216,6 @@ export default function Menu({
                 label="Quản lý người dùng"
                 icon={Users}
                 roles={["admin"]}
-              />
-              <NavLink
-                href="/tac-gia-tiem-nang"
-                label="Tác giả tiềm năng"
-                icon={UserCheck}
-                roles={["admin", "moderator"]}
               />
               <NavLink
                 href="/bao-cao"

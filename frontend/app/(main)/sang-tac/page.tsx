@@ -11,7 +11,6 @@ import { createCouponAPI, getCouponsAPI } from "@/services/coupon.service";
 import { publishDocumentAPI } from "@/services/publication.service";
 import { getDocumentVersionsAPI, restoreVersionAPI } from "@/services/version.service";
 import { ingestDocumentAPI } from "@/services/rag.service";
-import { generateAICoverAPI } from "@/services/inference.service";
 import { requestWithdrawalAPI } from "@/services/withdrawal.service";
 import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
 import { API_URL } from "@/services/authentication.service";
@@ -225,7 +224,6 @@ function StudioContent() {
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [visible, setVisible] = useState(false);
-  const [generatingCover, setGeneratingCover] = useState(false);
   const [showCreateDocModal, setShowCreateDocModal] = useState(false);
   const [newDocTitle, setNewDocTitle] = useState("");
   const [newDocDescription, setNewDocDescription] = useState("");
@@ -543,21 +541,6 @@ function StudioContent() {
     }
   };
   
-  const handleGenerateAICover = async () => {
-    if (!selectedDocumentId) return;
-    setGeneratingCover(true);
-    setStatusMsg("Đang tạo ảnh bìa AI");
-    try {
-      await generateAICoverAPI(selectedDocumentId);
-      showToast("Ảnh bìa AI đã được khởi tạo và cập nhật", "success");
-      fetchDocuments();
-    } catch (e: any) {
-      showToast(e.message || "Tạo ảnh bìa thất bại", "error");
-    } finally {
-      setGeneratingCover(false);
-      setStatusMsg("Sẵn sàng");
-    }
-  };
 
   const handleSave = async () => {
     if (!selectedDocumentId) return;
