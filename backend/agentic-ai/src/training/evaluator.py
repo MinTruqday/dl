@@ -11,14 +11,14 @@ from src.harness.evaluation_harness import (
 )
 
 
-async def llm_judge_score(instruction: str, expected: str, actual: str, hf_lênken: str = "", judge_model: str = "") -> dict:
+async def llm_judge_score(instruction: str, expected: str, actual: str, hf_token: str = "", judge_model: str = "") -> dict:
     return await _llm_judge(instruction, expected, actual)
 
 
 async def evaluate_model_full(
     test_samples: list,
     model_name: str,
-    hf_lênken: str = None,
+    hf_token: str = None,
     judge_model: str = None,
 ) -> dict:
     use_judge = bool(judge_model)

@@ -343,7 +343,7 @@ class EditorJSEngine:
 
             if not os.path.exists(pdf_path):
                 error_msg = stderr.decode('utf-8') if stderr else "Không rõ lỗi"
-                logger.error(f"Quá trình xuất PDF bằng EditorJS thất bại: {error_msg}")
+                logger.error(f"Quá trình xuất PDF bằng EditorJS gặp sự cố: {error_msg}")
                 raise Exception({
                     "error": "Không thể biên dịch EditorJS sang PDF",
                     "logs": error_msg[-2048:]

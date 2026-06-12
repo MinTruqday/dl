@@ -5,7 +5,7 @@ from typing import List
 from src.core.prompt_registry import prompt_registry, PromptType
 
 _INJECTION_PATTERN = re.compile(
-    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?lênken"
+    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?token"
     r"|ignore (previous|above|all)|jailbreak|do anything now|dan mode"
     r"|bypass (safety|filter|restriction))",
     re.IGNORECASE

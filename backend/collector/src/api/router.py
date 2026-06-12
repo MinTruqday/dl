@@ -34,9 +34,9 @@ async def trigger_collection(req: CollectionRequest):
     try:
         await mq_client.publish(queue_name, payload)
         logger.info(f"Tiến trình thu thập {payload['job_id']} đã được bật cho nguồn {source}")
-        return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy thành công cho nguồn {source}'}
+        return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy cho nguồn {source}'}
     except Exception as e:
-        logger.error(f"Bật tiến trình thu thập bị lỗi: {e}")
+        logger.error(f"Bật tiến trình thu thập gặp sự cố: {e}")
         raise HTTPException(status_code=500, detail='Hệ thống không thể chuyển lệnh thu thập vào hàng đợi xử lý')
 
 @router.post('/dung')

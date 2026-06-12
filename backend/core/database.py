@@ -41,7 +41,7 @@ async def init_db():
             logger.info("Khởi tạo cụm MongoDB Replica Set hoàn tất")
             await asyncio.sleep(3)
         except Exception as e:
-            logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc thất bại: {e}")
+            logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc gặp sự cố: {e}")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
     
@@ -49,13 +49,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Kết nối thành công với RabbitMQ")
+            logger.info("Kết nối hoàn tất với RabbitMQ")
             break
         except Exception as e:
             if i == max_retries - 1:
                 logger.error(f"Không thể kết nối với RabbitMQ sau {max_retries} lần thử: {e}")
                 raise e
-            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} thất bại, đang thử lại sau 5 giây... ({e})")
+            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} gặp sự cố, đang thử lại sau 5 giây... ({e})")
             await asyncio.sleep(5)
     
     await setup_indexes()

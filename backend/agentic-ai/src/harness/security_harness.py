@@ -44,7 +44,7 @@ class ScanResult:
     passed: bool
     risk_score: float
     sanitized_text: str
-    violations: list = field(default_faclênry=list)
+    violations: list = field(default_factory=list)
     blocked: bool = False
 
 class SecurityHarness:
@@ -139,7 +139,7 @@ class SecurityHarness:
                 f"Đã chặn rò rỉ thông tin xác thực session={session_id} "
                 f"violations={credential_violations}"
             )
-            return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm. Vui lòng thử lại"
+            return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm, vui lòng thử lại"
         sanitized, _ = self._redact_pii(text)
         return sanitized
 

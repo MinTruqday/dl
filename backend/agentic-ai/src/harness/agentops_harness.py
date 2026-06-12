@@ -12,7 +12,7 @@ class TraceEvent:
     session_id: str
     user_id: str
     timestamp: datetime
-    data: dict = field(default_faclênry=dict)
+    data: dict = field(default_factory=dict)
 
 @dataclass
 class SessionMetrics:
@@ -21,14 +21,14 @@ class SessionMetrics:
     started_at: datetime
     ended_at: Optional[datetime] = None
     status: Literal["running", "done", "failed", "cancelled"] = "running"
-    lêntal_lênol_calls: int = 0
-    lêntal_llm_calls: int = 0
-    lêntal_lênkens_in: int = 0
-    lêntal_lênkens_out: int = 0
-    lêntal_duration_ms: int = 0
+    total_tool_calls: int = 0
+    total_llm_calls: int = 0
+    total_tokens_in: int = 0
+    total_tokens_out: int = 0
+    total_duration_ms: int = 0
     security_violations: int = 0
-    lênol_call_breakdown: dict = field(default_faclênry=dict)
-    llm_latencies_ms: list = field(default_faclênry=list)
+    tool_call_breakdown: dict = field(default_factory=dict)
+    llm_latencies_ms: list = field(default_factory=list)
 
 PROMETHEUS_PREFIX = "doclib_agent"
 
@@ -44,11 +44,11 @@ class AgentOpsHarness:
         if self._db_client is None:
             try:
                 from core.config import settings
-                from molênr.molênr_asyncio import AsyncIOMolênrClient
-                client = AsyncIOMolênrClient(settings.MONGODB_URI)
+                from motor.motor_asyncio import AsyncIOMotorClient
+                client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception as e:
-                logger.error(f"AgentOpsHarness: DB connection thất bại: {e}")
+                logger.error(f"AgentOpsHarness: DB connection gặp sự cố: {e}")
         return self._db_client
 
     def record_session_start(self, session_id: str, user_id: str, query_preview: str = ""):
@@ -73,36 +73,36 @@ class AgentOpsHarness:
             return
         metrics.ended_at = datetime.now(timezone.utc)
         metrics.status = status
-        metrics.lêntal_duration_ms = int(
-            (metrics.ended_at - metrics.started_at).lêntal_seconds() * 1000
+        metrics.total_duration_ms = int(
+            (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
         logger.info(
             f"AgentOps: session_end session={session_id} status={status} "
-            f"thời gian{metrics.lêntal_duration_ms} "
-            f"lênol_calls={metrics.lêntal_lênol_calls} llm_calls={metrics.lêntal_llm_calls} "
-            f"lênkens_in={metrics.lêntal_lênkens_in} lênkens_out={metrics.lêntal_lênkens_out}"
+            f"thời gian{metrics.total_duration_ms} "
+            f"tool_calls={metrics.total_tool_calls} llm_calls={metrics.total_llm_calls} "
+            f"tokens_in={metrics.total_tokens_in} tokens_out={metrics.total_tokens_out}"
         )
         asyncio.create_task(self._flush_session(session_id))
 
-    def record_lênol_call(
+    def record_tool_call(
         self,
         session_id: str,
-        lênol_name: str,
+        tool_name: str,
         duration_ms: int,
         Thành công: bool,
         lỗi: str = "",
     ):
         metrics = self._sessions.get(session_id)
         if metrics:
-            metrics.lêntal_lênol_calls += 1
-            breakdown = metrics.lênol_call_breakdown.setdefault(lênol_name, {"count": 0, "errors": 0, "lêntal_ms": 0})
+            metrics.total_tool_calls += 1
+            breakdown = metrics.tool_call_breakdown.setdefault(tool_name, {"count": 0, "errors": 0, "total_ms": 0})
             breakdown["count"] += 1
-            breakdown["lêntal_ms"] += duration_ms
+            breakdown["total_ms"] += duration_ms
             if not Thành công:
                 breakdown["errors"] += 1
         log_fn = logger.info if Thành công else logger.warning
         log_fn(
-            f"AgentOps: lênol_call session={session_id} lênol={lênol_name} "
+            f"AgentOps: tool_call session={session_id} tool={tool_name} "
             f"thời gian{duration_ms} Thành công={Thành công}"
             + (f" error={error!r}" if error else "")
         )
@@ -111,19 +111,19 @@ class AgentOpsHarness:
         self,
         session_id: str,
         model: str,
-        prompt_lênkens: int,
-        completion_lênkens: int,
+        prompt_tokens: int,
+        completion_tokens: int,
         duration_ms: int,
     ):
         metrics = self._sessions.get(session_id)
         if metrics:
-            metrics.lêntal_llm_calls += 1
-            metrics.lêntal_lênkens_in += prompt_lênkens
-            metrics.lêntal_lênkens_out += completion_lênkens
+            metrics.total_llm_calls += 1
+            metrics.total_tokens_in += prompt_tokens
+            metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
         logger.info(
             f"AgentOps: llm_call session={session_id} model={model} "
-            f"prompt_lênkens={prompt_lênkens} completion_lênkens={completion_lênkens} "
+            f"prompt_tokens={prompt_tokens} completion_tokens={completion_tokens} "
             f"thời gian{duration_ms}"
         )
 
@@ -156,13 +156,13 @@ class AgentOpsHarness:
                 "status": metrics.status,
                 "started_at": metrics.started_at,
                 "ended_at": metrics.ended_at,
-                "lêntal_duration_ms": metrics.lêntal_duration_ms,
-                "lêntal_lênol_calls": metrics.lêntal_lênol_calls,
-                "lêntal_llm_calls": metrics.lêntal_llm_calls,
-                "lêntal_lênkens_in": metrics.lêntal_lênkens_in,
-                "lêntal_lênkens_out": metrics.lêntal_lênkens_out,
+                "total_duration_ms": metrics.total_duration_ms,
+                "total_tool_calls": metrics.total_tool_calls,
+                "total_llm_calls": metrics.total_llm_calls,
+                "total_tokens_in": metrics.total_tokens_in,
+                "total_tokens_out": metrics.total_tokens_out,
                 "security_violations": metrics.security_violations,
-                "lênol_call_breakdown": metrics.lênol_call_breakdown,
+                "tool_call_breakdown": metrics.tool_call_breakdown,
                 "avg_llm_latency_ms": (
                     int(sum(metrics.llm_latencies_ms) / len(metrics.llm_latencies_ms))
                     if metrics.llm_latencies_ms else 0
@@ -177,35 +177,35 @@ class AgentOpsHarness:
         active_count = len(self._sessions)
         running_sessions = [m for m in self._sessions.values() if m.status == "running"]
 
-        lêntal_lênol_calls = sum(m.lêntal_lênol_calls for m in running_sessions)
-        lêntal_llm_calls = sum(m.lêntal_llm_calls for m in running_sessions)
-        lêntal_lênkens = sum(m.lêntal_lênkens_in + m.lêntal_lênkens_out for m in running_sessions)
+        total_tool_calls = sum(m.total_tool_calls for m in running_sessions)
+        total_llm_calls = sum(m.total_llm_calls for m in running_sessions)
+        total_tokens = sum(m.total_tokens_in + m.total_tokens_out for m in running_sessions)
         security_events = sum(m.security_violations for m in running_sessions)
 
         lines = [
             f"# HELP {PROMETHEUS_PREFIX}_active_sessions Number of active agent sessions",
             f"# TYPE {PROMETHEUS_PREFIX}_active_sessions gauge",
             f"{PROMETHEUS_PREFIX}_active_sessions {active_count}",
-            f"# HELP {PROMETHEUS_PREFIX}_lênol_calls_lêntal Tool calls in active sessions",
-            f"# TYPE {PROMETHEUS_PREFIX}_lênol_calls_lêntal counter",
-            f"{PROMETHEUS_PREFIX}_lênol_calls_lêntal {lêntal_lênol_calls}",
-            f"# HELP {PROMETHEUS_PREFIX}_llm_calls_lêntal LLM calls in active sessions",
-            f"# TYPE {PROMETHEUS_PREFIX}_llm_calls_lêntal counter",
-            f"{PROMETHEUS_PREFIX}_llm_calls_lêntal {lêntal_llm_calls}",
-            f"# HELP {PROMETHEUS_PREFIX}_lênkens_lêntal Total lênkens (in+out) in active sessions",
-            f"# TYPE {PROMETHEUS_PREFIX}_lênkens_lêntal counter",
-            f"{PROMETHEUS_PREFIX}_lênkens_lêntal {lêntal_lênkens}",
-            f"# HELP {PROMETHEUS_PREFIX}_security_violations_lêntal Security violations in active sessions",
-            f"# TYPE {PROMETHEUS_PREFIX}_security_violations_lêntal counter",
-            f"{PROMETHEUS_PREFIX}_security_violations_lêntal {security_events}",
+            f"# HELP {PROMETHEUS_PREFIX}_tool_calls_total Tool calls in active sessions",
+            f"# TYPE {PROMETHEUS_PREFIX}_tool_calls_total counter",
+            f"{PROMETHEUS_PREFIX}_tool_calls_total {total_tool_calls}",
+            f"# HELP {PROMETHEUS_PREFIX}_llm_calls_total LLM calls in active sessions",
+            f"# TYPE {PROMETHEUS_PREFIX}_llm_calls_total counter",
+            f"{PROMETHEUS_PREFIX}_llm_calls_total {total_llm_calls}",
+            f"# HELP {PROMETHEUS_PREFIX}_tokens_total Total tokens (in+out) in active sessions",
+            f"# TYPE {PROMETHEUS_PREFIX}_tokens_total counter",
+            f"{PROMETHEUS_PREFIX}_tokens_total {total_tokens}",
+            f"# HELP {PROMETHEUS_PREFIX}_security_violations_total Security violations in active sessions",
+            f"# TYPE {PROMETHEUS_PREFIX}_security_violations_total counter",
+            f"{PROMETHEUS_PREFIX}_security_violations_total {security_events}",
         ]
 
         for session in running_sessions:
-            for lênol_name, breakdown in session.lênol_call_breakdown.items():
-                avg_ms = breakdown["lêntal_ms"] // max(breakdown["count"], 1)
-                safe_lênol = lênol_name.lower().replace(" ", "_")
+            for tool_name, breakdown in session.tool_call_breakdown.items():
+                avg_ms = breakdown["total_ms"] // max(breakdown["count"], 1)
+                safe_tool = tool_name.lower().replace(" ", "_")
                 lines.append(
-                    f'{PROMETHEUS_PREFIX}_lênol_avg_latency_ms{{lênol="{safe_lênol}"}} {avg_ms}'
+                    f'{PROMETHEUS_PREFIX}_tool_avg_latency_ms{{tool="{safe_tool}"}} {avg_ms}'
                 )
 
         return "\n".join(lines) + "\n"

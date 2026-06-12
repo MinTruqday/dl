@@ -31,7 +31,7 @@ class UploadService:
             raise HTTPException(status_code=400, detail='Hệ thống không cho phép tải lên tệp SVG để đảm bảo an toàn')
         if ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail=f'Hệ thống hiện chưa hỗ trợ định dạng .{ext}')
-        filename = f'documents/{uuid7().hex}.{ext}'
+        filename = f'tài liệu/{uuid7().hex}.{ext}'
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
@@ -43,7 +43,7 @@ class UploadService:
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):
-        if '.' in file_path or file_path.startswith('/'):
+        if '' in file_path or file_path.startswith('/'):
             raise HTTPException(status_code=400, detail='Đường dẫn tệp tin không hợp lệ')
         try:
             url = await generate_presigned_url(file_path, 3600)

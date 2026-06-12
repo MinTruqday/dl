@@ -63,7 +63,7 @@ class OperationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['system_config'].update_one({'key': 'maintenance_mode'}, {'$set': {'enabled': enabled, 'message': message, 'updated_at': datetime.now(timezone.utc)}}, upsert=True)
-        logger.warning(f"Chế độ bảo trì {('enabled' if enabled else 'disabled')} by admin")
+        logger.warning(f"Chế độ bảo trì đã được {('bật' if enabled else 'tắt')} bởi quản trị viên")
         return {'message': f"Chế độ bảo trì hệ thống đã được {('kích hoạt' if enabled else 'tắt bỏ')}"}
 
     @staticmethod
@@ -78,7 +78,7 @@ class OperationService:
         if not key_value:
             key_value = str(uuid7()).replace('-', '')
         await db['api_keys'].insert_one({'_id': str(uuid7()), 'name': name, 'provider': provider, 'key_value': key_value, 'created_at': datetime.now(timezone.utc)})
-        logger.info(f"API Key '{name}' for '{provider}' đã được tạo thành công")
+        logger.info(f"Đã khởi tạo API Key '{name}' cho '{provider}'")
         return {'message': 'Lưu trữ khóa API an toàn', 'key': key_value}
 
     @staticmethod
@@ -87,7 +87,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         campaign = {'_id': str(uuid7()), 'title': data.get('title', 'Chiến dịch mới'), 'target_audience': data.get('target', 'ALL'), 'discount_percent': data.get('discount', 0), 'status': 'active', 'created_at': datetime.now(timezone.utc)}
         await db['marketing_campaigns'].insert_one(campaign)
-        logger.info(f"Chiến dịch '{campaign['title']}' đã được tạo thành công")
+        logger.info(f"Chiến dịch '{campaign['title']}' đã được khởi tạo")
         return {'message': 'Chiến dịch tiếp thị mới đã được ghi nhận trên hệ thống'}
 
     @staticmethod
@@ -172,7 +172,7 @@ class OperationService:
                             elif key.startswith('images/'):
                                 categories['User Images']['count'] += 1
                                 categories['User Images']['size'] += size
-                            elif key.startswith('documents/'):
+                            elif key.startswith('tài liệu/'):
                                 categories['User Documents']['count'] += 1
                                 categories['User Documents']['size'] += size
                             else:
@@ -249,7 +249,7 @@ class OperationService:
             raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được hoàn tất trước đó')
         await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'COMPLETED', 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}})
         logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã được duyệt bởi {admin_id}')
-        return {'message': 'Yêu cầu rút tiền đã được phê duyệt thành công'}
+        return {'message': 'Yêu cầu rút tiền đã được phê duyệt'}
 
     @staticmethod
     async def reject_withdrawal(withdrawal_id: str, reason: str, admin_id: str, db=None) -> dict:

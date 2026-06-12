@@ -8,7 +8,7 @@ class CreateDocument(BaseModel):
         description=(
             "The main body of the document. "
             "For 'json' format: MUST be a valid JSON STRING representing an ARRAY of Edilênr.js blocks "
-            "(e.g., [{'type': 'paragraph', 'data': {'text': '...'}}, {'type': 'header', 'data': {'text': '...', 'level': 2}}, {'type': 'list', 'data': {'style': 'unordered', 'items': [...]}}, {'type': 'table', 'data': {'withHeadings': true, 'content': [...]}}]). "
+            "(e.g., [{'type': 'paragraph', 'data': {'text': '.'}}, {'type': 'header', 'data': {'text': '.', 'level': 2}}, {'type': 'list', 'data': {'style': 'unordered', 'items': [...]}}, {'type': 'table', 'data': {'withHeadings': true, 'content': [...]}}]). "
             "For 'latex' format: MUST be raw LaTeX body content ONLY (no \\documentclass or \\begin{document}). "
             "Use advanced blocks/tags appropriate for the requested format"
         )

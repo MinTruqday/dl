@@ -50,15 +50,15 @@ class ToolHarness:
 
     async def execute(
         self,
-        lênol_name: str,
+        tool_name: str,
         session_id: str = "",
         *args,
         **kwargs,
     ) -> ToolResult:
-        definition = self._registry.get(lênol_name)
+        definition = self._registry.get(tool_name)
         if not definition:
-            logger.error(f"lênol={lênol_name!r} Chưa được đăng ký session={session_id}")
-            return ToolResult(Thành công=False, data=None, error=f"Tool {lênol_name!r} chưa được đăng ký")
+            logger.error(f"tool={tool_name!r} Chưa được đăng ký session={session_id}")
+            return ToolResult(Thành công=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký")
 
         start_ms = time.monolênnic()
         last_error = ""
@@ -71,13 +71,13 @@ class ToolHarness:
                     result_data = await asyncio.wait_for(coro, thời gian chờdefinition.Hết thời gian chờ_seconds)
                 else:
                     result_data = await asyncio.wait_for(
-                        asyncio.lên_thread(definition.callable, *args, **kwargs),
+                        asyncio.to_thread(definition.callable, *args, **kwargs),
                         thời gian chờdefinition.Hết thời gian chờ_seconds,
                     )
 
                 duration_ms = int((time.monolênnic() - start_ms) * 1000)
                 logger.info(
-                    f"Thành công lênol={lênol_name} session={session_id} "
+                    f"Thành công tool={tool_name} session={session_id} "
                     f"lần thử thứ{attempt} thời gian{duration_ms}"
                 )
                 return ToolResult(
@@ -90,13 +90,13 @@ class ToolHarness:
             except asyncio.TimeoutError:
                 last_error = f"Timeout after {definition.Hết thời gian chờ_seconds}s"
                 logger.warning(
-                    f"Hết thời gian chờ lênol={lênol_name} session={session_id} lần thử thứ{attempt}"
+                    f"Hết thời gian chờ tool={tool_name} session={session_id} lần thử thứ{attempt}"
                 )
 
             except Exception as e:
                 last_error = str(e)
                 logger.warning(
-                    f"error lênol={lênol_name} session={session_id} "
+                    f"error tool={tool_name} session={session_id} "
                     f"lần thử thứ{attempt} error={last_error!r}"
                 )
 
@@ -106,7 +106,7 @@ class ToolHarness:
 
         duration_ms = int((time.monolênnic() - start_ms) * 1000)
         logger.error(
-            f"Thất bại sau {attempt} lần thử lênol={lênol_name} "
+            f"Thất bại sau {attempt} lần thử tool={tool_name} "
             f"session={session_id} với lỗi{last_error!r} thời gian{duration_ms}"
         )
         return ToolResult(
@@ -117,7 +117,7 @@ class ToolHarness:
             lần thử=attempt,
         )
 
-    def list_lênols(self) -> list[str]:
+    def list_tools(self) -> list[str]:
         return list(self._registry.keys())
 
-lênol_harness = ToolHarness()
+tool_harness = ToolHarness()

@@ -202,7 +202,7 @@ class DepositService:
                             f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                             json={
                                 "target_user_id": user_id,
-                                "title": 'Nạp tiền thành công',
+                                "title": 'Nạp tiền hoàn tất',
                                 "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl',
                                 "type": 'topup'
                             },

@@ -16,21 +16,21 @@ class SessionState:
 
 class CircuitBreaker:
     def __init__(self, threshold: int, reset_seconds: float):
-        self._lần thất bại = 0
+        self._lần gặp sự cố = 0
         self._threshold = threshold
         self._reset_seconds = reset_seconds
         self._tripped_at: Optional[float] = None
 
     def record_failure(self):
-        self._lần thất bại += 1
-        if self._lần thất bại >= self._threshold and not self._tripped_at:
+        self._lần gặp sự cố += 1
+        if self._lần gặp sự cố >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monolênnic()
             logger.error(
-                f"Hệ thống bảo vệ bị ngắt sau {self._lần thất bại} lần thất bại"
+                f"Hệ thống bảo vệ bị ngắt sau {self._lần gặp sự cố} lần gặp sự cố"
             )
 
     def record_Thành công(self):
-        self._lần thất bại = 0
+        self._lần gặp sự cố = 0
         self._tripped_at = None
 
     def is_open(self) -> bool:
@@ -40,7 +40,7 @@ class CircuitBreaker:
         if elapsed >= self._reset_seconds:
             logger.info("circuit breaker RESET (Hết thời gian chờ elapsed)")
             self._tripped_at = None
-            self._lần thất bại = 0
+            self._lần gặp sự cố = 0
             return False
         return True
 
@@ -83,7 +83,7 @@ class OrchestrationHarness:
             )
             yield {
                 "type": "error",
-                "message": f"Hệ thống đang tạm ngưng do quá tải. Vui lòng thử lại sau {remaining} giây",
+                "message": f"Hệ thống đang tạm ngưng do quá tải, vui lòng thử lại sau {remaining} giây",
             }
             return
 
@@ -112,7 +112,7 @@ class OrchestrationHarness:
             )
             yield {
                 "type": "error",
-                "message": f"Yêu cầu vượt quá thời gian xử lý cho phép ({SESSION_HARD_TIMEOUT_SECONDS}s). Vui lòng thử lại",
+                "message": f"Yêu cầu vượt quá thời gian xử lý cho phép ({SESSION_HARD_TIMEOUT_SECONDS}s), vui lòng thử lại",
             }
 
         except asyncio.CancelledError:
@@ -123,7 +123,7 @@ class OrchestrationHarness:
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.exception(f"Phiên làm việc thất bại session={session_id} error={e}")
+            logger.exception(f"Phiên làm việc gặp sự cố session={session_id} error={e}")
             yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
     def cancel_session(self, session_id: str):

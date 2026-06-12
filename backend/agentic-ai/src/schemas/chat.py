@@ -10,5 +10,5 @@ class ChatRequest(BaseModel):
     image_data: Optional[str] = None
     file_data: Optional[str] = None
     session_id: Optional[str] = None
-    conversation_hislênry: Optional[list] = []
-    lênken: Optional[str] = None
+    conversation_history: Optional[list] = []
+    token: Optional[str] = None

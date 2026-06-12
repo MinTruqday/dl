@@ -13,7 +13,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
             content_raw = payload.get("content_raw")
             author_id = payload.get("author_id", None)
             
-            if not document_id or "." in str(document_id):
+            if not document_id or "" in str(document_id):
                 logger.error(f"Mã tài liệu không hợp lệ hoặc không an toàn: {document_id}")
                 return
 
@@ -43,7 +43,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                     from core.storage import upload_file
                     import uuid
                     from uuid6 import uuid7
-                    file_key = f"documents/{document_id}/tectonic_{uuid7().hex[:8]}.pdf"
+                    file_key = f"tài liệu/{document_id}/tectonic_{uuid7().hex[:8]}.pdf"
                     
                     if os.path.exists(pdf_file_path):
                         with open(pdf_file_path, "rb") as bf:
@@ -65,7 +65,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                                         f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                                         json={
                                             "target_user_id": author_id,
-                                            "title": "Biên dịch tài liệu thành công",
+                                            "title": "Biên dịch tài liệu hoàn tất",
                                             "body": f"Bản in PDF chất lượng cao cho tài liệu {document_id} đã sẵn sàng",
                                             "type": "SYSTEM"
                                         },
@@ -74,7 +74,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                         except Exception as e:
                             logger.error(f"Không thể gửi thông báo: {e}")
                 else:
-                    logger.error(f"Biên dịch tệp PDF thất bại cho tài liệu {document_id}: {stderr.decode()}")
+                    logger.error(f"Biên dịch tệp PDF gặp sự cố cho tài liệu {document_id}: {stderr.decode()}")
                     await documents_collection.update_one(
                         {"_id": document_id},
                         {"$set": {"status": "error_compilation"}}
@@ -104,7 +104,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
 
 async def start_tectonic_worker():
     if not db_client.rabbitmq:
-        logger.info("Không thể kết nối RabbitMQ, đang thử lại..")
+        logger.info("Không thể kết nối RabbitMQ, đang thử lại")
         return
         
     try:
@@ -202,7 +202,7 @@ async def process_user_interaction(message: AbstractIncomingMessage):
                         json={"user_id": user_id, "document_id": document_id, "action": action}
                     )
                     if resp.status_code == 200:
-                        logger.info(f"AI đã cập nhật thành công cơ sở dữ liệu vector cho người dùng {user_id}")
+                        logger.info(f"AI đã cập nhật cơ sở dữ liệu vector cho người dùng {user_id}")
                     else:
                         logger.warning(f"Không thể cập nhật cơ sở dữ liệu vector AI: {resp.status_code}")
         except Exception as e:

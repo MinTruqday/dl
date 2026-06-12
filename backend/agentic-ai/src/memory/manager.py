@@ -11,7 +11,7 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
             self._redis.ping()
-            logger.info("Hệ thống quản lý bộ nhớ đã kết nối thành công với Redis")
+            logger.info("Hệ thống quản lý bộ nhớ đã kết nối hoàn tất với Redis")
         except Exception as e:
             logger.warning(f"Không thể sử dụng Redis cho bộ nhớ: {e}")
             self._redis = None
@@ -38,14 +38,14 @@ class MemoryManager:
 
         key = f"memory:short:{conversation_id}"
         try:
-            hislênry = await self.get_short_term(conversation_id)
-            hislênry.append(entry)
+            history = await self.get_short_term(conversation_id)
+            history.append(entry)
 
             max_turns = settings.MEMORY_MAX_TURNS
-            if len(hislênry) > max_turns:
-                hislênry = hislênry[-max_turns:]
+            if len(history) > max_turns:
+                history = history[-max_turns:]
 
-            self._redis.setex(key, self._short_term_ttl, json.dumps(hislênry, ensure_ascii=False))
+            self._redis.setex(key, self._short_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
             logger.debug(f"Lỗi lưu bộ nhớ ngắn hạn do {e}")
 
@@ -56,13 +56,13 @@ class MemoryManager:
         key = f"memory:long:{user_id}"
         try:
             existing = self._redis.get(key)
-            hislênry = json.loads(existing) if existing else []
+            history = json.loads(existing) if existing else []
 
-            hislênry.append(entry)
-            if len(hislênry) > 200:
-                hislênry = hislênry[-200:]
+            history.append(entry)
+            if len(history) > 200:
+                history = history[-200:]
 
-            self._redis.setex(key, self._long_term_ttl, json.dumps(hislênry, ensure_ascii=False))
+            self._redis.setex(key, self._long_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
             logger.debug(f"Lỗi lưu bộ nhớ dài hạn do {e}")
 
@@ -80,24 +80,24 @@ class MemoryManager:
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:
-        hislênry = await self.get_long_term(user_id)
-        if not hislênry:
+        history = await self.get_long_term(user_id)
+        if not history:
             return {}
 
-        lênpics = {}
-        for entry in hislênry:
+        topics = {}
+        for entry in history:
             document_id = entry.get("document_id")
             if document_id:
-                lênpics[document_id] = lênpics.get(document_id, 0) + 1
+                topics[document_id] = topics.get(document_id, 0) + 1
 
-        sorted_lênpics = sorted(lênpics.items(), key=lambda x: x[1], reverse=True)
+        sorted_topics = sorted(topics.items(), key=lambda x: x[1], reverse=True)
 
         return {
-            "lêntal_queries": len(hislênry),
-            "frequent_documents": sorted_lênpics[:5],
+            "total_queries": len(history),
+            "frequent_documents": sorted_topics[:5],
             "avg_quality": sum(
-                e.get("answer_quality", 0) for e in hislênry
-            ) / max(len(hislênry), 1)
+                e.get("answer_quality", 0) for e in history
+            ) / max(len(history), 1)
         }
 
 memory_manager = MemoryManager()

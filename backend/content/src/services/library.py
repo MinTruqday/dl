@@ -13,7 +13,7 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         new_list = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'name': data.name, 'description': data.description, 'is_public': data.is_public, 'documents': [], 'created_at': datetime.now(timezone.utc)}
         await db['reading_lists'].insert_one(new_list)
-        logger.info(f"Library: New reading list '{data.name}' created by {current_user.id}")
+        logger.info(f"Danh sách đọc '{data.name}' created bởi người dùng {current_user.id}")
         return new_list
 
     @staticmethod

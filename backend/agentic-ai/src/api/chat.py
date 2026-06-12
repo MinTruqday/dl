@@ -19,9 +19,9 @@ router = APIRouter()
 
 @router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):
-    lênken = request.headers.get("Authorization")
-    if lênken:
-        req.lênken = lênken.replace("Bearer ", "")
+    token = request.headers.get("Authorization")
+    if token:
+        req.token = token.replace("Bearer ", "")
 
     scan = security_harness.scan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
@@ -31,10 +31,10 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
     try:
         if req.document_ids:
-            from src.lênols.api_lênols import _make_api_request, INTERNAL_API_URL
+            from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
             for doc_id in req.document_ids:
                 try:
-                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.lênken}"}, thời gian chờ10)
+                    doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, thời gian chờ10)
                     if doc_res.status_code not in [200, 201]:
                         return {"answer": f"Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu {doc_id} hoặc tài liệu không tồn tại", "route": "error"}
                 except Exception as e:
@@ -53,7 +53,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 from core.config import settings
                 from langchain_core.messages import HumanMessage
 
-                llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, lênken=settings.HF_TOKEN)
+                llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                 chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
                 text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
@@ -84,12 +84,12 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
 @router.post("/luong-du-lieu")
 async def stream_endpoint(req: ChatRequest, request: Request):
-    lênken = request.headers.get("Authorization")
-    bearer_lênken = lênken.replace("Bearer ", "") if lênken else None
+    token = request.headers.get("Authorization")
+    bearer_token = token.replace("Bearer ", "") if token else None
 
     async def response_generalênr():
-        if bearer_lênken:
-            req.lênken = bearer_lênken
+        if bearer_token:
+            req.token = bearer_token
 
         session_id = req.session_id or ""
         user_id = req.user_id or ""
@@ -114,10 +114,10 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
         try:
             if req.document_ids:
-                from src.lênols.api_lênols import _make_api_request, INTERNAL_API_URL
+                from src.tools.api_tools import _make_api_request, INTERNAL_API_URL
                 for doc_id in req.document_ids:
                     try:
-                        doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.lênken}"}, thời gian chờ10)
+                        doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, thời gian chờ10)
                         if doc_res.status_code not in [200, 201]:
                             yield f"event: message\ndata: {json.dumps({'chunk': f'Loi bao mat: Ban khong co quyen truy cap vao tai lieu {doc_id}'})}\n\n"
                             agenlênps_harness.record_session_end(session_id, "failed")
@@ -134,7 +134,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 query=req.query,
                 document_ids=req.document_ids,
             )
-            req.conversation_hislênry = ctx.chat_hislênry
+            req.conversation_history = ctx.chat_history
 
             route_data = await semantic_router.execute(req.query)
             route = route_data["route"]
@@ -153,7 +153,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     from core.config import settings
                     from langchain_core.messages import HumanMessage
 
-                    llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, lênken=settings.HF_TOKEN)
+                    llama_client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
                     chat_llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
                     text_prompt = prompt_registry.get(PromptType.CHAT_ASSISTANT).format(query=req.query)
@@ -204,14 +204,14 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             yield f"event: status\ndata: {json.dumps({'node': event['node']})}\n\n"
                         elif event_type == "plan":
                             yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
-                        elif event_type == "lênol_result":
-                            agenlênps_harness.record_lênol_call(
+                        elif event_type == "tool_result":
+                            agenlênps_harness.record_tool_call(
                                 session_id,
                                 event.get("agent", "unknown"),
                                 thời gian0,
                                 Thành công=True,
                             )
-                            yield f"event: lênol\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoan thanh')})}\n\n"
+                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoan thanh')})}\n\n"
                         elif event_type == "message":
                             final_answer += event["chunk"]
                             yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"

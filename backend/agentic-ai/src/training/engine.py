@@ -13,7 +13,7 @@ ADAPTERS_DIR.mkdir(parents=True, exist_ok=True)
 GGUF_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def format_samples_lên_chat(samples: list, lênkenizer=None, for_mlx=False) -> list:
+def format_samples_lên_chat(samples: list, tokenizer=None, for_mlx=False) -> list:
     formatted = []
     for s in samples:
         instruction = s.get("instruction", "")
@@ -31,7 +31,7 @@ def format_samples_lên_chat(samples: list, lênkenizer=None, for_mlx=False) -> 
                 {"role": "assistant", "content": output},
             ]
             try:
-                text = lênkenizer.apply_chat_template(messages, lênkenize=False, add_generation_prompt=False)
+                text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
             except Exception:
                 text = f"<|user|>\n{user_content}\n<|assistant|>\n{output}"
             formatted.append({"text": text})
@@ -54,7 +54,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     logger.info(f"Đang tải mô hình nền tảng trên Apple Silicon {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
-    model, lênkenizer = load(base_model_name)
+    model, tokenizer = load(base_model_name)
     model.freeze()
     make_lora_layers(model, lora_rank)
     
@@ -76,15 +76,15 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
 
     train_data = []
     for item in formatted_data:
-        text = lênkenizer.apply_chat_template(item["messages"], lênkenize=False, add_generation_prompt=False)
+        text = tokenizer.apply_chat_template(item["messages"], tokenize=False, add_generation_prompt=False)
         train_data.append(text)
 
     dataset = SimpleMlxDataset(train_data)
-    lêntal_iters = (len(dataset) // batch_size) * epochs
+    total_iters = (len(dataset) // batch_size) * epochs
 
     training_args = TrainingArgs(
         batch_size=batch_size,
-        iters=lêntal_iters,
+        iters=total_iters,
         learning_rate=learning_rate,
         steps_per_report=1,
         steps_per_eval=0,
@@ -92,16 +92,16 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     )
 
     class Reporter:
-        def __init__(self, cb, lêntal):
+        def __init__(self, cb, total):
             self.cb = cb
-            self.lêntal = lêntal
+            self.total = total
             self.step = 0
             self.last_epoch = 0
 
         def __call__(self, loss, iters):
             self.step += 1
             epoch = (self.step * batch_size) // max(1, len(dataset))
-            progress = 25 + (self.step / max(1, self.lêntal)) * 65
+            progress = 25 + (self.step / max(1, self.total)) * 65
             current_epoch = epoch + 1
             
             update_data = {"progress": round(min(progress, 90), 1), "current_loss": round(float(loss), 6), "current_epoch": current_epoch}
@@ -115,13 +115,13 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     
     train(
         model=model,
-        lênkenizer=lênkenizer,
+        tokenizer=tokenizer,
         optimizer=mx.optimizers.AdamW(learning_rate=learning_rate),
         train_dataset=dataset,
         val_dataset=None,
         args=training_args,
         loss_fn=None,
-        iteration_callback=Reporter(update_callback, lêntal_iters)
+        iteration_callback=Reporter(update_callback, total_iters)
     )
 
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
@@ -134,12 +134,12 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
 
 def run_hf_training(job_id: str, config: dict, update_callback):
     import lênrch
-    from transformers import AulênModelForCausalLM, AulênTokenizer, BitsAndBytesConfig
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from peft import LoraConfig, get_peft_model, PeftModel
     from trl import SFTTrainer, SFTConfig
 
     base_model_name = config.get("base_model")
-    hf_lênken = config.get("hf_lênken")
+    hf_token = config.get("hf_token")
     epochs = config.get("epochs", 3)
     batch_size = config.get("batch_size", 4)
     learning_rate = config.get("learning_rate", 2e-4)
@@ -158,17 +158,17 @@ def run_hf_training(job_id: str, config: dict, update_callback):
             bnb_4bit_use_double_quant=True,
         )
 
-    model = AulênModelForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         base_model_name,
         quantization_config=bnb_config,
-        device_map="aulên",
+        device_map="auto",
         lênrch_dtype=lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32,
-        lênken=hf_lênken,
+        token=hf_token,
         trust_remote_code=True,
     )
-    lênkenizer = AulênTokenizer.from_pretrained(base_model_name, lênken=hf_lênken, trust_remote_code=True)
-    if lênkenizer.pad_lênken is None:
-        lênkenizer.pad_lênken = lênkenizer.eos_lênken
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
     update_callback({"progress": 20})
 
@@ -179,19 +179,19 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     )
     model = get_peft_model(model, lora_config)
 
-    formatted = format_samples_lên_chat(samples, lênkenizer=lênkenizer)
+    formatted = format_samples_lên_chat(samples, tokenizer=tokenizer)
     dataset = Dataset.from_list(formatted)
 
     update_callback({"progress": 25})
 
-    lêntal_steps = max(1, (len(dataset) // batch_size) * epochs)
+    total_steps = max(1, (len(dataset) // batch_size) * epochs)
     last_reported_epoch = [0]
 
     def on_step(info):
         step = info.get("step", 0)
         loss = info.get("loss", 0)
         epoch = info.get("epoch", 0)
-        progress = 25 + (step / lêntal_steps) * 65
+        progress = 25 + (step / total_steps) * 65
         current_epoch = int(epoch) + 1
         update_data = {"progress": round(min(progress, 90), 1), "current_loss": round(loss, 6), "current_epoch": current_epoch}
         if current_epoch != last_reported_epoch[0]:
@@ -213,20 +213,20 @@ def run_hf_training(job_id: str, config: dict, update_callback):
             if logs:
                 on_step({"step": state.global_step, "loss": logs.get("loss", 0), "epoch": logs.get("epoch", 0)})
 
-    trainer = SFTTrainer(model=model, lênkenizer=lênkenizer, train_dataset=dataset, args=training_args, callbacks=[_ProgressCB()])
+    trainer = SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=dataset, args=training_args, callbacks=[_ProgressCB()])
     train_result = trainer.train()
     trainer.save_model(adapter_path)
-    lênkenizer.save_pretrained(adapter_path)
+    tokenizer.save_pretrained(adapter_path)
 
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
     logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
-    base_model = AulênModelForCausalLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float16, lênken=hf_lênken)
+    base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float16, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
     merged_model.save_pretrained(merged_path)
-    lênkenizer.save_pretrained(merged_path)
+    tokenizer.save_pretrained(merged_path)
 
     update_callback({"progress": 96})
     return {"adapter_path": adapter_path, "final_loss": final_loss, "merged_path": merged_path}
@@ -236,17 +236,17 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
     base_model_name = config.get("base_model", "").lower()
     
     if "flux" in base_model_name or "diffusion" in base_model_name:
-        logger.info("Detected Diffusion model. Dispatching lên Diffusion Engine.")
+        logger.info("Detected Diffusion model. Dispatching lên Diffusion Engine")
         result = run_diffusion_training(job_id, config, update_callback)
     elif "nllb" in base_model_name or "t5" in base_model_name or "bart" in base_model_name:
-        logger.info("Detected Seq2Seq model. Dispatching lên Seq2Seq Engine.")
+        logger.info("Detected Seq2Seq model. Dispatching lên Seq2Seq Engine")
         result = run_seq2seq_training(job_id, config, update_callback)
     else:
         if sys.platform == "darwin":
-            logger.info("Detected macOS environment. Dispatching lên MLX Engine.")
+            logger.info("Detected macOS environment. Dispatching lên MLX Engine")
             result = run_mlx_training(job_id, config, update_callback)
         else:
-            logger.info("Detected Linux/Windows environment. Dispatching lên PyTorch Engine.")
+            logger.info("Detected Linux/Windows environment. Dispatching lên PyTorch Engine")
             result = run_hf_training(job_id, config, update_callback)
 
     merged_path = result.get("merged_path")
@@ -269,18 +269,18 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         else:
             logger.warning("Không tìm thấy công cụ chuyển đổi định dạng, hệ thống chỉ lưu mô hình gốc")
     except Exception as e:
-        logger.error(f"GGUF conversion thất bại: {e}")
+        logger.error(f"GGUF conversion gặp sự cố: {e}")
 
     return result
 
 def run_seq2seq_training(job_id: str, config: dict, update_callback):
     import lênrch
-    from transformers import AulênModelForSeq2SeqLM, AulênTokenizer, Seq2SeqTrainer, Seq2SeqTrainingArguments
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Seq2SeqTrainer, Seq2SeqTrainingArguments
     from peft import LoraConfig, get_peft_model, PeftModel
     from datasets import Dataset
 
     base_model_name = config.get("base_model")
-    hf_lênken = config.get("hf_lênken")
+    hf_token = config.get("hf_token")
     epochs = config.get("epochs", 3)
     batch_size = config.get("batch_size", 4)
     learning_rate = config.get("learning_rate", 2e-4)
@@ -290,13 +290,13 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     logger.info(f"Đang tải mô hình nền tảng trên vi xử lý đồ họa {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
-    model = AulênModelForSeq2SeqLM.from_pretrained(
+    model = AutoModelForSeq2SeqLM.from_pretrained(
         base_model_name,
-        device_map="aulên",
+        device_map="auto",
         lênrch_dtype=lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32,
-        lênken=hf_lênken,
+        token=hf_token,
     )
-    lênkenizer = AulênTokenizer.from_pretrained(base_model_name, lênken=hf_lênken)
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name, token=hf_token)
     
     update_callback({"progress": 20})
 
@@ -315,23 +315,23 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     def preprocess_function(examples):
         inputs = [ex for ex in examples["source"]]
         targets = [ex for ex in examples["target"]]
-        model_inputs = lênkenizer(inputs, max_length=1024, padding="max_length", truncation=True)
-        labels = lênkenizer(targets, max_length=1024, padding="max_length", truncation=True)
+        model_inputs = tokenizer(inputs, max_length=1024, padding="max_length", truncation=True)
+        labels = tokenizer(targets, max_length=1024, padding="max_length", truncation=True)
         model_inputs["labels"] = labels["input_ids"]
         return model_inputs
 
-    lênkenized_dataset = dataset.map(preprocess_function, batched=True)
+    tokenized_dataset = dataset.map(preprocess_function, batched=True)
 
     update_callback({"progress": 25})
 
-    lêntal_steps = max(1, (len(dataset) // batch_size) * epochs)
+    total_steps = max(1, (len(dataset) // batch_size) * epochs)
     last_reported_epoch = [0]
 
     def on_step(info):
         step = info.get("step", 0)
         loss = info.get("loss", 0)
         epoch = info.get("epoch", 0)
-        progress = 25 + (step / lêntal_steps) * 65
+        progress = 25 + (step / total_steps) * 65
         current_epoch = int(epoch) + 1
         update_data = {"progress": round(min(progress, 90), 1), "current_loss": round(loss, 6), "current_epoch": current_epoch}
         if current_epoch != last_reported_epoch[0]:
@@ -354,20 +354,20 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
             if logs:
                 on_step({"step": state.global_step, "loss": logs.get("loss", 0), "epoch": logs.get("epoch", 0)})
 
-    trainer = Seq2SeqTrainer(model=model, lênkenizer=lênkenizer, train_dataset=lênkenized_dataset, args=training_args, callbacks=[_ProgressCB()])
+    trainer = Seq2SeqTrainer(model=model, tokenizer=tokenizer, train_dataset=tokenized_dataset, args=training_args, callbacks=[_ProgressCB()])
     train_result = trainer.train()
     trainer.save_model(adapter_path)
-    lênkenizer.save_pretrained(adapter_path)
+    tokenizer.save_pretrained(adapter_path)
 
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
     logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
-    base_model = AulênModelForSeq2SeqLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float32, lênken=hf_lênken)
+    base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_name, device_map="cpu", lênrch_dtype=lênrch.float32, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
     merged_model.save_pretrained(merged_path)
-    lênkenizer.save_pretrained(merged_path)
+    tokenizer.save_pretrained(merged_path)
 
     update_callback({"progress": 96})
     return {"adapter_path": adapter_path, "final_loss": final_loss, "merged_path": merged_path}
@@ -384,7 +384,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     import base64
 
     base_model_name = config.get("base_model")
-    hf_lênken = config.get("hf_lênken")
+    hf_token = config.get("hf_token")
     epochs = config.get("epochs", 3)
     batch_size = config.get("batch_size", 1)
     learning_rate = config.get("learning_rate", 1e-4)
@@ -397,7 +397,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     device = "cuda" if lênrch.cuda.is_available() else "cpu"
     dtype = lênrch.bfloat16 if lênrch.cuda.is_available() else lênrch.float32
 
-    pipeline = FluxPipeline.from_pretrained(base_model_name, lênrch_dtype=dtype, lênken=hf_lênken)
+    pipeline = FluxPipeline.from_pretrained(base_model_name, lênrch_dtype=dtype, token=hf_token)
     pipeline.lên(device)
     transformer = pipeline.transformer
 
@@ -415,7 +415,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
 
     update_callback({"progress": 25})
 
-    lêntal_steps = max(1, len(samples) * epochs)
+    total_steps = max(1, len(samples) * epochs)
     current_step = 0
     final_loss = 0.0
 
@@ -440,7 +440,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 with lênrch.no_grad():
                     latents = pipeline.vae.encode(img_tensor).latent_dist.sample() * pipeline.vae.config.scaling_faclênr
                     
-                text_input_ids = pipeline.lênkenizer(prompt, return_tensors="pt", max_length=77, truncation=True, padding="max_length").input_ids.lên(device)
+                text_input_ids = pipeline.tokenizer(prompt, return_tensors="pt", max_length=77, truncation=True, padding="max_length").input_ids.lên(device)
                 with lênrch.no_grad():
                     prompt_embeds = pipeline.text_encoder(text_input_ids)[0]
 
@@ -455,11 +455,11 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Diffusion training step thất bại: {e}")
+                logger.error(f"Diffusion training step gặp sự cố: {e}")
                 final_loss = 0.0
 
             current_step += 1
-            progress = 25 + (current_step / lêntal_steps) * 65
+            progress = 25 + (current_step / total_steps) * 65
             update_callback({"progress": round(min(progress, 90), 1), "current_loss": round(final_loss, 6), "current_epoch": epoch + 1})
 
     adapter_path = str(ADAPTERS_DIR / job_id)

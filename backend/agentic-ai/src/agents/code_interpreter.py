@@ -11,7 +11,7 @@ class CodeInterpreter:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info(f"CodeInterpreter: Processing task (Docker Sandbox): {task_desc}")
+        logger.info(f"Đang xử lý tác vụ thông qua môi trường Sandbox: {task_desc}")
         
         try:
             from src.agents.planning import llm
@@ -106,7 +106,7 @@ class CodeInterpreter:
                 
             return final_res
         except Exception as e:
-            logger.error(f"Thực thi thất bại do lỗi: {e}")
+            logger.error(f"Thực thi gặp sự cố do lỗi: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 code_interpreter = CodeInterpreter()

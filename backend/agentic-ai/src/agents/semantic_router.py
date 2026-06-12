@@ -14,7 +14,7 @@ class SemanticRouter:
             
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
-            lênken=settings.HF_TOKEN,
+            token=settings.HF_TOKEN,
         )
         self.router_llm = HFInferenceChat(client=self.llama_client, model=settings.LLAMA_MODEL)
 
@@ -56,7 +56,7 @@ class SemanticRouter:
             return {"route": route, "answer": answer}
             
         except Exception as e:
-            logger.error(f"Điều hướng yêu cầu thất bại do lỗi: {e}")
+            logger.error(f"Điều hướng yêu cầu gặp sự cố do lỗi: {e}")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = SemanticRouter()

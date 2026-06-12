@@ -60,7 +60,7 @@ class HighlightService:
         if skip > 0:
             pipeline.append({'$skip': skip})
         pipeline.append({'$limit': limit})
-        pipeline.extend([{'$lookup': {'from': 'documents', 'localField': 'document_id', 'foreignField': '_id', 'as': 'doc'}}, {'$unwind': {'path': '$doc', 'preserveNullAndEmptyArrays': True}}])
+        pipeline.extend([{'$lookup': {'from': 'tài liệu', 'localField': 'document_id', 'foreignField': '_id', 'as': 'doc'}}, {'$unwind': {'path': '$doc', 'preserveNullAndEmptyArrays': True}}])
         highlights = await db['highlights'].aggregate(pipeline).to_list(length=limit)
         result = []
         for h in highlights:

@@ -269,7 +269,7 @@ class DocumentService:
                 rl_key = f"rl:unlock:{document_id}:{user_id or 'guest'}"
                 attempts = await db_client.redis.get(rl_key)
                 if attempts and int(attempts) >= 5:
-                    raise HTTPException(status_code=429, detail="Bạn đã nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau 15 phút")
+                    raise HTTPException(status_code=429, detail="Bạn đã nhập sai mật khẩu quá nhiều lần, vui lòng thử lại sau 15 phút")
                     
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
             if not pwd_context.verify(password, document.get("access_password_hash")):

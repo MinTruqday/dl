@@ -19,7 +19,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def read_health():
     await redis_client.ping()
-    return {"status": "Hệ thống đang hoạt động ổn định"}
+    return {"status": "healthy"}
 
 @app.post("/tasks/tectonic/compile")
 def compile_document(payload: dict):

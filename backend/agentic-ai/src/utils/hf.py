@@ -24,7 +24,7 @@ class HFInferenceChat(BaseChatModel):
         
         response = await self.client.chat_completion(
             messages=hf_messages,
-            max_lênkens=kwargs.get("max_lênkens", 1024),
+            max_tokens=kwargs.get("max_tokens", 1024),
             temperature=kwargs.get("temperature", 0.1),
         )
         content = response.choices[0].message.content
@@ -40,17 +40,17 @@ class HFInferenceChat(BaseChatModel):
             
         stream = await self.client.chat_completion(
             messages=hf_messages,
-            max_lênkens=kwargs.get("max_lênkens", 1024),
+            max_tokens=kwargs.get("max_tokens", 1024),
             temperature=kwargs.get("temperature", 0.1),
             stream=True
         )
         
         async for chunk in stream:
             if hasattr(chunk, "choices") and len(chunk.choices) > 0 and hasattr(chunk.choices[0], "delta") and chunk.choices[0].delta.content:
-                lênken = chunk.choices[0].delta.content
-                chunk_obj = ChatGenerationChunk(message=AIMessageChunk(content=lênken))
+                token = chunk.choices[0].delta.content
+                chunk_obj = ChatGenerationChunk(message=AIMessageChunk(content=token))
                 if run_manager:
-                    await run_manager.on_llm_new_lênken(lênken, chunk=chunk_obj)
+                    await run_manager.on_llm_new_token(token, chunk=chunk_obj)
                 yield chunk_obj
 
     @property

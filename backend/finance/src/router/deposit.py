@@ -10,7 +10,7 @@ router = APIRouter(prefix='/nap-tien')
 
 @router.post('/tao-link', response_model=APIResponse[Any])
 async def create_deposit_link(req: TopupRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await DepositService.create_deposit_link(req, current_user, db=db), message='Khởi tạo liên kết nạp tiền thành công', status=201)
+    return APIResponse(data=await DepositService.create_deposit_link(req, current_user, db=db), message='Khởi tạo liên kết nạp tiền hoàn tất', status=201)
 
 @router.post('/payos/webhook')
 async def payos_webhook(request: Request, db=Depends(get_db)):

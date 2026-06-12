@@ -47,4 +47,4 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "Hệ thống đang hoạt động ổn định", "service": "signal"}
+    return {"status": "healthy", "service": "signal"}

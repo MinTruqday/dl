@@ -14,7 +14,7 @@ class Knowledge:
                 "document_ids": getattr(req, 'document_ids', []),
                 "use_smart": req.useSmart,
                 "use_web": req.useWeb,
-                "chat_hislênry": req.conversation_hislênry or [],
+                "chat_history": req.conversation_history or [],
                 "file_data": req.file_data,
                 "image_data": req.image_data
             })

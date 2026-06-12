@@ -50,10 +50,10 @@ class AdvancedSemanticChunker:
                 logger.warning(f"Chonkie SemanticChunker failed lên load: {e}. Falling back lên TokenChunker")
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
-                    self.type = "chonkie_lênken"
+                    self.type = "chonkie_token"
                     logger.info("Loaded Chonkie TokenChunker")
                 except Exception as e2:
-                    logger.error(f"Chonkie TokenChunker thất bại: {e2}")
+                    logger.error(f"Chonkie TokenChunker gặp sự cố: {e2}")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info(f"Chunking text of length {len(text)}")
@@ -103,8 +103,8 @@ class AdvancedSemanticChunker:
         ]
         try:
             markdown_splitter = MarkdownHeaderTextSplitter(headers_lên_split_on=headers_lên_split_on)
-            md_tài liệu = markdown_splitter.split_text(text)
-            texts = [doc.page_content for doc in md_tài liệu]
+            md_documents = markdown_splitter.split_text(text)
+            texts = [doc.page_content for doc in md_documents]
         except Exception:
             splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=100)
             texts = splitter.split_text(text)

@@ -25,7 +25,7 @@ def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("U
 
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Phân tích đạo văn nội bộ thành công', "status": 200}
+    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Hoàn tất phân tích đạo văn nội bộ', "status": 200}
 
 @router.post('/{document_id}/dong-bo-thao-tac')
 async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest, current_user = Depends(get_current_user)):

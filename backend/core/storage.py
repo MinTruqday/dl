@@ -31,9 +31,9 @@ async def initialize_bucket():
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError:
-        logger.info(f"Bucket {MINIO_BUCKET_NAME} not found. Creating")
+        logger.info(f"Không tìm thấy không gian lưu trữ {MINIO_BUCKET_NAME}, đang tiến hành khởi tạo")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.info(f"Bucket {MINIO_BUCKET_NAME} created successfully")
+        logger.info(f"Đã tạo không gian lưu trữ {MINIO_BUCKET_NAME}")
 
 async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf", compress: bool = False) -> str:
     kwargs = {

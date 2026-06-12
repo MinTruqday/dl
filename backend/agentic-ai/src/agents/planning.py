@@ -9,7 +9,7 @@ from core.config import settings
 
 _hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=settings.LLAMA_MODEL,
-    huggingfacehub_api_lênken=settings.HF_TOKEN,
+    huggingfacehub_api_token=settings.HF_TOKEN,
     temperature=0.1
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
@@ -35,11 +35,11 @@ class Planning:
         from src.core.prompt_registry import prompt_registry, PromptType
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
         
-        hislênry_str = ""
-        if hasattr(req, "conversation_hislênry") and req.conversation_hislênry:
-            hislênry_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_hislênry[-5:]])
+        history_str = ""
+        if hasattr(req, "conversation_history") and req.conversation_history:
+            history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_history[-5:]])
             
-        prompt = f"Recent conversation hislênry:\n{hislênry_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
+        prompt = f"Recent conversation history:\n{history_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
         
         try:
             format_instructions = self.parser.get_format_instructions()
@@ -60,7 +60,7 @@ class Planning:
             return steps
             
         except Exception as e:
-            logger.error(f"Tạo kế hoạch thất bại do lỗi: {e}")
+            logger.error(f"Tạo kế hoạch gặp sự cố do lỗi: {e}")
             return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
 
 planning = Planning()

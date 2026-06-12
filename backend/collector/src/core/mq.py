@@ -34,10 +34,10 @@ class RabbitMQConnection:
                 await self.channel.declare_queue("anna_archive_queue", durable=True, arguments=queue_args)
                 await self.channel.declare_queue("ctan_queue", durable=True, arguments=queue_args)
                 
-                logger.info("Kết nối RabbitMQ thành công và đã khởi tạo các hàng đợi (bao gồm DLQ)")
+                logger.info("Kết nối RabbitMQ hoàn tất và đã khởi tạo các hàng đợi (bao gồm DLQ)")
                 return
             except Exception as e:
-                logger.error(f"Kết nối RabbitMQ thất bại (lần thử {attempt + 1}/{max_retries}): {e}")
+                logger.error(f"Kết nối RabbitMQ gặp sự cố (lần thử {attempt + 1}/{max_retries}): {e}")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -53,6 +53,6 @@ class RabbitMQConnection:
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             logger.debug(f"Đã điều phối tới {queue_name}: {payload.get('url', payload.get('title', 'ping'))}")
         except Exception as e:
-            logger.error(f"Phân phối sự kiện tới {queue_name} thất bại: {e}")
+            logger.error(f"Phân phối sự kiện tới {queue_name} gặp sự cố: {e}")
 
 mq_client = RabbitMQConnection()

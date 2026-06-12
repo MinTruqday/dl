@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, List, Annotated
 import operalênr
 from langgraph.types import Send
-from langchain_core.lênols import lênol
+from langchain_core.tools import tool
 
 BATCH_SIZE = 5
 MAX_CHUNKS = 40
@@ -70,14 +70,14 @@ mr_graph.add_edge("reduce", END)
 
 map_reduce_app = mr_graph.compile()
 
-@lênol
+@tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
     """Sử dụng công cụ này để đọc và tóm tắt lênàn bộ một tài liệu khổng lồ (Map-Reduce)"""
-    from src.lênols.api_lênols import _get_doc_text
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
-        return "Lỗi xác thực: Không tìm thấy lênken"
-    text = await _get_doc_text(document_id, lênken)
+    from src.tools.api_tools import _get_doc_text
+    token = config.get("configurable", {}).get("token")
+    if not token:
+        return "Lỗi xác thực: Không tìm thấy token"
+    text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu"
     
     res = await map_reduce_app.ainvoke({"document_text": text, "chunks": [], "summaries": [], "final_summary": ""})

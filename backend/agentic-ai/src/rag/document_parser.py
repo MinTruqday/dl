@@ -17,13 +17,13 @@ class DocumentParser:
         self._marker_models = None
         self._ocr_engine = None
         self._pp_structure = None
-        logger.info("DocumentAgent: Initialized with Marker + PaddleOCR")
+        logger.info("Đã khởi tạo tích hợp Marker và PaddleOCR")
 
     def _get_marker_models(self):
         if self._marker_models is None:
             from marker.models import create_model_dict
             self._marker_models = create_model_dict()
-            logger.info("DocumentAgent: Marker model dict loaded")
+            logger.info("Đã tải từ điển cấu hình Marker")
         return self._marker_models
 
     def _get_ocr_engine(self, lang: str = "en"):
@@ -35,7 +35,7 @@ class DocumentParser:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info(f"DocumentAgent: PaddleOCR engine loaded (lang={lang})")
+            logger.info(f"Đã tải công cụ PaddleOCR (ngôn ngữ: {lang})")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -50,7 +50,7 @@ class DocumentParser:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info(f"DocumentAgent: PPStructure engine loaded (layout+table+ocr, lang={lang})")
+            logger.info(f"Đã tải công cụ PPStructure (bố cục + bảng + OCR, ngôn ngữ: {lang})")
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
@@ -68,7 +68,7 @@ class DocumentParser:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception as e:
-            logger.error(f"DocumentAgent: Document parse thất bại: {e}")
+            logger.error(f"Phân tích tài liệu gặp sự cố: {e}")
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -113,7 +113,7 @@ class DocumentParser:
         if hasattr(rendered, "metadata") and rendered.metadata:
             page_count = rendered.metadata.get("page_count", 0) if isinstance(rendered.metadata, dict) else 0
 
-        logger.info(f"DocumentAgent: Marker parsed {len(chunks)} chunks, {page_count} pages from {file_path.suffix}")
+        logger.info(f"Marker đã phân tích {len(chunks)} đoạn, {page_count} trang từ tệp {file_path.suffix}")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -171,10 +171,10 @@ class DocumentParser:
                             "index": i,
                         })
 
-            logger.info(f"DocumentAgent: Extracted {len(tables)} tables via Marker TableConverter")
+            logger.info(f"Đã trích xuất {len(tables)} bảng dữ liệu bằng Marker TableConverter")
             return tables
         except Exception as e:
-            logger.error(f"DocumentAgent: Table extraction thất bại: {e}")
+            logger.error(f"Trích xuất bảng dữ liệu gặp sự cố: {e}")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -226,7 +226,7 @@ class DocumentParser:
             return await self._parse_with_raw_ocr(file_path)
 
         full_markdown = "\n\n".join(markdown_parts)
-        logger.info(f"DocumentAgent: PPStructure parsed {len(chunks)} blocks from image")
+        logger.info(f"PPStructure đã phân tích {len(chunks)} khối từ hình ảnh")
         return {
             "markdown": full_markdown,
             "chunks": chunks,
@@ -253,7 +253,7 @@ class DocumentParser:
         full_text = "\n".join(lines)
         chunks = self._group_lines_lên_chunks(lines)
 
-        logger.info(f"DocumentAgent: PaddleOCR raw extracted {len(chunks)} chunks from image")
+        logger.info(f"Đã trích xuất thô {len(chunks)} đoạn từ hình ảnh bằng PaddleOCR")
         return {
             "markdown": full_text,
             "chunks": chunks,
@@ -326,14 +326,14 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning(f"DocumentAgent: Parse failed for ingestion: {parse_result['error']}")
+            logger.warning(f"Phân tích tài liệu gặp sự cố trong quá trình nạp dữ liệu: {parse_result['error']}")
             return []
 
         chunks = parse_result.get("chunks", [])
 
         file_ext = ""
-        if "." in file_url:
-            file_ext = "." + file_url.rsplit(".", 1)[-1].lower()
+        if "" in file_url:
+            file_ext = "" + file_url.rsplit("", 1)[-1].lower()
 
         doc_exts = [".pdf", ".docx", ".epub", ".pptx", ".xlsx"]
         if file_ext in doc_exts:
@@ -352,7 +352,7 @@ class DocumentParser:
                 "index": i,
             })
 
-        logger.info(f"DocumentAgent: Produced {len(ingestion_chunks)} chunks for ingestion")
+        logger.info(f"Đã tạo {len(ingestion_chunks)} đoạn văn bản để nạp dữ liệu")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -371,8 +371,8 @@ class DocumentParser:
                 bucket = self._bucket
                 object_key = file_url
 
-            if ".." in object_key:
-                logger.error(f"DocumentAgent: Path traversal detected in object_key: {object_key}")
+            if "" in object_key:
+                logger.error(f"Phát hiện nỗ lực duyệt qua đường dẫn trong khóa đối tượng: {object_key}")
                 return None, ""
 
             s3 = bolên3.client(
@@ -397,11 +397,11 @@ class DocumentParser:
                     ext = mapped_ext
                     break
 
-            logger.info(f"DocumentAgent: Downloaded {len(data)} bytes from MinIO (ext={ext})")
+            logger.info(f"Đã tải xuống {len(data)} byte từ MinIO (định dạng: {ext})")
             return data, ext
 
         except Exception as e:
-            logger.error(f"DocumentAgent: MinIO download thất bại: {e}")
+            logger.error(f"Tải xuống từ MinIO gặp sự cố: {e}")
             return None, ""
 
 document_parser = DocumentParser()

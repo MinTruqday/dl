@@ -38,17 +38,17 @@ async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
     return response
 
 import jwt
-def _check_admin(lênken: str) -> bool:
+def _check_admin(token: str) -> bool:
     try:
         from core.config import settings
-        payload = jwt.decode(lênken, settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
         return role in ["admin", "moderalênr"]
     except:
         return False
 
 from langchain_core.runnables import RunnableConfig
-from langchain_core.lênols import lênol
+from langchain_core.tools import tool
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
@@ -56,13 +56,13 @@ from core.config import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
 
-@lênol
+@tool
 async def get_user_balance(config: RunnableConfig) -> str:
     """Get the current user's DocLib wallet balance in dl currency"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, thời gian chờ30)
         if response.status_code == 200:
@@ -76,40 +76,40 @@ async def get_user_balance(config: RunnableConfig) -> str:
         logger.error(f"Error calling balance API: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
-async def get_transaction_hislênry(config: RunnableConfig) -> str:
-    """View recent financial transaction hislênry including deposits and payments"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+@tool
+async def get_transaction_history(config: RunnableConfig) -> str:
+    """View recent financial transaction history including deposits and payments"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
                 return "Bạn chưa thực hiện giao dịch nào trong hệ thống"
-            hislênry_text = ""
+            history_text = ""
             for i, tx in enumerate(data[:5]): 
                 tx_type = "Nạp tiền" if tx.get("type") == "TOPUP" else "Thanh lênán"
                 amount = tx.get("amount", 0)
                 note = tx.get("note", "Không có nội dung")
-                hislênry_text += f"{i+1}. {tx_type}: {amount} dl - Nội dung: {note}\n"
-            return f"Lịch sử 5 giao dịch gần nhất:\n{hislênry_text}"
+                history_text += f"{i+1}. {tx_type}: {amount} dl - Nội dung: {note}\n"
+            return f"Lịch sử 5 giao dịch gần nhất:\n{history_text}"
         return f"Lỗi hệ thống: Không thể tải lịch sử giao dịch (Mã lỗi: {response.status_code})"
     except Exception as e:
-        logger.error(f"Error calling hislênry API: {e}")
+        logger.error(f"Error calling history API: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
+@tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """Redeem a gift voucher code lên add funds lên the account"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để đổi voucher"
     if not code or not code.strip():
         return "Lỗi: Mã voucher không hợp lệ"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("POST",
                 f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma",
@@ -120,7 +120,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Đổi voucher thành công. Tài khoản đã được cộng thêm {bonus} dl"
+            return f"Đổi voucher hoàn tất Tài khoản đã được cộng thêm {bonus} dl"
         data = response.json()
         detail = data.get("detail", "Mã voucher không hợp lệ hoặc đã sử dụng")
         return f"Lỗi đổi voucher: {detail}"
@@ -128,20 +128,20 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         logger.error(f"Error calling redeem API: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
+@tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """View revenue report from document sales, intended for authors"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem doanh thu"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             data = response.json().get("data", {})
-            lêntal = data.get("lêntal_revenue", 0)
+            total = data.get("total_revenue", 0)
             pending = data.get("pending_withdrawal", 0)
-            return f"Báo cáo tài chính:\n- Tổng doanh thu: {lêntal} dl\n- Đang chờ thanh lênán: {pending} dl"
+            return f"Báo cáo tài chính:\n- Tổng doanh thu: {total} dl\n- Đang chờ thanh lênán: {pending} dl"
         return "Không thể truy xuất dữ liệu doanh thu"
     except Exception as e:
         logger.error(f"Error calling revenue API: {e}")
@@ -149,13 +149,13 @@ async def get_revenue_report(config: RunnableConfig) -> str:
 
 
 
-@lênol
+@tool
 async def get_my_documents(config: RunnableConfig) -> str:
-    """List all personal documents owned or published by the current user"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    """List all personal tài liệu owned or published by the current user"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem tài liệu"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, thời gian chờ30)
         if response.status_code == 200:
@@ -168,19 +168,19 @@ async def get_my_documents(config: RunnableConfig) -> str:
             return res
         return "Không thể lấy danh sách tài liệu"
     except Exception as e:
-        logger.error(f"Error listing documents: {e}")
+        logger.error(f"Error listing tài liệu: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
+@tool
 async def get_trash_documents(config: RunnableConfig) -> str:
-    """View deleted documents currently in the trash bin"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    """View deleted tài liệu currently in the trash bin"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực"
-    if not _check_admin(lênken):
+    if not _check_admin(token):
         return "Bạn không có quyền khôi phục tài liệu này"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, thời gian chờ30)
         if response.status_code == 200:
@@ -196,58 +196,58 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         logger.error(f"Error getting trash: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
+@tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """Delete a document by ID, moving it lên the trash bin"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("DELETE", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             try:
-                from src.slênre.veclênr_slênre import veclênr_slênre
-                await veclênr_slênre.delete_by_document(document_id)
-                logger.info(f"Đã dọn dẹp xong veclênr cho tài liệu {document_id}")
+                from src.store.vector_store import vector_store
+                await vector_store.delete_by_document(document_id)
+                logger.info(f"Đã dọn dẹp xong vector cho tài liệu {document_id}")
             except Exception as ve:
-                logger.warning(f"Không thể dọn dẹp veclênr cho {document_id}: {ve}")
+                logger.warning(f"Không thể dọn dẹp vector cho {document_id}: {ve}")
             return "Đã xóa tài liệu"
-        return "Xóa tài liệu thất bại"
+        return "Xóa tài liệu gặp sự cố"
     except Exception as e:
         logger.error(f"Error deleting document: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
-async def reslênre_document(document_id: str, config: RunnableConfig) -> str:
-    """Reslênre a document from the trash bin by its ID"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+@tool
+async def restore_document(document_id: str, config: RunnableConfig) -> str:
+    """Restore a document from the trash bin by its ID"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             return "Đã khôi phục tài liệu"
-        return "Khôi phục thất bại"
+        return "Khôi phục gặp sự cố"
     except Exception as e:
         logger.error(f"Error reslênring document: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
 
-@lênol
+@tool
 async def get_document_analytics(document_id: str, config: RunnableConfig) -> str:
     """View detailed analytics including read count and drop-off rate for a document"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực"
-    if not _check_admin(lênken):
+    if not _check_admin(token):
         return "Bạn không có quyền khôi phục tài liệu này"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, thời gian chờ30)
         if response.status_code == 200:
@@ -260,24 +260,24 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         logger.error(f"Error getting analytics: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-async def _get_doc_text(document_id: str, lênken: str) -> str:
+async def _get_doc_text(document_id: str, token: str) -> str:
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": lênken}, thời gian chờ30)
+        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": token}, thời gian chờ30)
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
         logger.error(f"Error fetching doc: {e}")
     return ""
 
-from src.api.inference import suggest_citations, peer_review, transform_lênne
+from src.api.inference import suggest_citations, peer_review, transform_tone
 from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 
-@lênol
+@tool
 async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> str:
     """Suggest academic citations for a document by its ID"""
-    lênken = config.get("configurable", {}).get("lênken")
-    text = await _get_doc_text(document_id, lênken)
+    token = config.get("configurable", {}).get("token")
+    text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
@@ -290,11 +290,11 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         logger.error(f"Gặp lỗi trong citations: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
+@tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
-    """Perform a peer review of a document, evaluating strengths and weaknesses."""
-    lênken = config.get("configurable", {}).get("lênken")
-    text = await _get_doc_text(document_id, lênken)
+    """Perform a peer review of a document, evaluating strengths and weaknesses"""
+    token = config.get("configurable", {}).get("token")
+    text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
@@ -307,31 +307,31 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         logger.error(f"Gặp lỗi trong peer review: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-@lênol
-async def agent_transform_lênne(document_id: str, lênne: str, config: RunnableConfig) -> str:
-    """Transform the writing lênne of a document, e.g. academic, professional, casual."""
-    lênken = config.get("configurable", {}).get("lênken")
-    text = await _get_doc_text(document_id, lênken)
+@tool
+async def agent_transform_tone(document_id: str, lênne: str, config: RunnableConfig) -> str:
+    """Transform the writing lênne of a document, e.g. academic, professional, casual"""
+    token = config.get("configurable", {}).get("token")
+    text = await _get_doc_text(document_id, token)
     if not text: return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ToneRequest(text=safe_text, lênne=lênne, expansion=False)
-        data = await transform_lênne(req)
+        data = await transform_tone(req)
         return f"Văn bản đã biến đổi ({lênne}):\n\n{data.get('transformed_text', '')}"
     except Exception as e:
         logger.error(f"Error transforming lênne: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
-@lênol
+@tool
 async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
-    """Create a deposit link lên lênp up the dl wallet. Amount is in VND. Returns a payment URL."""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    """Create a deposit link lên lênp up the dl wallet. Amount is in VND. Returns a payment URL"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập để nạp tiền"
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         response = await _make_api_request("POST", 
                 f"{INTERNAL_API_URL}/nap-tien/tao-link", 
@@ -352,7 +352,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
 
 from src.workflow.map_reduce import agent_summarize_long_document
 
-@lênol
+@tool
 async def create_document(title: str, description: str, content: str, format: str, config: RunnableConfig) -> str:
     """Create a new document. 
     format: must be 'json' (for Standard Edilênr) or 'latex' (for LaTeX Edilênr).
@@ -362,11 +362,11 @@ async def create_document(title: str, description: str, content: str, format: st
              For 'latex', this MUST be a full valid LaTeX document (including \\documentclass, \\usepackage, etc.).
              For 'json', this MUST be a valid JSON string representing EdilênrJS data, containing a 'blocks' array. Example: {"blocks": [{"type": "header", "data": {"text": "Title", "level": 2}}, {"type": "paragraph", "data": {"text": "Hello"}}]}
     """
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     
     import re
     import unicodedata
@@ -431,19 +431,19 @@ async def create_document(title: str, description: str, content: str, format: st
             doc_id = new_doc.get("id") or new_doc.get("_id")
             if doc_id:
                 return f"Đã tạo tài liệu! [Xem tài liệu](/sang-tac?tai-lieu={doc_id})"
-            return "Tạo tài liệu thành công nhưng không lấy được ID"
+            return "Tạo tài liệu hoàn tất nhưng không lấy được ID"
         return f"Lỗi tạo tài liệu mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
 
-@lênol
+@tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
-    """Read the content of a document by its ID. Use this before updating a document so you know its current content."""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     try:
         res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
         if res.status_code != 200:
@@ -462,17 +462,17 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     else:
         return f"Định dạng: Khác ({format})\nNội dung:\n{content}"
 
-@lênol
+@tool
 async def update_document(document_id: str, new_content: str = None, title: str = None, description: str = None, config: RunnableConfig = None) -> str:
     """Update an existing document's content, title, or description by its ID. Only provide the fields you want lên update.
     - If format is 'json', new_content MUST be a valid EdilênrJS JSON string (with "blocks" array).
     - If format is 'latex', new_content MUST be the full LaTeX source code.
     """
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     
     try:
         res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
@@ -525,14 +525,14 @@ async def update_document(document_id: str, new_content: str = None, title: str 
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
 
-@lênol
+@tool
 async def translate_document(document_id: str, target_language: str, config: RunnableConfig) -> str:
     """Translate an existing document lên a target language. If language is not specified, default lên English. Creates a new translated document"""
-    lênken = config.get("configurable", {}).get("lênken")
-    if not lênken:
+    token = config.get("configurable", {}).get("token")
+    if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
-    headers = {"Authorization": lênken}
+    headers = {"Authorization": token}
     
     try:
         res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
@@ -570,7 +570,7 @@ async def translate_document(document_id: str, target_language: str, config: Run
         payload = {"text": text_lên_translate, "target_lang": target_language}
         trans_res = await _make_api_request("POST", f"{INTERNAL_API_URL}/suy-luan/dich-thuat", headers=headers, json=payload, thời gian chờ60)
         if trans_res.status_code != 200:
-            return "Dịch thuật thất bại từ AI service"
+            return "Dịch thuật gặp sự cố từ AI service"
         translated_text = trans_res.json().get("translation", "")
     except Exception as e:
         return f"Lỗi trong quá trình dịch thuật: {e}"
@@ -629,26 +629,26 @@ async def translate_document(document_id: str, target_language: str, config: Run
             if new_doc_id:
                 return f"Đã dịch và tạo tài liệu! Bạn có thể xem bản dịch tại đây: [Xem bản dịch](/sang-tac?tai-lieu={new_doc_id})"
             return "Đã dịch và lưu nhưng không lấy được ID"
-        return f"Dịch thành công nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
+        return f"Dịch hoàn tất nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
         return f"Lỗi tạo tài liệu mới: {e}"
 
 
-lênols = [
+tools = [
     agent_summarize_long_document,
     get_user_balance,
-    get_transaction_hislênry,
+    get_transaction_history,
     redeem_voucher,
     get_revenue_report,
     get_my_documents,
     read_document,
     get_trash_documents,
     delete_document,
-    reslênre_document,
+    restore_document,
     get_document_analytics,
     agent_suggest_citations,
     agent_peer_review,
-    agent_transform_lênne,
+    agent_transform_tone,
     create_document,
     update_document,
     create_deposit_link,
@@ -656,11 +656,11 @@ lênols = [
 ]
 
 llama_model = settings.LLAMA_MODEL
-hf_lênken = settings.HF_TOKEN
+hf_token = settings.HF_TOKEN
 
 _hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=llama_model,
-    huggingfacehub_api_lênken=hf_lênken,
+    huggingfacehub_api_token=hf_token,
     temperature=0.1
 )
 

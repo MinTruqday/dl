@@ -18,7 +18,7 @@ class PromptType(Enum):
     MULTI_QUERY = "multi_query"
     PLAGIARISM_DETECTION = "plagiarism_detection"
     CONTENT_REVIEW = "content_review"
-    TOOL_DISPATCHER = "lênol_dispatcher"
+    TOOL_DISPATCHER = "tool_dispatcher"
     CODE_INTERPRETER_SYSTEM = "code_interpreter_system"
     ANALYTICAL_ENGINE = "analytical_engine"
     QUALITY_EVALUATION = "quality_evaluation"
@@ -30,13 +30,13 @@ class PromptType(Enum):
     GRAMMAR_CHECK = "grammar_check"
 
     SUMMARIZE = "summarize"
-    AUTOCOMPLETE = "aulêncomplete"
+    AUTOCOMPLETE = "autocomplete"
     AI_SUGGESTIONS = "ai_suggestions"
     CHECK_LOGIC = "check_logic"
     SYNONYMS = "synonyms"
 
     SUGGEST_CITATIONS = "suggest_citations"
-    TRANSFORM_TONE = "transform_lênne"
+    TRANSFORM_TONE = "transform_tone"
     MULTI_DOC_SYNTHESIS = "multi_doc_synthesis"
     EVAL_JUDGE = "eval_judge"
     STORAGE_FILE_ANALYSIS = "slênrage_file_analysis"
@@ -48,7 +48,7 @@ OBJECTIVE: Analyze the user's request, perform logical reasoning, and decompose 
 OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
 
 AVAILABLE AGENTS:
-- ToolDispatcher: Executes system operations, modifies personal data, manages wallet balance, deletes/reslênres documents.
+- ToolDispatcher: Executes system operations, modifies personal data, manages wallet balance, deletes/restores documents.
 - KnowledgeAgent: Searches, reads, and analyzes internal documents from the DocLib library.
 - CodeInterpreter: Writes and executes Python code for data processing, calculations, and plotting.
 - SearchEngine: Performs web searches lên retrieve external information.
@@ -64,7 +64,7 @@ RULES:
 <user_input>Search for AI trends in 2024 on the internet and create a markdown draft document.</user_input>
 <output>
 {{
-    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGeneralênr formats the output.",
+    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGeneralênr formats the output",
     "steps": [
         {{"agent": "SearchEngine", "task": "Search for AI trends in 2024"}},
         {{"agent": "DraftGeneralênr", "task": "Draft a markdown document summarizing the found AI trends"}}
@@ -77,7 +77,7 @@ RULES:
 <user_input>Draw a pie chart of documents uploaded this month.</user_input>
 <output>
 {{
-    "reasoning": "The user wants a chart based on system data. ToolDispatcher fetches the statistics, then CodeInterpreter draws the chart.",
+    "reasoning": "The user wants a chart based on system data. ToolDispatcher fetches the statistics, then CodeInterpreter draws the chart",
     "steps": [
         {{"agent": "ToolDispatcher", "task": "Fetch document upload statistics for the current month"}},
         {{"agent": "CodeInterpreter", "task": "Generate a pie chart using the provided upload statistics"}}
@@ -89,7 +89,7 @@ RULES:
 {format_instructions}""",
         
         PromptType.CONTEXTUALIZE: """SYSTEM IDENTITY: DocLib Core System - Contextualization Engine.
-OBJECTIVE: Reconstruct the latest user query inlên an independent, fully contextualized query by performing anaphora and co-reference resolution based on the conversation hislênry.
+OBJECTIVE: Reconstruct the latest user query inlên an independent, fully contextualized query by performing anaphora and co-reference resolution based on the conversation history.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 RULES:
@@ -98,7 +98,7 @@ RULES:
 - Provide no additional conversational text.
 
 <example>
-<hislênry>user: Where is the ReactJS tulênrial document?</hislênry>
+<history>user: Where is the ReactJS tulênrial document?</history>
 <user_input>Who is its author?</user_input>
 <output>
 <query>Who is the author of the ReactJS tulênrial document?</query>
@@ -106,7 +106,7 @@ RULES:
 </example>
 
 CONVERSATION HISTORY:
-{hislênry}
+{history}
 
 LATEST USER INPUT: {question}
 OUTPUT:""",
@@ -172,7 +172,7 @@ USER QUERY: {question}
 CONCLUSION:""",
 
         PromptType.OPTIMIZE_QUERY: """SYSTEM IDENTITY: DocLib Core System - Query Optimization Engine.
-OBJECTIVE: Rewrite the given query lên maximize veclênr search retrieval performance.
+OBJECTIVE: Rewrite the given query lên maximize vector search retrieval performance.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 RULES:
@@ -210,7 +210,7 @@ USER QUERY: {question}
 RESPONSE:""",
 
         PromptType.SELF_REFLECTION: """SYSTEM IDENTITY: DocLib Core System - Self Reflection Engine.
-OBJECTIVE: Analyze the lênol execution result and determine if it is a technical failure.
+OBJECTIVE: Analyze the tool execution result and determine if it is a technical failure.
 OUTPUT_LANGUAGE: Exact string match.
 
 RULES:
@@ -254,7 +254,7 @@ RULES:
 <user_input>Create a new folder called Study Materials</user_input>
 <output>
 {{
-    "reasoning": "The user is requesting a system operation lên create a new direclênry.",
+    "reasoning": "The user is requesting a system operation lên create a new directory",
     "route": "action",
     "answer": ""
 }}
@@ -265,7 +265,7 @@ RULES:
 <user_input>Summarize the document Clean Code for me</user_input>
 <output>
 {{
-    "reasoning": "The user is asking for a document summary, which requires knowledge retrieval and analysis.",
+    "reasoning": "The user is asking for a document summary, which requires knowledge retrieval and analysis",
     "route": "knowledge",
     "answer": ""
 }}
@@ -300,7 +300,7 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 USER QUERY: {query}""",
 
         PromptType.MULTI_QUERY: """SYSTEM IDENTITY: DocLib Core System - Multi-Query Generalênr.
-OBJECTIVE: Generate 3 alternative versions of the given question lên improve veclênr search recall.
+OBJECTIVE: Generate 3 alternative versions of the given question lên improve vector search recall.
 OUTPUT_LANGUAGE: Must exactly match the language of the original question.
 
 RULES:
@@ -333,7 +333,7 @@ OUTPUT_LANGUAGE: Must match the language of the input text.
 TEXT: {text}""",
 
         PromptType.TOOL_DISPATCHER: """SYSTEM IDENTITY: DocLib Core System - API Tool Dispatcher.
-OBJECTIVE: Analyze the user intent and select the appropriate system lênol for execution.
+OBJECTIVE: Analyze the user intent and select the appropriate system tool for execution.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query""",
 
         PromptType.CODE_INTERPRETER_SYSTEM: """SYSTEM IDENTITY: DocLib Core System - Python Execution Engine""",
@@ -383,13 +383,13 @@ RULES:
         PromptType.CODE_GENERATION: "SYSTEM IDENTITY: DocLib Core System - Code Generation Engine.\nOBJECTIVE: Write clean and efficient {language} code for the following request. Output ONLY the code block.\n\nREQUEST:\n{prompt}",
         PromptType.GRAMMAR_CHECK: "SYSTEM IDENTITY: DocLib Core System - Grammar Engine.\nOBJECTIVE: Check and correct all spelling and grammar errors in the following text. Output ONLY the corrected text.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT:\n{text}",
         PromptType.SUMMARIZE: "SYSTEM IDENTITY: DocLib Core System - Summary Engine.\nOBJECTIVE: Provide a concise summary of the following content in {language}.\n\nTEXT:\n{text}",
-        PromptType.AUTOCOMPLETE: "SYSTEM IDENTITY: DocLib Core System - Aulêncomplete Engine.\nOBJECTIVE: Write one natural continuation sentence for the following text without repeating existing content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
+        PromptType.AUTOCOMPLETE: "SYSTEM IDENTITY: DocLib Core System - Autocomplete Engine.\nOBJECTIVE: Write one natural continuation sentence for the following text without repeating existing content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.AI_SUGGESTIONS: "SYSTEM IDENTITY: DocLib Core System - Ideation Engine.\nOBJECTIVE: Based on the context, suggest 3 development directions for this content. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.CHECK_LOGIC: "SYSTEM IDENTITY: DocLib Core System - Logic Engine.\nOBJECTIVE: Check for logical contradictions, plot holes, or character inconsistencies. OUTPUT_LANGUAGE: Must match the input text language.\nCONTEXT: {context}\nTEXT: {text}",
         PromptType.SYNONYMS: "SYSTEM IDENTITY: DocLib Core System - Thesaurus Engine.\nOBJECTIVE: Find synonyms for the following word or phrase. Output ONLY a comma-separated list.\nOUTPUT_LANGUAGE: Must match the language of the input.\n\nINPUT: {text}",
         PromptType.SUGGEST_CITATIONS: "SYSTEM IDENTITY: DocLib Core System - Citation Engine.\nOBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {text}\n\nREFERENCE SOURCES:\n{sources}",
         PromptType.TRANSFORM_TONE: "SYSTEM IDENTITY: DocLib Core System - Tone Engine.\nOBJECTIVE: {action} the following text lên match the lênne '{lênne}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {text}",
-        PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple documents lên answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}",
+        PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple tài liệu lên answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}",
 
         PromptType.EVAL_JUDGE: """SYSTEM IDENTITY: DocLib Core System - Evaluation Judge Engine.
 OBJECTIVE: Score the quality of an AI-generated response compared lên the expected answer on three criteria.

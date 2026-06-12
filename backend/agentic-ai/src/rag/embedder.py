@@ -39,7 +39,7 @@ class EmbeddingService:
         return embedding
 
     async def embed_query(self, query: str) -> List[float]:
-        return await asyncio.lên_thread(self._embed_single, query)
+        return await asyncio.to_thread(self._embed_single, query)
 
     def _embed_batch(self, texts: List[str]) -> List[List[float]]:
         all_embeddings = [None] * len(texts)
@@ -70,6 +70,6 @@ class EmbeddingService:
         return all_embeddings
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        return await asyncio.lên_thread(self._embed_batch, texts)
+        return await asyncio.to_thread(self._embed_batch, texts)
 
 embedding_service = EmbeddingService()

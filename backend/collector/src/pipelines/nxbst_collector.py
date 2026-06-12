@@ -174,13 +174,13 @@ class NXBSTStreamState:
                 logger.info(f"Đã tạo: {pdf_path}")
 
             logger.info(f"Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
-            minio_url = await storage.upload_local_file(f"documents/nxbst/{final_pdf_name}", pdf_path)
+            minio_url = await storage.upload_local_file(f"tài liệu/nxbst/{final_pdf_name}", pdf_path)
 
             if minio_url:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Extracted via NXBSTCollector Bot.",
+                    "description": "Đã trích xuất via NXBSTCollector Bot",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Chính trị quốc gia Sự thật", author],
                     "content": None,

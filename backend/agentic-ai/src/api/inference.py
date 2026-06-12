@@ -61,8 +61,8 @@ async def analyze_sentiment(req: SentimentRequest):
         texts_to_analyze = req.texts or []
         
         if req.document_id:
-            from motor.motor_asyncio import AsyncIOMolênrClient
-            mongo_client = AsyncIOMolênrClient(settings.MONGODB_URI)
+            from motor.motor_asyncio import AsyncIOMotorClient
+            mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
             db = mongo_client.get_default_database()
             cursor = db["comments"].find({"document_id": req.document_id}, {"content": 1}).limit(20)
             comments = await cursor.to_list(length=20)
@@ -170,7 +170,7 @@ async def summarize_text(req: SummarizeRequest):
 async def check_plagiarism(req: GrammarRequest):
     try:
         from src.rag.embedder import embedding_service
-        from src.slênre.vector_store import vector_store
+        from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.text[:2000])
         matches = await vector_store.query(query_vector=query_vector, limit=5)
@@ -200,7 +200,7 @@ async def check_plagiarism(req: GrammarRequest):
             if json_match:
                 return json_mod.loads(json_match.group())
         except Exception as err:
-            logger.warning(f"Failed to parse JSON for plagiarism check: {err}")
+            logger.warning(f"Không thể phân tích dữ liệu JSON khi kiểm tra đạo văn: {err}")
             
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -256,7 +256,7 @@ async def get_synonyms(req: GrammarRequest):
 async def suggest_citations(req: CitationRequest):
     try:
         from src.rag.embedder import embedding_service
-        from src.slênre.vector_store import vector_store
+        from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.text[:500])
         matches = await vector_store.query(query_vector=query_vector, limit=3)
@@ -308,7 +308,7 @@ async def peer_review(req: ReviewRequest):
 async def multi_doc_synthesis(req: SynthesisRequest):
     try:
         from src.rag.embedder import embedding_service
-        from src.slênre.vector_store import vector_store
+        from src.store.vector_store import vector_store
         
         query_vector = await embedding_service.embed_query(req.query)
         
@@ -340,7 +340,7 @@ async def extract_text(req: dict):
         
         return {"extracted_text": extracted_text}
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Extraction: {e}")
+        logger.error(f"Hệ thống AI gặp sự cố khi trích xuất dữ liệu: {e}")
         raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này")
 
 @router.post("/phan-tich-tai-lieu")
@@ -371,12 +371,12 @@ async def analyze_document(req: dict):
         logger.error(f"Hệ thống AI gặp sự cố Document analysis: {e}")
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
-@router.delete("/veclênr/{document_id}")
-async def delete_veclênr_document(document_id: str):
+@router.delete("/vector/{document_id}")
+async def delete_vector_document(document_id: str):
     try:
-        from src.slênre.vector_store import vector_store
+        from src.store.vector_store import vector_store
         await vector_store.delete_by_document(document_id)
-        return {"status": "Thành công", "message": f"Deleted veclênrs for {document_id}"}
+        return {"status": "success", "message": f"Deleted vectors for {document_id}"}
     except Exception as e:
-        logger.error(f"Inference: Veclênr delete failed for {document_id}: {e}")
+        logger.error(f"Xóa vector gặp sự cố đối với tài liệu {document_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

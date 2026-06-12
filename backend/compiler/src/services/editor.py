@@ -268,7 +268,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
-            logger.error(f'Quá trình tóm tắt tự động thất bại: {e}')
+            logger.error(f'Quá trình tóm tắt tự động gặp sự cố: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
         raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
 
@@ -380,7 +380,7 @@ class EditorService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f'Kiểm tra đạo văn chuyên sâu thất bại: {e}')
+            logger.error(f'Kiểm tra đạo văn chuyên sâu gặp sự cố: {e}')
         return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn'}
 
     @staticmethod

@@ -89,8 +89,8 @@ class PurchaseService:
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error(f'Giao dịch mua tài liệu của người dùng {current_user.id} thất bại: {e}')
-                raise HTTPException(status_code=500, detail='Giao dịch thất bại, vui lòng thử lại sau')
+                logger.error(f'Giao dịch mua tài liệu của người dùng {current_user.id} gặp sự cố: {e}')
+                raise HTTPException(status_code=500, detail='Giao dịch không hoàn tất, vui lòng thử lại sau')
             finally:
                 if should_close_session:
                     await session.end_session()
@@ -148,8 +148,8 @@ class PurchaseService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error(f'Quá trình hoàn tiền thất bại: {e}')
-            raise HTTPException(status_code=500, detail='Hoàn tiền thất bại')
+            logger.error(f'Quá trình hoàn tiền gặp sự cố: {e}')
+            raise HTTPException(status_code=500, detail='Hoàn tiền không hoàn tất')
         finally:
             if should_close_session:
                 await session.end_session()

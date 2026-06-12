@@ -11,7 +11,7 @@ router = APIRouter(prefix='/van-hanh')
 
 @router.get('/chi-so', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_system_metrics(db=Depends(get_db)):
-    return APIResponse(data=await OperationService.get_system_health(db=db), message='Dữ liệu thông số hệ thống đã được tải thành công')
+    return APIResponse(data=await OperationService.get_system_health(db=db), message='Dữ liệu thông số hệ thống đã được tải hoàn tất')
 
 @router.get('/bao-tri', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_maintenance_status(db=Depends(get_db)):
@@ -27,7 +27,7 @@ async def trigger_backup(db=Depends(get_db)):
 
 @router.post('/khoa-api', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_api_key(name: str, db=Depends(get_db)):
-    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='API Key mới đã được tạo thành công')
+    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='API Key mới đã được tạo hoàn tất')
 
 @router.post('/tiep-thi/chien-dich', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):

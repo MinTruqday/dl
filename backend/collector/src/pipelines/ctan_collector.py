@@ -169,7 +169,7 @@ class CTANCollector:
                 
                 if found_pdf:
                     pdf_filename = os.path.basename(found_pdf)
-                    minio_url_pdf = await storage.upload_local_file(f"documents/ctan/{pdf_filename}", found_pdf)
+                    minio_url_pdf = await storage.upload_local_file(f"tài liệu/ctan/{pdf_filename}", found_pdf)
                     logger.info(f"Đã lấy và tải file PDF chính lên: {minio_url_pdf}")
                     payload["pdf_url"] = minio_url_pdf
                     
@@ -188,20 +188,20 @@ class CTANCollector:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.warning(f"Đọc file thất bại {rel_path}: {e}")
+                                logger.warning(f"Đọc file gặp sự cố {rel_path}: {e}")
                                 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
                 with open(md_path, "w", encoding="utf-8") as md_f:
                     md_f.write(md_content)
                     
-                minio_url_md = await storage.upload_local_file(f"documents/ctan/{md_filename}", md_path)
+                minio_url_md = await storage.upload_local_file(f"tài liệu/ctan/{md_filename}", md_path)
                 logger.info(f"Đã đóng gói và đẩy file Markdown lên: {minio_url_md}")
                 payload["markdown_url"] = minio_url_md
                 
                 logger.info(f"Xử lý hoàn tất {filename}")
             else:
-                logger.error(f"Tải thất bại {url}")
+                logger.error(f"Tải gặp sự cố {url}")
                 return
         except Exception as e:
             logger.error(f"Gặp lỗi: {e}")
@@ -215,7 +215,7 @@ class CTANCollector:
             book_document = {
                 "title": title,
                 "slug": slug,
-                "description": payload.get("description", "Extracted via CTAN bot"),
+                "description": payload.get("description", "Đã trích xuất via CTAN bot"),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
                 "markdown_url": payload.get("markdown_url"),

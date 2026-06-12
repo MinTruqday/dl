@@ -13,7 +13,7 @@ class ReadingService:
         if cursor:
             from datetime import datetime
             match_stage['last_read_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
-        pipeline = [{'$match': match_stage}, {'$sort': {'last_read_at': -1}}, {'$limit': limit}, {'$lookup': {'from': 'documents', 'localField': 'document_id', 'foreignField': '_id', 'as': 'doc'}}, {'$unwind': {'path': '$doc', 'preserveNullAndEmptyArrays': True}}, {'$lookup': {'from': 'users', 'localField': 'doc.author_id', 'foreignField': '_id', 'as': 'author'}}, {'$unwind': {'path': '$author', 'preserveNullAndEmptyArrays': True}}]
+        pipeline = [{'$match': match_stage}, {'$sort': {'last_read_at': -1}}, {'$limit': limit}, {'$lookup': {'from': 'tài liệu', 'localField': 'document_id', 'foreignField': '_id', 'as': 'doc'}}, {'$unwind': {'path': '$doc', 'preserveNullAndEmptyArrays': True}}, {'$lookup': {'from': 'users', 'localField': 'doc.author_id', 'foreignField': '_id', 'as': 'author'}}, {'$unwind': {'path': '$author', 'preserveNullAndEmptyArrays': True}}]
         history = await db['reading_history'].aggregate(pipeline).to_list(length=limit)
         result = []
         for h in history:

@@ -11,7 +11,7 @@ from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from langchain_community.cache import RedisCache
 from redis import Redis
 from loguru import logger
-from src.slênre.veclênr_slênre import veclênr_slênre
+from src.store.vector_store import vector_store
 from src.rag.embedder import embedding_service
 from src.rag.retrieval import retrieval_service
 from src.memory.mem0_manager import mem0_manager
@@ -42,7 +42,7 @@ from src.utils.hf import HFInferenceChat
 
 llama_client = AsyncInferenceClient(
     model=settings.LLAMA_MODEL,
-    lênken=settings.HF_TOKEN,
+    token=settings.HF_TOKEN,
 )
 
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
@@ -50,11 +50,11 @@ llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 try:
     _fallback_client = AsyncInferenceClient(
         model=settings.FALLBACK_MODEL,
-        lênken=settings.HF_TOKEN,
+        token=settings.HF_TOKEN,
     )
     _fallback_llm = HFInferenceChat(client=_fallback_client, model=settings.FALLBACK_MODEL)
     llm = llm.with_fallbacks([_fallback_llm])
-    logger.info(f"LLM fallback chain configured: primary -> {settings.FALLBACK_MODEL}")
+    logger.info(f"Đã thiết lập chuỗi dự phòng cho mô hình ngôn ngữ: chính -> {settings.FALLBACK_MODEL}")
 except Exception as e:
     logger.warning(f"Failed lên configure LLM fallback: {e}")
 
@@ -62,18 +62,18 @@ llm_generate = llm.with_config({"tags": ["final_generalênr"]})
 
 async def contextualize_question(state: AgentState):
     question = state["question"]
-    hislênry = state.get("chat_hislênry", [])
-    if not hislênry:
+    history = state.get("chat_history", [])
+    if not history:
         return {"question": question}
 
-    hislênry_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in hislênry[-5:]])
+    history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history[-5:]])
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
         template=prompt_registry.get(PromptType.CONTEXTUALIZE),
-        input_variables=["hislênry", "question"]
+        input_variables=["history", "question"]
     )
     try:
-        response = await llm.ainvoke(prompt.format(hislênry=hislênry_str, question=question))
+        response = await llm.ainvoke(prompt.format(history=history_str, question=question))
         content = response.content.strip()
         import re
         q_match = re.search(r"<query>(.*?)</query>", content, re.DOTALL)
@@ -126,14 +126,14 @@ async def retrieve_db(state: AgentState):
     if document_ids and len(document_ids) >= 2:
         logger.info(f"Đang sử dụng truy xuất liên kết cho {len(document_ids)} tài liệu")
         try:
-            raw_tài liệu = await retrieval_service.cross_document_retrieve(question, document_ids, k=6)
-            extracted_tài liệu = []
-            for doc in raw_tài liệu:
+            raw_documents = await retrieval_service.cross_document_retrieve(question, document_ids, k=6)
+            extracted_documents = []
+            for doc in raw_documents:
                 meta = doc.get('metadata', {})
                 title = meta.get('title', 'Tài liệu')
                 file_url = meta.get('file_url', '')
-                extracted_tài liệu.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
-            return {"documents": list(set(extracted_tài liệu)), "current_source": "db"}
+                extracted_documents.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
+            return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception as e:
             logger.error(f"Cross-document retrieval lỗi: {e}")
 
@@ -161,7 +161,7 @@ async def retrieve_db(state: AgentState):
     except Exception as e:
         logger.error(f"Lỗi chiến lược truy xuất dữ liệu do {e}")
             
-    extracted_tài liệu = []
+    extracted_documents = []
     
     try:
         from sentence_transformers import CrossEncoder
@@ -169,37 +169,37 @@ async def retrieve_db(state: AgentState):
     except Exception:
         reranker = None
         
-    all_raw_tài liệu = []
+    all_raw_documents = []
     for q in list(dict.fromkeys(queries))[:3]: 
         try:
-            results = await veclênr_slênre.query(query_veclênr=await embedding_service.embed_query(q), document_ids=document_ids, limit=10)
+            results = await vector_store.query(query_vector=await embedding_service.embed_query(q), document_ids=document_ids, limit=10)
             for doc in results:
                 doc['_query'] = q
-                all_raw_tài liệu.append(doc)
+                all_raw_documents.append(doc)
         except Exception as e:
-            logger.error(f"Lỗi tìm kiếm veclênr cho truy vấn '{q}': {e}")
+            logger.error(f"Lỗi tìm kiếm vector cho truy vấn '{q}': {e}")
             
-    if all_raw_tài liệu:
+    if all_raw_documents:
         if reranker:
             try:
-                pairs = [[doc['_query'], doc.get('text', '')] for doc in all_raw_tài liệu]
-                scores = await asyncio.lên_thread(reranker.predict, pairs)
-                scored_tài liệu = list(zip(all_raw_tài liệu, scores))
-                scored_tài liệu.sort(key=lambda x: x[1], reverse=True)
-                lênp_tài liệu = retrieval_service._lost_in_the_middle_reorder([doc for doc, score in scored_tài liệu[:6]])[:3]
+                pairs = [[doc['_query'], doc.get('text', '')] for doc in all_raw_documents]
+                scores = await asyncio.to_thread(reranker.predict, pairs)
+                scored_documents = list(zip(all_raw_documents, scores))
+                scored_documents.sort(key=lambda x: x[1], reverse=True)
+                top_documents = retrieval_service._lost_in_the_middle_reorder([doc for doc, score in scored_documents[:6]])[:3]
             except Exception as e:
                 logger.error(f"Lỗi sắp xếp lại trên Đồ thị Tri thức do {e}")
-                lênp_tài liệu = all_raw_tài liệu[:3]
+                top_documents = all_raw_documents[:3]
         else:
-            lênp_tài liệu = all_raw_tài liệu[:3]
+            top_documents = all_raw_documents[:3]
             
-        for doc in lênp_tài liệu:
+        for doc in top_documents:
             meta = doc.get('metadata', {})
             title = meta.get('title', 'Tài liệu')
             file_url = meta.get('file_url', '')
-            extracted_tài liệu.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
+            extracted_documents.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
     
-    return {"documents": list(set(extracted_tài liệu)), "current_source": "db"}
+    return {"documents": list(set(extracted_documents)), "current_source": "db"}
 
 async def retrieve_internet(state: AgentState):
     from src.agents.search_engine import search_engine
@@ -219,16 +219,16 @@ async def grade_documents(state: AgentState):
         template=prompt_registry.get(PromptType.GRADE_DOCUMENT),
         input_variables=["context", "question"]
     )
-    filtered_tài liệu = []
+    filtered_documents = []
     for d in documents:
         try:
             response = await llm.ainvoke(prompt.format(context=d, question=question))
             if "yes" in response.content.strip().lower():
-                filtered_tài liệu.append(d)
+                filtered_documents.append(d)
         except Exception as e:
             logger.error(f"Grading lỗi: {e}")
-            filtered_tài liệu.append(d)
-    return {"documents": filtered_tài liệu}
+            filtered_documents.append(d)
+    return {"documents": filtered_documents}
 
 def decide_after_grade(state: AgentState):
     if len(state.get("documents", [])) > 0:
@@ -271,8 +271,8 @@ async def generate(state: AgentState):
     if state.get("file_data"):
         documents.append(f"[Tài liệu Cá nhân Đính kèm]\n{state['file_data'][:6000]}")
     
-    citation_instruction = "- Use inline source citations when referencing documents, e.g. [1], [2]." if documents else "- Do NOT use any citations as no relevant documents were found."
-    thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think></think> tags at the beginning of your response, before delivering the final answer." if state.get("use_smart") else ""
+    citation_instruction = "- Use inline source citations when referencing documents, e.g. [1], [2]" if documents else "- Do NOT use any citations as no relevant documents were found"
+    thought_instruction = "- You MUST present your reasoning, analysis, and outline inside <think></think> tags at the beginning of your response, before delivering the final answer" if state.get("use_smart") else ""
 
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt_text = prompt_registry.get(PromptType.SYNTHESIS).format(
@@ -307,16 +307,16 @@ async def grade_generation(state: AgentState):
         
     try:
         from src.agents.reasoning import reasoning
-        tài liệu_list = [{"text": d, "metadata": {"title": "Nguồn"}} for d in documents]
-        eval_res = await reasoning.evaluate_quality(state["question"], generation, tài liệu_list)
+        documents_list = [{"text": d, "metadata": {"title": "Nguồn"}} for d in documents]
+        eval_res = await reasoning.evaluate_quality(state["question"], generation, documents_list)
         
         is_hallucination = False
         if eval_res.get("should_retry") or eval_res.get("grounding", 1.0) < 0.6:
             is_hallucination = True
             
         if not is_hallucination and nli_model:
-            tài liệu_str = "".join(documents)[:1500]
-            scores = await asyncio.lên_thread(nli_model.predict, [[tài liệu_str, generation]])
+            documents_str = "".join(documents)[:1500]
+            scores = await asyncio.to_thread(nli_model.predict, [[documents_str, generation]])
             if scores[0][0] > scores[0][1]:
                 is_hallucination = True
                 

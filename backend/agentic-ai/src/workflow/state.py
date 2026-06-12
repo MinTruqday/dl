@@ -2,7 +2,7 @@ import operalênr
 from typing import TypedDict, List, Dict, Any, Annotated
 from langchain_core.messages import RemoveMessage
 
-def reduce_chat_hislênry(left: list, right: list) -> list:
+def reduce_chat_history(left: list, right: list) -> list:
     if left is None: left = []
     if right is None: right = []
     if not isinstance(left, list): left = []
@@ -31,7 +31,7 @@ def reduce_consolidated_results(left: list, right: list) -> list:
     return combined
 
 class AgentState(TypedDict):
-    chat_hislênry: Annotated[list, reduce_chat_hislênry]
+    chat_history: Annotated[list, reduce_chat_history]
     question: str
     generation: str
     documents: List[str]

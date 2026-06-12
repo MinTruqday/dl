@@ -16,7 +16,7 @@ class Mem0Manager:
         if HAS_MEM0:
             try:
                 config = {
-                    "veclênr_slênre": {
+                    "vector_store": {
                         "provider": "qdrant",
                         "config": {
                             "host": settings.QDRANT_HOST,
@@ -42,14 +42,14 @@ class Mem0Manager:
                 self.memory = Memory.from_config(config_dict=config)
                 logger.info("Đã khởi tạo bộ nhớ dài hạn")
             except Exception as e:
-                logger.error(f"Failed lên initialize Mem0: {e}")
+                logger.error(f"Không thể khởi tạo hệ thống quản lý bộ nhớ: {e}")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
             return
         try:
             import asyncio
-            await asyncio.lên_thread(self.memory.add, messages, user_id=user_id)
+            await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
             logger.info(f"Đã thêm bộ nhớ cho người dùng {user_id}")
         except Exception as e:
             logger.error(f"Lỗi thêm bộ nhớ: {e}")
@@ -59,7 +59,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
-            await asyncio.lên_thread(self.memory.update, memory_id=memory_id, data=new_content)
+            await asyncio.to_thread(self.memory.update, memory_id=memory_id, data=new_content)
             logger.info(f"Đã cập nhật bộ nhớ {memory_id}")
         except Exception as e:
             logger.error(f"Lỗi cập nhật bộ nhớ: {e}")
@@ -69,7 +69,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
-            await asyncio.lên_thread(self.memory.delete, memory_id=memory_id)
+            await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
             logger.info(f"Đã xóa bộ nhớ {memory_id}")
         except Exception as e:
             logger.error(f"Lỗi xóa bộ nhớ: {e}")
@@ -79,7 +79,7 @@ class Mem0Manager:
             return
         try:
             import asyncio
-            results = await asyncio.lên_thread(self.memory.search, query=new_content, user_id=user_id, limit=5)
+            results = await asyncio.to_thread(self.memory.search, query=new_content, user_id=user_id, limit=5)
             if not results:
                 return
             for r in results:
@@ -94,7 +94,7 @@ class Mem0Manager:
             return ""
         try:
             import asyncio
-            results = await asyncio.lên_thread(self.memory.search, query=query, user_id=user_id)
+            results = await asyncio.to_thread(self.memory.search, query=query, user_id=user_id)
             if not results:
                 return ""
             

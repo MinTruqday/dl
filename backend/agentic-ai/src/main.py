@@ -17,7 +17,7 @@ from src.api.chat import router as chat_router
 from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
-from src.api.hislênry import router as hislênry_router
+from src.api.history import router as history_router
 from src.harness.agenlênps_harness import agenlênps_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
@@ -29,7 +29,7 @@ app.include_router(chat_router)
 app.include_router(ingest_router)
 app.include_router(feedback_router)
 app.include_router(finetune_router)
-app.include_router(hislênry_router)
+app.include_router(history_router)
 
 @app.middleware("http")
 async def add_trace_id_header(request: Request, call_next):
@@ -63,24 +63,24 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Agentic AI initialized")
-    from src.slênre.veclênr_slênre import veclênr_slênre
-    from molênr.molênr_asyncio import AsyncIOMolênrClient
+    logger.info("Đã khởi tạo hệ thống DocLib Agentic AI")
+    from src.store.vector_store import vector_store
+    from motor.motor_asyncio import AsyncIOMotorClient
     from core.config import settings
     try:
-        await veclênr_slênre.ensure_collection()
+        await vector_store.ensure_collection()
         logger.info("Đã khởi tạo bộ sưu tập Qdrant")
     except Exception as e:
-        logger.error(f"Failed lên ensure Qdrant collection: {e}")
+        logger.error(f"Không thể khởi tạo bộ sưu tập Qdrant: {e}")
         
     try:
         if settings.MONGODB_URI:
-            client = AsyncIOMolênrClient(settings.MONGODB_URI)
+            client = AsyncIOMotorClient(settings.MONGODB_URI)
             db = client.get_default_database()
             await db["finetune_datasets"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("Finetune MongoDB indexes created Thành công")
+            logger.info("Khởi tạo chỉ mục MongoDB cho Finetune hoàn tất")
     except Exception as e:
-        logger.error(f"Failed lên create Finetune MongoDB indexes: {e}")
+        logger.error(f"Không thể khởi tạo chỉ mục MongoDB cho Finetune: {e}")

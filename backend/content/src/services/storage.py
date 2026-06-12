@@ -106,7 +106,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                print(f'Error physically deleting file from MinIO: {e}')
+                print(f'Lỗi khi xóa tệp tin vật lý từ hệ thống lưu trữ: {e}')
 
         return True
 
@@ -185,7 +185,7 @@ class StorageService:
         )
         if result.modified_count == 0:
             return {'message': 'Tệp tin đã được chia sẻ cho người dùng này trước đó'}
-        return {'message': f'Chia sẻ tệp tin thành công tới {email} với quyền {role}'}
+        return {'message': f'Đã chia sẻ tệp tin tới {email} với quyền {role}'}
 
     @staticmethod
     async def get_recent_items(owner_id: str, limit: int=20, db=None) -> List[StorageItemInDB]:

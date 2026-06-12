@@ -15,5 +15,5 @@ async def compile_editorjs(req: CompileRequest):
         pdf_bytes = await EditorJSEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception as e:
-        logger.error(f"Quá trình biên dịch thất bại: {e}")
+        logger.error(f"Quá trình biên dịch gặp sự cố: {e}")
         raise HTTPException(status_code=500, detail=str(e))

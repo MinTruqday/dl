@@ -15,7 +15,7 @@ class TelemetryService:
             db = db_client.mongodb.get_default_database()
         telemetry_event = {'_id': str(uuid7()), 'event_name': event_name, 'properties': properties, 'user_id': str(current_user.id) if current_user else 'anonymous', 'timestamp': datetime.now(timezone.utc)}
         await db['telemetry'].insert_one(telemetry_event)
-        logger.debug(f"Đã ghi nhận sự kiện viễn trắc: {event_name} by {telemetry_event['user_id']}")
+        logger.debug(f"Đã ghi nhận sự kiện viễn trắc: {event_name} bởi người dùng {telemetry_event['user_id']}")
         return {'status': 'success'}
 
     @staticmethod

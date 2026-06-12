@@ -102,13 +102,13 @@ class NXBGDCollector:
             logger.info(f"Đã tạo PDF: {pdf_path}")
                 
             logger.info(f"Đang đẩy file {final_pdf_name} lên hệ thống lưu trữ")
-            minio_url = await storage.upload_local_file(f"documents/nxbgd/{final_pdf_name}", pdf_path)
+            minio_url = await storage.upload_local_file(f"tài liệu/nxbgd/{final_pdf_name}", pdf_path)
             
             if minio_url:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Extracted via NXBGD collector.",
+                    "description": "Đã trích xuất via NXBGD collector",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,
@@ -183,7 +183,7 @@ class NXBGDCollector:
                             viewer_url = await doc_link.get_attribute("href")
                             if viewer_url.startswith("/"): viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
                             
-                            logger.info(f"-> Processing Resource: {full_title} at {viewer_url}")
+                            logger.info(f"-> Đang xử lý tài nguyên: {full_title} at {viewer_url}")
                             
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
@@ -235,7 +235,7 @@ class NXBGDCollector:
                     await asyncio.sleep(5)
                     next_btn = await self.page.query_selector("button.p-paginator-next")
                     if next_btn and not await next_btn.is_disabled() and "p-disabled" not in (await next_btn.get_attribute("class") or ""):
-                        logger.info(">>> Moving to Next Page >>>")
+                        logger.info("Đang chuyển sang trang tiếp theo")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:

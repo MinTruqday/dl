@@ -85,7 +85,7 @@ class AnnaArchiveCollector:
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Quy trình lấy danh sách từ Anna's Archive bị lỗi: {e}")
+                logger.error(f"Quy trình lấy danh sách từ Anna's Archive gặp sự cố: {e}")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -206,7 +206,7 @@ class AnnaArchiveCollector:
                             payload["download_link"] = download_link
                             logger.info(f"Đã lấy được link tải: {download_link}")
                             
-                            ext = payload["download_link"].split('.')[-1][:4] if '.' in payload["download_link"].split('/')[-1] else 'pdf'
+                            ext = payload["download_link"].split('')[-1][:4] if '' in payload["download_link"].split('/')[-1] else 'pdf'
                             if len(ext) > 4 or "/" in ext: ext = 'pdf'
                             slug = urllib.parse.quote(payload["title"].lower().replace(" ", "-"))[:50]
                             payload["filename"] = f"{slug}.{ext}"
@@ -216,7 +216,7 @@ class AnnaArchiveCollector:
                         else:
                             logger.warning(f"Hết thời gian chờ xử lý đếm ngược bằng JS: {slow_url}")
                     except Exception as e:
-                        logger.error(f"Chờ liên kết tải xuống thất bại: {e}")
+                        logger.error(f"Chờ liên kết tải xuống gặp sự cố: {e}")
                 if not slow_link_el:
                     logger.warning(f"Không tìm thấy nút tải trên trang: {document_url}")
                     await page.screenshot(path="/app/logs/anna_error.png", full_page=True)
@@ -252,7 +252,7 @@ class AnnaArchiveCollector:
             success = await download_file_with_retry(url, target_local)
             if success:
                 logger.info(f"Đã tải về tệp tạm thời {target_local}")
-                minio_url = await storage.upload_local_file(f"documents/anna_archive/{filename}", target_local)
+                minio_url = await storage.upload_local_file(f"tài liệu/anna_archive/{filename}", target_local)
                 
             if os.path.exists(target_local):
                 os.unlink(target_local)
@@ -266,7 +266,7 @@ class AnnaArchiveCollector:
             document_metadata = {
                 "title": title,
                 "slug": slug,
-                "description": f"Extracted via Anna's Archive bot",
+                "description": f"Đã trích xuất via Anna's Archive bot",
                 "file_url": minio_url,
                 "pdf_url": minio_url if ext.lower() == "pdf" else None,
                 "tags": ["Anna's Archive", payload.get("author", "Unknown")],

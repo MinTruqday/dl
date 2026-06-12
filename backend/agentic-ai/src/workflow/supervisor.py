@@ -22,7 +22,7 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
         
     if time.time() - start_time > 45:
-        logger.error("Execution exceeded 45 seconds budget")
+        logger.error("Thời gian thực thi đã vượt quá giới hạn 45 giây")
         return {"next_node": "trimmer", "error": "Yêu cầu quá phức tạp, đã vượt quá ngân sách thời gian xử lý (45s)"}
 
     steps = state.get("steps", [])
@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
         
     if state.get("error"):
-        logger.warning(f"Acting: Skipping further lênols due lên lỗi: {state.get('error')}")
+        logger.warning(f"Bỏ qua các công cụ tiếp theo do gặp lỗi: {state.get('error')}")
         return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "start_time": start_time}
         
     if idx >= len(steps):
@@ -57,7 +57,7 @@ async def supervisor_node(state: ActingState):
     next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
-async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: str):
+async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
     
@@ -76,12 +76,12 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
         current_task = task_desc
         while replan_count < 3:
             if agent_name == "ToolDispatcher":
-                lênken = getattr(req, "lênken", None)
-                res = await lênol_callable.execute(current_task, {}, req.user_id, lênken)
+                token = getattr(req, "token", None)
+                res = await tool_callable.execute(current_task, {}, req.user_id, token)
             elif agent_name == "Knowledge":
-                res = await lênol_callable.execute(req)
+                res = await tool_callable.execute(req)
             else:
-                res = await lênol_callable.execute(current_task)
+                res = await tool_callable.execute(current_task)
             
             from src.core.prompt_registry import prompt_registry, PromptType
             prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
@@ -90,11 +90,11 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
             
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
-                logger.warning(f"Tự đánh giá thất bại cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
+                logger.warning(f"Tự đánh giá gặp sự cố cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
                 replan_prompt = (
-                    f"The following task thất bại:\n{current_task}\n\n"
+                    f"The following task gặp sự cố:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
-                    "Rewrite the task description lên fix the issue. Output only the revised task."
+                    "Rewrite the task description lên fix the issue. Output only the revised task"
                 )
                 replan_res = await llm.ainvoke(replan_prompt)
                 current_task = replan_res.content.strip() or current_task
@@ -112,27 +112,27 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
             "last_agent_result": final_res
         }
     except Exception as e:
-        logger.error(f"Acting: Node execution thất bại: {e}")
+        logger.error(f"Thực thi node gặp sự cố: {e}")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e)
         }
 
 async def code_interpreter_node(state: ActingState):
-    return await execute_lênol_node(state, code_interpreter, "CodeInterpreter")
+    return await execute_tool_node(state, code_interpreter, "CodeInterpreter")
 
 async def search_engine_node(state: ActingState):
-    return await execute_lênol_node(state, search_engine, "SearchEngine")
+    return await execute_tool_node(state, search_engine, "SearchEngine")
 
 async def action_agent_node(state: ActingState):
-    return await execute_lênol_node(state, action, "ToolDispatcher")
+    return await execute_tool_node(state, action, "ToolDispatcher")
 
 
 async def knowledge_agent_node(state: ActingState):
-    return await execute_lênol_node(state, knowledge, "Knowledge")
+    return await execute_tool_node(state, knowledge, "Knowledge")
 
 async def reasoning_agent_node(state: ActingState):
-    return await execute_lênol_node(state, reasoning, "Reasoning")
+    return await execute_tool_node(state, reasoning, "Reasoning")
 
 
 
@@ -141,9 +141,9 @@ async def trimmer_node(state: ActingState):
     if not results:
         return {"next_node": "trimmer"}
         
-    lêntal_length = sum(len(str(r)) for r in results)
-    if lêntal_length > 12000:
-        logger.info(f"Đang tóm tắt các kết quả đã được tổng hợp (Length: {lêntal_length})")
+    total_length = sum(len(str(r)) for r in results)
+    if total_length > 12000:
+        logger.info(f"Đang tóm tắt các kết quả đã được tổng hợp (Length: {total_length})")
         try:
             from src.workflow.brain import llm
             combined = "\n\n".join(str(r) for r in results)
@@ -156,7 +156,7 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.warning(f"Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi {e}")
+            logger.warning(f"Quá trình tóm tắt gặp sự cố, đang chuyển sang chế độ cắt bớt do lỗi {e}")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         
@@ -168,7 +168,7 @@ def trimmer_router(state: ActingState):
 async def sanitizer_node(state: ActingState):
     req = state.get("req")
     if req:
-        if hasattr(req, "lênken"): req.lênken = None
+        if hasattr(req, "token"): req.token = None
         if hasattr(req, "user_id"): req.user_id = None
         if hasattr(req, "session_id"): req.session_id = None
     return {"req": req, "next_node": "trimmer"}
@@ -220,7 +220,7 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req):
-        logger.info("Acting: Starting LangGraph execution flow")
+        logger.info("Đang bắt đầu luồng thực thi LangGraph")
         yield {"type": "status", "node": "Phân tích yêu cầu"}
         
         initial_state = {
@@ -249,7 +249,7 @@ class Supervisor:
                     if state_update.get("error"):
                         yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
                     else:
-                        yield {"type": "lênol_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
+                        yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
                         
                 elif node_name == "aggregalênr":
                     yield {"type": "status", "node": "Tổng hợp thông tin"}
