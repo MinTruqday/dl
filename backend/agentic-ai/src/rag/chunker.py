@@ -47,7 +47,7 @@ class AdvancedSemanticChunker:
                 self.type = "chonkie_semantic"
                 logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
             except Exception as e:
-                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back to TokenChunker")
+                logger.warning(f"Tải Chonkie SemanticChunker thất bại: {e}. Đang chuyển sang dự phòng TokenChunker")
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
                     self.type = "chonkie_token"
@@ -59,7 +59,7 @@ class AdvancedSemanticChunker:
         logger.info(f"Chunking text of length {len(text)}")
         
         if not self.chunker:
-            logger.warning("Using fallback Langchain CharSplit due lên Chonkie initialization error")
+            logger.warning("Đang sử dụng dự phòng Langchain CharSplit do lỗi khởi tạo Chonkie")
             return self._fallback_chunking(text, metadata)
 
         try:
@@ -86,11 +86,11 @@ class AdvancedSemanticChunker:
                     "metadata": chunk_meta
                 })
                 
-            logger.info(f"Chonkie chunking complete. Total chunks: {len(chunks)}, type: {self.type}")
+            logger.info(f"Hoàn thành phân nhỏ bằng Chonkie với số lượng: {len(chunks)}, loại: {self.type}")
             return chunks
             
         except Exception as e:
-            logger.error(f"Error running Chonkie: {e}. Using fallback")
+            logger.error(f"Chạy Chonkie gặp lỗi: {e}. Đang sử dụng dự phòng")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

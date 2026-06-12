@@ -56,7 +56,7 @@ try:
     llm = llm.with_fallbacks([_fallback_llm])
     logger.info(f"Đã thiết lập chuỗi dự phòng cho mô hình ngôn ngữ: chính -> {settings.FALLBACK_MODEL}")
 except Exception as e:
-    logger.warning(f"Failed to configure LLM fallback: {e}")
+    logger.warning(f"Cấu hình dự phòng LLM thất bại: {e}")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -135,7 +135,7 @@ async def retrieve_db(state: AgentState):
                 extracted_documents.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception as e:
-            logger.error(f"Cross-document retrieval lỗi: {e}")
+            logger.error(f"Truy xuất chéo tài liệu lỗi: {e}")
 
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
@@ -258,7 +258,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception as e:
-        logger.error(f"Generate direct lỗi: {e}")
+        logger.error(f"Tạo phản hồi trực tiếp lỗi: {e}")
         return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def generate(state: AgentState):

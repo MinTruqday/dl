@@ -24,7 +24,7 @@ class BookmarkService:
             message = 'Đã thêm tài liệu vào danh sách lưu trữ'
             is_bookmarked = True
             await db['user_content_profiles'].update_one({'_id': user_id}, {'$addToSet': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}}, upsert=True)
-        return {'status': 'thành công', 'message': message, 'is_bookmarked': is_bookmarked}
+        return {'status': 'success', 'message': message, 'is_bookmarked': is_bookmarked}
 
     @staticmethod
     async def get_bookmarks(current_user, limit: int=100, db=None) -> list:

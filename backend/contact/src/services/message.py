@@ -200,11 +200,11 @@ class MessageService:
                 else:
                     await db['message_groups'].update_one({'_id': other_user_id}, {'$pull': {'members': str(current_user.id)}})
                     await db['conversations'].update_one({'_id': other_user_id}, {'$addToSet': {'cleared_by': str(current_user.id)}})
-            return {'status': 'thành công'}
+            return {'status': 'success'}
         await db['messages'].update_many({'$or': [{'sender_id': str(current_user.id), 'receiver_id': other_user_id}, {'sender_id': other_user_id, 'receiver_id': str(current_user.id)}]}, {'$addToSet': {'deleted_by': str(current_user.id)}})
         participant_key = f'{min(str(current_user.id), other_user_id)}_{max(str(current_user.id), other_user_id)}'
         await db['conversations'].update_one({'_id': participant_key}, {'$addToSet': {'cleared_by': str(current_user.id)}})
-        return {'status': 'thành công'}
+        return {'status': 'success'}
 
     @staticmethod
     async def add_reaction(message_id: str, reaction: str, current_user, db=None):
@@ -232,7 +232,7 @@ class MessageService:
         if last_msg:
             update_data[f'last_read_message_id.{user_id}'] = last_msg['_id']
         await db['conversations'].update_one({'_id': participant_key}, {'$set': update_data})
-        return {'status': 'thành công'}
+        return {'status': 'success'}
 
     @staticmethod
     async def share_document(receiver_id: str, document_id: str, current_user, db=None):
@@ -357,7 +357,7 @@ class MessageService:
             {'$set': {f'drafts.{current_user.id}': content}},
             upsert=True
         )
-        return {'status': 'thành công'}
+        return {'status': 'success'}
 
     @staticmethod
     async def get_draft(other_user_id: str, current_user, db=None):

@@ -429,7 +429,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 image_data = base64.b64decode(image_b64)
                 img = Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
             except Exception as e:
-                logger.error(f"Failed to load image for diffusion training: {e}")
+                logger.error(f"Tải hình ảnh cho quá trình huấn luyện diffusion thất bại: {e}")
                 continue
 
             optimizer.zero_grad()
@@ -455,7 +455,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Diffusion training step thất bại: {e}")
+                logger.error(f"Bước huấn luyện diffusion thất bại: {e}")
                 final_loss = 0.0
 
             current_step += 1

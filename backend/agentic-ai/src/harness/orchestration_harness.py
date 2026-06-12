@@ -102,7 +102,7 @@ class OrchestrationHarness:
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info(f"Phiên làm việc success session={session_id}")
+            logger.info(f"Phiên làm việc thành công với session={session_id}")
 
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")

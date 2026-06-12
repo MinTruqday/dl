@@ -73,7 +73,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
             return "Lỗi xác thực: Phiên đăng nhập đã hết hạn"
         return f"Lỗi hệ thống: Không thể truy xuất số dư (Mã lỗi: {response.status_code})"
     except Exception as e:
-        logger.error(f"Error calling balance API: {e}")
+        logger.error(f"Gọi API số dư thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -98,7 +98,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
             return f"Lịch sử 5 giao dịch gần nhất:\n{history_text}"
         return f"Lỗi hệ thống: Không thể tải lịch sử giao dịch (Mã lỗi: {response.status_code})"
     except Exception as e:
-        logger.error(f"Error calling history API: {e}")
+        logger.error(f"Gọi API lịch sử thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -125,7 +125,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         detail = data.get("detail", "Mã quà tặng không hợp lệ hoặc đã sử dụng")
         return f"Lỗi đổi mã quà tặng: {detail}"
     except Exception as e:
-        logger.error(f"Error calling redeem API: {e}")
+        logger.error(f"Gọi API đổi thưởng thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -144,7 +144,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             return f"Báo cáo tài chính:\n- Tổng doanh thu: {total} dl\n- Đang chờ thanh toán: {pending} dl"
         return "Không thể truy xuất dữ liệu doanh thu"
     except Exception as e:
-        logger.error(f"Error calling revenue API: {e}")
+        logger.error(f"Gọi API doanh thu thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
@@ -168,7 +168,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
             return res
         return "Không thể lấy danh sách tài liệu"
     except Exception as e:
-        logger.error(f"Error listing tài liệu: {e}")
+        logger.error(f"Lấy danh sách tài liệu thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -193,7 +193,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
             return res
         return "Không thể truy cập thùng rác"
     except Exception as e:
-        logger.error(f"Error getting trash: {e}")
+        logger.error(f"Lấy danh sách thùng rác thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -216,7 +216,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
             return "Đã xóa tài liệu"
         return "Xóa tài liệu thất bại"
     except Exception as e:
-        logger.error(f"Error deleting document: {e}")
+        logger.error(f"Xóa tài liệu thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @tool
@@ -233,7 +233,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             return "Đã khôi phục tài liệu"
         return "Khôi phục thất bại"
     except Exception as e:
-        logger.error(f"Error restoring document: {e}")
+        logger.error(f"Khôi phục tài liệu thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
@@ -257,7 +257,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             return f"Phân tích độc giả cho tài liệu {document_id}:\n- {readers} người đọc, tỉ lệ bỏ dở {rate}%"
         return "Không thể lấy dữ liệu thống kê"
     except Exception as e:
-        logger.error(f"Error getting analytics: {e}")
+        logger.error(f"Lấy dữ liệu phân tích thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 async def _get_doc_text(document_id: str, token: str) -> str:
@@ -266,7 +266,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
-        logger.error(f"Error fetching doc: {e}")
+        logger.error(f"Tải tài liệu thất bại: {e}")
     return ""
 
 from src.api.inference import suggest_citations, peer_review, transform_tone
@@ -321,7 +321,7 @@ async def agent_transform_tone(document_id: str, tone: str, config: RunnableConf
         data = await transform_tone(req)
         return f"Văn bản đã biến đổi ({tone}):\n\n{data.get('transformed_text', '')}"
     except Exception as e:
-        logger.error(f"Error transforming tone: {e}")
+        logger.error(f"Chuyển đổi giọng điệu thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
@@ -347,7 +347,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             return "Không thể lấy đường dẫn thanh toán từ hệ thống"
         return "Lỗi khởi tạo thanh toán"
     except Exception as e:
-        logger.error(f"Error calling deposit API: {e}")
+        logger.error(f"Gọi API nạp tiền thất bại: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 from src.workflow.map_reduce import agent_summarize_long_document
@@ -383,7 +383,7 @@ async def create_document(title: str, description: str, content: str, format: st
             profile_data = res_profile.json().get("data", {})
             user_name = profile_data.get("full_name") or profile_data.get("name") or "Người dùng"
     except Exception as e:
-        logger.warning(f"Could not fetch user profile for author name: {e}")
+        logger.warning(f"Không thể tải hồ sơ người dùng để lấy tên tác giả: {e}")
 
     if format == 'latex':
         if '\\documentclass' not in content:

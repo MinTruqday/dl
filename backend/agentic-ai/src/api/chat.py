@@ -38,7 +38,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     if doc_res.status_code not in [200, 201]:
                         return {"answer": f"Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu {doc_id} hoặc tài liệu không tồn tại", "route": "error"}
                 except Exception as e:
-                    logger.error(f"Error checking document access for {doc_id}: {e}")
+                    logger.error(f"Kiểm tra quyền truy cập tài liệu {doc_id} thất bại: {e}")
                     return {"answer": f"Lỗi: Không thể xác thực quyền truy cập tài liệu {doc_id} lúc này", "route": "error"}
 
         route_data = await semantic_router.execute(req.query)
@@ -78,7 +78,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
             "route": "agentic_ai"
         }
     except Exception as e:
-        logger.error(f"Execution error in /chat: {e}")
+        logger.error(f"Lỗi thực thi trong /chat: {e}")
         return {"answer": "Hệ thống đang gặp sự cố, vui lòng thử lại sau", "route": "error"}
 
 
@@ -123,7 +123,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
-                        logger.error(f"Error checking document access for {doc_id}: {e}")
+                        logger.error(f"Kiểm tra quyền truy cập tài liệu {doc_id} thất bại: {e}")
                         yield f"event: message\ndata: {json.dumps({'chunk': f'Loi: Khong the xac thuc quyen truy cap tai lieu {doc_id}'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return

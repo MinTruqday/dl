@@ -46,7 +46,7 @@ class ReadingService:
             await db['user_content_profiles'].update_one({'_id': user_id}, {'$set': {'reading_stats.last_read_date': today_date, 'reading_stats.current_streak': current_streak, 'reading_stats.longest_streak': longest_streak}}, upsert=True)
         if data.progress_percentage >= 100:
             await db['user_content_profiles'].update_one({'_id': user_id}, {'$addToSet': {'badges': {'name': 'Mọt Sách', 'awarded_at': now}}}, upsert=True)
-        return {'status': 'thành công', 'current_streak': current_streak}
+        return {'status': 'success', 'current_streak': current_streak}
 
 
 
@@ -102,18 +102,18 @@ class ReadingService:
         if data.letter_spacing is not None:
             update_data['letter_spacing'] = data.letter_spacing
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$set': {'typography': update_data}}, upsert=True)
-        return {'status': 'thành công', 'typography': update_data}
+        return {'status': 'success', 'typography': update_data}
 
     @staticmethod
     async def clear_reading_history(current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_many({'user_id': str(current_user.id)})
-        return {'status': 'thành công', 'message': 'Toàn bộ lịch sử đọc đã được xóa'}
+        return {'status': 'success', 'message': 'Toàn bộ lịch sử đọc đã được xóa'}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_one({'user_id': str(current_user.id), 'document_id': document_id})
-        return {'status': 'thành công', 'message': 'Lịch sử đọc đã được xóa'}
+        return {'status': 'success', 'message': 'Lịch sử đọc đã được xóa'}

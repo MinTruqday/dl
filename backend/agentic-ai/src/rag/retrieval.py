@@ -26,7 +26,7 @@ class RetrievalService:
             logger.info(f"Loaded Reranker model {settings.RERANKER_MODEL} thành công")
         except Exception as e:
             self.reranker = None
-            logger.error(f"Failed to load reranker: {e}")
+            logger.error(f"Tải mô hình reranker thất bại: {e}")
 
     async def multi_query_retrieve(self, question: str, document_ids: Optional[List[str]] = None, k: int = 5) -> List[Dict]:
         logger.info(f"Đang truy xuất thông tin đa chiều cho {question}")

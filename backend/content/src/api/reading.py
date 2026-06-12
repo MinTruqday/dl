@@ -59,7 +59,7 @@ def validate_url_ssrf(url: str):
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
             raise HTTPException(status_code=403, detail='Tên miền phân giải ra địa chỉ mạng nội bộ bị cấm để đảm bảo an toàn')
     except socket.gailỗi:
-        raise HTTPException(status_code=400, detail='Cannot resolve hostname')
+        raise HTTPException(status_code=400, detail='Không thể phân giải tên miền')
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     if '' in info.filename or info.filename.startswith('/'):
@@ -107,7 +107,7 @@ async def get_zip_content(file_url: str=Query(...), path: str=Query(...), db=Dep
                                 text = file_bytes.decode('utf-8')
                                 return APIResponse(data={'content': text, 'type': 'text'}, message='thành công')
                             except UnicodeDecodeError:
-                                return APIResponse(data={'content': 'Binary file cannot be displayed', 'type': 'binary'}, message='thành công')
+                                return APIResponse(data={'content': 'Tệp nhị phân không thể hiển thị trực tiếp', 'type': 'binary'}, message='thành công')
                         return APIResponse(data=None, message='Không tìm thấy tệp', status=404)
     except HTTPException as he:
         raise he

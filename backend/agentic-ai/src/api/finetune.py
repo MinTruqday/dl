@@ -335,7 +335,7 @@ async def deploy_model(job_id: str, req: dict):
                     commit_message="Deploy fine-tuned model via DocLib"
                 ))
             else:
-                logger.warning(f"Could not find merged path directory: {merged_path}")
+                logger.warning(f"Không tìm thấy thư mục đường dẫn đã gộp: {merged_path}")
                 raise Exception("Không tìm thấy thư mục mô hình đã gộp")
                 
         model_name = repo_id

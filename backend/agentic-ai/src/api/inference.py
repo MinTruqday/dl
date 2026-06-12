@@ -114,7 +114,7 @@ async def analyze_sentiment(req: SentimentRequest):
             "analysis": [{"text": t, "sentiment": s} for t, s in zip(texts_to_analyze, results)]
         }
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Sentiment analysis: {e}")
+        logger.error(f"Hệ thống AI gặp sự cố phân tích cảm xúc: {e}")
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 
@@ -210,7 +210,7 @@ async def check_plagiarism(req: GrammarRequest):
             "matches": significant_matches[:3]
         }
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Real plagiarism check: {e}")
+        logger.error(f"Hệ thống AI gặp sự cố kiểm tra đạo văn: {e}")
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
 
 @router.post("/hanh-dong")
@@ -368,7 +368,7 @@ async def analyze_document(req: dict):
         else:
             raise ValueError("Mô hình ngôn ngữ không trả về định dạng JSON")
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Document analysis: {e}")
+        logger.error(f"Hệ thống AI gặp sự cố phân tích tài liệu: {e}")
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
 @router.delete("/vector/{document_id}")
@@ -376,7 +376,7 @@ async def delete_vector_document(document_id: str):
     try:
         from src.store.vector_store import vector_store
         await vector_store.delete_by_document(document_id)
-        return {"status": "success", "message": f"Deleted vectors for {document_id}"}
+        return {"status": "success", "message": f"Đã xóa vector dữ liệu cho tài liệu {document_id}"}
     except Exception as e:
         logger.error(f"Xóa vector thất bại đối với tài liệu {document_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

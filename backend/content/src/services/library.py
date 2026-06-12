@@ -44,7 +44,7 @@ class LibraryService:
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$addToSet': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
-        return {'status': 'thành công', 'message': 'Đã thêm vào danh sách đọc'}
+        return {'status': 'success', 'message': 'Đã thêm vào danh sách đọc'}
 
     @staticmethod
     async def remove_document_from_list(list_id: str, document_id: str, current_user, db=None) -> dict:
@@ -53,4 +53,4 @@ class LibraryService:
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$pull': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
-        return {'status': 'thành công', 'message': 'Đã xóa khỏi danh sách đọc'}
+        return {'status': 'success', 'message': 'Đã xóa khỏi danh sách đọc'}

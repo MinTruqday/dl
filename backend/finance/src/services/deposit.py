@@ -102,7 +102,7 @@ class DepositService:
                 raise
             except Exception as e:
                 logger.exception(f'Gặp lỗi khi xử lý thông báo từ payOS: {e}')
-        return Response(content=json.dumps({'code': '00', 'desc': 'thành công'}), media_type='application/json', status_code=200)
+        return Response(content=json.dumps({'code': '00', 'desc': 'success'}), media_type='application/json', status_code=200)
 
     @staticmethod
     async def verify_deposit(order_code: int, current_user, db=None):
@@ -180,7 +180,7 @@ class DepositService:
         user_id = order['user_id']
         
         try:
-            result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'thành công', 'updated_at': datetime.now(timezone.utc)}}, session=session)
+            result = await orders.update_one({'order_code': order_code, 'status': {'$in': ['INIT', 'pending']}}, {'$set': {'status': 'success', 'updated_at': datetime.now(timezone.utc)}}, session=session)
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
