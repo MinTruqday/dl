@@ -3,7 +3,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_db, get_current_user
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from src.services.wallet import WalletService
 from src.services.purchase import PurchaseService
 from src.services.withdrawal import WithdrawalService

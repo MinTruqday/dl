@@ -6,11 +6,12 @@ from webauthn.helpers.structs import RegistrationCredential, AuthenticationCrede
 from webauthn.helpers.exceptions import InvalidRegistrationResponse, InvalidAuthenticationResponse
 from fastapi import HTTPException
 from core.database import db_client
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from datetime import datetime, timezone
 import os
 import uuid
 from loguru import logger
+
 RP_ID = getattr(settings, 'PASSKEY_RP_ID')
 RP_NAME = getattr(settings, 'PASSKEY_RP_NAME')
 ORIGIN = getattr(settings, 'PASSKEY_ALLOWED_ORIGINS')

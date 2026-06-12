@@ -3,7 +3,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from src.schemas.user import UserCreate, UserInDB, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, VerifyCodeRequest
+from provision.src.schemas.user import UserCreate, UserInDB, UserResponse, ForgotPasswordRequest, ResetPasswordRequest, VerifyCodeRequest
 from src.services.authentication import AuthenticationService
 from pydantic import BaseModel, EmailStr
 

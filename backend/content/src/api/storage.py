@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, BackgroundTasks
 from typing import List, Any, Optional
 from core.response import APIResponse
-from src.schemas.user import UserInDB, RoleEnum
+from provision.src.schemas.user import UserInDB, RoleEnum
 from src.schemas.storage import StorageItemCreate, StorageItemUpdate, StorageItemResponse
 from src.api.dependency import get_db, require_role
 from src.services.storage import StorageService

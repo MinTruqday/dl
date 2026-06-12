@@ -2,7 +2,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, Response
 from src.api.dependency import get_db, get_current_user
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from src.services.export import ExportService
 from src.services.document import DocumentService
 router = APIRouter(prefix='/xuat-tai-lieu')

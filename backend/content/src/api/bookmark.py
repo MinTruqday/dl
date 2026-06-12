@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status, Query
 from core.response import APIResponse
 from src.api.dependency import get_db, get_current_user
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from src.services.bookmark import BookmarkService
 from pydantic import BaseModel
 router = APIRouter(prefix='/dau-trang')

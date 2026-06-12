@@ -1,7 +1,7 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, require_role
-from src.schemas.user import UserInDB, RoleEnum
+from provision.src.schemas.user import UserInDB, RoleEnum
 from src.schemas.document import CoauthorInviteRequest, CollaborationResponse, TransferOwnershipRequest, UpdateCollaboratorRoleRequest, CollabMemoCreateRequest, UpdateCollabAccessRequest, CreateDraftSnapshotRequest, CollabTaskCreateRequest, UpdateTaskStatusRequest, TaskCommentCreateRequest
 from core.response import APIResponse
 from src.services.collaboration import CollaborationService

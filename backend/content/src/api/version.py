@@ -1,7 +1,7 @@
 from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from src.api.dependency import get_db, get_current_user
 from src.services.version import VersionsService
 router = APIRouter(prefix='/phien-ban')

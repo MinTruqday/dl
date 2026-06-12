@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 import jwt
 from core.security import SECRET_KEY, ALGORITHM
 from core.database import db_client
-from src.schemas.user import UserInDB, RoleEnum
+from provision.src.schemas.user import UserInDB, RoleEnum
 import time
 from core.config import settings
 from loguru import logger

@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_db, get_current_user
-from src.schemas.user import UserInDB
+from provision.src.schemas.user import UserInDB
 from src.schemas.notification import NotificationCreate
 from src.services.notification import NotificationService
 from core.response import APIResponse

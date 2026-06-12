@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, require_role, get_current_user
-from src.schemas.user import UserInDB, RoleEnum
+from provision.src.schemas.user import UserInDB, RoleEnum
 from src.schemas.document import ModerateDocumentRequest
 from core.response import APIResponse
 from src.services.document import DocumentService
