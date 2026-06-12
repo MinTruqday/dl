@@ -38,7 +38,7 @@ class EmailService:
                 server.quit()
                 return True
             except Exception as e:
-                logger.error(f'Gặp sự cố khi gửi email qua SMTP: {e}')
+                logger.error(f'Thất bại khi gửi email qua SMTP: {e}')
                 raise
         success = await asyncio.to_thread(send_sync)
         logger.info(f'Đã gửi thư khôi phục mật khẩu đến {email}')

@@ -91,7 +91,7 @@ class AuthenticationService:
 
         if not verify_password(password, password_hash):
             await db['audit_logs'].insert_one({'action': 'LOGIN_FAILED_WRONG_PASSWORD', 'actor_email': user_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
-            logger.warning(f'Đăng nhập không hoàn tất do sai mật khẩu cho tài khoản {username} từ {client_ip}')
+            logger.warning(f'Đăng nhập không thành công do sai mật khẩu cho tài khoản {username} từ {client_ip}')
             raise HTTPException(status_code=401, detail='Mật khẩu bạn nhập không chính xác')
         if not user_doc.get('is_active', True):
             raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa, vui lòng liên hệ quản trị viên')
@@ -185,8 +185,8 @@ class AuthenticationService:
             token_resp = await client.post('https://oauth2.googleapis.com/token', data={'code': code, 'client_id': google_client_id, 'client_secret': google_client_secret, 'redirect_uri': redirect_uri, 'grant_type': 'authorization_code'})
             token_data = token_resp.json()
             if 'access_token' not in token_data:
-                logger.error(f'Xác thực qua Google gặp sự cố: {token_data}')
-                raise HTTPException(status_code=400, detail='Quá trình xác thực với Google không hoàn tất, vui lòng thử lại')
+                logger.error(f'Xác thực qua Google thất bại: {token_data}')
+                raise HTTPException(status_code=400, detail='Quá trình xác thực với Google không thành công, vui lòng thử lại')
             user_resp = await client.get('https://www.googleapis.com/oauth2/v3/userinfo', headers={'Authorization': f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
         if db is None:

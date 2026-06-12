@@ -27,7 +27,7 @@ async def _chat_direct(messages: List[dict], max_tokens: int = 500, temperature:
         )
         return response.choices[0].message.content
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Model {settings.LLAMA_MODEL}: {e}")
+        logger.error(f"Hệ thống AI thất bại {settings.LLAMA_MODEL}: {e}")
         raise e
 
 @router.post("/tao-noi-dung")
@@ -40,7 +40,7 @@ async def generate_text(req: GenerationRequest):
         )
         return {"result": result}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/dich-thuat")
 async def translate_text(req: TranslationRequest):
@@ -53,7 +53,7 @@ async def translate_text(req: TranslationRequest):
         )
         return {"translation": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/phan-tich-cam-xuc")
 async def analyze_sentiment(req: SentimentRequest):
@@ -114,8 +114,8 @@ async def analyze_sentiment(req: SentimentRequest):
             "analysis": [{"text": t, "sentiment": s} for t, s in zip(texts_to_analyze, results)]
         }
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Sentiment analysis: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        logger.error(f"Hệ thống AI thất bại Sentiment analysis: {e}")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 
 @router.post("/tao-ma-nguon")
@@ -129,7 +129,7 @@ async def generate_code(req: CodeRequest):
         )
         return {"code": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/kiem-tra-ngu-phap")
 async def grammar_check(req: GrammarRequest):
@@ -147,13 +147,13 @@ async def grammar_check(req: GrammarRequest):
         return {
             "corrected_text": result.strip(), 
             "score": grammar_score, 
-            "message": "Hoàn tất kiểm tra ngữ pháp và tính toán độ chính xác"
+            "message": "Thành công kiểm tra ngữ pháp và tính toán độ chính xác"
         }
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 
-@router.post("/lênm-tat")
+@router.post("/tom-tat")
 async def summarize_text(req: SummarizeRequest):
     try:
         prompt = prompt_registry.get(PromptType.SUMMARIZE).format(language=req.language, text=req.text)
@@ -164,7 +164,7 @@ async def summarize_text(req: SummarizeRequest):
         )
         return {"summary": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/kiem-tra-dao-van")
 async def check_plagiarism(req: GrammarRequest):
@@ -210,8 +210,8 @@ async def check_plagiarism(req: GrammarRequest):
             "matches": significant_matches[:3]
         }
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Real plagiarism check: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        logger.error(f"Hệ thống AI thất bại Real plagiarism check: {e}")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/hanh-dong")
 async def unified_action(req: ActionRequest):
@@ -236,7 +236,7 @@ async def unified_action(req: ActionRequest):
         return {"result": result.strip()}
     except Exception as e:
         logger.error(f"Hệ thống không thể thực thi hành động {req.action} do lỗi: {e}")
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/tu-dong-nghia")
 async def get_synonyms(req: GrammarRequest):
@@ -249,7 +249,7 @@ async def get_synonyms(req: GrammarRequest):
         )
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 
 @router.post("/trich-dan-thong-minh")
@@ -274,7 +274,7 @@ async def suggest_citations(req: CitationRequest):
         )
         return {"citations": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/bien-doi-van-ban")
 async def transform_tone(req: ToneRequest):
@@ -288,7 +288,7 @@ async def transform_tone(req: ToneRequest):
         )
         return {"transformed_text": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/tham-dinh-noi-dung")
 async def peer_review(req: ReviewRequest):
@@ -302,9 +302,9 @@ async def peer_review(req: ReviewRequest):
         )
         return {"review_report": result.strip()}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
-@router.post("/lênng-hop-da-tai-lieu")
+@router.post("/tong-hop-da-tai-lieu")
 async def multi_doc_synthesis(req: SynthesisRequest):
     try:
         from src.rag.embedder import embedding_service
@@ -326,7 +326,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
         )
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
-        raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thất bại, vui lòng thử lại sau")
 
 @router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict):
@@ -340,7 +340,7 @@ async def extract_text(req: dict):
         
         return {"extracted_text": extracted_text}
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố khi trích xuất dữ liệu: {e}")
+        logger.error(f"Hệ thống AI thất bại khi trích xuất dữ liệu: {e}")
         raise HTTPException(status_code=500, detail="Không thể trích xuất văn bản lúc này")
 
 @router.post("/phan-tich-tai-lieu")
@@ -368,7 +368,7 @@ async def analyze_document(req: dict):
         else:
             raise ValueError("Mô hình ngôn ngữ không trả về định dạng JSON")
     except Exception as e:
-        logger.error(f"Hệ thống AI gặp sự cố Document analysis: {e}")
+        logger.error(f"Hệ thống AI thất bại Document analysis: {e}")
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
 
 @router.delete("/vector/{document_id}")
@@ -378,5 +378,5 @@ async def delete_vector_document(document_id: str):
         await vector_store.delete_by_document(document_id)
         return {"status": "success", "message": f"Deleted vectors for {document_id}"}
     except Exception as e:
-        logger.error(f"Xóa vector gặp sự cố đối với tài liệu {document_id}: {e}")
+        logger.error(f"Xóa vector thất bại đối với tài liệu {document_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

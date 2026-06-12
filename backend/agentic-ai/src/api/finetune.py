@@ -83,7 +83,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         })
 
     except Exception as e:
-        logger.error(f"Huấn luyện tinh chỉnh gặp sự cố cho tác vụ {job_id}: {e}")
+        logger.error(f"Huấn luyện tinh chỉnh thất bại cho tác vụ {job_id}: {e}")
         sync_update({"status": "failed", "error_message": str(e)})
     finally:
         active_jobs.pop(job_id, None)
@@ -320,7 +320,7 @@ async def deploy_model(job_id: str, req: dict):
         
         repo_id = f"{hf_username}/{model_name}"
         
-        logger.info(f"Creating reposilênry on HuggingFace Hub: {repo_id}")
+        logger.info(f"Creating repository on HuggingFace Hub: {repo_id}")
         api.create_repo(repo_id=repo_id, exist_ok=True)
         
         if merged_path:
@@ -329,7 +329,7 @@ async def deploy_model(job_id: str, req: dict):
                 logger.info(f"Đang tải thư mục {merged_path} lên {repo_id}")
                 import asyncio
                 loop = asyncio.get_event_loop()
-                await loop.run_in_execulênr(None, lambda: api.upload_folder(
+                await loop.run_in_executor(None, lambda: api.upload_folder(
                     folder_path=merged_path,
                     repo_id=repo_id,
                     commit_message="Deploy fine-tuned model via DocLib"
@@ -342,8 +342,8 @@ async def deploy_model(job_id: str, req: dict):
         await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"merged_model_name": repo_id}})
         
     except Exception as e:
-        logger.error(f"HuggingFace Hub deploy gặp sự cố: {e}")
-        raise HTTPException(status_code=500, detail=f"Triển khai mô hình lên HuggingFace gặp sự cố do lỗi {e}")
+        logger.error(f"HuggingFace Hub deploy thất bại: {e}")
+        raise HTTPException(status_code=500, detail=f"Triển khai mô hình lên HuggingFace thất bại do lỗi {e}")
 
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})
     return {"status": "deployed", "model_name": model_name}

@@ -60,7 +60,7 @@ class ToolHarness:
             logger.error(f"tool={tool_name!r} Chưa được đăng ký session={session_id}")
             return ToolResult(Thành công=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký")
 
-        start_ms = time.monolênnic()
+        start_ms = time.monotonic()
         last_error = ""
         attempt = 0
 
@@ -75,7 +75,7 @@ class ToolHarness:
                         thời gian chờdefinition.Hết thời gian chờ_seconds,
                     )
 
-                duration_ms = int((time.monolênnic() - start_ms) * 1000)
+                duration_ms = int((time.monotonic() - start_ms) * 1000)
                 logger.info(
                     f"Thành công tool={tool_name} session={session_id} "
                     f"lần thử thứ{attempt} thời gian{duration_ms}"
@@ -104,7 +104,7 @@ class ToolHarness:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
-        duration_ms = int((time.monolênnic() - start_ms) * 1000)
+        duration_ms = int((time.monotonic() - start_ms) * 1000)
         logger.error(
             f"Thất bại sau {attempt} lần thử tool={tool_name} "
             f"session={session_id} với lỗi{last_error!r} thời gian{duration_ms}"

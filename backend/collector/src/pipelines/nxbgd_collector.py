@@ -64,7 +64,7 @@ class NXBGDCollector:
                 except Exception as e:
                     logger.warning(f"Không bắt được dữ liệu trả về từ NXBGD: {e}")
         except Exception as e:
-            logger.warning(f"Xử lý phản hồi từ NXBGD gặp sự cố: {e}")
+            logger.warning(f"Xử lý phản hồi từ NXBGD thất bại: {e}")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -218,7 +218,7 @@ class NXBGDCollector:
                                 if current_pages > 0 and current_pages == last_page_count:
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(f"Đã thu thập {current_pages} trang, không phát hiện trang mới, hoàn tất tài liệu")
+                                        logger.info(f"Đã thu thập {current_pages} trang, không phát hiện trang mới, thành công tài liệu")
                                         break
                                 else:
                                     stable_count = 0

@@ -36,7 +36,7 @@ async def trigger_collection(req: CollectionRequest):
         logger.info(f"Tiến trình thu thập {payload['job_id']} đã được bật cho nguồn {source}")
         return {'status': 'success', 'job_id': payload['job_id'], 'message': f'Tiến trình thu thập dữ liệu đã được khởi chạy cho nguồn {source}'}
     except Exception as e:
-        logger.error(f"Bật tiến trình thu thập gặp sự cố: {e}")
+        logger.error(f"Bật tiến trình thu thập thất bại: {e}")
         raise HTTPException(status_code=500, detail='Hệ thống không thể chuyển lệnh thu thập vào hàng đợi xử lý')
 
 @router.post('/dung')
@@ -48,7 +48,7 @@ async def stop_collection():
         return {'status': 'success', 'message': 'Tín hiệu dừng thu thập đã được hệ thống tiếp nhận'}
     except Exception as e:
         logger.error(f'Lỗi khi tạm dừng thu thập: {e}')
-        raise HTTPException(status_code=500, detail='Quá trình truyền tín hiệu dừng thu thập gặp sự cố')
+        raise HTTPException(status_code=500, detail='Quá trình truyền tín hiệu dừng thu thập thất bại')
 
 @router.get('/noi-bo/cong-viec-dang-chay')
 async def get_active_jobs():

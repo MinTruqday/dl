@@ -74,7 +74,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
         return f"Lỗi hệ thống: Không thể truy xuất số dư (Mã lỗi: {response.status_code})"
     except Exception as e:
         logger.error(f"Error calling balance API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
@@ -99,7 +99,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         return f"Lỗi hệ thống: Không thể tải lịch sử giao dịch (Mã lỗi: {response.status_code})"
     except Exception as e:
         logger.error(f"Error calling history API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
@@ -120,13 +120,13 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Đổi voucher hoàn tất Tài khoản đã được cộng thêm {bonus} dl"
+            return f"Đổi voucher thành công Tài khoản đã được cộng thêm {bonus} dl"
         data = response.json()
         detail = data.get("detail", "Mã voucher không hợp lệ hoặc đã sử dụng")
         return f"Lỗi đổi voucher: {detail}"
     except Exception as e:
         logger.error(f"Error calling redeem API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
@@ -145,7 +145,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "Không thể truy xuất dữ liệu doanh thu"
     except Exception as e:
         logger.error(f"Error calling revenue API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 
 
@@ -169,7 +169,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
         return "Không thể lấy danh sách tài liệu"
     except Exception as e:
         logger.error(f"Error listing tài liệu: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
@@ -194,7 +194,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         return "Không thể truy cập thùng rác"
     except Exception as e:
         logger.error(f"Error getting trash: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
@@ -214,10 +214,10 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
             except Exception as ve:
                 logger.warning(f"Không thể dọn dẹp vector cho {document_id}: {ve}")
             return "Đã xóa tài liệu"
-        return "Xóa tài liệu gặp sự cố"
+        return "Xóa tài liệu thất bại"
     except Exception as e:
         logger.error(f"Error deleting document: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
@@ -231,10 +231,10 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
         response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             return "Đã khôi phục tài liệu"
-        return "Khôi phục gặp sự cố"
+        return "Khôi phục thất bại"
     except Exception as e:
         logger.error(f"Error reslênring document: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 
 
@@ -258,7 +258,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         return "Không thể lấy dữ liệu thống kê"
     except Exception as e:
         logger.error(f"Error getting analytics: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
@@ -288,7 +288,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         return f"Gợi ý trích dẫn:\n\n{data.get('citations', '')}"
     except Exception as e:
         logger.error(f"Gặp lỗi trong citations: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
@@ -305,7 +305,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         return f"Báo cáo thẩm định:\n\n{data.get('review_report', '')}"
     except Exception as e:
         logger.error(f"Gặp lỗi trong peer review: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 @tool
 async def agent_transform_tone(document_id: str, lênne: str, config: RunnableConfig) -> str:
@@ -322,7 +322,7 @@ async def agent_transform_tone(document_id: str, lênne: str, config: RunnableCo
         return f"Văn bản đã biến đổi ({lênne}):\n\n{data.get('transformed_text', '')}"
     except Exception as e:
         logger.error(f"Error transforming lênne: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 
 @tool
@@ -348,7 +348,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "Lỗi khởi tạo thanh lênán"
     except Exception as e:
         logger.error(f"Error calling deposit API: {e}")
-        return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+        return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 from src.workflow.map_reduce import agent_summarize_long_document
 
@@ -431,7 +431,7 @@ async def create_document(title: str, description: str, content: str, format: st
             doc_id = new_doc.get("id") or new_doc.get("_id")
             if doc_id:
                 return f"Đã tạo tài liệu! [Xem tài liệu](/sang-tac?tai-lieu={doc_id})"
-            return "Tạo tài liệu hoàn tất nhưng không lấy được ID"
+            return "Tạo tài liệu thành công nhưng không lấy được ID"
         return f"Lỗi tạo tài liệu mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
@@ -550,7 +550,7 @@ async def translate_document(document_id: str, target_language: str, config: Run
         return "Tài liệu trống, không có nội dung để dịch"
 
     import json
-    text_lên_translate = ""
+    text_to_translate = ""
     if format == 'json':
         try:
             parsed = json.loads(original_content)
@@ -560,17 +560,17 @@ async def translate_document(document_id: str, target_language: str, config: Run
                 text_content = b.get("data", {}).get("text", "")
                 if text_content:
                     texts.append(text_content)
-            text_lên_translate = "\n\n".join(texts)
+            text_to_translate = "\n\n".join(texts)
         except:
-            text_lên_translate = str(original_content)
+            text_to_translate = str(original_content)
     else:
-        text_lên_translate = original_content
+        text_to_translate = original_content
 
     try:
-        payload = {"text": text_lên_translate, "target_lang": target_language}
+        payload = {"text": text_to_translate, "target_lang": target_language}
         trans_res = await _make_api_request("POST", f"{INTERNAL_API_URL}/suy-luan/dich-thuat", headers=headers, json=payload, thời gian chờ60)
         if trans_res.status_code != 200:
-            return "Dịch thuật gặp sự cố từ AI service"
+            return "Dịch thuật thất bại từ AI service"
         translated_text = trans_res.json().get("translation", "")
     except Exception as e:
         return f"Lỗi trong quá trình dịch thuật: {e}"
@@ -629,7 +629,7 @@ async def translate_document(document_id: str, target_language: str, config: Run
             if new_doc_id:
                 return f"Đã dịch và tạo tài liệu! Bạn có thể xem bản dịch tại đây: [Xem bản dịch](/sang-tac?tai-lieu={new_doc_id})"
             return "Đã dịch và lưu nhưng không lấy được ID"
-        return f"Dịch hoàn tất nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
+        return f"Dịch thành công nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
         return f"Lỗi tạo tài liệu mới: {e}"
 

@@ -32,7 +32,7 @@ NAME_TO_NLLB = {
     "ko": "kor_Hang"
 }
 
-def map_lên_nllb(lang_name: str) -> str:
+def map_to_nllb(lang_name: str) -> str:
     lang_name = lang_name.lower().strip()
     if lang_name in NAME_TO_NLLB:
         return NAME_TO_NLLB[lang_name]

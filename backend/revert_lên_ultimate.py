@@ -1,4 +1,5 @@
 import os
+import re
 
 target_dirs = [
     '/Users/caominhtrung/Library/Mobile Documents/com~apple~CloudDocs/Documents/DocLib/backend/worker',
@@ -15,11 +16,71 @@ target_dirs = [
     '/Users/caominhtrung/Library/Mobile Documents/com~apple~CloudDocs/Documents/DocLib/backend/agentic-ai'
 ]
 
+# We need a robust regex to find anything matching `[a-zA-Z_]*lên[a-zA-Z_]*` outside of string literals?
+# Or just replace all known english variables that got corrupted.
 replacements = {
-    "gặp sự cố": "thất bại",
-    "Gặp sự cố": "Thất bại",
-    "hoàn tất": "thành công",
-    "Hoàn tất": "Thành công"
+    "lênol": "tool",
+    "Lênol": "Tool",
+    "lênken": "token",
+    "Lênken": "Token",
+    "slênre": "store",
+    "Slênre": "Store",
+    "veclênr": "vector",
+    "Veclênr": "Vector",
+    "molênr": "motor",
+    "Molênr": "Motor",
+    "hislênry": "history",
+    "Hislênry": "History",
+    "aulên": "auto",
+    "Aulên": "Auto",
+    "cuslênm": "custom",
+    "Cuslênm": "Custom",
+    "monilênr": "monitor",
+    "Monilênr": "Monitor",
+    "faclênry": "factory",
+    "Faclênry": "Factory",
+    "direclênry": "directory",
+    "Direclênry": "Directory",
+    "lênday": "today",
+    "lênmorrow": "tomorrow",
+    "botlênm": "bottom",
+    "photlên": "photo",
+    "cryptlên": "crypto",
+    "butlênn": "button",
+    "lênpic": "topic",
+    "lêntal": "total",
+    "Lêntal": "Total",
+    "seleclênr": "selector",
+    "Seleclênr": "Selector",
+    "agenlênps": "agentops",
+    "Agenlênps": "Agentops",
+    "reposilênry": "repository",
+    "Reposilênry": "Repository",
+    "execulênr": "executor",
+    "Execulênr": "Executor",
+    "generalênr": "generator",
+    "Generalênr": "Generator",
+    "operalênr": "operator",
+    "Operalênr": "Operator",
+    "aggregalênr": "aggregator",
+    "Aggregalênr": "Aggregator",
+    "monolênnic": "monotonic",
+    "Monolênnic": "Monotonic",
+    "lênm-tat": "tom-tat",
+    "lênng-hop": "tong-hop",
+    "lênm_tat": "tom_tat",
+    "lênng_hop": "tong_hop",
+    "lên_thread": "to_thread",
+    "lên_list": "to_list",
+    "lên_dict": "to_dict",
+    "lên_json": "to_json",
+    "lênp_": "top_",
+    "Lênp_": "Top_",
+    "_lên_": "_to_",
+    "slênp": "stop",
+    "Slênp": "Stop",
+    "aulêncomplete": "autocomplete",
+    "transform_lênne": "transform_tone"
 }
 
 total_files_modified = 0
@@ -43,4 +104,4 @@ for d in target_dirs:
                         f.write(new_content)
                     total_files_modified += 1
 
-print(f"Reverted to thành công / thất bại in {total_files_modified} files.")
+print(f"ULTIMATE fixed lên corruptions in {total_files_modified} files.")

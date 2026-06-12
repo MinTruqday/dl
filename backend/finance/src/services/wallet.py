@@ -31,7 +31,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập Redis thất bại: {e}")
         
         if db_client.redis:
             try:
@@ -87,7 +87,7 @@ class WalletService:
                             f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                             json={
                                 "target_user_id": str(current_user.id),
-                                "title": 'Nạp dl hoàn tất',
+                                "title": 'Nạp dl thành công',
                                 "body": f'Tài khoản vừa được cộng thêm {bonus_dl} dl',
                                 "type": 'topup'
                             },
@@ -96,7 +96,7 @@ class WalletService:
             except Exception as e:
                 logger.warning(f'Không thể gửi thông báo: {e}')
             logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
-            return {'message': 'Đổi mã quà tặng hoàn tất', 'bonus_dl': bonus_dl, 'status': 'success'}
+            return {'message': 'Đổi mã quà tặng thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:
             raise
         except Exception as e:

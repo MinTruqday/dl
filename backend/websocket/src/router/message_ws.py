@@ -23,7 +23,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Qu
             await websocket.close(code=1008)
             return
     except Exception as e:
-        logger.error(f"Quá trình xác thực token kết nối cho {user_id} gặp sự cố: {e}")
+        logger.error(f"Quá trình xác thực token kết nối cho {user_id} thất bại: {e}")
         await websocket.close(code=1008)
         return
 

@@ -25,11 +25,11 @@ def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("U
 
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Hoàn tất phân tích đạo văn nội bộ', "status": 200}
+    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Thành công phân tích đạo văn nội bộ', "status": 200}
 
 @router.post('/{document_id}/dong-bo-thao-tac')
 async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.sync_keystroke_buffer(document_id, payload.model_dump(), current_user), "message": 'Đồng bộ dữ liệu gõ phím hoàn tất', "status": 200}
+    return {"data": await EditorService.sync_keystroke_buffer(document_id, payload.model_dump(), current_user), "message": 'Đồng bộ dữ liệu gõ phím thành công', "status": 200}
 
 @router.get('/latex')
 async def get_latex():
@@ -37,7 +37,7 @@ async def get_latex():
 
 @router.post('/tai-lieu/{document_id}/goi-y')
 async def add_inline_suggestion(document_id: str, payload: InlineSuggestionRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.add_inline_suggestion(document_id, payload.model_dump(), current_user), "message": 'Thêm gợi ý nội dòng hoàn tất', "status": 201}
+    return {"data": await EditorService.add_inline_suggestion(document_id, payload.model_dump(), current_user), "message": 'Thêm gợi ý nội dòng thành công', "status": 201}
 
 @router.put('/goi-y/{suggestion_id}/giai-quyet')
 async def resolve_suggestion(suggestion_id: str, payload: ResolveSuggestionRequest, current_user = Depends(get_current_user)):
@@ -45,7 +45,7 @@ async def resolve_suggestion(suggestion_id: str, payload: ResolveSuggestionReque
 
 @router.post('/pomodoro')
 async def sync_pomodoro_session(payload: PomodoroSyncRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.sync_pomodoro_session(payload.model_dump(), current_user), "message": 'Đồng bộ phiên Pomodoro hoàn tất', "status": 200}
+    return {"data": await EditorService.sync_pomodoro_session(payload.model_dump(), current_user), "message": 'Đồng bộ phiên Pomodoro thành công', "status": 200}
 
 @router.post('/{document_id}/tu-dong-luu')
 async def auto_save_draft(document_id: str, payload: AutoSaveRequest, current_user = Depends(get_current_user)):
@@ -57,15 +57,15 @@ async def submit_for_review(document_id: str, current_user = Depends(get_current
 
 @router.post('/{document_id}/kiem-tra-dao-van-chuyen-sau')
 async def check_deep_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
-    return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Hoàn tất kiểm tra đạo văn chuyên sâu', "status": 200}
+    return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Thành công kiểm tra đạo văn chuyên sâu', "status": 200}
 
 @router.post('/{document_id}/thay-the-toan-cuc')
 async def global_find_replace(document_id: str, payload: FindReplaceRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.global_find_replace(document_id, payload.search, payload.replace, payload.match_case, current_user), "message": 'Thay thế toàn cục hoàn tất', "status": 200}
+    return {"data": await EditorService.global_find_replace(document_id, payload.search, payload.replace, payload.match_case, current_user), "message": 'Thay thế toàn cục thành công', "status": 200}
 
 @router.post('/{document_id}/anh-bia/tao-ai')
 async def generate_cover(document_id: str, payload: CoverGenerateRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
-    return {"data": await EditorService.generate_cover(document_id, payload.style, current_user, agentic_ai_url), "message": 'Khởi tạo ảnh bìa AI hoàn tất', "status": 200}
+    return {"data": await EditorService.generate_cover(document_id, payload.style, current_user, agentic_ai_url), "message": 'Khởi tạo ảnh bìa AI thành công', "status": 200}
 
 @router.post('/{document_id}/goi-y-ai')
 async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
@@ -77,7 +77,7 @@ async def summarize_document(document_id: str, current_user = Depends(get_curren
 
 @router.post('/{document_id}/phan-tich-the')
 async def extract_smart_tags(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
-    return {"data": await EditorService.extract_smart_tags(document_id, current_user, agentic_ai_url), "message": 'Tự động phân tích thẻ hoàn tất', "status": 200}
+    return {"data": await EditorService.extract_smart_tags(document_id, current_user, agentic_ai_url), "message": 'Tự động phân tích thẻ thành công', "status": 200}
 
 @router.post('/{document_id}/kiem-tra-logic')
 async def check_logic(document_id: str, payload: dict, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):

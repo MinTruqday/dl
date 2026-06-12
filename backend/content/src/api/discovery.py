@@ -9,11 +9,11 @@ router = APIRouter(prefix='/kham-pha')
 
 @router.get('/xu-huong', response_model=APIResponse[Any])
 async def get_trending_documents(limit: int=5, db=Depends(get_db)):
-    return APIResponse(data=await DocumentService.get_trending_documents(limit), message='Lấy danh sách tài liệu xu hướng hoàn tất', status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_trending_documents(limit), message='Lấy danh sách tài liệu xu hướng thành công', status=status.HTTP_200_OK)
 
 @router.get('/phan-loai', response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
-    return APIResponse(data=await DocumentService.get_tags_categories(), message='Lấy danh sách thẻ và danh mục hoàn tất', status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_tags_categories(), message='Lấy danh sách thẻ và danh mục thành công', status=status.HTTP_200_OK)
 
 @router.get('/tim-kiem-thong-minh', response_model=APIResponse[Any])
 async def smart_search(query: str, limit: int=10, current_user: UserInDB=Depends(get_current_user_optional), db=Depends(get_db)):
@@ -37,9 +37,9 @@ async def smart_search(query: str, limit: int=10, current_user: UserInDB=Depends
             )
             if resp.status_code == 200:
                 result = resp.json()
-                return APIResponse(data=result, message='Tìm kiếm thông minh AI hoàn tất')
+                return APIResponse(data=result, message='Tìm kiếm thông minh AI thành công')
             else:
-                logger.error(f"Tìm kiếm thông minh gặp sự cố với truy vấn '{query}': {resp.status_code}")
+                logger.error(f"Tìm kiếm thông minh thất bại với truy vấn '{query}': {resp.status_code}")
                 return APIResponse(data=await DocumentService.get_text_search(query, limit), message='Lỗi kết nối AI, dùng tìm kiếm cơ bản')
     except Exception as e:
         logger.error(f"Tìm kiếm thông minh gặp ngoại lệ với truy vấn '{query}': {e}")
@@ -47,8 +47,8 @@ async def smart_search(query: str, limit: int=10, current_user: UserInDB=Depends
 
 @router.get('/goi-y/ai', response_model=APIResponse[Any])
 async def get_ai_recommendations(limit: int=10, current_user: UserInDB=Depends(get_current_user_optional), db=Depends(get_db)):
-    return APIResponse(data=await DocumentService.get_trending_documents(limit), message='Lấy gợi ý tài liệu từ AI hoàn tất')
+    return APIResponse(data=await DocumentService.get_trending_documents(limit), message='Lấy gợi ý tài liệu từ AI thành công')
 
 @router.get('/hashtag-xu-huong', response_model=APIResponse[Any])
 async def get_trending_tags(limit: int=10, db=Depends(get_db)):
-    return APIResponse(data=await DocumentService.get_trending_tags(limit), message='Lấy danh sách hashtag xu hướng hoàn tất', status=status.HTTP_200_OK)
+    return APIResponse(data=await DocumentService.get_trending_tags(limit), message='Lấy danh sách hashtag xu hướng thành công', status=status.HTTP_200_OK)

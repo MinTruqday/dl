@@ -15,7 +15,7 @@ def _contains_injection(text: str) -> bool:
     return bool(_INJECTION_PATTERN.search(text))
 
 
-class ResponseGeneralênr:
+class ResponseGenerator:
     def __init__(self):
         pass
         
@@ -43,6 +43,6 @@ class ResponseGeneralênr:
             
         except Exception as e:
             logger.error(f"Lỗi tạo phản hồi: {str(e)}")
-            yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            yield "Hệ thống đang thất bại, vui lòng thử lại sau"
 
-response_generalênr = ResponseGeneralênr()
+response_generator = ResponseGenerator()

@@ -55,7 +55,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"Đẩy file {local_file_path} lên MinIO gặp sự cố: {e}")
+            logger.error(f"Đẩy file {local_file_path} lên MinIO thất bại: {e}")
             raise e
 
 storage = CollectorStorage()

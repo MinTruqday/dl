@@ -82,7 +82,7 @@ class CouponService:
         new_status = not coupon.get('is_active', True)
         await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'is_active': new_status}})
         logger.info(f'Mã giảm giá {coupon_id} đã được chuyển sang trạng thái {new_status}')
-        return {'message': 'Cập nhật trạng thái mã ưu đãi hoàn tất', 'is_active': new_status}
+        return {'message': 'Cập nhật trạng thái mã ưu đãi thành công', 'is_active': new_status}
 
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user, db=None) -> dict:

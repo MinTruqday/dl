@@ -26,7 +26,7 @@ class RetrievalService:
             logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) Thành công")
         except Exception as e:
             self.reranker = None
-            logger.error(f"Failed lên load reranker: {e}")
+            logger.error(f"Failed to load reranker: {e}")
 
     async def multi_query_retrieve(self, question: str, document_ids: Optional[List[str]] = None, k: int = 5) -> List[Dict]:
         logger.info(f"Đang truy xuất thông tin đa chiều cho {question}")
@@ -125,7 +125,7 @@ class RetrievalService:
                 if isinstance(parsed, list) and len(parsed) == len(document_ids):
                     sub_queries = parsed
         except Exception as e:
-            logger.warning(f"Cross-doc decomposition gặp sự cố: {e}")
+            logger.warning(f"Cross-doc decomposition thất bại: {e}")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

@@ -47,13 +47,13 @@ class AdvancedSemanticChunker:
                 self.type = "chonkie_semantic"
                 logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
             except Exception as e:
-                logger.warning(f"Chonkie SemanticChunker failed lên load: {e}. Falling back lên TokenChunker")
+                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back lên TokenChunker")
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
                     self.type = "chonkie_token"
                     logger.info("Loaded Chonkie TokenChunker")
                 except Exception as e2:
-                    logger.error(f"Chonkie TokenChunker gặp sự cố: {e2}")
+                    logger.error(f"Chonkie TokenChunker thất bại: {e2}")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info(f"Chunking text of length {len(text)}")
@@ -96,13 +96,13 @@ class AdvancedSemanticChunker:
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
         from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
         
-        headers_lên_split_on = [
+        headers_to_split_on = [
             ("#", "Header 1"),
             ("##", "Header 2"),
             ("###", "Header 3"),
         ]
         try:
-            markdown_splitter = MarkdownHeaderTextSplitter(headers_lên_split_on=headers_lên_split_on)
+            markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
             md_documents = markdown_splitter.split_text(text)
             texts = [doc.page_content for doc in md_documents]
         except Exception:

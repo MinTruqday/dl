@@ -80,7 +80,7 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error(f'Gặp sự cố khi tạo tập tin PDF đồng bộ: {e}')
+                logger.error(f'Thất bại khi tạo tập tin PDF đồng bộ: {e}')
                 return None
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:

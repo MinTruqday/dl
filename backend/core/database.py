@@ -38,10 +38,10 @@ async def init_db():
                 "_id": "rs0",
                 "members": [{"_id": 0, "host": host_with_port}]
             })
-            logger.info("Khởi tạo cụm MongoDB Replica Set hoàn tất")
+            logger.info("Khởi tạo cụm MongoDB Replica Set thành công")
             await asyncio.sleep(3)
         except Exception as e:
-            logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc gặp sự cố: {e}")
+            logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc thất bại: {e}")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
     
@@ -49,13 +49,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Kết nối hoàn tất với RabbitMQ")
+            logger.info("Kết nối thành công với RabbitMQ")
             break
         except Exception as e:
             if i == max_retries - 1:
                 logger.error(f"Không thể kết nối với RabbitMQ sau {max_retries} lần thử: {e}")
                 raise e
-            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} gặp sự cố, đang thử lại sau 5 giây... ({e})")
+            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} thất bại, đang thử lại sau 5 giây... ({e})")
             await asyncio.sleep(5)
     
     await setup_indexes()
@@ -105,7 +105,7 @@ async def setup_indexes():
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
 
-        logger.info("Khởi tạo chỉ mục MongoDB hoàn tất")
+        logger.info("Khởi tạo chỉ mục MongoDB thành công")
     except Exception as e:
         logger.error(f"Không thể tạo chỉ mục cơ sở dữ liệu MongoDB: {e}")
 

@@ -110,7 +110,7 @@ class WithdrawalService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f'Yêu cầu rút tiền của người dùng {current_user.id} gặp sự cố: {e}')
+            logger.exception(f'Yêu cầu rút tiền của người dùng {current_user.id} thất bại: {e}')
             raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau')
         finally:
             if should_close_session:

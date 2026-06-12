@@ -255,13 +255,13 @@ class IngestionPipeline:
             
             os.remove(tmp_path)
             
-            logger.info(f"Đã phân tích hoàn tất {len(full_text)} ký tự")
+            logger.info(f"Đã phân tích thành công {len(full_text)} ký tự")
             return full_text
         except ImportError:
             logger.error("Hệ thống đang thiếu thư viện phân tích nội dung")
             return ""
         except Exception as e:
-            logger.error(f"Quá trình phân tích dữ liệu gặp sự cố do lỗi: {e}")
+            logger.error(f"Quá trình phân tích dữ liệu thất bại do lỗi: {e}")
             return ""
 
 ingestion_pipeline = IngestionPipeline()

@@ -246,7 +246,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
         if not withdrawal:
-            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được hoàn tất trước đó')
+            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được thành công trước đó')
         await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'COMPLETED', 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}})
         logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã được duyệt bởi {admin_id}')
         return {'message': 'Yêu cầu rút tiền đã được phê duyệt'}
@@ -272,6 +272,6 @@ class OperationService:
         except Exception as e:
             await session.abort_transaction()
             logger.error(f'Lỗi khi xử lý thao tác từ chối lệnh rút tiền: {e}')
-            raise HTTPException(status_code=500, detail='Gặp sự cố khi từ chối giao dịch')
+            raise HTTPException(status_code=500, detail='Thất bại khi từ chối giao dịch')
         finally:
             await session.end_session()

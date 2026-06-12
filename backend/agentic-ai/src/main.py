@@ -18,7 +18,7 @@ from src.api.ingest import router as ingest_router
 from src.api.feedback import router as feedback_router
 from src.api.finetune import router as finetune_router
 from src.api.history import router as history_router
-from src.harness.agenlênps_harness import agenlênps_harness
+from src.harness.agentops_harness import agentops_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
 
@@ -47,7 +47,7 @@ async def health_check():
 async def harness_metrics():
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
-        content=agenlênps_harness.get_prometheus_metrics(),
+        content=agentops_harness.get_prometheus_metrics(),
         media_type="text/plain; version=0.0.4",
     )
 
@@ -81,6 +81,6 @@ async def startup_event():
             await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("Khởi tạo chỉ mục MongoDB cho Finetune hoàn tất")
+            logger.info("Khởi tạo chỉ mục MongoDB cho Finetune thành công")
     except Exception as e:
         logger.error(f"Không thể khởi tạo chỉ mục MongoDB cho Finetune: {e}")

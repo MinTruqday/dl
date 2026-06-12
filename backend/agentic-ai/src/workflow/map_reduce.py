@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, List, Annotated
-import operalênr
+import operator
 from langgraph.types import Send
 from langchain_core.tools import tool
 
@@ -10,7 +10,7 @@ MAX_CHUNKS = 40
 class MapReduceState(TypedDict):
     document_text: str
     chunks: List[str]
-    summaries: Annotated[list, operalênr.add]
+    summaries: Annotated[list, operator.add]
     final_summary: str
 
 async def splitter_node(state: MapReduceState):

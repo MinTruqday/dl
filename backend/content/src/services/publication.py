@@ -15,7 +15,7 @@ class PublicationService:
             raise HTTPException(status_code=403, detail='Không tìm thấy tài liệu hoặc bạn không hiện có quyền truy cập')
         await db['documents'].update_one({'_id': str(document_id)}, {'$set': {'seo_tags': seo_data.get('tags', []), 'seo_keywords': seo_data.get('keywords', []), 'seo_slug': seo_data.get('slug', ''), 'meta_description': seo_data.get('description', ''), 'updated_at': datetime.now(timezone.utc)}})
         logger.info(f'Người dùng {user_id} đã cập nhật thông tin SEO cho tài liệu {document_id}')
-        return {'message': 'Cập nhật thông tin tài liệu hoàn tất'}
+        return {'message': 'Cập nhật thông tin tài liệu thành công'}
 
     @staticmethod
     async def get_readability_score(document_id: str, current_user, db=None):

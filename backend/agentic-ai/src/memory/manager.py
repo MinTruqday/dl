@@ -11,7 +11,7 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
             self._redis.ping()
-            logger.info("Hệ thống quản lý bộ nhớ đã kết nối hoàn tất với Redis")
+            logger.info("Hệ thống quản lý bộ nhớ đã kết nối thành công với Redis")
         except Exception as e:
             logger.warning(f"Không thể sử dụng Redis cho bộ nhớ: {e}")
             self._redis = None

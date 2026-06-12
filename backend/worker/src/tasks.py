@@ -72,14 +72,14 @@ def compile_document_tectonic(document_id, tex_content):
             )
             
             if not os.path.exists(pdf_path):
-                logger.error(f"Gặp sự cố khi biên dịch tài liệu {document_id} bằng Tectonic")
+                logger.error(f"Thất bại khi biên dịch tài liệu {document_id} bằng Tectonic")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {"status": "error", "error": "Biên dịch thất bại", "logs": log_content, "document_id": document_id}
                 
-            logger.info(f"Tectonic đã hoàn tất quá trình biên dịch tài liệu {document_id}")
+            logger.info(f"Tectonic đã thành công quá trình biên dịch tài liệu {document_id}")
             
             return {"status": "success", "pdf_path": pdf_path, "document_id": document_id, "logs": process.stdout}
         except subprocess.TimeoutExpired:

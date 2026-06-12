@@ -26,7 +26,7 @@ class Planning:
         try:
             return await self.llm.ainvoke(messages)
         except (httpx.TimeoutException, httpx.HTTPStatusError, Exception) as primary_err:
-            logger.warning(f"Mô hình ngôn ngữ chính gặp sự cố ({primary_err})")
+            logger.warning(f"Mô hình ngôn ngữ chính thất bại ({primary_err})")
             raise primary_err
         
     async def create_plan(self, req) -> List[Dict[str, str]]:
@@ -60,7 +60,7 @@ class Planning:
             return steps
             
         except Exception as e:
-            logger.error(f"Tạo kế hoạch gặp sự cố do lỗi: {e}")
+            logger.error(f"Tạo kế hoạch thất bại do lỗi: {e}")
             return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
 
 planning = Planning()

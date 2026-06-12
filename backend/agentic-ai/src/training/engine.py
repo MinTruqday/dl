@@ -13,7 +13,7 @@ ADAPTERS_DIR.mkdir(parents=True, exist_ok=True)
 GGUF_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def format_samples_lên_chat(samples: list, tokenizer=None, for_mlx=False) -> list:
+def format_samples_to_chat(samples: list, tokenizer=None, for_mlx=False) -> list:
     formatted = []
     for s in samples:
         instruction = s.get("instruction", "")
@@ -60,7 +60,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     
     update_callback({"progress": 20})
 
-    formatted_data = format_samples_lên_chat(samples, for_mlx=True)
+    formatted_data = format_samples_to_chat(samples, for_mlx=True)
     jsonl_path = str(ADAPTERS_DIR / f"{job_id}_train.jsonl")
     with open(jsonl_path, "w", encoding="utf-8") as f:
         for item in formatted_data:
@@ -179,7 +179,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     )
     model = get_peft_model(model, lora_config)
 
-    formatted = format_samples_lên_chat(samples, tokenizer=tokenizer)
+    formatted = format_samples_to_chat(samples, tokenizer=tokenizer)
     dataset = Dataset.from_list(formatted)
 
     update_callback({"progress": 25})
@@ -255,9 +255,9 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         import shutil
         import subprocess
         convert_script = shutil.which("python3") or "python"
-        llama_cpp_convert = Path("/app/llama.cpp/convert_hf_lên_gguf.py")
+        llama_cpp_convert = Path("/app/llama.cpp/convert_hf_to_gguf.py")
         if not llama_cpp_convert.exists():
-            llama_cpp_convert = Path("convert_hf_lên_gguf.py")
+            llama_cpp_convert = Path("convert_hf_to_gguf.py")
 
         if llama_cpp_convert.exists():
             subprocess.run(
@@ -269,7 +269,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         else:
             logger.warning("Không tìm thấy công cụ chuyển đổi định dạng, hệ thống chỉ lưu mô hình gốc")
     except Exception as e:
-        logger.error(f"GGUF conversion gặp sự cố: {e}")
+        logger.error(f"GGUF conversion thất bại: {e}")
 
     return result
 
@@ -429,7 +429,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 image_data = base64.b64decode(image_b64)
                 img = Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
             except Exception as e:
-                logger.error(f"Failed lên load image for diffusion training: {e}")
+                logger.error(f"Failed to load image for diffusion training: {e}")
                 continue
 
             optimizer.zero_grad()
@@ -455,7 +455,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Diffusion training step gặp sự cố: {e}")
+                logger.error(f"Diffusion training step thất bại: {e}")
                 final_loss = 0.0
 
             current_step += 1

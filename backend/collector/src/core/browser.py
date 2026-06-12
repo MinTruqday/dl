@@ -69,9 +69,9 @@ async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300,
                     else:
                         logger.error(f"Mã lỗi: {resp.status} - {url}")
         except Exception as e:
-            logger.warning(f"Lần thử thứ {attempt+1}/{max_retries} gặp sự cố với {url}: {e}")
+            logger.warning(f"Lần thử thứ {attempt+1}/{max_retries} thất bại với {url}: {e}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 ** attempt)
             else:
-                logger.error(f"Tải gặp sự cố xuống {url} sau {max_retries} lần thử")
+                logger.error(f"Tải thất bại xuống {url} sau {max_retries} lần thử")
     return False

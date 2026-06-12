@@ -1,4 +1,4 @@
-import operalênr
+import operator
 import os
 import langchain
 import asyncio
@@ -56,9 +56,9 @@ try:
     llm = llm.with_fallbacks([_fallback_llm])
     logger.info(f"Đã thiết lập chuỗi dự phòng cho mô hình ngôn ngữ: chính -> {settings.FALLBACK_MODEL}")
 except Exception as e:
-    logger.warning(f"Failed lên configure LLM fallback: {e}")
+    logger.warning(f"Failed to configure LLM fallback: {e}")
 
-llm_generate = llm.with_config({"tags": ["final_generalênr"]})
+llm_generate = llm.with_config({"tags": ["final_generator"]})
 
 async def contextualize_question(state: AgentState):
     question = state["question"]
@@ -259,7 +259,7 @@ async def generate_direct(state: AgentState):
         return {"generation": response.content}
     except Exception as e:
         logger.error(f"Generate direct lỗi: {e}")
-        return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
+        return {"generation": "Hệ thống đang thất bại, vui lòng thử lại sau"}
 
 async def generate(state: AgentState):
     question = state["question"]
@@ -296,7 +296,7 @@ async def generate(state: AgentState):
         return {"generation": generation}
     except Exception as e:
         logger.error(f"Generate lỗi: {e}")
-        return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
+        return {"generation": "Hệ thống đang thất bại, vui lòng thử lại sau"}
 
 async def grade_generation(state: AgentState):
     documents = state.get("documents", [])

@@ -48,7 +48,7 @@ class AgentOpsHarness:
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception as e:
-                logger.error(f"AgentOpsHarness: DB connection gặp sự cố: {e}")
+                logger.error(f"Kết nối dữ liệu thất bại: {e}")
         return self._db_client
 
     def record_session_start(self, session_id: str, user_id: str, query_preview: str = ""):
@@ -59,7 +59,7 @@ class AgentOpsHarness:
         )
         self._sessions[session_id] = metrics
         logger.info(
-            f"AgentOps: session_start session={session_id} user={user_id} "
+            f"session_start session={session_id} user={user_id} "
             f"query_preview={query_preview[:80]!r}"
         )
 
@@ -77,7 +77,7 @@ class AgentOpsHarness:
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
         logger.info(
-            f"AgentOps: session_end session={session_id} status={status} "
+            f"Đã kết thúc phiên {session_id} với trạng thái {status}"
             f"thời gian{metrics.total_duration_ms} "
             f"tool_calls={metrics.total_tool_calls} llm_calls={metrics.total_llm_calls} "
             f"tokens_in={metrics.total_tokens_in} tokens_out={metrics.total_tokens_out}"
@@ -102,7 +102,7 @@ class AgentOpsHarness:
                 breakdown["errors"] += 1
         log_fn = logger.info if Thành công else logger.warning
         log_fn(
-            f"AgentOps: tool_call session={session_id} tool={tool_name} "
+            f"Công cụ {tool_name} được gọi trong phiên {session_id}"
             f"thời gian{duration_ms} Thành công={Thành công}"
             + (f" error={error!r}" if error else "")
         )
@@ -122,7 +122,7 @@ class AgentOpsHarness:
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
         logger.info(
-            f"AgentOps: llm_call session={session_id} model={model} "
+            f"Mô hình {model} được gọi trong phiên {session_id}"
             f"prompt_tokens={prompt_tokens} completion_tokens={completion_tokens} "
             f"thời gian{duration_ms}"
         )
@@ -138,7 +138,7 @@ class AgentOpsHarness:
         if metrics:
             metrics.security_violations += 1
         logger.warning(
-            f"AgentOps: security_event session={session_id} event={event_type} "
+            f"Sự kiện bảo mật {event_type} phát sinh trong phiên {session_id}"
             f"risk_score={risk_score:.2f} violations={violations or []}"
         )
 
@@ -169,9 +169,9 @@ class AgentOpsHarness:
                 ),
             }
             await db["agent_traces"].insert_one(doc)
-            logger.info(f"AgentOps: trace flushed lên DB session={session_id}")
+            logger.info(f"Đã ghi lịch sử vào cơ sở dữ liệu cho phiên {session_id}")
         except Exception as e:
-            logger.error(f"AgentOps: failed lên flush trace lên DB: {e}")
+            logger.error(f"Ghi lịch sử vào cơ sở dữ liệu gặp sự cố: {e}")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)
@@ -210,4 +210,4 @@ class AgentOpsHarness:
 
         return "\n".join(lines) + "\n"
 
-agenlênps_harness = AgentOpsHarness()
+agentops_harness = AgentOpsHarness()

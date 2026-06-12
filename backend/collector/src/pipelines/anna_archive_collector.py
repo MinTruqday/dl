@@ -85,7 +85,7 @@ class AnnaArchiveCollector:
                         break
                     page_num += 1
             except Exception as e:
-                logger.error(f"Quy trình lấy danh sách từ Anna's Archive gặp sự cố: {e}")
+                logger.error(f"Quy trình lấy danh sách từ Anna's Archive thất bại: {e}")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
@@ -216,7 +216,7 @@ class AnnaArchiveCollector:
                         else:
                             logger.warning(f"Hết thời gian chờ xử lý đếm ngược bằng JS: {slow_url}")
                     except Exception as e:
-                        logger.error(f"Chờ liên kết tải xuống gặp sự cố: {e}")
+                        logger.error(f"Chờ liên kết tải xuống thất bại: {e}")
                 if not slow_link_el:
                     logger.warning(f"Không tìm thấy nút tải trên trang: {document_url}")
                     await page.screenshot(path="/app/logs/anna_error.png", full_page=True)

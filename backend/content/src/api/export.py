@@ -11,4 +11,4 @@ router = APIRouter(prefix='/xuat-tai-lieu')
 async def export_document_pdf(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     pdf_content = await ExportService.export_document_pdf_watermarked(document_id, current_user, db=db)
     headers = {'Content-Disposition': f'attachment; filename="DocLib_Export_{document_id}_Watermarked.pdf"'}
-    return APIResponse(data=Response(content=pdf_content, media_type='application/pdf', headers=headers), message='Xuất bản sao PDF đính kèm dấu bản quyền hoàn tất', status=200)
+    return APIResponse(data=Response(content=pdf_content, media_type='application/pdf', headers=headers), message='Xuất bản sao PDF đính kèm dấu bản quyền thành công', status=200)

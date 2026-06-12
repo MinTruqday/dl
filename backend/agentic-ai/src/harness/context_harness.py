@@ -44,7 +44,7 @@ class ContextHarness:
                 import redis.asyncio as aioredis
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception as e:
-                logger.error(f"Kết nối Redis gặp sự cố: {e}")
+                logger.error(f"Kết nối Redis thất bại: {e}")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -144,13 +144,13 @@ class ContextHarness:
         except Exception as e:
             logger.warning(f"Không thể xóa phiên làm việc {session_id}: {e}")
 
-    def apply_context_lên_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
+    def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history
         rag_state["user_id"] = ctx.user_id
         rag_state["document_ids"] = ctx.active_document_ids
         return rag_state
 
-    def apply_context_lên_acting_req(self, ctx: AgentContext, req: Any) -> Any:
+    def apply_context_to_acting_req(self, ctx: AgentContext, req: Any) -> Any:
         if hasattr(req, "conversation_history"):
             req.conversation_history = ctx.chat_history
         return req

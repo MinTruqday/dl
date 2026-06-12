@@ -8,13 +8,13 @@ class HFInferenceChat(BaseChatModel):
     client: Any = Field(default=None)
     model: str = Field(default="")
     
-    def _generate(self, messages: List[BaseMessage], slênp: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any) -> ChatResult:
+    def _generate(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any) -> ChatResult:
         import asyncio
         import nest_asyncio
         nest_asyncio.apply()
-        return asyncio.run(self._agenerate(messages, slênp, run_manager, **kwargs))
+        return asyncio.run(self._agenerate(messages, stop, run_manager, **kwargs))
 
-    async def _agenerate(self, messages: List[BaseMessage], slênp: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any) -> ChatResult:
+    async def _agenerate(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any) -> ChatResult:
         hf_messages = []
         for msg in messages:
             if isinstance(msg, HumanMessage): role = "user"
@@ -30,7 +30,7 @@ class HFInferenceChat(BaseChatModel):
         content = response.choices[0].message.content
         return ChatResult(generations=[ChatGeneration(message=AIMessage(content=content))])
 
-    async def _astream(self, messages: List[BaseMessage], slênp: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any):
+    async def _astream(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, run_manager: Optional[Any] = None, **kwargs: Any):
         hf_messages = []
         for msg in messages:
             if isinstance(msg, HumanMessage): role = "user"

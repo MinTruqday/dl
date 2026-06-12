@@ -21,7 +21,7 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content, 'format': format_type})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail=f'Máy chủ gặp sự cố trong quá trình xuất tệp {format_type}')
+                    raise HTTPException(status_code=422, detail=f'Máy chủ thất bại trong quá trình xuất tệp {format_type}')
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(status_code=408, detail=f'Hệ thống mất quá nhiều thời gian để xuất tệp {format_type} nên đã tự động ngắt')
@@ -223,7 +223,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
-        return {'message': 'Thay thế nội dung toàn cục hoàn tất', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -268,7 +268,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
-            logger.error(f'Quá trình tóm tắt tự động gặp sự cố: {e}')
+            logger.error(f'Quá trình tóm tắt tự động thất bại: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
         raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
 
@@ -380,7 +380,7 @@ class EditorService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f'Kiểm tra đạo văn chuyên sâu gặp sự cố: {e}')
+            logger.error(f'Kiểm tra đạo văn chuyên sâu thất bại: {e}')
         return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn'}
 
     @staticmethod

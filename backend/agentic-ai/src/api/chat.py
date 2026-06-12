@@ -9,7 +9,7 @@ from src.workflow.supervisor import supervisor
 from src.agents.semantic_router import semantic_router
 from src.core.prompt_registry import prompt_registry, PromptType
 from src.harness.security_harness import security_harness
-from src.harness.agenlênps_harness import agenlênps_harness
+from src.harness.agentops_harness import agentops_harness
 from src.harness.context_harness import context_harness
 from src.harness.orchestration_harness import orchestration_harness
 
@@ -74,12 +74,12 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
+            "answer": final_answer or "Hệ thống đang thất bại, vui lòng thử lại sau",
             "route": "agentic_ai"
         }
     except Exception as e:
         logger.error(f"Execution error in /chat: {e}")
-        return {"answer": "Hệ thống đang gặp sự cố, vui lòng thử lại sau", "route": "error"}
+        return {"answer": "Hệ thống đang thất bại, vui lòng thử lại sau", "route": "error"}
 
 
 @router.post("/luong-du-lieu")
@@ -87,7 +87,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
 
-    async def response_generalênr():
+    async def response_generator():
         if bearer_token:
             req.token = bearer_token
 
@@ -96,7 +96,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
         scan = security_harness.scan_input(req.query, session_id=session_id, user_id=user_id)
         if not scan.passed:
-            agenlênps_harness.record_security_event(
+            agentops_harness.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
             yield f"event: message\ndata: {json.dumps({'chunk': 'Yeu cau cua ban chua noi dung khong duoc phep'})}\n\n"
@@ -104,13 +104,13 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             return
 
         if scan.violations:
-            agenlênps_harness.record_security_event(
+            agentops_harness.record_security_event(
                 session_id, "pii_redacted", scan.risk_score, scan.violations
             )
 
         req.query = scan.sanitized_text
 
-        agenlênps_harness.record_session_start(session_id, user_id, req.query)
+        agentops_harness.record_session_start(session_id, user_id, req.query)
 
         try:
             if req.document_ids:
@@ -120,12 +120,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, thời gian chờ10)
                         if doc_res.status_code not in [200, 201]:
                             yield f"event: message\ndata: {json.dumps({'chunk': f'Loi bao mat: Ban khong co quyen truy cap vao tai lieu {doc_id}'})}\n\n"
-                            agenlênps_harness.record_session_end(session_id, "failed")
+                            agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
                         logger.error(f"Error checking document access for {doc_id}: {e}")
                         yield f"event: message\ndata: {json.dumps({'chunk': f'Loi: Khong the xac thuc quyen truy cap tai lieu {doc_id}'})}\n\n"
-                        agenlênps_harness.record_session_end(session_id, "failed")
+                        agentops_harness.record_session_end(session_id, "failed")
                         return
 
             ctx = await context_harness.build_context(
@@ -205,7 +205,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                         elif event_type == "plan":
                             yield f"event: plan\ndata: {json.dumps({'steps': event['steps']})}\n\n"
                         elif event_type == "tool_result":
-                            agenlênps_harness.record_tool_call(
+                            agentops_harness.record_tool_call(
                                 session_id,
                                 event.get("agent", "unknown"),
                                 thời gian0,
@@ -228,13 +228,13 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                 await context_harness.save_turn(session_id, "user", req.query)
                 await context_harness.save_turn(session_id, "assistant", final_answer)
 
-            agenlênps_harness.record_session_end(session_id, "done")
+            agentops_harness.record_session_end(session_id, "done")
 
         except Exception as e:
             logger.exception(f"Lỗi thực thi luồng do {e}")
-            agenlênps_harness.record_session_end(session_id, "failed")
+            agentops_harness.record_session_end(session_id, "failed")
             yield f"event: message\ndata: {json.dumps({'chunk': 'He thong dang gap su co, vui long thu lai sau'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 
-    return StreamingResponse(response_generalênr(), media_type="text/event-stream")
+    return StreamingResponse(response_generator(), media_type="text/event-stream")

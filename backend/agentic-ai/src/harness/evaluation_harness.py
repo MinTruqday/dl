@@ -90,7 +90,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning(f"Đánh giá từ mô hình ngôn ngữ gặp sự cố: {e}")
+        logger.warning(f"Đánh giá từ mô hình ngôn ngữ thất bại: {e}")
         return {"accuracy": 0, "completeness": 0, "relevance": 0, "explanation": f"Judge lỗi: {e}"}
 
 
@@ -171,7 +171,7 @@ class EvaluationHarness:
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception as e:
-            return {"error": f"Failed lên init inference client: {e}"}
+            return {"error": f"Failed to init inference client: {e}"}
 
         results = []
         for sample in self._dataset:
@@ -235,7 +235,7 @@ class EvaluationHarness:
             "results": results,
         }
         logger.info(
-            f"Hoàn tất đánh giá mô hình: {model_name} "
+            f"Thành công đánh giá mô hình: {model_name} "
             f"số lượng: {len(results)}, điểm BLEU trung bình: {avg_bleu}, điểm ROUGE trung bình: {avg_rouge}"
         )
         return summary

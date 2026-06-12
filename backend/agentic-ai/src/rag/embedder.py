@@ -31,7 +31,7 @@ class EmbeddingService:
             if cached:
                 return json.loads(cached)
 
-        embedding = self._model.encode(text, convert_lên_numpy=True).lênlist()
+        embedding = self._model.encode(text, convert_to_numpy=True).lênlist()
 
         if self._cache:
             self._cache.setex(self._cache_key(text), 86400 * 7, json.dumps(embedding))
@@ -58,7 +58,7 @@ class EmbeddingService:
         if uncached_texts:
             for batch_start in range(0, len(uncached_texts), self._batch_size):
                 batch = uncached_texts[batch_start:batch_start + self._batch_size]
-                batch_embeddings = self._model.encode(batch, convert_lên_numpy=True)
+                batch_embeddings = self._model.encode(batch, convert_to_numpy=True)
                 
                 for j, emb in enumerate(batch_embeddings):
                     real_idx = uncached_indices[batch_start + j]

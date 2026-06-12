@@ -56,7 +56,7 @@ class SemanticRouter:
             return {"route": route, "answer": answer}
             
         except Exception as e:
-            logger.error(f"Điều hướng yêu cầu gặp sự cố do lỗi: {e}")
+            logger.error(f"Điều hướng yêu cầu thất bại do lỗi: {e}")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = SemanticRouter()

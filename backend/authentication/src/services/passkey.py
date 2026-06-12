@@ -58,7 +58,7 @@ class PasskeyService:
         try:
             verification = verify_registration_response(credential=credential_data, expected_challenge=challenge, expected_origin=ORIGIN, expected_rp_id=RP_ID)
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f'Xác thực Passkey gặp sự cố: {str(e)}')
+            raise HTTPException(status_code=400, detail=f'Xác thực Passkey thất bại: {str(e)}')
         new_passkey = {'credential_id': base64.b64encode(verification.credential_id).decode('utf-8'), 'public_key': base64.b64encode(verification.credential_public_key).decode('utf-8'), 'sign_count': verification.sign_count, 'transports': credential_data.get('response', {}).get('transports', []), 'created_at': datetime.now(timezone.utc)}
         await db['auth_credentials'].update_one({'_id': user['_id']}, {'$push': {'passkeys': new_passkey}})
         await db['passkey_challenges'].delete_one({'_id': f'reg:{email}'})
@@ -67,7 +67,7 @@ class PasskeyService:
                 await db_client.redis.delete(f'passkey_reg_challenge:{email}')
             except Exception as e:
                 logger.error(f'Không thể xóa khóa thử thách đăng ký Redis của {email}: {e}')
-        return {'message': 'Đăng ký Passkey hoàn tất'}
+        return {'message': 'Đăng ký Passkey thành công'}
 
     @staticmethod
     async def login_begin(email: str, db=None):
@@ -116,7 +116,7 @@ class PasskeyService:
         try:
             verification = verify_authentication_response(credential=credential_data, expected_challenge=challenge, expected_origin=ORIGIN, expected_rp_id=RP_ID, credential_public_key=base64.b64decode(passkey['public_key']), credential_current_sign_count=passkey['sign_count'])
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f'Xác thực đăng nhập gặp sự cố: {str(e)}')
+            raise HTTPException(status_code=400, detail=f'Xác thực đăng nhập thất bại: {str(e)}')
         await db['auth_credentials'].update_one({'_id': user['_id'], 'passkeys.credential_id': credential_id_b64}, {'$set': {'passkeys.$.sign_count': verification.new_sign_count}})
         await db['passkey_challenges'].delete_one({'_id': f'auth:{email}'})
         if db_client.redis:

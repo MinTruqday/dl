@@ -37,7 +37,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                 documents_collection = db["documents"]
                 
                 if proc.returncode == 0:
-                    logger.info(f"Biên dịch tệp PDF hoàn tất cho tài liệu {document_id}")
+                    logger.info(f"Biên dịch tệp PDF thành công cho tài liệu {document_id}")
                     pdf_file_path = os.path.join(work_dir, "main.pdf")
                     
                     from core.storage import upload_file
@@ -48,7 +48,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                     if os.path.exists(pdf_file_path):
                         with open(pdf_file_path, "rb") as bf:
                             await upload_file(bf.read(), file_key, "application/pdf")
-                        logger.info(f"Tải lên tài liệu {pdf_file_path} lên hệ thống lưu trữ hoàn tất: {file_key}")
+                        logger.info(f"Tải lên tài liệu {pdf_file_path} lên hệ thống lưu trữ thành công: {file_key}")
                     
                     await documents_collection.update_one(
                         {"_id": document_id},
@@ -65,7 +65,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                                         f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                                         json={
                                             "target_user_id": author_id,
-                                            "title": "Biên dịch tài liệu hoàn tất",
+                                            "title": "Biên dịch tài liệu thành công",
                                             "body": f"Bản in PDF chất lượng cao cho tài liệu {document_id} đã sẵn sàng",
                                             "type": "SYSTEM"
                                         },
@@ -74,7 +74,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                         except Exception as e:
                             logger.error(f"Không thể gửi thông báo: {e}")
                 else:
-                    logger.error(f"Biên dịch tệp PDF gặp sự cố cho tài liệu {document_id}: {stderr.decode()}")
+                    logger.error(f"Biên dịch tệp PDF thất bại cho tài liệu {document_id}: {stderr.decode()}")
                     await documents_collection.update_one(
                         {"_id": document_id},
                         {"$set": {"status": "error_compilation"}}
@@ -100,7 +100,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                             logger.error(f"Không thể gửi thông báo: {e}")
                 
         except Exception as e:
-            logger.error(f"Hàng đợi gặp sự cố: {str(e)}")
+            logger.error(f"Hàng đợi thất bại: {str(e)}")
 
 async def start_tectonic_worker():
     if not db_client.rabbitmq:
@@ -175,10 +175,10 @@ async def process_document_publish(message: AbstractIncomingMessage):
             except Exception as e:
                 logger.error(f"Không thể gửi thông báo: {e}")
                 
-            logger.info(f"Quá trình xuất bản nền đã hoàn tất cho tài liệu {document_id}")
+            logger.info(f"Quá trình xuất bản nền đã thành công cho tài liệu {document_id}")
             
         except Exception as e:
-            logger.error(f"Hàng đợi xuất bản tài liệu gặp sự cố: {str(e)}")
+            logger.error(f"Hàng đợi xuất bản tài liệu thất bại: {str(e)}")
 
 async def process_user_interaction(message: AbstractIncomingMessage):
     async with message.process():
@@ -206,7 +206,7 @@ async def process_user_interaction(message: AbstractIncomingMessage):
                     else:
                         logger.warning(f"Không thể cập nhật cơ sở dữ liệu vector AI: {resp.status_code}")
         except Exception as e:
-            logger.error(f"Hàng đợi tương tác người dùng gặp sự cố: {str(e)}")
+            logger.error(f"Hàng đợi tương tác người dùng thất bại: {str(e)}")
 
 async def start_workers():
     if not db_client.rabbitmq:

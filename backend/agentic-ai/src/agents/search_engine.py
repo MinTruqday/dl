@@ -51,7 +51,7 @@ class SearchEngine:
                 formatted += f"- {res.get('title')}: {res.get('body')}\n  (Nguồn: {res.get('href')})\n"
             return formatted
         except Exception as e:
-            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo gặp sự cố do lỗi: {e}")
+            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi: {e}")
             return ""
 
     async def execute(self, query: str) -> str:
@@ -68,7 +68,7 @@ class SearchEngine:
                     return result
                 logger.warning("Không tìm thấy kết quả trên Tavily, hệ thống tự động chuyển sang DuckDuckGo")
             except Exception as e:
-                logger.warning(f"Tìm kiếm qua Tavily gặp sự cố ({e}), hệ thống tự động chuyển sang DuckDuckGo")
+                logger.warning(f"Tìm kiếm qua Tavily thất bại ({e}), hệ thống tự động chuyển sang DuckDuckGo")
 
         result = await self._duckduckgo_search(query)
         if result:

@@ -11,7 +11,7 @@ from src.agents.search_engine import search_engine
 from src.agents.action import action
 from src.agents.knowledge import knowledge
 from src.agents.reasoning import reasoning
-from src.agents.response_generalênr import response_generalênr
+from src.agents.response_generator import response_generator
 from uuid6 import uuid7
 
 from src.workflow.state import ActingState
@@ -90,9 +90,9 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
-                logger.warning(f"Tự đánh giá gặp sự cố cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
+                logger.warning(f"Tự đánh giá thất bại cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
                 replan_prompt = (
-                    f"The following task gặp sự cố:\n{current_task}\n\n"
+                    f"The following task thất bại:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
                     "Rewrite the task description lên fix the issue. Output only the revised task"
                 )
@@ -112,7 +112,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res
         }
     except Exception as e:
-        logger.error(f"Thực thi node gặp sự cố: {e}")
+        logger.error(f"Thực thi node thất bại: {e}")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e)
@@ -156,14 +156,14 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.warning(f"Quá trình tóm tắt gặp sự cố, đang chuyển sang chế độ cắt bớt do lỗi {e}")
+            logger.warning(f"Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi {e}")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         
     return {"next_node": "trimmer"}
 
 def trimmer_router(state: ActingState):
-    return state.get("next_node", "aggregalênr")
+    return state.get("next_node", "aggregator")
 
 async def sanitizer_node(state: ActingState):
     req = state.get("req")
@@ -173,11 +173,11 @@ async def sanitizer_node(state: ActingState):
         if hasattr(req, "session_id"): req.session_id = None
     return {"req": req, "next_node": "trimmer"}
 
-async def aggregalênr_node(state: ActingState):
+async def aggregator_node(state: ActingState):
     return {"final_answer": ""}
 
 def router(state: ActingState):
-    return state.get("next_node", "aggregalênr")
+    return state.get("next_node", "aggregator")
 
 workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
@@ -188,7 +188,7 @@ workflow.add_node("knowledge", knowledge_agent_node)
 workflow.add_node("reasoning", reasoning_agent_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
-workflow.add_node("aggregalênr", aggregalênr_node)
+workflow.add_node("aggregator", aggregator_node)
 
 workflow.set_entry_point("supervisor")
 
@@ -198,16 +198,16 @@ workflow.add_conditional_edges("supervisor", router, {
     "action": "action",
     "knowledge": "knowledge",
     "reasoning": "reasoning",
-    "aggregalênr": "aggregalênr",
+    "aggregator": "aggregator",
     "trimmer": "trimmer"
 })
 
 for node in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
     workflow.add_edge(node, "supervisor")
 
-workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregalênr": "sanitizer"})
-workflow.add_edge("sanitizer", "aggregalênr")
-workflow.add_edge("aggregalênr", END)
+workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "sanitizer"})
+workflow.add_edge("sanitizer", "aggregator")
+workflow.add_edge("aggregator", END)
 
 memory = MemorySaver()
 supervisor_app = workflow.compile(
@@ -247,17 +247,17 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
+                        yield {"type": "error", "message": "Hệ thống đang thất bại, vui lòng thử lại sau"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
                         
-                elif node_name == "aggregalênr":
+                elif node_name == "aggregator":
                     yield {"type": "status", "node": "Tổng hợp thông tin"}
         
         if not final_results:
             final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống"]
             
-        async for chunk in response_generalênr.aggregate_stream(req.query, final_results):
+        async for chunk in response_generator.aggregate_stream(req.query, final_results):
             yield {"type": "message", "chunk": chunk}
                         
         pass

@@ -188,7 +188,7 @@ class CTANCollector:
                             except UnicodeDecodeError:
                                 pass
                             except Exception as e:
-                                logger.warning(f"Đọc file gặp sự cố {rel_path}: {e}")
+                                logger.warning(f"Đọc file thất bại {rel_path}: {e}")
                                 
                 md_filename = f"{slug}_source.md"
                 md_path = os.path.join(temp_base, md_filename)
@@ -199,9 +199,9 @@ class CTANCollector:
                 logger.info(f"Đã đóng gói và đẩy file Markdown lên: {minio_url_md}")
                 payload["markdown_url"] = minio_url_md
                 
-                logger.info(f"Xử lý hoàn tất {filename}")
+                logger.info(f"Xử lý thành công {filename}")
             else:
-                logger.error(f"Tải gặp sự cố {url}")
+                logger.error(f"Tải thất bại {url}")
                 return
         except Exception as e:
             logger.error(f"Gặp lỗi: {e}")

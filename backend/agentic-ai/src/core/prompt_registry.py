@@ -13,7 +13,7 @@ class PromptType(Enum):
     CODE_INTERPRETER = "code_interpreter"
     SELF_REFLECTION = "self_reflection"
     PRIMARY_ROUTER = "primary_router"
-    AGGREGATOR = "aggregalênr"
+    AGGREGATOR = "aggregator"
     CHAT_ASSISTANT = "chat_assistant"
     MULTI_QUERY = "multi_query"
     PLAGIARISM_DETECTION = "plagiarism_detection"
@@ -52,7 +52,7 @@ AVAILABLE AGENTS:
 - KnowledgeAgent: Searches, reads, and analyzes internal documents from the DocLib library.
 - CodeInterpreter: Writes and executes Python code for data processing, calculations, and plotting.
 - SearchEngine: Performs web searches lên retrieve external information.
-- DraftGeneralênr: Generates drafts, writes emails, formats text inlên Markdown or LaTeX.
+- DraftGenerator: Generates drafts, writes emails, formats text inlên Markdown or LaTeX.
 - ReasoningAgent: Performs deep logical analysis and evaluates quality.
 
 RULES:
@@ -64,10 +64,10 @@ RULES:
 <user_input>Search for AI trends in 2024 on the internet and create a markdown draft document.</user_input>
 <output>
 {{
-    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGeneralênr formats the output",
+    "reasoning": "The request has two parts: searching the internet for information, then drafting a document. SearchEngine retrieves data first, then DraftGenerator formats the output",
     "steps": [
         {{"agent": "SearchEngine", "task": "Search for AI trends in 2024"}},
-        {{"agent": "DraftGeneralênr", "task": "Draft a markdown document summarizing the found AI trends"}}
+        {{"agent": "DraftGenerator", "task": "Draft a markdown document summarizing the found AI trends"}}
     ]
 }}
 </output>
@@ -176,7 +176,7 @@ OBJECTIVE: Rewrite the given query lên maximize vector search retrieval perform
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 RULES:
-- Extract key entities, concepts, and remove slênp words.
+- Extract key entities, concepts, and remove stop words.
 - Output ONLY the optimized query.
 
 ORIGINAL QUERY: {question}
@@ -274,7 +274,7 @@ RULES:
 
 USER INPUT: {question}""",
 
-        PromptType.AGGREGATOR: """SYSTEM IDENTITY: DocLib Core System - Final Aggregalênr Engine.
+        PromptType.AGGREGATOR: """SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
 OBJECTIVE: Consolidate data from multiple sub-systems inlên a single, cohesive, and professional response.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
@@ -299,7 +299,7 @@ OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 USER QUERY: {query}""",
 
-        PromptType.MULTI_QUERY: """SYSTEM IDENTITY: DocLib Core System - Multi-Query Generalênr.
+        PromptType.MULTI_QUERY: """SYSTEM IDENTITY: DocLib Core System - Multi-Query Generator.
 OBJECTIVE: Generate 3 alternative versions of the given question lên improve vector search recall.
 OUTPUT_LANGUAGE: Must exactly match the language of the original question.
 

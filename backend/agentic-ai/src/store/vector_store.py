@@ -75,7 +75,7 @@ class VectorStore:
         try:
             await self.client.delete(
                 collection_name=self.collection_name,
-                points_seleclênr=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))])
+                points_selector=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))])
             )
         except Exception as e:
             logger.error(f"Lỗi xóa dữ liệu trên VectorStore do: {e}")

@@ -106,7 +106,7 @@ class CodeInterpreter:
                 
             return final_res
         except Exception as e:
-            logger.error(f"Thực thi gặp sự cố do lỗi: {e}")
-            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            logger.error(f"Thực thi thất bại do lỗi: {e}")
+            return "Hệ thống đang thất bại, vui lòng thử lại sau"
 
 code_interpreter = CodeInterpreter()

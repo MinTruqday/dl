@@ -20,7 +20,7 @@ class UploadService:
         except Exception as e:
             logger.error(f'Sự cố khi tải hình ảnh lên hệ thống lưu trữ: {e}')
             raise HTTPException(status_code=500, detail='Lỗi khi tải hình ảnh lên hệ thống lưu trữ')
-        logger.info(f'Tải hình ảnh lên hệ thống hoàn tất {filename}')
+        logger.info(f'Tải hình ảnh lên hệ thống thành công {filename}')
         return {'url': filename, 'filename': filename}
 
     @staticmethod
@@ -38,7 +38,7 @@ class UploadService:
         except Exception as e:
             logger.error(f'Sự cố khi tải tài liệu lên hệ thống lưu trữ: {e}')
             raise HTTPException(status_code=500, detail='Lỗi khi tải tài liệu lên hệ thống lưu trữ')
-        logger.info(f'Tải tài liệu lên hệ thống hoàn tất {filename}')
+        logger.info(f'Tải tài liệu lên hệ thống thành công {filename}')
         return {'url': filename, 'filename': filename, 'extension': ext}
 
     @staticmethod
@@ -50,4 +50,4 @@ class UploadService:
             return {'download_url': url}
         except Exception as e:
             logger.error(f'Không thể tạo liên kết tải xuống từ hệ thống lưu trữ: {e}')
-            raise HTTPException(status_code=500, detail='Gặp sự cố khi tạo liên kết tải về')
+            raise HTTPException(status_code=500, detail='Thất bại khi tạo liên kết tải về')
