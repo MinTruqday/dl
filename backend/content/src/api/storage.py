@@ -35,7 +35,7 @@ async def search_items(q: str, type: Optional[str]=None, current_user: UserInDB=
 @router.get('/gan-day', response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(limit: int=20, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     items = await StorageService.get_recent_items(current_user.id, limit, db=db)
-    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Đã tải danh sách truy cập gần đây', status=200)
+    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Đã tải danh sách truy cập', status=200)
 
 @router.get('/quota', response_model=APIResponse[Any])
 async def get_storage_quota(current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -60,7 +60,7 @@ async def download_zip(ids: str, current_user: UserInDB=Depends(require_role([Ro
     from core.config import settings
     item_ids = [i.strip() for i in ids.split(',') if i.strip()]
     if not item_ids:
-        raise HTTPException(status_code=400, detail='Không có tệp tin nào được chọn')
+        raise HTTPException(status_code=400, detail='Không có tệp tin được chọn')
     zip_buffer = io.BytesIO()
     async with await get_storage_client() as storage_client:
         with zipfile.ZipFile(zip_buffer, 'a', zipfile.ZIP_DEFLATED, False) as zip_file:
@@ -132,5 +132,5 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:
         from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail='Liên kết chia sẻ không hợp lệ hoặc đã hết hạn')
+        raise HTTPException(status_code=404, detail='Liên kết chia sẻ không hợp lệ')
     return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã tải thông tin tệp', status=200)

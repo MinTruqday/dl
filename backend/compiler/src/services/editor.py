@@ -21,15 +21,15 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content, 'format': format_type})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail=f'Máy chủ gặp sự cố trong quá trình xuất tệp {format_type}')
+                    raise HTTPException(status_code=422, detail=f'Lỗi xuất tệp {format_type}')
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail=f'Hệ thống mất quá nhiều thời gian để xuất tệp {format_type} nên đã tự động ngắt')
+            raise HTTPException(status_code=408, detail=f'Lỗi quá thời gian xuất tệp {format_type}')
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Hệ thống gặp lỗi nghiêm trọng trong lúc xuất tệp {format_type}: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình xuất tài liệu')
+            logger.error(f'Lỗi xuất tệp {format_type}: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi xuất tài liệu')
 
     @staticmethod
     async def compile_editorjs_to_pdf(content: str, compiler_url: str = os.getenv("COMPILER_SERVICE_URL", "http://compiler:8300")):
@@ -40,15 +40,15 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail='Lỗi định dạng tài liệu, không thể biên dịch')
+                    raise HTTPException(status_code=422, detail='Lỗi biên dịch tài liệu')
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail='Quá trình biên dịch tài liệu mất quá nhiều thời gian')
+            raise HTTPException(status_code=408, detail='Lỗi quá thời gian biên dịch')
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Hệ thống gặp lỗi khi biên dịch tài liệu: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình biên dịch tài liệu')
+            logger.error(f'Lỗi biên dịch tài liệu: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi biên dịch tài liệu')
 
     @staticmethod
     async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, redis_client=None, db=None):
@@ -59,7 +59,7 @@ class EditorService:
                 await redis_client.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
             return {'status': 'synced_cache', 'timestamp': payload.get('timestamp')}
         except Exception as e:
-            logger.error(f'Gặp lỗi trong quá trình đồng bộ thao tác gõ phím: {e}')
+            logger.error(f'Lỗi đồng bộ thao tác: {e}')
             return {'status': 'sync_failed', 'error': str(e)}
 
     @staticmethod
@@ -80,7 +80,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thêm gợi ý chỉnh sửa cho tài liệu {document_id}')
-        return {'message': 'Gợi ý chỉnh sửa đã được thêm'}
+        return {'message': 'Đã thêm gợi ý chỉnh sửa'}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
@@ -90,7 +90,7 @@ class EditorService:
             raise HTTPException(status_code=404, detail='Không tìm thấy gợi ý')
         doc = await db['documents'].find_one({'_id': sug['document_id']})
         if doc and str(doc.get('author_id')) != user_id and sug.get('reviewer_id') != user_id:
-            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền xử lý gợi ý này')
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý gợi ý này')
 
         await db['editor_suggestions'].update_one(
             {'_id': ObjectId(suggestion_id)},
@@ -146,7 +146,7 @@ class EditorService:
                 if 'data' in block and 'text' in block['data']:
                     words += len(str(block['data']['text']).split())
         except Exception as e:
-            logger.error(f'Không thể phân tích nội dung nháp của tài liệu {document_id}: {e}')
+            logger.error(f'Lỗi phân tích bản nháp tài liệu {document_id}: {e}')
 
         reading_time_minutes = max(1, words // 200)
         await db['documents'].update_one(
@@ -168,7 +168,7 @@ class EditorService:
             {'$set': {'editor_review_status': 'pending_review'}}
         )
         logger.info(f'Tài liệu {document_id} đã được gửi để chờ phê duyệt bởi {user_id}')
-        return {'message': 'Tài liệu đã được gửi đi và đang chờ kiểm duyệt'}
+        return {'message': 'Đã gửi tài liệu để kiểm duyệt'}
 
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user, db=None):
@@ -176,7 +176,7 @@ class EditorService:
         user_id = str(current_user.id)
         document = await db['documents'].find_one({'_id': str(document_id), 'author_id': user_id})
         if not document:
-            raise HTTPException(status_code=403, detail='Không hiện có quyền thao tác hoặc tài liệu không tồn tại')
+            raise HTTPException(status_code=403, detail='Không có quyền thao tác hoặc tài liệu không tồn tại')
 
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
@@ -221,7 +221,7 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {'suggestions': resp.json().get('result', '')}
-        return {'suggestions': 'Không thể lấy gợi ý vào lúc này'}
+        return {'suggestions': 'Lỗi gợi ý AI'}
 
     @staticmethod
     async def summarize_document(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -254,9 +254,9 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
-            logger.error(f'Quá trình tóm tắt tự động thất bại: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
-        raise HTTPException(status_code=500, detail='Không thể tóm tắt tài liệu')
+            logger.error(f'Lỗi tóm tắt tài liệu: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi kết nối AI')
+        raise HTTPException(status_code=500, detail='Lỗi tóm tắt tài liệu')
 
     @staticmethod
     async def extract_smart_tags(document_id: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -289,9 +289,9 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$addToSet': {'tags': {'$each': tags}}})
                     return {'tags': tags}
         except Exception as e:
-            logger.error(f'Không thể trích xuất thẻ tự động: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi kết nối AI Service')
-        raise HTTPException(status_code=500, detail='Không thể phân tích thẻ')
+            logger.error(f'Lỗi phân tích thẻ: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi kết nối AI')
+        raise HTTPException(status_code=500, detail='Lỗi phân tích thẻ')
 
     @staticmethod
     async def add_inline_comment(document_id: str, data: dict, current_user, db=None) -> dict:
@@ -330,7 +330,7 @@ class EditorService:
 
         doc = await db['documents'].find_one({'_id': comment['document_id']})
         if doc and str(doc.get('author_id')) != str(current_user.id) and comment.get('user_id') != str(current_user.id):
-            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền xử lý bình luận này')
+            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý bình luận này')
 
         await db['editor_comments'].update_one(
             {'_id': comment_id},
@@ -366,8 +366,8 @@ class EditorService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f'Kiểm tra đạo văn chuyên sâu thất bại: {e}')
-        return {'plagiarism_score': None, 'status': 'error', 'message': 'Dịch vụ phân tích đạo văn tạm thời gián đoạn'}
+            logger.error(f'Lỗi kiểm tra đạo văn: {e}')
+        return {'plagiarism_score': None, 'status': 'error', 'message': 'Lỗi dịch vụ đạo văn'}
 
     @staticmethod
     async def check_logic(document_id: str, content: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -396,5 +396,5 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {'corrected_text': '', 'score': 0, 'message': 'Dịch vụ kiểm tra ngữ pháp tạm thời gián đoạn'}
+        return {'corrected_text': '', 'score': 0, 'message': 'Lỗi dịch vụ ngữ pháp'}
 

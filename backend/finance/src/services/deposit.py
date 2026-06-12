@@ -147,7 +147,7 @@ class DepositService:
             raise HTTPException(status_code=500, detail='Lỗi kiểm tra trạng thái thanh toán')
 
     @staticmethod
-    async def process_thành công_order(order_code: int, paid_amount: int=None, db=None, session=None):
+    async def process_success_order(order_code: int, paid_amount: int=None, db=None, session=None):
         should_close_session = False
         if db is None:
             db = db_client.mongodb.get_default_database()

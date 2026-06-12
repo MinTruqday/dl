@@ -109,11 +109,11 @@ class ReadingService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_many({'user_id': str(current_user.id)})
-        return {'status': 'success', 'message': 'Toàn bộ lịch sử đọc đã được xóa'}
+        return {'status': 'success', 'message': 'Đã xóa toàn bộ lịch sử đọc'}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_one({'user_id': str(current_user.id), 'document_id': document_id})
-        return {'status': 'success', 'message': 'Lịch sử đọc đã được xóa'}
+        return {'status': 'success', 'message': 'Đã xóa lịch sử đọc'}

@@ -67,7 +67,7 @@ class LatexEngine:
                         })
                 
                 raise Exception({
-                    "error": "Không thể biên dịch LaTeX", 
+                    "error": "Lỗi biên dịch LaTeX", 
                     "logs": log_content[-2048:], 
                     "parsed_errors": parsed_errors
                 })
@@ -80,15 +80,15 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.warning(f"Không thể dừng tiến trình công cụ biên dịch: {e}")
-            raise Exception("Tài liệu LaTeX mất quá nhiều thời gian để biên dịch")
+                    logger.warning(f"Lỗi dừng tiến trình biên dịch: {e}")
+            raise Exception("Lỗi biên dịch LaTeX quá thời gian")
             
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"Không thể dọn dẹp các tệp tạm {filepath} của công cụ biên dịch: {e}")
+                    logger.warning(f"Lỗi dọn dẹp tệp tạm {filepath}: {e}")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -109,7 +109,7 @@ class LatexEngine:
             await asyncio.wait_for(process.communicate(), timeout=30)
             
             if not os.path.exists(out_path):
-                raise Exception("Không thể chuyển đổi định dạng tài liệu")
+                raise Exception("Lỗi chuyển đổi định dạng tài liệu")
                 
             with open(out_path, "rb") as f:
                 return f.read()
@@ -118,7 +118,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"Không thể dọn dẹp các tệp tạm {filepath} của công cụ biên dịch: {e}")
+                    logger.warning(f"Lỗi dọn dẹp tệp tạm {filepath}: {e}")
 
     @staticmethod
     def format_latex(content: str) -> dict:

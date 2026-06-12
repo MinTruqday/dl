@@ -50,7 +50,7 @@ async def get_conversations(current_user = Depends(get_current_user)):
 async def toggle_pin(message_id: str, current_user = Depends(get_current_user)):
     result = await MessageService.toggle_pin(message_id, current_user)
     if result is None:
-        return APIResponse(message='Không tìm thấy tin nhắn hoặc không hiện có quyền', status=404)
+        return APIResponse(message='Không tìm thấy tin nhắn hoặc không có quyền', status=404)
     if result == 'limit_reached':
         return APIResponse(message='Bạn chỉ có thể ghim tối đa 3 tin nhắn', status=400)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
@@ -73,7 +73,7 @@ async def edit_message(message_id: str, req: dict, current_user = Depends(get_cu
 async def recall_message(message_id: str, current_user = Depends(get_current_user)):
     result = await MessageService.recall_message(message_id, current_user)
     if not result:
-        return APIResponse(message='Không hiện có quyền thu hồi tin nhắn này', status=403)
+        return APIResponse(message='Không có quyền thu hồi tin nhắn này', status=403)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
     await publish_personal_message({'type': 'message_recalled', 'data': result}, other_id)
     return APIResponse(data=result, message='Đã thu hồi tin nhắn', status=200)

@@ -15,9 +15,9 @@ class VersionsService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Không tìm thấy tài liệu')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         await db['document_versions'].insert_one({'document_id': document_id, 'author_id': str(current_user.id), 'note': version_note, 'snapshot': {'title': doc.get('title'), 'description': doc.get('description'), 'content': doc.get('content', ''), 'cover_url': doc.get('cover_url'), 'tags': doc.get('tags', []), 'categories': doc.get('categories', [])}, 'created_at': datetime.now(timezone.utc)})
-        logger.info(f'Người dùng {current_user.id} vừa lưu bản nháp cho tài liệu {document_id}')
+        logger.info(f'Người dùng {current_user.id} lưu bản nháp tài liệu {document_id}')
         return {'message': 'Đã lưu bản nháp tài liệu'}
 
     @staticmethod
@@ -37,12 +37,12 @@ class VersionsService:
             db = db_client.mongodb.get_default_database()
         version = await db['document_versions'].find_one({'_id': ObjectId(version_id), 'author_id': str(current_user.id)})
         if not version:
-            raise HTTPException(status_code=404, detail='Không tìm thấy phiên bản')
+            raise HTTPException(status_code=404, detail='Phiên bản không tồn tại')
         snapshot = version.get('snapshot')
         if not snapshot:
             update_data = {'content': version.get('content', ''), 'updated_at': datetime.now(timezone.utc)}
         else:
             update_data = {**snapshot, 'updated_at': datetime.now(timezone.utc)}
         await db['documents'].update_one({'_id': version['document_id']}, {'$set': update_data})
-        logger.info(f"Người dùng {current_user.id} đã khôi phục tài liệu {version['document_id']} về phiên bản {version_id}")
+        logger.info(f"Người dùng {current_user.id} khôi phục tài liệu {version['document_id']} về phiên bản {version_id}")
         return {'message': 'Đã khôi phục phiên bản tài liệu'}

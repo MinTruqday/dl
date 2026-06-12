@@ -13,7 +13,7 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         new_list = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'name': data.name, 'description': data.description, 'is_public': data.is_public, 'documents': [], 'created_at': datetime.now(timezone.utc)}
         await db['reading_lists'].insert_one(new_list)
-        logger.info(f"Danh sách đọc '{data.name}' created bởi người dùng {current_user.id}")
+        logger.info(f"Người dùng {current_user.id} tạo danh sách đọc '{data.name}'")
         return new_list
 
     @staticmethod
@@ -28,7 +28,7 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         reading_list = await db['reading_lists'].find_one({'_id': list_id, 'user_id': str(current_user.id)})
         if not reading_list:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
+            raise HTTPException(status_code=404, detail='Danh sách đọc không tồn tại')
         doc_ids = reading_list.get('documents', [])
         if doc_ids:
             docs = await db['documents'].find({'_id': {'$in': doc_ids}}).to_list(length=100)
@@ -43,7 +43,7 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$addToSet': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
+            raise HTTPException(status_code=404, detail='Danh sách đọc không tồn tại')
         return {'status': 'success', 'message': 'Đã thêm vào danh sách đọc'}
 
     @staticmethod
@@ -52,5 +52,5 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$pull': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
+            raise HTTPException(status_code=404, detail='Danh sách đọc không tồn tại')
         return {'status': 'success', 'message': 'Đã xóa khỏi danh sách đọc'}

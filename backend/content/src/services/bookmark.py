@@ -43,7 +43,7 @@ class BookmarkService:
             db = db_client.mongodb.get_default_database()
         folder = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'name': name.strip()[:100], 'bookmark_ids': [], 'created_at': datetime.now(timezone.utc)}
         await db['bookmark_folders'].insert_one(folder)
-        logger.info(f"Thư mục đã được tạo {folder['_id']} bởi người dùng {current_user.id}")
+        logger.info(f"Đã tạo thư mục {folder['_id']} cho người dùng {current_user.id}")
         return folder
 
     @staticmethod
@@ -69,4 +69,4 @@ class BookmarkService:
         result = await db['bookmark_folders'].delete_one({'_id': folder_id, 'user_id': str(current_user.id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail='Thư mục không tồn tại')
-        return {'message': 'Thư mục đánh dấu đã được xóa'}
+        return {'message': 'Đã xóa thư mục đánh dấu'}

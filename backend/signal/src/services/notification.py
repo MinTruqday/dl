@@ -64,5 +64,5 @@ class NotificationService:
                     json.dumps({'title': data.title, 'body': data.body})
                 )
             except Exception as e:
-                logger.error(f'Lỗi đẩy dữ liệu lên bộ nhớ đệm: {e}')
+                logger.error(f'Lỗi gửi thông báo: {e}')
         return {'id': notif_id}

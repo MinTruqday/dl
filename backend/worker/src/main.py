@@ -13,7 +13,7 @@ redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=503,
-        content={"detail": "Bạn không thể thực hiện thao tác này ngay lúc này, vui lòng thử lại sau"}
+        content={"detail": "Lỗi dịch vụ vui lòng thử lại sau"}
     )
 
 @app.get("/health")
@@ -25,7 +25,7 @@ async def read_health():
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:
-        raise HTTPException(status_code=400, detail="Không xác định được mã số của tài liệu")
+        raise HTTPException(status_code=400, detail="Thiếu mã tài liệu")
     
     from src.tasks import compile_document_tectonic
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))

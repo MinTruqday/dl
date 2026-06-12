@@ -23,7 +23,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
             logger.warning("Dữ liệu token bị thiếu trường sub hoặc sid")
             raise credentials_exception
     except jwt.PyJWTError as e:
-        logger.warning(f'Lỗi giải mã token JWT: {str(e)}')
+        logger.warning(f'Phiên đăng nhập không hợp lệ: {str(e)}')
         raise credentials_exception
     if db_client.redis:
         import httpx
@@ -38,7 +38,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         user_id_str = str(user_doc['_id'])
         is_valid_session = await db_client.redis.sismember(f'user_sessions:{user_id_str}', session_id)
         if not is_valid_session:
-            logger.warning(f'Người dùng {email}')
+            logger.warning(f'Phiên đăng nhập không hợp lệ của {email}')
             raise credentials_exception
     else:
         import httpx

@@ -29,7 +29,7 @@ class UserService:
         if res.matched_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         logger.info(f'Phân quyền của người dùng {user_id} đã đổi thành {role}')
-        return {'message': f'Hệ thống đã cập nhật vai trò của người dùng thành {role}'}
+        return {'message': f'Đã cập nhật vai trò người dùng thành {role}'}
 
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool, db=None) -> Dict[str, str]:
@@ -61,7 +61,7 @@ class UserService:
                         json={
                             "target_user_id": user_id,
                             "title": 'Bạn có một thông báo nhắc nhở từ hệ thống',
-                            "body": f'Hệ thống ghi nhận một vi phạm nội quy từ tài khoản của bạn. Lý do cụ thể: {reason}',
+                            "body": f'Hệ thống ghi nhận vi phạm từ tài khoản của bạn. Lý do: {reason}',
                             "type": 'WARNING'
                         },
                         timeout=3.0
@@ -69,7 +69,7 @@ class UserService:
         except Exception as e:
             logger.warning(f'Lỗi khi gửi thông báo: {e}')
         logger.info(f'Thành viên {user_id} vừa bị nhắc nhở bởi {current_moderator.id}')
-        return {'message': 'Đã gửi thông báo cảnh báo đến người dùng'}
+        return {'message': 'Đã gửi cảnh báo đến người dùng'}
 
     @staticmethod
     async def lock_user(user_id: str, reason: str, duration_hours: int, current_moderator, db=None) -> dict:
@@ -79,7 +79,7 @@ class UserService:
         await db['users'].update_one({'_id': user_id}, {'$set': {'is_active': False, 'locked_until': lock_until, 'lock_reason': reason, 'updated_at': datetime.now(timezone.utc)}})
         await db['audit_logs'].insert_one({'action': 'LOCK_USER', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'reason': reason, 'duration': duration_hours, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'Người dùng {user_id} đã bị cấm {duration_hours} tiếng bởi {current_moderator.id}')
-        return {'message': f'Tài khoản đã bị tạm khóa trong vòng {duration_hours} giờ tới'}
+        return {'message': f'Đã tạm khóa tài khoản trong {duration_hours} giờ'}
 
     @staticmethod
     async def shadowban_user(user_id: str, is_banned: bool, current_moderator, db=None) -> dict:
@@ -89,7 +89,7 @@ class UserService:
         action = 'SHADOWBAN' if is_banned else 'UNSHADOWBAN'
         await db['audit_logs'].insert_one({'action': action, 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'Người dùng {user_id} đã được {action.lower()} bởi {current_moderator.id}')
-        return {'message': 'Tài khoản này đã bị thay đổi trạng thái hạn chế'}
+        return {'message': 'Đã cập nhật trạng thái hạn chế'}
 
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
@@ -98,7 +98,7 @@ class UserService:
         await db['users'].update_one({'_id': user_id}, {'$set': {'kyc_status': status, 'is_kyc_verified': status == 'VERIFIED', 'updated_at': datetime.now(timezone.utc)}})
         await db['audit_logs'].insert_one({'action': f'KYC_{status}', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'Thông tin KYC của {user_id} đã cập nhật thành {status} bởi {current_moderator.id}')
-        return {'message': 'Thông tin định danh KYC đã được cập nhật'}
+        return {'message': 'Đã cập nhật thông tin định danh KYC'}
 
     @staticmethod
     async def get_moderator_notes(user_id: str, db=None) -> list:
@@ -113,7 +113,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         await db['moderator_notes'].insert_one({'_id': str(uuid7()), 'user_id': user_id, 'moderator_id': str(current_moderator.id), 'note': note, 'created_at': datetime.now(timezone.utc)})
         logger.info(f'Vừa thêm ghi chú cho người dùng {user_id} bởi {current_moderator.id}')
-        return {'message': 'Hệ thống đã lưu lại ghi chú điều hành'}
+        return {'message': 'Đã lưu ghi chú điều hành'}
 
     @staticmethod
     async def get_report_queue(status_filter: str='pending', cursor: str=None, limit: int=30, skip: int=0, db=None) -> list:
@@ -124,7 +124,7 @@ class UserService:
             try:
                 match_query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except ValueError as e:
-                logger.warning(f'Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi báo về là: {e}')
+                logger.warning(f'Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi: {e}')
         pipeline = [{'$match': match_query}, {'$sort': {'created_at': -1}}]
         if skip > 0:
             pipeline.append({'$skip': skip})
@@ -172,7 +172,7 @@ class UserService:
         now = datetime.now(timezone.utc)
         res = await db['users'].update_many({'locked_until': {'$lt': now}, 'is_active': False}, {'$set': {'is_active': True}, '$unset': {'locked_until': '', 'lock_reason': ''}})
         if res.modified_count > 0:
-            logger.info(f'Hệ thống tự động mở khóa cho {res.modified_count} tài khoản')
+            logger.info(f'Đã tự động mở khóa {res.modified_count} tài khoản')
         return res.modified_count
 
     @staticmethod

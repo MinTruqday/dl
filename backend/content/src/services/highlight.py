@@ -17,7 +17,7 @@ class HighlightService:
             color = '#e4e4e7'
         highlight = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'text': data['text'], 'color': color, 'start_offset': data.get('start_offset', 0), 'end_offset': data.get('end_offset', 0), 'note': data.get('note', ''), 'created_at': datetime.now(timezone.utc)}
         await db['highlights'].insert_one(highlight)
-        logger.info(f'Người dùng {current_user.id} vừa làm nổi bật nội dung trong tài liệu {document_id}')
+        logger.info(f'Người dùng {current_user.id} đánh dấu nội dung tài liệu {document_id}')
         return highlight
 
     @staticmethod
@@ -43,7 +43,7 @@ class HighlightService:
         result = await db['highlights'].delete_one({'_id': highlight_id, 'user_id': str(current_user.id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail='Ghi chú không tồn tại')
-        logger.info(f'Người dùng {current_user.id} đã xóa phần nội dung làm nổi bật {highlight_id}')
+        logger.info(f'Người dùng {current_user.id} xóa đánh dấu {highlight_id}')
         return {'message': 'Đã xóa ghi chú'}
 
     @staticmethod
@@ -55,7 +55,7 @@ class HighlightService:
             try:
                 match_query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except ValueError as e:
-                logger.warning(f'Dữ liệu thời gian {cursor} không đúng chuẩn ISO: {e}')
+                logger.warning(f'Thời gian {cursor} sai chuẩn ISO: {e}')
         pipeline = [{'$match': match_query}, {'$sort': {'created_at': -1}}]
         if skip > 0:
             pipeline.append({'$skip': skip})

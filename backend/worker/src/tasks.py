@@ -33,16 +33,16 @@ celery_app.conf.task_queues = (
     default_retry_delay=10
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info(f"Đang bắt đầu quá trình xóa hoàn toàn tài liệu {document_id}")
+    logger.info(f"Đang xóa hoàn toàn tài liệu {document_id}")
     import httpx
     try:
         from core.database import db_client
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
-        logger.info(f"Tài liệu {document_id} đã được dọn dẹp và xóa hoàn toàn khỏi hệ thống")
+        logger.info(f"Đã xóa hoàn toàn tài liệu {document_id}")
     except Exception as e:
-        logger.error(f"Không thể xóa hoàn toàn tài liệu {document_id} do lỗi {e}")
+        logger.error(f"Lỗi xóa tài liệu {document_id}: {e}")
         raise hard_delete_document_task.retry(exc=e)
 
 @celery_app.task(
@@ -63,7 +63,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
             
         try:
-            logger.debug(f"Đang tiến hành xử lý tài liệu {document_id}")
+            logger.debug(f"Đang xử lý tài liệu {document_id}")
             process = subprocess.run(
                 ["tectonic", "--synctex", "--keep-logs", "-Z", "continue-on-errors", "--outdir", temp_dir, tex_path],
                 capture_output=True,
@@ -72,19 +72,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
             
             if not os.path.exists(pdf_path):
-                logger.error(f"Thất bại khi biên dịch tài liệu {document_id} bằng công cụ biên dịch")
+                logger.error(f"Lỗi biên dịch tài liệu {document_id}")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
-                return {"status": "error", "error": "Biên dịch thất bại", "logs": log_content, "document_id": document_id}
+                return {"status": "error", "error": "Lỗi biên dịch", "logs": log_content, "document_id": document_id}
                 
-            logger.info(f"Đã hoàn tất xử lý tài liệu {document_id}")
+            logger.info(f"Đã xử lý tài liệu {document_id}")
             
             return {"status": "success", "pdf_path": pdf_path, "document_id": document_id, "logs": process.stdout}
         except subprocess.TimeoutExpired:
-            logger.error(f"Tài liệu {document_id} mất quá nhiều thời gian để biên dịch")
-            return {"status": "error", "error": "Quá thời gian biên dịch cho phép, có thể tài liệu chứa vòng lặp vô hạn", "document_id": document_id}
+            logger.error(f"Lỗi biên dịch quá thời gian tài liệu {document_id}")
+            return {"status": "error", "error": "Lỗi biên dịch quá thời gian có thể do vòng lặp vô hạn", "document_id": document_id}
         except Exception as e:
-            logger.exception(f"Lỗi của công cụ biên dịch: {e}")
+            logger.exception(f"Lỗi biên dịch: {e}")
             return {"status": "error", "error": str(e), "document_id": document_id}

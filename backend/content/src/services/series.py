@@ -25,7 +25,7 @@ class SeriesService:
         await db['series'].insert_one(series)
         if series['document_ids']:
             await db['documents'].update_many({'_id': {'$in': series['document_ids']}, 'author_id': str(current_user.id)}, {'$set': {'series_id': series_id}})
-        logger.info(f'Người dùng {current_user.id} vừa tạo bộ tài liệu {series_id}')
+        logger.info(f'Người dùng {current_user.id} tạo bộ tài liệu {series_id}')
         return {'message': 'Đã tạo chuỗi tài liệu mới', 'series_id': series_id}
 
     @staticmethod
@@ -41,7 +41,7 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu')
+            raise HTTPException(status_code=404, detail='Chuỗi tài liệu không tồn tại')
         series = serialize_document(series)
         if series.get('document_ids'):
             docs = await db['documents'].find({'_id': {'$in': series['document_ids']}}).to_list(length=100)
@@ -54,17 +54,17 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
+            raise HTTPException(status_code=404, detail='Chuỗi tài liệu không tồn tại hoặc không có quyền')
         update_fields = {}
         if 'title' in data and data['title']:
             update_fields['title'] = data['title']
         if 'description' in data:
             update_fields['description'] = data['description']
         if not update_fields:
-            raise HTTPException(status_code=400, detail='Không có trường nào để cập nhật')
+            raise HTTPException(status_code=400, detail='Không có trường cập nhật')
         update_fields['updated_at'] = datetime.now(timezone.utc)
         await db['series'].update_one({'_id': series_id}, {'$set': update_fields})
-        logger.info(f'Người dùng {current_user.id} vừa cập nhật bộ tài liệu {series_id}')
+        logger.info(f'Người dùng {current_user.id} cập nhật bộ tài liệu {series_id}')
         return {'message': 'Đã cập nhật chuỗi tài liệu', 'series_id': series_id}
 
     @staticmethod
@@ -73,7 +73,7 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
+            raise HTTPException(status_code=404, detail='Chuỗi tài liệu không tồn tại hoặc không có quyền')
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
@@ -81,12 +81,12 @@ class SeriesService:
                 if series.get('document_ids'):
                     await db['documents'].update_many({'_id': {'$in': series['document_ids']}}, {'$unset': {'series_id': ''}}, session=session)
                 await session.commit_transaction()
-                logger.info(f'Người dùng {current_user.id} đã xóa bộ tài liệu {series_id}')
+                logger.info(f'Người dùng {current_user.id} xóa bộ tài liệu {series_id}')
                 return {'message': 'Đã xóa chuỗi tài liệu'}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Không thể xóa bộ tài liệu {series_id}: {e}')
-            raise HTTPException(status_code=500, detail='Hệ thống đang bảo trì dữ liệu, vui lòng thử lại sau')
+            logger.error(f'Lỗi xóa bộ tài liệu {series_id}: {e}')
+            raise HTTPException(status_code=500, detail='Hệ thống bảo trì vui lòng thử lại sau')
         finally:
             await session.end_session()
 
@@ -96,12 +96,12 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
+            raise HTTPException(status_code=404, detail='Chuỗi tài liệu không tồn tại hoặc không có quyền')
         docs = await db['documents'].find({'_id': {'$in': document_ids}, 'author_id': str(current_user.id)}).to_list(length=500)
         if len(docs) != len(document_ids):
-            raise HTTPException(status_code=400, detail='Một số tài liệu không tồn tại hoặc không thuộc quyền sở hữu của bạn')
+            raise HTTPException(status_code=400, detail='Tài liệu không tồn tại hoặc không thuộc quyền sở hữu')
         await db['series'].update_one({'_id': series_id}, {'$set': {'document_ids': document_ids, 'updated_at': datetime.now(timezone.utc)}})
-        logger.info(f'Người dùng {current_user.id} vừa sắp xếp lại các tài liệu trong bộ {series_id}')
+        logger.info(f'Người dùng {current_user.id} sắp xếp lại tài liệu trong bộ {series_id}')
         return {'message': 'Đã sắp xếp lại thứ tự tài liệu'}
 
     @staticmethod
@@ -110,11 +110,11 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu')
+            raise HTTPException(status_code=404, detail='Chuỗi tài liệu không tồn tại')
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Không tìm thấy tài liệu')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
         await db['series'].update_one({'_id': series_id}, {'$addToSet': {'document_ids': document_id}})
         await db['documents'].update_one({'_id': document_id}, {'$set': {'series_id': series_id}})
-        logger.info(f'Người dùng {current_user.id} vừa đưa tài liệu {document_id} vào bộ {series_id}')
+        logger.info(f'Người dùng {current_user.id} đưa tài liệu {document_id} vào bộ {series_id}')
         return {'message': 'Đã thêm tài liệu vào chuỗi'}

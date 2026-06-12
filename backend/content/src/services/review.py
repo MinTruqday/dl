@@ -12,7 +12,7 @@ class ReviewService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reviews'].update_one({'user_id': str(current_user.id), 'document_id': document_id}, {'$set': {'rating': rating_data.rating, 'review_text': rating_data.review_text, 'created_at': datetime.now(timezone.utc)}}, upsert=True)
-        logger.info(f'Người dùng {current_user.id} đã đánh giá tài liệu {document_id}')
+        logger.info(f'Người dùng {current_user.id} đánh giá tài liệu {document_id}')
         return {'status': 'success'}
 
     @staticmethod
@@ -23,8 +23,8 @@ class ReviewService:
         description = getattr(data, 'description', None) or getattr(data, 'context_text', '') or ''
         report = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'text_excerpt': text_excerpt[:500] if text_excerpt else '', 'description': description[:300] if description else '', 'status': 'pending', 'created_at': datetime.now(timezone.utc)}
         await db['typo_reports'].insert_one(report)
-        logger.info(f'Người dùng {current_user.id} vừa báo lỗi chính tả trong tài liệu {document_id}')
-        return {'message': 'Cảm ơn bạn đã đóng góp chỉnh sửa'}
+        logger.info(f'Người dùng {current_user.id} báo lỗi chính tả tài liệu {document_id}')
+        return {'message': 'Cảm ơn bạn đóng góp chỉnh sửa'}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -40,7 +40,7 @@ class ReviewService:
         content_text = getattr(review_in, 'content', None) or getattr(review_in, 'comment', '') or ''
         review_item = {'_id': str(uuid7()), 'document_id': document_id, 'user_id': str(current_user.id), 'full_name': current_user.full_name or 'Cộng tác viên ẩn danh', 'avatar_url': getattr(current_user, 'avatar_url', None), 'rating': review_in.rating, 'content': content_text, 'comment': content_text, 'created_at': datetime.now(timezone.utc)}
         await db['reviews'].update_one({'user_id': str(current_user.id), 'document_id': document_id}, {'$set': review_item}, upsert=True)
-        logger.info(f'Người dùng {current_user.id} đã đánh giá {review_in.rating} sao cho tài liệu {document_id}')
+        logger.info(f'Người dùng {current_user.id} đánh giá {review_in.rating} sao tài liệu {document_id}')
         return review_item
 
     @staticmethod
@@ -66,5 +66,5 @@ class ReviewService:
         description = getattr(data, 'description', None) or getattr(data, 'details', '') or ''
         report = {'_id': str(uuid7()), 'reporter_id': str(current_user.id), 'item_type': item_type, 'item_id': item_id, 'reason': data.reason, 'description': description, 'status': 'pending', 'created_at': datetime.now(timezone.utc)}
         await db['reports'].insert_one(report)
-        logger.info(f'Người dùng {current_user.id} đã báo cáo {item_type} mã {item_id}')
-        return {'message': 'Cảm ơn bạn đã báo cáo nội dung'}
+        logger.info(f'Người dùng {current_user.id} báo cáo {item_type} mã {item_id}')
+        return {'message': 'Cảm ơn bạn báo cáo nội dung'}

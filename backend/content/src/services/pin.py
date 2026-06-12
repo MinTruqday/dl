@@ -38,15 +38,15 @@ class PinService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'pinned_documents': {'document_id': document_id, 'pinned_at': datetime.now(timezone.utc)}}}, upsert=True)
-        logger.info(f'Tài liệu {document_id} đã được ghim bởi {current_user.id}')
-        return {'status': 'success', 'message': 'Tài liệu đã được ghim'}
+        logger.info(f'Người dùng {current_user.id} ghim tài liệu {document_id}')
+        return {'status': 'success', 'message': 'Đã ghim tài liệu'}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$pull': {'pinned_documents': document_id}}, upsert=True)
-        return {'status': 'success', 'message': 'Tài liệu đã được bỏ ghim'}
+        return {'status': 'success', 'message': 'Đã bỏ ghim tài liệu'}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:

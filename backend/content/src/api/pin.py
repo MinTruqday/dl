@@ -5,7 +5,7 @@ from src.schemas.user import UserInDB
 from src.schemas.library import PinnedDocumentRequest
 from core.response import APIResponse
 from src.services.pin import PinService
-router = APIRouter(prefix='/ghim', tags=['Pin'])
+router = APIRouter(prefix='/ghim')
 
 @router.get('', response_model=APIResponse[Any])
 async def get_pinned_documents(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

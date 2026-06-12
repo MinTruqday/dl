@@ -277,7 +277,7 @@ class EditorJSEngine:
                  'linkSearch', 'template'):
             return ''
 
-        logger.warning(f'Hệ thống bỏ qua khối nội dung không hợp lệ có loại là {t}')
+        logger.warning(f'Bỏ qua khối nội dung không hợp lệ loại {t}')
         return ''
 
     @staticmethod
@@ -343,9 +343,9 @@ class EditorJSEngine:
 
             if not os.path.exists(pdf_path):
                 error_msg = stderr.decode('utf-8') if stderr else "Không rõ lỗi"
-                logger.error(f"Quá trình xuất PDF bằng công cụ biên dịch thất bại: {error_msg}")
+                logger.error(f"Lỗi xuất PDF: {error_msg}")
                 raise Exception({
-                    "error": "Không thể biên dịch EditorJS sang PDF",
+                    "error": "Lỗi biên dịch EditorJS sang PDF",
                     "logs": error_msg[-2048:]
                 })
 
@@ -357,12 +357,12 @@ class EditorJSEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.warning(f"Không thể dừng tiến trình của công cụ biên dịch: {e}")
-            raise Exception("Tài liệu EditorJS mất quá nhiều thời gian để biên dịch")
+                    logger.warning(f"Lỗi dừng tiến trình biên dịch: {e}")
+            raise Exception("Lỗi biên dịch quá thời gian")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning(f"Không thể dọn dẹp các tệp tạm {filepath} của công cụ biên dịch: {e}")
+                    logger.warning(f"Lỗi dọn dẹp tệp tạm {filepath}: {e}")
