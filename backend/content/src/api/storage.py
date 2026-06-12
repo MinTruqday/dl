@@ -97,8 +97,8 @@ async def update_item(item_id: str, data: StorageItemUpdate=Body(...), current_u
 @router.delete('/tap-tin/{item_id}', response_model=APIResponse[Any])
 async def delete_item(item_id: str, hard_delete: bool=False, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     if hard_delete:
-        thành công = await StorageService.delete_item(item_id, current_user.id, db=db)
-        if not thành công:
+        success = await StorageService.delete_item(item_id, current_user.id, db=db)
+        if not success:
             raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
         return APIResponse(data=None, message='Xóa vĩnh viễn thành công', status=200)
     else:

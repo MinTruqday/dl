@@ -20,7 +20,7 @@ async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest,
 
 @router.get('/latex', response_model=APIResponse[Any])
 async def get_latex(db=Depends(get_db)):
-    return APIResponse(data=await EditorService.get_latex(db=db), message='Lấy mã nguồn LaTeX thành công', status=200)
+    return APIResponse(data=await EditorService.get_latex(db=db), message='Lấy mã nguồn tài liệu thành công', status=200)
 
 @router.post('/tai-lieu/{document_id}/goi-y', response_model=APIResponse[Any])
 async def add_inline_suggestion(document_id: str, payload: InlineSuggestionRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])), db=Depends(get_db)):

@@ -31,7 +31,7 @@ class PurchaseService:
         wallet = await db['wallets'].find_one({'_id': str(current_user.id)})
         if not wallet or wallet.get('balance', 0) < price:
             if should_close_session: await session.abort_transaction(); await session.end_session()
-            raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này (Cần {price} dl)')
+            raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này, cần {price} dl')
         lock = None
         if hasattr(db_client, 'redis') and db_client.redis:
             lock = db_client.redis.lock(f"purchase:{current_user.id}:{document_id}", timeout=15)
@@ -47,7 +47,7 @@ class PurchaseService:
                 deduct_result = await db['wallets'].update_one({'_id': str(current_user.id), 'balance': {'$gte': price}}, {'$inc': {'balance': -price}}, session=session)
                 if deduct_result.modified_count == 0:
                     if should_close_session: await session.abort_transaction()
-                    raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này (Cần {price} dl)')
+                    raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này, cần {price} dl')
                 if author_id:
                     await db['wallets'].update_one({'_id': author_id}, {'$inc': {'balance': price}}, upsert=True, session=session)
                 await db['purchases'].insert_one({'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'item_type': 'document', 'price': price, 'purchased_at': datetime.now(timezone.utc)}, session=session)

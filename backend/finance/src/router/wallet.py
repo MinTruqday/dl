@@ -12,15 +12,15 @@ router = APIRouter(prefix='/vi-tien')
 
 @router.get('/so-du', response_model=APIResponse[Any])
 async def get_balance(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.get_balance(current_user, db=db), message='Lấy số dư ví thành công')
+    return APIResponse(data=await WalletService.get_balance(current_user, db=db), message='Đã tải thông tin số dư ví')
 
 @router.post('/ma-qua-tang/doi-ma', response_model=APIResponse[Any])
-async def redeem_coupon(req: RedeemCouponRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.redeem_coupon(req, current_user, db=db), message='Đổi mã quà tặng thành công')
+async def redeem_coupon(payload: RedeemCouponRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(data=await WalletService.redeem_coupon(payload.model_dump(), current_user, db=db), message='Đã đổi mã quà tặng')
 
 @router.get('/lich-su', response_model=APIResponse[Any])
 async def get_history(cursor: str=Query(None), limit: int=Query(30, ge=1, le=100), tx_type: str=Query(None), skip: int=Query(0, ge=0), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await WalletService.get_history(current_user, cursor, limit, tx_type, skip, db=db), message='Lấy lịch sử giao dịch thành công')
+    return APIResponse(data=await WalletService.get_history(current_user, skip=skip, limit=limit, db=db), message='Đã tải lịch sử giao dịch')
 
 
 
@@ -57,12 +57,12 @@ async def get_revenue(current_user: UserInDB=Depends(get_current_user), db=Depen
     
     wallet = await db['wallets'].find_one({'_id': author_id})
     revenue_data['available_balance'] = wallet.get('balance', 0) if wallet else 0
-    return APIResponse(data=revenue_data, message='Lấy số liệu doanh thu thành công')
+    return APIResponse(data=revenue_data, message='Đã tải số liệu doanh thu')
 
 @router.post('/giao-dich-mua/tai-lieu/{document_id}', response_model=APIResponse[Any])
 async def purchase_document(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.purchase_document(document_id, current_user, db=db), message='Thanh toán mua tài liệu thành công')
+    return APIResponse(data=await PurchaseService.purchase_document(document_id, current_user, db=db), message='Đã thanh toán mua tài liệu', status=201)
 
 @router.post('/giao-dich-mua/{purchase_id}/huy-bo', response_model=APIResponse[Any])
 async def cancel_purchase(purchase_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Hủy mua thành công')
+    return APIResponse(data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db), message='Đã hủy mua thành công')

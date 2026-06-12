@@ -33,12 +33,12 @@ async def init_db():
             from urllib.parse import urlparse
             parsed_uri = urlparse(mongo_uri)
             host_with_port = parsed_uri.netloc.split('@')[-1] if '@' in parsed_uri.netloc else parsed_uri.netloc
-            logger.info("Đang khởi tạo cụm máy chủ MongoDB Replica Set")
+            logger.info("Đang khởi tạo cụm máy chủ cơ sở dữ liệu")
             await db_client.mongodb.admin.command("replSetInitiate", {
                 "_id": "rs0",
                 "members": [{"_id": 0, "host": host_with_port}]
             })
-            logger.info("Khởi tạo cụm MongoDB Replica Set thành công")
+            logger.info("Khởi tạo cụm máy chủ cơ sở dữ liệu thành công")
             await asyncio.sleep(3)
         except Exception as e:
             logger.warning(f"Khởi tạo cụm máy chủ bị bỏ qua hoặc thất bại: {e}")
@@ -49,13 +49,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Kết nối thành công với RabbitMQ")
+            logger.info("Kết nối thành công với hệ thống hàng đợi")
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error(f"Không thể kết nối với RabbitMQ sau {max_retries} lần thử: {e}")
+                logger.error(f"Không thể kết nối với hệ thống hàng đợi sau {max_retries} lần thử: {e}")
                 raise e
-            logger.warning(f"Thử kết nối RabbitMQ lần thứ {i+1} thất bại do lỗi: {e}, đang thử lại sau 5 giây...")
+            logger.warning(f"Thử kết nối hệ thống hàng đợi lần thứ {i+1} thất bại do lỗi: {e}, đang thử lại sau 5 giây")
             await asyncio.sleep(5)
     
     await setup_indexes()
@@ -105,9 +105,9 @@ async def setup_indexes():
         await db["storage_items"].create_index([("target_id", 1)], background=True)
         await db["storage_items"].create_index([("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True)
 
-        logger.info("Khởi tạo chỉ mục MongoDB thành công")
+        logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
     except Exception as e:
-        logger.error(f"Không thể tạo chỉ mục cơ sở dữ liệu MongoDB: {e}")
+        logger.error(f"Không thể tạo chỉ mục cơ sở dữ liệu: {e}")
 
 async def close_db():
     if db_client.mongodb:

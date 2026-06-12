@@ -11,7 +11,7 @@ router = APIRouter(prefix='/van-hanh')
 
 @router.get('/chi-so', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_system_metrics(db=Depends(get_db)):
-    return APIResponse(data=await OperationService.get_system_health(db=db), message='Dữ liệu thông số hệ thống đã được tải thành công')
+    return APIResponse(data=await OperationService.get_system_telemetry(db=db), message='Đã tải dữ liệu viễn trắc hệ thống')
 
 @router.get('/bao-tri', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_maintenance_status(db=Depends(get_db)):
@@ -23,15 +23,15 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 
 @router.post('/sao-luu', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def trigger_backup(db=Depends(get_db)):
-    return APIResponse(data=await OperationService.trigger_backup(db=db), message='Tiến trình sao lưu dữ liệu hệ thống đã được kích hoạt')
+    return APIResponse(data=await OperationService.trigger_backup(db=db), message='Đã kích hoạt sao lưu hệ thống')
 
 @router.post('/khoa-api', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_api_key(name: str, db=Depends(get_db)):
-    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='API Key mới đã được tạo thành công')
+    return APIResponse(data=await OperationService.create_api_key(name, db=db), message='Đã tạo khóa truy cập mới')
 
 @router.post('/tiep-thi/chien-dich', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)):
-    return APIResponse(data=await OperationService.create_marketing_campaign(payload.model_dump(), db=db), message='Chiến dịch tiếp thị mới đã được thiết lập')
+    return APIResponse(data=await OperationService.create_marketing_campaign(payload.model_dump(), db=db), message='Đã tạo chiến dịch tiếp thị mới', status=201)
 
 @router.get('/don-ung-tuyen/tac-gia', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_author_applications(status: str='PENDING', db=Depends(get_db)):
@@ -58,12 +58,12 @@ async def get_collector_stats(db=Depends(get_db)):
     return APIResponse(data=await OperationService.get_collector_stats(db=db), message='Dữ liệu thống kê thu thập đã được tổng hợp')
 
 @router.post('/nguoi-dung/{user_id}/shadowban', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def shadowban_user(user_id: str, is_banned: bool, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await UserService.shadowban_user(user_id, is_banned, current_user, db=db), message='Thiết lập trạng thái hạn chế (shadowban) đã được áp dụng')
+async def shadowban_user(payload: Any, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(data=await OperationService.bulk_update_shadowban(payload.user_ids, payload.status, current_user, db=db), message='Đã áp dụng trạng thái hạn chế')
 
 @router.post('/nguoi-dung/{user_id}/kyc/{status}', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
-async def verify_kyc(user_id: str, status: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await UserService.verify_kyc(user_id, status, current_user, db=db), message='Hồ sơ định danh (KYC) của người dùng đã được xử lý')
+async def verify_kyc(payload: Any, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(data=await OperationService.bulk_verify_kyc(payload.user_ids, payload.status, current_user, db=db), message='Hồ sơ định danh của người dùng đã được xử lý')
 
 @router.get('/minio/thong-ke', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_minio_stats(db=Depends(get_db)):

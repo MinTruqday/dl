@@ -37,7 +37,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                 documents_collection = db["documents"]
                 
                 if proc.returncode == 0:
-                    logger.info(f"Biên dịch tệp PDF thành công cho tài liệu {document_id}")
+                    logger.info(f"Quá trình biên dịch tệp PDF cho tài liệu {document_id} đã hoàn tất")
                     pdf_file_path = os.path.join(work_dir, "main.pdf")
                     
                     from core.storage import upload_file
@@ -104,7 +104,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
 
 async def start_tectonic_worker():
     if not db_client.rabbitmq:
-        logger.info("Không thể kết nối RabbitMQ, đang thử lại")
+        logger.info("Không thể kết nối hệ thống hàng đợi, đang thử lại")
         return
         
     try:
@@ -175,7 +175,7 @@ async def process_document_publish(message: AbstractIncomingMessage):
             except Exception as e:
                 logger.error(f"Không thể gửi thông báo: {e}")
                 
-            logger.info(f"Quá trình xuất bản nền đã thành công cho tài liệu {document_id}")
+            logger.info(f"Quá trình xuất bản nền cho tài liệu {document_id} đã hoàn tất")
             
         except Exception as e:
             logger.error(f"Hàng đợi xuất bản tài liệu thất bại: {str(e)}")
@@ -210,7 +210,7 @@ async def process_user_interaction(message: AbstractIncomingMessage):
 
 async def start_workers():
     if not db_client.rabbitmq:
-        logger.warning("Dịch vụ RabbitMQ chưa sẵn sàng, đang chờ kết nối")
+        logger.warning("Hệ thống hàng đợi chưa sẵn sàng, đang chờ kết nối")
         return
         
     try:

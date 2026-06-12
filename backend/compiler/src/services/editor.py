@@ -40,15 +40,15 @@ class EditorService:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content})
                 if response.status_code != 200:
-                    raise HTTPException(status_code=422, detail='Lỗi định dạng EditorJS, không thể biên dịch')
+                    raise HTTPException(status_code=422, detail='Lỗi định dạng tài liệu, không thể biên dịch')
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail='Quá trình biên dịch EditorJS mất quá nhiều thời gian')
+            raise HTTPException(status_code=408, detail='Quá trình biên dịch tài liệu mất quá nhiều thời gian')
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Hệ thống gặp lỗi khi biên dịch EditorJS: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình biên dịch tài liệu EditorJS')
+            logger.error(f'Hệ thống gặp lỗi khi biên dịch tài liệu: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình biên dịch tài liệu')
 
     @staticmethod
     async def analyze_internal_plagiarism(document_id: str, content_payload: dict, current_user, db=None):
@@ -71,7 +71,7 @@ class EditorService:
                 user_id = str(current_user.id)
                 await redis_client.publish(f'editor:{document_id}:keystroke', str(payload))
                 await redis_client.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
-            return {'status': 'synced_redis', 'timestamp': payload.get('timestamp')}
+            return {'status': 'synced_cache', 'timestamp': payload.get('timestamp')}
         except Exception as e:
             logger.error(f'Gặp lỗi trong quá trình đồng bộ thao tác gõ phím: {e}')
             return {'status': 'sync_failed', 'error': str(e)}

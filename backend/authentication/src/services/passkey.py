@@ -30,7 +30,7 @@ class PasskeyService:
             try:
                 await db_client.redis.setex(f'passkey_reg_challenge:{email}', 300, options.challenge)
             except Exception as e:
-                logger.warning(f'Không thể lưu thử thách vào Redis: {e}')
+                logger.warning(f'Không thể lưu thử thách vào bộ nhớ đệm: {e}')
         await db['passkey_challenges'].update_one({'_id': f'reg:{email}'}, {'$set': {'challenge': options.challenge, 'created_at': datetime.now(timezone.utc)}}, upsert=True)
         return json.loads(options_to_json(options))
 
@@ -46,7 +46,7 @@ class PasskeyService:
             try:
                 challenge = await db_client.redis.get(f'passkey_reg_challenge:{email}')
             except Exception as e:
-                logger.warning(f'Không thể lấy thử thách từ Redis: {e}')
+                logger.warning(f'Không thể lấy thử thách từ bộ nhớ đệm: {e}')
         if not challenge:
             chal_doc = await db['passkey_challenges'].find_one({'_id': f'reg:{email}'})
             if chal_doc:
@@ -66,7 +66,7 @@ class PasskeyService:
             try:
                 await db_client.redis.delete(f'passkey_reg_challenge:{email}')
             except Exception as e:
-                logger.error(f'Không thể xóa khóa thử thách đăng ký Redis của {email}: {e}')
+                logger.error(f'Không thể xóa khóa thử thách đăng ký khỏi bộ nhớ đệm của {email}: {e}')
         return {'message': 'Đăng ký Passkey thành công'}
 
     @staticmethod
@@ -84,7 +84,7 @@ class PasskeyService:
             try:
                 await db_client.redis.setex(f'passkey_auth_challenge:{email}', 300, options.challenge)
             except Exception as e:
-                logger.warning(f'Không thể lưu thử thách xác thực vào Redis: {e}')
+                logger.warning(f'Không thể lưu thử thách xác thực vào bộ nhớ đệm: {e}')
         await db['passkey_challenges'].update_one({'_id': f'auth:{email}'}, {'$set': {'challenge': options.challenge, 'created_at': datetime.now(timezone.utc)}}, upsert=True)
         return json.loads(options_to_json(options))
 
@@ -100,7 +100,7 @@ class PasskeyService:
             try:
                 challenge = await db_client.redis.get(f'passkey_auth_challenge:{email}')
             except Exception as e:
-                logger.warning(f'Không thể lấy thử thách xác thực từ Redis: {e}')
+                logger.warning(f'Không thể lấy thử thách xác thực từ bộ nhớ đệm: {e}')
         if not challenge:
             chal_doc = await db['passkey_challenges'].find_one({'_id': f'auth:{email}'})
             if chal_doc:
@@ -123,7 +123,7 @@ class PasskeyService:
             try:
                 await db_client.redis.delete(f'passkey_auth_challenge:{email}')
             except Exception as e:
-                logger.error(f'Không thể xóa khóa thử thách xác thực Redis của {email}: {e}')
+                logger.error(f'Không thể xóa khóa thử thách xác thực khỏi bộ nhớ đệm của {email}: {e}')
         import httpx
         user_doc = None
         try:

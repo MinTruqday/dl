@@ -29,7 +29,7 @@ async def lock_user(user_id: str, req: ModerationActionRequest, current_user: Us
 
 @router.post('/{user_id}/shadowban', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def shadowban_user(user_id: str, is_banned: bool, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await UserService.shadowban_user(user_id, is_banned, current_user, db=db), message='Thiết lập trạng thái hạn chế (shadowban) đã được áp dụng')
+    return APIResponse(data=await UserService.shadowban_user(user_id, is_banned, current_user, db=db), message='Đã áp dụng trạng thái hạn chế')
 
 @router.get('/{user_id}/ghi-chu', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def get_moderator_notes(user_id: str, db=Depends(get_db)):
@@ -61,7 +61,7 @@ async def internal_get_user_by_email(email: str, db=Depends(get_db)):
 @router.get('/noi-bo/slug/{slug}', response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
-    return APIResponse(data=user, message='Đã tìm thấy thông tin người dùng theo định danh (slug)')
+    return APIResponse(data=user, message='Đã tìm thấy thông tin người dùng')
 
 class InternalCreateUserRequest(BaseModel):
     email: str

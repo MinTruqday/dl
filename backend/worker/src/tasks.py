@@ -53,7 +53,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info(f"Đang khởi động Tectonic để xử lý tài liệu {document_id}")
+    logger.info(f"Bắt đầu xử lý tài liệu {document_id}")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -63,7 +63,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
             
         try:
-            logger.debug(f"Hệ thống đang sử dụng Tectonic để biên dịch tài liệu {document_id}")
+            logger.debug(f"Đang tiến hành xử lý tài liệu {document_id}")
             process = subprocess.run(
                 ["tectonic", "--synctex", "--keep-logs", "-Z", "continue-on-errors", "--outdir", temp_dir, tex_path],
                 capture_output=True,
@@ -72,19 +72,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
             
             if not os.path.exists(pdf_path):
-                logger.error(f"Thất bại khi biên dịch tài liệu {document_id} bằng Tectonic")
+                logger.error(f"Thất bại khi biên dịch tài liệu {document_id} bằng công cụ biên dịch")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {"status": "error", "error": "Biên dịch thất bại", "logs": log_content, "document_id": document_id}
                 
-            logger.info(f"Tectonic đã thành công quá trình biên dịch tài liệu {document_id}")
+            logger.info(f"Đã hoàn tất xử lý tài liệu {document_id}")
             
             return {"status": "success", "pdf_path": pdf_path, "document_id": document_id, "logs": process.stdout}
         except subprocess.TimeoutExpired:
-            logger.error(f"Tài liệu {document_id} mất quá nhiều thời gian để biên dịch bằng Tectonic")
+            logger.error(f"Tài liệu {document_id} mất quá nhiều thời gian để biên dịch")
             return {"status": "error", "error": "Quá thời gian biên dịch cho phép, có thể tài liệu chứa vòng lặp vô hạn", "document_id": document_id}
         except Exception as e:
-            logger.exception(f"Lỗi biên dịch Tectonic: {e}")
+            logger.exception(f"Lỗi của công cụ biên dịch: {e}")
             return {"status": "error", "error": str(e), "document_id": document_id}

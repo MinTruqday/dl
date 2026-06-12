@@ -31,7 +31,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập bộ nhớ đệm gặp sự cố: {e}")
         
         if db_client.redis:
             try:
@@ -41,7 +41,7 @@ class WalletService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f'Không thể khóa phiên làm việc trên Redis: {e}')
+                logger.exception(f'Không thể khóa phiên làm việc trên bộ nhớ đệm: {e}')
                 raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm, vui lòng thử lại sau")
 
         if db is None:
@@ -111,7 +111,7 @@ class WalletService:
                 try:
                     await db_client.redis.delete(lock_key)
                 except Exception as e:
-                    logger.error(f'Không thể mở khóa phiên làm việc trên Redis: {e}')
+                    logger.error(f'Không thể mở khóa phiên làm việc trên bộ nhớ đệm: {e}')
 
     @staticmethod
     async def get_history(current_user, cursor: str=None, limit: int=30, tx_type: str=None, skip: int=0, db=None):

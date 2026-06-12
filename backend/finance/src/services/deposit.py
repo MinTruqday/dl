@@ -67,20 +67,20 @@ class DepositService:
                 )
                 return {'checkout_url': checkout_url, 'order_code': order_code}
             else:
-                logger.error(f'Không thể tạo liên kết thanh toán payOS: {res_data}')
+                logger.error(f'Không thể tạo liên kết từ cổng thanh toán: {res_data}')
                 await db['orders'].update_one({'order_code': order_code}, {'$set': {'status': 'FAILED'}})
-                raise HTTPException(status_code=400, detail=res_data.get('desc', 'Lỗi khởi tạo thanh toán payOS'))
+                raise HTTPException(status_code=400, detail=res_data.get('desc', 'Lỗi khởi tạo từ cổng thanh toán'))
         except HTTPException:
             raise
         except Exception as e:
             await db['orders'].update_one({'order_code': order_code}, {'$set': {'status': 'FAILED'}})
-            logger.exception(f'Không thể kết nối với hệ thống payOS: {e}')
+            logger.exception(f'Không thể kết nối với cổng thanh toán: {e}')
             raise HTTPException(status_code=500, detail='Không thể kết nối với hệ thống thanh toán, vui lòng thử lại sau')
 
     @staticmethod
     async def deposit_webhook(request, db=None):
         data = await request.json()
-        logger.info(f'Nhận được thông báo từ payOS với dữ liệu {json.dumps(data, default=str)}')
+        logger.info(f'Nhận được thông báo từ cổng thanh toán với dữ liệu {json.dumps(data, default=str)}')
         if data.get('code') == '00' and data.get('data'):
             webhook_data = data['data']
             order_code = webhook_data.get('orderCode')
@@ -88,20 +88,20 @@ class DepositService:
             try:
                 received_signature = data.get('signature', '')
                 if not received_signature:
-                    logger.warning('Thông báo từ payOS bị thiếu chữ ký xác thực')
+                    logger.warning('Thông báo từ cổng thanh toán bị thiếu chữ ký xác thực')
                     raise HTTPException(status_code=400, detail="Bị thiếu chữ ký số xác thực")
                     
                 expected_signature = DepositService._generate_payos_signature(signature_data)
                 if received_signature != expected_signature:
-                    logger.warning('Chữ ký xác thực từ payOS không khớp')
+                    logger.warning('Chữ ký xác thực từ cổng thanh toán không khớp')
                     raise HTTPException(status_code=400, detail="Chữ ký số không hợp lệ")
                     
                 paid_amount = webhook_data.get('amount', 0)
-                await DepositService.process_thành công_order(order_code, paid_amount)
+                await DepositService.process_success_order(order_code, paid_amount)
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f'Gặp lỗi khi xử lý thông báo từ payOS: {e}')
+                logger.exception(f'Gặp lỗi khi xử lý thông báo từ cổng thanh toán: {e}')
         return Response(content=json.dumps({'code': '00', 'desc': 'success'}), media_type='application/json', status_code=200)
 
     @staticmethod
@@ -126,7 +126,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception(f"Hệ thống giới hạn truy cập Redis gặp sự cố: {e}")
+                logger.exception(f"Hệ thống giới hạn truy cập bộ nhớ đệm gặp sự cố: {e}")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -136,14 +136,14 @@ class DepositService:
                 payment_data = res_data.get('data', {})
                 status = payment_data.get('status', 'UNKNOWN')
                 if status == 'PAID':
-                    await DepositService.process_thành công_order(order_code, payment_data.get('amountPaid', 0))
+                    await DepositService.process_success_order(order_code, payment_data.get('amountPaid', 0))
                 return {'order_code': order_code, 'status': status, 'amount': payment_data.get('amount', 0), 'amount_paid': payment_data.get('amountPaid', 0)}
             else:
                 raise HTTPException(status_code=400, detail='Không thể kiểm tra trạng thái thanh toán')
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception(f'Lỗi khi xác minh giao dịch payOS: {e}')
+            logger.exception(f'Lỗi khi xác minh giao dịch từ cổng thanh toán: {e}')
             raise HTTPException(status_code=500, detail='Lỗi kiểm tra trạng thái thanh toán')
 
     @staticmethod

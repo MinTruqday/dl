@@ -76,10 +76,11 @@ class OperationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         if not key_value:
-            key_value = str(uuid7()).replace('-', '')
+            import secrets
+            key_value = secrets.token_urlsafe(32)
         await db['api_keys'].insert_one({'_id': str(uuid7()), 'name': name, 'provider': provider, 'key_value': key_value, 'created_at': datetime.now(timezone.utc)})
-        logger.info(f"Đã khởi tạo API Key '{name}' cho '{provider}'")
-        return {'message': 'Lưu trữ khóa API an toàn', 'key': key_value}
+        logger.info(f"Đã khởi tạo khóa truy cập {name} cho hệ thống")
+        return {'message': 'Lưu trữ khóa truy cập an toàn', 'key': key_value}
 
     @staticmethod
     async def create_marketing_campaign(data: dict, db=None) -> dict:
@@ -185,7 +186,7 @@ class OperationService:
                         formatted_categories.append({'name': name, 'count': stats['count'], 'size_bytes': stats['size']})
                 return {'status': 'healthy', 'total_buckets': len(buckets_list), 'total_size_bytes': total_size_bytes, 'total_objects_count': total_objects_count, 'buckets': buckets_data, 'categories': formatted_categories}
         except Exception as e:
-            logger.error(f'Lỗi lấy thông số lưu trữ từ MinIO: {e}')
+            logger.error(f'Lỗi lấy thông số từ hệ thống lưu trữ: {e}')
             return {'status': 'unreachable', 'total_buckets': 0, 'total_size_bytes': 0, 'total_objects_count': 0, 'buckets': [], 'categories': []}
 
     @staticmethod
@@ -246,7 +247,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
         if not withdrawal:
-            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được thành công trước đó')
+            raise HTTPException(status_code=400, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được xử lý thành công trước đó')
         await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'COMPLETED', 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}})
         logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã được duyệt bởi {admin_id}')
         return {'message': 'Yêu cầu rút tiền đã được phê duyệt'}

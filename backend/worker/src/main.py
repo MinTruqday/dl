@@ -29,4 +29,4 @@ def compile_document(payload: dict):
     
     from src.tasks import compile_document_tectonic
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Yêu cầu biên dịch bằng Tectonic đã được xếp vào hàng đợi", "task_id": task.id}
+    return {"message": "Đã đưa tài liệu vào hàng đợi xử lý", "task_id": task.id}
