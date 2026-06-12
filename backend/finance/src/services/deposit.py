@@ -88,13 +88,13 @@ class DepositService:
             try:
                 received_signature = data.get('signature', '')
                 if not received_signature:
-                    logger.warning('payOS webhook missing signature')
-                    raise HTTPException(status_code=400, detail="Missing signature")
+                    logger.warning('Thông báo từ payOS bị thiếu chữ ký xác thực')
+                    raise HTTPException(status_code=400, detail="Bị thiếu chữ ký số xác thực")
                     
                 expected_signature = DepositService._generate_payos_signature(signature_data)
                 if received_signature != expected_signature:
-                    logger.warning('payOS webhook signature mismatch')
-                    raise HTTPException(status_code=400, detail="Invalid signature")
+                    logger.warning('Chữ ký xác thực từ payOS không khớp')
+                    raise HTTPException(status_code=400, detail="Chữ ký số không hợp lệ")
                     
                 paid_amount = webhook_data.get('amount', 0)
                 await DepositService.process_success_order(order_code, paid_amount)
@@ -170,7 +170,7 @@ class DepositService:
             return
             
         if paid_amount is not None and paid_amount < order.get('amount', 0):
-            logger.warning(f"Order {order_code} paid amount ({paid_amount}) is less than required ({order.get('amount')}).")
+            logger.warning(f"Số tiền thanh toán cho đơn hàng {order_code} ({paid_amount}) chưa đủ yêu cầu")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -203,13 +203,13 @@ class DepositService:
                             json={
                                 "target_user_id": user_id,
                                 "title": 'Nạp tiền thành công',
-                                "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl.',
+                                "body": f'Tài khoản vừa được cộng thêm {dl_to_add} dl',
                                 "type": 'topup'
                             },
                             timeout=3.0
                         )
             except Exception as e:
-                logger.warning(f'Notification failed: {e}')
+                logger.warning(f'Không thể gửi thông báo: {e}')
             logger.info(f'Đã cộng thêm {dl_to_add} dl cho người dùng {user_id} từ đơn hàng {order_code}')
         except Exception as e:
             if should_close_session:

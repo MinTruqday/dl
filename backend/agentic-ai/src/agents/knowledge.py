@@ -14,13 +14,13 @@ class Knowledge:
                 "document_ids": getattr(req, 'document_ids', []),
                 "use_smart": req.useSmart,
                 "use_web": req.useWeb,
-                "chat_history": req.conversation_history or [],
+                "chat_hislênry": req.conversation_hislênry or [],
                 "file_data": req.file_data,
                 "image_data": req.image_data
             })
-            return result.get("generation", "Không tìm thấy thông tin phù hợp trong tài liệu.")
+            return result.get("generation", "Không tìm thấy thông tin phù hợp trong tài liệu")
         except Exception as e:
             logger.error(f"Knowledge: Retrieval failed: {e}")
-            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
+            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 knowledge = Knowledge()

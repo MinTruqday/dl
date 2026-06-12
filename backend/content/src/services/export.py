@@ -20,19 +20,19 @@ class ExportService:
     @staticmethod
     async def export_document_pdf_watermarked(document_id: str, current_user, db=None):
         if not REPORTLAB_AVAILABLE:
-            raise HTTPException(status_code=500, detail='Dịch vụ xuất bản PDF đang bảo trì do thiếu thư viện hệ thống.')
+            raise HTTPException(status_code=500, detail='Dịch vụ xuất bản PDF đang bảo trì do thiếu thư viện hệ thống')
         if db is None:
             db = db_client.mongodb.get_default_database()
         document = await db['documents'].find_one({'_id': str(document_id)})
         if not document:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại trên hệ thống.')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại trên hệ thống')
         user_email = current_user.email if hasattr(current_user, 'email') and current_user.email else str(current_user.id)
         user_id = str(current_user.id)
         if document.get("is_premium") and document.get("author_id") != user_id and (not hasattr(current_user, 'role') or current_user.role not in ["ADMIN", "MODERATOR"]):
             purchases_col = db["purchases"]
             purchase = await purchases_col.find_one({"user_id": user_id, "item_id": str(document["_id"])})
             if not purchase:
-                raise HTTPException(status_code=403, detail='Bạn chưa mua quyền truy cập tài liệu này.')
+                raise HTTPException(status_code=403, detail='Bạn chưa mua quyền truy cập tài liệu này')
         watermark_text = f'Bản quyền thuộc DocLib - Cấp riêng cho: {user_email} (ID: {user_id})'
 
         def generate_pdf_sync(db=None):
@@ -43,7 +43,7 @@ class ExportService:
                 c.drawString(50, 800, document.get('title', 'Tác phẩm vô danh'))
                 c.setFont('Helvetica', 12)
                 y_pos = 750
-                content = str(document.get('content', 'Nội dung sáng tác đang chờ xử lý.'))
+                content = str(document.get('content', 'Nội dung sáng tác đang chờ xử lý'))
                 lines = content.split('\n')
                 for para in lines:
                     if not para.strip():
@@ -84,6 +84,6 @@ class ExportService:
                 return None
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
-            raise HTTPException(status_code=500, detail='Lỗi trong quá trình tạo tệp PDF có dấu mờ.')
+            raise HTTPException(status_code=500, detail='Lỗi trong quá trình tạo tệp PDF có dấu mờ')
         logger.info(f'Đã xuất tài liệu {document_id} thành PDF có đóng dấu bản quyền cho {user_id}')
         return pdf_data

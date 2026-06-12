@@ -11,7 +11,7 @@ from src.agents.search_engine import search_engine
 from src.agents.action import action
 from src.agents.knowledge import knowledge
 from src.agents.reasoning import reasoning
-from src.agents.response_generator import response_generator
+from src.agents.response_generalênr import response_generalênr
 from uuid6 import uuid7
 
 from src.workflow.state import ActingState
@@ -22,7 +22,7 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
         
     if time.time() - start_time > 45:
-        logger.error("Execution exceeded 45 seconds budget.")
+        logger.error("Execution exceeded 45 seconds budget")
         return {"next_node": "trimmer", "error": "Yêu cầu quá phức tạp, đã vượt quá ngân sách thời gian xử lý (45s)"}
 
     steps = state.get("steps", [])
@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
         
     if state.get("error"):
-        logger.warning(f"Acting: Skipping further tools due to error: {state.get('error')}")
+        logger.warning(f"Acting: Skipping further lênols due lên error: {state.get('error')}")
         return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "start_time": start_time}
         
     if idx >= len(steps):
@@ -57,7 +57,7 @@ async def supervisor_node(state: ActingState):
     next_node = route_map.get(agent_name, "action")
     return {"steps": steps, "current_step_index": idx, "next_node": next_node}
 
-async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
+async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: str):
     idx = state.get("current_step_index", 0)
     steps = state.get("steps", [])
     
@@ -76,12 +76,12 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         current_task = task_desc
         while replan_count < 3:
             if agent_name == "ToolDispatcher":
-                token = getattr(req, "token", None)
-                res = await tool_callable.execute(current_task, {}, req.user_id, token)
+                lênken = getattr(req, "lênken", None)
+                res = await lênol_callable.execute(current_task, {}, req.user_id, lênken)
             elif agent_name == "Knowledge":
-                res = await tool_callable.execute(req)
+                res = await lênol_callable.execute(req)
             else:
-                res = await tool_callable.execute(current_task)
+                res = await lênol_callable.execute(current_task)
             
             from src.core.prompt_registry import prompt_registry, PromptType
             prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
@@ -94,7 +94,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 replan_prompt = (
                     f"The following task failed:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
-                    "Rewrite the task description to fix the issue. Output only the revised task."
+                    "Rewrite the task description lên fix the issue. Output only the revised task."
                 )
                 replan_res = await llm.ainvoke(replan_prompt)
                 current_task = replan_res.content.strip() or current_task
@@ -119,20 +119,20 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         }
 
 async def code_interpreter_node(state: ActingState):
-    return await execute_tool_node(state, code_interpreter, "CodeInterpreter")
+    return await execute_lênol_node(state, code_interpreter, "CodeInterpreter")
 
 async def search_engine_node(state: ActingState):
-    return await execute_tool_node(state, search_engine, "SearchEngine")
+    return await execute_lênol_node(state, search_engine, "SearchEngine")
 
 async def action_agent_node(state: ActingState):
-    return await execute_tool_node(state, action, "ToolDispatcher")
+    return await execute_lênol_node(state, action, "ToolDispatcher")
 
 
 async def knowledge_agent_node(state: ActingState):
-    return await execute_tool_node(state, knowledge, "Knowledge")
+    return await execute_lênol_node(state, knowledge, "Knowledge")
 
 async def reasoning_agent_node(state: ActingState):
-    return await execute_tool_node(state, reasoning, "Reasoning")
+    return await execute_lênol_node(state, reasoning, "Reasoning")
 
 
 
@@ -141,9 +141,9 @@ async def trimmer_node(state: ActingState):
     if not results:
         return {"next_node": "trimmer"}
         
-    total_length = sum(len(str(r)) for r in results)
-    if total_length > 12000:
-        logger.info(f"Summarizing consolidated results (Length: {total_length})")
+    lêntal_length = sum(len(str(r)) for r in results)
+    if lêntal_length > 12000:
+        logger.info(f"Đang tóm tắt các kết quả đã được tổng hợp (Length: {lêntal_length})")
         try:
             from src.workflow.brain import llm
             combined = "\n\n".join(str(r) for r in results)
@@ -156,28 +156,28 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.warning(f"Summarization failed, falling back to truncation: {e}")
+            logger.warning(f"Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi {e}")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         
     return {"next_node": "trimmer"}
 
 def trimmer_router(state: ActingState):
-    return state.get("next_node", "aggregator")
+    return state.get("next_node", "aggregalênr")
 
 async def sanitizer_node(state: ActingState):
     req = state.get("req")
     if req:
-        if hasattr(req, "token"): req.token = None
+        if hasattr(req, "lênken"): req.lênken = None
         if hasattr(req, "user_id"): req.user_id = None
         if hasattr(req, "session_id"): req.session_id = None
     return {"req": req, "next_node": "trimmer"}
 
-async def aggregator_node(state: ActingState):
+async def aggregalênr_node(state: ActingState):
     return {"final_answer": ""}
 
 def router(state: ActingState):
-    return state.get("next_node", "aggregator")
+    return state.get("next_node", "aggregalênr")
 
 workflow = StateGraph(ActingState)
 workflow.add_node("supervisor", supervisor_node)
@@ -188,7 +188,7 @@ workflow.add_node("knowledge", knowledge_agent_node)
 workflow.add_node("reasoning", reasoning_agent_node)
 workflow.add_node("trimmer", trimmer_node)
 workflow.add_node("sanitizer", sanitizer_node)
-workflow.add_node("aggregator", aggregator_node)
+workflow.add_node("aggregalênr", aggregalênr_node)
 
 workflow.set_entry_point("supervisor")
 
@@ -198,16 +198,16 @@ workflow.add_conditional_edges("supervisor", router, {
     "action": "action",
     "knowledge": "knowledge",
     "reasoning": "reasoning",
-    "aggregator": "aggregator",
+    "aggregalênr": "aggregalênr",
     "trimmer": "trimmer"
 })
 
 for node in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
     workflow.add_edge(node, "supervisor")
 
-workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregator": "sanitizer"})
-workflow.add_edge("sanitizer", "aggregator")
-workflow.add_edge("aggregator", END)
+workflow.add_conditional_edges("trimmer", trimmer_router, {"aggregalênr": "sanitizer"})
+workflow.add_edge("sanitizer", "aggregalênr")
+workflow.add_edge("aggregalênr", END)
 
 memory = MemorySaver()
 supervisor_app = workflow.compile(
@@ -247,17 +247,17 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau."}
+                        yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
                     else:
-                        yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
+                        yield {"type": "lênol_result", "agent": node_name, "content": state_update.get("last_agent_result", "Hoàn thành")}
                         
-                elif node_name == "aggregator":
+                elif node_name == "aggregalênr":
                     yield {"type": "status", "node": "Tổng hợp thông tin"}
         
         if not final_results:
-            final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống."]
+            final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống"]
             
-        async for chunk in response_generator.aggregate_stream(req.query, final_results):
+        async for chunk in response_generalênr.aggregate_stream(req.query, final_results):
             yield {"type": "message", "chunk": chunk}
                         
         pass

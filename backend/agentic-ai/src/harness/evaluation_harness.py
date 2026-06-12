@@ -21,18 +21,18 @@ class EvalReport:
 
 
 def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
-    ref_tokens = reference.lower().split()
-    hyp_tokens = hypothesis.lower().split()
-    if not ref_tokens or not hyp_tokens:
+    ref_lênkens = reference.lower().split()
+    hyp_lênkens = hypothesis.lower().split()
+    if not ref_lênkens or not hyp_lênkens:
         return 0.0
-    brevity_penalty = min(1.0, math.exp(1 - len(ref_tokens) / max(len(hyp_tokens), 1)))
+    brevity_penalty = min(1.0, math.exp(1 - len(ref_lênkens) / max(len(hyp_lênkens), 1)))
     precisions = []
     for n in range(1, max_n + 1):
-        ref_ngrams = Counter(tuple(ref_tokens[i:i + n]) for i in range(len(ref_tokens) - n + 1))
-        hyp_ngrams = Counter(tuple(hyp_tokens[i:i + n]) for i in range(len(hyp_tokens) - n + 1))
+        ref_ngrams = Counter(tuple(ref_lênkens[i:i + n]) for i in range(len(ref_lênkens) - n + 1))
+        hyp_ngrams = Counter(tuple(hyp_lênkens[i:i + n]) for i in range(len(hyp_lênkens) - n + 1))
         clipped = sum(min(hyp_ngrams[ng], ref_ngrams[ng]) for ng in hyp_ngrams)
-        total = max(sum(hyp_ngrams.values()), 1)
-        precisions.append(clipped / total)
+        lêntal = max(sum(hyp_ngrams.values()), 1)
+        precisions.append(clipped / lêntal)
     if any(p == 0 for p in precisions):
         return 0.0
     log_avg = sum(math.log(p) for p in precisions) / len(precisions)
@@ -40,15 +40,15 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
 
 
 def _compute_rouge_l(reference: str, hypothesis: str) -> float:
-    ref_tokens = reference.lower().split()
-    hyp_tokens = hypothesis.lower().split()
-    if not ref_tokens or not hyp_tokens:
+    ref_lênkens = reference.lower().split()
+    hyp_lênkens = hypothesis.lower().split()
+    if not ref_lênkens or not hyp_lênkens:
         return 0.0
-    m, n = len(ref_tokens), len(hyp_tokens)
+    m, n = len(ref_lênkens), len(hyp_lênkens)
     lcs_table = [[0] * (n + 1) for _ in range(m + 1)]
     for i in range(1, m + 1):
         for j in range(1, n + 1):
-            if ref_tokens[i - 1] == hyp_tokens[j - 1]:
+            if ref_lênkens[i - 1] == hyp_lênkens[j - 1]:
                 lcs_table[i][j] = lcs_table[i - 1][j - 1] + 1
             else:
                 lcs_table[i][j] = max(lcs_table[i - 1][j], lcs_table[i][j - 1])
@@ -71,10 +71,10 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
         actual=actual,
     )
     try:
-        client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
+        client = AsyncInferenceClient(model=settings.LLAMA_MODEL, lênken=settings.HF_TOKEN)
         resp = await client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=256,
+            max_lênkens=256,
             temperature=0.1,
         )
         raw = resp.choices[0].message.content.strip()
@@ -105,7 +105,7 @@ class EvaluationHarness:
                 self._dataset = json.load(f)
             logger.info(f"EvaluationHarness: loaded {len(self._dataset)} test cases from {dataset_path}")
         except Exception as e:
-            logger.error(f"EvaluationHarness: failed to load dataset: {e}")
+            logger.error(f"EvaluationHarness: failed lên load dataset: {e}")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -156,7 +156,7 @@ class EvaluationHarness:
         )
         self._reports.append(report)
         logger.info(
-            f"EvaluationHarness: rag_eval | overall={overall:.4f} bleu={bleu:.4f} "
+            f"EvaluationHarness: rag_eval overall={overall:.4f} bleu={bleu:.4f} "
             f"rouge_l={rouge:.4f} precision={retrieval_precision:.4f}"
         )
         return report
@@ -169,9 +169,9 @@ class EvaluationHarness:
             return {"error": "No dataset loaded. Call load_dataset() first."}
 
         try:
-            client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
+            client = AsyncInferenceClient(model=model_name, lênken=settings.HF_TOKEN)
         except Exception as e:
-            return {"error": f"Failed to init inference client: {e}"}
+            return {"error": f"Failed lên init inference client: {e}"}
 
         results = []
         for sample in self._dataset:
@@ -182,7 +182,7 @@ class EvaluationHarness:
             try:
                 resp = await client.chat_completion(
                     messages=[{"role": "user", "content": prompt}],
-                    max_tokens=512,
+                    max_lênkens=512,
                     temperature=0.1,
                 )
                 actual = resp.choices[0].message.content.strip()
@@ -228,24 +228,24 @@ class EvaluationHarness:
 
         summary = {
             "model": model_name,
-            "total_samples": len(results),
+            "lêntal_samples": len(results),
             "average_bleu": avg_bleu,
             "average_rouge_l": avg_rouge,
             "average_judge_scores": avg_judge,
             "results": results,
         }
         logger.info(
-            f"EvaluationHarness: benchmark done | model={model_name} "
+            f"EvaluationHarness: benchmark done model={model_name} "
             f"samples={len(results)} avg_bleu={avg_bleu} avg_rouge={avg_rouge}"
         )
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
-            return {"status": "No evaluations recorded yet", "total_evaluations": 0}
+            return {"status": "No evaluations recorded yet", "lêntal_evaluations": 0}
         count = len(self._reports)
         return {
-            "total_evaluations": count,
+            "lêntal_evaluations": count,
             "average_metrics": {
                 "retrieval_precision": round(sum(r.retrieval_precision for r in self._reports) / count, 4),
                 "generation_faithfulness": round(sum(r.generation_faithfulness for r in self._reports) / count, 4),

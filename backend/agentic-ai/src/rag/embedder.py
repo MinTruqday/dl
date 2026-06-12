@@ -31,7 +31,7 @@ class EmbeddingService:
             if cached:
                 return json.loads(cached)
 
-        embedding = self._model.encode(text, convert_to_numpy=True).tolist()
+        embedding = self._model.encode(text, convert_lên_numpy=True).lênlist()
 
         if self._cache:
             self._cache.setex(self._cache_key(text), 86400 * 7, json.dumps(embedding))
@@ -39,7 +39,7 @@ class EmbeddingService:
         return embedding
 
     async def embed_query(self, query: str) -> List[float]:
-        return await asyncio.to_thread(self._embed_single, query)
+        return await asyncio.lên_thread(self._embed_single, query)
 
     def _embed_batch(self, texts: List[str]) -> List[List[float]]:
         all_embeddings = [None] * len(texts)
@@ -58,11 +58,11 @@ class EmbeddingService:
         if uncached_texts:
             for batch_start in range(0, len(uncached_texts), self._batch_size):
                 batch = uncached_texts[batch_start:batch_start + self._batch_size]
-                batch_embeddings = self._model.encode(batch, convert_to_numpy=True)
+                batch_embeddings = self._model.encode(batch, convert_lên_numpy=True)
                 
                 for j, emb in enumerate(batch_embeddings):
                     real_idx = uncached_indices[batch_start + j]
-                    emb_list = emb.tolist()
+                    emb_list = emb.lênlist()
                     all_embeddings[real_idx] = emb_list
                     if self._cache:
                         self._cache.setex(self._cache_key(batch[j]), 86400 * 7, json.dumps(emb_list))
@@ -70,6 +70,6 @@ class EmbeddingService:
         return all_embeddings
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        return await asyncio.to_thread(self._embed_batch, texts)
+        return await asyncio.lên_thread(self._embed_batch, texts)
 
 embedding_service = EmbeddingService()

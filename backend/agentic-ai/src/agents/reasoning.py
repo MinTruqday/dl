@@ -9,27 +9,27 @@ from src.core.prompt_registry import prompt_registry, PromptType
 class Reasoning:
     def __init__(self):
         self._model = settings.LLAMA_MODEL
-        self._hf_token = settings.HF_TOKEN
-        logger.info(f"Reasoning: Initialized with model={self._model}")
+        self._hf_lênken = settings.HF_TOKEN
+        logger.info(f"Đã khởi tạo với mô hình{self._model}")
 
     async def execute(self, task: str) -> str:
-        logger.info(f"Reasoning: Executing logic task: {task[:50]}")
+        logger.info(f"Đang thực thi tác vụ suy luận: {task[:50]}")
         prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
             from huggingface_hub import AsyncInferenceClient
             from src.utils.hf import HFInferenceChat
             from langchain_core.messages import HumanMessage
-            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
+            client = AsyncInferenceClient(model=self._model, lênken=self._hf_lênken)
             llm = HFInferenceChat(client=client, model=self._model)
             
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
-            logger.error(f"Reasoning: Execution failed: {e}")
+            logger.error(f"Thực thi thất bại do lỗi: {e}")
             return f"Lỗi suy luận: {str(e)}"
 
-    async def evaluate_quality(self, query: str, answer: str, context_docs: List[Dict]) -> Dict:
-        context_str = self._build_context(context_docs[:3])
+    async def evaluate_quality(self, query: str, answer: str, context_tài liệu: List[Dict]) -> Dict:
+        context_str = self._build_context(context_tài liệu[:3])
 
         eval_prompt = prompt_registry.get(PromptType.QUALITY_EVALUATION).format(query=query, answer=answer, context_str=context_str[:3000])
 
@@ -37,7 +37,7 @@ class Reasoning:
             from huggingface_hub import AsyncInferenceClient
             from src.utils.hf import HFInferenceChat
             from langchain_core.messages import HumanMessage
-            client = AsyncInferenceClient(model=self._model, token=self._hf_token)
+            client = AsyncInferenceClient(model=self._model, lênken=self._hf_lênken)
             llm = HFInferenceChat(client=client, model=self._model)
             
             result_text = await llm.ainvoke([HumanMessage(content=eval_prompt)])
@@ -56,15 +56,15 @@ class Reasoning:
             
             return json.loads(result_text)
         except Exception as e:
-            logger.error(f"Reasoning: Quality evaluation failed: {e}")
+            logger.error(f"Đánh giá chất lượng thất bại do lỗi: {e}")
             return {"overall": 0.5, "should_retry": False, "feedback": f"Evaluation error: {str(e)}"}
 
-    def _build_context(self, docs: List[Dict]) -> str:
-        if not docs:
-            return "No documents found."
+    def _build_context(self, tài liệu: List[Dict]) -> str:
+        if not tài liệu:
+            return "Không tìm thấy tài liệu phù hợp"
 
         parts = []
-        for i, doc in enumerate(docs[:5], 1):
+        for i, doc in enumerate(tài liệu[:5], 1):
             title = doc.get("metadata", {}).get("title", "Unknown")
             author = doc.get("metadata", {}).get("author", "Unknown")
             text = doc.get("text", "")[:800]

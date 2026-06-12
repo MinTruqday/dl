@@ -315,10 +315,10 @@ class EditorJSEngine:
             parsed_content = json.loads(content)
             blocks = parsed_content.get('blocks', []) if isinstance(parsed_content, dict) else []
         except json.JSONDecodeError:
-            raise Exception({"error": "Nội dung EditorJS không hợp lệ (JSON decode error)."})
+            raise Exception({"error": "Nội dung EditorJS không hợp lệ (JSON decode error)"})
 
         if not blocks:
-            raise Exception({"error": "Tài liệu EditorJS không có nội dung."})
+            raise Exception({"error": "Tài liệu EditorJS không có nội dung"})
 
         html_content = EditorJSEngine._convert_blocks_to_html(blocks)
 
@@ -342,10 +342,10 @@ class EditorJSEngine:
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
 
             if not os.path.exists(pdf_path):
-                error_msg = stderr.decode('utf-8') if stderr else "Không rõ lỗi."
+                error_msg = stderr.decode('utf-8') if stderr else "Không rõ lỗi"
                 logger.error(f"Quá trình xuất PDF bằng EditorJS thất bại: {error_msg}")
                 raise Exception({
-                    "error": "Không thể biên dịch EditorJS sang PDF.",
+                    "error": "Không thể biên dịch EditorJS sang PDF",
                     "logs": error_msg[-2048:]
                 })
 

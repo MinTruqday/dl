@@ -15,7 +15,7 @@ class AuthenticatedUser:
 
 def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("User")):
     if not x_user_id:
-        raise HTTPException(status_code=401, detail="Missing X-User-ID header from API Gateway")
+        raise HTTPException(status_code=401, detail="Thiếu thông tin người dùng từ hệ thống")
     return AuthenticatedUser(user_id=x_user_id, user_name=x_user_name)
 
 async def publish_personal_message(message: dict, receiver_id: str):

@@ -24,7 +24,7 @@ class ReviewService:
         report = {'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'text_excerpt': text_excerpt[:500] if text_excerpt else '', 'description': description[:300] if description else '', 'status': 'pending', 'created_at': datetime.now(timezone.utc)}
         await db['typo_reports'].insert_one(report)
         logger.info(f'Người dùng {current_user.id} vừa báo lỗi chính tả trong tài liệu {document_id}')
-        return {'message': 'Đã gửi báo cáo lỗi chính tả thành công.'}
+        return {'message': 'Đã gửi báo cáo lỗi chính tả thành công'}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -67,4 +67,4 @@ class ReviewService:
         report = {'_id': str(uuid7()), 'reporter_id': str(current_user.id), 'item_type': item_type, 'item_id': item_id, 'reason': data.reason, 'description': description, 'status': 'pending', 'created_at': datetime.now(timezone.utc)}
         await db['reports'].insert_one(report)
         logger.info(f'Người dùng {current_user.id} đã báo cáo {item_type} mã {item_id}')
-        return {'message': 'Đã gửi báo cáo nội dung thành công.'}
+        return {'message': 'Đã gửi báo cáo nội dung thành công'}

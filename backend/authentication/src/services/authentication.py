@@ -19,7 +19,7 @@ class AuthenticationService:
         redirect_uri = getattr(settings, 'GOOGLE_REDIRECT_URI', None)
         if not google_client_id or not redirect_uri:
             logger.error('GOOGLE_CLIENT_ID or GOOGLE_REDIRECT_URI is not set')
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ đăng nhập Google chưa được thiết lập. Vui lòng liên hệ quản trị viên.')
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ đăng nhập Google chưa được thiết lập. Vui lòng liên hệ quản trị viên')
         auth_url = f'https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={google_client_id}&redirect_uri={redirect_uri}&scope=openid email profile'
         return auth_url
 
@@ -29,7 +29,7 @@ class AuthenticationService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         config = await db['settings'].find_one({'_id': 'system_config'})
         if config and (not config.get('registration_enabled', True)):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Cổng đăng ký thành viên hiện đang tạm đóng theo yêu cầu của hệ thống. Vui lòng quay lại sau.')
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Cổng đăng ký thành viên hiện đang tạm đóng theo yêu cầu của hệ thống. Vui lòng quay lại sau')
         import httpx
         try:
             async with httpx.AsyncClient() as client:
@@ -84,7 +84,7 @@ class AuthenticationService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail='Tài khoản hoặc Email không tồn tại trên hệ thống.')
+            raise HTTPException(status_code=401, detail='Tài khoản hoặc Email không tồn tại trên hệ thống')
 
         auth_cred = await db['auth_credentials'].find_one({"_id": str(user_doc['_id'])})
         password_hash = auth_cred.get('password_hash') if auth_cred else "invalid"
@@ -92,9 +92,9 @@ class AuthenticationService:
         if not verify_password(password, password_hash):
             await db['audit_logs'].insert_one({'action': 'LOGIN_FAILED_WRONG_PASSWORD', 'actor_email': user_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
             logger.warning(f'Đăng nhập thất bại do sai mật khẩu cho tài khoản {username} từ {client_ip}')
-            raise HTTPException(status_code=401, detail='Mật khẩu bạn nhập không chính xác.')
+            raise HTTPException(status_code=401, detail='Mật khẩu bạn nhập không chính xác')
         if not user_doc.get('is_active', True):
-            raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên.')
+            raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên')
         session_id = str(uuid7())
         user_id_str = str(user_doc['_id'])
         if db_client.redis:
@@ -107,14 +107,14 @@ class AuthenticationService:
     @staticmethod
     async def revoke_all_sessions(current_user: UserInDB, db=None):
         if not db_client.redis:
-            return {'message': 'Tính năng này hiện đang bảo trì và tạm thời không khả dụng.'}
+            return {'message': 'Tính năng này hiện đang bảo trì và tạm thời không khả dụng'}
         user_id_str = str(current_user.id)
         sessions = await db_client.redis.smembers(f'user_sessions:{user_id_str}')
         for sid in sessions:
             await db_client.redis.delete(f'session_meta:{sid}')
         await db_client.redis.delete(f'user_sessions:{user_id_str}')
         logger.info(f'Đã vô hiệu hóa toàn bộ phiên đăng nhập của {user_id_str}')
-        return {'message': 'Bạn đã đăng xuất khỏi tất cả các thiết bị thành công.'}
+        return {'message': 'Bạn đã đăng xuất khỏi tất cả các thiết bị thành công'}
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str, db=None):
@@ -135,7 +135,7 @@ class AuthenticationService:
                 await EmailService.send_reset_password_email(email, otp_code)
             except Exception as e:
                 logger.error(f'Không thể gửi thư khôi phục mật khẩu đến {email}: {e}')
-        return {'status': 'ok', 'message': 'Yêu cầu đã được ghi nhận. Nếu Email tồn tại trên hệ thống, mã xác thực sẽ được gửi tới bạn trong giây lát.'}
+        return {'status': 'ok', 'message': 'Yêu cầu đã được ghi nhận. Nếu Email tồn tại trên hệ thống, mã xác thực sẽ được gửi tới bạn trong giây lát'}
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str, db=None):
@@ -143,14 +143,14 @@ class AuthenticationService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         token_doc = await db['password_reset_tokens'].find_one({'token': token, 'used': False})
         if not token_doc or token_doc.get('expires_at') < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail='Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới.')
+            raise HTTPException(status_code=400, detail='Mã xác thực không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã mới')
         auth_cred = await db['auth_credentials'].find_one({'email': token_doc['email']})
         if auth_cred:
             await db['auth_credentials'].update_one({'email': token_doc['email']}, {'$set': {'password_hash': get_password_hash(new_password)}})
         await db['password_reset_tokens'].update_one({'_id': token_doc['_id']}, {'$set': {'used': True}})
         await db['audit_logs'].insert_one({'action': 'RESET_PASSWORD_SUCCESS', 'actor_email': token_doc['email'], 'ip': client_ip, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f"Tài khoản {token_doc['email']} đã đổi mật khẩu thành công từ {client_ip}")
-        return {'status': 'ok', 'message': 'Mật khẩu của bạn đã được thay đổi thành công.'}
+        return {'status': 'ok', 'message': 'Mật khẩu của bạn đã được thay đổi thành công'}
 
     @staticmethod
     async def verify_reset_code(token: str, client_ip: str, db=None):
@@ -158,13 +158,13 @@ class AuthenticationService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         token_doc = await db['password_reset_tokens'].find_one({'token': token, 'used': False})
         if not token_doc or token_doc.get('expires_at') < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail='Mã xác thực không hợp lệ hoặc đã hết hạn.')
-        return {'status': 'ok', 'message': 'Mã xác thực hợp lệ.'}
+            raise HTTPException(status_code=400, detail='Mã xác thực không hợp lệ hoặc đã hết hạn')
+        return {'status': 'ok', 'message': 'Mã xác thực hợp lệ'}
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
         if not user_doc.get('is_active', True):
-            raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa.')
+            raise HTTPException(status_code=403, detail='Tài khoản của bạn hiện đang bị tạm khóa')
         session_id = str(uuid7())
         user_id_str = str(user_doc['_id'])
         if db_client.redis:
@@ -186,7 +186,7 @@ class AuthenticationService:
             token_data = token_resp.json()
             if 'access_token' not in token_data:
                 logger.error(f'Xác thực qua Google thất bại: {token_data}')
-                raise HTTPException(status_code=400, detail='Quá trình xác thực với Google thất bại. Vui lòng thử lại.')
+                raise HTTPException(status_code=400, detail='Quá trình xác thực với Google thất bại. Vui lòng thử lại')
             user_resp = await client.get('https://www.googleapis.com/oauth2/v3/userinfo', headers={'Authorization': f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
         if db is None:
@@ -201,7 +201,7 @@ class AuthenticationService:
         if not user_doc:
             config = await db['settings'].find_one({'_id': 'system_config'})
             if config and (not config.get('registration_enabled', True)):
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Hệ thống hiện đang tạm đóng cổng đăng ký mới (bao gồm cả Google). Vui lòng quay lại sau.')
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Hệ thống hiện đang tạm đóng cổng đăng ký mới (bao gồm cả Google). Vui lòng quay lại sau')
             import httpx
             try:
                 async with httpx.AsyncClient() as client:

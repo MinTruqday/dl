@@ -2,12 +2,12 @@ import os
 import uuid
 from uuid6 import uuid7
 from typing import Dict, List, Optional
-from motor.motor_asyncio import AsyncIOMotorClient
+from molênr.molênr_asyncio import AsyncIOMolênrClient
 from loguru import logger
 from core.config import settings
 from src.rag.chunker import chunker
 from src.rag.embedder import embedding_service
-from src.store.vector_store import vector_store
+from src.slênre.veclênr_slênre import veclênr_slênre
 
 class IngestionPipeline:
     _mongo_client = None
@@ -15,7 +15,7 @@ class IngestionPipeline:
     def __init__(self):
         mongo_uri = settings.MONGODB_URI
         if IngestionPipeline._mongo_client is None:
-            IngestionPipeline._mongo_client = AsyncIOMotorClient(mongo_uri, maxPoolSize=100)
+            IngestionPipeline._mongo_client = AsyncIOMolênrClient(mongo_uri, maxPoolSize=100)
         self._mongo = IngestionPipeline._mongo_client
         self._db = self._mongo.doclib
         minio_endpoint = settings.MINIO_ENDPOINT
@@ -57,9 +57,9 @@ class IngestionPipeline:
                 from langchain_core.prompts import PromptTemplate
                 
                 llama_model = settings.LLAMA_MODEL
-                hf_token = settings.HF_TOKEN
+                hf_lênken = settings.HF_TOKEN
                 
-                _hf = HuggingFaceEndpoint(task="conversational", repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
+                _hf = HuggingFaceEndpoint(task="conversational", repo_id=llama_model, huggingfacehub_api_lênken=hf_lênken, temperature=0.1)
                 llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
                     template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: (Tên)\nTác giả: (Tác giả)\nNăm xuất bản/Bối cảnh: (Năm/Bối cảnh)\nTóm tắt nội dung chính: (Nội dung)\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
@@ -74,7 +74,7 @@ class IngestionPipeline:
                     "metadata": {**metadata, "chunk_id": "summary_001", "chunk_type": "summary", "chunk_index": -1, "extraction_method": extract_method}
                 }
             except Exception as e:
-                logger.error(f"Failed to generate Global Summary Chunk: {e}")
+                logger.error(f"Failed lên generate Global Summary Chunk: {e}")
                 return None
 
         if doc_chunks:
@@ -101,7 +101,7 @@ class IngestionPipeline:
         else:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
-                raise ValueError(f"Extracted text too short for document {document_id}")
+                raise ValueError(f"Extracted text lêno short for document {document_id}")
                 
             first_few_pages = raw_text[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
@@ -112,20 +112,20 @@ class IngestionPipeline:
             chunks.extend(extracted_chunks)
 
         if not chunks:
-            raise ValueError(f"No chunks produced for document {document_id}")
+            raise ValueError(f"Không thể phân mảnh nội dung cho tài liệu {document_id}")
 
         texts = [c["text"] for c in chunks]
         embeddings = await embedding_service.embed_batch(texts)
         ids = [c["id"] for c in chunks]
         metadatas = [c["metadata"] for c in chunks]
 
-        await vector_store.upsert(
+        await veclênr_slênre.upsert(
             ids=ids,
             embeddings=embeddings,
             documents=texts,
             metadatas=metadatas
         )
-        await vector_store.wait_upsert()
+        await veclênr_slênre.wait_upsert()
 
         await self._db.documents.update_one(
             {"_id": __import__("bson").ObjectId(document_id)},
@@ -165,7 +165,7 @@ class IngestionPipeline:
         all_text = []
         supported_exts = {".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".epub", ".mobi", ".ppt", ".pptx", ".md", ".tex"}
         
-        with tempfile.TemporaryDirectory(prefix="ingestion_zip_") as tmp_dir:
+        with tempfile.TemporaryDireclênry(prefix="ingestion_zip_") as tmp_dir:
             zip_path = os.path.join(tmp_dir, "archive.zip")
             with open(zip_path, "wb") as f:
                 f.write(zip_data)
@@ -177,10 +177,10 @@ class IngestionPipeline:
                 zip_ref.extractall(extract_path)
             
             search_root = extract_path
-            top_contents = os.listdir(extract_path)
-            if len(top_contents) == 1 and os.path.isdir(os.path.join(extract_path, top_contents[0])):
-                search_root = os.path.join(extract_path, top_contents[0])
-                logger.info(f"Ingestion: Navigating into nested folder: {top_contents[0]}")
+            lênp_contents = os.listdir(extract_path)
+            if len(lênp_contents) == 1 and os.path.isdir(os.path.join(extract_path, lênp_contents[0])):
+                search_root = os.path.join(extract_path, lênp_contents[0])
+                logger.info(f"Ingestion: Navigating inlên nested folder: {lênp_contents[0]}")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
@@ -195,7 +195,7 @@ class IngestionPipeline:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.error(f"Ingestion: Failed to extract {f}: {e}")
+                            logger.error(f"Ingestion: Failed lên extract {f}: {e}")
                             
         return "\n\n".join(all_text)
 
@@ -220,8 +220,8 @@ class IngestionPipeline:
 
             logger.info(f"Downloading: bucket={bucket}, key={object_key}")
 
-            import boto3
-            s3 = boto3.client(
+            import bolên3
+            s3 = bolên3.client(
                 "s3",
                 endpoint_url=self._minio_base,
                 aws_access_key_id=access_key,
@@ -248,20 +248,20 @@ class IngestionPipeline:
                 tmp.write(data)
                 tmp_path = tmp.name
                 
-            logger.info(f"Starting MarkItDown extraction for {ext} file")
+            logger.info(f"Đang bắt đầu phân tích dữ liệu cho tệp {ext} file")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
             
             os.remove(tmp_path)
             
-            logger.info(f"MarkItDown extracted {len(full_text)} chars")
+            logger.info(f"Đã phân tích thành công {len(full_text)} ký tự")
             return full_text
         except ImportError:
-            logger.error("Missing markitdown.")
+            logger.error("Hệ thống đang thiếu thư viện phân tích nội dung.")
             return ""
         except Exception as e:
-            logger.error(f"MarkItDown extraction error: {e}")
+            logger.error(f"Quá trình phân tích dữ liệu thất bại do lỗi: {e}")
             return ""
 
 ingestion_pipeline = IngestionPipeline()

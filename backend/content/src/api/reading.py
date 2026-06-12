@@ -57,7 +57,7 @@ def validate_url_ssrf(url: str):
         ip = socket.gethostbyname(parsed.hostname)
         ip_obj = ipaddress.ip_address(ip)
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
-            raise HTTPException(status_code=403, detail='Tên miền phân giải ra IP nội bộ bị cấm (SSRF Protection).')
+            raise HTTPException(status_code=403, detail='Tên miền phân giải ra IP nội bộ bị cấm (SSRF Protection)')
     except socket.gaierror:
         raise HTTPException(status_code=400, detail='Cannot resolve hostname')
 

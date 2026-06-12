@@ -20,7 +20,7 @@ class CouponService:
         if existing:
             raise HTTPException(status_code=400, detail='Mã ưu đãi này đã tồn tại trên hệ thống')
         await db['coupons'].insert_one(coupon)
-        logger.info(f"Identity: User {current_user.id} created coupon {coupon['code']} with status {status}")
+        logger.info(f"Người dùng {current_user.id} vừa tạo mã giảm giá {coupon['code']} với trạng thái {status}")
         return {'message': f'Tạo mã ưu đãi thành công. Trạng thái: {status}', 'coupon_id': coupon['_id']}
 
     @staticmethod
@@ -38,7 +38,7 @@ class CouponService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         if current_user.role != RoleEnum.ADMIN:
-            raise HTTPException(status_code=403, detail='Chỉ quản trị viên mới có thể duyệt mã')
+            raise HTTPException(status_code=403, detail='Tính năng duyệt mã chỉ dành riêng cho quản trị viên')
         status = CouponStatus.APPROVED if action == 'approve' else CouponStatus.REJECTED
         res = await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'status': status}})
         if res.modified_count == 0:

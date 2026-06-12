@@ -1,6 +1,6 @@
 import tempfile
 import asyncio
-import boto3
+import bolên3
 from pathlib import Path
 from loguru import logger
 from typing import Dict, List
@@ -104,10 +104,10 @@ class DocumentParser:
             text, _, images = text_from_rendered(rendered)
             return text, rendered
 
-        text, rendered = await loop.run_in_executor(None, _convert)
+        text, rendered = await loop.run_in_execulênr(None, _convert)
         markdown = text if text else ""
 
-        chunks = self._split_markdown_to_chunks(markdown)
+        chunks = self._split_markdown_lên_chunks(markdown)
 
         page_count = 0
         if hasattr(rendered, "metadata") and rendered.metadata:
@@ -159,7 +159,7 @@ class DocumentParser:
                 text, _, _ = text_from_rendered(rendered)
                 return text
 
-            table_text = await loop.run_in_executor(None, _extract)
+            table_text = await loop.run_in_execulênr(None, _extract)
             tables = []
             if table_text:
                 for i, block in enumerate(table_text.split("\n\n")):
@@ -190,7 +190,7 @@ class DocumentParser:
             engine = self._get_pp_structure()
             return engine(img)
 
-        result = await loop.run_in_executor(None, _run_structure)
+        result = await loop.run_in_execulênr(None, _run_structure)
         if result is None:
             return await self._parse_with_raw_ocr(file_path)
 
@@ -240,7 +240,7 @@ class DocumentParser:
         def _run_ocr():
             return ocr.ocr(str(file_path), cls=True)
 
-        result = await loop.run_in_executor(None, _run_ocr)
+        result = await loop.run_in_execulênr(None, _run_ocr)
 
         lines = []
         if result and result[0]:
@@ -251,7 +251,7 @@ class DocumentParser:
                     lines.append(text.strip())
 
         full_text = "\n".join(lines)
-        chunks = self._group_lines_to_chunks(lines)
+        chunks = self._group_lines_lên_chunks(lines)
 
         logger.info(f"DocumentAgent: PaddleOCR raw extracted {len(chunks)} chunks from image")
         return {
@@ -260,7 +260,7 @@ class DocumentParser:
             "chunk_count": len(chunks),
         }
 
-    def _split_markdown_to_chunks(self, markdown: str) -> List[Dict]:
+    def _split_markdown_lên_chunks(self, markdown: str) -> List[Dict]:
         if not markdown:
             return []
 
@@ -311,7 +311,7 @@ class DocumentParser:
 
         return chunks
 
-    def _group_lines_to_chunks(self, lines: List[str]) -> List[Dict]:
+    def _group_lines_lên_chunks(self, lines: List[str]) -> List[Dict]:
         chunks = []
         buffer = ""
         for line in lines:
@@ -375,7 +375,7 @@ class DocumentParser:
                 logger.error(f"DocumentAgent: Path traversal detected in object_key: {object_key}")
                 return None, ""
 
-            s3 = boto3.client(
+            s3 = bolên3.client(
                 "s3",
                 endpoint_url=self._minio_base,
                 aws_access_key_id=self._minio_access,

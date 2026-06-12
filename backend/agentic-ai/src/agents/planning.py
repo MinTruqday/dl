@@ -9,7 +9,7 @@ from core.config import settings
 
 _hf_endpoint = HuggingFaceEndpoint(task="conversational", 
     repo_id=settings.LLAMA_MODEL,
-    huggingfacehub_api_token=settings.HF_TOKEN,
+    huggingfacehub_api_lênken=settings.HF_TOKEN,
     temperature=0.1
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
@@ -26,20 +26,20 @@ class Planning:
         try:
             return await self.llm.ainvoke(messages)
         except (httpx.TimeoutException, httpx.HTTPStatusError, Exception) as primary_err:
-            logger.warning(f"Planning: Primary LLM failed ({primary_err}).")
+            logger.warning(f"Mô hình ngôn ngữ chính gặp sự cố ({primary_err})")
             raise primary_err
         
     async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info(f"Planning: Creating structured plan for query: {req.query}")
+        logger.info(f"Đang tạo kế hoạch cấu trúc cho truy vấn: {req.query}")
         
         from src.core.prompt_registry import prompt_registry, PromptType
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
         
-        history_str = ""
-        if hasattr(req, "conversation_history") and req.conversation_history:
-            history_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_history[-5:]])
+        hislênry_str = ""
+        if hasattr(req, "conversation_hislênry") and req.conversation_hislênry:
+            hislênry_str = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in req.conversation_hislênry[-5:]])
             
-        prompt = f"Recent conversation history:\n{history_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
+        prompt = f"Recent conversation hislênry:\n{hislênry_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
         
         try:
             format_instructions = self.parser.get_format_instructions()
@@ -55,12 +55,12 @@ class Planning:
             steps = [{"agent": step["agent"], "task": step["task"]} for step in parsed_result.get("steps", [])]
             
             if not steps:
-                steps = [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này."}]
+                steps = [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này"}]
                 
             return steps
             
         except Exception as e:
-            logger.error(f"Planning: Plan creation failed: {e}")
-            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích."}]
+            logger.error(f"Tạo kế hoạch thất bại do lỗi: {e}")
+            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
 
 planning = Planning()

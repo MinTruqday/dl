@@ -5,7 +5,7 @@ from typing import List
 from src.core.prompt_registry import prompt_registry, PromptType
 
 _INJECTION_PATTERN = re.compile(
-    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?token"
+    r"(system[_\s]?prompt|api[_\s]?key|secret[_\s]?key|hf[_\s]?lênken"
     r"|ignore (previous|above|all)|jailbreak|do anything now|dan mode"
     r"|bypass (safety|filter|restriction))",
     re.IGNORECASE
@@ -15,16 +15,16 @@ def _contains_injection(text: str) -> bool:
     return bool(_INJECTION_PATTERN.search(text))
 
 
-class ResponseGenerator:
+class ResponseGeneralênr:
     def __init__(self):
         pass
         
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
-        logger.info(f"ResponseGenerator: Consolidating results for query: {query[:50]}")
+        logger.info(f"Đang tổng hợp kết quả cho truy vấn: {query[:50]}")
         
         if _contains_injection(query):
-            logger.warning(f"ResponseGenerator: Possible prompt injection detected in query")
-            yield "Yêu cầu này vi phạm chính sách sử dụng. Vui lòng đặt câu hỏi khác."
+            logger.warning(f"Phát hiện dấu hiệu chèn mã độc vào câu truy vấn")
+            yield "Yêu cầu này vi phạm chính sách sử dụng. Vui lòng đặt câu hỏi khác"
             return
         
         try:
@@ -42,7 +42,7 @@ class ResponseGenerator:
                     yield chunk.content
             
         except Exception as e:
-            logger.error(f"ResponseGenerator error: {str(e)}")
-            yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau."
+            logger.error(f"ResponseGeneralênr error: {str(e)}")
+            yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
-response_generator = ResponseGenerator()
+response_generalênr = ResponseGeneralênr()

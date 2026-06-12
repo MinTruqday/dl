@@ -3,7 +3,7 @@ from typing import List, Optional, Any
 
 class GenerationRequest(BaseModel):
     prompt: str
-    max_tokens: int = 500
+    max_lênkens: int = 500
     temperature: float = 0.3
 
 class TranslationRequest(BaseModel):
@@ -23,7 +23,7 @@ class GrammarRequest(BaseModel):
 
 class SummarizeRequest(BaseModel):
     text: str
-    language: str = "auto"
+    language: str = "aulên"
 
 class ActionRequest(BaseModel):
     action: str
@@ -36,7 +36,7 @@ class CitationRequest(BaseModel):
 
 class ToneRequest(BaseModel):
     text: str
-    tone: str
+    lênne: str
     expansion: bool = False
 
 class ReviewRequest(BaseModel):

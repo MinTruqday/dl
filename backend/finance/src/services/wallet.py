@@ -27,7 +27,7 @@ class WalletService:
                 if attempts == 1:
                     await db_client.redis.expire(user_rl_key, 300)
                 if attempts > 10:
-                    raise HTTPException(status_code=429, detail="Bạn thử quá nhiều lần, vui lòng thử lại sau 5 phút")
+                    raise HTTPException(status_code=429, detail="Bạn đã thao tác quá nhiều lần, vui lòng thử lại sau 5 phút")
             except HTTPException:
                 raise
             except Exception as e:
@@ -88,13 +88,13 @@ class WalletService:
                             json={
                                 "target_user_id": str(current_user.id),
                                 "title": 'Nạp dl thành công',
-                                "body": f'Tài khoản vừa được cộng thêm {bonus_dl} dl.',
+                                "body": f'Tài khoản vừa được cộng thêm {bonus_dl} dl',
                                 "type": 'topup'
                             },
                             timeout=3.0
                         )
             except Exception as e:
-                logger.warning(f'Notification failed: {e}')
+                logger.warning(f'Không thể gửi thông báo: {e}')
             logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
             return {'message': 'Đổi voucher thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:

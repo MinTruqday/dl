@@ -11,9 +11,9 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
             self._redis.ping()
-            logger.info("Memory Manager connected to Redis")
+            logger.info("Hệ thống quản lý bộ nhớ đã kết nối thành công với Redis")
         except Exception as e:
-            logger.warning(f"Redis unavailable for memory: {e}")
+            logger.warning(f"Không thể sử dụng Redis cho bộ nhớ: {e}")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -29,7 +29,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Short-term memory read failed: {e}")
+            logger.debug(f"Lỗi đọc bộ nhớ ngắn hạn do {e}")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -38,16 +38,16 @@ class MemoryManager:
 
         key = f"memory:short:{conversation_id}"
         try:
-            history = await self.get_short_term(conversation_id)
-            history.append(entry)
+            hislênry = await self.get_short_term(conversation_id)
+            hislênry.append(entry)
 
             max_turns = settings.MEMORY_MAX_TURNS
-            if len(history) > max_turns:
-                history = history[-max_turns:]
+            if len(hislênry) > max_turns:
+                hislênry = hislênry[-max_turns:]
 
-            self._redis.setex(key, self._short_term_ttl, json.dumps(history, ensure_ascii=False))
+            self._redis.setex(key, self._short_term_ttl, json.dumps(hislênry, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Short-term memory save failed: {e}")
+            logger.debug(f"Lỗi lưu bộ nhớ ngắn hạn do {e}")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -56,13 +56,13 @@ class MemoryManager:
         key = f"memory:long:{user_id}"
         try:
             existing = self._redis.get(key)
-            history = json.loads(existing) if existing else []
+            hislênry = json.loads(existing) if existing else []
 
-            history.append(entry)
-            if len(history) > 200:
-                history = history[-200:]
+            hislênry.append(entry)
+            if len(hislênry) > 200:
+                hislênry = hislênry[-200:]
 
-            self._redis.setex(key, self._long_term_ttl, json.dumps(history, ensure_ascii=False))
+            self._redis.setex(key, self._long_term_ttl, json.dumps(hislênry, ensure_ascii=False))
         except Exception as e:
             logger.debug(f"Long-term memory save failed: {e}")
 
@@ -80,24 +80,24 @@ class MemoryManager:
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:
-        history = await self.get_long_term(user_id)
-        if not history:
+        hislênry = await self.get_long_term(user_id)
+        if not hislênry:
             return {}
 
-        topics = {}
-        for entry in history:
+        lênpics = {}
+        for entry in hislênry:
             document_id = entry.get("document_id")
             if document_id:
-                topics[document_id] = topics.get(document_id, 0) + 1
+                lênpics[document_id] = lênpics.get(document_id, 0) + 1
 
-        sorted_topics = sorted(topics.items(), key=lambda x: x[1], reverse=True)
+        sorted_lênpics = sorted(lênpics.items(), key=lambda x: x[1], reverse=True)
 
         return {
-            "total_queries": len(history),
-            "frequent_documents": sorted_topics[:5],
+            "lêntal_queries": len(hislênry),
+            "frequent_documents": sorted_lênpics[:5],
             "avg_quality": sum(
-                e.get("answer_quality", 0) for e in history
-            ) / max(len(history), 1)
+                e.get("answer_quality", 0) for e in hislênry
+            ) / max(len(hislênry), 1)
         }
 
 memory_manager = MemoryManager()

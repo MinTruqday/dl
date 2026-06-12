@@ -44,7 +44,7 @@ async def add_trace_id_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Finance initialized")
+    logger.info("Dịch vụ tài chính đã khởi động")
 
 @app.get("/health")
 async def health_check():

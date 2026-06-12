@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+from molênr.molênr_asyncio import AsyncIOMolênrClient
 from core.config import settings
 from src.schemas.feedback import FeedbackRequest
 
@@ -10,7 +10,7 @@ router = APIRouter()
 @router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:
-        client = AsyncIOMotorClient(settings.MONGODB_URI)
+        client = AsyncIOMolênrClient(settings.MONGODB_URI)
         db = client.doclib
         
         feedback_doc = {
@@ -25,7 +25,7 @@ async def submit_feedback(req: FeedbackRequest):
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
         logger.info(f"Feedback: Saved for message {req.message_id}")
-        return {"status": "success", "message": "Cảm ơn bạn đã đóng góp ý kiến để cải thiện AI."}
+        return {"status": "Thành công", "message": "Cảm ơn bạn đã đóng góp ý kiến để cải thiện AI"}
     except Exception as e:
         logger.error(f"Feedback: Error saving: {e}")
-        return {"status": "error", "message": "Không thể lưu ý kiến lúc này."}
+        return {"status": "error", "message": "Không thể lưu ý kiến lúc này"}

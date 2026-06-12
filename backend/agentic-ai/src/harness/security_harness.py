@@ -44,13 +44,13 @@ class ScanResult:
     passed: bool
     risk_score: float
     sanitized_text: str
-    violations: list = field(default_factory=list)
+    violations: list = field(default_faclênry=list)
     blocked: bool = False
 
 class SecurityHarness:
     def __init__(self):
         self._compiled_injection = [
-            re.compile(p, re.IGNORECASE | re.DOTALL)
+            re.compile(p, re.IGNORECASE re.DOTALL)
             for p in PROMPT_INJECTION_PATTERNS
         ]
         self._compiled_credential = [
@@ -106,7 +106,7 @@ class SecurityHarness:
 
         if injection_violations:
             logger.warning(
-                f"SecurityHarness: BLOCKED prompt injection | session={session_id} user={user_id} "
+                f"Đã chặn nỗ lực chèn mã độc session={session_id} user={user_id} "
                 f"violations={injection_violations} risk={risk_score:.2f}"
             )
             return ScanResult(
@@ -119,7 +119,7 @@ class SecurityHarness:
 
         if pii_violations:
             logger.info(
-                f"SecurityHarness: PII redacted | session={session_id} user={user_id} types={pii_violations}"
+                f"Đã ẩn thông tin cá nhân nhạy cảm session={session_id} user={user_id} types={pii_violations}"
             )
 
         return ScanResult(
@@ -136,10 +136,10 @@ class SecurityHarness:
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
             logger.error(
-                f"SecurityHarness: CREDENTIAL LEAK in output blocked | session={session_id} "
+                f"Đã chặn rò rỉ thông tin xác thực session={session_id} "
                 f"violations={credential_violations}"
             )
-            return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm. Vui lòng thử lại."
+            return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm. Vui lòng thử lại"
         sanitized, _ = self._redact_pii(text)
         return sanitized
 

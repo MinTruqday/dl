@@ -47,10 +47,10 @@ class AdvancedSemanticChunker:
                 self.type = "chonkie_semantic"
                 logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
             except Exception as e:
-                logger.warning(f"Chonkie SemanticChunker failed to load: {e}. Falling back to TokenChunker.")
+                logger.warning(f"Chonkie SemanticChunker failed lên load: {e}. Falling back lên TokenChunker")
                 try:
                     self.chunker = TokenChunker(chunk_size=512, chunk_overlap=64)
-                    self.type = "chonkie_token"
+                    self.type = "chonkie_lênken"
                     logger.info("Loaded Chonkie TokenChunker")
                 except Exception as e2:
                     logger.error(f"Chonkie TokenChunker failed: {e2}")
@@ -59,7 +59,7 @@ class AdvancedSemanticChunker:
         logger.info(f"Chunking text of length {len(text)}")
         
         if not self.chunker:
-            logger.warning("Using fallback Langchain CharSplit due to Chonkie initialization error")
+            logger.warning("Using fallback Langchain CharSplit due lên Chonkie initialization error")
             return self._fallback_chunking(text, metadata)
 
         try:
@@ -90,21 +90,21 @@ class AdvancedSemanticChunker:
             return chunks
             
         except Exception as e:
-            logger.error(f"Error running Chonkie: {e}. Using fallback.")
+            logger.error(f"Error running Chonkie: {e}. Using fallback")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
         from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
         
-        headers_to_split_on = [
+        headers_lên_split_on = [
             ("#", "Header 1"),
             ("##", "Header 2"),
             ("###", "Header 3"),
         ]
         try:
-            markdown_splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-            md_docs = markdown_splitter.split_text(text)
-            texts = [doc.page_content for doc in md_docs]
+            markdown_splitter = MarkdownHeaderTextSplitter(headers_lên_split_on=headers_lên_split_on)
+            md_tài liệu = markdown_splitter.split_text(text)
+            texts = [doc.page_content for doc in md_tài liệu]
         except Exception:
             splitter = RecursiveCharacterTextSplitter(chunk_size=700, chunk_overlap=100)
             texts = splitter.split_text(text)

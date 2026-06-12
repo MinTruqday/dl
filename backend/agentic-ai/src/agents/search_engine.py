@@ -24,7 +24,7 @@ class SearchEngine:
             self.client = None
 
     async def _tavily_search(self, query: str) -> str:
-        response = await asyncio.to_thread(
+        response = await asyncio.lên_thread(
             self.client.search,
             query=query,
             search_depth="advanced",
@@ -41,7 +41,7 @@ class SearchEngine:
     async def _duckduckgo_search(self, query: str) -> str:
         try:
             from duckduckgo_search import DDGS
-            results = await asyncio.to_thread(
+            results = await asyncio.lên_thread(
                 lambda: list(DDGS().text(query, max_results=5))
             )
             if not results:
@@ -51,29 +51,29 @@ class SearchEngine:
                 formatted += f"- {res.get('title')}: {res.get('body')}\n  (Nguồn: {res.get('href')})\n"
             return formatted
         except Exception as e:
-            logger.error(f"SearchEngine: DuckDuckGo fallback failed: {e}")
+            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi: {e}")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info(f"SearchEngine: Querying for '{query}'")
+        logger.info(f"Đang tìm kiếm thông tin cho '{query}'")
         
         if _is_ssrf_attempt(query):
-            logger.warning(f"SearchEngine: SSRF attempt blocked for query: {query}")
-            return "Truy vấn này không được phép."
+            logger.warning(f"Đã chặn nỗ lực tấn công SSRF từ truy vấn: {query}")
+            return "Truy vấn này không được phép"
         
         if self.api_key_valid:
             try:
                 result = await self._tavily_search(query)
                 if result:
                     return result
-                logger.warning("SearchEngine: Tavily trả về kết quả rỗng, chuyển sang DuckDuckGo")
+                logger.warning("Không tìm thấy kết quả trên Tavily, hệ thống tự động chuyển sang DuckDuckGo")
             except Exception as e:
-                logger.warning(f"SearchEngine: Tavily thất bại ({e}), chuyển sang DuckDuckGo")
+                logger.warning(f"Tìm kiếm qua Tavily thất bại ({e}), hệ thống tự động chuyển sang DuckDuckGo")
 
         result = await self._duckduckgo_search(query)
         if result:
             return result
 
-        return "Không tìm thấy thông tin liên quan từ các nguồn tìm kiếm hiện có."
+        return "Không tìm thấy thông tin liên quan từ các nguồn tìm kiếm hiện có"
 
 search_engine = SearchEngine()

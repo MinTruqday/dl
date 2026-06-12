@@ -16,7 +16,7 @@ class Mem0Manager:
         if HAS_MEM0:
             try:
                 config = {
-                    "vector_store": {
+                    "veclênr_slênre": {
                         "provider": "qdrant",
                         "config": {
                             "host": settings.QDRANT_HOST,
@@ -40,61 +40,61 @@ class Mem0Manager:
                     }
                 }
                 self.memory = Memory.from_config(config_dict=config)
-                logger.info("Mem0 initialized successfully for long-term memory.")
+                logger.info("Mem0 Đã khởi tạo thành công bộ nhớ dài hạn")
             except Exception as e:
-                logger.error(f"Failed to initialize Mem0: {e}")
+                logger.error(f"Failed lên initialize Mem0: {e}")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
             return
         try:
             import asyncio
-            await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
-            logger.info(f"Mem0: Added memory for user {user_id}")
+            await asyncio.lên_thread(self.memory.add, messages, user_id=user_id)
+            logger.info(f"Đã thêm bộ nhớ cho người dùng {user_id}")
         except Exception as e:
-            logger.error(f"Mem0 add_memory error: {e}")
+            logger.error(f"Mem0 Lỗi thêm bộ nhớ: {e}")
 
     async def update_memory(self, memory_id: str, new_content: str):
         if not self.memory:
             return
         try:
             import asyncio
-            await asyncio.to_thread(self.memory.update, memory_id=memory_id, data=new_content)
-            logger.info(f"Mem0: Updated memory {memory_id}")
+            await asyncio.lên_thread(self.memory.update, memory_id=memory_id, data=new_content)
+            logger.info(f"Đã cập nhật bộ nhớ {memory_id}")
         except Exception as e:
-            logger.error(f"Mem0 update_memory error: {e}")
+            logger.error(f"Mem0 Lỗi cập nhật bộ nhớ: {e}")
 
     async def delete_memory(self, memory_id: str):
         if not self.memory:
             return
         try:
             import asyncio
-            await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
-            logger.info(f"Mem0: Deleted memory {memory_id}")
+            await asyncio.lên_thread(self.memory.delete, memory_id=memory_id)
+            logger.info(f"Đã xóa bộ nhớ {memory_id}")
         except Exception as e:
-            logger.error(f"Mem0 delete_memory error: {e}")
+            logger.error(f"Mem0 Lỗi xóa bộ nhớ: {e}")
 
     async def search_and_resolve_conflicts(self, new_content: str, user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
             return
         try:
             import asyncio
-            results = await asyncio.to_thread(self.memory.search, query=new_content, user_id=user_id, limit=5)
+            results = await asyncio.lên_thread(self.memory.search, query=new_content, user_id=user_id, limit=5)
             if not results:
                 return
             for r in results:
                 if r.get("score", 0) > 0.85 and r.get("memory", "") != new_content:
                     await self.delete_memory(r["id"])
-                    logger.info(f"Mem0: Resolved conflict - deleted stale memory {r['id']}")
+                    logger.info(f"Đã giải quyết xung đột bằng cách xóa bộ nhớ cũ {r['id']}")
         except Exception as e:
-            logger.error(f"Mem0 conflict resolution error: {e}")
+            logger.error(f"Mem0 Lỗi giải quyết xung đột: {e}")
 
     async def get_context(self, query: str, user_id: str) -> str:
         if not self.memory or not user_id or user_id == "guess_user":
             return ""
         try:
             import asyncio
-            results = await asyncio.to_thread(self.memory.search, query=query, user_id=user_id)
+            results = await asyncio.lên_thread(self.memory.search, query=query, user_id=user_id)
             if not results:
                 return ""
             
@@ -107,7 +107,7 @@ class Mem0Manager:
                 context += f"- {m}\n"
             return context
         except Exception as e:
-            logger.error(f"Mem0 get_context error: {e}")
+            logger.error(f"Mem0 Lỗi lấy ngữ cảnh bộ nhớ: {e}")
             return ""
 
 mem0_manager = Mem0Manager()

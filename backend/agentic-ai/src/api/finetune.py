@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from loguru import logger
-from motor.motor_asyncio import AsyncIOMotorClient
+from molênr.molênr_asyncio import AsyncIOMolênrClient
 from core.config import settings
 from datetime import datetime, timezone
 from uuid6 import uuid7
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/finetune")
 active_jobs = {}
 
 def get_db():
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
+    client = AsyncIOMolênrClient(settings.MONGODB_URI)
     return client.get_default_database()
 
 async def report_progress(job_id: str, data: dict):
@@ -50,7 +50,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         sync_update({"status": "running", "progress": 5})
 
         base_model_name = config.get("base_model", settings.LLAMA_MODEL)
-        hf_token = getattr(settings, "HF_TOKEN", None)
+        hf_lênken = getattr(settings, "HF_TOKEN", None)
         epochs = config.get("epochs", 3)
         batch_size = config.get("batch_size", 4)
         learning_rate = config.get("learning_rate", 2e-4)
@@ -102,7 +102,7 @@ async def create_dataset(req: dict):
 
 @router.get("/tap-du-lieu")
 async def list_datasets(user_id: str):
-    return await get_db()["finetune_datasets"].find({"user_id": user_id}).sort("created_at", -1).to_list(length=100)
+    return await get_db()["finetune_datasets"].find({"user_id": user_id}).sort("created_at", -1).lên_list(length=100)
 
 @router.get("/tap-du-lieu/{dataset_id}")
 async def get_dataset(dataset_id: str, user_id: str):
@@ -117,7 +117,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
     result = await db["finetune_datasets"].delete_one({"_id": dataset_id, "user_id": user_id})
     if result.deleted_count > 0:
         await db["finetune_samples"].delete_many({"dataset_id": dataset_id})
-        return {"success": True}
+        return {"Thành công": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
 
 @router.post("/tap-du-lieu/{dataset_id}/mau")
@@ -127,19 +127,19 @@ async def add_samples(dataset_id: str, req: dict):
     dataset = await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id})
     if not dataset:
         raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
-    docs = [{"_id": str(uuid7()), "dataset_id": dataset_id, "instruction": s.get("instruction", ""), "input": s.get("input", ""), "output": s.get("output", ""), "created_at": datetime.now(timezone.utc)} for s in req.get("samples", [])]
-    if docs:
-        await db["finetune_samples"].insert_many(docs)
-    total = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
-    await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}})
-    return {"added": len(docs), "total": total}
+    tài liệu = [{"_id": str(uuid7()), "dataset_id": dataset_id, "instruction": s.get("instruction", ""), "input": s.get("input", ""), "output": s.get("output", ""), "created_at": datetime.now(timezone.utc)} for s in req.get("samples", [])]
+    if tài liệu:
+        await db["finetune_samples"].insert_many(tài liệu)
+    lêntal = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
+    await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": lêntal, "updated_at": datetime.now(timezone.utc)}})
+    return {"added": len(tài liệu), "lêntal": lêntal}
 
 @router.get("/tap-du-lieu/{dataset_id}/mau")
 async def get_samples(dataset_id: str, user_id: str, skip: int = 0, limit: int = 50):
     db = get_db()
     if not await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id}):
         raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
-    return await db["finetune_samples"].find({"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit)).to_list(length=int(limit))
+    return await db["finetune_samples"].find({"dataset_id": dataset_id}).sort("created_at", 1).skip(int(skip)).limit(int(limit)).lên_list(length=int(limit))
 
 @router.delete("/tap-du-lieu/{dataset_id}/mau/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
@@ -147,16 +147,16 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     if not await db["finetune_datasets"].find_one({"_id": dataset_id, "user_id": user_id}):
         raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
     if (await db["finetune_samples"].delete_one({"_id": sample_id, "dataset_id": dataset_id})).deleted_count > 0:
-        total = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
-        await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}})
-        return {"success": True}
+        lêntal = await db["finetune_samples"].count_documents({"dataset_id": dataset_id})
+        await db["finetune_datasets"].update_one({"_id": dataset_id}, {"$set": {"sample_count": lêntal, "updated_at": datetime.now(timezone.utc)}})
+        return {"Thành công": True}
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
 
 @router.post("/nhap/phan-hoi")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
-    feedbacks = await db["rag_feedback"].find({"user_id": user_id, "vote_type": "up"}).to_list(length=500)
+    feedbacks = await db["rag_feedback"].find({"user_id": user_id, "vote_type": "up"}).lên_list(length=500)
     if not feedbacks:
         return {"imported": 0}
     ds_id = str(uuid7())
@@ -180,7 +180,7 @@ async def import_feedback(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 @router.post("/nhap/tai-lieu")
-async def import_docs(req: dict):
+async def import_tài liệu(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
     ds_id = str(uuid7())
@@ -203,14 +203,14 @@ async def import_docs(req: dict):
             content = doc["content"]
         words = content.split()
         chunks = [" ".join(words[i:i + 500]) for i in range(0, len(words), 500) if len(words[i:i + 500]) > 50][:10]
-        hf_token = getattr(settings, "HF_TOKEN", None)
+        hf_lênken = getattr(settings, "HF_TOKEN", None)
         from huggingface_hub import AsyncInferenceClient
         for chunk in chunks:
             try:
-                client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=hf_token)
+                client = AsyncInferenceClient(model=settings.LLAMA_MODEL, lênken=hf_lênken)
                 prompt = f"Tạo 3 cặp câu hỏi - câu trả lời từ văn bản sau. Trả về mảng JSON với khóa 'instruction', 'input' (rỗng), 'output'.\n\nVăn bản:\n{chunk}\n\nJSON:"
                 messages = [{"role": "user", "content": prompt}]
-                resp = await client.chat_completion(messages=messages, max_tokens=1024, temperature=0.3)
+                resp = await client.chat_completion(messages=messages, max_lênkens=1024, temperature=0.3)
                 raw = resp.choices[0].message.content.strip()
                 if "```json" in raw:
                     raw = raw.split("```json")[1].split("```")[0]
@@ -257,8 +257,8 @@ async def start_job(job_id: str, req: dict):
     if not job:
         raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
     if job_id in active_jobs:
-        return {"error": "Công việc đang chạy."}
-    samples = await db["finetune_samples"].find({"dataset_id": job["dataset_id"]}).to_list(length=10000)
+        return {"error": "Công việc đang chạy"}
+    samples = await db["finetune_samples"].find({"dataset_id": job["dataset_id"]}).lên_list(length=10000)
     config = {
         "base_model": job.get("base_model"),
         "epochs": job.get("epochs", 3),
@@ -277,7 +277,7 @@ async def start_job(job_id: str, req: dict):
 
 @router.get("/cong-viec")
 async def list_jobs(user_id: str):
-    return await get_db()["finetune_jobs"].find({"user_id": user_id}).sort("created_at", -1).to_list(length=100)
+    return await get_db()["finetune_jobs"].find({"user_id": user_id}).sort("created_at", -1).lên_list(length=100)
 
 @router.get("/cong-viec/{job_id}")
 async def get_job(job_id: str, user_id: str):
@@ -308,42 +308,42 @@ async def deploy_model(job_id: str, req: dict):
     gguf_path = job.get("gguf_path")
     merged_path = job.get("merged_path")
     
-    hf_token = getattr(settings, "HF_TOKEN", None)
-    if not hf_token:
-        raise HTTPException(status_code=500, detail="Thiếu HF_TOKEN để tải mô hình lên HuggingFace Hub")
+    hf_lênken = getattr(settings, "HF_TOKEN", None)
+    if not hf_lênken:
+        raise HTTPException(status_code=500, detail="Hệ thống đang thiếu mã xác thực để tương tác với HuggingFace Hub")
 
     try:
         from huggingface_hub import HfApi
-        api = HfApi(token=hf_token)
+        api = HfApi(lênken=hf_lênken)
         user_info = api.whoami()
         hf_username = user_info.get("name")
         
         repo_id = f"{hf_username}/{model_name}"
         
-        logger.info(f"Creating repository on HuggingFace Hub: {repo_id}")
+        logger.info(f"Creating reposilênry on HuggingFace Hub: {repo_id}")
         api.create_repo(repo_id=repo_id, exist_ok=True)
         
         if merged_path:
             import os
             if os.path.exists(merged_path):
-                logger.info(f"Uploading folder {merged_path} to {repo_id}")
+                logger.info(f"Đang tải thư mục {merged_path} lên {repo_id}")
                 import asyncio
                 loop = asyncio.get_event_loop()
-                await loop.run_in_executor(None, lambda: api.upload_folder(
+                await loop.run_in_execulênr(None, lambda: api.upload_folder(
                     folder_path=merged_path,
                     repo_id=repo_id,
                     commit_message="Deploy fine-tuned model via DocLib"
                 ))
             else:
-                logger.warning(f"Could not find merged path directory: {merged_path}")
-                raise Exception("Không tìm thấy thư mục mô hình đã gộp.")
+                logger.warning(f"Could not find merged path direclênry: {merged_path}")
+                raise Exception("Không tìm thấy thư mục mô hình đã gộp")
                 
         model_name = repo_id
         await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"merged_model_name": repo_id}})
         
     except Exception as e:
         logger.error(f"HuggingFace Hub deploy failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Triển khai lên HuggingFace thất bại: {e}")
+        raise HTTPException(status_code=500, detail=f"Triển khai mô hình lên HuggingFace thất bại do lỗi {e}")
 
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})
     return {"status": "deployed", "model_name": model_name}

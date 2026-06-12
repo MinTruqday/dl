@@ -32,7 +32,7 @@ class MessageService:
                 return existing
         user_doc = await db['user_contact_profiles'].find_one({'_id': receiver_id})
         if user_doc and sender_id in user_doc.get('blocked_users', []):
-            raise Exception('Bạn đã bị chặn bởi người dùng này.')
+            raise Exception('Bạn đã bị người dùng này chặn')
         self_destruct_at = None
         settings_id = f'settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}'
         tasks = [db['message_settings'].find_one({'_id': settings_id})]

@@ -33,8 +33,8 @@ class HighlightService:
             db = db_client.mongodb.get_default_database()
         result = await db['highlights'].update_one({'_id': highlight_id, 'user_id': str(current_user.id)}, {'$set': {'note': note, 'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Ghi chú không tồn tại.')
-        return {'message': 'Đã cập nhật ghi chú.'}
+            raise HTTPException(status_code=404, detail='Ghi chú không tồn tại')
+        return {'message': 'Đã cập nhật ghi chú'}
 
     @staticmethod
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
@@ -42,9 +42,9 @@ class HighlightService:
             db = db_client.mongodb.get_default_database()
         result = await db['highlights'].delete_one({'_id': highlight_id, 'user_id': str(current_user.id)})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail='Ghi chú không tồn tại.')
+            raise HTTPException(status_code=404, detail='Ghi chú không tồn tại')
         logger.info(f'Người dùng {current_user.id} đã xóa phần nội dung làm nổi bật {highlight_id}')
-        return {'message': 'Đã xóa ghi chú.'}
+        return {'message': 'Đã xóa ghi chú'}
 
     @staticmethod
     async def get_all_notes(current_user, cursor: str=None, limit: int=50, skip: int=0, db=None) -> list:

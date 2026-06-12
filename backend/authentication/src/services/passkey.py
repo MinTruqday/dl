@@ -23,7 +23,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại.')
+            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
         user_id = str(user['_id'])
         options = generate_registration_options(rp_id=RP_ID, rp_name=RP_NAME, user_id=user_id.encode('utf-8'), user_name=email, user_display_name=email, authenticator_selection=AuthenticatorSelectionCriteria(user_verification=UserVerificationRequirement.PREFERRED))
         if db_client.redis:
@@ -40,7 +40,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại.')
+            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
         challenge = None
         if db_client.redis:
             try:
@@ -54,7 +54,7 @@ class PasskeyService:
                 if age < 300:
                     challenge = chal_doc['challenge']
         if not challenge:
-            raise HTTPException(status_code=400, detail='Challenge không hợp lệ hoặc đã hết hạn.')
+            raise HTTPException(status_code=400, detail='Challenge không hợp lệ hoặc đã hết hạn')
         try:
             verification = verify_registration_response(credential=credential_data, expected_challenge=challenge, expected_origin=ORIGIN, expected_rp_id=RP_ID)
         except Exception as e:
@@ -67,7 +67,7 @@ class PasskeyService:
                 await db_client.redis.delete(f'passkey_reg_challenge:{email}')
             except Exception as e:
                 logger.error(f'Không thể xóa khóa thử thách đăng ký Redis của {email}: {e}')
-        return {'message': 'Đăng ký Passkey thành công.'}
+        return {'message': 'Đăng ký Passkey thành công'}
 
     @staticmethod
     async def login_begin(email: str, db=None):
@@ -75,10 +75,10 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại.')
+            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
         passkeys = user.get('passkeys', [])
         if not passkeys:
-            raise HTTPException(status_code=400, detail='Tài khoản này chưa đăng ký Passkey.')
+            raise HTTPException(status_code=400, detail='Tài khoản này chưa đăng ký Passkey')
         options = generate_authentication_options(rp_id=RP_ID, allow_credentials=[PublicKeyCredentialDescriptor(id=base64.b64decode(p['credential_id']), type=PublicKeyCredentialType.PUBLIC_KEY, transports=p.get('transports')) for p in passkeys], user_verification=UserVerificationRequirement.PREFERRED)
         if db_client.redis:
             try:
@@ -94,7 +94,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại.')
+            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
         challenge = None
         if db_client.redis:
             try:
@@ -108,11 +108,11 @@ class PasskeyService:
                 if age < 300:
                     challenge = chal_doc['challenge']
         if not challenge:
-            raise HTTPException(status_code=400, detail='Challenge không hợp lệ hoặc đã hết hạn.')
+            raise HTTPException(status_code=400, detail='Challenge không hợp lệ hoặc đã hết hạn')
         credential_id_b64 = credential_data.get('id')
         passkey = next((p for p in user.get('passkeys', []) if p['credential_id'] == credential_id_b64), None)
         if not passkey:
-            raise HTTPException(status_code=400, detail='Passkey không hợp lệ.')
+            raise HTTPException(status_code=400, detail='Passkey không hợp lệ')
         try:
             verification = verify_authentication_response(credential=credential_data, expected_challenge=challenge, expected_origin=ORIGIN, expected_rp_id=RP_ID, credential_public_key=base64.b64decode(passkey['public_key']), credential_current_sign_count=passkey['sign_count'])
         except Exception as e:
@@ -135,7 +135,7 @@ class PasskeyService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail='Tài khoản không tồn tại trên hệ thống.')
+            raise HTTPException(status_code=401, detail='Tài khoản không tồn tại trên hệ thống')
             
         from src.services.authentication import AuthenticationService
         return await AuthenticationService.issue_token_for_user(user_doc, 'passkey_login')

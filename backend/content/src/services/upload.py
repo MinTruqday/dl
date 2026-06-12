@@ -9,7 +9,7 @@ class UploadService:
     @staticmethod
     async def upload_image(file, db=None):
         if 'svg' in file.content_type.lower() or file.filename.lower().endswith('.svg'):
-            raise HTTPException(status_code=400, detail='Không hỗ trợ định dạng SVG để bảo mật.')
+            raise HTTPException(status_code=400, detail='Không hỗ trợ định dạng SVG để bảo mật')
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail='Hệ thống chỉ chấp nhận các tệp tin hình ảnh')
         ext = file.filename.split('.')[-1]

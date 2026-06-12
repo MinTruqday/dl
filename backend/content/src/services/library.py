@@ -28,7 +28,7 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         reading_list = await db['reading_lists'].find_one({'_id': list_id, 'user_id': str(current_user.id)})
         if not reading_list:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc.')
+            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
         doc_ids = reading_list.get('documents', [])
         if doc_ids:
             docs = await db['documents'].find({'_id': {'$in': doc_ids}}).to_list(length=100)
@@ -43,8 +43,8 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$addToSet': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc.')
-        return {'status': 'success', 'message': 'Đã thêm vào danh sách.'}
+            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
+        return {'status': 'success', 'message': 'Đã thêm vào danh sách'}
 
     @staticmethod
     async def remove_document_from_list(list_id: str, document_id: str, current_user, db=None) -> dict:
@@ -52,5 +52,5 @@ class LibraryService:
             db = db_client.mongodb.get_default_database()
         result = await db['reading_lists'].update_one({'_id': list_id, 'user_id': str(current_user.id)}, {'$pull': {'documents': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc.')
-        return {'status': 'success', 'message': 'Đã xóa khỏi danh sách.'}
+            raise HTTPException(status_code=404, detail='Không tìm thấy danh sách đọc')
+        return {'status': 'success', 'message': 'Đã xóa khỏi danh sách'}

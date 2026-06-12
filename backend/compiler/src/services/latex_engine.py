@@ -67,7 +67,7 @@ class LatexEngine:
                         })
                 
                 raise Exception({
-                    "error": "Không thể biên dịch LaTeX.", 
+                    "error": "Không thể biên dịch LaTeX", 
                     "logs": log_content[-2048:], 
                     "parsed_errors": parsed_errors
                 })

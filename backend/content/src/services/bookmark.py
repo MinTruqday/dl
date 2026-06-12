@@ -16,12 +16,12 @@ class BookmarkService:
         bookmarks = profile.get('bookmarks', []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message = 'Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ.'
+            message = 'Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ'
             is_bookmarked = False
             await db['user_content_profiles'].update_one({'_id': user_id}, {'$pull': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}}, upsert=True)
         else:
             bookmarks.append(document_id)
-            message = 'Đã thêm tài liệu vào danh sách lưu trữ.'
+            message = 'Đã thêm tài liệu vào danh sách lưu trữ'
             is_bookmarked = True
             await db['user_content_profiles'].update_one({'_id': user_id}, {'$addToSet': {'bookmarks': document_id}, '$set': {'updated_at': datetime.now(timezone.utc)}}, upsert=True)
         return {'status': 'success', 'message': message, 'is_bookmarked': is_bookmarked}
@@ -59,8 +59,8 @@ class BookmarkService:
             db = db_client.mongodb.get_default_database()
         result = await db['bookmark_folders'].update_one({'_id': folder_id, 'user_id': str(current_user.id)}, {'$set': {'bookmark_ids': bookmark_ids, 'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Thư mục không tồn tại.')
-        return {'message': 'Đã cập nhật thư mục đánh dấu thành công.'}
+            raise HTTPException(status_code=404, detail='Thư mục không tồn tại')
+        return {'message': 'Đã cập nhật thư mục đánh dấu thành công'}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
@@ -68,5 +68,5 @@ class BookmarkService:
             db = db_client.mongodb.get_default_database()
         result = await db['bookmark_folders'].delete_one({'_id': folder_id, 'user_id': str(current_user.id)})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail='Thư mục không tồn tại.')
-        return {'message': 'Đã xóa thư mục đánh dấu thành công.'}
+            raise HTTPException(status_code=404, detail='Thư mục không tồn tại')
+        return {'message': 'Đã xóa thư mục đánh dấu thành công'}
