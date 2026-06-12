@@ -69,4 +69,4 @@ class BookmarkService:
         result = await db['bookmark_folders'].delete_one({'_id': folder_id, 'user_id': str(current_user.id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail='Thư mục không tồn tại')
-        return {'message': 'Đã xóa thư mục đánh dấu thành công'}
+        return {'message': 'Thư mục đánh dấu đã được xóa'}

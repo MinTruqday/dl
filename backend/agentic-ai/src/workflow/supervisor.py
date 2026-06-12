@@ -90,7 +90,7 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
             
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
-                logger.warning(f"Self-reflection failed for {agent_name}, replanning {replan_count}/3")
+                logger.warning(f"Tự đánh giá thất bại cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
                 replan_prompt = (
                     f"The following task failed:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"

@@ -50,7 +50,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         except Exception:
             user_doc = None
     if user_doc is None:
-        logger.warning(f'Không tìm thấy người dùng nào có email {email}')
+        logger.warning(f'Không tìm thấy người dùng nào sử dụng email {email}')
         raise credentials_exception
     user_id_str = str(user_doc['_id'])
     user_doc['_id'] = user_id_str
@@ -73,8 +73,8 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(f'Từ chối truy cập vì {current_user.email} có quyền {current_user.role} nhưng chức năng này yêu cầu {required_roles}')
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
+            logger.warning(f'Từ chối truy cập do {current_user.email} hiện có quyền {current_user.role} nhưng chức năng này yêu cầu quyền {required_roles}')
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không hiện có quyền thực hiện thao tác này')
         return current_user
     return role_checker
 
@@ -109,7 +109,7 @@ def require_permissions(required_permissions: List[str]):
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Quyền bị từ chối. Thiếu quyền: {', '.join(missing)}")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Từ chối truy cập do thiếu quyền: {', '.join(missing)}")
         return current_user
     return permission_checker
 

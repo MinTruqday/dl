@@ -38,19 +38,19 @@ class PinService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$addToSet': {'pinned_documents': {'document_id': document_id, 'pinned_at': datetime.now(timezone.utc)}}}, upsert=True)
-        logger.info(f'Pin: Document {document_id} pinned by {current_user.id}')
-        return {'status': 'success', 'message': 'Đã ghim tài liệu thành công'}
+        logger.info(f'Tài liệu {document_id} đã được ghim bởi {current_user.id}')
+        return {'status': 'success', 'message': 'Tài liệu đã được ghim'}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$pull': {'pinned_documents': document_id}}, upsert=True)
-        return {'status': 'success', 'message': 'Đã bỏ ghim tài liệu thành công'}
+        return {'status': 'success', 'message': 'Tài liệu đã được bỏ ghim'}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['user_content_profiles'].update_one({'_id': str(current_user.id)}, {'$set': {'pinned_documents': document_ids}}, upsert=True)
-        return {'status': 'success', 'message': 'Đã cập nhật danh sách ghim thành công'}
+        return {'status': 'success', 'message': 'Cập nhật danh sách ghim hoàn tất'}

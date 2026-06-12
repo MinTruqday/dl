@@ -82,7 +82,7 @@ class CouponService:
         new_status = not coupon.get('is_active', True)
         await db['coupons'].update_one({'_id': coupon_id}, {'$set': {'is_active': new_status}})
         logger.info(f'Mã giảm giá {coupon_id} đã được chuyển sang trạng thái {new_status}')
-        return {'message': 'Đã cập nhật trạng thái mã ưu đãi', 'is_active': new_status}
+        return {'message': 'Cập nhật trạng thái mã ưu đãi hoàn tất', 'is_active': new_status}
 
     @staticmethod
     async def delete_coupon(coupon_id: str, current_user, db=None) -> dict:
@@ -95,4 +95,4 @@ class CouponService:
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail='Mã ưu đãi không tồn tại')
         logger.info(f'Người dùng {current_user.id} đã xóa mã giảm giá {coupon_id}')
-        return {'message': 'Đã xóa mã ưu đãi thành công'}
+        return {'message': 'Đã xóa mã ưu đãi khỏi hệ thống'}

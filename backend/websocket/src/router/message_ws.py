@@ -19,7 +19,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, token: str = Qu
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning(f"Kết nối thất bại do thông tin người dùng không khớp")
+            logger.warning(f"Kết nối bị từ chối do thông tin xác thực không trùng khớp")
             await websocket.close(code=1008)
             return
     except Exception as e:

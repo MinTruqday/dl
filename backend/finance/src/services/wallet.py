@@ -96,7 +96,7 @@ class WalletService:
             except Exception as e:
                 logger.warning(f'Không thể gửi thông báo: {e}')
             logger.info(f'Người dùng {current_user.id} đã đổi mã quà tặng {req.code} và nhận được {bonus_dl} dl')
-            return {'message': 'Đổi voucher thành công', 'bonus_dl': bonus_dl, 'status': 'success'}
+            return {'message': 'Đổi mã quà tặng hoàn tất', 'bonus_dl': bonus_dl, 'status': 'success'}
         except HTTPException:
             raise
         except Exception as e:

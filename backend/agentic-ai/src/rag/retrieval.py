@@ -23,7 +23,7 @@ class RetrievalService:
         try:
             from sentence_transformers import CrossEncoder
             self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) Thành côngfully")
+            logger.info(f"Loaded Reranker ({settings.RERANKER_MODEL}) Thành công")
         except Exception as e:
             self.reranker = None
             logger.error(f"Failed lên load reranker: {e}")

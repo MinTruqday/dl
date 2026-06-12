@@ -44,7 +44,7 @@ async def add_trace_id_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Compiler 0.1a initialized")
+    logger.info("Dịch vụ biên dịch DocLib 0.1a đã khởi động")
 
 
 @app.get("/health")

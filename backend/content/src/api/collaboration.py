@@ -45,7 +45,7 @@ async def get_online_collaborators(document_id: str, current_user: UserInDB=Depe
 
 @router.patch('/{collaboration_id}/vai-tro', response_model=APIResponse[Any])
 async def update_collaborator_role(collaboration_id: str, data: UpdateCollaboratorRoleRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await CollaborationService.update_collaborator_role(collaboration_id, data.role, current_user, db=db), message='Thay đổi vai trò cộng tác viên thành công')
+    return APIResponse(data=await CollaborationService.update_collaborator_role(collaboration_id, data.role, current_user, db=db), message='Cập nhật vai trò cộng tác viên hoàn tất')
 
 @router.post('/tai-lieu/{document_id}/tin-nhan', response_model=APIResponse[Any])
 async def send_memo(document_id: str, data: CollabMemoCreateRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
@@ -65,7 +65,7 @@ async def get_sent_pending_invites(document_id: str, current_user: UserInDB=Depe
 
 @router.delete('/loi-moi/{invite_id}', response_model=APIResponse[Any])
 async def revoke_invite(invite_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await CollaborationService.revoke_invite(invite_id, current_user, db=db), message='Đã thu hồi lời mời thành công')
+    return APIResponse(data=await CollaborationService.revoke_invite(invite_id, current_user, db=db), message='Đã thu hồi lời mời')
 
 @router.get('/tai-lieu/{document_id}/thong-ke-dong-gop', response_model=APIResponse[Any])
 async def get_contribution_stats(document_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
@@ -85,7 +85,7 @@ async def acquire_lock(document_id: str, current_user: UserInDB=Depends(require_
 
 @router.post('/tai-lieu/{document_id}/mo-khoa', response_model=APIResponse[Any])
 async def release_lock(document_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await CollaborationService.release_lock(document_id, current_user, db=db), message='Nhả khóa tài liệu thành công')
+    return APIResponse(data=await CollaborationService.release_lock(document_id, current_user, db=db), message='Đã kết thúc biên tập và mở khóa tài liệu')
 
 @router.get('/tai-lieu/{document_id}/trang-thai-khoa', response_model=APIResponse[Any])
 async def get_lock_status(document_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
@@ -97,7 +97,7 @@ async def generate_invite_code(document_id: str, current_user: UserInDB=Depends(
 
 @router.post('/tham-gia/{invite_code}', response_model=APIResponse[Any])
 async def join_via_invite_code(invite_code: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await CollaborationService.join_via_invite_code(invite_code, current_user, db=db), message='Tham gia nhóm cộng tác biên tập thành công')
+    return APIResponse(data=await CollaborationService.join_via_invite_code(invite_code, current_user, db=db), message='Đã tham gia nhóm cộng tác biên tập')
 
 @router.post('/tai-lieu/{document_id}/nhiem-vu', response_model=APIResponse[Any])
 async def create_task(document_id: str, data: CollabTaskCreateRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):

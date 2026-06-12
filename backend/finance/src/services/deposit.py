@@ -113,7 +113,7 @@ class DepositService:
         if not order:
             raise HTTPException(status_code=404, detail='Đơn hàng không tồn tại')
         if order.get('user_id') != str(current_user.id):
-            raise HTTPException(status_code=403, detail='Bạn không có quyền truy cập đơn hàng này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền truy cập đơn hàng này')
             
         if getattr(db_client, 'redis', None):
             rl_key = f'rl:verify_deposit:{current_user.id}'

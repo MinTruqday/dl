@@ -10,7 +10,7 @@ from loguru import logger
 class LatexEngine:
     DANGEROUS_PATTERNS = [
         r"\\input\s*\{?\s*/", r"\\include\s*\{?\s*/",
-        r"\\input\s*\{?\s*\.\.", r"\\include\s*\{?\s*\.\.",
+        r"\\input\s*\{?\s*\.\", r"\\include\s*\{?\s*\.\",
         r"\\lstinputlisting", r"\\openin", r"\\read",
         r"\\newwrite", r"\\openout", r"\\write"
     ]
@@ -81,7 +81,7 @@ class LatexEngine:
                     process.kill()
                 except Exception as e:
                     logger.warning(f"Không thể dừng tiến trình biên dịch LaTeX: {e}")
-            raise Exception("Quá thời gian biên dịch tài liệu LaTeX")
+            raise Exception("Tài liệu LaTeX mất quá nhiều thời gian để biên dịch")
             
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):

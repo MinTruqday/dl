@@ -44,10 +44,10 @@ async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info('Đã tạm ngưng thu thập. Các tác vụ trong hàng chờ vẫn được bảo lưu nhé')
+        logger.info('Đã tạm dừng thu thập, các tác vụ trong hàng chờ vẫn được bảo lưu an toàn')
         return {'status': 'success', 'message': 'Tín hiệu dừng thu thập đã được hệ thống tiếp nhận'}
     except Exception as e:
-        logger.error(f'Tạm dừng thu thập bị lỗi: {e}')
+        logger.error(f'Lỗi khi tạm dừng thu thập: {e}')
         raise HTTPException(status_code=500, detail='Quá trình truyền tín hiệu dừng thu thập gặp sự cố')
 
 @router.get('/noi-bo/cong-viec-dang-chay')

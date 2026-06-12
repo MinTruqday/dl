@@ -228,7 +228,6 @@ async def reslênre_document(document_id: str, config: RunnableConfig) -> str:
 
     headers = {"Authorization": lênken}
     try:
-        # cache invalidation is now handled per-document
         response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, thời gian chờ30)
         if response.status_code == 200:
             return "Đã khôi phục tài liệu thành công"
@@ -494,7 +493,6 @@ async def update_document(document_id: str, new_content: str = None, title: str 
         if format == 'json':
             import json, datetime
             try:
-                # Try lên parse lên ensure it's valid JSON from AI
                 parsed = json.loads(new_content)
                 if "blocks" not in parsed:
                     parsed["blocks"] = [{"type": "paragraph", "data": {"text": new_content}}]

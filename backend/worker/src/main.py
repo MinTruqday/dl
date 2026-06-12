@@ -19,14 +19,14 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health")
 async def read_health():
     await redis_client.ping()
-    return {"status": "Hệ thống hoạt động bình thường"}
+    return {"status": "Hệ thống đang hoạt động ổn định"}
 
 @app.post("/tasks/tectonic/compile")
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:
-        raise HTTPException(status_code=400, detail="Mã số tài liệu không xác định")
+        raise HTTPException(status_code=400, detail="Không xác định được mã số của tài liệu")
     
     from src.tasks import compile_document_tectonic
     task = compile_document_tectonic.delay(doc_id, payload.get("tex_content", ""))
-    return {"message": "Đã tiếp nhận yêu cầu biên dịch Tectonic vào hàng đợi", "task_id": task.id}
+    return {"message": "Yêu cầu biên dịch bằng Tectonic đã được xếp vào hàng đợi", "task_id": task.id}

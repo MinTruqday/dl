@@ -31,7 +31,7 @@ class PurchaseService:
         wallet = await db['wallets'].find_one({'_id': str(current_user.id)})
         if not wallet or wallet.get('balance', 0) < price:
             if should_close_session: await session.abort_transaction(); await session.end_session()
-            raise HTTPException(status_code=400, detail=f'Số dư ví không đủ để mua tài liệu này (Cần {price} dl)')
+            raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này (Cần {price} dl)')
         lock = None
         if hasattr(db_client, 'redis') and db_client.redis:
             lock = db_client.redis.lock(f"purchase:{current_user.id}:{document_id}", timeout=15)
@@ -47,7 +47,7 @@ class PurchaseService:
                 deduct_result = await db['wallets'].update_one({'_id': str(current_user.id), 'balance': {'$gte': price}}, {'$inc': {'balance': -price}}, session=session)
                 if deduct_result.modified_count == 0:
                     if should_close_session: await session.abort_transaction()
-                    raise HTTPException(status_code=400, detail=f'Số dư ví không đủ để mua tài liệu này (Cần {price} dl)')
+                    raise HTTPException(status_code=400, detail=f'Số dư trong ví không đủ để mua tài liệu này (Cần {price} dl)')
                 if author_id:
                     await db['wallets'].update_one({'_id': author_id}, {'$inc': {'balance': price}}, upsert=True, session=session)
                 await db['purchases'].insert_one({'_id': str(uuid7()), 'user_id': str(current_user.id), 'document_id': document_id, 'item_type': 'document', 'price': price, 'purchased_at': datetime.now(timezone.utc)}, session=session)
@@ -83,7 +83,7 @@ class PurchaseService:
                         except Exception as e:
                             logger.error(f"Không thể gửi thông báo: {e}")
                 logger.info(f'Người dùng {current_user.id} đã mua tài liệu {document_id} với giá {price} dl')
-                return {'message': 'Mua tài liệu thành công', 'status': 'purchased'}
+                return {'message': 'Thanh toán mua tài liệu hoàn tất', 'status': 'purchased'}
             except HTTPException:
                 raise
             except Exception as e:
@@ -142,7 +142,7 @@ class PurchaseService:
             
             if should_close_session:
                 await session.commit_transaction()
-            return {'message': 'Hoàn tiền thành công', 'refunded_amount': price}
+            return {'message': 'Hoàn tiền hoàn tất', 'refunded_amount': price}
         except HTTPException:
             raise
         except Exception as e:

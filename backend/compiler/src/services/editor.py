@@ -43,7 +43,7 @@ class EditorService:
                     raise HTTPException(status_code=422, detail='Lỗi định dạng EditorJS, không thể biên dịch')
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail='Quá thời gian xử lý biên dịch EditorJS')
+            raise HTTPException(status_code=408, detail='Quá trình biên dịch EditorJS mất quá nhiều thời gian')
         except HTTPException:
             raise
         except Exception as e:
@@ -94,7 +94,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thêm gợi ý chỉnh sửa cho tài liệu {document_id}')
-        return {'message': 'Gợi ý chỉnh sửa đã được thêm thành công'}
+        return {'message': 'Gợi ý chỉnh sửa đã được thêm'}
 
     @staticmethod
     async def resolve_suggestion(suggestion_id: str, payload: dict, current_user, db=None):
@@ -104,7 +104,7 @@ class EditorService:
             raise HTTPException(status_code=404, detail='Không tìm thấy gợi ý')
         doc = await db['documents'].find_one({'_id': sug['document_id']})
         if doc and str(doc.get('author_id')) != user_id and sug.get('reviewer_id') != user_id:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý gợi ý này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền xử lý gợi ý này')
 
         await db['editor_suggestions'].update_one(
             {'_id': ObjectId(suggestion_id)},
@@ -172,7 +172,7 @@ class EditorService:
                 'updated_at': datetime.now(timezone.utc)
             }}
         )
-        return {'message': 'Tự động lưu bản nháp thành công', 'timestamp': str(datetime.now(timezone.utc))}
+        return {'message': 'Đã tự động lưu bản nháp', 'timestamp': str(datetime.now(timezone.utc))}
 
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
@@ -182,7 +182,7 @@ class EditorService:
             {'$set': {'editor_review_status': 'pending_review'}}
         )
         logger.info(f'Tài liệu {document_id} đã được gửi để chờ phê duyệt bởi {user_id}')
-        return {'message': 'Tài liệu đã được gửi và đang chờ kiểm duyệt'}
+        return {'message': 'Tài liệu đã được gửi đi và đang chờ kiểm duyệt'}
 
     @staticmethod
     async def global_find_replace(document_id: str, search_term: str, replace_term: str, match_case: bool, current_user, db=None):
@@ -190,7 +190,7 @@ class EditorService:
         user_id = str(current_user.id)
         document = await db['documents'].find_one({'_id': str(document_id), 'author_id': user_id})
         if not document:
-            raise HTTPException(status_code=403, detail='Không có quyền thao tác hoặc tài liệu không tồn tại')
+            raise HTTPException(status_code=403, detail='Không hiện có quyền thao tác hoặc tài liệu không tồn tại')
 
         flags = 0 if match_case else re.IGNORECASE
         pattern = re.compile(re.escape(search_term), flags=flags)
@@ -223,7 +223,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
-        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Thay thế nội dung toàn cục hoàn tất', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -322,7 +322,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         }
         await db['editor_comments'].insert_one(comment)
-        return {'_id': comment_id, 'message': 'Đã thêm nhận xét thành công'}
+        return {'_id': comment_id, 'message': 'Đã thêm nhận xét'}
 
     @staticmethod
     async def get_inline_comments(document_id: str, current_user, db=None) -> List[dict]:
@@ -344,7 +344,7 @@ class EditorService:
 
         doc = await db['documents'].find_one({'_id': comment['document_id']})
         if doc and str(doc.get('author_id')) != str(current_user.id) and comment.get('user_id') != str(current_user.id):
-            raise HTTPException(status_code=403, detail='Bạn không có quyền xử lý bình luận này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền xử lý bình luận này')
 
         await db['editor_comments'].update_one(
             {'_id': comment_id},
@@ -431,4 +431,4 @@ class EditorService:
                     )
                     logger.info(f'Đã tạo xong ảnh bìa cho tài liệu {document_id}')
                 return data
-        return {'cover_url': None, 'message': 'Không thể tạo ảnh bìa lúc này'}
+        return {'cover_url': None, 'message': 'Tạm thời không thể tạo ảnh bìa'}

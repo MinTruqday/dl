@@ -15,7 +15,7 @@ async def get_db():
     return db_client.mongodb[settings.MONGODB_DB_NAME]
 
 async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
-    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên đăng nhập không hợp lệ hoặc đã hết hạn', headers={'WWW-Authenticate': 'Bearer'})
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên làm việc không hợp lệ hoặc đã hết hạn', headers={'WWW-Authenticate': 'Bearer'})
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get('sub')
@@ -72,8 +72,8 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(f'Từ chối truy cập vì {current_user.email} có quyền {current_user.role} nhưng chức năng này yêu cầu {required_roles}')
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
+            logger.warning(f'Từ chối truy cập do {current_user.email} hiện có quyền {current_user.role} nhưng chức năng này yêu cầu quyền {required_roles}')
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không hiện có quyền thực hiện thao tác này')
         return current_user
     return role_checker
 
@@ -106,6 +106,6 @@ def require_permissions(required_permissions: List[str]):
             return current_user
         missing = [p for p in required_permissions if p not in user_perms]
         if missing:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Quyền bị từ chối. Thiếu quyền: {', '.join(missing)}")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Từ chối truy cập do thiếu quyền: {', '.join(missing)}")
         return current_user
     return permission_checker

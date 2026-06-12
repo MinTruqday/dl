@@ -132,5 +132,5 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:
         from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail='Liên kết chia sẻ không hợp lệ hoặc đã bị vô hiệu hóa')
+        raise HTTPException(status_code=404, detail='Liên kết chia sẻ không hợp lệ hoặc đã hết hạn')
     return APIResponse(data=StorageItemResponse(**item.dict()), message='Lấy thông tin thành công', status=200)

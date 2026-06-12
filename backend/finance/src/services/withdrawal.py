@@ -104,7 +104,7 @@ class WithdrawalService:
                 
             masked_bank_info = bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
             logger.info(f'Người dùng {current_user.id} vừa yêu cầu rút {amount} dl về tài khoản {masked_bank_info}')
-            return {'message': 'Yêu cầu rút tiền đã được gửi thành công', 'withdrawal_id': withdrawal_id}
+            return {'message': 'Đã tiếp nhận yêu cầu rút tiền', 'withdrawal_id': withdrawal_id}
         except HTTPException:
             raise
         except Exception as e:
@@ -235,7 +235,7 @@ class WithdrawalService:
                 await session.commit_transaction()
                 
             logger.info(f'Người dùng {current_user.id} đã tự hủy yêu cầu rút tiền {withdrawal_id}')
-            return {'message': 'Đã hủy yêu cầu rút tiền thành công'}
+            return {'message': 'Đã hủy yêu cầu rút tiền'}
         except HTTPException:
             raise
         except Exception as e:

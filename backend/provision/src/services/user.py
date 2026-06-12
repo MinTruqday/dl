@@ -27,7 +27,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'role': role, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
+            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         logger.info(f'Phân quyền của người dùng {user_id} đã đổi thành {role}')
         return {'message': f'Hệ thống đã cập nhật vai trò của người dùng thành {role}'}
 
@@ -37,9 +37,9 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'is_active': is_active, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
+            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         logger.info(f'Trạng thái tài khoản {user_id} đã đổi thành {is_active}')
-        return {'message': 'Trạng thái hoạt động của tài khoản đã được cập nhật'}
+        return {'message': 'Đã cập nhật trạng thái hoạt động của tài khoản'}
 
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_moderator, db=None) -> dict:
@@ -47,7 +47,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         user = await db['users'].find_one({'_id': user_id})
         if not user:
-            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
+            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         warning = {'_id': str(uuid7()), 'user_id': user_id, 'moderator_id': str(current_moderator.id), 'reason': reason, 'created_at': datetime.now(timezone.utc)}
         await db['warnings'].insert_one(warning)
         await db['audit_logs'].insert_one({'action': 'WARN_USER', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'reason': reason, 'timestamp': datetime.now(timezone.utc)})
@@ -67,9 +67,9 @@ class UserService:
                         timeout=3.0
                     )
         except Exception as e:
-            logger.warning(f'Không gửi được thông báo: {e}')
+            logger.warning(f'Lỗi khi gửi thông báo: {e}')
         logger.info(f'Thành viên {user_id} vừa bị nhắc nhở bởi {current_moderator.id}')
-        return {'message': 'Cảnh báo đã được gửi đến người dùng'}
+        return {'message': 'Đã gửi thông báo cảnh báo đến người dùng'}
 
     @staticmethod
     async def lock_user(user_id: str, reason: str, duration_hours: int, current_moderator, db=None) -> dict:
@@ -89,7 +89,7 @@ class UserService:
         action = 'SHADOWBAN' if is_banned else 'UNSHADOWBAN'
         await db['audit_logs'].insert_one({'action': action, 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'Người dùng {user_id} đã được {action.lower()} bởi {current_moderator.id}')
-        return {'message': 'Trạng thái hạn chế (shadowban) của người dùng đã được thay đổi'}
+        return {'message': 'Tài khoản này đã bị thay đổi trạng thái hạn chế'}
 
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
@@ -98,7 +98,7 @@ class UserService:
         await db['users'].update_one({'_id': user_id}, {'$set': {'kyc_status': status, 'is_kyc_verified': status == 'VERIFIED', 'updated_at': datetime.now(timezone.utc)}})
         await db['audit_logs'].insert_one({'action': f'KYC_{status}', 'actor_id': str(current_moderator.id), 'target_user_id': user_id, 'timestamp': datetime.now(timezone.utc)})
         logger.info(f'Thông tin KYC của {user_id} đã cập nhật thành {status} bởi {current_moderator.id}')
-        return {'message': 'Hồ sơ định danh (KYC) của người dùng đã được cập nhật'}
+        return {'message': 'Thông tin định danh KYC đã được cập nhật'}
 
     @staticmethod
     async def get_moderator_notes(user_id: str, db=None) -> list:
@@ -113,7 +113,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         await db['moderator_notes'].insert_one({'_id': str(uuid7()), 'user_id': user_id, 'moderator_id': str(current_moderator.id), 'note': note, 'created_at': datetime.now(timezone.utc)})
         logger.info(f'Vừa thêm ghi chú cho người dùng {user_id} bởi {current_moderator.id}')
-        return {'message': 'Ghi chú điều hành đã được lưu lại'}
+        return {'message': 'Hệ thống đã lưu lại ghi chú điều hành'}
 
     @staticmethod
     async def get_report_queue(status_filter: str='pending', cursor: str=None, limit: int=30, skip: int=0, db=None) -> list:
@@ -124,7 +124,7 @@ class UserService:
             try:
                 match_query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except ValueError as e:
-                logger.warning(f'Định dạng thời gian của cursor bị sai: {cursor}, lỗi báo về là: {e}')
+                logger.warning(f'Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi báo về là: {e}')
         pipeline = [{'$match': match_query}, {'$sort': {'created_at': -1}}]
         if skip > 0:
             pipeline.append({'$skip': skip})
@@ -143,7 +143,7 @@ class UserService:
             db = db_client.mongodb.get_default_database()
         await db['reports'].update_one({'_id': report_id}, {'$set': {'status': 'resolved', 'action_taken': action, 'resolved_by': str(current_moderator.id), 'resolved_at': datetime.now(timezone.utc)}})
         logger.info(f"Báo cáo {report_id} đã xử lý xong với hình thức '{action}' bởi {current_moderator.id}")
-        return {'message': 'Báo cáo vi phạm đã được xử lý'}
+        return {'message': 'Đã xử lý báo cáo vi phạm'}
 
     @staticmethod
     async def get_moderator_activity_log(moderator_id: str, db=None) -> list:

@@ -64,7 +64,7 @@ class MemoryManager:
 
             self._redis.setex(key, self._long_term_ttl, json.dumps(hislênry, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Long-term memory save failed: {e}")
+            logger.debug(f"Lỗi lưu bộ nhớ dài hạn do {e}")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -76,7 +76,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Long-term memory read failed: {e}")
+            logger.debug(f"Lỗi đọc bộ nhớ dài hạn do {e}")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

@@ -242,7 +242,7 @@ class EvaluationHarness:
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
-            return {"status": "No evaluations recorded yet", "lêntal_evaluations": 0}
+            return {"status": "Chưa có đánh giá nào được ghi nhận", "lêntal_evaluations": 0}
         count = len(self._reports)
         return {
             "lêntal_evaluations": count,

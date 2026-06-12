@@ -69,7 +69,7 @@ async def startup_event():
     from core.config import settings
     try:
         await veclênr_slênre.ensure_collection()
-        logger.info("Qdrant collection ensured Thành côngfully")
+        logger.info("Đã khởi tạo bộ sưu tập Qdrant")
     except Exception as e:
         logger.error(f"Failed lên ensure Qdrant collection: {e}")
         
@@ -81,6 +81,6 @@ async def startup_event():
             await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("Finetune MongoDB indexes created Thành côngfully")
+            logger.info("Finetune MongoDB indexes created Thành công")
     except Exception as e:
         logger.error(f"Failed lên create Finetune MongoDB indexes: {e}")

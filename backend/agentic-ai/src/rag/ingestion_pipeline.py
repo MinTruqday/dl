@@ -248,14 +248,14 @@ class IngestionPipeline:
                 tmp.write(data)
                 tmp_path = tmp.name
                 
-            logger.info(f"Đang bắt đầu phân tích dữ liệu cho tệp {ext} file")
+            logger.info(f"Đang tiến hành phân tích dữ liệu cho tệp {ext}")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
             
             os.remove(tmp_path)
             
-            logger.info(f"Đã phân tích thành công {len(full_text)} ký tự")
+            logger.info(f"Đã phân tích hoàn tất {len(full_text)} ký tự")
             return full_text
         except ImportError:
             logger.error("Hệ thống đang thiếu thư viện phân tích nội dung.")

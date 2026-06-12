@@ -13,7 +13,7 @@ async def validate_svg(file: UploadFile):
         content = await file.read()
         text = content.decode('utf-8', errors='ignore')
         if re.search('<!ENTITY', text, re.IGNORECASE) or re.search('<!DOCTYPE', text, re.IGNORECASE):
-            raise HTTPException(status_code=400, detail='Tệp SVG chứa định dạng không an toàn (XXE/XML Bomb)')
+            raise HTTPException(status_code=400, detail='Tệp SVG chứa định dạng không an toàn')
         await file.seek(0)
 
 @router.post('/hinh-anh', response_model=APIResponse[Any])
@@ -31,7 +31,7 @@ async def upload_asset(file: UploadFile=File(...), current_user: UserInDB=Depend
     from src.services.storage import StorageService
     quota = await StorageService.get_storage_quota(current_user.id, db=db)
     if quota['used'] >= quota['limit']:
-        raise HTTPException(status_code=400, detail='Đã vượt quá hạn mức lưu trữ (1GB). Vui lòng dọn dẹp bớt tệp tin')
+        raise HTTPException(status_code=400, detail='Đã vượt quá hạn mức lưu trữ 1GB vui lòng dọn dẹp bớt tệp tin')
     return APIResponse(data=await UploadService.upload_document(file, db=db), message='Tải tập tin lên thành công', status=201)
 
 @router.get('/luu-tru/{file_path:path}', response_model=APIResponse[Any])

@@ -55,7 +55,7 @@ class ReadingService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_goals'].update_one({'user_id': str(current_user.id)}, {'$set': {'target_documents': max(0, data.target_documents), 'target_pages': max(0, data.target_pages), 'period': data.period if data.period in ['weekly', 'monthly', 'yearly'] else 'monthly', 'updated_at': datetime.now(timezone.utc)}}, upsert=True)
-        return {'message': 'Đã thiết lập mục tiêu đọc tài liệu thành công'}
+        return {'message': 'Thiết lập mục tiêu đọc hoàn tất'}
 
     @staticmethod
     async def get_reading_goal(current_user, db=None) -> dict:
@@ -109,11 +109,11 @@ class ReadingService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_many({'user_id': str(current_user.id)})
-        return {'status': 'success', 'message': 'Đã xóa toàn bộ lịch sử đọc thành công'}
+        return {'status': 'success', 'message': 'Toàn bộ lịch sử đọc đã được xóa'}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_history'].delete_one({'user_id': str(current_user.id), 'document_id': document_id})
-        return {'status': 'success', 'message': 'Đã xóa mục lịch sử đọc thành công'}
+        return {'status': 'success', 'message': 'Lịch sử đọc đã được xóa'}

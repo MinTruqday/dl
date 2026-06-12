@@ -23,7 +23,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
+            raise HTTPException(status_code=404, detail='Không tìm thấy người dùng này')
         user_id = str(user['_id'])
         options = generate_registration_options(rp_id=RP_ID, rp_name=RP_NAME, user_id=user_id.encode('utf-8'), user_name=email, user_display_name=email, authenticator_selection=AuthenticatorSelectionCriteria(user_verification=UserVerificationRequirement.PREFERRED))
         if db_client.redis:
@@ -40,7 +40,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
+            raise HTTPException(status_code=404, detail='Không tìm thấy người dùng này')
         challenge = None
         if db_client.redis:
             try:
@@ -67,7 +67,7 @@ class PasskeyService:
                 await db_client.redis.delete(f'passkey_reg_challenge:{email}')
             except Exception as e:
                 logger.error(f'Không thể xóa khóa thử thách đăng ký Redis của {email}: {e}')
-        return {'message': 'Đăng ký Passkey thành công'}
+        return {'message': 'Đăng ký Passkey hoàn tất'}
 
     @staticmethod
     async def login_begin(email: str, db=None):
@@ -75,7 +75,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
+            raise HTTPException(status_code=404, detail='Không tìm thấy người dùng này')
         passkeys = user.get('passkeys', [])
         if not passkeys:
             raise HTTPException(status_code=400, detail='Tài khoản này chưa đăng ký Passkey')
@@ -94,7 +94,7 @@ class PasskeyService:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         user = await db['auth_credentials'].find_one({'email': email})
         if not user:
-            raise HTTPException(status_code=404, detail='Người dùng không tồn tại')
+            raise HTTPException(status_code=404, detail='Không tìm thấy người dùng này')
         challenge = None
         if db_client.redis:
             try:

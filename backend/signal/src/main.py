@@ -42,9 +42,9 @@ async def add_trace_id_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ thông báo DocLib đã khởi động")
+    logger.info("Dịch vụ thông báo của DocLib đã sẵn sàng")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "Hệ thống hoạt động bình thường", "service": "signal"}
+    return {"status": "Hệ thống đang hoạt động ổn định", "service": "signal"}

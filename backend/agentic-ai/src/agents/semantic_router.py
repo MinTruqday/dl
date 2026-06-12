@@ -10,7 +10,7 @@ class SemanticRouter:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("LLAMA_MODEL is not set")
+            raise ValueError("Chưa cấu hình biến LLAMA_MODEL")
             
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -52,7 +52,7 @@ class SemanticRouter:
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
                 
-            logger.info(f"Đã phân loại yêu cầu vào luồng'{route}'")
+            logger.info(f"Đã phân loại yêu cầu vào luồng '{route}'")
             return {"route": route, "answer": answer}
             
         except Exception as e:

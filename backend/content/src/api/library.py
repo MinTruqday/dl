@@ -22,8 +22,8 @@ async def get_list_by_id(list_id: str, current_user: UserInDB=Depends(get_curren
 
 @router.post('/danh-sach/{list_id}/tai-lieu/{document_id}', response_model=APIResponse[Any])
 async def add_to_list(list_id: str, document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await LibraryService.add_document_to_list(list_id, document_id, current_user, db=db), message='Đã thêm vào danh sách')
+    return APIResponse(data=await LibraryService.add_document_to_list(list_id, document_id, current_user, db=db), message='Đã thêm vào danh sách đọc')
 
 @router.delete('/danh-sach/{list_id}/tai-lieu/{document_id}', response_model=APIResponse[Any])
 async def remove_from_list(list_id: str, document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await LibraryService.remove_document_from_list(list_id, document_id, current_user, db=db), message='Đã xóa khỏi danh sách')
+    return APIResponse(data=await LibraryService.remove_document_from_list(list_id, document_id, current_user, db=db), message='Đã xóa khỏi danh sách đọc')

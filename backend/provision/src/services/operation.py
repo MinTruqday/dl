@@ -24,7 +24,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'role': role, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
+            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         logger.info(f'Vai trò người dùng {user_id} đã cập nhật thành {role}')
         return {'message': f'Hệ thống đã cập nhật vai trò của người dùng thành {role}'}
 
@@ -34,9 +34,9 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         res = await db['users'].update_one({'_id': user_id}, {'$set': {'is_active': is_active, 'updated_at': datetime.now(timezone.utc)}})
         if res.matched_count == 0:
-            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này trên hệ thống')
+            raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người dùng này')
         logger.info(f'Người dùng {user_id} trạng thái cập nhật thành {is_active}')
-        return {'message': 'Trạng thái hoạt động của tài khoản đã được cập nhật'}
+        return {'message': 'Đã cập nhật trạng thái hoạt động của tài khoản'}
 
     @staticmethod
     async def get_author_applications(status: str='PENDING', db=None) -> list:
@@ -51,7 +51,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         app = await db['author_applications'].find_one({'_id': application_id})
         if not app:
-            raise HTTPException(status_code=404, detail='Không tìm thấy hồ sơ đăng ký tương ứng')
+            raise HTTPException(status_code=404, detail='Không tìm thấy hồ sơ đăng ký này')
         await db['author_applications'].update_one({'_id': application_id}, {'$set': {'status': status, 'reason': reason, 'reviewed_by': reviewer_id, 'reviewed_at': datetime.now(timezone.utc)}})
         if status == 'APPROVED':
             await db['users'].update_one({'_id': app['user_id']}, {'$set': {'role': RoleEnum.AUTHOR}})
@@ -69,7 +69,7 @@ class OperationService:
     @staticmethod
     async def trigger_backup(action: str='FULL', db=None) -> dict:
         logger.info(f"Lệnh sao lưu '{action}' đã được kích hoạt")
-        return {'message': 'Tiến trình sao lưu dữ liệu hệ thống đã được đưa vào hàng đợi'}
+        return {'message': 'Hệ thống đã xếp lịch sao lưu dữ liệu'}
 
     @staticmethod
     async def create_api_key(name: str, provider: str='DEFAULT', key_value: str='', db=None) -> dict:
@@ -79,7 +79,7 @@ class OperationService:
             key_value = str(uuid7()).replace('-', '')
         await db['api_keys'].insert_one({'_id': str(uuid7()), 'name': name, 'provider': provider, 'key_value': key_value, 'created_at': datetime.now(timezone.utc)})
         logger.info(f"API Key '{name}' for '{provider}' đã được tạo thành công")
-        return {'message': 'API Key mới đã được lưu trữ an toàn', 'key': key_value}
+        return {'message': 'Lưu trữ khóa API an toàn', 'key': key_value}
 
     @staticmethod
     async def create_marketing_campaign(data: dict, db=None) -> dict:
@@ -88,7 +88,7 @@ class OperationService:
         campaign = {'_id': str(uuid7()), 'title': data.get('title', 'Chiến dịch mới'), 'target_audience': data.get('target', 'ALL'), 'discount_percent': data.get('discount', 0), 'status': 'active', 'created_at': datetime.now(timezone.utc)}
         await db['marketing_campaigns'].insert_one(campaign)
         logger.info(f"Chiến dịch '{campaign['title']}' đã được tạo thành công")
-        return {'message': 'Chiến dịch tiếp thị mới đã được khởi tạo trên hệ thống'}
+        return {'message': 'Chiến dịch tiếp thị mới đã được ghi nhận trên hệ thống'}
 
     @staticmethod
     async def get_system_health(db=None) -> dict:
@@ -185,7 +185,7 @@ class OperationService:
                         formatted_categories.append({'name': name, 'count': stats['count'], 'size_bytes': stats['size']})
                 return {'status': 'healthy', 'total_buckets': len(buckets_list), 'total_size_bytes': total_size_bytes, 'total_objects_count': total_objects_count, 'buckets': buckets_data, 'categories': formatted_categories}
         except Exception as e:
-            logger.error(f'Tải thất bại thông số lưu trữ MinIO: {e}')
+            logger.error(f'Lỗi lấy thông số lưu trữ từ MinIO: {e}')
             return {'status': 'unreachable', 'total_buckets': 0, 'total_size_bytes': 0, 'total_objects_count': 0, 'buckets': [], 'categories': []}
 
     @staticmethod
@@ -199,7 +199,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f"Tải thất bại thống kê thu thập: {e}")
+            logger.error(f"Lỗi lấy dữ liệu thống kê: {e}")
         return {'total_documents': 0, 'total_assets': 0, 'collector_status': 'OFFLINE', 'last_crawl': None, 'storage_usage_mb': 0}
 
     @staticmethod
@@ -209,7 +209,7 @@ class OperationService:
         report_id = str(uuid7())
         await db['bug_reports'].insert_one({'_id': report_id, 'title': data['title'], 'description': data['description'], 'status': 'open', 'assigned_to': str(current_moderator.id), 'created_at': datetime.now(timezone.utc)})
         logger.info(f'Lỗi {report_id} đã được giải quyết bởi {current_moderator.id}')
-        return {'message': 'Hệ thống đã tiếp nhận báo cáo lỗi từ người dùng'}
+        return {'message': 'Hệ thống đã ghi nhận báo cáo sự cố của người dùng'}
 
     @staticmethod
     async def assign_task(data: dict, current_moderator, db=None) -> dict:
@@ -218,7 +218,7 @@ class OperationService:
         task = {'_id': str(uuid7()), 'assigned_to': data['moderator_id'], 'title': data['title'], 'status': 'pending', 'created_at': datetime.now(timezone.utc)}
         await db['moderator_tasks'].insert_one(task)
         logger.info(f"Đã giao việc cho {data['moderator_id']} bởi {current_moderator.id}")
-        return {'message': 'Nhiệm vụ điều hành đã được phân công cho người phụ trách'}
+        return {'message': 'Nhiệm vụ điều hành đã được phân công'}
 
     @staticmethod
     async def submit_policy_proposal(data: dict, current_moderator, db=None) -> dict:
@@ -246,10 +246,10 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
         if not withdrawal:
-            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không tồn tại hoặc đã được hoàn tất trước đó')
+            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống hoặc đã được hoàn tất trước đó')
         await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'COMPLETED', 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}})
         logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã được duyệt bởi {admin_id}')
-        return {'message': 'Yêu cầu rút tiền của người dùng đã được phê duyệt'}
+        return {'message': 'Yêu cầu rút tiền đã được phê duyệt thành công'}
 
     @staticmethod
     async def reject_withdrawal(withdrawal_id: str, reason: str, admin_id: str, db=None) -> dict:
@@ -257,7 +257,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
         if not withdrawal:
-            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không tồn tại')
+            raise HTTPException(status_code=404, detail='Giao dịch rút tiền này không có trên hệ thống')
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
@@ -268,10 +268,10 @@ class OperationService:
                 await db['transactions'].insert_one(tx.model_dump(by_alias=True), session=session)
                 await session.commit_transaction()
                 logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã bị bác bỏ bởi {admin_id}. Lý do: {reason}')
-                return {'message': 'Yêu cầu rút tiền bị từ chối, số dư đã được hoàn trả lại vào ví người dùng'}
+                return {'message': 'Yêu cầu rút tiền đã bị từ chối và tiền đã được hoàn lại vào ví'}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Từ chối lệnh rút tiền gặp lỗi: {e}')
-            raise HTTPException(status_code=500, detail='Quá trình xử lý từ chối giao dịch gặp sự cố')
+            logger.error(f'Lỗi khi xử lý thao tác từ chối lệnh rút tiền: {e}')
+            raise HTTPException(status_code=500, detail='Gặp sự cố khi từ chối giao dịch')
         finally:
             await session.end_session()

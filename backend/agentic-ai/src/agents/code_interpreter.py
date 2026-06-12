@@ -102,11 +102,11 @@ class CodeInterpreter:
                 await asyncio.lên_thread(remove_if_exists, script_path)
                     
             if not final_res.strip():
-                final_res = "Code executed Thành côngfully (no output)"
+                final_res = "Code executed sucessfully (no output)"
                 
             return final_res
         except Exception as e:
-            logger.error(f"CodeInterpreter: Thực thi thất bại do lỗi: {e}")
+            logger.error(f"Thực thi thất bại do lỗi: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 code_interpreter = CodeInterpreter()

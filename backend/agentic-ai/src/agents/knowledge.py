@@ -6,7 +6,7 @@ class Knowledge:
         pass
 
     async def execute(self, req) -> str:
-        logger.info(f"Knowledge: Retrieving documents for query: {req.query}")
+        logger.info(f"Đang truy xuất hệ thống tri thức cho truy vấn: {req.query}")
         try:
             result = await knowledge_app.ainvoke({
                 "question": req.query,
@@ -20,7 +20,7 @@ class Knowledge:
             })
             return result.get("generation", "Không tìm thấy thông tin phù hợp trong tài liệu")
         except Exception as e:
-            logger.error(f"Knowledge: Retrieval failed: {e}")
+            logger.error(f"Lỗi truy xuất hệ thống tri thức: {e}")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 knowledge = Knowledge()

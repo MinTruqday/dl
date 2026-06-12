@@ -52,17 +52,17 @@ from fastapi import HTTPException
 def validate_url_ssrf(url: str):
     parsed = urlparse(url)
     if not parsed.hostname:
-        raise HTTPException(status_code=400, detail='Invalid URL')
+        raise HTTPException(status_code=400, detail='Đường dẫn không hợp lệ')
     try:
         ip = socket.gethostbyname(parsed.hostname)
         ip_obj = ipaddress.ip_address(ip)
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
-            raise HTTPException(status_code=403, detail='Tên miền phân giải ra IP nội bộ bị cấm (SSRF Protection)')
+            raise HTTPException(status_code=403, detail='Tên miền phân giải ra địa chỉ mạng nội bộ bị cấm để đảm bảo an toàn')
     except socket.gaierror:
         raise HTTPException(status_code=400, detail='Cannot resolve hostname')
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
-    if '..' in info.filename or info.filename.startswith('/'):
+    if '.' in info.filename or info.filename.startswith('/'):
         return False
     if info.external_attr >> 16 & 40960 == 40960:
         return False
@@ -107,7 +107,7 @@ async def get_zip_content(file_url: str=Query(...), path: str=Query(...), db=Dep
                                 text = file_bytes.decode('utf-8')
                                 return APIResponse(data={'content': text, 'type': 'text'}, message='Thành công')
                             except UnicodeDecodeError:
-                                return APIResponse(data={'content': 'Binary file cannot be displayed.', 'type': 'binary'}, message='Thành công')
+                                return APIResponse(data={'content': 'Binary file cannot be displayed', 'type': 'binary'}, message='Thành công')
                         return APIResponse(data=None, message='Không tìm thấy tệp', status=404)
     except HTTPException as he:
         raise he

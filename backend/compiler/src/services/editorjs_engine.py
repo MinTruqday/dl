@@ -358,7 +358,7 @@ class EditorJSEngine:
                     process.kill()
                 except Exception as e:
                     logger.warning(f"Không thể dừng tiến trình EditorJS: {e}")
-            raise Exception("Quá thời gian biên dịch tài liệu EditorJS")
+            raise Exception("Tài liệu EditorJS mất quá nhiều thời gian để biên dịch")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):

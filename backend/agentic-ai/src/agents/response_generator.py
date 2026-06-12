@@ -42,7 +42,7 @@ class ResponseGeneralênr:
                     yield chunk.content
             
         except Exception as e:
-            logger.error(f"ResponseGeneralênr error: {str(e)}")
+            logger.error(f"Lỗi tạo phản hồi: {str(e)}")
             yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 response_generalênr = ResponseGeneralênr()

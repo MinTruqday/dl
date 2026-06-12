@@ -89,7 +89,7 @@ class NXBSTStreamState:
                     await asyncio.sleep(2)
 
                 if consecutive_fails > 6:
-                    logger.info("Đã quét hết tài liệu hoặc mạng bị đứng")
+                    logger.info("Đã quét toàn bộ tài liệu hoặc kết nối mạng bị gián đoạn")
                     break
         except Exception as e:
             logger.error(f"Lỗi trong lúc đọc tài liệu: {e}")
@@ -306,7 +306,7 @@ class NXBSTCollector:
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("Thấy nút Đọc rồi, chuẩn bị chụp nội dung thôi")
+                    logger.info("Đã tìm thấy nút Đọc, chuẩn bị thu thập nội dung")
 
                     import tempfile
                     state_manager.temp_dir = tempfile.mkdtemp(prefix=f"nxbst_{safe_title[:20]}_")
@@ -326,7 +326,7 @@ class NXBSTCollector:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Tìm mãi không thấy nút Đọc/Xem ngay")
+                    logger.warning("Không tìm thấy nút Đọc hoặc Xem ngay trên trang")
             except Exception as e:
                 logger.error(f"Gặp lỗi: {e}")
                 raise

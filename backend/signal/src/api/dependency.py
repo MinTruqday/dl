@@ -14,16 +14,16 @@ async def get_db():
     return db_client.mongodb[settings.MONGODB_DB_NAME]
 
 async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
-    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên đăng nhập không hợp lệ hoặc đã hết hạn', headers={'WWW-Authenticate': 'Bearer'})
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên làm việc đã hết hạn hoặc không hợp lệ', headers={'WWW-Authenticate': 'Bearer'})
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get('sub')
         session_id: str = payload.get('sid')
         if email is None or session_id is None:
-            logger.warning(f"Token đăng nhập bị thiếu 'sub' hoặc 'sid'")
+            logger.warning(f"Dữ liệu token bị thiếu trường sub hoặc sid")
             raise credentials_exception
     except jwt.PyJWTError as e:
-        logger.warning(f'Giải mã JWT gặp lỗi {str(e)}')
+        logger.warning(f'Quá trình giải mã JWT gặp sự cố {str(e)}')
         raise credentials_exception
     if db_client.redis:
         import httpx
@@ -38,7 +38,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         user_id_str = str(user_doc['_id'])
         is_valid_session = await db_client.redis.sismember(f'user_sessions:{user_id_str}', session_id)
         if not is_valid_session:
-            logger.warning(f'Phát hiện phiên đăng nhập cũ bị hủy của người dùng {email}')
+            logger.warning(f'Phát hiện nỗ lực sử dụng phiên làm việc cũ của {email}')
             raise credentials_exception
     else:
         import httpx
@@ -49,7 +49,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         except Exception:
             user_doc = None
     if user_doc is None:
-        logger.warning(f'Không tìm thấy tài khoản nào ứng với email {email}')
+        logger.warning(f'Hệ thống không tìm thấy tài khoản nào sử dụng email {email}')
         raise credentials_exception
     user_id_str = str(user_doc['_id'])
     user_doc['_id'] = user_id_str
@@ -68,7 +68,7 @@ def require_role(required_roles: List[RoleEnum]):
         if current_user.role == RoleEnum.ADMIN:
             return current_user
         if current_user.role not in required_roles:
-            logger.warning(f'Tài khoản {current_user.email} đang có quyền {current_user.role} trong khi yêu cầu cần {required_roles}')
+            logger.warning(f'Tài khoản {current_user.email} có quyền {current_user.role} nhưng tính năng này yêu cầu quyền {required_roles}')
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Bạn không có quyền thực hiện thao tác này')
         return current_user
     return role_checker

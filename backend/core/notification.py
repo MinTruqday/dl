@@ -4,7 +4,7 @@ from loguru import logger
 
 async def send_internal_notification(user_id: str, title: str, body: str, notif_type: str = "SYSTEM"):
     if not settings.SIGNAL_URL:
-        logger.warning("SIGNAL_URL is not configured, skipping notification.")
+        logger.warning("Chưa thiết lập đường dẫn tín hiệu, bỏ qua việc gửi thông báo")
         return False
         
     try:
@@ -22,5 +22,5 @@ async def send_internal_notification(user_id: str, title: str, body: str, notif_
             response.raise_for_status()
             return True
     except Exception as e:
-        logger.error(f"Failed to send notification to {user_id}: {e}")
+        logger.error(f"Không thể gửi thông báo tới {user_id}: {e}")
         return False

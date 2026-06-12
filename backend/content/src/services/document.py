@@ -77,7 +77,7 @@ class DocumentService:
         docs_collection = db["documents"]
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
-            raise HTTPException(status_code=400, detail="Đường dẫn tài liệu này đã tồn tại")
+            raise HTTPException(status_code=400, detail="Đường dẫn tùy chỉnh này đã được sử dụng")
         
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"):
@@ -128,7 +128,7 @@ class DocumentService:
         if content_in.expected_version:
             db_updated = document.get("updated_at")
             if db_updated and str(db_updated).split('+')[0] != str(content_in.expected_version).split('+')[0]:
-                raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác")
+                raise HTTPException(status_code=409, detail="Phiên bản tài liệu đã bị thay đổi bởi một người dùng khác")
             
         if document.get("content"):
             await db["document_revisions"].insert_one({
@@ -157,7 +157,7 @@ class DocumentService:
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Tài liệu được cập nhật",
-                            "body": f"Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật.",
+                            "body": f"Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật",
                             "type": "DOCUMENT_UPDATE"
                         },
                         timeout=3.0
@@ -182,18 +182,18 @@ class DocumentService:
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
         if doc.get("author_id") != str(current_user.id) and current_user.role != "ADMIN":
-            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa tài liệu này")
+            raise HTTPException(status_code=403, detail="Bạn không hiện có quyền chỉnh sửa tài liệu này")
             
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
             db_updated = doc.get("updated_at")
             if db_updated and str(db_updated).split('+')[0] != str(doc_update.expected_version).split('+')[0]:
-                raise HTTPException(status_code=409, detail="Xung đột phiên bản: Tài liệu đã bị thay đổi bởi người khác")
+                raise HTTPException(status_code=409, detail="Phiên bản tài liệu đã bị thay đổi bởi một người dùng khác")
             
         update_data = {k: v for k, v in doc_update.model_dump().items() if v is not None}
         if "slug" in update_data and update_data["slug"] != doc.get("slug"):
             existing = await docs_col.find_one({"slug": update_data["slug"]})
             if existing:
-                raise HTTPException(status_code=400, detail="Đường dẫn tài liệu này đã tồn tại")
+                raise HTTPException(status_code=400, detail="Đường dẫn tùy chỉnh này đã được sử dụng")
                 
         if update_data:
             if doc.get("content") and "content" in update_data:
@@ -258,7 +258,7 @@ class DocumentService:
 
         if document.get("author_id") != user_id and document.get("status") != DocumentStatus.PUBLISHED:
             if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="Tài liệu đang ở bản nháp")
+                raise HTTPException(status_code=403, detail="Tài liệu này hiện đang là bản nháp")
 
         if document.get("is_password_protected") and document.get("author_id") != user_id:
             if not password:
@@ -309,7 +309,7 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu trong thùng rác")
             
         logger.info(f"Người dùng {current_user.id} đã khôi phục tài liệu {document_id}")
-        return {"message": "Đã khôi phục tài liệu thành công"}
+        return {"message": "Đã khôi phục tài liệu từ thùng rác"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -362,11 +362,11 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="Email không tồn tại")
             
         if str(target_user["_id"]) in document.get("coauthors", []):
-            return {"message": "Người này đã là đồng tác giả"}
+            return {"message": "Người dùng này đã là đồng tác giả"}
             
         await db["documents"].update_one({"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}})
         logger.info(f"Đã mời đồng tác giả {target_user['_id']} tham gia tài liệu {document_id}")
-        return {"message": f"Đã thêm {target_user['full_name']} làm đồng tác giả."}
+        return {"message": f"Đã thêm {target_user['full_name']} làm đồng tác giả"}
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
@@ -576,7 +576,7 @@ class DocumentService:
             "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Điều phối viên {current_moderator.id} đã đổi trạng thái tài liệu {document_id} thành {status_val.lower()}")
-        return {"message": f"Đã {status_val.lower()} tài liệu thành công."}
+        return {"message": f"Đã {status_val.lower()} tài liệu thành công"}
 
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:
@@ -591,7 +591,7 @@ class DocumentService:
             }}
         )
         logger.info(f"Điều phối viên {current_moderator.id} đã giải quyết tranh chấp bản quyền {dispute_id}")
-        return {"message": "Đã giải quyết tranh chấp bản quyền thành công"}
+        return {"message": "Tranh chấp bản quyền đã được giải quyết"}
 
     @staticmethod
     async def get_trending_tags(limit: int = 10) -> List[str]:

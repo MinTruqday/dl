@@ -147,7 +147,7 @@ async def grammar_check(req: GrammarRequest):
         return {
             "corrected_text": result.strip(), 
             "score": grammar_score, 
-            "message": "Đã hoàn thành kiểm tra ngữ pháp và tính lênán độ chính xác"
+            "message": "Hoàn tất kiểm tra ngữ pháp và tính toán độ chính xác"
         }
     except Exception:
         raise HTTPException(status_code=500, detail="Hệ thống đang gặp sự cố, vui lòng thử lại sau")
@@ -366,7 +366,7 @@ async def analyze_document(req: dict):
         if json_match:
             return json_mod.loads(json_match.group())
         else:
-            raise ValueError("LLM did not return JSON")
+            raise ValueError("Mô hình ngôn ngữ không trả về định dạng JSON")
     except Exception as e:
         logger.error(f"Inference: Document analysis failed: {e}")
         raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")

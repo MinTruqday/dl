@@ -223,7 +223,7 @@ class AnnaArchiveCollector:
                     links = await page.evaluate("Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)")
                     logger.warning(f"Các nút có thể bấm được trên trang: {links}")
                     await page.close()
-                    raise Exception("Slow download button not found")
+                    raise Exception("Không tìm thấy nút tải chậm")
             except Exception as e:
                 logger.error(f"Gặp lỗi: {e}")
                 raise
@@ -266,7 +266,7 @@ class AnnaArchiveCollector:
             document_metadata = {
                 "title": title,
                 "slug": slug,
-                "description": f"Extracted via Anna's Archive bot.",
+                "description": f"Extracted via Anna's Archive bot",
                 "file_url": minio_url,
                 "pdf_url": minio_url if ext.lower() == "pdf" else None,
                 "tags": ["Anna's Archive", payload.get("author", "Unknown")],

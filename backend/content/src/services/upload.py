@@ -12,42 +12,42 @@ class UploadService:
             raise HTTPException(status_code=400, detail='Không hỗ trợ định dạng SVG để bảo mật')
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail='Hệ thống chỉ chấp nhận các tệp tin hình ảnh')
-        ext = file.filename.split('.')[-1]
+        ext = file.filename.split('')[-1]
         filename = f'images/{uuid7().hex}.{ext}'
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'Sự cố khi tải hình ảnh lên MinIO: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tải hình ảnh lên MinIO')
-        logger.info(f'Đã tải hình ảnh lên MinIO với tên {filename}')
+            logger.error(f'Sự cố khi tải hình ảnh lên hệ thống lưu trữ: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi khi tải hình ảnh lên hệ thống lưu trữ')
+        logger.info(f'Tải hình ảnh lên hệ thống hoàn tất {filename}')
         return {'url': filename, 'filename': filename}
 
     @staticmethod
     async def upload_document(file, db=None):
         allowed_extensions = ['pdf', 'epub', 'mobi', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt', 'zip', 'csv', 'json', 'md', 'png', 'jpg', 'jpeg', 'webp', 'webm', 'mp3', 'wav', 'm4a', 'ogg', 'mp4']
-        ext = file.filename.split('.')[-1].lower()
+        ext = file.filename.split('')[-1].lower()
         if ext == 'svg' or 'svg' in file.content_type.lower():
-            raise HTTPException(status_code=400, detail='SVG upload is blocked.')
+            raise HTTPException(status_code=400, detail='Hệ thống không cho phép tải lên tệp SVG để đảm bảo an toàn')
         if ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail=f'Rất tiếc hệ thống hiện tại chưa hỗ trợ định dạng .{ext}')
+            raise HTTPException(status_code=400, detail=f'Hệ thống hiện chưa hỗ trợ định dạng .{ext}')
         filename = f'documents/{uuid7().hex}.{ext}'
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'Sự cố khi tải tài liệu lên MinIO: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tải tài liệu lên MinIO')
-        logger.info(f'Đã tải tài liệu lên MinIO với tên {filename}')
+            logger.error(f'Sự cố khi tải tài liệu lên hệ thống lưu trữ: {e}')
+            raise HTTPException(status_code=500, detail='Lỗi khi tải tài liệu lên hệ thống lưu trữ')
+        logger.info(f'Tải tài liệu lên hệ thống hoàn tất {filename}')
         return {'url': filename, 'filename': filename, 'extension': ext}
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):
-        if '..' in file_path or file_path.startswith('/'):
+        if '.' in file_path or file_path.startswith('/'):
             raise HTTPException(status_code=400, detail='Đường dẫn tệp tin không hợp lệ')
         try:
             url = await generate_presigned_url(file_path, 3600)
             return {'download_url': url}
         except Exception as e:
-            logger.error(f'Không thể tạo liên kết tải xuống MinIO: {e}')
-            raise HTTPException(status_code=500, detail='Lỗi hệ thống khi tạo liên kết tải về')
+            logger.error(f'Không thể tạo liên kết tải xuống từ hệ thống lưu trữ: {e}')
+            raise HTTPException(status_code=500, detail='Gặp sự cố khi tạo liên kết tải về')

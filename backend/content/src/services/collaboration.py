@@ -20,7 +20,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         import httpx
         invitee = None
         try:
@@ -34,18 +34,18 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Không tìm thấy người dùng với email này')
         invitee_id = str(invitee['_id'])
         if invitee_id == str(current_user.id):
-            raise HTTPException(status_code=400, detail='Bạn không thể tự mời chính mình cộng tác')
+            raise HTTPException(status_code=400, detail='Bạn không thể tự mời bản thân làm cộng tác viên')
         existing_invite = await db['collaboration_invites'].find_one({'document_id': document_id, 'invitee_id': invitee_id, 'status': 'PENDING'})
         if existing_invite:
-            raise HTTPException(status_code=400, detail='Đã có một lời mời đang chờ người này xác nhận')
+            raise HTTPException(status_code=400, detail='Đã có một lời mời đang chờ người dùng này xác nhận')
         coauthors = doc.get('coauthors', [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail='Người này đã là cộng tác viên của tài liệu')
+            raise HTTPException(status_code=400, detail='Người dùng này đã là cộng tác viên')
         invite = {'_id': str(uuid7()), 'document_id': document_id, 'document_title': doc.get('title', 'Tài liệu không tên'), 'inviter_id': str(current_user.id), 'inviter_name': current_user.full_name, 'invitee_id': invitee_id, 'role': role, 'status': 'PENDING', 'created_at': datetime.now(timezone.utc)}
         await db['collaboration_invites'].insert_one(invite)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Gửi lời mời', f'Đã gửi lời mời cộng tác tới {invitee_email} với vai trò {role}')
         logger.info(f'Người dùng {current_user.id} vừa mời {invitee_id} cùng chỉnh sửa tài liệu {document_id}')
-        return {'message': 'Đã gửi lời mời cộng tác thành công', 'invite_id': invite['_id']}
+        return {'message': 'Đã gửi lời mời cộng tác', 'invite_id': invite['_id']}
 
     @staticmethod
     async def get_my_collaboration_invites(current_user, db=None) -> list:
@@ -68,7 +68,7 @@ class CollaborationService:
             await db['documents'].update_one({'_id': invite['document_id']}, {'$push': {'coauthors': str(current_user.id)}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Chấp nhận' if status == 'ACCEPTED' else 'Từ chối', 'Đã chấp nhận lời mời cộng tác' if status == 'ACCEPTED' else 'Đã từ chối lời mời cộng tác')
         logger.info(f'Người dùng {current_user.id} đã {status} lời mời cộng tác {invite_id}')
-        return {'message': f"Đã {('chấp nhận' if status == 'ACCEPTED' else 'từ chối')} lời mời cộng tác."}
+        return {'message': f"Đã {('chấp nhận' if status == 'ACCEPTED' else 'từ chối')} lời mời cộng tác"}
 
     @staticmethod
     async def get_collaborators(document_id: str, current_user, db=None) -> list:
@@ -76,7 +76,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         invites = await db['collaboration_invites'].find({'document_id': document_id, 'status': 'ACCEPTED'}).to_list(length=100)
         collaborators = []
         for inv in invites:
@@ -102,12 +102,12 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin cộng tác')
         doc = await db['documents'].find_one({'_id': invite['document_id'], 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền quản lý cộng tác viên của tài liệu này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền quản lý cộng tác viên của tài liệu này')
         await db['documents'].update_one({'_id': invite['document_id']}, {'$pull': {'coauthors': invite['invitee_id']}})
         await db['collaboration_invites'].delete_one({'_id': collaboration_id})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Xóa cộng tác viên', f"Đã xóa cộng tác viên có ID {invite['invitee_id']}")
         logger.info(f"Chủ sở hữu {current_user.id} đã xóa người cộng tác {invite['invitee_id']} khỏi tài liệu {invite['document_id']}")
-        return {'message': 'Đã xóa cộng tác viên thành công'}
+        return {'message': 'Đã xóa người dùng khỏi danh sách cộng tác'}
 
     @staticmethod
     async def get_activities(document_id: str, current_user, db=None) -> list:
@@ -115,7 +115,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         activities = await db['collaboration_activities'].find({'document_id': document_id}).sort('timestamp', -1).limit(50).to_list(length=50)
         return [{'id': act['_id'], 'user_name': act['user_name'], 'action': act['action'], 'details': act['details'], 'timestamp': act['timestamp'].isoformat() if isinstance(act.get('timestamp'), datetime) else act.get('timestamp')} for act in activities]
 
@@ -125,7 +125,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền chuyển sở hữu')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền chuyển sở hữu')
         import httpx
         target_user = None
         try:
@@ -138,12 +138,12 @@ class CollaborationService:
         if not target_user:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin người nhận chuyển nhượng')
         if target_user_id not in doc.get('coauthors', []):
-            raise HTTPException(status_code=400, detail='Người dùng phải là cộng tác viên mới có thể nhận chuyển nhượng')
+            raise HTTPException(status_code=400, detail='Chỉ cộng tác viên mới có thể nhận chuyển nhượng tài liệu')
         await db['documents'].update_one({'_id': document_id}, {'$set': {'author_id': target_user_id, 'updated_at': datetime.now(timezone.utc)}, '$pull': {'coauthors': target_user_id}})
         await db['documents'].update_one({'_id': document_id}, {'$push': {'coauthors': str(current_user.id)}})
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Chuyển sở hữu', f"Đã chuyển quyền sở hữu tài liệu cho {target_user.get('full_name')}")
         logger.info(f'Đã chuyển quyền sở hữu tài liệu {document_id} từ {current_user.id} sang {target_user_id}')
-        return {'message': 'Đã chuyển quyền sở hữu tài liệu thành công'}
+        return {'message': 'Đã chuyển giao quyền sở hữu tài liệu'}
 
     @staticmethod
     async def update_status(document_id: str, current_user, db=None) -> dict:
@@ -175,12 +175,12 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Không tìm thấy thông tin cộng tác')
         doc = await db['documents'].find_one({'_id': invite['document_id'], 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền quản lý cộng tác viên của tài liệu này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền quản lý cộng tác viên của tài liệu này')
         if role not in ['editor', 'viewer']:
             raise HTTPException(status_code=400, detail='Vai trò cộng tác không hợp lệ')
         await db['collaboration_invites'].update_one({'_id': collaboration_id}, {'$set': {'role': role}})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Cập nhật vai trò', f"Đã thay đổi vai trò của cộng tác viên có ID {invite['invitee_id']} sang {role}")
-        return {'message': 'Thay đổi vai trò cộng tác viên thành công'}
+        return {'message': 'Cập nhật vai trò cộng tác viên hoàn tất'}
 
     @staticmethod
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
@@ -188,7 +188,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         memo = {'_id': str(uuid7()), 'document_id': document_id, 'sender_name': current_user.full_name, 'sender_id': str(current_user.id), 'message': message, 'timestamp': datetime.now(timezone.utc)}
         await db['collaboration_memos'].insert_one(memo)
         return {'message': 'Gửi tin nhắn trao đổi thành công', 'memo': memo}
@@ -199,7 +199,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         memos = await db['collaboration_memos'].find({'document_id': document_id}).sort('timestamp', 1).limit(100).to_list(length=100)
         return [{'id': m['_id'], 'sender_name': m['sender_name'], 'sender_id': m['sender_id'], 'message': m['message'], 'timestamp': m['timestamp'].isoformat() if isinstance(m.get('timestamp'), datetime) else m.get('timestamp')} for m in memos]
 
@@ -209,7 +209,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền cập nhật cài đặt')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền cập nhật cài đặt')
         if access_level not in ['invite_only', 'anyone_with_link']:
             raise HTTPException(status_code=400, detail='Mức quyền truy cập không hợp lệ')
         await db['documents'].update_one({'_id': document_id}, {'$set': {'collab_access_level': access_level}})
@@ -222,7 +222,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         invites = await db['collaboration_invites'].find({'document_id': document_id, 'status': 'PENDING'}).sort('created_at', -1).to_list(length=100)
         return invites
 
@@ -235,10 +235,10 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Lời mời không tồn tại hoặc đã được chấp nhận')
         doc = await db['documents'].find_one({'_id': invite['document_id'], 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền thu hồi lời mời này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền thu hồi lời mời này')
         await db['collaboration_invites'].delete_one({'_id': invite_id})
         await CollaborationService.log_activity(invite['document_id'], current_user.full_name, 'Thu hồi lời mời', 'Đã thu hồi lời mời cộng tác chưa duyệt')
-        return {'message': 'Đã thu hồi lời mời cộng tác thành công'}
+        return {'message': 'Đã thu hồi lời mời cộng tác'}
 
     @staticmethod
     async def get_contribution_stats(document_id: str, current_user, db=None) -> list:
@@ -246,7 +246,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền xem thống kê')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền xem thống kê')
         pipeline = [{'$match': {'document_id': document_id}}, {'$group': {'_id': '$user_name', 'count': {'$sum': 1}}}, {'$sort': {'count': -1}}]
         stats = await db['collaboration_activities'].aggregate(pipeline).to_list(length=100)
         return [{'user_name': s['_id'], 'count': s['count']} for s in stats]
@@ -257,11 +257,11 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         snapshot = {'_id': str(uuid7()), 'document_id': document_id, 'version_name': version_name, 'content': doc.get('content', ''), 'created_by': current_user.full_name, 'timestamp': datetime.now(timezone.utc)}
         await db['collaboration_drafts'].insert_one(snapshot)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Tạo nháp', f'Đã lưu trữ phiên bản nháp cộng tác: {version_name}')
-        return {'message': 'Tạo nháp cộng tác viên thành công', 'snapshot': snapshot}
+        return {'message': 'Bản nháp cộng tác đã được tạo', 'snapshot': snapshot}
 
     @staticmethod
     async def get_snapshots(document_id: str, current_user, db=None) -> list:
@@ -269,7 +269,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         drafts = await db['collaboration_drafts'].find({'document_id': document_id}).sort('timestamp', -1).to_list(length=100)
         return [{'id': d['_id'], 'version_name': d['version_name'], 'created_by': d['created_by'], 'timestamp': d['timestamp'].isoformat() if isinstance(d.get('timestamp'), datetime) else d.get('timestamp')} for d in drafts]
 
@@ -279,17 +279,17 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         existing = await db['collaboration_locks'].find_one({'document_id': document_id})
         if existing:
             locked_at = existing.get('locked_at')
             locked_at_ts = locked_at.timestamp() if isinstance(locked_at, datetime) else 0
             if locked_at_ts > cutoff and existing.get('user_id') != str(current_user.id):
-                raise HTTPException(status_code=400, detail=f"Tài liệu hiện đang được khóa độc quyền bởi {existing.get('user_name')}.")
+                raise HTTPException(status_code=400, detail=f"Tài liệu hiện đang được khóa độc quyền bởi {existing.get('user_name')}")
         await db['collaboration_locks'].update_one({'document_id': document_id}, {'$set': {'user_id': str(current_user.id), 'user_name': current_user.full_name, 'locked_at': datetime.now(timezone.utc)}}, upsert=True)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Khóa tài liệu', 'Đã kích hoạt chế độ khóa biên tập độc quyền')
-        return {'message': 'Đã lấy khóa biên tập thành công'}
+        return {'message': 'Đã khóa tài liệu để biên tập'}
 
     @staticmethod
     async def release_lock(document_id: str, current_user, db=None) -> dict:
@@ -299,7 +299,7 @@ class CollaborationService:
         if existing and existing.get('user_id') == str(current_user.id):
             await db['collaboration_locks'].delete_one({'document_id': document_id})
             await CollaborationService.log_activity(document_id, current_user.full_name, 'Mở khóa tài liệu', 'Đã tắt chế độ khóa biên tập độc quyền')
-        return {'message': 'Đã nhả khóa biên tập thành công'}
+        return {'message': 'Đã kết thúc biên tập và mở khóa tài liệu'}
 
     @staticmethod
     async def get_lock_status(document_id: str, db=None) -> dict:
@@ -322,7 +322,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền sở hữu')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền sở hữu')
         invite_code = str(uuid7())[:8].upper()
         await db['collaboration_invite_codes'].update_one({'document_id': document_id}, {'$set': {'invite_code': invite_code, 'created_at': datetime.now(timezone.utc)}}, upsert=True)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Tạo mã cộng tác', f'Đã kích hoạt mã mời nhanh: {invite_code}')
@@ -346,7 +346,7 @@ class CollaborationService:
         await db['documents'].update_one({'_id': document_id}, {'$push': {'coauthors': str(current_user.id)}, '$set': {'updated_at': datetime.now(timezone.utc)}})
         await db['collaboration_invites'].insert_one({'_id': str(uuid7()), 'document_id': document_id, 'document_title': doc.get('title', 'Tài liệu không tên'), 'inviter_id': doc['author_id'], 'inviter_name': 'Chủ sở hữu', 'invitee_id': str(current_user.id), 'role': 'editor', 'status': 'ACCEPTED', 'created_at': datetime.now(timezone.utc), 'responded_at': datetime.now(timezone.utc)})
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Tham gia qua mã', 'Đã gia nhập nhóm cộng tác viên biên tập thông qua mã mời nhanh')
-        return {'message': 'Tham gia nhóm cộng tác biên tập thành công', 'document_id': document_id}
+        return {'message': 'Đã tham gia nhóm cộng tác biên tập', 'document_id': document_id}
 
     @staticmethod
     async def create_task(document_id: str, task_desc: str, assigned_to: str, current_user, db=None) -> dict:
@@ -354,7 +354,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         task = {'_id': str(uuid7()), 'document_id': document_id, 'task_desc': task_desc, 'is_done': False, 'assigned_to': assigned_to or 'Chưa giao', 'created_by': current_user.full_name, 'created_at': datetime.now(timezone.utc)}
         await db['collaboration_tasks'].insert_one(task)
         await CollaborationService.log_activity(document_id, current_user.full_name, 'Tạo nhiệm vụ', f"Đã thêm nhiệm vụ cộng tác mới: {task_desc} (Giao cho: {assigned_to or 'Chưa giao'})")
@@ -366,7 +366,7 @@ class CollaborationService:
             db = db_client.mongodb.get_default_database()
         doc = await db['documents'].find_one({'_id': document_id, '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không có quyền truy cập')
+            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại hoặc bạn không hiện có quyền truy cập')
         tasks = await db['collaboration_tasks'].find({'document_id': document_id}).sort('created_at', -1).to_list(length=100)
         return [{'id': t['_id'], 'task_desc': t['task_desc'], 'is_done': t['is_done'], 'assigned_to': t['assigned_to'], 'created_by': t['created_by'], 'created_at': t['created_at'].isoformat() if isinstance(t.get('created_at'), datetime) else t.get('created_at')} for t in tasks]
 
@@ -379,7 +379,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Nhiệm vụ không tồn tại')
         doc = await db['documents'].find_one({'_id': task['document_id'], '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền chỉnh sửa nhiệm vụ này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền chỉnh sửa nhiệm vụ này')
         await db['collaboration_tasks'].update_one({'_id': task_id}, {'$set': {'is_done': is_done}})
         await CollaborationService.log_activity(task['document_id'], current_user.full_name, 'Cập nhật nhiệm vụ', f"Đã đánh dấu nhiệm vụ '{task['task_desc']}' thành {('Hoàn thành' if is_done else 'Chưa xong')}")
         return {'message': 'Cập nhật nhiệm vụ thành công'}
@@ -393,7 +393,7 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Nhiệm vụ không tồn tại')
         doc = await db['documents'].find_one({'_id': task['document_id'], '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền thảo luận trong nhiệm vụ này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền thảo luận trong nhiệm vụ này')
         comment = {'_id': str(uuid7()), 'task_id': task_id, 'sender_name': current_user.full_name, 'comment_text': comment_text, 'timestamp': datetime.now(timezone.utc)}
         await db['collaboration_task_comments'].insert_one(comment)
         return {'comment': comment}
@@ -407,6 +407,6 @@ class CollaborationService:
             raise HTTPException(status_code=404, detail='Nhiệm vụ không tồn tại')
         doc = await db['documents'].find_one({'_id': task['document_id'], '$or': [{'author_id': str(current_user.id)}, {'coauthors': str(current_user.id)}]})
         if not doc:
-            raise HTTPException(status_code=403, detail='Bạn không có quyền truy cập thảo luận nhiệm vụ này')
+            raise HTTPException(status_code=403, detail='Bạn không hiện có quyền truy cập thảo luận nhiệm vụ này')
         comments = await db['collaboration_task_comments'].find({'task_id': task_id}).sort('timestamp', 1).to_list(length=100)
         return [{'id': c['_id'], 'sender_name': c['sender_name'], 'comment_text': c['comment_text'], 'timestamp': c['timestamp'].isoformat() if isinstance(c.get('timestamp'), datetime) else c.get('timestamp')} for c in comments]

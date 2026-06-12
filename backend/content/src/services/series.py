@@ -26,7 +26,7 @@ class SeriesService:
         if series['document_ids']:
             await db['documents'].update_many({'_id': {'$in': series['document_ids']}, 'author_id': str(current_user.id)}, {'$set': {'series_id': series_id}})
         logger.info(f'Người dùng {current_user.id} vừa tạo bộ tài liệu {series_id}')
-        return {'message': 'Tạo Series thành công', 'series_id': series_id}
+        return {'message': 'Tạo chuỗi tài liệu hoàn tất', 'series_id': series_id}
 
     @staticmethod
     async def get_my_series(current_user, db=None) -> list:
@@ -54,7 +54,7 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không có quyền')
+            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
         update_fields = {}
         if 'title' in data and data['title']:
             update_fields['title'] = data['title']
@@ -65,7 +65,7 @@ class SeriesService:
         update_fields['updated_at'] = datetime.now(timezone.utc)
         await db['series'].update_one({'_id': series_id}, {'$set': update_fields})
         logger.info(f'Người dùng {current_user.id} vừa cập nhật bộ tài liệu {series_id}')
-        return {'message': 'Cập nhật chuỗi thành công', 'series_id': series_id}
+        return {'message': 'Cập nhật chuỗi tài liệu hoàn tất', 'series_id': series_id}
 
     @staticmethod
     async def delete_series(series_id: str, current_user, db=None) -> dict:
@@ -73,7 +73,7 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không có quyền')
+            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
@@ -82,7 +82,7 @@ class SeriesService:
                     await db['documents'].update_many({'_id': {'$in': series['document_ids']}}, {'$unset': {'series_id': ''}}, session=session)
                 await session.commit_transaction()
                 logger.info(f'Người dùng {current_user.id} đã xóa bộ tài liệu {series_id}')
-                return {'message': 'Xóa chuỗi thành công'}
+                return {'message': 'Đã xóa chuỗi tài liệu'}
         except Exception as e:
             await session.abort_transaction()
             logger.error(f'Không thể xóa bộ tài liệu {series_id}: {e}')
@@ -96,13 +96,13 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await db['series'].find_one({'_id': series_id, 'author_id': str(current_user.id)})
         if not series:
-            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không có quyền')
+            raise HTTPException(status_code=404, detail='Không tìm thấy chuỗi tài liệu hoặc không hiện có quyền')
         docs = await db['documents'].find({'_id': {'$in': document_ids}, 'author_id': str(current_user.id)}).to_list(length=500)
         if len(docs) != len(document_ids):
-            raise HTTPException(status_code=400, detail='Một số tài liệu không tồn tại hoặc không thuộc về bạn')
+            raise HTTPException(status_code=400, detail='Một số tài liệu không tồn tại hoặc không thuộc quyền sở hữu của bạn')
         await db['series'].update_one({'_id': series_id}, {'$set': {'document_ids': document_ids, 'updated_at': datetime.now(timezone.utc)}})
         logger.info(f'Người dùng {current_user.id} vừa sắp xếp lại các tài liệu trong bộ {series_id}')
-        return {'message': 'Sắp xếp lại thứ tự thành công'}
+        return {'message': 'Đã sắp xếp lại thứ tự tài liệu'}
 
     @staticmethod
     async def link_series(document_id: str, series_id: str, current_user, db=None) -> dict:
@@ -117,4 +117,4 @@ class SeriesService:
         await db['series'].update_one({'_id': series_id}, {'$addToSet': {'document_ids': document_id}})
         await db['documents'].update_one({'_id': document_id}, {'$set': {'series_id': series_id}})
         logger.info(f'Người dùng {current_user.id} vừa đưa tài liệu {document_id} vào bộ {series_id}')
-        return {'message': 'Liên kết chuỗi tài liệu thành công'}
+        return {'message': 'Đã thêm tài liệu vào chuỗi'}

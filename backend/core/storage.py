@@ -33,7 +33,7 @@ async def initialize_bucket():
     except ClientError:
         logger.info(f"Bucket {MINIO_BUCKET_NAME} not found. Creating")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.info(f"Bucket {MINIO_BUCKET_NAME} created successfully.")
+        logger.info(f"Bucket {MINIO_BUCKET_NAME} created successfully")
 
 async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf", compress: bool = False) -> str:
     kwargs = {

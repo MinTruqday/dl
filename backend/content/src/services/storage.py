@@ -178,14 +178,14 @@ class StorageService:
         item = await db_client.mongodb.get_default_database().storage_items.find_one({'_id': item_id, 'owner_id': owner_id})
         if not item:
             from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail='Tài nguyên không tồn tại hoặc bạn không có quyền chia sẻ')
+            raise HTTPException(status_code=404, detail='Tài nguyên không tồn tại hoặc bạn không hiện có quyền chia sẻ')
         result = await db_client.mongodb.get_default_database().storage_items.update_one(
             {'_id': item_id, 'shared_with.user_id': {'$ne': target_user_id}},
             {'$addToSet': {'shared_with': {'user_id': target_user_id, 'role': role}}}
         )
         if result.modified_count == 0:
             return {'message': 'Tệp tin đã được chia sẻ cho người dùng này trước đó'}
-        return {'message': f'Chia sẻ tệp tin thành công tới {email} với quyền {role}.'}
+        return {'message': f'Chia sẻ tệp tin thành công tới {email} với quyền {role}'}
 
     @staticmethod
     async def get_recent_items(owner_id: str, limit: int=20, db=None) -> List[StorageItemInDB]:

@@ -147,7 +147,7 @@ async def get_series_by_id(series_id: str):
 async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await SeriesService.create_series(req.model_dump(), current_user),
-        message="Tạo chuỗi tài liệu thành công",
+        message="Tạo chuỗi tài liệu hoàn tất",
         status=status.HTTP_201_CREATED
     )
 
@@ -155,14 +155,14 @@ async def create_series(req: SeriesCreateRequest, current_user: UserInDB = Depen
 async def update_series(series_id: str, req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await SeriesService.update_series(series_id, req.model_dump(), current_user),
-        message="Cập nhật chuỗi tài liệu thành công"
+        message="Cập nhật chuỗi tài liệu hoàn tất"
     )
 
 @router.delete("/chuoi-tai-lieu/{series_id}", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
 async def delete_series(series_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await SeriesService.delete_series(series_id, current_user),
-        message="Xóa chuỗi tài liệu thành công"
+        message="Đã xóa chuỗi tài liệu"
     )
 
 @router.patch("/chuoi-tai-lieu/{series_id}/tai-lieu", response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))])
@@ -176,7 +176,7 @@ async def reorder_series_documents(series_id: str, document_ids: List[str], curr
 async def link_series(document_id: str, series_id: str, current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await SeriesService.link_series(document_id, series_id, current_user), 
-        message="Liên kết chuỗi tài liệu thành công", 
+        message="Đã thêm tài liệu vào chuỗi", 
         status=200
     )
 
@@ -229,7 +229,7 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id, "author_id": str(current_user.id)})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không có quyền")
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu hoặc bạn không hiện có quyền")
     import httpx
     target = None
     try:
@@ -240,7 +240,7 @@ async def transfer_document(document_id: str, new_owner_id: str = Query(...), cu
     except Exception:
         pass
     if not target:
-        raise HTTPException(status_code=404, detail="Không tìm thấy người nhận chuyển nhượng")
+        raise HTTPException(status_code=404, detail="Không tìm thấy người để chuyển nhượng")
     await db["documents"].update_one(
         {"_id": document_id},
         {"$set": {"author_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}}

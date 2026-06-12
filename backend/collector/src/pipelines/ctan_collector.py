@@ -83,7 +83,7 @@ class CTANCollector:
                 payload["title"] = raw_title.strip()
                 
                 desc_el = await page.query_selector('main p')
-                payload["description"] = await desc_el.inner_text() if desc_el else "No description available."
+                payload["description"] = await desc_el.inner_text() if desc_el else "No description available"
                 
                 author_el = await page.query_selector('main table td a[href*="/author/"]')
                 authors_list = []
@@ -111,7 +111,7 @@ class CTANCollector:
                     else:
                         logger.warning(f"Link tải bị trống trên trang: {book_url}")
                 else:
-                    logger.warning(f"Tìm mỏi mắt không thấy nút tải ở XPath trên trang: {book_url}")
+                    logger.warning(f"Không tìm thấy nút tải qua XPath trên trang: {book_url}")
                 
             except Exception as e:
                 logger.error(f"Gặp lỗi: {e}")
@@ -199,7 +199,7 @@ class CTANCollector:
                 logger.info(f"Đã đóng gói và đẩy file Markdown lên: {minio_url_md}")
                 payload["markdown_url"] = minio_url_md
                 
-                logger.info(f"Xử lý êm xuôi {filename}")
+                logger.info(f"Xử lý hoàn tất {filename}")
             else:
                 logger.error(f"Tải thất bại {url}")
                 return
@@ -215,7 +215,7 @@ class CTANCollector:
             book_document = {
                 "title": title,
                 "slug": slug,
-                "description": payload.get("description", "Extracted via CTAN bot."),
+                "description": payload.get("description", "Extracted via CTAN bot"),
                 "file_url": minio_url_book,
                 "pdf_url": payload.get("pdf_url"),
                 "markdown_url": payload.get("markdown_url"),
