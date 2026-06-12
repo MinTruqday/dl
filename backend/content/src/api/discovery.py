@@ -39,10 +39,10 @@ async def smart_search(query: str, limit: int=10, current_user: UserInDB=Depends
                 result = resp.json()
                 return APIResponse(data=result, message='Đã tìm kiếm thông minh bằng AI')
             else:
-                logger.error(f"Tìm kiếm thông minh thất bại với truy vấn '{query}': {resp.status_code}")
+                logger.error("Tìm kiếm thông minh thất bại với truy vấn '{query}': {resp.status_code}")
                 return APIResponse(data=await DocumentService.get_text_search(query, limit), message='Đã chuyển sang tìm kiếm tiêu chuẩn')
     except Exception as e:
-        logger.error(f"Tìm kiếm thông minh gặp ngoại lệ với truy vấn '{query}': {e}")
+        logger.error("Tìm kiếm thông minh gặp ngoại lệ với truy vấn '{query}'")
         return APIResponse(data=await DocumentService.get_text_search(query, limit), message='Đã chuyển sang tìm kiếm tiêu chuẩn')
 
 @router.get('/goi-y/ai', response_model=APIResponse[Any])

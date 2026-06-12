@@ -52,11 +52,11 @@ class SemanticRouter:
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
                 
-            logger.info(f"Đã phân loại yêu cầu vào luồng '{route}'")
+            logger.info("Đã phân loại yêu cầu vào luồng '{route}'")
             return {"route": route, "answer": answer}
             
         except Exception as e:
-            logger.error(f"Điều hướng yêu cầu thất bại do lỗi: {e}")
+            logger.error("Điều hướng yêu cầu thất bại do lỗi")
             return {"route": "knowledge", "answer": ""}
 
 semantic_router = SemanticRouter()

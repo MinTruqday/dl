@@ -28,7 +28,7 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"Lỗi thêm dữ liệu vào hàng đợi VectorStore do: {e}")
+                logger.error("Lỗi thêm dữ liệu vào hàng đợi VectorStore do")
 
     async def ensure_collection(self):
         try:
@@ -41,7 +41,7 @@ class VectorStore:
                     vectors_config=VectorParams(size=embedding_service._dimensions, distance=Distance.COSINE)
                 )
         except Exception as e:
-            logger.error(f"Lỗi khởi tạo bộ sưu tập VectorStore do: {e}")
+            logger.error("Lỗi khởi tạo bộ sưu tập VectorStore do")
             raise
 
     async def upsert(self, ids: List[str], embeddings: List[List[float]], documents: List[str], metadatas: List[Dict]):
@@ -68,7 +68,7 @@ class VectorStore:
             )
             return [{"text": hit.payload.get("text", ""), "metadata": {k: v for k, v in hit.payload.items() if k != "text"}, "score": hit.score} for hit in results]
         except Exception as e:
-            logger.error(f"Lỗi truy vấn VectorStore do: {e}")
+            logger.error("Lỗi truy vấn VectorStore do")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -78,7 +78,7 @@ class VectorStore:
                 points_selector=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))])
             )
         except Exception as e:
-            logger.error(f"Lỗi xóa dữ liệu trên VectorStore do: {e}")
+            logger.error("Lỗi xóa dữ liệu trên VectorStore do")
             raise
 
 vector_store = VectorStore()

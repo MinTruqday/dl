@@ -381,7 +381,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(status_code=403, detail='Không có quyền chỉnh sửa nhiệm vụ này')
         await db['collaboration_tasks'].update_one({'_id': task_id}, {'$set': {'is_done': is_done}})
-        await CollaborationService.log_activity(task['document_id'], current_user.full_name, 'Cập nhật nhiệm vụ', f"Đã đánh dấu nhiệm vụ '{task['task_desc']}' thành {('Hoàn thành' if is_done else 'Chưa xong')}")
+        await CollaborationService.log_activity(task['document_id'], current_user.full_name, 'Cập nhật nhiệm vụ', "Đã đánh dấu nhiệm vụ '{task['task_desc']}' thành {('Hoàn thành' if is_done else 'Chưa xong')}")
         return {'message': 'Đã cập nhật nhiệm vụ'}
 
     @staticmethod

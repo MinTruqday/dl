@@ -106,7 +106,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error(f'Lỗi xóa tệp vật lý: {e}')
+                logger.error('Lỗi xóa tệp vật lý')
 
         return True
 

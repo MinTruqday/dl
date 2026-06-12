@@ -36,10 +36,10 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 try:
                     doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
                     if doc_res.status_code not in [200, 201]:
-                        return {"answer": f"Lỗi bảo mật: Bạn không có quyền truy cập vào tài liệu {doc_id} hoặc tài liệu không tồn tại", "route": "error"}
+                        return {"answer": "Bạn không có quyền truy cập hoặc tài liệu không tồn tại", "route": "error"}
                 except Exception as e:
-                    logger.error(f"Kiểm tra quyền truy cập tài liệu {doc_id} thất bại: {e}")
-                    return {"answer": f"Lỗi: Không thể xác thực quyền truy cập tài liệu {doc_id} lúc này", "route": "error"}
+                    logger.error('Lỗi kiểm tra quyền truy cập tài liệu')
+                    return {"answer": "Không thể xác thực quyền truy cập tài liệu", "route": "error"}
 
         route_data = await semantic_router.execute(req.query)
         route = route_data["route"]
@@ -74,12 +74,12 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
+            "answer": final_answer or "Hệ thống đang gặp sự cố vui lòng thử lại sau",
             "route": "agentic_ai"
         }
     except Exception as e:
-        logger.error(f"Lỗi thực thi trong /chat: {e}")
-        return {"answer": "Hệ thống đang gặp sự cố, vui lòng thử lại sau", "route": "error"}
+        logger.error('Lỗi thực thi AI')
+        return {"answer": "Hệ thống đang gặp sự cố vui lòng thử lại sau", "route": "error"}
 
 
 @router.post("/luong-du-lieu")
@@ -119,12 +119,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     try:
                         doc_res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{doc_id}", headers={"Authorization": f"Bearer {req.token}"}, timeout=10)
                         if doc_res.status_code not in [200, 201]:
-                            yield f"event: message\ndata: {json.dumps({'chunk': f'Loi bao mat: Ban khong co quyen truy cap vao tai lieu {doc_id}'})}\n\n"
+                            yield f"event: message\ndata: {json.dumps({'chunk': 'Ban khong co quyen truy cap hoac tai lieu khong ton tai'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
-                        logger.error(f"Kiểm tra quyền truy cập tài liệu {doc_id} thất bại: {e}")
-                        yield f"event: message\ndata: {json.dumps({'chunk': f'Loi: Khong the xac thuc quyen truy cap tai lieu {doc_id}'})}\n\n"
+                        logger.error('Lỗi kiểm tra quyền truy cập tài liệu')
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'Khong the xac thuc quyen truy cap tai lieu'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
 
@@ -231,7 +231,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_session_end(session_id, "done")
 
         except Exception as e:
-            logger.exception(f"Lỗi thực thi luồng do {e}")
+            logger.exception('Lỗi thực thi luồng AI')
             agentops_harness.record_session_end(session_id, "failed")
             yield f"event: message\ndata: {json.dumps({'chunk': 'He thong dang gap su co, vui long thu lai sau'})}\n\n"
 

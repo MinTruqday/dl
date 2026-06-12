@@ -38,7 +38,7 @@ class PublicationService:
             logger.error('Thư viện đánh giá độ đọc chưa cài đặt')
             return {'error': 'Tính năng phân tích độ đọc chưa khả dụng'}
         except Exception as e:
-            logger.error(f'Lỗi khi phân tích mức độ dễ đọc: {e}')
+            logger.error('Lỗi khi phân tích mức độ dễ đọc')
             return {'error': 'Lỗi phân tích nội dung'}
 
     @staticmethod

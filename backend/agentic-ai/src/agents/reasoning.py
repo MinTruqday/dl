@@ -25,7 +25,7 @@ class Reasoning:
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
-            logger.error(f"Thực thi thất bại do lỗi: {e}")
+            logger.error("Thực thi thất bại do lỗi")
             return f"Lỗi suy luận: {str(e)}"
 
     async def evaluate_quality(self, query: str, answer: str, context_documents: List[Dict]) -> Dict:
@@ -56,7 +56,7 @@ class Reasoning:
             
             return json.loads(result_text)
         except Exception as e:
-            logger.error(f"Đánh giá chất lượng thất bại do lỗi: {e}")
+            logger.error("Đánh giá chất lượng thất bại do lỗi")
             return {"overall": 0.5, "should_retry": False, "feedback": f"Evaluation lỗi: {str(e)}"}
 
     def _build_context(self, documents: List[Dict]) -> str:

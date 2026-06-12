@@ -44,7 +44,7 @@ class ContextHarness:
                 import redis.asyncio as aioredis
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception as e:
-                logger.error(f"Kết nối Redis thất bại: {e}")
+                logger.error('Lỗi kết nối bộ nhớ đệm')
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -62,7 +62,7 @@ class ContextHarness:
                     pass
             return history
         except Exception as e:
-            logger.warning(f"Không thể tải lịch sử cho phiên làm việc {session_id}: {e}")
+            logger.warning('Lỗi tải lịch sử phiên làm việc')
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -73,7 +73,7 @@ class ContextHarness:
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception as e:
-            logger.warning(f"Không thể tải cài đặt của người dùng {user_id}: {e}")
+            logger.warning('Lỗi tải cài đặt người dùng')
             return ""
 
     async def build_context(
@@ -112,10 +112,7 @@ class ContextHarness:
             estimated_tokens=estimated,
         )
 
-        logger.info(
-            f"context built session={session_id} user={user_id} "
-            f"history_turns={len(truncated_history)} estimated_tokens={estimated}"
-        )
+        logger.info('Xây dựng ngữ cảnh hoàn tất')
         return ctx
 
     async def save_turn(self, session_id: str, role: str, content: str, ttl_seconds: int = 86400):
@@ -132,7 +129,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception as e:
-            logger.warning(f"Không thể lưu lượt tương tác cho phiên làm việc {session_id}: {e}")
+            logger.warning('Lỗi lưu tương tác phiên làm việc')
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -140,9 +137,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info(f"Đã xóa phiên làm việc: {session_id}")
+            logger.info('Đã xóa phiên làm việc')
         except Exception as e:
-            logger.warning(f"Không thể xóa phiên làm việc {session_id}: {e}")
+            logger.warning('Lỗi xóa phiên làm việc')
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

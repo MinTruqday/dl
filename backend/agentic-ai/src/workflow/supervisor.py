@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
         
     if state.get("error"):
-        logger.warning(f"Bỏ qua các công cụ tiếp theo do gặp lỗi: {state.get('error')}")
+        logger.warning('Bỏ qua các công cụ tiếp theo do gặp lỗi')
         return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "start_time": start_time}
         
     if idx >= len(steps):
@@ -112,7 +112,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res
         }
     except Exception as e:
-        logger.error(f"Thực thi node thất bại: {e}")
+        logger.error("Thực thi node thất bại")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e)
@@ -156,7 +156,7 @@ async def trimmer_node(state: ActingState):
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception as e:
-            logger.warning(f"Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi {e}")
+            logger.warning("Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
         

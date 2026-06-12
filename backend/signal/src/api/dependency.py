@@ -20,7 +20,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         email: str = payload.get('sub')
         session_id: str = payload.get('sid')
         if email is None or session_id is None:
-            logger.warning(f"Dữ liệu token bị thiếu trường sub hoặc sid")
+            logger.warning("Dữ liệu token bị thiếu trường sub hoặc sid")
             raise credentials_exception
     except jwt.PyJWTError as e:
         logger.warning(f'Phiên đăng nhập không hợp lệ {str(e)}')

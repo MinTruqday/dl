@@ -26,5 +26,5 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
         logger.info(f"Đã trích xuất {len(full_text)} ký tự từ tệp tải lên")
         return full_text
     except Exception as e:
-        logger.error(f"Không thể trích xuất văn bản từ tệp tải lên: {e}")
+        logger.error("Không thể trích xuất văn bản từ tệp tải lên")
         return ""

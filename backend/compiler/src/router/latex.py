@@ -13,7 +13,7 @@ async def compile_latex(req: CompileRequest):
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
     except Exception as e:
-        logger.error(f"Lỗi biên dịch: {e}")
+        logger.error("Lỗi biên dịch")
         if isinstance(e.args[0], dict):
             raise HTTPException(status_code=400, detail=e.args[0])
         raise HTTPException(status_code=500, detail=str(e))
@@ -32,7 +32,7 @@ async def export_document(format: str, req: CompileRequest):
             
         return Response(content=file_bytes, media_type=media_type)
     except Exception as e:
-        logger.error(f"Lỗi xuất tài liệu: {e}")
+        logger.error("Lỗi xuất tài liệu")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/dinh-dang")

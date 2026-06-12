@@ -25,7 +25,7 @@ try:
     nli_model = CrossEncoder(nli_model_name)
 except Exception as e:
     nli_model = None
-    logger.error(f"Không thể tải mô hình ngôn ngữ tự nhiên do lỗi {e}")
+    logger.error("Không thể tải mô hình ngôn ngữ tự nhiên do lỗi")
 
 try:
     redis_url = settings.REDIS_URI
@@ -33,7 +33,7 @@ try:
     langchain.llm_cache = RedisSemanticCache(redis_url=redis_url, embedding=embedding_service)
     logger.info("Đã kích hoạt bộ đệm ngữ nghĩa trên Redis")
 except Exception as e:
-    logger.error(f"Lỗi truy xuất bộ đệm ngữ nghĩa Redis: {e}")
+    logger.error("Lỗi truy xuất bộ đệm ngữ nghĩa Redis")
 
 from src.workflow.state import AgentState
 
@@ -56,7 +56,7 @@ try:
     llm = llm.with_fallbacks([_fallback_llm])
     logger.info(f"Đã thiết lập chuỗi dự phòng cho mô hình ngôn ngữ: chính -> {settings.FALLBACK_MODEL}")
 except Exception as e:
-    logger.warning(f"Cấu hình dự phòng LLM thất bại: {e}")
+    logger.warning("Cấu hình dự phòng LLM thất bại")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -80,7 +80,7 @@ async def contextualize_question(state: AgentState):
         final_q = q_match.group(1).strip() if q_match else content.replace("<query>", "").replace("</query>", "").strip()
         return {"question": final_q}
     except Exception as e:
-        logger.error(f"Contextualization lỗi: {e}")
+        logger.error("Contextualization lỗi")
         return {"question": question}
 
 async def route_question(state: AgentState):
@@ -98,7 +98,7 @@ async def route_question(state: AgentState):
         route_val = route_match.group(1).strip() if route_match else ("direct" if "direct" in res else "rag")
         return {"current_source": "db", "route": route_val}
     except Exception as e:
-        logger.error(f"Lỗi điều hướng do {e}")
+        logger.error("Lỗi điều hướng do")
         return {"current_source": "db", "route": "rag"}
 
 def decide_initial_route(state: AgentState):
@@ -135,7 +135,7 @@ async def retrieve_db(state: AgentState):
                 extracted_documents.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception as e:
-            logger.error(f"Truy xuất chéo tài liệu lỗi: {e}")
+            logger.error("Truy xuất chéo tài liệu lỗi")
 
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
@@ -159,7 +159,7 @@ async def retrieve_db(state: AgentState):
                 q_clean = q.strip("- 123. \r")
                 if q_clean: queries.append(q_clean)
     except Exception as e:
-        logger.error(f"Lỗi chiến lược truy xuất dữ liệu do {e}")
+        logger.error("Lỗi chiến lược truy xuất dữ liệu do")
             
     extracted_documents = []
     
@@ -177,7 +177,7 @@ async def retrieve_db(state: AgentState):
                 doc['_query'] = q
                 all_raw_documents.append(doc)
         except Exception as e:
-            logger.error(f"Lỗi tìm kiếm vector cho truy vấn '{q}': {e}")
+            logger.error("Lỗi tìm kiếm vector cho truy vấn '{q}'")
             
     if all_raw_documents:
         if reranker:
@@ -188,7 +188,7 @@ async def retrieve_db(state: AgentState):
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
                 top_documents = retrieval_service._lost_in_the_middle_reorder([doc for doc, score in scored_documents[:6]])[:3]
             except Exception as e:
-                logger.error(f"Lỗi sắp xếp lại trên Đồ thị Tri thức do {e}")
+                logger.error("Lỗi sắp xếp lại trên Đồ thị Tri thức do")
                 top_documents = all_raw_documents[:3]
         else:
             top_documents = all_raw_documents[:3]
@@ -208,7 +208,7 @@ async def retrieve_internet(state: AgentState):
         results = await search_engine.execute(question)
         return {"documents": [f"[Nguồn Internet]\n{results}"], "current_source": "internet"}
     except Exception as e:
-        logger.error(f"Lỗi tìm kiếm trên web do {e}")
+        logger.error("Lỗi tìm kiếm trên web do")
         return {"documents": [], "current_source": "internet"}
 
 async def grade_documents(state: AgentState):
@@ -226,7 +226,7 @@ async def grade_documents(state: AgentState):
             if "yes" in response.content.strip().lower():
                 filtered_documents.append(d)
         except Exception as e:
-            logger.error(f"Grading lỗi: {e}")
+            logger.error("Grading lỗi")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
@@ -248,7 +248,7 @@ async def transform_query(state: AgentState):
         res = await llm.ainvoke(prompt.format(question=question))
         return {"question": res.content.strip(), "retry_count": state.get("retry_count", 0) + 1, "current_source": "db"}
     except Exception as e:
-        logger.error(f"Lỗi biến đổi truy vấn do {e}")
+        logger.error("Lỗi biến đổi truy vấn do")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 async def generate_direct(state: AgentState):
@@ -258,7 +258,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception as e:
-        logger.error(f"Tạo phản hồi trực tiếp lỗi: {e}")
+        logger.error("Tạo phản hồi trực tiếp lỗi")
         return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def generate(state: AgentState):
@@ -295,7 +295,7 @@ async def generate(state: AgentState):
         await mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception as e:
-        logger.error(f"Generate lỗi: {e}")
+        logger.error("Generate lỗi")
         return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def grade_generation(state: AgentState):
@@ -322,7 +322,7 @@ async def grade_generation(state: AgentState):
                 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception as e:
-        logger.error(f"Grade generation lỗi: {e}")
+        logger.error("Grade generation lỗi")
         return {"hallucination_pass": "yes"}
 
 def check_hallucination(state: AgentState):

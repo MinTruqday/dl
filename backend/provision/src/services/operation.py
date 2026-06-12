@@ -68,7 +68,7 @@ class OperationService:
 
     @staticmethod
     async def trigger_backup(action: str='FULL', db=None) -> dict:
-        logger.info(f"Lệnh sao lưu '{action}' đã được kích hoạt")
+        logger.info("Lệnh sao lưu '{action}' đã được kích hoạt")
         return {'message': 'Đã xếp lịch sao lưu dữ liệu'}
 
     @staticmethod
@@ -88,7 +88,7 @@ class OperationService:
             db = db_client.mongodb.get_default_database()
         campaign = {'_id': str(uuid7()), 'title': data.get('title', 'Chiến dịch mới'), 'target_audience': data.get('target', 'ALL'), 'discount_percent': data.get('discount', 0), 'status': 'active', 'created_at': datetime.now(timezone.utc)}
         await db['marketing_campaigns'].insert_one(campaign)
-        logger.info(f"Chiến dịch '{campaign['title']}' đã được khởi tạo")
+        logger.info("Chiến dịch '{campaign['title']}' đã được khởi tạo")
         return {'message': 'Đã tạo chiến dịch tiếp thị'}
 
     @staticmethod
@@ -186,7 +186,7 @@ class OperationService:
                         formatted_categories.append({'name': name, 'count': stats['count'], 'size_bytes': stats['size']})
                 return {'status': 'healthy', 'total_buckets': len(buckets_list), 'total_size_bytes': total_size_bytes, 'total_objects_count': total_objects_count, 'buckets': buckets_data, 'categories': formatted_categories}
         except Exception as e:
-            logger.error(f'Lỗi lấy thông số từ hệ thống lưu trữ: {e}')
+            logger.error('Lỗi lấy thông số từ hệ thống lưu trữ')
             return {'status': 'unreachable', 'total_buckets': 0, 'total_size_bytes': 0, 'total_objects_count': 0, 'buckets': [], 'categories': []}
 
     @staticmethod
@@ -200,7 +200,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f"Lỗi lấy dữ liệu thống kê: {e}")
+            logger.error("Lỗi lấy dữ liệu thống kê")
         return {'total_documents': 0, 'total_assets': 0, 'collector_status': 'OFFLINE', 'last_crawl': None, 'storage_usage_mb': 0}
 
     @staticmethod
@@ -272,7 +272,7 @@ class OperationService:
                 return {'message': 'Đã từ chối yêu cầu rút tiền và hoàn tiền vào ví'}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Lỗi khi xử lý thao tác từ chối lệnh rút tiền: {e}')
+            logger.error('Lỗi khi xử lý thao tác từ chối lệnh rút tiền')
             raise HTTPException(status_code=500, detail='Từ chối giao dịch thất bại')
         finally:
             await session.end_session()

@@ -42,7 +42,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
             httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
         logger.info(f"Đã xóa hoàn toàn tài liệu {document_id}")
     except Exception as e:
-        logger.error(f"Lỗi xóa tài liệu {document_id}: {e}")
+        logger.error("Lỗi xóa tài liệu {document_id}")
         raise hard_delete_document_task.retry(exc=e)
 
 @celery_app.task(
@@ -86,5 +86,5 @@ def compile_document_tectonic(document_id, tex_content):
             logger.error(f"Lỗi biên dịch quá thời gian tài liệu {document_id}")
             return {"status": "error", "error": "Lỗi biên dịch quá thời gian có thể do vòng lặp vô hạn", "document_id": document_id}
         except Exception as e:
-            logger.exception(f"Lỗi biên dịch: {e}")
+            logger.exception("Lỗi biên dịch")
             return {"status": "error", "error": str(e), "document_id": document_id}

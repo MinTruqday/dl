@@ -63,15 +63,15 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống DocLib Agentic AI")
+    logger.info('Khởi tạo hệ thống AI thành công')
     from src.store.vector_store import vector_store
     from motor.motor_asyncio import AsyncIOMotorClient
     from core.config import settings
     try:
         await vector_store.ensure_collection()
-        logger.info("Đã khởi tạo bộ sưu tập Qdrant")
+        logger.info('Khởi tạo cơ sở dữ liệu vector thành công')
     except Exception as e:
-        logger.error(f"Không thể khởi tạo bộ sưu tập Qdrant: {e}")
+        logger.error('Lỗi khởi tạo cơ sở dữ liệu vector')
         
     try:
         if settings.MONGODB_URI:
@@ -81,6 +81,6 @@ async def startup_event():
             await db["finetune_samples"].create_index([("dataset_id", 1), ("created_at", 1)], background=True)
             await db["finetune_jobs"].create_index([("user_id", 1), ("created_at", -1)], background=True)
             await db["finetune_jobs"].create_index([("dataset_id", 1), ("status", 1)], background=True)
-            logger.info("Khởi tạo chỉ mục MongoDB cho Finetune thành công")
+            logger.info('Khởi tạo chỉ mục cơ sở dữ liệu thành công')
     except Exception as e:
-        logger.error(f"Không thể khởi tạo chỉ mục MongoDB cho Finetune: {e}")
+        logger.error('Lỗi khởi tạo chỉ mục cơ sở dữ liệu')

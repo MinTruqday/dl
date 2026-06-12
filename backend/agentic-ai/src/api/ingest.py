@@ -8,11 +8,11 @@ router = APIRouter()
 
 @router.post("/nap-du-lieu")
 async def ingest_endpoint(req: IngestRequest):
-    logger.info(f"Đang bắt đầu xử lý tài liệu {req.document_id}")
+    logger.info('Bắt đầu xử lý tài liệu')
     return await ingestion_pipeline.ingest_document(req.document_id)
 
 @router.delete("/tai-lieu/{document_id}")
 async def delete_document_endpoint(document_id: str):
-    logger.info(f"Đang xóa vector của tài liệu {document_id}")
+    logger.info('Xóa vector tài liệu')
     vector_store.delete_by_document(document_id)
-    return {"status": "success", "message": f"Đã xóa dữ liệu của tài liệu {document_id} khỏi bộ nhớ AI"}
+    return {"status": "success", "message": "Đã xóa dữ liệu tài liệu khỏi bộ nhớ AI"}

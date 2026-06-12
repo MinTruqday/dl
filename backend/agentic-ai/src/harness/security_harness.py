@@ -105,10 +105,7 @@ class SecurityHarness:
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
         if injection_violations:
-            logger.warning(
-                f"Đã chặn nỗ lực chèn mã độc session={session_id} user={user_id} "
-                f"violations={injection_violations} risk={risk_score:.2f}"
-            )
+            logger.warning('Đã chặn nỗ lực chèn mã độc')
             return ScanResult(
                 passed=False,
                 blocked=True,
@@ -118,9 +115,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info(
-                f"Đã ẩn thông tin cá nhân nhạy cảm session={session_id} user={user_id} types={pii_violations}"
-            )
+            logger.info('Đã ẩn thông tin cá nhân nhạy cảm')
 
         return ScanResult(
             passed=True,
@@ -135,10 +130,7 @@ class SecurityHarness:
             return text
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
-            logger.error(
-                f"Đã chặn rò rỉ thông tin xác thực session={session_id} "
-                f"violations={credential_violations}"
-            )
+            logger.error('Đã chặn rò rỉ thông tin xác thực')
             return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm, vui lòng thử lại"
         sanitized, _ = self._redact_pii(text)
         return sanitized

@@ -46,7 +46,7 @@ class Action:
                 tool_params = tool_call["args"]
                 
                 if tool_name not in self.tool_map:
-                    return f"Không tìm thấy công cụ '{tool_name}' không tồn tại"
+                    return "Không tìm thấy công cụ '{tool_name}' không tồn tại"
                     
                 selected_tool = self.tool_map[tool_name]
                 
@@ -54,7 +54,7 @@ class Action:
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
                     return f"Tác vụ {tool_name} cần bạn phê duyệt để tiếp tục"
 
-                logger.info(f"Đang gọi công cụ '{tool_name}' với tham số {tool_params}")
+                logger.info("Đang gọi công cụ '{tool_name}' với tham số {tool_params}")
                 
                 try:
                     tool_result = await selected_tool.ainvoke(tool_params, config={"configurable": {"token": token}})
@@ -63,13 +63,13 @@ class Action:
                     from langchain_core.messages import ToolMessage
                     messages.append(res)
                     messages.append(ToolMessage(content=f"Lỗi khi thực thi công cụ {str(e)}, vui lòng kiểm tra lại dữ liệu gửi tool", tool_call_id=tool_call["id"]))
-                    logger.warning(f"Công cụ gặp sự cố, đang thử lại lần {attempt+1}/3: {e}")
+                    logger.warning("Công cụ gặp sự cố, đang thử lại lần {attempt+1}/3")
                     if attempt == 2:
                         return f"Đã xảy ra lỗi khi thực thi thao tác sau 3 lần thử: {str(e)}"
 
                 
         except Exception as e:
-            logger.error(f"Thực thi tác vụ gặp sự cố do lỗi: {e}")
+            logger.error("Thực thi tác vụ gặp sự cố do lỗi")
             return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 action = Action()

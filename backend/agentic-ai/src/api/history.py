@@ -23,7 +23,7 @@ async def create_session(data: dict, db=Depends(get_db)):
     document_id = data.get('document_id')
     first_query = data.get('first_query', '')
     if not user_id:
-        raise HTTPException(status_code=400, detail="Dữ liệu bị thiếu thông tin định danh người dùng")
+        raise HTTPException(status_code=400, detail="Dữ liệu thiếu thông tin định danh người dùng")
         
     title = first_query[:40] if first_query else 'Cuộc hội thoại mới'
     session = {
@@ -75,7 +75,7 @@ async def add_message(session_id: str, data: dict, db=Depends(get_db)):
     role = data.get('role')
     content = data.get('content')
     if not user_id or not role or not content:
-        raise HTTPException(status_code=400, detail="Dữ liệu bị thiếu các trường bắt buộc")
+        raise HTTPException(status_code=400, detail="Dữ liệu thiếu trường bắt buộc")
     message_id = str(uuid7())
     message = {'_id': message_id, 'session_id': session_id, 'user_id': user_id, 'role': role, 'content': content, 'created_at': datetime.now(timezone.utc)}
     await db['ai_messages'].insert_one(message)

@@ -85,7 +85,7 @@ class SeriesService:
                 return {'message': 'Đã xóa chuỗi tài liệu'}
         except Exception as e:
             await session.abort_transaction()
-            logger.error(f'Lỗi xóa bộ tài liệu {series_id}: {e}')
+            logger.error('Lỗi xóa bộ tài liệu {series_id}')
             raise HTTPException(status_code=500, detail='Hệ thống bảo trì vui lòng thử lại sau')
         finally:
             await session.end_session()

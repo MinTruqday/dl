@@ -261,7 +261,7 @@ class NXBSTCollector:
                             break
 
                         next_page_idx = current_page + 1
-                        pagination_btn_xpath = f'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'
+                        pagination_btn_xpath = 'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'
 
                         try:
                             next_btn = await page.query_selector(pagination_btn_xpath)

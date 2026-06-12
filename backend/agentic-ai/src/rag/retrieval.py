@@ -26,7 +26,7 @@ class RetrievalService:
             logger.info(f"Loaded Reranker model {settings.RERANKER_MODEL} thành công")
         except Exception as e:
             self.reranker = None
-            logger.error(f"Tải mô hình reranker thất bại: {e}")
+            logger.error("Tải mô hình reranker thất bại")
 
     async def multi_query_retrieve(self, question: str, document_ids: Optional[List[str]] = None, k: int = 5) -> List[Dict]:
         logger.info(f"Đang truy xuất thông tin đa chiều cho {question}")
@@ -58,7 +58,7 @@ class RetrievalService:
             queries = [q for q in queries if q]
             queries.append(question)
         except Exception as e:
-            logger.error(f"Lỗi tạo truy vấn đa chiều do {e}")
+            logger.error("Lỗi tạo truy vấn đa chiều do")
             queries = [question]
 
         all_documents = []
@@ -76,7 +76,7 @@ class RetrievalService:
         return unique_documents[:k]
 
     async def retrieve(self, query: str, document_ids: Optional[List[str]] = None, k: int = 5) -> List[Dict]:
-        logger.info(f"Đang truy xuất thông tin cho '{query}' với danh sách tài liệu: {document_ids}")
+        logger.info("Đang truy xuất thông tin cho '{query}' với danh sách tài liệu: {document_ids}")
         
         from src.rag.embedder import embedding_service
         query_vector = embedding_service.embed_query(query)
@@ -100,7 +100,7 @@ class RetrievalService:
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
         except Exception as e:
-            logger.error(f"Lỗi sắp xếp lại kết quả do {e}")
+            logger.error("Lỗi sắp xếp lại kết quả do")
             return documents[:k]
 
     async def cross_document_retrieve(self, question: str, document_ids: List[str], k: int = 5) -> List[Dict]:
@@ -125,7 +125,7 @@ class RetrievalService:
                 if isinstance(parsed, list) and len(parsed) == len(document_ids):
                     sub_queries = parsed
         except Exception as e:
-            logger.warning(f"Cross-doc decomposition thất bại: {e}")
+            logger.warning("Cross-doc decomposition thất bại")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

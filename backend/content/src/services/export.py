@@ -10,7 +10,7 @@ try:
     from reportlab.lib.utils import simpleSplit
     import PyPDF2
 except ImportError as e:
-    logger.error(f'Hệ thống đang thiếu thư viện xuất PDF: {e}')
+    logger.error('Hệ thống đang thiếu thư viện xuất PDF')
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -80,7 +80,7 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error(f'Thất bại khi tạo tập tin PDF đồng bộ: {e}')
+                logger.error('Thất bại khi tạo tập tin PDF đồng bộ')
                 return None
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:

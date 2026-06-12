@@ -20,7 +20,7 @@ from src.core.browser import managed_browser, get_stealth_context, download_file
 class CTANCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
-        logger.info(f"Bắt đầu thu thập danh sách bảng chữ cái CTAN")
+        logger.info("Bắt đầu thu thập danh sách bảng chữ cái CTAN")
         
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -147,7 +147,7 @@ class CTANCollector:
                 
                 minio_url_book = await storage.upload_local_file(f"books/ctan/{filename}", target_zip_local)
                         
-                logger.info(f"Đang xả nén file ZIP")
+                logger.info("Đang xả nén file ZIP")
                 os.makedirs(extracted_folder_path, exist_ok=True)
                 with zipfile.ZipFile(target_zip_local, 'r') as zip_ref:
                     zip_ref.extractall(extracted_folder_path)
@@ -204,7 +204,7 @@ class CTANCollector:
                 logger.error(f"Tải thất bại {url}")
                 return
         except Exception as e:
-            logger.error(f"Gặp lỗi: {e}")
+            logger.error("Gặp lỗi")
             raise
         finally:
             shutil.rmtree(temp_base, ignore_errors=True)

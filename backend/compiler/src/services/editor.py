@@ -28,7 +28,7 @@ class EditorService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Lỗi xuất tệp {format_type}: {e}')
+            logger.error('Lỗi xuất tệp {format_type}')
             raise HTTPException(status_code=500, detail='Lỗi xuất tài liệu')
 
     @staticmethod
@@ -47,7 +47,7 @@ class EditorService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f'Lỗi biên dịch tài liệu: {e}')
+            logger.error('Lỗi biên dịch tài liệu')
             raise HTTPException(status_code=500, detail='Lỗi biên dịch tài liệu')
 
     @staticmethod
@@ -59,7 +59,7 @@ class EditorService:
                 await redis_client.hset(f'editor_snapshot:{document_id}', user_id, str(payload))
             return {'status': 'synced_cache', 'timestamp': payload.get('timestamp')}
         except Exception as e:
-            logger.error(f'Lỗi đồng bộ thao tác: {e}')
+            logger.error('Lỗi đồng bộ thao tác')
             return {'status': 'sync_failed', 'error': str(e)}
 
     @staticmethod
@@ -146,7 +146,7 @@ class EditorService:
                 if 'data' in block and 'text' in block['data']:
                     words += len(str(block['data']['text']).split())
         except Exception as e:
-            logger.error(f'Lỗi phân tích bản nháp tài liệu {document_id}: {e}')
+            logger.error('Lỗi phân tích bản nháp tài liệu {document_id}')
 
         reading_time_minutes = max(1, words // 200)
         await db['documents'].update_one(
@@ -205,7 +205,7 @@ class EditorService:
             'document_id': str(document_id),
             'author_id': user_id,
             'action': 'GLOBAL_REPLACE',
-            'details': f"Replaced '{search_term}' with '{replace_term}'",
+            'details': "Replaced '{search_term}' with '{replace_term}'",
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
@@ -254,7 +254,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:
-            logger.error(f'Lỗi tóm tắt tài liệu: {e}')
+            logger.error('Lỗi tóm tắt tài liệu')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI')
         raise HTTPException(status_code=500, detail='Lỗi tóm tắt tài liệu')
 
@@ -289,7 +289,7 @@ class EditorService:
                     await db['documents'].update_one({'_id': document_id}, {'$addToSet': {'tags': {'$each': tags}}})
                     return {'tags': tags}
         except Exception as e:
-            logger.error(f'Lỗi phân tích thẻ: {e}')
+            logger.error('Lỗi phân tích thẻ')
             raise HTTPException(status_code=500, detail='Lỗi kết nối AI')
         raise HTTPException(status_code=500, detail='Lỗi phân tích thẻ')
 
@@ -366,7 +366,7 @@ class EditorService:
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error(f'Lỗi kiểm tra đạo văn: {e}')
+            logger.error('Lỗi kiểm tra đạo văn')
         return {'plagiarism_score': None, 'status': 'error', 'message': 'Lỗi dịch vụ đạo văn'}
 
     @staticmethod

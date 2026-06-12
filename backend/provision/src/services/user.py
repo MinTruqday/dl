@@ -67,7 +67,7 @@ class UserService:
                         timeout=3.0
                     )
         except Exception as e:
-            logger.warning(f'Lỗi khi gửi thông báo: {e}')
+            logger.warning('Lỗi khi gửi thông báo')
         logger.info(f'Thành viên {user_id} vừa bị nhắc nhở bởi {current_moderator.id}')
         return {'message': 'Đã gửi cảnh báo đến người dùng'}
 
@@ -124,7 +124,7 @@ class UserService:
             try:
                 match_query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except ValueError as e:
-                logger.warning(f'Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi: {e}')
+                logger.warning('Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi')
         pipeline = [{'$match': match_query}, {'$sort': {'created_at': -1}}]
         if skip > 0:
             pipeline.append({'$skip': skip})

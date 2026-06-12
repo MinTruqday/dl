@@ -21,7 +21,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         email: str = payload.get('sub')
         session_id: str = payload.get('sid')
         if email is None or session_id is None:
-            logger.warning(f"Dữ liệu giải mã token bị thiếu thông tin sub hoặc sid")
+            logger.warning("Dữ liệu giải mã token bị thiếu thông tin sub hoặc sid")
             raise credentials_exception
     except jwt.PyJWTError as e:
         logger.warning(f'Không thể giải mã JWT: {str(e)}')

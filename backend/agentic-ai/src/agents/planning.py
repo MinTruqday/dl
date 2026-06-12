@@ -60,7 +60,7 @@ class Planning:
             return steps
             
         except Exception as e:
-            logger.error(f"Tạo kế hoạch thất bại do lỗi: {e}")
+            logger.error("Tạo kế hoạch thất bại do lỗi")
             return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
 
 planning = Planning()

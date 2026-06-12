@@ -90,7 +90,7 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning(f"Đánh giá từ mô hình ngôn ngữ thất bại: {e}")
+        logger.warning('Lỗi đánh giá từ mô hình ngôn ngữ')
         return {"accuracy": 0, "completeness": 0, "relevance": 0, "explanation": f"Judge lỗi: {e}"}
 
 
@@ -103,9 +103,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info(f"Đã tải {len(self._dataset)} bài kiểm tra từ {dataset_path}")
+            logger.info('Tải dữ liệu kiểm tra thành công')
         except Exception as e:
-            logger.error(f"Không thể tải tập dữ liệu: {e}")
+            logger.error('Lỗi tải dữ liệu kiểm tra')
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -155,10 +155,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info(
-            f"Đánh giá RAG tổng thể: {overall:.4f}, BLEU: {bleu:.4f} "
-            f"ROUGE-L: {rouge:.4f}, độ chính xác: {retrieval_precision:.4f}"
-        )
+        logger.info('Đánh giá RAG hoàn tất')
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -190,7 +187,7 @@ class EvaluationHarness:
                 results.append({
                     "instruction": instruction,
                     "expected": expected,
-                    "actual": f"Error: {e}",
+                    "actual": "Lỗi đánh giá mô hình",
                     "bleu": 0.0,
                     "rouge_l": 0.0,
                     "judge_scores": None,
@@ -234,10 +231,7 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info(
-            f"Đánh giá thành công mô hình: {model_name} "
-            f"số lượng: {len(results)}, điểm BLEU trung bình: {avg_bleu}, điểm ROUGE trung bình: {avg_rouge}"
-        )
+        logger.info('Đánh giá mô hình thành công')
         return summary
 
     def get_dashboard_metrics(self) -> dict:

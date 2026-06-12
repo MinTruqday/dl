@@ -157,13 +157,13 @@ class DocumentService:
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Tài liệu được cập nhật",
-                            "body": f"Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật",
+                            "body": "Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật",
                             "type": "DOCUMENT_UPDATE"
                         },
                         timeout=3.0
                     )
             except Exception as e:
-                logger.error(f"Không thể gửi thông báo cập nhật cho tài liệu {document_id}: {e}")
+                logger.error("Không thể gửi thông báo cập nhật cho tài liệu {document_id}")
         
         logger.info(f"Người dùng {current_user.id} cập nhật tài liệu {document_id}")
         
@@ -356,7 +356,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get('data')
         except Exception as e:
-            logger.warning(f"Lỗi tra cứu thông tin qua email: {e}")
+            logger.warning("Lỗi tra cứu thông tin qua email")
             
         if not target_user:
             raise HTTPException(status_code=404, detail="Email không tồn tại")
@@ -426,7 +426,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get('data')
         except Exception as e:
-            logger.warning(f"Không thể tải thông tin tác giả: {e}")
+            logger.warning("Không thể tải thông tin tác giả")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -448,7 +448,7 @@ class DocumentService:
         with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
             zf.writestr("mimetype", "application/epub+zip")
             with zf.open("OEBPS/content.xhtml", "w") as f:
-                f.write(f'<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{document.get("title")}</title></head><body><h1>{document.get("title")}</h1>'.encode("utf-8"))
+                f.write('<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{document.get("title")}</title></head><body><h1>{document.get("title")}</h1>'.encode("utf-8"))
                 for p in (document.get("content") or "").split("\n"):
                     if p.strip():
                         f.write(f"<p>{p.strip()}</p>".encode("utf-8"))

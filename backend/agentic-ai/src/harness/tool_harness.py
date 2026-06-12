@@ -43,7 +43,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info(f"Đã đăng ký công cụ {name} thời gian chờ {timeout_seconds}s số lần thử lại {max_retries}")
+        logger.info('Đã đăng ký công cụ AI')
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -57,7 +57,7 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error(f"tool={tool_name!r} Chưa được đăng ký session={session_id}")
+            logger.error('Công cụ AI chưa được đăng ký')
             return ToolResult(success=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký")
 
         start_ms = time.monotonic()
@@ -76,10 +76,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info(
-                    f"Thành công tool={tool_name} session={session_id} "
-                    f"lần thử thứ{attempt} thời gian{duration_ms}"
-                )
+                logger.info('Công cụ AI thực thi thành công')
                 return ToolResult(
                     success=True,
                     data=result_data,
@@ -89,26 +86,18 @@ class ToolHarness:
 
             except asyncio.TimeoutError:
                 last_error = f"Timeout after {definition.timeout_seconds}s"
-                logger.warning(
-                    f"Hết thời gian chờ tool={tool_name} session={session_id} lần thử thứ{attempt}"
-                )
+                logger.warning('Công cụ AI hết thời gian chờ')
 
             except Exception as e:
                 last_error = str(e)
-                logger.warning(
-                    f"error tool={tool_name} session={session_id} "
-                    f"lần thử thứ{attempt} error={last_error!r}"
-                )
+                logger.warning('Lỗi thực thi công cụ AI')
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
         duration_ms = int((time.monotonic() - start_ms) * 1000)
-        logger.error(
-            f"Thất bại sau {attempt} lần thử tool={tool_name} "
-            f"session={session_id} với lỗi{last_error!r} thời gian{duration_ms}"
-        )
+        logger.error('Thất bại thực thi công cụ AI')
         return ToolResult(
             success=False,
             data=None,

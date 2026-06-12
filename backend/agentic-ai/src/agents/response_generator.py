@@ -23,7 +23,7 @@ class ResponseGenerator:
         logger.info(f"Đang tổng hợp kết quả cho truy vấn: {query[:50]}")
         
         if _contains_injection(query):
-            logger.warning(f"Phát hiện dấu hiệu chèn mã độc vào câu truy vấn")
+            logger.warning("Phát hiện dấu hiệu chèn mã độc vào câu truy vấn")
             yield "Yêu cầu này vi phạm chính sách sử dụng. Vui lòng đặt câu hỏi khác"
             return
         

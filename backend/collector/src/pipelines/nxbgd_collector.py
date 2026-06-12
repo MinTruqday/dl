@@ -254,6 +254,6 @@ class NXBGDCollector:
             await self.close()
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info(f"Bắt đầu kéo dữ liệu từ NXBGD cho toàn bộ các lớp")
+    logger.info("Bắt đầu kéo dữ liệu từ NXBGD cho toàn bộ các lớp")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

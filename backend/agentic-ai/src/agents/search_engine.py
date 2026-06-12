@@ -51,11 +51,11 @@ class SearchEngine:
                 formatted += f"- {res.get('title')}: {res.get('body')}\n  (Nguồn: {res.get('href')})\n"
             return formatted
         except Exception as e:
-            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi: {e}")
+            logger.error("Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info(f"Đang tìm kiếm thông tin cho '{query}'")
+        logger.info("Đang tìm kiếm thông tin cho '{query}'")
         
         if _is_ssrf_attempt(query):
             logger.warning(f"Đã chặn nỗ lực tấn công SSRF từ truy vấn: {query}")

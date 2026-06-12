@@ -74,7 +74,7 @@ class IngestionPipeline:
                     "metadata": {**metadata, "chunk_id": "summary_001", "chunk_type": "summary", "chunk_index": -1, "extraction_method": extract_method}
                 }
             except Exception as e:
-                logger.error(f"Không thể tạo đoạn tóm tắt toàn cục: {e}")
+                logger.error("Không thể tạo đoạn tóm tắt toàn cục")
                 return None
 
         if doc_chunks:
@@ -195,7 +195,7 @@ class IngestionPipeline:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.error(f"Lỗi nạp dữ liệu từ {f}: {e}")
+                            logger.error("Lỗi nạp dữ liệu từ {f}")
                             
         return "\n\n".join(all_text)
 
@@ -233,7 +233,7 @@ class IngestionPipeline:
             logger.info(f"Đã tải xuống {len(data)} byte từ MinIO")
             return data
         except Exception as e:
-            logger.error(f"Download lỗi: {e}")
+            logger.error("Download lỗi")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -261,7 +261,7 @@ class IngestionPipeline:
             logger.error("Hệ thống đang thiếu thư viện phân tích nội dung")
             return ""
         except Exception as e:
-            logger.error(f"Quá trình phân tích dữ liệu thất bại do lỗi: {e}")
+            logger.error("Quá trình phân tích dữ liệu thất bại do lỗi")
             return ""
 
 ingestion_pipeline = IngestionPipeline()

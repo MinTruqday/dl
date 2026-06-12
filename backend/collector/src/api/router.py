@@ -29,7 +29,7 @@ async def trigger_collection(req: CollectionRequest):
         queue_name = 'ctan_queue'
         payload['pages'] = pages
     else:
-        raise HTTPException(status_code=400, detail=f"Nguồn dữ liệu '{source}' chưa được hỗ trợ")
+        raise HTTPException(status_code=400, detail="Nguồn dữ liệu '{source}' chưa được hỗ trợ")
         
     try:
         await mq_client.publish(queue_name, payload)

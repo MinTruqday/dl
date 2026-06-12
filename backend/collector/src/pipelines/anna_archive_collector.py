@@ -21,7 +21,7 @@ class AnnaArchiveCollector:
     @staticmethod
     async def run_list_collector(search_query: str = "", pages: int = 0):
         if search_query:
-            logger.info(f"Bắt đầu tìm kiếm phân trang trên Anna's Archive: {search_query}")
+            logger.info("Bắt đầu tìm kiếm phân trang trên Anna's Archive: {search_query}")
         else:
             logger.info("Bắt đầu thu thập hàng loạt từ Anna's Archive")
         encoded = urllib.parse.quote(search_query)

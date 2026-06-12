@@ -27,5 +27,5 @@ async def submit_feedback(req: FeedbackRequest):
         logger.info(f"Đã lưu đánh giá cho tin nhắn {req.message_id}")
         return {"status": "success", "message": "Cảm ơn bạn đã đóng góp ý kiến để cải thiện AI"}
     except Exception as e:
-        logger.error(f"Lỗi lưu đánh giá: {e}")
+        logger.error("Lỗi lưu đánh giá")
         return {"status": "error", "message": "Không thể lưu ý kiến lúc này"}

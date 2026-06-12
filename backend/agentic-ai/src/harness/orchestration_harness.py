@@ -25,9 +25,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error(
-                f"Hệ thống bảo vệ bị ngắt sau {self._failures} lần thất bại"
-            )
+            logger.error('Hệ thống bảo vệ bị ngắt do lỗi liên tục')
 
     def record_success(self):
         self._failures = 0
@@ -38,7 +36,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("circuit breaker RESET do hết thời gian chờ")
+            logger.info('Khởi động lại hệ thống bảo vệ')
             self._tripped_at = None
             self._failures = 0
             return False
@@ -77,10 +75,7 @@ class OrchestrationHarness:
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
             remaining = int(self._circuit_breaker.remaining_seconds())
-            logger.error(
-                f"Hệ thống bảo vệ đã kích hoạt chặn yêu cầu session={session_id}"
-                f"retry_after={remaining}s"
-            )
+            logger.error('Hệ thống bảo vệ chặn yêu cầu')
             yield {
                 "type": "error",
                 "message": f"Hệ thống đang tạm ngưng do quá tải, vui lòng thử lại sau {remaining} giây",
@@ -88,28 +83,26 @@ class OrchestrationHarness:
             return
 
         self._open_session(session_id)
-        logger.info(f"Bắt đầu phiên làm việc session={session_id}")
+        logger.info('Bắt đầu phiên làm việc')
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info(f"Phiên làm việc đã bị hủy session={session_id}")
+                        logger.info('Phiên làm việc bị hủy')
                         yield {"type": "error", "message": "Phiên làm việc đã bị huỷ"}
                         return
                     yield event
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info(f"Phiên làm việc thành công với session={session_id}")
+            logger.info('Phiên làm việc thành công')
 
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error(
-                f"Phiên làm việc quá hạn ({SESSION_HARD_TIMEOUT_SECONDS}s) session={session_id}"
-            )
+            logger.error('Phiên làm việc quá hạn')
             yield {
                 "type": "error",
                 "message": f"Yêu cầu vượt quá thời gian xử lý cho phép ({SESSION_HARD_TIMEOUT_SECONDS}s), vui lòng thử lại",
@@ -117,20 +110,20 @@ class OrchestrationHarness:
 
         except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.warning(f"Đã hủy phiên làm việc session={session_id}")
+            logger.warning('Đã hủy phiên làm việc')
             yield {"type": "error", "message": "Phiên làm việc bị huỷ do kết nối bị đứt"}
 
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.exception(f"Phiên làm việc thất bại session={session_id} error={e}")
+            logger.exception('Lỗi phiên làm việc')
             yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info(f"Đã nhận yêu cầu hủy session={session_id}")
+            logger.info('Nhận yêu cầu hủy phiên làm việc')
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())

@@ -18,9 +18,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'Lỗi tải hình ảnh lên hệ thống: {e}')
+            logger.error('Lỗi tải hình ảnh lên hệ thống')
             raise HTTPException(status_code=500, detail='Lỗi tải hình ảnh lên hệ thống')
-        return {'url': filename, 'filename': filename, 'message': f'Đã tải hình ảnh lên hệ thống'}
+        return {'url': filename, 'filename': filename, 'message': 'Đã tải hình ảnh lên hệ thống'}
 
     @staticmethod
     async def upload_document(file, db=None):
@@ -35,9 +35,9 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error(f'Lỗi tải tài liệu lên hệ thống: {e}')
+            logger.error('Lỗi tải tài liệu lên hệ thống')
             raise HTTPException(status_code=500, detail='Lỗi tải tài liệu lên hệ thống')
-        return {'url': filename, 'filename': filename, 'extension': ext, 'message': f'Đã tải tài liệu lên hệ thống'}
+        return {'url': filename, 'filename': filename, 'extension': ext, 'message': 'Đã tải tài liệu lên hệ thống'}
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):
@@ -47,5 +47,5 @@ class UploadService:
             url = await generate_presigned_url(file_path, 3600)
             return {'download_url': url}
         except Exception as e:
-            logger.error(f'Lỗi tạo liên kết tải xuống: {e}')
+            logger.error('Lỗi tạo liên kết tải xuống')
             raise HTTPException(status_code=500, detail='Thất bại khi tạo liên kết tải về')

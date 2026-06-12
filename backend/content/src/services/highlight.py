@@ -55,7 +55,7 @@ class HighlightService:
             try:
                 match_query['created_at'] = {'$lt': datetime.fromisoformat(cursor.replace('Z', '+00:00'))}
             except ValueError as e:
-                logger.warning(f'Thời gian {cursor} sai chuẩn ISO: {e}')
+                logger.warning('Thời gian {cursor} sai chuẩn ISO')
         pipeline = [{'$match': match_query}, {'$sort': {'created_at': -1}}]
         if skip > 0:
             pipeline.append({'$skip': skip})
@@ -81,7 +81,7 @@ class HighlightService:
             note = h.get('note', '')
             lines.append(f'> {text}')
             if note:
-                lines.append(f'')
+                lines.append('')
                 lines.append(f'**Ghi chu:** {note}')
             lines.append('')
             lines.append('---')

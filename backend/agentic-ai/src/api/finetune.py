@@ -83,7 +83,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         })
 
     except Exception as e:
-        logger.error(f"Huấn luyện tinh chỉnh thất bại cho tác vụ {job_id}: {e}")
+        logger.error('Lỗi huấn luyện tinh chỉnh')
         sync_update({"status": "failed", "error_message": str(e)})
     finally:
         active_jobs.pop(job_id, None)
@@ -208,7 +208,7 @@ async def import_documents(req: dict):
         for chunk in chunks:
             try:
                 client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=hf_token)
-                prompt = f"Tạo 3 cặp câu hỏi - câu trả lời từ văn bản sau. Trả về mảng JSON với khóa 'instruction', 'input' (rỗng), 'output'.\n\nVăn bản:\n{chunk}\n\nJSON:"
+                prompt = "Tạo 3 cặp câu hỏi - câu trả lời từ văn bản sau. Trả về mảng JSON với khóa 'instruction', 'input' (rỗng), 'output'.\n\nVăn bản:\n{chunk}\n\nJSON:"
                 messages = [{"role": "user", "content": prompt}]
                 resp = await client.chat_completion(messages=messages, max_tokens=1024, temperature=0.3)
                 raw = resp.choices[0].message.content.strip()
@@ -220,7 +220,7 @@ async def import_documents(req: dict):
                     if p.get("instruction") and p.get("output"):
                         samples.append({"_id": str(uuid7()), "dataset_id": ds_id, "instruction": p["instruction"], "input": p.get("input", ""), "output": p["output"], "created_at": datetime.now(timezone.utc)})
             except Exception as e:
-                logger.warning(f"Lỗi trích xuất dữ liệu huấn luyện: {e}")
+                logger.warning('Lỗi trích xuất dữ liệu huấn luyện')
     if samples:
         await db["finetune_samples"].insert_many(samples)
         await db["finetune_datasets"].update_one({"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}})
@@ -310,7 +310,7 @@ async def deploy_model(job_id: str, req: dict):
     
     hf_token = getattr(settings, "HF_TOKEN", None)
     if not hf_token:
-        raise HTTPException(status_code=500, detail="Hệ thống đang thiếu mã xác thực để tương tác với HuggingFace Hub")
+        raise HTTPException(status_code=500, detail="Hệ thống đang thiếu mã xác thực HuggingFace")
 
     try:
         from huggingface_hub import HfApi
@@ -320,13 +320,13 @@ async def deploy_model(job_id: str, req: dict):
         
         repo_id = f"{hf_username}/{model_name}"
         
-        logger.info(f"Creating repository on HuggingFace Hub: {repo_id}")
+        logger.info('Tạo kho lưu trữ HuggingFace thành công')
         api.create_repo(repo_id=repo_id, exist_ok=True)
         
         if merged_path:
             import os
             if os.path.exists(merged_path):
-                logger.info(f"Đang tải thư mục {merged_path} lên {repo_id}")
+                logger.info('Đang tải mô hình lên HuggingFace')
                 import asyncio
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(None, lambda: api.upload_folder(
@@ -335,15 +335,15 @@ async def deploy_model(job_id: str, req: dict):
                     commit_message="Deploy fine-tuned model via DocLib"
                 ))
             else:
-                logger.warning(f"Không tìm thấy thư mục đường dẫn đã gộp: {merged_path}")
+                logger.warning('Không tìm thấy thư mục mô hình đã gộp')
                 raise Exception("Không tìm thấy thư mục mô hình đã gộp")
                 
         model_name = repo_id
         await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"merged_model_name": repo_id}})
         
     except Exception as e:
-        logger.error(f"HuggingFace Hub deploy thất bại: {e}")
-        raise HTTPException(status_code=500, detail=f"Triển khai mô hình lên HuggingFace thất bại do lỗi {e}")
+        logger.error('Lỗi triển khai lên HuggingFace')
+        raise HTTPException(status_code=500, detail="Lỗi triển khai mô hình lên HuggingFace")
 
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})
     return {"status": "deployed", "model_name": model_name}

@@ -221,7 +221,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
+    logger.info("Đang gộp bộ chuyển đổi vào mô hình nền tảng")
     base_model = AutoModelForCausalLM.from_pretrained(base_model_name, device_map="cpu", torch_dtype=torch.float16, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
@@ -269,7 +269,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         else:
             logger.warning("Không tìm thấy công cụ chuyển đổi định dạng, hệ thống chỉ lưu mô hình gốc")
     except Exception as e:
-        logger.error(f"GGUF conversion thất bại: {e}")
+        logger.error("GGUF conversion thất bại")
 
     return result
 
@@ -362,7 +362,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info(f"Đang gộp bộ chuyển đổi vào mô hình nền tảng")
+    logger.info("Đang gộp bộ chuyển đổi vào mô hình nền tảng")
     base_model = AutoModelForSeq2SeqLM.from_pretrained(base_model_name, device_map="cpu", torch_dtype=torch.float32, token=hf_token)
     merged_model = PeftModel.from_pretrained(base_model, adapter_path).merge_and_unload()
     merged_path = str(MODELS_DIR / f"merged-{job_id}")
@@ -429,7 +429,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 image_data = base64.b64decode(image_b64)
                 img = Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
             except Exception as e:
-                logger.error(f"Tải hình ảnh cho quá trình huấn luyện diffusion thất bại: {e}")
+                logger.error("Tải hình ảnh cho quá trình huấn luyện diffusion thất bại")
                 continue
 
             optimizer.zero_grad()
@@ -455,7 +455,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Bước huấn luyện diffusion thất bại: {e}")
+                logger.error("Bước huấn luyện diffusion thất bại")
                 final_loss = 0.0
 
             current_step += 1

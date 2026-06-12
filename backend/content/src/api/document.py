@@ -361,7 +361,7 @@ async def broadcast_notification(document_id: str, req: BroadcastRequest, curren
                         f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                         json={
                             "target_user_id": lib["user_id"],
-                            "title": f"Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
+                            "title": "Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
                             "body": req.message,
                             "type": "SYSTEM"
                         },

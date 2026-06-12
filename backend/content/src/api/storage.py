@@ -74,7 +74,7 @@ async def download_zip(ids: str, current_user: UserInDB=Depends(require_role([Ro
                     except Exception as e:
                         print(f'Lỗi khi tải xuống {item.name}: {e}')
     zip_buffer.seek(0)
-    return StreamingResponse(zip_buffer, media_type='application/x-zip-compressed', headers={'Content-Disposition': f'attachment; filename=storage_download.zip'})
+    return StreamingResponse(zip_buffer, media_type='application/x-zip-compressed', headers={'Content-Disposition': 'attachment; filename=storage_download.zip'})
 
 @router.put('/tap-tin/{item_id}', response_model=APIResponse[StorageItemResponse])
 async def update_item(item_id: str, data: StorageItemUpdate=Body(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):

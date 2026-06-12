@@ -13,7 +13,7 @@ class MemoryManager:
             self._redis.ping()
             logger.info("Hệ thống quản lý bộ nhớ đã kết nối thành công với Redis")
         except Exception as e:
-            logger.warning(f"Không thể sử dụng Redis cho bộ nhớ: {e}")
+            logger.warning("Không thể sử dụng Redis cho bộ nhớ")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -29,7 +29,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Lỗi đọc bộ nhớ ngắn hạn do {e}")
+            logger.debug("Lỗi đọc bộ nhớ ngắn hạn do")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -47,7 +47,7 @@ class MemoryManager:
 
             self._redis.setex(key, self._short_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Lỗi lưu bộ nhớ ngắn hạn do {e}")
+            logger.debug("Lỗi lưu bộ nhớ ngắn hạn do")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -64,7 +64,7 @@ class MemoryManager:
 
             self._redis.setex(key, self._long_term_ttl, json.dumps(history, ensure_ascii=False))
         except Exception as e:
-            logger.debug(f"Lỗi lưu bộ nhớ dài hạn do {e}")
+            logger.debug("Lỗi lưu bộ nhớ dài hạn do")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -76,7 +76,7 @@ class MemoryManager:
             if data:
                 return json.loads(data)
         except Exception as e:
-            logger.debug(f"Lỗi đọc bộ nhớ dài hạn do {e}")
+            logger.debug("Lỗi đọc bộ nhớ dài hạn do")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

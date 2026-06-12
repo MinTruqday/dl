@@ -68,7 +68,7 @@ class DocumentParser:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception as e:
-            logger.error(f"Phân tích tài liệu thất bại: {e}")
+            logger.error("Phân tích tài liệu thất bại")
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -174,7 +174,7 @@ class DocumentParser:
             logger.info(f"Đã trích xuất {len(tables)} bảng dữ liệu bằng Marker TableConverter")
             return tables
         except Exception as e:
-            logger.error(f"Trích xuất bảng dữ liệu thất bại: {e}")
+            logger.error("Trích xuất bảng dữ liệu thất bại")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -326,7 +326,7 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning(f"Phân tích tài liệu thất bại trong quá trình nạp dữ liệu: {parse_result['error']}")
+            logger.warning('Phân tích tài liệu thất bại trong quá trình nạp dữ liệu')
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -401,7 +401,7 @@ class DocumentParser:
             return data, ext
 
         except Exception as e:
-            logger.error(f"Tải xuống từ MinIO thất bại: {e}")
+            logger.error("Tải xuống từ MinIO thất bại")
             return None, ""
 
 document_parser = DocumentParser()
