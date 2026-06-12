@@ -46,3 +46,13 @@ class ReviewRequest(BaseModel):
 class SynthesisRequest(BaseModel):
     document_ids: List[str]
     query: str
+
+
+class PlagiarismCheckRequest(BaseModel):
+    content: str
+
+class CoverGenerateRequest(BaseModel):
+    style: str = "minimalist"
+
+class AISuggestionRequest(BaseModel):
+    context: str

@@ -1,11 +1,12 @@
+from agentic_ai.src.schemas.inference import PlagiarismCheckRequest, CoverGenerateRequest, AISuggestionRequest
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Header
 from loguru import logger
 
 from src.schemas.editor import (
-    PlagiarismCheckRequest, KeystrokeSyncRequest, InlineSuggestionRequest, 
+    KeystrokeSyncRequest, InlineSuggestionRequest, 
     ResolveSuggestionRequest, PomodoroSyncRequest, FindReplaceRequest, 
-    AutoSaveRequest, CoverGenerateRequest, AISuggestionRequest, 
+    AutoSaveRequest, 
     InlineCommentRequest, VersionDiffRequest
 )
 from src.services.editor import EditorService
@@ -65,7 +66,7 @@ async def global_find_replace(document_id: str, payload: FindReplaceRequest, cur
 
 
 @router.post('/{document_id}/goi-y-ai')
-async def get_ai_suggestions(document_id: str, payload: AISuggestionRequest, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
+async def get_ai_suggestions(document_id: str, payload: current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.get_ai_suggestions(document_id, payload.context, current_user, agentic_ai_url), "message": 'Đã tải gợi ý từ AI', "status": 200}
 
 @router.post('/{document_id}/tom-tat')

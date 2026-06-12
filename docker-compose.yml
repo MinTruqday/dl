@@ -172,10 +172,10 @@ services:
     networks:
       - doclib_network
 
-  agentic-ai:
+  agentic_ai:
     build:
       context: ./backend
-      dockerfile: ./agentic-ai/Dockerfile
+      dockerfile: ./agentic_ai/Dockerfile
     container_name: doclib_agentic_ai
     restart: always
     ports:
@@ -191,7 +191,7 @@ services:
       - qdrant
       - ollama
     volumes:
-      - ./backend/agentic-ai/src:/app/src
+      - ./backend/agentic_ai/src:/app/src
       - ./backend/core:/app/core
       - hf_cache:/home/appuser/.cache/huggingface
     networks:

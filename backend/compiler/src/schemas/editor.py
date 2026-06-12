@@ -1,9 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
-class PlagiarismCheckRequest(BaseModel):
-    content: str
-
 class KeystrokeSyncRequest(BaseModel):
     content: str
     timestamp: Optional[float] = None
@@ -28,12 +25,6 @@ class FindReplaceRequest(BaseModel):
 
 class AutoSaveRequest(BaseModel):
     content: dict
-
-class CoverGenerateRequest(BaseModel):
-    style: str = "minimalist"
-
-class AISuggestionRequest(BaseModel):
-    context: str
 
 class InlineCommentRequest(BaseModel):
     block_id: str
