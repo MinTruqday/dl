@@ -25,7 +25,7 @@ def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("U
 
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def analyze_internal_plagiarism(document_id: str, payload: PlagiarismCheckRequest, current_user = Depends(get_current_user)):
-    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Phân tích đạo văn nội bộ thành công', "status": 200}
+    return {"data": await EditorService.analyze_internal_plagiarism(document_id, payload.model_dump(), current_user), "message": 'Đã hoàn tất phân tích đạo văn nội bộ', "status": 200}
 
 @router.post('/{document_id}/dong-bo-thao-tac')
 async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest, current_user = Depends(get_current_user)):
@@ -58,7 +58,7 @@ async def submit_for_review(document_id: str, current_user = Depends(get_current
 
 @router.post('/{document_id}/kiem-tra-dao-van-chuyen-sau')
 async def check_deep_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
-    return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Kiểm tra đạo văn chuyên sâu thành công', "status": 200}
+    return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Đã hoàn tất kiểm tra đạo văn chuyên sâu', "status": 200}
 
 @router.post('/{document_id}/thay-the-toan-cuc')
 async def global_find_replace(document_id: str, payload: FindReplaceRequest, current_user = Depends(get_current_user)):

@@ -20,7 +20,7 @@ class UploadService:
         except Exception as e:
             logger.error(f'Sự cố khi tải hình ảnh lên hệ thống lưu trữ: {e}')
             raise HTTPException(status_code=500, detail='Lỗi khi tải hình ảnh lên hệ thống lưu trữ')
-        return {'url': filename, 'filename': filename, 'message': f'Tải hình ảnh {filename} lên hệ thống thành công'}
+        return {'url': filename, 'filename': filename, 'message': f'Đã tải hình ảnh lên hệ thống'}
 
     @staticmethod
     async def upload_document(file, db=None):
@@ -37,7 +37,7 @@ class UploadService:
         except Exception as e:
             logger.error(f'Sự cố khi tải tài liệu lên hệ thống lưu trữ: {e}')
             raise HTTPException(status_code=500, detail='Lỗi khi tải tài liệu lên hệ thống lưu trữ')
-        return {'url': filename, 'filename': filename, 'extension': ext, 'message': f'Tải tài liệu {filename} lên hệ thống thành công'}
+        return {'url': filename, 'filename': filename, 'extension': ext, 'message': f'Đã tải tài liệu lên hệ thống'}
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):

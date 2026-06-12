@@ -55,7 +55,7 @@ class ReadingService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db['reading_goals'].update_one({'user_id': str(current_user.id)}, {'$set': {'target_documents': max(0, data.target_documents), 'target_pages': max(0, data.target_pages), 'period': data.period if data.period in ['weekly', 'monthly', 'yearly'] else 'monthly', 'updated_at': datetime.now(timezone.utc)}}, upsert=True)
-        return {'message': 'Thiết lập mục tiêu đọc thành công'}
+        return {'message': 'Đã thiết lập mục tiêu đọc'}
 
     @staticmethod
     async def get_reading_goal(current_user, db=None) -> dict:

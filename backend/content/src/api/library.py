@@ -10,15 +10,15 @@ router = APIRouter(prefix='/thu-vien')
 
 @router.post('/danh-sach', response_model=APIResponse[Any])
 async def create_reading_list(data: ReadingListCreate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await LibraryService.create_reading_list(data, current_user, db=db), message='Tạo danh sách đọc thành công', status=201)
+    return APIResponse(data=await LibraryService.create_reading_list(data, current_user, db=db), message='Đã tạo danh sách đọc', status=201)
 
 @router.get('/danh-sach', response_model=APIResponse[Any])
 async def get_my_lists(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await LibraryService.get_my_reading_lists(current_user, db=db), message='Lấy danh sách đọc thành công')
+    return APIResponse(data=await LibraryService.get_my_reading_lists(current_user, db=db), message='Đã tải danh sách đọc')
 
 @router.get('/danh-sach/{list_id}', response_model=APIResponse[Any])
 async def get_list_by_id(list_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db), message='Lấy chi tiết danh sách thành công')
+    return APIResponse(data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db), message='Đã tải chi tiết danh sách')
 
 @router.post('/danh-sach/{list_id}/tai-lieu/{document_id}', response_model=APIResponse[Any])
 async def add_to_list(list_id: str, document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

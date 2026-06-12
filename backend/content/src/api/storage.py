@@ -11,7 +11,7 @@ router = APIRouter(prefix='/luu-tru')
 async def create_folder(data: StorageItemCreate=Body(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     data.is_folder = True
     item = await StorageService.create_item(data, current_user.id, db=db)
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Tạo thư mục thành công', status=201)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã tạo thư mục mới', status=201)
 
 @router.post('/tap-tin', response_model=APIResponse[StorageItemResponse])
 async def create_file(background_tasks: BackgroundTasks, data: StorageItemCreate=Body(...), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -19,28 +19,28 @@ async def create_file(background_tasks: BackgroundTasks, data: StorageItemCreate
     data.is_folder = False
     item = await StorageService.create_item(data, current_user.id, db=db)
     background_tasks.add_task(AIService.process_storage_file, str(item.id), current_user.id)
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Tạo tập tin thành công', status=201)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã tạo tập tin mới', status=201)
 
 @router.get('/danh-sach', response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(parent_id: Optional[str]=None, is_trashed: bool=False, is_starred: Optional[bool]=None, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     items = await StorageService.get_items_by_parent(parent_id, current_user.id, is_trashed, is_starred, db=db)
     response_items = [StorageItemResponse(**item.dict()) for item in items]
-    return APIResponse(data=response_items, message='Lấy danh sách thành công', status=200)
+    return APIResponse(data=response_items, message='Đã tải danh sách thư mục', status=200)
 
 @router.get('/tim-kiem', response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(q: str, type: Optional[str]=None, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     items = await StorageService.search_items(q, current_user.id, type, db=db)
-    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Tìm kiếm thành công', status=200)
+    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Đã hoàn tất tìm kiếm', status=200)
 
 @router.get('/gan-day', response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(limit: int=20, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     items = await StorageService.get_recent_items(current_user.id, limit, db=db)
-    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Lấy danh sách gần đây thành công', status=200)
+    return APIResponse(data=[StorageItemResponse(**item.dict()) for item in items], message='Đã tải danh sách truy cập gần đây', status=200)
 
 @router.get('/quota', response_model=APIResponse[Any])
 async def get_storage_quota(current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     data = await StorageService.get_storage_quota(current_user.id, db=db)
-    return APIResponse(data=data, message='Lấy hạn mức thành công', status=200)
+    return APIResponse(data=data, message='Đã kiểm tra hạn mức lưu trữ', status=200)
 
 @router.post('/tap-tin/{item_id}/shortcut', response_model=APIResponse[StorageItemResponse])
 async def create_shortcut(item_id: str, target_parent_id: Optional[str]=Body(None, embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -48,7 +48,7 @@ async def create_shortcut(item_id: str, target_parent_id: Optional[str]=Body(Non
     item = await StorageService.create_shortcut(item_id, target_parent_id, current_user.id, db=db)
     if not item:
         raise HTTPException(status_code=404, detail='Không tìm thấy tệp tin gốc')
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Tạo lối tắt thành công', status=201)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã tạo lối tắt', status=201)
 
 @router.get('/tai-xuong-zip')
 async def download_zip(ids: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -92,7 +92,7 @@ async def update_item(item_id: str, data: StorageItemUpdate=Body(...), current_u
         item = await StorageService.update_item(item_id, current_user.id, data, db=db)
     if not item:
         raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Cập nhật thành công', status=200)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã cập nhật thông tin', status=200)
 
 @router.delete('/tap-tin/{item_id}', response_model=APIResponse[Any])
 async def delete_item(item_id: str, hard_delete: bool=False, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -100,26 +100,26 @@ async def delete_item(item_id: str, hard_delete: bool=False, current_user: UserI
         success = await StorageService.delete_item(item_id, current_user.id, db=db)
         if not success:
             raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
-        return APIResponse(data=None, message='Xóa vĩnh viễn thành công', status=200)
+        return APIResponse(data=None, message='Đã xóa vĩnh viễn tệp', status=200)
     else:
         item = await StorageService.update_item(item_id, current_user.id, StorageItemUpdate(is_trashed=True), db=db)
         if not item:
             raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
-        return APIResponse(data=None, message='Đưa vào thùng rác thành công', status=200)
+        return APIResponse(data=None, message='Đã chuyển vào thùng rác', status=200)
 
 @router.post('/tap-tin/{item_id}/sao-chep', response_model=APIResponse[StorageItemResponse])
 async def copy_item(item_id: str, target_parent_id: Optional[str]=Body(None, embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     item = await StorageService.copy_item(item_id, current_user.id, target_parent_id, db=db)
     if not item:
         raise HTTPException(status_code=404, detail='Không tìm thấy tập tin hoặc thư mục')
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Sao chép thành công', status=201)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã sao chép tệp', status=201)
 
 @router.post('/tap-tin/{item_id}/version', response_model=APIResponse[StorageItemResponse])
 async def add_version(item_id: str, url: str=Body(..., embed=True), size: int=Body(..., embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
     item = await StorageService.add_version(item_id, current_user.id, url, size, db=db)
     if not item:
         raise HTTPException(status_code=404, detail='Không tìm thấy tập tin')
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Cập nhật phiên bản thành công', status=200)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã cập nhật phiên bản mới', status=200)
 
 @router.post('/tap-tin/{item_id}/chia-se', response_model=APIResponse[Any])
 async def share_archive(item_id: str, email: str=Body(..., embed=True), role: str=Body('viewer', embed=True), current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.READER])), db=Depends(get_db)):
@@ -133,4 +133,4 @@ async def get_public_item(share_token: str, db=Depends(get_db)):
     if not item:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail='Liên kết chia sẻ không hợp lệ hoặc đã hết hạn')
-    return APIResponse(data=StorageItemResponse(**item.dict()), message='Lấy thông tin thành công', status=200)
+    return APIResponse(data=StorageItemResponse(**item.dict()), message='Đã tải thông tin tệp', status=200)

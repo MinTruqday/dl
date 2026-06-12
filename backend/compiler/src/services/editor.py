@@ -223,7 +223,7 @@ class EditorService:
             'created_at': datetime.now(timezone.utc)
         })
         logger.info(f'Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}')
-        return {'message': 'Thay thế nội dung toàn cục thành công', 'affected_fields': ['title', 'description', 'content']}
+        return {'message': 'Đã thay thế nội dung toàn cục', 'affected_fields': ['title', 'description', 'content']}
 
     @staticmethod
     async def get_ai_suggestions(document_id: str, context: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -381,7 +381,7 @@ class EditorService:
                     return resp.json()
         except Exception as e:
             logger.error(f'Kiểm tra đạo văn chuyên sâu thất bại: {e}')
-        return {'plagiarism_score': None, 'status': 'error', 'message': 'Không thể kết nối với máy chủ phân tích đạo văn'}
+        return {'plagiarism_score': None, 'status': 'error', 'message': 'Dịch vụ phân tích đạo văn tạm thời gián đoạn'}
 
     @staticmethod
     async def check_logic(document_id: str, content: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -410,7 +410,7 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {'corrected_text': '', 'score': 0, 'message': 'Không thể kiểm tra ngữ pháp lúc này'}
+        return {'corrected_text': '', 'score': 0, 'message': 'Dịch vụ kiểm tra ngữ pháp tạm thời gián đoạn'}
 
     @staticmethod
     async def generate_cover(document_id: str, style: str, current_user, agentic_ai_url: str, db=None) -> dict:
@@ -431,4 +431,4 @@ class EditorService:
                     )
                     logger.info(f'Đã tạo xong ảnh bìa cho tài liệu {document_id}')
                 return data
-        return {'cover_url': None, 'message': 'Tạm thời không thể tạo ảnh bìa'}
+        return {'cover_url': None, 'message': 'Dịch vụ tạo ảnh bìa tạm thời gián đoạn'}

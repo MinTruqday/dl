@@ -10,37 +10,37 @@ router = APIRouter(prefix='/doc')
 
 @router.get('/lich-su', response_model=APIResponse[Any])
 async def get_history(cursor: str=None, limit: int=Query(20), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.get_reading_history(current_user, cursor, limit, db=db), message='Lấy lịch sử đọc thành công')
+    return APIResponse(data=await ReadingService.get_reading_history(current_user, cursor, limit, db=db), message='Đã tải lịch sử đọc')
 
 @router.post('/tien-do', response_model=APIResponse[Any])
 async def update_progress(data: ProgressUpdate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.update_progress(data, current_user, db=db), message='Cập nhật tiến độ thành công')
+    return APIResponse(data=await ReadingService.update_progress(data, current_user, db=db), message='Đã cập nhật tiến độ')
 
 
 
 @router.post('/muc-tieu', response_model=APIResponse[Any])
 async def set_reading_goal(data: ReadingGoalCreate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.set_reading_goal(data, current_user, db=db), message='Thiết lập mục tiêu thành công', status=201)
+    return APIResponse(data=await ReadingService.set_reading_goal(data, current_user, db=db), message='Đã thiết lập mục tiêu', status=201)
 
 @router.get('/muc-tieu', response_model=APIResponse[Any])
 async def get_reading_goal(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.get_reading_goal(current_user, db=db), message='Lấy thông tin mục tiêu thành công')
+    return APIResponse(data=await ReadingService.get_reading_goal(current_user, db=db), message='Đã tải thông tin mục tiêu')
 
 @router.put('/trinh-bay', response_model=APIResponse[Any])
 async def update_typography(data: TypographyRequest, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.update_typography(data, current_user, db=db), message='Cập nhật hiển thị thành công')
+    return APIResponse(data=await ReadingService.update_typography(data, current_user, db=db), message='Đã cập nhật hiển thị')
 
 @router.get('/tai-lieu/{document_id}/tim-kiem', response_model=APIResponse[Any])
 async def search_in_document(document_id: str, q: str=Query(...), current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.search_in_document(document_id, q, current_user, db=db), message='Tìm kiếm trong tài liệu thành công')
+    return APIResponse(data=await ReadingService.search_in_document(document_id, q, current_user, db=db), message='Đã tìm kiếm trong tài liệu')
 
 @router.delete('/lich-su', response_model=APIResponse[Any])
 async def clear_reading_history(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.clear_reading_history(current_user, db=db), message='Xóa toàn bộ lịch sử đọc thành công')
+    return APIResponse(data=await ReadingService.clear_reading_history(current_user, db=db), message='Đã xóa toàn bộ lịch sử đọc')
 
 @router.delete('/lich-su/{document_id}', response_model=APIResponse[Any])
 async def delete_history_item(document_id: str, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
-    return APIResponse(data=await ReadingService.delete_history_item(document_id, current_user, db=db), message='Xóa mục lịch sử đọc thành công')
+    return APIResponse(data=await ReadingService.delete_history_item(document_id, current_user, db=db), message='Đã xóa mục lịch sử đọc')
 import aiohttp
 import zipfile
 import io
@@ -81,9 +81,9 @@ async def get_zip_tree(file_url: str=Query(...), db=Depends(get_db)):
                         for info in z.infolist():
                             if is_safe_zip_info(info):
                                 tree.append({'path': info.filename, 'name': info.filename.split('/')[-1] if not info.is_dir() else info.filename.split('/')[-2], 'is_dir': info.is_dir(), 'size': info.file_size})
-                        return APIResponse(data=tree, message='Lấy cây thư mục thành công')
+                        return APIResponse(data=tree, message='Đã tải cây thư mục')
                 else:
-                    return APIResponse(data=None, message='Không thể tải file', status=400)
+                    return APIResponse(data=None, message='Tệp hiện không khả dụng', status=400)
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -105,9 +105,9 @@ async def get_zip_content(file_url: str=Query(...), path: str=Query(...), db=Dep
                             file_bytes = z.read(path)
                             try:
                                 text = file_bytes.decode('utf-8')
-                                return APIResponse(data={'content': text, 'type': 'text'}, message='thành công')
+                                return APIResponse(data={'content': text, 'type': 'text'}, message='Đã tải nội dung tệp')
                             except UnicodeDecodeError:
-                                return APIResponse(data={'content': 'Tệp nhị phân không thể hiển thị trực tiếp', 'type': 'binary'}, message='thành công')
+                                return APIResponse(data={'content': 'Tệp nhị phân không hỗ trợ xem trực tiếp', 'type': 'binary'}, message='Tệp nhị phân không hỗ trợ xem trực tiếp')
                         return APIResponse(data=None, message='Không tìm thấy tệp', status=404)
     except HTTPException as he:
         raise he
