@@ -24,7 +24,7 @@ class SearchEngine:
             self.client = None
 
     async def _tavily_search(self, query: str) -> str:
-        response = await asyncio.lên_thread(
+        response = await asyncio.to_thread(
             self.client.search,
             query=query,
             search_depth="advanced",
@@ -41,7 +41,7 @@ class SearchEngine:
     async def _duckduckgo_search(self, query: str) -> str:
         try:
             from duckduckgo_search import DDGS
-            results = await asyncio.lên_thread(
+            results = await asyncio.to_thread(
                 lambda: list(DDGS().text(query, max_results=5))
             )
             if not results:
@@ -51,7 +51,7 @@ class SearchEngine:
                 formatted += f"- {res.get('title')}: {res.get('body')}\n  (Nguồn: {res.get('href')})\n"
             return formatted
         except Exception as e:
-            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi: {e}")
+            logger.error(f"Tìm kiếm dự phòng bằng DuckDuckGo gặp sự cố do lỗi: {e}")
             return ""
 
     async def execute(self, query: str) -> str:
@@ -68,7 +68,7 @@ class SearchEngine:
                     return result
                 logger.warning("Không tìm thấy kết quả trên Tavily, hệ thống tự động chuyển sang DuckDuckGo")
             except Exception as e:
-                logger.warning(f"Tìm kiếm qua Tavily thất bại ({e}), hệ thống tự động chuyển sang DuckDuckGo")
+                logger.warning(f"Tìm kiếm qua Tavily gặp sự cố ({e}), hệ thống tự động chuyển sang DuckDuckGo")
 
         result = await self._duckduckgo_search(query)
         if result:
