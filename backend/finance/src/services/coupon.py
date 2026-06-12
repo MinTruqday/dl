@@ -21,7 +21,7 @@ class CouponService:
             raise HTTPException(status_code=400, detail='Mã ưu đãi này đã tồn tại trên hệ thống')
         await db['coupons'].insert_one(coupon)
         logger.info(f"Người dùng {current_user.id} vừa tạo mã giảm giá {coupon['code']} với trạng thái {status}")
-        return {'message': f'Tạo mã ưu đãi thành công. Trạng thái: {status}', 'coupon_id': coupon['_id']}
+        return {'message': f'Đã tạo mã ưu đãi, trạng thái hiện tại: {status}', 'coupon_id': coupon['_id']}
 
     @staticmethod
     async def get_coupons(current_user, db=None) -> list:
@@ -44,7 +44,7 @@ class CouponService:
         if res.modified_count == 0:
             raise HTTPException(status_code=404, detail='Không tìm thấy mã ưu đãi')
         logger.info(f'Quản trị viên {current_user.id} đã {action} mã giảm giá {coupon_id}')
-        return {'message': f"Đã {('duyệt' if action == 'approve' else 'từ chối')} mã ưu đãi thành công"}
+        return {'message': f"Đã {('duyệt' if action == 'approve' else 'từ chối')} mã ưu đãi"}
 
     @staticmethod
     async def validate_coupon(code: str, user: Any, document_id: Optional[str]=None, db=None) -> dict:

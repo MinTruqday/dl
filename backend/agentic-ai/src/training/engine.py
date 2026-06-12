@@ -269,7 +269,7 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
         else:
             logger.warning("Không tìm thấy công cụ chuyển đổi định dạng, hệ thống chỉ lưu mô hình gốc")
     except Exception as e:
-        logger.error(f"GGUF conversion failed: {e}")
+        logger.error(f"GGUF conversion thất bại: {e}")
 
     return result
 
@@ -455,7 +455,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error(f"Diffusion training step failed: {e}")
+                logger.error(f"Diffusion training step thất bại: {e}")
                 final_loss = 0.0
 
             current_step += 1

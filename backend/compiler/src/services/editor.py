@@ -113,7 +113,7 @@ class EditorService:
         logger.info(f'Người dùng {user_id} đã giải quyết xong gợi ý chỉnh sửa {suggestion_id}')
         action_map = {'accepted': 'chấp nhận', 'rejected': 'từ chối'}
         action_vn = action_map.get(payload.get('action'), payload.get('action'))
-        return {'message': f'Đã {action_vn} gợi ý thành công'}
+        return {'message': f'Đã {action_vn} gợi ý'}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
@@ -264,7 +264,7 @@ class EditorService:
                     json={'action': 'summarize', 'text': text[:5000], 'context': doc.get('title', '')}
                 )
                 if resp.status_code == 200:
-                    summary = resp.json().get('result', 'Đã tóm tắt tài liệu thành công')
+                    summary = resp.json().get('result', 'Đã tóm tắt tài liệu')
                     await db['documents'].update_one({'_id': document_id}, {'$set': {'description': summary}})
                     return {'summary': summary}
         except Exception as e:

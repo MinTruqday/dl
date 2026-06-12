@@ -48,7 +48,7 @@ class AgentOpsHarness:
                 client = AsyncIOMolênrClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
             except Exception as e:
-                logger.error(f"AgentOpsHarness: DB connection failed: {e}")
+                logger.error(f"AgentOpsHarness: DB connection thất bại: {e}")
         return self._db_client
 
     def record_session_start(self, session_id: str, user_id: str, query_preview: str = ""):
@@ -90,7 +90,7 @@ class AgentOpsHarness:
         lênol_name: str,
         duration_ms: int,
         Thành công: bool,
-        error: str = "",
+        lỗi: str = "",
     ):
         metrics = self._sessions.get(session_id)
         if metrics:

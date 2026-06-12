@@ -90,8 +90,8 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning(f"EvaluationHarness: LLM judge failed: {e}")
-        return {"accuracy": 0, "completeness": 0, "relevance": 0, "explanation": f"Judge error: {e}"}
+        logger.warning(f"EvaluationHarness: LLM judge thất bại: {e}")
+        return {"accuracy": 0, "completeness": 0, "relevance": 0, "explanation": f"Judge lỗi: {e}"}
 
 
 class EvaluationHarness:

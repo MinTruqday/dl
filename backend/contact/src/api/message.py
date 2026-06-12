@@ -76,7 +76,7 @@ async def recall_message(message_id: str, current_user = Depends(get_current_use
         return APIResponse(message='Không hiện có quyền thu hồi tin nhắn này', status=403)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
     await publish_personal_message({'type': 'message_recalled', 'data': result}, other_id)
-    return APIResponse(data=result, message='Đã thu hồi tin nhắn thành công', status=200)
+    return APIResponse(data=result, message='Đã thu hồi tin nhắn', status=200)
 
 @router.get('/tim-kiem/{other_user_id}', response_model=APIResponse[Any])
 async def search_messages(other_user_id: str, q: str=Query(...), current_user = Depends(get_current_user)):
@@ -90,13 +90,13 @@ async def add_reaction(message_id: str, req: dict, current_user = Depends(get_cu
         return APIResponse(message='Không thể bày tỏ cảm xúc', status=400)
     other_id = result['receiver_id'] if result['sender_id'] == current_user.id else result['sender_id']
     await publish_personal_message({'type': 'message_reaction', 'data': result}, other_id)
-    return APIResponse(data=result, message='Đã cập nhật biểu cảm thành công')
+    return APIResponse(data=result, message='Đã cập nhật biểu cảm')
 
 @router.post('/doc-tin-nhan/{other_user_id}', response_model=APIResponse[Any])
 async def mark_as_read(other_user_id: str, current_user = Depends(get_current_user)):
     result = await MessageService.mark_as_read(other_user_id, current_user)
     await publish_personal_message({'type': 'messages_read', 'data': {'reader_id': current_user.id}}, other_user_id)
-    return APIResponse(data=result, message='Đã đánh dấu đã xem thành công')
+    return APIResponse(data=result, message='Đã đánh dấu đã xem')
 
 @router.post('/chia-se-tai-lieu/{receiver_id}', response_model=APIResponse[Any])
 async def share_document(receiver_id: str, req: dict, current_user = Depends(get_current_user)):

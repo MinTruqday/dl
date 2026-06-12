@@ -60,7 +60,7 @@ class BookmarkService:
         result = await db['bookmark_folders'].update_one({'_id': folder_id, 'user_id': str(current_user.id)}, {'$set': {'bookmark_ids': bookmark_ids, 'updated_at': datetime.now(timezone.utc)}})
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail='Thư mục không tồn tại')
-        return {'message': 'Đã cập nhật thư mục đánh dấu thành công'}
+        return {'message': 'Đã cập nhật thư mục đánh dấu'}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:

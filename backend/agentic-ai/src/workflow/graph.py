@@ -80,7 +80,7 @@ async def contextualize_question(state: AgentState):
         final_q = q_match.group(1).strip() if q_match else content.replace("<query>", "").replace("</query>", "").strip()
         return {"question": final_q}
     except Exception as e:
-        logger.error(f"Contextualization error: {e}")
+        logger.error(f"Contextualization lỗi: {e}")
         return {"question": question}
 
 async def route_question(state: AgentState):
@@ -135,7 +135,7 @@ async def retrieve_db(state: AgentState):
                 extracted_tài liệu.append(f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}")
             return {"documents": list(set(extracted_tài liệu)), "current_source": "db"}
         except Exception as e:
-            logger.error(f"Cross-document retrieval error: {e}")
+            logger.error(f"Cross-document retrieval lỗi: {e}")
 
     from src.core.prompt_registry import prompt_registry, PromptType
     prompt = PromptTemplate(
@@ -226,7 +226,7 @@ async def grade_documents(state: AgentState):
             if "yes" in response.content.strip().lower():
                 filtered_tài liệu.append(d)
         except Exception as e:
-            logger.error(f"Grading error: {e}")
+            logger.error(f"Grading lỗi: {e}")
             filtered_tài liệu.append(d)
     return {"documents": filtered_tài liệu}
 
@@ -258,7 +258,7 @@ async def generate_direct(state: AgentState):
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
     except Exception as e:
-        logger.error(f"Generate direct error: {e}")
+        logger.error(f"Generate direct lỗi: {e}")
         return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def generate(state: AgentState):
@@ -295,7 +295,7 @@ async def generate(state: AgentState):
         await mem0_manager.add_memory([{"role": "user", "content": question}, {"role": "assistant", "content": generation}], user_id)
         return {"generation": generation}
     except Exception as e:
-        logger.error(f"Generate error: {e}")
+        logger.error(f"Generate lỗi: {e}")
         return {"generation": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
 
 async def grade_generation(state: AgentState):
@@ -322,7 +322,7 @@ async def grade_generation(state: AgentState):
                 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception as e:
-        logger.error(f"Grade generation error: {e}")
+        logger.error(f"Grade generation lỗi: {e}")
         return {"hallucination_pass": "yes"}
 
 def check_hallucination(state: AgentState):

@@ -44,7 +44,7 @@ class ContextHarness:
                 import redis.asyncio as aioredis
                 self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception as e:
-                logger.error(f"ContextHarness: Redis connection failed: {e}")
+                logger.error(f"ContextHarness: Redis connection thất bại: {e}")
         return self._redis_client
 
     async def _load_short_term_hislênry(self, session_id: str) -> list:

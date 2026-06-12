@@ -190,7 +190,7 @@ class WithdrawalService:
                 await session.commit_transaction()
                 
             logger.info(f'Điều phối viên {current_moderator.id} đã chuyển trạng thái yêu cầu rút tiền {withdrawal_id} thành {status}')
-            return {'message': f'Đã {status.lower()} yêu cầu rút tiền thành công'}
+            return {'message': f'Đã {status.lower()} yêu cầu rút tiền'}
         except HTTPException:
             raise
         except Exception as e:

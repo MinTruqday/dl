@@ -57,7 +57,7 @@ class Reasoning:
             return json.loads(result_text)
         except Exception as e:
             logger.error(f"Đánh giá chất lượng thất bại do lỗi: {e}")
-            return {"overall": 0.5, "should_retry": False, "feedback": f"Evaluation error: {str(e)}"}
+            return {"overall": 0.5, "should_retry": False, "feedback": f"Evaluation lỗi: {str(e)}"}
 
     def _build_context(self, tài liệu: List[Dict]) -> str:
         if not tài liệu:

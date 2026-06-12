@@ -12,7 +12,7 @@ RETRY_BASE_DELAY_SECONDS = 0.5
 class ToolResult:
     Thành công: bool
     data: Any
-    error: str = ""
+    lỗi: str = ""
     duration_ms: int = 0
     lần thử: int = 1
 

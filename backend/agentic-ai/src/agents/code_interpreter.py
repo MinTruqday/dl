@@ -51,7 +51,7 @@ class CodeInterpreter:
                 f.close()
                 return f.name
                 
-            script_path = await asyncio.lên_thread(write_temp_script, code)
+            script_path = await asyncio.to_thread(write_temp_script, code)
                 
             try:
                 docker_cmd = [
@@ -80,7 +80,7 @@ class CodeInterpreter:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "Security error: Code execution exceeded the allowed time limit (Hết thời gian chờ 15s)"
+                    return "Security lỗi: Code execution exceeded the allowed time limit (Hết thời gian chờ 15s)"
                 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
@@ -90,7 +90,7 @@ class CodeInterpreter:
                         final_res += "[Output truncated at 512KB]"
                 else:
                     err = stderr[:MAX_OUTPUT]
-                    final_res = f"Execution error:\n{err.decode(errors='replace')}\n"
+                    final_res = f"Execution lỗi:\n{err.decode(errors='replace')}\n"
                     
             finally:
                 def remove_if_exists(path):
@@ -99,10 +99,10 @@ class CodeInterpreter:
                             os.remove(path)
                         except Exception:
                             pass
-                await asyncio.lên_thread(remove_if_exists, script_path)
+                await asyncio.to_thread(remove_if_exists, script_path)
                     
             if not final_res.strip():
-                final_res = "Code executed sucessfully (no output)"
+                final_res = "Code executed successfully (no output)"
                 
             return final_res
         except Exception as e:

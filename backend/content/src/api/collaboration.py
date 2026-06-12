@@ -73,7 +73,7 @@ async def get_contribution_stats(document_id: str, current_user: UserInDB=Depend
 
 @router.post('/tai-lieu/{document_id}/phien-ban', response_model=APIResponse[Any])
 async def create_snapshot(document_id: str, data: CreateDraftSnapshotRequest, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):
-    return APIResponse(data=await CollaborationService.create_snapshot(document_id, data.version_name, current_user, db=db), message='Đã tạo phiên bản nháp cộng tác thành công', status=201)
+    return APIResponse(data=await CollaborationService.create_snapshot(document_id, data.version_name, current_user, db=db), message='Đã tạo phiên bản nháp cộng tác', status=201)
 
 @router.get('/tai-lieu/{document_id}/phien-ban', response_model=APIResponse[Any])
 async def get_snapshots(document_id: str, current_user: UserInDB=Depends(require_role([RoleEnum.AUTHOR])), db=Depends(get_db)):

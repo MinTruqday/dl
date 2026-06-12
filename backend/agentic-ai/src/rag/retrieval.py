@@ -125,7 +125,7 @@ class RetrievalService:
                 if isinstance(parsed, list) and len(parsed) == len(document_ids):
                     sub_queries = parsed
         except Exception as e:
-            logger.warning(f"Cross-doc decomposition failed: {e}")
+            logger.warning(f"Cross-doc decomposition thất bại: {e}")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

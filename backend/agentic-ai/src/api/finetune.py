@@ -220,7 +220,7 @@ async def import_tài liệu(req: dict):
                     if p.get("instruction") and p.get("output"):
                         samples.append({"_id": str(uuid7()), "dataset_id": ds_id, "instruction": p["instruction"], "input": p.get("input", ""), "output": p["output"], "created_at": datetime.now(timezone.utc)})
             except Exception as e:
-                logger.warning(f"Finetune extract failed: {e}")
+                logger.warning(f"Finetune extract thất bại: {e}")
     if samples:
         await db["finetune_samples"].insert_many(samples)
         await db["finetune_datasets"].update_one({"_id": ds_id}, {"$set": {"sample_count": len(samples), "status": "ready"}})
@@ -342,7 +342,7 @@ async def deploy_model(job_id: str, req: dict):
         await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"merged_model_name": repo_id}})
         
     except Exception as e:
-        logger.error(f"HuggingFace Hub deploy failed: {e}")
+        logger.error(f"HuggingFace Hub deploy thất bại: {e}")
         raise HTTPException(status_code=500, detail=f"Triển khai mô hình lên HuggingFace thất bại do lỗi {e}")
 
     await db["finetune_jobs"].update_one({"_id": job_id}, {"$set": {"status": "deployed"}})

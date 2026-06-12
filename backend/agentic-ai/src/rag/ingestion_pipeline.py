@@ -233,7 +233,7 @@ class IngestionPipeline:
             logger.info(f"Downloaded {len(data)} bytes from MinIO")
             return data
         except Exception as e:
-            logger.error(f"Download error: {e}")
+            logger.error(f"Download lỗi: {e}")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:

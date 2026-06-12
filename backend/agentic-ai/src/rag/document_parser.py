@@ -68,7 +68,7 @@ class DocumentParser:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception as e:
-            logger.error(f"DocumentAgent: Document parse failed: {e}")
+            logger.error(f"DocumentAgent: Document parse thất bại: {e}")
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -174,7 +174,7 @@ class DocumentParser:
             logger.info(f"DocumentAgent: Extracted {len(tables)} tables via Marker TableConverter")
             return tables
         except Exception as e:
-            logger.error(f"DocumentAgent: Table extraction failed: {e}")
+            logger.error(f"DocumentAgent: Table extraction thất bại: {e}")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -401,7 +401,7 @@ class DocumentParser:
             return data, ext
 
         except Exception as e:
-            logger.error(f"DocumentAgent: MinIO download failed: {e}")
+            logger.error(f"DocumentAgent: MinIO download thất bại: {e}")
             return None, ""
 
 document_parser = DocumentParser()

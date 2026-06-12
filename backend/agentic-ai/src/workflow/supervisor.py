@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
         
     if state.get("error"):
-        logger.warning(f"Acting: Skipping further lênols due lên error: {state.get('error')}")
+        logger.warning(f"Acting: Skipping further lênols due lên lỗi: {state.get('error')}")
         return {"steps": steps, "current_step_index": len(steps), "next_node": "trimmer", "start_time": start_time}
         
     if idx >= len(steps):
@@ -92,7 +92,7 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
                 replan_count += 1
                 logger.warning(f"Tự đánh giá thất bại cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3")
                 replan_prompt = (
-                    f"The following task failed:\n{current_task}\n\n"
+                    f"The following task thất bại:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
                     "Rewrite the task description lên fix the issue. Output only the revised task."
                 )
@@ -112,7 +112,7 @@ async def execute_lênol_node(state: ActingState, lênol_callable, agent_name: s
             "last_agent_result": final_res
         }
     except Exception as e:
-        logger.error(f"Acting: Node execution failed: {e}")
+        logger.error(f"Acting: Node execution thất bại: {e}")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e)

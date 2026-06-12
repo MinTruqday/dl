@@ -576,7 +576,7 @@ class DocumentService:
             "timestamp": datetime.now(timezone.utc)
         })
         logger.info(f"Điều phối viên {current_moderator.id} đã đổi trạng thái tài liệu {document_id} thành {status_val.lower()}")
-        return {"message": f"Đã {status_val.lower()} tài liệu thành công"}
+        return {"message": f"Đã {status_val.lower()} tài liệu"}
 
     @staticmethod
     async def resolve_copyright_dispute(dispute_id: str, resolution: str, current_moderator) -> dict:

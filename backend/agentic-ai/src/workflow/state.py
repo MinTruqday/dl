@@ -53,6 +53,6 @@ class ActingState(TypedDict):
     consolidated_results: Annotated[list, reduce_consolidated_results]
     final_answer: str
     next_node: str
-    error: str
+    lỗi: str
     replan_count: int
     start_time: float

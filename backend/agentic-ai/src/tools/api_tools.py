@@ -213,7 +213,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 logger.info(f"Đã dọn dẹp xong veclênr cho tài liệu {document_id}")
             except Exception as ve:
                 logger.warning(f"Không thể dọn dẹp veclênr cho {document_id}: {ve}")
-            return "Đã xóa tài liệu thành công"
+            return "Đã xóa tài liệu"
         return "Xóa tài liệu thất bại"
     except Exception as e:
         logger.error(f"Error deleting document: {e}")
@@ -230,7 +230,7 @@ async def reslênre_document(document_id: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, thời gian chờ30)
         if response.status_code == 200:
-            return "Đã khôi phục tài liệu thành công"
+            return "Đã khôi phục tài liệu"
         return "Khôi phục thất bại"
     except Exception as e:
         logger.error(f"Error reslênring document: {e}")
@@ -287,7 +287,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         data = await suggest_citations(req)
         return f"Gợi ý trích dẫn:\n\n{data.get('citations', '')}"
     except Exception as e:
-        logger.error(f"Error in citations: {e}")
+        logger.error(f"Gặp lỗi trong citations: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @lênol
@@ -304,7 +304,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         data = await peer_review(req)
         return f"Báo cáo thẩm định:\n\n{data.get('review_report', '')}"
     except Exception as e:
-        logger.error(f"Error in peer review: {e}")
+        logger.error(f"Gặp lỗi trong peer review: {e}")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 @lênol
@@ -343,7 +343,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             data = response.json().get("data", {})
             checkout_url = data.get("checkout_url") or data.get("payment_url")
             if checkout_url:
-                return f"Đã tạo yêu cầu nạp {amount} VNĐ thành công. Vui lòng truy cập đường dẫn sau để thanh lênán: [Thanh lênán tại đây]({checkout_url})"
+                return f"Đã tạo yêu cầu nạp {amount} VNĐ. Vui lòng truy cập đường dẫn sau để thanh lênán: [Thanh lênán tại đây]({checkout_url})"
             return "Không thể lấy đường dẫn thanh lênán từ hệ thống"
         return "Lỗi khởi tạo thanh lênán"
     except Exception as e:
@@ -430,7 +430,7 @@ async def create_document(title: str, description: str, content: str, format: st
             new_doc = res_create.json().get("data", {})
             doc_id = new_doc.get("id") or new_doc.get("_id")
             if doc_id:
-                return f"Đã tạo tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={doc_id})"
+                return f"Đã tạo tài liệu! [Xem tài liệu](/sang-tac?tai-lieu={doc_id})"
             return "Tạo tài liệu thành công nhưng không lấy được ID"
         return f"Lỗi tạo tài liệu mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
@@ -520,7 +520,7 @@ async def update_document(document_id: str, new_content: str = None, title: str 
     try:
         res_update = await _make_api_request("PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, json=payload)
         if res_update.status_code in [200, 201]:
-            return f"Đã cập nhật tài liệu thành công! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
+            return f"Đã cập nhật tài liệu! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
         return f"Lỗi cập nhật tài liệu (Mã lỗi: {res_update.status_code})"
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
@@ -627,8 +627,8 @@ async def translate_document(document_id: str, target_language: str, config: Run
             new_doc = res_create.json().get("data", {})
             new_doc_id = new_doc.get("id") or new_doc.get("_id")
             if new_doc_id:
-                return f"Đã dịch và tạo tài liệu thành công! Bạn có thể xem bản dịch tại đây: [Xem bản dịch](/sang-tac?tai-lieu={new_doc_id})"
-            return "Đã dịch và lưu thành công nhưng không lấy được ID"
+                return f"Đã dịch và tạo tài liệu! Bạn có thể xem bản dịch tại đây: [Xem bản dịch](/sang-tac?tai-lieu={new_doc_id})"
+            return "Đã dịch và lưu nhưng không lấy được ID"
         return f"Dịch thành công nhưng không thể tạo file mới (Mã lỗi: {res_create.status_code})"
     except Exception as e:
         return f"Lỗi tạo tài liệu mới: {e}"
