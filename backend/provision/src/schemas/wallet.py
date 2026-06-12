@@ -71,12 +71,12 @@ class FlashSaleRequest(BaseModel):
     expires_at: str
 
 class TopupRequest(BaseModel):
-    amount: int = Field(..., gt=0)
+    amount: int = Field(, gt=0)
     method: str = "payos"
 
 class VoucherCreateRequest(BaseModel):
     code: str
-    amount_dl: int = Field(..., gt=0)
+    amount_dl: int = Field(, gt=0)
     expires_at: datetime
 
 class CouponCreateRequest(BaseModel):

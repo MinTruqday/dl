@@ -62,7 +62,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                             if settings.SIGNAL_URL:
                                 async with httpx.AsyncClient() as client:
                                     await client.post(
-                                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                                         json={
                                             "target_user_id": author_id,
                                             "title": "Biên dịch tài liệu thành công",
@@ -87,7 +87,7 @@ async def process_tectonic_compile(message: AbstractIncomingMessage):
                             if settings.SIGNAL_URL:
                                 async with httpx.AsyncClient() as client:
                                     await client.post(
-                                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                                         json={
                                             "target_user_id": author_id,
                                             "title": "Lỗi biên dịch tài liệu",
@@ -161,7 +161,7 @@ async def process_document_publish(message: AbstractIncomingMessage):
                         for follower_id in followers:
                             try:
                                 await client.post(
-                                    f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                                    f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                                     json={
                                         "target_user_id": follower_id,
                                         "title": "Tài liệu mới xuất bản",

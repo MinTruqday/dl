@@ -120,7 +120,13 @@ class AuthenticationService:
     async def forgot_password(email: str, client_ip: str, db=None):
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        user = await db['users'].find_one({'email': email})
+        import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                user = resp.json().get('data') if resp.status_code == 200 else None
+        except Exception:
+            user = None
         if user:
             otp_code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
             await db['password_reset_tokens'].insert_one({'_id': secrets.token_hex(8), 'email': email, 'token': otp_code, 'expires_at': datetime.now(timezone.utc) + timedelta(minutes=1), 'used': False, 'created_at': datetime.now(timezone.utc)})
@@ -185,9 +191,13 @@ class AuthenticationService:
             google_user = user_resp.json()
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        users_col = db['users']
         email = google_user.get('email')
-        user_doc = await users_col.find_one({'email': email})
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                user_doc = resp.json().get('data') if resp.status_code == 200 else None
+        except Exception:
+            user_doc = None
         if not user_doc:
             config = await db['settings'].find_one({'_id': 'system_config'})
             if config and (not config.get('registration_enabled', True)):

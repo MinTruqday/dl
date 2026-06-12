@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 router = APIRouter()
 
-@router.post('/kich-hoat')
+@router.post('/noi-bo/kich-hoat')
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages

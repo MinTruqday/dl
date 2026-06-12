@@ -80,4 +80,4 @@ class QuotaService:
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
         await db['quota_configs'].update_one({'_id': 'global'}, {'$set': {f'role_limits.{role}': limits.model_dump(), 'updated_at': datetime.now(timezone.utc)}}, upsert=True)
-        return {'message': f'Đã cập nhật hạn mức cho nhóm {role}'}
+        return {'message': f'Cập nhật hạn mức cho nhóm {role}'}

@@ -27,7 +27,13 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         logger.warning(f'JWT Decode error: {str(e)}')
         raise credentials_exception
     if db_client.redis:
-        user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]['users'].find_one({'email': email}, {'_id': 1})
+        import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                user_doc = resp.json().get('data') if resp.status_code == 200 else None
+        except Exception:
+            user_doc = None
         if not user_doc:
             raise credentials_exception
         user_id_str = str(user_doc['_id'])
@@ -35,7 +41,13 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         if not is_valid_session:
             logger.warning(f'Security: Revoked session attempt for user {email}')
             raise credentials_exception
-    user_doc = await db_client.mongodb[settings.MONGODB_DB_NAME]['users'].find_one({'email': email})
+    import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"http://provision:8450/nguoi-dung/noi-bo/email/{email}", timeout=3.0)
+                user_doc = resp.json().get('data') if resp.status_code == 200 else None
+        except Exception:
+            user_doc = None
     if user_doc is None:
         logger.warning(f'User not found for email: {email}')
         raise credentials_exception

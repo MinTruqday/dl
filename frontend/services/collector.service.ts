@@ -4,7 +4,7 @@ export async function triggerCollectionAPI(
   source: string,
   pages: number,
 ) {
-  const res = await fetch(`${API_URL}/thu-thap/kich-hoat`, {
+  const res = await fetch(`${API_URL}/thu-thap/noi-bo/kich-hoat`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

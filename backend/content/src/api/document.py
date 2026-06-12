@@ -358,7 +358,7 @@ async def broadcast_notification(document_id: str, req: BroadcastRequest, curren
             for lib in libraries:
                 try:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
                         json={
                             "target_user_id": lib["user_id"],
                             "title": f"Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
