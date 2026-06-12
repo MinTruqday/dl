@@ -113,6 +113,17 @@ def require_permissions(required_permissions: List[str]):
     return permission_checker
 
 async def check_quota(current_user: UserInDB=Depends(get_current_user)):
-    from src.services.quota import QuotaService
-    await QuotaService.check_quota(str(current_user.id), current_user.role.value)
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(
+                f"{settings.PROVISION_URL}/quota/kiem-tra",
+                params={"user_id": str(current_user.id), "role": current_user.role.value}
+            )
+            if resp.status_code == 429:
+                raise HTTPException(status_code=429, detail=resp.json().get('detail', 'Vượt quá hạn mức'))
+            elif resp.status_code != 200:
+                logger.warning(f"Không thể kiểm tra hạn mức từ provision: {resp.status_code}")
+    except httpx.RequestError as e:
+        logger.error(f"Lỗi kết nối tới provision service: {e}")
     return current_user

@@ -18,7 +18,7 @@ async def read_users_me(current_user: UserInDB=Depends(get_current_user), db=Dep
 @router.post('/dang-ky', response_model=APIResponse[UserResponse], status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(calls=3, period=60))])
 async def register_user(user_in: UserCreate, request: Request, db=Depends(get_db)) -> Any:
     client_ip = request.client.host if request.client else 'unknown'
-    return APIResponse(data=await AuthenticationService.register_user(user_in, client_ip, db=db), message='Đã đăng ký tài khoản', status=status.HTTP_201_CREATED)
+    return APIResponse(data=await AuthenticationService.register_user(user_in, client_ip, db=db), message='Đã đăng ký tài khoản thành công, vui lòng đăng nhập', status=status.HTTP_201_CREATED)
 
 @router.post('/dang-nhap', response_model=APIResponse[Any], dependencies=[Depends(RateLimiter(calls=5, period=60))])
 async def login(request: Request, form_data: OAuth2PasswordRequestForm=Depends(), db=Depends(get_db)) -> Any:

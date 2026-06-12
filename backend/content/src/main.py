@@ -17,12 +17,10 @@ from src.api.collaboration import router as collaboration_router
 from src.api.publication import router as publication_router
 from src.api.storage import router as storage_router
 from src.api.highlight import router as highlight_router
-from src.api.editor import router as editor_router
 from src.api.draft import router as draft_router
 from src.api.pin import router as pin_router
-from src.api.quota import router as quota_router
 
-app = FastAPI(title="DocLib Content", version=settings.VERSION)
+app = FastAPI(title="DocLib Content")
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,10 +43,8 @@ app.include_router(collaboration_router)
 app.include_router(publication_router)
 app.include_router(storage_router)
 app.include_router(highlight_router)
-app.include_router(editor_router)
 app.include_router(draft_router)
 app.include_router(pin_router)
-app.include_router(quota_router)
 
 @app.on_event("startup")
 async def startup_event():

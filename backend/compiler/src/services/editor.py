@@ -51,20 +51,6 @@ class EditorService:
             raise HTTPException(status_code=500, detail='Lỗi hệ thống trong quá trình biên dịch tài liệu')
 
     @staticmethod
-    async def analyze_internal_plagiarism(document_id: str, content_payload: dict, current_user, db=None):
-        content = content_payload.get('content', '')
-        if not content or len(content.split()) < 10:
-            return {'duplication_score': 0.0, 'status': 'clean'}
-        try:
-            documents = await db['documents'].find({'$text': {'$search': content[:100]}}).limit(1).to_list(1)
-            if documents and str(documents[0]['_id']) != document_id:
-                return {'duplication_score': 85.5, 'matched_with': documents[0].get('title', 'Unknown'), 'status': 'warning'}
-            return {'duplication_score': 0.0, 'status': 'clean'}
-        except Exception as e:
-            logger.error(f'Lỗi khi kiểm tra đạo văn: {e}')
-            return {'duplication_score': 0.0, 'status': 'clean', 'error': str(e)}
-
-    @staticmethod
     async def sync_keystroke_buffer(document_id: str, payload: dict, current_user, redis_client=None, db=None):
         try:
             if redis_client:
@@ -412,23 +398,3 @@ class EditorService:
                 return resp.json()
         return {'corrected_text': '', 'score': 0, 'message': 'Dịch vụ kiểm tra ngữ pháp tạm thời gián đoạn'}
 
-    @staticmethod
-    async def generate_cover(document_id: str, style: str, current_user, agentic_ai_url: str, db=None) -> dict:
-        doc = await db['documents'].find_one({'_id': document_id, 'author_id': str(current_user.id)})
-        if not doc:
-            raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                f'{agentic_ai_url}/inference/tao-anh-bia',
-                json={'title': doc.get('title', ''), 'description': doc.get('description', ''), 'style': style}
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get('cover_url'):
-                    await db['documents'].update_one(
-                        {'_id': document_id},
-                        {'$set': {'cover_url': data['cover_url'], 'updated_at': datetime.now(timezone.utc)}}
-                    )
-                    logger.info(f'Đã tạo xong ảnh bìa cho tài liệu {document_id}')
-                return data
-        return {'cover_url': None, 'message': 'Dịch vụ tạo ảnh bìa tạm thời gián đoạn'}

@@ -5,7 +5,13 @@ from src.schemas.quota import QuotaLimit
 from src.services.quota import QuotaService
 from core.response import APIResponse
 from typing import Any
-router = APIRouter(prefix='/quota', tags=['Quota'])
+
+router = APIRouter(prefix='/han-muc')
+
+@router.get('/kiem-tra', response_model=APIResponse[Any], include_in_schema=False)
+async def check_quota_internal(user_id: str, role: str, db=Depends(get_db)):
+    await QuotaService.check_quota(user_id, role, db=db)
+    return APIResponse(data=None, message='Trong hạn mức', status=200)
 
 @router.get('/me', response_model=APIResponse[Any])
 async def get_my_quota(current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
