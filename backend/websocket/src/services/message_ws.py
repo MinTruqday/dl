@@ -144,7 +144,7 @@ class MessageConnectionManager:
         try:
             async with httpx.AsyncClient() as client:
                 res = await client.get(
-                    f"{settings.COLLECTOR_URL}/internal/running-jobs", timeout=3.0
+                    f"{settings.COLLECTOR_URL}/running-jobs", timeout=3.0
                 )
                 active_collectors = res.json() if res.status_code == 200 else []
         except Exception:

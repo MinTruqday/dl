@@ -122,7 +122,7 @@ class WalletService:
                 if settings.SIGNAL_URL:
                     async with httpx.AsyncClient() as client:
                         await client.post(
-                            f"{settings.SIGNAL_URL}/notification/internal/trigger",
+                            f"{settings.SIGNAL_URL}/notification/trigger",
                             json={
                                 "target_user_id": str(current_user.id),
                                 "title": "Nạp dl thành công",

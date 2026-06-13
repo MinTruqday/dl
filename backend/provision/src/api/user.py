@@ -143,33 +143,27 @@ async def search_users(q: str = "", limit: int = 10, db=Depends(get_db)):
     )
 
 
-@router.get(
-    "/internal/{user_id}", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.get("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user(user_id: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_id(user_id, db)
     return APIResponse(data=user, message="Đã tải thông tin người dùng")
 
 
 @router.post(
-    "/internal/multiple-users", response_model=APIResponse[Any], include_in_schema=False
+    "/multiple-users", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
     users = await UserService.internal_get_users_by_ids(user_ids, db)
     return APIResponse(data=users, message="Đã tải danh sách người dùng")
 
 
-@router.get(
-    "/internal/email/{email}", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.get("/email/{email}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_email(email: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_email(email, db)
     return APIResponse(data=user, message="Đã tải thông tin người dùng")
 
 
-@router.get(
-    "/internal/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.get("/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
     return APIResponse(data=user, message="Đã tải thông tin người dùng")
@@ -183,9 +177,7 @@ class InternalCreateUserRequest(BaseModel):
     slug: str
 
 
-@router.post(
-    "/internal/create", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.post("/create", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.dict(), db)
     return APIResponse(

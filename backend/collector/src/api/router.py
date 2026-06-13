@@ -12,7 +12,7 @@ from uuid6 import uuid7
 router = APIRouter()
 
 
-@router.post("/internal/trigger")
+@router.post("/trigger")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages
@@ -71,7 +71,7 @@ async def stop_collection():
         )
 
 
-@router.get("/internal/running-jobs")
+@router.get("/running-jobs")
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)

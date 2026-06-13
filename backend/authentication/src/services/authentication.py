@@ -44,7 +44,7 @@ class AuthenticationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    "{settings.PROVISION_URL}/user/internal/create",
+                    "{settings.PROVISION_URL}/user/create",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -104,12 +104,12 @@ class AuthenticationService:
             async with httpx.AsyncClient() as client:
                 if is_email:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/user/internal/email/{username}",
+                        f"{settings.PROVISION_URL}/user/email/{username}",
                         timeout=3.0,
                     )
                 else:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/user/internal/slug/{username}",
+                        f"{settings.PROVISION_URL}/user/slug/{username}",
                         timeout=3.0,
                     )
                 if resp.status_code == 200:
@@ -179,7 +179,7 @@ class AuthenticationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/internal/email/{email}",
+                    f"{settings.PROVISION_URL}/user/email/{email}",
                     timeout=3.0,
                 )
                 user = resp.json().get("data") if resp.status_code == 200 else None
@@ -308,7 +308,7 @@ class AuthenticationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/internal/email/{email}",
+                    f"{settings.PROVISION_URL}/user/email/{email}",
                     timeout=3.0,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
@@ -326,7 +326,7 @@ class AuthenticationService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        "{settings.PROVISION_URL}/user/internal/create",
+                        "{settings.PROVISION_URL}/user/create",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),

@@ -317,7 +317,7 @@ class DepositService:
                 if settings.SIGNAL_URL:
                     async with httpx.AsyncClient() as client:
                         await client.post(
-                            f"{settings.SIGNAL_URL}/notification/internal/trigger",
+                            f"{settings.SIGNAL_URL}/notification/trigger",
                             json={
                                 "target_user_id": user_id,
                                 "title": "Nạp tiền thành công",

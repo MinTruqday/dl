@@ -339,7 +339,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/internal/trigger",
+                    f"{settings.COLLECTOR_URL}/trigger",
                     json={"source": source, "pages": pages},
                     timeout=5.0,
                 )
@@ -398,7 +398,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/internal/running-jobs", timeout=5.0
+                    f"{settings.COLLECTOR_URL}/running-jobs", timeout=5.0
                 )
                 if resp.status_code == 200:
                     return resp.json()

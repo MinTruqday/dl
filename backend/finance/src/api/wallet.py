@@ -94,7 +94,7 @@ async def get_revenue(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/user/internal/{author_id}", timeout=3.0
+                f"{settings.PROVISION_URL}/user/{author_id}", timeout=3.0
             )
             if resp.status_code == 200:
                 user_doc = resp.json().get("data") or {}

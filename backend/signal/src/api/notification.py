@@ -61,9 +61,7 @@ async def delete_notification(
     )
 
 
-@router.post(
-    "/internal/trigger", response_model=APIResponse[Any], include_in_schema=False
-)
+@router.post("/trigger", response_model=APIResponse[Any], include_in_schema=False)
 async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(
         data=await NotificationService.create_notification(data, db),

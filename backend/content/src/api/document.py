@@ -419,7 +419,7 @@ async def transfer_document(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/user/internal/{new_owner_id}",
+                f"{settings.PROVISION_URL}/user/{new_owner_id}",
                 timeout=3.0,
             )
             if resp.status_code == 200:
@@ -638,7 +638,7 @@ async def broadcast_notification(
             for lib in libraries:
                 try:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/notification/internal/trigger",
+                        f"{settings.SIGNAL_URL}/notification/trigger",
                         json={
                             "target_user_id": lib["user_id"],
                             "title": "Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
