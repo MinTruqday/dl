@@ -18,7 +18,7 @@ logger.add(
 )
 
 from core.config import settings
-from src.api.router_router import router
+from src.router.collector_router import router
 
 app = FastAPI(title="DocLib Collector", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

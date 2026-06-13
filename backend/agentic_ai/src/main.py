@@ -15,12 +15,12 @@ logger.add(
     filter=trace_id_filter,
     level="INFO",
 )
-from src.api.chat_router import router as chat_router
-from src.api.feedback_router import router as feedback_router
-from src.api.finetune_router import router as finetune_router
-from src.api.history_router import router as history_router
-from src.api.inference_router import router as inference_router
-from src.api.ingest_router import router as ingest_router
+from src.router.chat_router import router as chat_router
+from src.router.feedback_router import router as feedback_router
+from src.router.finetune_router import router as finetune_router
+from src.router.history_router import router as history_router
+from src.router.inference_router import router as inference_router
+from src.router.ingest_router import router as ingest_router
 from src.harness.agentops_harness import agentops_harness
 from src.harness.evaluation_harness import evaluation_harness
 from src.harness.orchestration_harness import orchestration_harness

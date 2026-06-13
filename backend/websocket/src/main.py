@@ -3,7 +3,7 @@ from core.config import settings
 from core.database import db_client
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api import editor_ws, message_ws
+from src.router import editor_ws, message_ws
 
 app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
 
@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(editor_ws.router, prefix="/soan-thao")
+app.include_router(editor_ws.router, prefix="/editor")
 app.include_router(message_ws.router, prefix="/message")
 
 

@@ -39,7 +39,7 @@ export default function ExplorePage() {
         getTagsCategoriesAPI(),
         getTrendingDocumentsAPI(3),
         getAIRecommendationsAPI(4),
-        getActiveBannersAPI(),
+        getActiveBannersAPI().catch(() => ({ data: [] })),
       ]);
       setCategories(catData.data?.categories || catData.categories || []);
       setTrending(trendData.data || trendData || []);

@@ -16,7 +16,7 @@ logger.add(
     level="INFO",
 )
 
-from src.api import editor_router as editor, editorjs_router as editorjs, latex_router as latex
+from src.router import editor_router as editor, editorjs_router as editorjs, latex_router as latex
 from core.config import settings
 
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)

@@ -16,10 +16,10 @@ logger.add(
     level="INFO",
 )
 
-from src.api.coupon_router import router as coupon_router
-from src.api.deposit_router import router as deposit_router
-from src.api.wallet_router import router as wallet_router
-from src.api.withdrawal_router import router as withdrawal_router
+from src.router.coupon_router import router as coupon_router
+from src.router.deposit_router import router as deposit_router
+from src.router.wallet_router import router as wallet_router
+from src.router.withdrawal_router import router as withdrawal_router
 from core.config import settings
 
 app = FastAPI(title="DocLib Finance", version=settings.VERSION)

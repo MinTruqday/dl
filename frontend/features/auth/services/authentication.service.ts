@@ -156,7 +156,7 @@ export const passkeyLoginFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/hoan-tat`, {
+  const res = await fetch(`${API_URL}/auth/passkey/login/finish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),
@@ -187,7 +187,7 @@ export const passkeyRegisterFinishAPI = async (
   email: string,
   credential: any,
 ): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/hoan-tat`, {
+  const res = await fetch(`${API_URL}/auth/passkey/register/finish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, credential }),

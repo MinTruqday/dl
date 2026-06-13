@@ -4,11 +4,11 @@ from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.audit_router import router as audit_router
-from src.api.operation_router import router as operation_router
-from src.api.quota_router import router as quota_router
-from src.api.telemetry_router import router as telemetry_router
-from src.api.user_router import router as user_router
+from src.router.audit_router import router as audit_router
+from src.router.operation_router import router as operation_router
+from src.router.quota_router import router as quota_router
+from src.router.telemetry_router import router as telemetry_router
+from src.router.user_router import router as user_router
 
 app = FastAPI(title="DocLib Provision", version=settings.VERSION)
 

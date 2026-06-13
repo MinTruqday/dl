@@ -182,7 +182,7 @@ services:
       - "8400:8400"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/ingest`) || PathPrefix(`/feedback`) || PathPrefix(`/finetune`) || PathPrefix(`/history`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/ingest`) || PathPrefix(`/feedback`) || PathPrefix(`/finetune`) || PathPrefix(`/history`) || PathPrefix(`/quota`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env
@@ -320,11 +320,11 @@ services:
   #     networks:
   #       - doclib_network
   #
-  authentication:
+  security:
     build:
       context: ./backend
-      dockerfile: ./authentication/Dockerfile
-    container_name: doclib_authentication
+      dockerfile: ./security/Dockerfile
+    container_name: doclib_security
     restart: always
     env_file:
       - .env
@@ -332,14 +332,14 @@ services:
       - "8500:8500"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/dinh-danh`)"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) "
       - "traefik.http.services.auth.loadbalancer.server.port=8500"
     depends_on:
       - mongodb
       - redis
       - rabbitmq
     volumes:
-      - ./backend/authentication/src:/app/src
+      - ./backend/security/src:/app/src
       - ./backend/core:/app/core
       - ./backend/logs/auth:/app/logs
     networks:

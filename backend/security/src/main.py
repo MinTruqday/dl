@@ -1,11 +1,13 @@
 import uvicorn
 from core.config import settings
+from loguru import logger
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router.message_router import router as message_router
+from src.router.auth_router import router as auth_router
+from src.router.passkey_router import router as passkey_router
 
-app = FastAPI(title="DocLib Contact", version=settings.VERSION)
+app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,12 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(message_router)
+app.include_router(auth_router)
+app.include_router(passkey_router)
 
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống liên hệ DocLib")
+    logger.info("Đã khởi tạo hệ thống bảo mật DocLib")
     await init_db()
 
 
@@ -35,8 +38,8 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "contact"}
+    return {"status": "ok", "service": "authentication"}
 
 
 if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8100, reload=True)
+    uvicorn.run("src.main:app", host="0.0.0.0", port=8500, reload=True)

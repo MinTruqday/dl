@@ -17,7 +17,7 @@ logger.add(
 )
 
 from core.config import settings
-from src.api.notification_router import router as notification_router
+from src.router.notification_router import router as notification_router
 
 app = FastAPI(title="DocLib Signal", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
