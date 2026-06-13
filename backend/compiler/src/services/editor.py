@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from loguru import logger
 from bson import ObjectId
 import os
+from core.config import settings
 import json
 import httpx
 import uuid
@@ -13,7 +14,7 @@ from fastapi import HTTPException
 class EditorService:
 
     @staticmethod
-    async def export_to_format(content: str, format_type: str, compiler_url: str = os.getenv("COMPILER_SERVICE_URL", "http://compiler:8300")):
+    async def export_to_format(content: str, format_type: str, compiler_url: str = settings.COMPILER_URL):
         if not content:
             raise HTTPException(status_code=400, detail='Nội dung tài liệu đang trống')
         try:
@@ -32,7 +33,7 @@ class EditorService:
             raise HTTPException(status_code=500, detail='Lỗi xuất tài liệu')
 
     @staticmethod
-    async def compile_editorjs_to_pdf(content: str, compiler_url: str = os.getenv("COMPILER_SERVICE_URL", "http://compiler:8300")):
+    async def compile_editorjs_to_pdf(content: str, compiler_url: str = settings.COMPILER_URL):
         if not content:
             raise HTTPException(status_code=400, detail='Nội dung tài liệu đang trống')
         try:

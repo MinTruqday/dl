@@ -15,12 +15,12 @@ class AuthenticationService:
 
     @staticmethod
     async def get_google_auth_url(db=None):
-        google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', None)
-        redirect_uri = getattr(settings, 'GOOGLE_REDIRECT_URI', None)
+        google_client_id = settings.GOOGLE_CLIENT_ID
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
             logger.error('Chưa thiết lập khóa ứng dụng Google hoặc đường dẫn phản hồi')
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Dịch vụ đăng nhập Google chưa được thiết lập')
-        auth_url = f'https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={google_client_id}&redirect_uri={redirect_uri}&scope=openid email profile'
+        auth_url = f'{settings.GOOGLE_AUTH_URL}?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile'
         return auth_url
 
     @staticmethod
@@ -177,17 +177,17 @@ class AuthenticationService:
 
     @staticmethod
     async def handle_google_callback(code: str, client_ip: str, db=None):
-        google_client_id = getattr(settings, 'GOOGLE_CLIENT_ID', None)
-        google_client_secret = getattr(settings, 'GOOGLE_CLIENT_SECRET', None)
-        redirect_uri = getattr(settings, 'GOOGLE_REDIRECT_URI', None)
+        google_client_id = settings.GOOGLE_CLIENT_ID
+        google_client_secret = settings.GOOGLE_CLIENT_SECRET
+        redirect_uri = settings.GOOGLE_REDIRECT_URI
         import httpx
         async with httpx.AsyncClient() as client:
-            token_resp = await client.post('https://oauth2.googleapis.com/token', data={'code': code, 'client_id': google_client_id, 'client_secret': google_client_secret, 'redirect_uri': redirect_uri, 'grant_type': 'authorization_code'})
+            token_resp = await client.post(settings.GOOGLE_TOKEN_URL, data={'code': code, 'client_id': settings.GOOGLE_CLIENT_ID, 'client_secret': settings.GOOGLE_CLIENT_SECRET, 'redirect_uri': settings.GOOGLE_REDIRECT_URI, 'grant_type': 'authorization_code'})
             token_data = token_resp.json()
             if 'access_token' not in token_data:
                 logger.error('Lỗi xác thực Google')
                 raise HTTPException(status_code=400, detail='Xác thực Google thất bại')
-            user_resp = await client.get('https://www.googleapis.com/oauth2/v3/userinfo', headers={'Authorization': f"Bearer {token_data['access_token']}"})
+            user_resp = await client.get(settings.GOOGLE_USERINFO_URL, headers={'Authorization': f"Bearer {token_data['access_token']}"})
             google_user = user_resp.json()
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]

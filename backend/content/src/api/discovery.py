@@ -25,7 +25,7 @@ async def smart_search(query: str, limit: int=10, current_user: UserInDB=Depends
     from fastapi import HTTPException
     from loguru import logger
     
-    rag_url = getattr(settings, 'AGENTIC_AI_URL', None)
+    rag_url = settings.AGENTIC_AI_URL
     if not rag_url:
         return APIResponse(data=await DocumentService.get_text_search(query, limit), message='Hệ thống AI chưa được cấu hình, dùng tìm kiếm cơ bản')
         

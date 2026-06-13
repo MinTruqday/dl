@@ -94,7 +94,7 @@ class OperationService:
         else:
             redis_status = 'not_configured'
         rag_status = 'unknown'
-        rag_url = getattr(settings, 'AGENTIC_AI_URL', None)
+        rag_url = settings.AGENTIC_AI_URL
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:

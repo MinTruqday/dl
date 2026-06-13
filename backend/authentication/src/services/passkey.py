@@ -12,9 +12,9 @@ import os
 import uuid
 from loguru import logger
 
-RP_ID = getattr(settings, 'PASSKEY_RP_ID')
-RP_NAME = getattr(settings, 'PASSKEY_RP_NAME')
-ORIGIN = getattr(settings, 'PASSKEY_ALLOWED_ORIGINS')
+RP_ID = settings.PASSKEY_RP_ID
+RP_NAME = settings.PASSKEY_RP_NAME
+ORIGIN = settings.PASSKEY_ALLOWED_ORIGINS
 
 class PasskeyService:
 

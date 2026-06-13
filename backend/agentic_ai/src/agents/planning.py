@@ -61,6 +61,6 @@ class Planning:
             
         except Exception as e:
             logger.error("Tạo kế hoạch thất bại do lỗi")
-            return [{"agent": "KnowledgeAgent", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
+            return [{"agent": "Knowledge", "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích"}]
 
 planning = Planning()

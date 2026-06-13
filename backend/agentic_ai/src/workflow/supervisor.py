@@ -44,12 +44,12 @@ async def supervisor_node(state: ActingState):
         return {"steps": steps, "current_step_index": idx, "next_node": "trimmer"}
         
     current_step = steps[idx]
-    agent_name = current_step.get("agent", "ToolDispatcher")
+    agent_name = current_step.get("agent", "Action")
     
     route_map = {
         "CodeInterpreter": "code_interpreter",
         "SearchEngine": "search_engine",
-        "ToolDispatcher": "action",
+        "Action": "action",
         "Knowledge": "knowledge",
         "Reasoning": "reasoning"
     }
@@ -75,7 +75,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
         final_res = ""
         current_task = task_desc
         while replan_count < 3:
-            if agent_name == "ToolDispatcher":
+            if agent_name == "Action":
                 token = getattr(req, "token", None)
                 res = await tool_callable.execute(current_task, {}, req.user_id, token)
             elif agent_name == "Knowledge":
@@ -125,7 +125,7 @@ async def search_engine_node(state: ActingState):
     return await execute_tool_node(state, search_engine, "SearchEngine")
 
 async def action_agent_node(state: ActingState):
-    return await execute_tool_node(state, action, "ToolDispatcher")
+    return await execute_tool_node(state, action, "Action")
 
 
 async def knowledge_agent_node(state: ActingState):

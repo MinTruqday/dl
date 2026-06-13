@@ -18,6 +18,9 @@ class Settings(BaseModel):
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_REDIRECT_URI: Optional[str] = os.getenv("GOOGLE_REDIRECT_URI")
+    GOOGLE_AUTH_URL: str = os.getenv("GOOGLE_AUTH_URL", "https://accounts.google.com/o/oauth2/v2/auth")
+    GOOGLE_TOKEN_URL: str = os.getenv("GOOGLE_TOKEN_URL", "https://oauth2.googleapis.com/token")
+    GOOGLE_USERINFO_URL: str = os.getenv("GOOGLE_USERINFO_URL", "https://www.googleapis.com/oauth2/v3/userinfo")
 
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")
@@ -34,16 +37,16 @@ class Settings(BaseModel):
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
 
-    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA", "0.5"))
-    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS", "384"))
-    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
-    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS", "10"))
+    HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
+    EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
+    EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))
+    MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
 
     TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
 
     QDRANT_URL: str = os.getenv("QDRANT_URL")
     QDRANT_HOST: str = os.getenv("QDRANT_HOST")
-    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
+    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
 
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
@@ -57,10 +60,10 @@ class Settings(BaseModel):
     AUTHENTICATION_URL: str = os.getenv("AUTHENTICATION_URL")
     CONTENT_URL: str = os.getenv("CONTENT_URL")
     WEBSOCKET_URL: str = os.getenv("WEBSOCKET_URL")
-    FLARESOLVERR_URL: str = os.getenv("FLARESOLVERR_URL", "http://flaresolverr:8191/v1")
+    FLARESOLVERR_URL: str = os.getenv("FLARESOLVERR_URL")
 
     SMTP_HOST: str = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
     SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
@@ -78,6 +81,7 @@ class Settings(BaseModel):
     PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
     PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")
     PAYOS_RETURN_URL: str = os.getenv("PAYOS_RETURN_URL")
+    PAYOS_API_URL: str = os.getenv("PAYOS_API_URL")
 
 
 settings = Settings()

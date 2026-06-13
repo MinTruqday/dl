@@ -57,7 +57,7 @@ class DepositService:
         
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post('https://api-merchant.payos.vn/v2/payment-requests', json=payload, headers={'x-client-id': getattr(settings, 'PAYOS_CLIENT_ID', ''), 'x-api-key': getattr(settings, 'PAYOS_API_KEY', ''), 'Content-Type': 'application/json'}, timeout=15)
+                response = await client.post(settings.PAYOS_API_URL, json=payload, headers={'x-client-id': settings.PAYOS_CLIENT_ID, 'x-api-key': settings.PAYOS_API_KEY, 'Content-Type': 'application/json'}, timeout=15)
             res_data = response.json()
             if res_data.get('code') == '00':
                 checkout_url = res_data['data']['checkoutUrl']
@@ -130,7 +130,7 @@ class DepositService:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f'https://api-merchant.payos.vn/v2/payment-requests/{order_code}', headers={'x-client-id': getattr(settings, 'PAYOS_CLIENT_ID', ''), 'x-api-key': getattr(settings, 'PAYOS_API_KEY', '')}, timeout=10)
+                response = await client.get(f'{settings.PAYOS_API_URL}/{order_code}', headers={'x-client-id': settings.PAYOS_CLIENT_ID, 'x-api-key': settings.PAYOS_API_KEY}, timeout=10)
             res_data = response.json()
             if res_data.get('code') == '00':
                 payment_data = res_data.get('data', {})

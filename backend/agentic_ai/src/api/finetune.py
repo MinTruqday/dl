@@ -50,7 +50,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         sync_update({"status": "running", "progress": 5})
 
         base_model_name = config.get("base_model", settings.LLAMA_MODEL)
-        hf_token = getattr(settings, "HF_TOKEN", None)
+        hf_token = settings.HF_TOKEN
         epochs = config.get("epochs", 3)
         batch_size = config.get("batch_size", 4)
         learning_rate = config.get("learning_rate", 2e-4)
@@ -203,7 +203,7 @@ async def import_documents(req: dict):
             content = doc["content"]
         words = content.split()
         chunks = [" ".join(words[i:i + 500]) for i in range(0, len(words), 500) if len(words[i:i + 500]) > 50][:10]
-        hf_token = getattr(settings, "HF_TOKEN", None)
+        hf_token = settings.HF_TOKEN
         from huggingface_hub import AsyncInferenceClient
         for chunk in chunks:
             try:
@@ -308,7 +308,7 @@ async def deploy_model(job_id: str, req: dict):
     gguf_path = job.get("gguf_path")
     merged_path = job.get("merged_path")
     
-    hf_token = getattr(settings, "HF_TOKEN", None)
+    hf_token = settings.HF_TOKEN
     if not hf_token:
         raise HTTPException(status_code=500, detail="Hệ thống đang thiếu mã xác thực HuggingFace")
 
