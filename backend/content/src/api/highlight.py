@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_db, get_current_user
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from src.schemas.highlight import HighlightCreateRequest, HighlightNoteUpdateRequest, ReadingPreferenceUpdate
 from src.services.highlight import HighlightService
 from core.response import APIResponse

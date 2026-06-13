@@ -46,4 +46,3 @@ async def make_ai_request(url: str, json_data: dict, timeout: float = 30.0):
     except Exception as e:
         ai_circuit_breaker.on_failure()
         raise e
-

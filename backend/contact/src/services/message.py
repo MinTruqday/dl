@@ -313,7 +313,7 @@ class MessageService:
         msg = await db['messages'].find_one({'_id': message_id})
         if not msg:
             return None
-        from core.http_client import http_client
+        from src.core.http_client import http_client
         from core.config import settings
         translated_content = ""
         try:

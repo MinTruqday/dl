@@ -1,7 +1,7 @@
 from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, Form
-from provision.src.schemas.user import UserInDB, RoleEnum
+from core.schemas.user import UserInDB, RoleEnum
 from src.api.dependency import get_db, require_role
 from src.services.upload import UploadService
 router = APIRouter(prefix='/tai-len')

@@ -3,7 +3,7 @@ from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
 from loguru import logger
-from src.schemas.user import RoleEnum
+from core.schemas.user import RoleEnum
 import uuid
 from uuid6 import uuid7
 import json

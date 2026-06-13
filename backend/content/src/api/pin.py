@@ -1,7 +1,7 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency import get_db, get_current_user
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from src.schemas.library import PinnedDocumentRequest
 from core.response import APIResponse
 from src.services.pin import PinService

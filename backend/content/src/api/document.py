@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from core.response import APIResponse
 from src.api.dependency import get_db, get_current_user_optional, get_current_user, require_role
 from fastapi import APIRouter, Depends, Response, Query, status, HTTPException, Header, Body, Request
-from provision.src.schemas.user import UserInDB, RoleEnum
+from core.schemas.user import UserInDB, RoleEnum
 from src.services.document import DocumentService
 from src.services.series import SeriesService
 from src.schemas.document import DocumentCreate, DocumentResponse, DocumentContentUpdate, DocumentUpdate, CoauthorInviteRequest, DocumentPasswordRequest

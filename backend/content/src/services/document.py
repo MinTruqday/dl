@@ -1,5 +1,5 @@
 from bson import ObjectId
-from core.publication import trigger_document_publish_job
+from src.core.publication import trigger_document_publish_job
 from passlib.context import CryptContext
 from core.storage import upload_file
 from typing import List, Any

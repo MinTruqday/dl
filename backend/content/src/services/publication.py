@@ -60,7 +60,7 @@ class PublicationService:
         document = await docs_collection.find_one({'_id': document_id, 'author_id': user_id})
         if not document:
             raise HTTPException(status_code=404, detail='Tài liệu không tồn tại')
-        from core.publication import trigger_document_publish_job
+        from src.core.publication import trigger_document_publish_job
         await trigger_document_publish_job(document_id, user_id)
         await docs_collection.update_one({'_id': document_id}, {'$set': {'status': 'processing_publish', 'updated_at': datetime.now(timezone.utc)}})
         logger.info(f'Đang xuất bản tài liệu {document_id}')

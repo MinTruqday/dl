@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Optional, List, Any
 from loguru import logger
 from core.config import settings
-from src.schemas.inference import (
+from core.schemas.inference import (
     GenerationRequest, TranslationRequest, SentimentRequest, CodeRequest, GrammarRequest,
     SummarizeRequest, ActionRequest, CitationRequest,
     ToneRequest, ReviewRequest, SynthesisRequest

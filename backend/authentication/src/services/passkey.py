@@ -6,7 +6,7 @@ from webauthn.helpers.structs import RegistrationCredential, AuthenticationCrede
 from webauthn.helpers.exceptions import InvalidRegistrationResponse, InvalidAuthenticationResponse
 from fastapi import HTTPException
 from core.database import db_client
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from datetime import datetime, timezone
 import os
 import uuid

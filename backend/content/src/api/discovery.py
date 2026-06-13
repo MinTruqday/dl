@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, Query, status
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from src.api.dependency import get_db, get_current_user_optional
 from core.response import APIResponse
 from src.services.document import DocumentService

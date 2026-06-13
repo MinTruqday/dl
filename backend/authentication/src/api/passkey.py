@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from src.api.dependency import get_db, get_current_user
+from core.dependency import get_db, get_current_user
 from core.response import APIResponse
-from provision.src.schemas.user import PasskeyRequest, PasskeyFinishRequest
+from core.schemas.user import PasskeyRequest, PasskeyFinishRequest
 from src.services.passkey import PasskeyService
 from typing import Any
 router = APIRouter(prefix='/xac-thuc/passkey')

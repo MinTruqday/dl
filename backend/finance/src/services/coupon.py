@@ -6,7 +6,7 @@ import uuid
 from uuid6 import uuid7
 from loguru import logger
 from src.schemas.wallet import CouponStatus, CouponTargetType
-from provision.src.schemas.user import RoleEnum
+from core.schemas.user import RoleEnum
 
 class CouponService:
 

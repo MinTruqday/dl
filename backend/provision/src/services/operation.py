@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import uuid
 from uuid6 import uuid7
 from loguru import logger
-from src.schemas.user import RoleEnum
+from core.schemas.user import RoleEnum
 
 class OperationService:
 
@@ -185,6 +185,70 @@ class OperationService:
         return {'total_documents': 0, 'total_assets': 0, 'collector_status': 'OFFLINE', 'last_crawl': None, 'storage_usage_mb': 0}
 
     @staticmethod
+    async def trigger_collection(source: str, pages: int, db=None) -> dict:
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{settings.COLLECTOR_URL}/noi-bo/kich-hoat",
+                    json={"source": source, "pages": pages},
+                    timeout=5.0
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                else:
+                    return {"status": "error", "message": resp.text}
+        except Exception as e:
+            logger.error("Lỗi kích hoạt thu thập")
+        return {'status': 'error', 'message': 'Không thể kết nối đến collector'}
+
+    @staticmethod
+    async def stop_collection(db=None) -> dict:
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(f"{settings.COLLECTOR_URL}/dung", timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json()
+                else:
+                    return {"status": "error", "message": resp.text}
+        except Exception as e:
+            logger.error("Lỗi dừng thu thập")
+        return {'status': 'error', 'message': 'Không thể kết nối đến collector'}
+
+    @staticmethod
+    async def get_collector_logs(db=None) -> list:
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{settings.COLLECTOR_URL}/logs", timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json()
+        except Exception as e:
+            logger.error("Lỗi lấy logs thu thập")
+        return []
+
+    @staticmethod
+    async def get_active_collector_jobs(db=None) -> list:
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{settings.COLLECTOR_URL}/noi-bo/cong-viec-dang-chay", timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json()
+        except Exception as e:
+            logger.error("Lỗi lấy danh sách công việc thu thập đang chạy")
+        return []
+
+    @staticmethod
     async def handle_bug_report(data: dict, current_moderator, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -212,48 +276,54 @@ class OperationService:
 
     @staticmethod
     async def get_withdrawal_requests(status: str='PENDING', limit: int=50, db=None) -> list:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        pipeline = [{'$match': {'status': status}}, {'$sort': {'created_at': -1}}, {'$limit': limit}, {'$lookup': {'from': 'users', 'localField': 'user_id', 'foreignField': '_id', 'as': 'user'}}, {'$unwind': {'path': '$user', 'preserveNullAndEmptyArrays': True}}]
-        apps = await db['withdrawal_requests'].aggregate(pipeline).to_list(length=limit)
-        result = []
-        for a in apps:
-            user = a.get('user', {})
-            result.append({'_id': str(a['_id']), 'user_id': a['user_id'], 'user_name': user.get('full_name') if user else 'Unknown', 'user_email': user.get('email') if user else '', 'amount': a.get('amount'), 'status': a.get('status'), 'created_at': a['created_at'].isoformat() if isinstance(a.get('created_at'), datetime) else a.get('created_at'), 'bank_info': user.get('bank_info') if user else {}})
-        return result
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{settings.FINANCE_URL}/rut-tien/hang-doi?status={status}&limit={limit}", timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json().get("data", [])
+        except Exception as e:
+            logger.error("Lỗi lấy danh sách rút tiền từ finance")
+        return []
 
     @staticmethod
     async def approve_withdrawal(withdrawal_id: str, admin_id: str, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
-        if not withdrawal:
-            raise HTTPException(status_code=400, detail='Không tìm thấy giao dịch rút tiền hoặc giao dịch đã được xử lý')
-        await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'COMPLETED', 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}})
-        logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã được duyệt bởi {admin_id}')
-        return {'message': 'Đã phê duyệt yêu cầu rút tiền'}
+        import httpx
+        from core.config import settings
+        from loguru import logger
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
+                    params={"action": "approve"},
+                    timeout=5.0
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                else:
+                    return {"status": "error", "message": resp.text}
+        except Exception as e:
+            logger.error(f"Lỗi duyệt rút tiền {withdrawal_id}")
+        return {'status': 'error', 'message': 'Không thể kết nối đến finance'}
 
     @staticmethod
     async def reject_withdrawal(withdrawal_id: str, reason: str, admin_id: str, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        withdrawal = await db['withdrawal_requests'].find_one({'_id': withdrawal_id, 'status': 'PENDING'})
-        if not withdrawal:
-            raise HTTPException(status_code=404, detail='Không tìm thấy giao dịch rút tiền')
-        session = await db_client.mongodb.start_session()
+        import httpx
+        from core.config import settings
+        from loguru import logger
         try:
-            async with session.start_transaction():
-                await db['users'].update_one({'_id': withdrawal['user_id']}, {'$inc': {'wallet_balance': withdrawal['amount']}}, session=session)
-                await db['withdrawal_requests'].update_one({'_id': withdrawal_id}, {'$set': {'status': 'REJECTED', 'rejection_reason': reason, 'processed_by': admin_id, 'processed_at': datetime.now(timezone.utc)}}, session=session)
-                from src.schemas.wallet import Transaction, TransactionType
-                tx = Transaction(user_id=withdrawal['user_id'], type=TransactionType.REFUND, amount=withdrawal['amount'], note=f'Hoàn trả yêu cầu rút tiền bị từ chối: {reason}')
-                await db['transactions'].insert_one(tx.model_dump(by_alias=True), session=session)
-                await session.commit_transaction()
-                logger.info(f'Yêu cầu rút tiền {withdrawal_id} đã bị từ chối bởi {admin_id}. Lý do: {reason}')
-                return {'message': 'Đã từ chối yêu cầu rút tiền và hoàn tiền vào ví'}
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
+                    params={"action": "reject", "reason": reason},
+                    timeout=5.0
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+                else:
+                    return {"status": "error", "message": resp.text}
         except Exception as e:
-            await session.abort_transaction()
-            logger.error('Lỗi khi xử lý thao tác từ chối lệnh rút tiền')
-            raise HTTPException(status_code=500, detail='Từ chối giao dịch thất bại')
-        finally:
-            await session.end_session()
+            logger.error(f"Lỗi từ chối rút tiền {withdrawal_id}")
+        return {'status': 'error', 'message': 'Không thể kết nối đến finance'}

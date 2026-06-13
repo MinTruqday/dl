@@ -1,4 +1,4 @@
-from agentic_ai.src.schemas.inference import PlagiarismCheckRequest, CoverGenerateRequest, AISuggestionRequest
+from core.schemas.inference import PlagiarismCheckRequest, CoverGenerateRequest, AISuggestionRequest
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Header
 from loguru import logger

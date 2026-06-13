@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, get_current_user
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from src.schemas.library import ReadingListCreate, BookmarkFolderCreate, BookmarkFolderAssign
 from core.response import APIResponse
 from src.services.library import LibraryService

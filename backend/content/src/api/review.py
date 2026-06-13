@@ -2,7 +2,7 @@ from typing import Any
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, status
 from typing import List, Any
-from provision.src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from src.schemas.review import ReviewCreate, ReviewResponse
 from src.api.dependency import get_db, get_current_user
 from src.services.review import ReviewService

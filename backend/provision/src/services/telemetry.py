@@ -1,7 +1,7 @@
 from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from core.database import db_client
-from src.schemas.user import UserInDB
+from core.schemas.user import UserInDB
 from typing import Optional, Dict, Any
 import uuid
 from uuid6 import uuid7

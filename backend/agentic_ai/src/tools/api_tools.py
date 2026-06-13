@@ -270,7 +270,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     return ""
 
 from src.api.inference import suggest_citations, peer_review, transform_tone
-from src.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
+from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
 
 
 @tool

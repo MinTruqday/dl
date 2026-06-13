@@ -1,12 +1,11 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, status
-from src.schemas.user import UserInDB, RoleEnum
+from core.schemas.user import UserInDB, RoleEnum
 from src.api.dependency import get_db, require_role, get_current_user
 from core.response import APIResponse
 from src.services.operation import OperationService
-from src.services.withdrawal import WithdrawalService
 from src.services.user import UserService
-from src.schemas.operation import CampaignRequest
+from src.schemas.operation import CampaignRequest, CollectionRequest
 router = APIRouter(prefix='/van-hanh')
 
 @router.get('/chi-so', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
@@ -49,6 +48,22 @@ async def get_admin_reports(db=Depends(get_db)):
 @router.get('/thu-thap/thong-ke', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def get_collector_stats(db=Depends(get_db)):
     return APIResponse(data=await OperationService.get_collector_stats(db=db), message='Đã tổng hợp dữ liệu thống kê')
+
+@router.post('/thu-thap/kich-hoat', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
+    return APIResponse(data=await OperationService.trigger_collection(req.source, req.pages, db=db), message='Đã kích hoạt trình thu thập')
+
+@router.post('/thu-thap/dung', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def stop_collection(db=Depends(get_db)):
+    return APIResponse(data=await OperationService.stop_collection(db=db), message='Đã gửi lệnh dừng trình thu thập')
+
+@router.get('/thu-thap/logs', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_collector_logs(db=Depends(get_db)):
+    return APIResponse(data=await OperationService.get_collector_logs(db=db), message='Đã tải logs từ trình thu thập')
+
+@router.get('/thu-thap/cong-viec-dang-chay', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+async def get_active_collector_jobs(db=Depends(get_db)):
+    return APIResponse(data=await OperationService.get_active_collector_jobs(db=db), message='Đã tải danh sách công việc đang chạy')
 
 @router.post('/nguoi-dung/{user_id}/shadowban', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))])
 async def shadowban_user(payload: Any, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

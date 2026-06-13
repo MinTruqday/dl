@@ -7,7 +7,7 @@ import os
 from fastapi import HTTPException, status
 from core.database import db_client
 from core.security import get_password_hash, verify_password, create_access_token
-from provision.src.schemas.user import UserCreate, UserInDB, RoleEnum
+from core.schemas.user import UserCreate, UserInDB, RoleEnum
 from src.services.email import EmailService
 from loguru import logger
 

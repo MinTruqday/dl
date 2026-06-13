@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 import jwt
 from core.security import SECRET_KEY, ALGORITHM
 from core.database import db_client
-from provision.src.schemas.user import UserInDB, RoleEnum
+from core.schemas.user import UserInDB, RoleEnum
 import time
 from core.config import settings
 from loguru import logger
@@ -15,7 +15,7 @@ async def get_db():
     return db_client.mongodb[settings.MONGODB_DB_NAME]
 
 async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
-    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên làm việc không hợp lệ hoặc đã hết hạn', headers={'WWW-Authenticate': 'Bearer'})
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Phiên đăng nhập không hợp lệ hoặc đã hết hạn', headers={'WWW-Authenticate': 'Bearer'})
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get('sub')
@@ -50,7 +50,7 @@ async def get_current_user(token: str=Depends(oauth2_scheme)) -> UserInDB:
         except Exception:
             user_doc = None
     if user_doc is None:
-        logger.warning(f'Không tìm thấy người dùng nào có email {email}')
+        logger.warning(f'Không có người dùng nào sử dụng email {email}')
         raise credentials_exception
     user_id_str = str(user_doc['_id'])
     user_doc['_id'] = user_id_str
@@ -68,6 +68,7 @@ async def get_current_user_token_param(token: str) -> UserInDB:
     return await get_current_user(token)
 
 def require_role(required_roles: List[RoleEnum]):
+
     async def role_checker(current_user: UserInDB=Depends(get_current_user)) -> UserInDB:
         if current_user.role == RoleEnum.ADMIN:
             return current_user
@@ -78,6 +79,7 @@ def require_role(required_roles: List[RoleEnum]):
     return role_checker
 
 class RateLimiter:
+
     def __init__(self, calls: int, period: int):
         self.calls = calls
         self.period = period
@@ -100,6 +102,7 @@ class RateLimiter:
         return True
 
 def require_permissions(required_permissions: List[str]):
+
     async def permission_checker(current_user: UserInDB=Depends(get_current_user)) -> UserInDB:
         user_perms = current_user.permissions or []
         if current_user.role == RoleEnum.ADMIN:

@@ -1,7 +1,7 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 from src.api.dependency import get_db, require_role, get_current_user
-from src.schemas.user import UserInDB, RoleEnum
+from core.schemas.user import UserInDB, RoleEnum
 from core.response import APIResponse
 from src.services.telemetry import TelemetryService
 router = APIRouter(prefix='/do-luong')
