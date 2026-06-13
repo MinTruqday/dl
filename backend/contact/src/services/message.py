@@ -194,7 +194,7 @@ class MessageService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        "{settings.PROVISION_URL}/nguoi-dung/noi-bo/nhieu-nguoi-dung",
+                        "{settings.PROVISION_URL}/user/internal/multiple-users",
                         json=other_user_ids,
                         timeout=5.0,
                     )

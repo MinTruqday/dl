@@ -11,7 +11,7 @@ class CompileRequest(BaseModel):
     content: str = Field(...)
 
 
-@router.post("/bien-dich")
+@router.post("/compile")
 async def compile_editorjs(req: CompileRequest):
     try:
         pdf_bytes = await EditorJSEngine.compile_to_pdf(req.content)

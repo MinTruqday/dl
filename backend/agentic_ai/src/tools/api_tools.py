@@ -179,7 +179,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/document/personal", headers=headers, timeout=30
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -207,7 +207,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/document/trash", headers=headers, timeout=30
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -234,7 +234,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "DELETE",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            f"{INTERNAL_API_URL}/document/{document_id}",
             headers=headers,
             timeout=30,
         )
@@ -264,7 +264,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc",
+            f"{INTERNAL_API_URL}/document/{document_id}/restore",
             headers=headers,
             timeout=30,
         )
@@ -289,7 +289,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot",
+            f"{INTERNAL_API_URL}/document/{document_id}/analyze/dropoff",
             headers=headers,
             timeout=30,
         )
@@ -308,7 +308,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
     try:
         res = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            f"{INTERNAL_API_URL}/document/{document_id}",
             headers={"Authorization": token},
             timeout=30,
         )
@@ -446,7 +446,7 @@ async def create_document(
     user_name = "Người dùng"
     try:
         res_profile = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/ho-so/ca-nhan", headers=headers, timeout=10
+            "GET", f"{INTERNAL_API_URL}/ho-so/personal", headers=headers, timeout=10
         )
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})
@@ -500,7 +500,7 @@ async def create_document(
         }
         res_create = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/tai-lieu/",
+            f"{INTERNAL_API_URL}/document/",
             headers=headers,
             json=create_payload,
         )
@@ -525,7 +525,7 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/document/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
@@ -564,7 +564,7 @@ async def update_document(
 
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/document/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return (
@@ -620,7 +620,7 @@ async def update_document(
     try:
         res_update = await _make_api_request(
             "PUT",
-            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            f"{INTERNAL_API_URL}/document/{document_id}",
             headers=headers,
             json=payload,
         )
@@ -644,7 +644,7 @@ async def translate_document(
 
     try:
         res = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+            "GET", f"{INTERNAL_API_URL}/document/{document_id}", headers=headers
         )
         if res.status_code != 200:
             return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
@@ -681,7 +681,7 @@ async def translate_document(
         payload = {"text": text_to_translate, "target_lang": target_language}
         trans_res = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/suy-luan/dich-thuat",
+            f"{INTERNAL_API_URL}/suy-luan/translate",
             headers=headers,
             json=payload,
             timeout=60,
@@ -755,7 +755,7 @@ async def translate_document(
         }
         res_create = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/tai-lieu/",
+            f"{INTERNAL_API_URL}/document/",
             headers=headers,
             json=create_payload,
         )

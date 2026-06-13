@@ -47,7 +47,7 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{invitee_email}",
+                    f"{settings.PROVISION_URL}/user/internal/email/{invitee_email}",
                     timeout=3.0,
                 )
                 if resp.status_code == 200:
@@ -185,7 +185,7 @@ class CollaborationService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{inv['invitee_id']}",
+                        f"{settings.PROVISION_URL}/user/internal/{inv['invitee_id']}",
                         timeout=3.0,
                     )
                     if resp.status_code == 200:
@@ -297,7 +297,7 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{target_user_id}",
+                    f"{settings.PROVISION_URL}/user/internal/{target_user_id}",
                     timeout=3.0,
                 )
                 if resp.status_code == 200:

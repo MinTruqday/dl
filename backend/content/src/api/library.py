@@ -12,7 +12,7 @@ from src.services.library import LibraryService
 router = APIRouter(prefix="/thu-vien")
 
 
-@router.post("/danh-sach", response_model=APIResponse[Any])
+@router.post("/list", response_model=APIResponse[Any])
 async def create_reading_list(
     data: ReadingListCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -25,7 +25,7 @@ async def create_reading_list(
     )
 
 
-@router.get("/danh-sach", response_model=APIResponse[Any])
+@router.get("/list", response_model=APIResponse[Any])
 async def get_my_lists(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -35,7 +35,7 @@ async def get_my_lists(
     )
 
 
-@router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
+@router.get("/list/{list_id}", response_model=APIResponse[Any])
 async def get_list_by_id(
     list_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -45,9 +45,7 @@ async def get_list_by_id(
     )
 
 
-@router.post(
-    "/danh-sach/{list_id}/tai-lieu/{document_id}", response_model=APIResponse[Any]
-)
+@router.post("/list/{list_id}/document/{document_id}", response_model=APIResponse[Any])
 async def add_to_list(
     list_id: str,
     document_id: str,
@@ -63,7 +61,7 @@ async def add_to_list(
 
 
 @router.delete(
-    "/danh-sach/{list_id}/tai-lieu/{document_id}", response_model=APIResponse[Any]
+    "/list/{list_id}/document/{document_id}", response_model=APIResponse[Any]
 )
 async def remove_from_list(
     list_id: str,

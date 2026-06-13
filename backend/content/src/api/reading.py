@@ -74,7 +74,7 @@ async def update_typography(
     )
 
 
-@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
+@router.get("/document/{document_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_in_document(
     document_id: str,
     q: str = Query(...),

@@ -39,7 +39,7 @@ async def upload_image(
     )
 
 
-@router.post("/tai-lieu", response_model=APIResponse[Any])
+@router.post("/document", response_model=APIResponse[Any])
 async def upload_document(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),

@@ -51,7 +51,7 @@ async def create_file(
     )
 
 
-@router.get("/danh-sach", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/list", response_model=APIResponse[List[StorageItemResponse]])
 async def list_items(
     parent_id: Optional[str] = None,
     is_trashed: bool = False,
@@ -137,7 +137,7 @@ async def create_shortcut(
     )
 
 
-@router.get("/tai-xuong-zip")
+@router.get("/download-zip")
 async def download_zip(
     ids: str,
     current_user: UserInDB = Depends(

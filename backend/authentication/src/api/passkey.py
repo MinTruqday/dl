@@ -9,7 +9,7 @@ from src.services.passkey import PasskeyService
 router = APIRouter(prefix="/xac-thuc/passkey")
 
 
-@router.post("/dang-nhap/bat-dau", response_model=APIResponse[Any])
+@router.post("/dang-nhap/start", response_model=APIResponse[Any])
 async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyService.login_begin(payload.email, db=db),

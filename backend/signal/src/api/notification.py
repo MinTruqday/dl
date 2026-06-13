@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.notification import NotificationCreate
 from src.services.notification import NotificationService
 
-router = APIRouter(prefix="/thong-bao")
+router = APIRouter(prefix="/notification")
 
 
 @router.get("", response_model=APIResponse[Any])
@@ -25,7 +25,7 @@ async def get_notifications(
     )
 
 
-@router.patch("/{notif_id}/da-doc", response_model=APIResponse[Any])
+@router.patch("/{notif_id}/read", response_model=APIResponse[Any])
 async def mark_as_read(
     notif_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -37,7 +37,7 @@ async def mark_as_read(
     )
 
 
-@router.patch("/da-doc-tat-ca", response_model=APIResponse[Any])
+@router.patch("/read-all", response_model=APIResponse[Any])
 async def mark_all_as_read(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -62,7 +62,7 @@ async def delete_notification(
 
 
 @router.post(
-    "/noi-bo/kich-hoat", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/trigger", response_model=APIResponse[Any], include_in_schema=False
 )
 async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(

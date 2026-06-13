@@ -8,7 +8,7 @@ from src.services.latex_engine import LatexEngine
 router = APIRouter()
 
 
-@router.post("/bien-dich")
+@router.post("/compile")
 async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
@@ -20,7 +20,7 @@ async def compile_latex(req: CompileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/xuat/{format}")
+@router.post("/export/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
         raise HTTPException(status_code=400, detail="Định dạng không hỗ trợ")
@@ -40,12 +40,12 @@ async def export_document(format: str, req: CompileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/dinh-dang")
+@router.post("/format")
 async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
 
 
-@router.post("/xuat-zip")
+@router.post("/export-zip")
 async def export_project_zip(req: CompileRequest):
     zip_bytes = LatexEngine.export_project_zip(req.content)
     return Response(content=zip_bytes, media_type="application/x-zip-compressed")

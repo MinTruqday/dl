@@ -36,7 +36,7 @@ async def _chat_direct(
         raise e
 
 
-@router.post("/tao-noi-dung")
+@router.post("/generate-content")
 async def generate_text(req: GenerationRequest):
     try:
         result = await _chat_direct(
@@ -51,7 +51,7 @@ async def generate_text(req: GenerationRequest):
         )
 
 
-@router.post("/dich-thuat")
+@router.post("/translate")
 async def translate_text(req: TranslationRequest):
     try:
         prompt = prompt_registry.get(PromptType.TRANSLATE).format(
@@ -69,7 +69,7 @@ async def translate_text(req: TranslationRequest):
         )
 
 
-@router.post("/phan-tich-cam-xuc")
+@router.post("/sentiment-analysis")
 async def analyze_sentiment(req: SentimentRequest):
     try:
         texts_to_analyze = req.texts or []
@@ -151,7 +151,7 @@ async def analyze_sentiment(req: SentimentRequest):
         )
 
 
-@router.post("/tao-ma-nguon")
+@router.post("/generate-code")
 async def generate_code(req: CodeRequest):
     try:
         prompt = prompt_registry.get(PromptType.CODE_GENERATION).format(
@@ -169,7 +169,7 @@ async def generate_code(req: CodeRequest):
         )
 
 
-@router.post("/kiem-tra-ngu-phap")
+@router.post("/check-grammar")
 async def grammar_check(req: GrammarRequest):
     try:
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -194,7 +194,7 @@ async def grammar_check(req: GrammarRequest):
         )
 
 
-@router.post("/tom-tat")
+@router.post("/summarize")
 async def summarize_text(req: SummarizeRequest):
     try:
         prompt = prompt_registry.get(PromptType.SUMMARIZE).format(
@@ -212,7 +212,7 @@ async def summarize_text(req: SummarizeRequest):
         )
 
 
-@router.post("/kiem-tra-dao-van")
+@router.post("/check-plagiarism")
 async def check_plagiarism(req: GrammarRequest):
     try:
         from src.rag.embedder import embedding_service
@@ -272,7 +272,7 @@ async def check_plagiarism(req: GrammarRequest):
         )
 
 
-@router.post("/hanh-dong")
+@router.post("/actions")
 async def unified_action(req: ActionRequest):
     try:
         prompts = {
@@ -310,7 +310,7 @@ async def unified_action(req: ActionRequest):
         )
 
 
-@router.post("/tu-dong-nghia")
+@router.post("/synonyms")
 async def get_synonyms(req: GrammarRequest):
     try:
         prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -326,7 +326,7 @@ async def get_synonyms(req: GrammarRequest):
         )
 
 
-@router.post("/trich-dan-thong-minh")
+@router.post("/smart-citation")
 async def suggest_citations(req: CitationRequest):
     try:
         from src.rag.embedder import embedding_service
@@ -357,7 +357,7 @@ async def suggest_citations(req: CitationRequest):
         )
 
 
-@router.post("/bien-doi-van-ban")
+@router.post("/text-transform")
 async def transform_tone(req: ToneRequest):
     try:
         action = "expand and transform" if req.expansion else "transform"
@@ -376,7 +376,7 @@ async def transform_tone(req: ToneRequest):
         )
 
 
-@router.post("/tham-dinh-noi-dung")
+@router.post("/content-moderation")
 async def peer_review(req: ReviewRequest):
     try:
         criteria_str = (
@@ -399,7 +399,7 @@ async def peer_review(req: ReviewRequest):
         )
 
 
-@router.post("/tong-hop-da-tai-lieu")
+@router.post("/multi-doc-synthesis")
 async def multi_doc_synthesis(req: SynthesisRequest):
     try:
         from src.rag.embedder import embedding_service
@@ -430,7 +430,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
         )
 
 
-@router.post("/trich-xuat-van-ban")
+@router.post("/extract-text")
 async def extract_text(req: dict):
     try:
         file_url = req.get("file_url")
@@ -449,7 +449,7 @@ async def extract_text(req: dict):
         )
 
 
-@router.post("/phan-tich-tai-lieu")
+@router.post("/document-analysis")
 async def analyze_document(req: dict):
     try:
         context = req.get("context", "")

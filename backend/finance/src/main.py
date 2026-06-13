@@ -43,6 +43,6 @@ async def startup_event():
     logger.info("Dịch vụ tài chính đã khởi động")
 
 
-@app.get("/kiem-tra-suc-khoe")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "finance"}

@@ -191,7 +191,7 @@ class DocumentService:
 
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
+                        f"{settings.SIGNAL_URL}/notification/internal/trigger",
                         json={
                             "target_user_id": str(current_user.id),
                             "title": "Tài liệu được cập nhật",
@@ -459,7 +459,7 @@ class DocumentService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/email/{email}",
+                    f"{settings.PROVISION_URL}/user/internal/email/{email}",
                     timeout=3.0,
                 )
                 if resp.status_code == 200:
@@ -547,7 +547,7 @@ class DocumentService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{document['author_id']}",
+                    f"{settings.PROVISION_URL}/user/internal/{document['author_id']}",
                     timeout=3.0,
                 )
                 if resp.status_code == 200:

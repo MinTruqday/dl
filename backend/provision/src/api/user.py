@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from src.api.dependency import get_current_user, get_db, require_role
 from src.services.user import UserService
 
-router = APIRouter(prefix="/nguoi-dung")
+router = APIRouter(prefix="/user")
 
 
 @router.get(
@@ -37,7 +37,7 @@ async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_
 
 
 @router.put(
-    "/{user_id}/trang-thai",
+    "/{user_id}/status",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))],
 )
@@ -144,7 +144,7 @@ async def search_users(q: str = "", limit: int = 10, db=Depends(get_db)):
 
 
 @router.get(
-    "/noi-bo/{user_id}", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/{user_id}", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_user(user_id: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_id(user_id, db)
@@ -152,7 +152,7 @@ async def internal_get_user(user_id: str, db=Depends(get_db)):
 
 
 @router.post(
-    "/noi-bo/nhieu-nguoi-dung", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/multiple-users", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
     users = await UserService.internal_get_users_by_ids(user_ids, db)
@@ -160,7 +160,7 @@ async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
 
 
 @router.get(
-    "/noi-bo/email/{email}", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/email/{email}", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_user_by_email(email: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_email(email, db)
@@ -168,7 +168,7 @@ async def internal_get_user_by_email(email: str, db=Depends(get_db)):
 
 
 @router.get(
-    "/noi-bo/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
@@ -184,7 +184,7 @@ class InternalCreateUserRequest(BaseModel):
 
 
 @router.post(
-    "/noi-bo/tao-moi", response_model=APIResponse[Any], include_in_schema=False
+    "/internal/create", response_model=APIResponse[Any], include_in_schema=False
 )
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.dict(), db)

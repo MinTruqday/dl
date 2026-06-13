@@ -9,7 +9,7 @@ from src.schemas.document import SchedulePublishRequest, SeoMetadataRequest
 from src.services.document import DocumentService
 from src.services.publication import PublicationService
 
-router = APIRouter(prefix="/xuat-ban")
+router = APIRouter(prefix="/export-ban")
 
 
 @router.post(

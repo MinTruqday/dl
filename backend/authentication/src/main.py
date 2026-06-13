@@ -1,8 +1,8 @@
 import uvicorn
+from core.config import settings
+from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from core.config import settings
-from core.database import init_db, close_db
 from src.api.authentication import router as auth_router
 from src.api.passkey import router as passkey_router
 

@@ -10,7 +10,7 @@ router = APIRouter(prefix="/do-luong")
 
 
 @router.get(
-    "/thong-ke",
+    "/statistics",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

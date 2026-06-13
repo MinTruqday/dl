@@ -9,7 +9,7 @@ from src.schemas.feedback import FeedbackRequest
 router = APIRouter()
 
 
-@router.post("/phan-hoi")
+@router.post("/feedback")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)

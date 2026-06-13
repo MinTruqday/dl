@@ -7,13 +7,13 @@ from src.store.vector_store import vector_store
 router = APIRouter()
 
 
-@router.post("/nap-du-lieu")
+@router.post("/ingest")
 async def ingest_endpoint(req: IngestRequest):
     logger.info("Bắt đầu xử lý tài liệu")
     return await ingestion_pipeline.ingest_document(req.document_id)
 
 
-@router.delete("/tai-lieu/{document_id}")
+@router.delete("/document/{document_id}")
 async def delete_document_endpoint(document_id: str):
     logger.info("Xóa vector tài liệu")
     vector_store.delete_by_document(document_id)

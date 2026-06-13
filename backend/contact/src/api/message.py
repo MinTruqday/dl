@@ -184,7 +184,7 @@ async def share_document(
     return APIResponse(data=result, message="Đã chia sẻ tài liệu", status=201)
 
 
-@router.get("/tai-lieu-chia-se/{other_user_id}", response_model=APIResponse[Any])
+@router.get("/shared-document/{other_user_id}", response_model=APIResponse[Any])
 async def get_shared_attachments(
     other_user_id: str, current_user=Depends(get_current_user)
 ):
@@ -210,7 +210,7 @@ async def unblock_user(other_user_id: str, current_user=Depends(get_current_user
     )
 
 
-@router.get("/trang-thai-chan/{other_user_id}", response_model=APIResponse[Any])
+@router.get("/status-chan/{other_user_id}", response_model=APIResponse[Any])
 async def get_blocked_status(
     other_user_id: str, current_user=Depends(get_current_user)
 ):
@@ -264,7 +264,7 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
     return APIResponse(data=result, message="Đã tạo nhóm thảo luận", status=201)
 
 
-@router.post("/nhap-tin-nhan/{other_user_id}", response_model=APIResponse[Any])
+@router.post("/input-tin-nhan/{other_user_id}", response_model=APIResponse[Any])
 async def save_draft(
     other_user_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -273,7 +273,7 @@ async def save_draft(
     return APIResponse(data=result, message="Đã lưu tin nhắn nháp")
 
 
-@router.get("/nhap-tin-nhan/{other_user_id}", response_model=APIResponse[Any])
+@router.get("/input-tin-nhan/{other_user_id}", response_model=APIResponse[Any])
 async def get_draft(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.get_draft(other_user_id, current_user)
     return APIResponse(data=result, message="Đã tải tin nhắn nháp")

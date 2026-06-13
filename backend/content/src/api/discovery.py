@@ -55,7 +55,7 @@ async def smart_search(
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{rag_url}/tro-chuyen",
+                f"{rag_url}/chat",
                 json={
                     "query": f"Tìm kiếm tài liệu liên quan đến: {query}",
                     "user_id": str(current_user.id),
@@ -83,7 +83,7 @@ async def smart_search(
         )
 
 
-@router.get("/goi-y/ai", response_model=APIResponse[Any])
+@router.get("/suggestion/ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(
     limit: int = 10,
     current_user: UserInDB = Depends(get_current_user_optional),

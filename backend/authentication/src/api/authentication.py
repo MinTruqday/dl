@@ -13,7 +13,7 @@ from src.services.authentication import AuthenticationService
 router = APIRouter(prefix="/xac-thuc")
 
 
-@router.get("/ca-nhan", response_model=APIResponse[UserResponse])
+@router.get("/personal", response_model=APIResponse[UserResponse])
 async def read_users_me(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -113,7 +113,7 @@ async def google_login(db=Depends(get_db)):
     )
 
 
-@router.get("/google/phan-hoi", response_model=APIResponse[Any])
+@router.get("/google/feedback", response_model=APIResponse[Any])
 async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(

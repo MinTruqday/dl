@@ -23,7 +23,7 @@ async def read_health():
     return {"status": "healthy"}
 
 
-@app.post("/cong-viec/tectonic/bien-dich")
+@app.post("/jobs/tectonic/compile")
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:

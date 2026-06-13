@@ -16,7 +16,7 @@ from src.workflow.supervisor import supervisor
 router = APIRouter()
 
 
-@router.post("/tro-chuyen")
+@router.post("/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
@@ -39,7 +39,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 try:
                     doc_res = await _make_api_request(
                         "GET",
-                        f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
+                        f"{INTERNAL_API_URL}/document/{doc_id}",
                         headers={"Authorization": f"Bearer {req.token}"},
                         timeout=10,
                     )
@@ -105,7 +105,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
         }
 
 
-@router.post("/luong-du-lieu")
+@router.post("/stream")
 async def stream_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     bearer_token = token.replace("Bearer ", "") if token else None
@@ -146,7 +146,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     try:
                         doc_res = await _make_api_request(
                             "GET",
-                            f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
+                            f"{INTERNAL_API_URL}/document/{doc_id}",
                             headers={"Authorization": f"Bearer {req.token}"},
                             timeout=10,
                         )

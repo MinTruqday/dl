@@ -16,7 +16,7 @@ from src.services.editor import EditorService
 router = APIRouter(prefix="/soan-thao")
 
 
-@router.post("/{document_id}/kiem-tra-dao-van")
+@router.post("/{document_id}/check-plagiarism")
 async def check_plagiarism(
     document_id: str,
     current_user=Depends(get_current_user),
@@ -31,7 +31,7 @@ async def check_plagiarism(
     }
 
 
-@router.post("/{document_id}/dong-bo-thao-tac")
+@router.post("/{document_id}/sync-action")
 async def sync_keystroke_buffer(
     document_id: str,
     payload: KeystrokeSyncRequest,
@@ -46,7 +46,7 @@ async def sync_keystroke_buffer(
     }
 
 
-@router.post("/tai-lieu/{document_id}/goi-y")
+@router.post("/document/{document_id}/suggestion")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -61,7 +61,7 @@ async def add_inline_suggestion(
     }
 
 
-@router.put("/goi-y/{suggestion_id}/giai-quyet")
+@router.put("/suggestion/{suggestion_id}/resolve")
 async def resolve_suggestion(
     suggestion_id: str,
     payload: ResolveSuggestionRequest,
@@ -89,7 +89,7 @@ async def sync_pomodoro_session(
     }
 
 
-@router.post("/{document_id}/tu-dong-luu")
+@router.post("/{document_id}/auto-save")
 async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
@@ -102,7 +102,7 @@ async def auto_save_draft(
     }
 
 
-@router.post("/{document_id}/gui-duyet")
+@router.post("/{document_id}/submit-review")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.submit_for_review(document_id, current_user),
@@ -111,7 +111,7 @@ async def submit_for_review(document_id: str, current_user=Depends(get_current_u
     }
 
 
-@router.post("/{document_id}/thay-the-toan-cuc")
+@router.post("/{document_id}/replace-all")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -130,7 +130,7 @@ async def global_find_replace(
     }
 
 
-@router.post("/{document_id}/goi-y-ai")
+@router.post("/{document_id}/ai-suggest")
 async def get_ai_suggestions(
     document_id: str,
     payload: current_user = Depends(get_current_user),
@@ -145,7 +145,7 @@ async def get_ai_suggestions(
     }
 
 
-@router.post("/{document_id}/tom-tat")
+@router.post("/{document_id}/summarize")
 async def summarize_document(
     document_id: str,
     current_user=Depends(get_current_user),
@@ -160,7 +160,7 @@ async def summarize_document(
     }
 
 
-@router.post("/{document_id}/phan-tich-the")
+@router.post("/{document_id}/analyze-tags")
 async def extract_smart_tags(
     document_id: str,
     current_user=Depends(get_current_user),
@@ -175,7 +175,7 @@ async def extract_smart_tags(
     }
 
 
-@router.post("/{document_id}/kiem-tra-logic")
+@router.post("/{document_id}/check-logic")
 async def check_logic(
     document_id: str,
     payload: dict,
@@ -191,7 +191,7 @@ async def check_logic(
     }
 
 
-@router.post("/{document_id}/kiem-tra-ngu-phap")
+@router.post("/{document_id}/check-grammar")
 async def check_grammar(
     document_id: str,
     current_user=Depends(get_current_user),
@@ -206,7 +206,7 @@ async def check_grammar(
     }
 
 
-@router.post("/{document_id}/binh-luan")
+@router.post("/{document_id}/comment")
 async def add_inline_comment(
     document_id: str,
     payload: InlineCommentRequest,
@@ -221,7 +221,7 @@ async def add_inline_comment(
     }
 
 
-@router.get("/{document_id}/binh-luan")
+@router.get("/{document_id}/comment")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.get_inline_comments(document_id, current_user),
@@ -230,7 +230,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
     }
 
 
-@router.put("/binh-luan/{comment_id}/giai-quyet")
+@router.put("/comment/{comment_id}/resolve")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),
@@ -239,7 +239,7 @@ async def resolve_comment(comment_id: str, current_user=Depends(get_current_user
     }
 
 
-@router.post("/{document_id}/so-sanh-phien-ban")
+@router.post("/{document_id}/compare-version")
 async def get_version_diff(
     document_id: str,
     payload: VersionDiffRequest,

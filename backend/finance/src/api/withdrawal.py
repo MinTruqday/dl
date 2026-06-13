@@ -61,7 +61,7 @@ async def verify_withdrawal(
 
 
 @router.post(
-    "/{withdrawal_id}/huy-bo",
+    "/{withdrawal_id}/cancel",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )
@@ -79,7 +79,7 @@ async def cancel_withdrawal(
 
 
 @router.get(
-    "/ca-nhan",
+    "/personal",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )

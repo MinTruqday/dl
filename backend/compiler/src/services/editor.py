@@ -48,7 +48,7 @@ class EditorService:
         if not content:
             raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
         try:
-            url = f"{compiler_url}/bien-dich/editorjs/bien-dich"
+            url = f"{compiler_url}/compile/editorjs/compile"
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:
@@ -309,7 +309,7 @@ class EditorService:
         doc = await db["documents"].find_one({"_id": document_id})
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/hanh-dong",
+                f"{agentic_ai_url}/inference/actions",
                 json={
                     "action": "ai_suggestions",
                     "text": context,
@@ -345,7 +345,7 @@ class EditorService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/hanh-dong",
+                    f"{agentic_ai_url}/inference/actions",
                     json={
                         "action": "summarize",
                         "text": text[:5000],
@@ -385,7 +385,7 @@ class EditorService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/hanh-dong",
+                    f"{agentic_ai_url}/inference/actions",
                     json={
                         "action": "extract_tags",
                         "text": text[:3000],
@@ -508,7 +508,7 @@ class EditorService:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/kiem-tra-dao-van",
+                    f"{agentic_ai_url}/inference/check-plagiarism",
                     json={"text": content[:5000]},
                 )
                 if resp.status_code == 200:
@@ -529,7 +529,7 @@ class EditorService:
         previous_content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/hanh-dong",
+                f"{agentic_ai_url}/inference/actions",
                 json={
                     "action": "check_logic",
                     "text": content,
@@ -553,7 +553,7 @@ class EditorService:
         content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/kiem-tra-ngu-phap",
+                f"{agentic_ai_url}/inference/check-grammar",
                 json={"text": content[:5000]},
             )
             if resp.status_code == 200:

@@ -60,7 +60,7 @@ async def approve_coupon(
     )
 
 
-@router.patch("/{coupon_id}/trang-thai", response_model=APIResponse[Any])
+@router.patch("/{coupon_id}/status", response_model=APIResponse[Any])
 async def toggle_coupon_status(
     coupon_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),

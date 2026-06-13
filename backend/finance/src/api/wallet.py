@@ -94,7 +94,7 @@ async def get_revenue(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{author_id}", timeout=3.0
+                f"{settings.PROVISION_URL}/user/internal/{author_id}", timeout=3.0
             )
             if resp.status_code == 200:
                 user_doc = resp.json().get("data") or {}
@@ -111,7 +111,7 @@ async def get_revenue(
     return APIResponse(data=revenue_data, message="Đã tải số liệu doanh thu")
 
 
-@router.post("/giao-dich-mua/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/giao-dich-mua/document/{document_id}", response_model=APIResponse[Any])
 async def purchase_document(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -124,7 +124,7 @@ async def purchase_document(
     )
 
 
-@router.post("/giao-dich-mua/{purchase_id}/huy-bo", response_model=APIResponse[Any])
+@router.post("/giao-dich-mua/{purchase_id}/cancel", response_model=APIResponse[Any])
 async def cancel_purchase(
     purchase_id: str,
     current_user: UserInDB = Depends(get_current_user),

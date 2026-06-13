@@ -13,7 +13,7 @@ router = APIRouter(prefix="/van-hanh")
 
 
 @router.get(
-    "/chi-so",
+    "/metrics",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -121,7 +121,7 @@ async def get_admin_reports(db=Depends(get_db)):
 
 
 @router.get(
-    "/thu-thap/thong-ke",
+    "/collect/statistics",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -133,7 +133,7 @@ async def get_collector_stats(db=Depends(get_db)):
 
 
 @router.post(
-    "/thu-thap/kich-hoat",
+    "/collect/trigger",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -145,7 +145,7 @@ async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
 
 
 @router.post(
-    "/thu-thap/tam-dung",
+    "/collect/pause",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -157,7 +157,7 @@ async def stop_collection(db=Depends(get_db)):
 
 
 @router.get(
-    "/thu-thap/logs",
+    "/collect/logs",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -169,7 +169,7 @@ async def get_collector_logs(db=Depends(get_db)):
 
 
 @router.get(
-    "/thu-thap/cong-viec-dang-chay",
+    "/collect/running-jobs",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -181,7 +181,7 @@ async def get_active_collector_jobs(db=Depends(get_db)):
 
 
 @router.post(
-    "/nguoi-dung/{user_id}/shadowban",
+    "/user/{user_id}/shadowban",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -197,7 +197,7 @@ async def shadowban_user(
 
 
 @router.post(
-    "/nguoi-dung/{user_id}/kyc/{status}",
+    "/user/{user_id}/kyc/{status}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -213,7 +213,7 @@ async def verify_kyc(
 
 
 @router.get(
-    "/minio/thong-ke",
+    "/minio/statistics",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

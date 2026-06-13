@@ -316,7 +316,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/thong-ke", timeout=5.0
+                    f"{settings.COLLECTOR_URL}/statistics", timeout=5.0
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -339,7 +339,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/noi-bo/kich-hoat",
+                    f"{settings.COLLECTOR_URL}/internal/trigger",
                     json={"source": source, "pages": pages},
                     timeout=5.0,
                 )
@@ -362,9 +362,7 @@ class OperationService:
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/tam-dung", timeout=5.0
-                )
+                resp = await client.post(f"{settings.COLLECTOR_URL}/pause", timeout=5.0)
                 if resp.status_code == 200:
                     return resp.json()
                 else:
@@ -400,7 +398,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/noi-bo/cong-viec-dang-chay", timeout=5.0
+                    f"{settings.COLLECTOR_URL}/internal/running-jobs", timeout=5.0
                 )
                 if resp.status_code == 200:
                     return resp.json()

@@ -12,7 +12,7 @@ from uuid6 import uuid7
 router = APIRouter()
 
 
-@router.post("/noi-bo/kich-hoat")
+@router.post("/internal/trigger")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages
@@ -54,7 +54,7 @@ async def trigger_collection(req: CollectionRequest):
         )
 
 
-@router.post("/tam-dung")
+@router.post("/pause")
 async def stop_collection():
     try:
         if mq_client.channel:
@@ -71,7 +71,7 @@ async def stop_collection():
         )
 
 
-@router.get("/noi-bo/cong-viec-dang-chay")
+@router.get("/internal/running-jobs")
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -88,7 +88,7 @@ async def get_active_jobs():
     return jobs
 
 
-@router.get("/thong-ke")
+@router.get("/statistics")
 async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -122,7 +122,7 @@ async def get_collector_stats():
     }
 
 
-@router.get("/nhat-ky-he-thong")
+@router.get("/system-logs")
 async def get_collector_logs():
     log_file = "logs/backend.log"
     logs = []

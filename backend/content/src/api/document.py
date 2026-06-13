@@ -17,7 +17,7 @@ from src.schemas.series import SeriesCreateRequest, SeriesResponse
 from src.services.document import DocumentService
 from src.services.series import SeriesService
 
-router = APIRouter(prefix="/tai-lieu")
+router = APIRouter(prefix="/document")
 
 
 @router.post("", response_model=APIResponse[DocumentResponse])
@@ -147,7 +147,7 @@ async def delete_folder(
 
 
 @router.get(
-    "/ca-nhan",
+    "/personal",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -165,7 +165,7 @@ async def get_my_documents(
 
 
 @router.get(
-    "/thung-rac",
+    "/trash",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -211,7 +211,7 @@ async def get_document_preview(slug: str):
 
 
 @router.get(
-    "/chuoi-tai-lieu/ca-nhan",
+    "/document-series/personal",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -222,7 +222,7 @@ async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
     )
 
 
-@router.get("/chuoi-tai-lieu/{series_id}", response_model=APIResponse[Any])
+@router.get("/document-series/{series_id}", response_model=APIResponse[Any])
 async def get_series_by_id(series_id: str):
     return APIResponse(
         data=await SeriesService.get_series_by_id(series_id),
@@ -231,7 +231,7 @@ async def get_series_by_id(series_id: str):
 
 
 @router.post(
-    "/chuoi-tai-lieu",
+    "/document-series",
     response_model=APIResponse[Any],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
@@ -247,7 +247,7 @@ async def create_series(
 
 
 @router.put(
-    "/chuoi-tai-lieu/{series_id}",
+    "/document-series/{series_id}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -265,7 +265,7 @@ async def update_series(
 
 
 @router.delete(
-    "/chuoi-tai-lieu/{series_id}",
+    "/document-series/{series_id}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -279,7 +279,7 @@ async def delete_series(
 
 
 @router.patch(
-    "/chuoi-tai-lieu/{series_id}/tai-lieu",
+    "/document-series/{series_id}/document",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -297,7 +297,7 @@ async def reorder_series_documents(
 
 
 @router.post(
-    "/{document_id}/chuoi-tai-lieu/{series_id}",
+    "/{document_id}/document-series/{series_id}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -326,7 +326,7 @@ async def soft_delete_document(
 
 
 @router.post(
-    "/{document_id}/khoi-phuc",
+    "/{document_id}/restore",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -419,7 +419,7 @@ async def transfer_document(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/nguoi-dung/noi-bo/{new_owner_id}",
+                f"{settings.PROVISION_URL}/user/internal/{new_owner_id}",
                 timeout=3.0,
             )
             if resp.status_code == 200:
@@ -440,7 +440,7 @@ async def transfer_document(
     )
 
 
-@router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
+@router.get("/{document_id}/analyze", response_model=APIResponse[Any])
 async def get_document_analytics(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -488,7 +488,7 @@ async def get_document_analytics(
     )
 
 
-@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
+@router.get("/{document_id}/metrics-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -610,7 +610,7 @@ class BroadcastRequest(BaseModel):
 
 
 @router.post(
-    "/{document_id}/thong-bao",
+    "/{document_id}/notification",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -638,7 +638,7 @@ async def broadcast_notification(
             for lib in libraries:
                 try:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/noi-bo/kich-hoat",
+                        f"{settings.SIGNAL_URL}/notification/internal/trigger",
                         json={
                             "target_user_id": lib["user_id"],
                             "title": "Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",

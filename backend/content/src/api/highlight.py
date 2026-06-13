@@ -12,7 +12,7 @@ from src.services.highlight import HighlightService
 router = APIRouter(prefix="/neu-bat")
 
 
-@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/document/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,
@@ -28,7 +28,7 @@ async def create_highlight(
     )
 
 
-@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.get("/document/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -87,7 +87,7 @@ async def get_all_notes(
     )
 
 
-@router.get("/tai-lieu/{document_id}/xuat-tai-lieu", response_model=APIResponse[Any])
+@router.get("/document/{document_id}/export-tai-lieu", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

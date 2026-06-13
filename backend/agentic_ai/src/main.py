@@ -35,12 +35,12 @@ app.include_router(finetune_router)
 app.include_router(history_router)
 
 
-@app.get("/kiem-tra-suc-khoe")
+@app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
 
-@app.get("/danh-gia/chi-so")
+@app.get("/evaluate/metrics")
 async def harness_metrics():
     from fastapi.responses import PlainTextResponse
 
@@ -50,7 +50,7 @@ async def harness_metrics():
     )
 
 
-@app.get("/danh-gia/trang-thai")
+@app.get("/evaluate/status")
 async def harness_status():
     return {
         "orchestration": {
