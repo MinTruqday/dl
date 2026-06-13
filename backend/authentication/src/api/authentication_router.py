@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from src.services.authentication_service import AuthenticationService
 
-router = APIRouter(prefix="/xac-thuc")
+router = APIRouter(prefix="/auth")
 
 
 @router.get("/personal", response_model=APIResponse[UserResponse])

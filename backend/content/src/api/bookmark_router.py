@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from src.api.dependency_router import get_current_user, get_db
 from src.services.bookmark_service import BookmarkService
 
-router = APIRouter(prefix="/dau-trang")
+router = APIRouter(prefix="/bookmark")
 
 
 class BookmarkFolderCreate(BaseModel):

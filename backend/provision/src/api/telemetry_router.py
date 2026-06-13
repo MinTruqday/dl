@@ -7,7 +7,7 @@ from src.api.dependency_router import get_current_user, get_db, require_role
 from src.services.telemetry_service import TelemetryService
 from core.config import settings
 
-router = APIRouter(prefix="/do-luong")
+router = APIRouter(prefix="/telemetry")
 
 
 @router.get(

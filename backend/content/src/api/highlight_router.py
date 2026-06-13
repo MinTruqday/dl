@@ -9,7 +9,7 @@ from src.schemas.highlight_schema import (HighlightCreateRequest,
                                           ReadingPreferenceUpdate)
 from src.services.highlight_service import HighlightService
 
-router = APIRouter(prefix="/neu-bat")
+router = APIRouter(prefix="/highlight")
 
 
 @router.post("/document/{document_id}", response_model=APIResponse[Any])

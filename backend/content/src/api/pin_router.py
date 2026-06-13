@@ -7,7 +7,7 @@ from src.api.dependency_router import get_current_user, get_db
 from src.schemas.library_schema import PinnedDocumentRequest
 from src.services.pin_service import PinService
 
-router = APIRouter(prefix="/ghim")
+router = APIRouter(prefix="/pin")
 
 
 @router.get("", response_model=APIResponse[Any])

@@ -6,7 +6,7 @@ from core.schemas.user import PasskeyFinishRequest, PasskeyRequest
 from fastapi import APIRouter, Depends
 from src.services.passkey_service import PasskeyService
 
-router = APIRouter(prefix="/xac-thuc/passkey")
+router = APIRouter(prefix="/auth/passkey")
 
 
 @router.post("/login/start", response_model=APIResponse[Any])

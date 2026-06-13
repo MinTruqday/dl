@@ -9,7 +9,7 @@ from src.schemas.operation_schema import CampaignRequest
 from src.services.operation_service import OperationService
 from src.services.user_service import UserService
 
-router = APIRouter(prefix="/van-hanh")
+router = APIRouter(prefix="/operation")
 
 
 @router.get(

@@ -10,7 +10,7 @@ from src.schemas.document_schema import (SchedulePublishRequest,
 from src.services.document_service import DocumentService
 from src.services.publication_service import PublicationService
 
-router = APIRouter(prefix="/export-ban")
+router = APIRouter(prefix="/publication")
 
 
 @router.post(

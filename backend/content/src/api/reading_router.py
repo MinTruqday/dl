@@ -9,7 +9,7 @@ from src.schemas.library_schema import (PinnedDocumentRequest, ProgressUpdate,
                                         ReadingGoalCreate, TypographyRequest)
 from src.services.reading_service import ReadingService
 
-router = APIRouter(prefix="/doc")
+router = APIRouter(prefix="/reading")
 
 
 @router.get("/history", response_model=APIResponse[Any])

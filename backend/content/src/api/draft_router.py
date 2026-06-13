@@ -8,7 +8,7 @@ from src.schemas.document_schema import ModerateDocumentRequest
 from src.services.document_service import DocumentService
 from core.config import settings
 
-router = APIRouter(prefix="/ban-nhap")
+router = APIRouter(prefix="/draft")
 
 
 @router.get(

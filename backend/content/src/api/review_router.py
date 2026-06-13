@@ -7,7 +7,7 @@ from src.api.dependency_router import get_current_user, get_db
 from src.schemas.review_schema import ReviewCreate, ReviewResponse
 from src.services.review_service import ReviewService
 
-router = APIRouter(prefix="/evaluate")
+router = APIRouter(prefix="/review")
 
 
 @router.post("/{document_id}", response_model=APIResponse[ReviewResponse])
