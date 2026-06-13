@@ -52,7 +52,7 @@ async def _check_quota(current_user: UserInDB):
     except HTTPException:
         raise
     except Exception:
-        logger.error("Lỗi kiểm tra quota")
+        logger.error("Lỗi kiểm tra hạn mức")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 
@@ -72,7 +72,7 @@ async def _consume_quota(
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
     except Exception:
-        logger.error("Lỗi trừ quota")
+        logger.error("Lỗi trừ hạn mức")
 
 
 async def _chat_direct(
@@ -270,7 +270,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="Chức năng này chỉ dành cho gói Cao cấp",
             )
 
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)

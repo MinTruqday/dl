@@ -124,7 +124,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Yeu cau cua ban chua noi dung khong duoc phep'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Yêu cầu của bạn chứa nội dung không được phép'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
             return
 
@@ -150,12 +150,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
                         if doc_res.status_code not in [200, 201]:
-                            yield f"event: message\ndata: {json.dumps({'chunk': 'Ban khong co quyen truy cap hoac tai lieu khong ton tai'})}\n\n"
+                            yield f"event: message\ndata: {json.dumps({'chunk': 'Bạn không có quyền truy cập hoặc tài liệu không tồn tại'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
                         logger.error("Lỗi kiểm tra quyền truy cập tài liệu")
-                        yield f"event: message\ndata: {json.dumps({'chunk': 'Khong the xac thuc quyen truy cap tai lieu'})}\n\n"
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'Không thể xác thực quyền truy cập tài liệu'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
 
@@ -172,7 +172,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             final_answer = ""
 
             if route == "chat":
-                yield f"event: status\ndata: {json.dumps({'node': 'Dang phan hoi truc tiep'})}\n\n"
+                yield f"event: status\ndata: {json.dumps({'node': 'Đang phản hồi trực tiếp'})}\n\n"
 
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
@@ -274,7 +274,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
         except Exception as e:
             logger.exception("Lỗi thực thi luồng AI")
             agentops_harness.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'He thong dang gap su co, vui long thu lai sau'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống đang gặp sự cố, vui lòng thử lại sau'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 
