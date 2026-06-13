@@ -58,7 +58,6 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
         <div className="w-full max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
-
           {registeredEmail && (
             <Passkey
               email={registeredEmail}
@@ -248,9 +247,7 @@ export default function RegisterPage() {
             </p>
           </section>
           <section>
-            <h4 className="font-medium text-black mb-2">
-              4. Bảo mật dữ liệu
-            </h4>
+            <h4 className="font-medium text-black mb-2">4. Bảo mật dữ liệu</h4>
             <p>
               DocLib cam kết bảo mật thông tin cá nhân và không chia sẻ cho bên
               thứ ba khi chưa có sự đồng ý của người dùng, trừ trường hợp yêu

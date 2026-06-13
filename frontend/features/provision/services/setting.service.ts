@@ -7,7 +7,8 @@ export async function getPrivacySettingsAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cài đặt riêng tư");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cài đặt riêng tư");
   return data;
 }
 
@@ -23,7 +24,8 @@ export async function updatePrivacySettingsAPI(settings: any) {
     body: JSON.stringify(settings),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật quyền riêng tư thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Cập nhật quyền riêng tư thất bại");
   return data;
 }
 
@@ -55,7 +57,8 @@ export async function updateGeneralSettingsAPI(settings: any) {
     body: JSON.stringify(settings),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật cài đặt chung thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Cập nhật cài đặt chung thất bại");
   return data;
 }
 
@@ -73,4 +76,3 @@ export async function updateProfileAPI(data: any) {
   if (!res.ok) return null;
   return result;
 }
-

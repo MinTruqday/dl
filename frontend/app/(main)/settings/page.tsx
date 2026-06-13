@@ -226,12 +226,14 @@ export default function SettingsPage() {
   }) => (
     <button
       onClick={onToggle}
-      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 ${active ? "bg-black border-black" : "bg-zinc-100"
-        }`}
+      className={`w-10 h-5 relative shrink-0 rounded-none border border-zinc-200 ${
+        active ? "bg-black border-black" : "bg-zinc-100"
+      }`}
     >
       <div
-        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 ${active ? "left-5 border-black" : "left-0"
-          }`}
+        className={`absolute top-0 w-4 h-4 bg-white border border-zinc-200 ${
+          active ? "left-5 border-black" : "left-0"
+        }`}
       />
     </button>
   );
@@ -270,16 +272,16 @@ export default function SettingsPage() {
       roles: ["reader", "potential_author", "author", "moderator", "admin"],
     },
     ...(user?.role === "reader" &&
-      user?.author_status !== "pending" &&
-      user?.author_status !== "approved"
+    user?.author_status !== "pending" &&
+    user?.author_status !== "approved"
       ? [
-        {
-          id: "apply_author",
-          label: "Tác giả tiềm năng",
-          icon: UserPlus,
-          roles: ["reader"],
-        },
-      ]
+          {
+            id: "apply_author",
+            label: "Tác giả tiềm năng",
+            icon: UserPlus,
+            roles: ["reader"],
+          },
+        ]
       : []),
     {
       id: "author",
@@ -298,9 +300,7 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6"
-      >
+      <div className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-black">Cài đặt</h1>
           <p className="text-zinc-500 text-sm font-medium">
@@ -309,9 +309,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div
-        className="grid lg:grid-cols-12 gap-12"
-      >
+      <div className="grid lg:grid-cols-12 gap-12">
         <aside className="lg:col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div className="space-y-4">
             <div className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
@@ -322,13 +320,16 @@ export default function SettingsPage() {
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id as TabKey)}
-                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${activeSection === section.id
-                    ? "bg-zinc-100 text-black border-zinc-300"
-                    : "bg-white text-zinc-500 border-transparent"
-                    }`}
+                  className={`flex items-center justify-between px-3 py-2 text-sm font-medium border rounded-none ${
+                    activeSection === section.id
+                      ? "bg-zinc-100 text-black border-zinc-300"
+                      : "bg-white text-zinc-500 border-transparent"
+                  }`}
                 >
                   {section.label}
-                  {activeSection === section.id && <ChevronRight className="w-4 h-4" />}
+                  {activeSection === section.id && (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
               ))}
             </nav>
@@ -354,7 +355,10 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        <main className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <main
+          className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           {activeSection === "appearance" && (
             <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">
@@ -373,11 +377,16 @@ export default function SettingsPage() {
                   </div>
                   <div
                     className="bg-white border border-zinc-200 p-6 text-black"
-                    style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+                    style={{
+                      fontFamily,
+                      fontSize: `${fontSize}px`,
+                      lineHeight,
+                    }}
                   >
-                    Kiến trúc thông tin (Information Architecture) là nền tảng cốt
-                    lõi của mọi hệ thống tương tác số. Việc cấu trúc dữ liệu minh
-                    bạch giúp giảm thiểu tải lượng nhận thức cho người dùng.
+                    Kiến trúc thông tin (Information Architecture) là nền tảng
+                    cốt lõi của mọi hệ thống tương tác số. Việc cấu trúc dữ liệu
+                    minh bạch giúp giảm thiểu tải lượng nhận thức cho người
+                    dùng.
                   </div>
                 </div>
 
@@ -397,10 +406,11 @@ export default function SettingsPage() {
                         <button
                           key={font}
                           onClick={() => setFontFamily(font)}
-                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center rounded-none truncate ${fontFamily === font
-                            ? "bg-black text-white border-black"
-                            : "bg-white text-zinc-500 border-zinc-200"
-                            }`}
+                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center rounded-none truncate ${
+                            fontFamily === font
+                              ? "bg-black text-white border-black"
+                              : "bg-white text-zinc-500 border-zinc-200"
+                          }`}
                           style={{ fontFamily: font }}
                         >
                           {font}
@@ -475,8 +485,8 @@ export default function SettingsPage() {
                         Chế độ đọc ẩn danh
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Không hiển thị lịch sử đọc và tương tác của bạn trên bảng
-                        xếp hạng và luồng chung.
+                        Không hiển thị lịch sử đọc và tương tác của bạn trên
+                        bảng xếp hạng và luồng chung.
                       </p>
                     </div>
                     <CustomSwitch
@@ -491,8 +501,8 @@ export default function SettingsPage() {
                         Thư viện nội bộ
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Giới hạn quyền truy cập bộ sưu tập cá nhân đối với
-                        người dùng khác.
+                        Giới hạn quyền truy cập bộ sưu tập cá nhân đối với người
+                        dùng khác.
                       </p>
                     </div>
                     <CustomSwitch
@@ -539,7 +549,8 @@ export default function SettingsPage() {
                         Tự động sao lưu bản thảo
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30 giây.
+                        Hệ thống sẽ tự động lưu nội dung vào máy chủ mỗi 30
+                        giây.
                       </p>
                     </div>
                     <CustomSwitch
@@ -567,10 +578,11 @@ export default function SettingsPage() {
                             });
                             if (success) setDefaultVisibility(mode);
                           }}
-                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none ${defaultVisibility === mode
-                            ? "bg-black text-white border-black"
-                            : "bg-zinc-50 text-zinc-500 border-zinc-200"
-                            }`}
+                          className={`h-10 border text-[10px] font-semibold uppercase tracking-widest rounded-none ${
+                            defaultVisibility === mode
+                              ? "bg-black text-white border-black"
+                              : "bg-zinc-50 text-zinc-500 border-zinc-200"
+                          }`}
                         >
                           {mode === "public" ? "Công khai" : "Riêng tư"}
                         </button>
@@ -626,8 +638,8 @@ export default function SettingsPage() {
                         Thông báo vi phạm thời gian thực
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm quy chế
-                        mới.
+                        Nhận cảnh báo ngay lập tức khi có báo cáo vi phạm quy
+                        chế mới.
                       </p>
                     </div>
                     <CustomSwitch
@@ -696,8 +708,8 @@ export default function SettingsPage() {
                         Chế độ bảo trì hệ thống
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để nâng
-                        cấp kỹ thuật.
+                        Khóa toàn bộ tác vụ ghi dữ liệu trên toàn hệ thống để
+                        nâng cấp kỹ thuật.
                       </p>
                     </div>
                     <CustomSwitch
@@ -717,8 +729,8 @@ export default function SettingsPage() {
                         Đăng ký tài khoản mới
                       </h4>
                       <p className="text-[10px] font-medium text-zinc-500 max-w-sm">
-                        Cho phép hoặc chặn quyền đăng ký tài khoản cho người dùng
-                        mới.
+                        Cho phép hoặc chặn quyền đăng ký tài khoản cho người
+                        dùng mới.
                       </p>
                     </div>
                     <CustomSwitch
@@ -838,7 +850,8 @@ export default function SettingsPage() {
                 Trung tâm thông báo
               </h3>
               <p className="text-xs font-medium text-zinc-500 max-w-xs leading-relaxed">
-                Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của bạn.
+                Hệ thống đồng bộ thông báo đang được thiết lập cho tài khoản của
+                bạn.
               </p>
             </div>
           )}
@@ -918,7 +931,10 @@ export default function SettingsPage() {
                     </div>
                     <button
                       onClick={() =>
-                        showToast("Đã gửi yêu cầu trích xuất dữ liệu", "success")
+                        showToast(
+                          "Đã gửi yêu cầu trích xuất dữ liệu",
+                          "success",
+                        )
                       }
                       className="px-6 py-2 border border-zinc-200 bg-white text-black text-xs font-medium rounded-none"
                     >
@@ -937,7 +953,9 @@ export default function SettingsPage() {
                       </p>
                     </div>
                     <button
-                      onClick={() => showToast("Chức năng đang bảo trì", "error")}
+                      onClick={() =>
+                        showToast("Chức năng đang bảo trì", "error")
+                      }
                       className="px-6 py-2 border border-red-600 bg-black text-white text-xs font-medium rounded-none"
                     >
                       Xóa tài khoản
@@ -963,10 +981,12 @@ export default function SettingsPage() {
         <ModalContent className="p-6">
           <p className="text-xs font-medium text-zinc-500 leading-relaxed">
             {confirmModal?.type === "maintenance"
-              ? `Bạn có chắc chắn muốn ${confirmModal?.value ? "kích hoạt" : "tắt"
-              } chế độ bảo trì? Hành động này sẽ ảnh hưởng đến tất cả người dùng.`
-              : `Bạn có chắc chắn muốn ${confirmModal?.value ? "mở lại" : "đóng"
-              } cổng đăng ký tài khoản mới?`}
+              ? `Bạn có chắc chắn muốn ${
+                  confirmModal?.value ? "kích hoạt" : "tắt"
+                } chế độ bảo trì? Hành động này sẽ ảnh hưởng đến tất cả người dùng.`
+              : `Bạn có chắc chắn muốn ${
+                  confirmModal?.value ? "mở lại" : "đóng"
+                } cổng đăng ký tài khoản mới?`}
           </p>
         </ModalContent>
         <ModalFooter className="flex gap-3 border-t border-zinc-200 p-4 bg-zinc-50">

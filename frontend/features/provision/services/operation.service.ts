@@ -10,7 +10,8 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
     },
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách đơn ứng tuyển");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách đơn ứng tuyển");
   return data;
 }
 
@@ -44,7 +45,8 @@ export async function getAdminConfigAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cấu hình hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cấu hình hệ thống");
   return data;
 }
 
@@ -60,7 +62,8 @@ export async function updateAdminConfigAPI(config: any) {
     body: JSON.stringify(config),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật cấu hình hệ thống");
   return data;
 }
 
@@ -71,7 +74,8 @@ export async function getSystemHealthAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải sức khỏe hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải sức khỏe hệ thống");
   return data;
 }
 
@@ -82,13 +86,12 @@ export async function getMaintenanceModeAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải trạng thái bảo trì");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải trạng thái bảo trì");
   return data;
 }
 
-export async function toggleMaintenanceModeAPI(
-  enabled: boolean,
-) {
+export async function toggleMaintenanceModeAPI(enabled: boolean) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/operation/bao-tri?enabled=${enabled}`, {
@@ -98,7 +101,8 @@ export async function toggleMaintenanceModeAPI(
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Thao tác chuyển đổi bảo trì thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Thao tác chuyển đổi bảo trì thất bại");
   return data;
 }
 
@@ -116,12 +120,6 @@ export async function triggerBackupAPI() {
   return data;
 }
 
-
-
-
-
-
-
 export async function getAdminReportsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
@@ -129,7 +127,8 @@ export async function getAdminReportsAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách báo cáo");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách báo cáo");
   return data;
 }
 
@@ -140,6 +139,7 @@ export async function getMinioStatsAPI() {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông số lưu trữ MinIO");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải thông số lưu trữ MinIO");
   return data;
 }

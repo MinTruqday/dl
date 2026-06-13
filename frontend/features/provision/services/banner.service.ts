@@ -3,7 +3,8 @@ import { API_URL, getAuthHeaders } from "./authentication.service";
 export async function getActiveBannersAPI() {
   const res = await fetch(`${API_URL}/banner`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách biểu ngữ");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách biểu ngữ");
   return data;
 }
 
@@ -12,7 +13,8 @@ export async function getAllBannersAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải toàn bộ danh sách biểu ngữ");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải toàn bộ danh sách biểu ngữ");
   return data;
 }
 

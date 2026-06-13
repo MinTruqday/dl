@@ -14,16 +14,21 @@ export async function getWalletHistoryAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử giao dịch");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch sử giao dịch");
   return data;
 }
 
-export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
+export async function getDetailedHistoryAPI(
+  skip: number = 0,
+  limit: number = 30,
+) {
   const res = await fetch(`${API_URL}/wallet/lich-su?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử chi tiết");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch sử chi tiết");
   return data;
 }
 
@@ -38,7 +43,11 @@ export async function redeemVoucherAPI(code: string) {
   return data;
 }
 
-export async function voteItemAPI(itemId: string, itemType: string, amount: number) {
+export async function voteItemAPI(
+  itemId: string,
+  itemType: string,
+  amount: number,
+) {
   const res = await fetch(`${API_URL}/wallet/binh-chon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -60,34 +69,41 @@ export async function unlockPostAPI(postId: string) {
   return data;
 }
 
-
 export async function getAuthorStatsAPI() {
   const res = await fetch(`${API_URL}/wallet/doanh-thu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải số liệu doanh thu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải số liệu doanh thu");
   return data;
 }
 
 export async function purchaseDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/wallet/giao-dich-mua/document/${documentId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/wallet/giao-dich-mua/document/${documentId}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Mua tài liệu thất bại");
   return data;
 }
 
-export async function purchaseChapterAPI(documentId: string, chapterId: string) {
-  const res = await fetch(`${API_URL}/wallet/giao-dich-mua/document/${documentId}/chuong/${chapterId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+export async function purchaseChapterAPI(
+  documentId: string,
+  chapterId: string,
+) {
+  const res = await fetch(
+    `${API_URL}/wallet/giao-dich-mua/document/${documentId}/chuong/${chapterId}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Mua chương thất bại");
   return data;
 }
-
-

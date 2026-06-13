@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { X } from "lucide-react";
 
 export interface ToastItem {
@@ -66,7 +72,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 key={t.id}
                 className={`relative border border-zinc-200 p-5 text-sm font-semibold bg-white animate-in slide-in-from-right-8 fade-in pointer-events-auto shadow-sm ${typeStyles}`}
               >
-                <div className="absolute w-1 bg-black" style={{ top: "-1px", bottom: "-1px", left: "-1px" }} />
+                <div
+                  className="absolute w-1 bg-black"
+                  style={{ top: "-1px", bottom: "-1px", left: "-1px" }}
+                />
                 <div className="flex justify-between items-center gap-6 whitespace-nowrap min-w-max">
                   <div className="flex-1 pl-2">
                     <p className="leading-relaxed font-bold tracking-tight">

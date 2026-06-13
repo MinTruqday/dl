@@ -1,5 +1,5 @@
 import { API, InlineTool } from "@editorjs/editorjs";
-import { IconStrikethrough } from '@codexteam/icons';
+import { IconStrikethrough } from "@codexteam/icons";
 
 export default class DocLibStrikethrough implements InlineTool {
   private api: API;
@@ -8,9 +8,15 @@ export default class DocLibStrikethrough implements InlineTool {
   private tag = "S";
   private class = "cdx-strikethrough";
 
-  static get isInline() { return true; }
-  static get title() { return "DocLib Strikethrough"; }
-  static get sanitize() { return { s: { class: true } }; }
+  static get isInline() {
+    return true;
+  }
+  static get title() {
+    return "DocLib Strikethrough";
+  }
+  static get sanitize() {
+    return { s: { class: true } };
+  }
 
   constructor({ api }: { api: API }) {
     this.api = api;
@@ -21,7 +27,7 @@ export default class DocLibStrikethrough implements InlineTool {
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML = IconStrikethrough;
-    
+
     return this.button;
   }
 
@@ -49,7 +55,10 @@ export default class DocLibStrikethrough implements InlineTool {
     const parentNode = this.api.selection.findParentTag(this.tag, this.class);
     this._state = !!parentNode;
     if (this.button) {
-      this.button.classList.toggle(this.api.styles.inlineToolButtonActive, this._state);
+      this.button.classList.toggle(
+        this.api.styles.inlineToolButtonActive,
+        this._state,
+      );
     }
     return this._state;
   }

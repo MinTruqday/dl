@@ -3,35 +3,45 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibGroupImage implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { urls: string[], layout: 'grid' | 'masonry' };
+  private data: { urls: string[]; layout: "grid" | "masonry" };
   private readOnly: boolean;
 
   static get toolbox() {
     return {
-      title: 'DocLib Group Image',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>'
+      title: "DocLib Group Image",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
     };
   }
 
-  static get isReadOnlySupported() { return true; }
+  static get isReadOnlySupported() {
+    return true;
+  }
 
-  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data?: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
       urls: Array.isArray(data.urls) ? data.urls : [],
-      layout: data.layout || 'grid'
+      layout: data.layout || "grid",
     };
   }
 
   render() {
-    this.wrapper = document.createElement('div');
+    this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
-    if (!document.getElementById('doclib-group-image-styles')) {
-        const style = document.createElement('style');
-        style.id = 'doclib-group-image-styles';
-        style.innerHTML = `
+
+    if (!document.getElementById("doclib-group-image-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-group-image-styles";
+      style.innerHTML = `
             .doclib-gi-wrapper { margin: 16px 0; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; background: #f8fafc; }
             .doclib-gi-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
             .doclib-gi-masonry { columns: 2 150px; column-gap: 8px; }
@@ -44,100 +54,107 @@ export default class DocLibGroupImage implements BlockTool {
             .doclib-gi-add { margin-top: 8px; width: 100%; padding: 8px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
             .doclib-gi-add:hover { background: #cbd5e1; }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
     }
-    
+
     this.buildUI();
     return this.wrapper;
   }
-  
+
   renderSettings() {
-      const wrapper = document.createElement('div');
-      
-      const gridBtn = document.createElement('div');
-      gridBtn.classList.add(this.api.styles.settingsButton);
-      if (this.data.layout === 'grid') gridBtn.classList.add(this.api.styles.settingsButtonActive);
-      gridBtn.innerHTML = 'Grid';
-      gridBtn.addEventListener('click', () => {
-          this.data.layout = 'grid';
-          this.buildUI();
-      });
-      
-      const masonryBtn = document.createElement('div');
-      masonryBtn.classList.add(this.api.styles.settingsButton);
-      if (this.data.layout === 'masonry') masonryBtn.classList.add(this.api.styles.settingsButtonActive);
-      masonryBtn.innerHTML = 'Masonry';
-      masonryBtn.addEventListener('click', () => {
-          this.data.layout = 'masonry';
-          this.buildUI();
-      });
-      
-      wrapper.appendChild(gridBtn);
-      wrapper.appendChild(masonryBtn);
-      
-      return wrapper;
+    const wrapper = document.createElement("div");
+
+    const gridBtn = document.createElement("div");
+    gridBtn.classList.add(this.api.styles.settingsButton);
+    if (this.data.layout === "grid")
+      gridBtn.classList.add(this.api.styles.settingsButtonActive);
+    gridBtn.innerHTML = "Grid";
+    gridBtn.addEventListener("click", () => {
+      this.data.layout = "grid";
+      this.buildUI();
+    });
+
+    const masonryBtn = document.createElement("div");
+    masonryBtn.classList.add(this.api.styles.settingsButton);
+    if (this.data.layout === "masonry")
+      masonryBtn.classList.add(this.api.styles.settingsButtonActive);
+    masonryBtn.innerHTML = "Masonry";
+    masonryBtn.addEventListener("click", () => {
+      this.data.layout = "masonry";
+      this.buildUI();
+    });
+
+    wrapper.appendChild(gridBtn);
+    wrapper.appendChild(masonryBtn);
+
+    return wrapper;
   }
 
   private buildUI() {
-      if (!this.wrapper) return;
-      this.wrapper.innerHTML = '';
-      
-      const container = document.createElement('div');
-      container.classList.add('doclib-gi-wrapper');
-      
-      if (this.data.urls.length > 0) {
-          const grid = document.createElement('div');
-          grid.classList.add(this.data.layout === 'masonry' ? 'doclib-gi-masonry' : 'doclib-gi-grid');
-          
-          this.data.urls.forEach((url, index) => {
-              const item = document.createElement('div');
-              item.classList.add('doclib-gi-item');
-              
-              const img = document.createElement('img');
-              img.src = url;
-              item.appendChild(img);
-              
-              if (!this.readOnly) {
-                  const overlay = document.createElement('div');
-                  overlay.classList.add('doclib-gi-item-overlay');
-                  
-                  const rmBtn = document.createElement('button');
-                  rmBtn.classList.add('doclib-gi-btn');
-                  rmBtn.innerHTML = '&times;';
-                  rmBtn.addEventListener('click', () => {
-                      this.data.urls.splice(index, 1);
-                      this.buildUI();
-                  });
-                  
-                  overlay.appendChild(rmBtn);
-                  item.appendChild(overlay);
-              }
-              
-              grid.appendChild(item);
+    if (!this.wrapper) return;
+    this.wrapper.innerHTML = "";
+
+    const container = document.createElement("div");
+    container.classList.add("doclib-gi-wrapper");
+
+    if (this.data.urls.length > 0) {
+      const grid = document.createElement("div");
+      grid.classList.add(
+        this.data.layout === "masonry" ? "doclib-gi-masonry" : "doclib-gi-grid",
+      );
+
+      this.data.urls.forEach((url, index) => {
+        const item = document.createElement("div");
+        item.classList.add("doclib-gi-item");
+
+        const img = document.createElement("img");
+        img.src = url;
+        item.appendChild(img);
+
+        if (!this.readOnly) {
+          const overlay = document.createElement("div");
+          overlay.classList.add("doclib-gi-item-overlay");
+
+          const rmBtn = document.createElement("button");
+          rmBtn.classList.add("doclib-gi-btn");
+          rmBtn.innerHTML = "&times;";
+          rmBtn.addEventListener("click", () => {
+            this.data.urls.splice(index, 1);
+            this.buildUI();
           });
-          container.appendChild(grid);
-      }
-      
-      if (!this.readOnly) {
-          const addBtn = document.createElement('button');
-          addBtn.classList.add('doclib-gi-add');
-          addBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Image';
-          addBtn.addEventListener('click', () => {
-              const url = prompt('Enter image URL:');
-              if (url) {
-                  this.data.urls.push(url);
-                  this.buildUI();
-              }
-          });
-          container.appendChild(addBtn);
-      }
-      
-      if (this.data.urls.length === 0 && this.readOnly) {
-          return;
-      }
-      
-      this.wrapper.appendChild(container);
+
+          overlay.appendChild(rmBtn);
+          item.appendChild(overlay);
+        }
+
+        grid.appendChild(item);
+      });
+      container.appendChild(grid);
+    }
+
+    if (!this.readOnly) {
+      const addBtn = document.createElement("button");
+      addBtn.classList.add("doclib-gi-add");
+      addBtn.innerHTML =
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Add Image';
+      addBtn.addEventListener("click", () => {
+        const url = prompt("Enter image URL:");
+        if (url) {
+          this.data.urls.push(url);
+          this.buildUI();
+        }
+      });
+      container.appendChild(addBtn);
+    }
+
+    if (this.data.urls.length === 0 && this.readOnly) {
+      return;
+    }
+
+    this.wrapper.appendChild(container);
   }
 
-  save() { return this.data; }
+  save() {
+    return this.data;
+  }
 }

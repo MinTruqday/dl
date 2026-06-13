@@ -21,7 +21,8 @@ export async function getCommentsByItemAPI(itemId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách bình luận");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách bình luận");
   return data;
 }
 

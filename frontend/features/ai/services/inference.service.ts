@@ -1,6 +1,9 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function translateTextAPI(text: string, targetLang: string = "vi") {
+export async function translateTextAPI(
+  text: string,
+  targetLang: string = "vi",
+) {
   const res = await fetch(`${API_URL}/inference/dich-thuat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

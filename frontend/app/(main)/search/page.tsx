@@ -111,7 +111,9 @@ export default function SearchResultsPage() {
       <div className="mb-8 border-b border-zinc-200 pb-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="space-y-3">
-            <h1 className="text-3xl font-semibold text-black">Kết quả tìm kiếm</h1>
+            <h1 className="text-3xl font-semibold text-black">
+              Kết quả tìm kiếm
+            </h1>
             <p className="text-zinc-500 text-sm font-medium">
               Từ khóa: "{query}" • Tìm thấy {results.length} tài liệu phù hợp
             </p>
@@ -129,11 +131,17 @@ export default function SearchResultsPage() {
 
             <div className="space-y-8">
               <div className="space-y-3">
-                <label className="text-xs font-semibold text-zinc-500">Sắp xếp theo</label>
+                <label className="text-xs font-semibold text-zinc-500">
+                  Sắp xếp theo
+                </label>
                 <div className="flex flex-col gap-1">
                   {[
                     { id: "newest", label: "Mới nhất", icon: Clock },
-                    { id: "most_viewed", label: "Xem nhiều nhất", icon: ArrowUpDown },
+                    {
+                      id: "most_viewed",
+                      label: "Xem nhiều nhất",
+                      icon: ArrowUpDown,
+                    },
                     { id: "highest_rated", label: "Đánh giá cao", icon: Star },
                   ].map((s) => (
                     <button
@@ -153,7 +161,9 @@ export default function SearchResultsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-semibold text-zinc-500">Thời gian xuất bản</label>
+                <label className="text-xs font-semibold text-zinc-500">
+                  Thời gian xuất bản
+                </label>
                 <div className="flex flex-col gap-1">
                   {[
                     { id: "all", label: "Tất cả thời gian" },
@@ -177,7 +187,9 @@ export default function SearchResultsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-semibold text-zinc-500">Giá tài liệu</label>
+                <label className="text-xs font-semibold text-zinc-500">
+                  Giá tài liệu
+                </label>
                 <div className="flex flex-col gap-1">
                   {[
                     { id: "all", label: "Tất cả" },
@@ -200,7 +212,9 @@ export default function SearchResultsPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-semibold text-zinc-500">Đánh giá tối thiểu</label>
+                <label className="text-xs font-semibold text-zinc-500">
+                  Đánh giá tối thiểu
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 0, label: "Tất cả" },
@@ -228,7 +242,9 @@ export default function SearchResultsPage() {
           {history.length > 0 && (
             <div className="space-y-4 pt-6 border-t border-zinc-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-zinc-500">Tìm kiếm gần đây</h3>
+                <h3 className="text-xs font-semibold text-zinc-500">
+                  Tìm kiếm gần đây
+                </h3>
                 <button
                   onClick={clearHistory}
                   className="text-xs font-medium text-zinc-400  "
@@ -250,7 +266,10 @@ export default function SearchResultsPage() {
                         e.preventDefault();
                         const newHistory = history.filter((item) => item !== h);
                         setHistory(newHistory);
-                        localStorage.setItem("doclib_search_history", JSON.stringify(newHistory));
+                        localStorage.setItem(
+                          "doclib_search_history",
+                          JSON.stringify(newHistory),
+                        );
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400  opacity-0 group-hover/item:opacity-100 "
                     >
@@ -263,7 +282,10 @@ export default function SearchResultsPage() {
           )}
         </aside>
 
-        <main className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <main
+          className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           <div className="grid grid-cols-1 gap-6">
             {loading ? (
               <div className="grid grid-cols-1 gap-6">
@@ -296,14 +318,16 @@ export default function SearchResultsPage() {
                   <div className="flex flex-col flex-1 gap-2 py-1">
                     {document.categories && document.categories.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
-                        {document.categories.slice(0, 3).map((tag: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 border border-zinc-200 bg-white"
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                        {document.categories
+                          .slice(0, 3)
+                          .map((tag: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 border border-zinc-200 bg-white"
+                            >
+                              {tag}
+                            </span>
+                          ))}
                       </div>
                     )}
 
@@ -313,12 +337,17 @@ export default function SearchResultsPage() {
 
                     <div className="text-xs text-zinc-500 flex items-center gap-1.5">
                       <span className="truncate text-black font-medium">
-                        {document.author_name || document.author?.full_name || document.author?.username || "Ẩn danh"}
+                        {document.author_name ||
+                          document.author?.full_name ||
+                          document.author?.username ||
+                          "Ẩn danh"}
                       </span>
                       <span>•</span>
                       <span className="shrink-0">
                         {document.created_at
-                          ? new Date(document.created_at).toLocaleDateString("vi-VN")
+                          ? new Date(document.created_at).toLocaleDateString(
+                              "vi-VN",
+                            )
                           : "Gần đây"}
                       </span>
                     </div>
@@ -326,17 +355,26 @@ export default function SearchResultsPage() {
                     <div className="flex items-center gap-3 text-xs text-zinc-500">
                       <div className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5" />
-                        <span>{document.views_count?.toLocaleString("vi-VN") || document.views || 0} lượt xem</span>
+                        <span>
+                          {document.views_count?.toLocaleString("vi-VN") ||
+                            document.views ||
+                            0}{" "}
+                          lượt xem
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="w-3.5 h-3.5" />
-                        <span>{document.average_rating?.toFixed(1) || "0.0"} sao</span>
+                        <span>
+                          {document.average_rating?.toFixed(1) || "0.0"} sao
+                        </span>
                       </div>
                     </div>
 
                     <div className="mt-auto pt-3 flex items-center justify-between">
                       <span className="text-xs font-semibold text-black">
-                        {document.price_dl > 0 ? `${document.price_dl} dl` : "Miễn phí"}
+                        {document.price_dl > 0
+                          ? `${document.price_dl} dl`
+                          : "Miễn phí"}
                       </span>
                       <div className="text-xs font-semibold text-black border border-black px-3 py-1.5 uppercase tracking-wider group- group-  ">
                         Xem
@@ -347,7 +385,9 @@ export default function SearchResultsPage() {
               ))
             ) : (
               <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-none">
-                <p className="text-sm font-medium text-zinc-500">Chưa có kết quả nào phù hợp</p>
+                <p className="text-sm font-medium text-zinc-500">
+                  Chưa có kết quả nào phù hợp
+                </p>
               </div>
             )}
           </div>

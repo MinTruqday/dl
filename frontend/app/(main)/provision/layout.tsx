@@ -22,7 +22,15 @@ export default function CreationLayout({
     { id: "step5", label: "Lịch sử", href: "/provision/lich-su" },
     { id: "step6", label: "Bình luận", href: "/provision/comment" },
     { id: "step7", label: "Thùng rác", href: "/provision/thung-rac" },
-    ...(isAdminOrMod ? [{ id: "step8", label: "Duyệt bản thảo", href: "/provision/duyet-ban-thao" }] : []),
+    ...(isAdminOrMod
+      ? [
+          {
+            id: "step8",
+            label: "Duyệt bản thảo",
+            href: "/provision/duyet-ban-thao",
+          },
+        ]
+      : []),
   ];
 
   const isActive = (href: string) => {

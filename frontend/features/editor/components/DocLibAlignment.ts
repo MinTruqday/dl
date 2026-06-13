@@ -1,5 +1,10 @@
 import { API, BlockTune } from "@editorjs/editorjs";
-import { IconAlignLeft, IconAlignCenter, IconAlignRight, IconAlignJustify } from '@codexteam/icons';
+import {
+  IconAlignLeft,
+  IconAlignCenter,
+  IconAlignRight,
+  IconAlignJustify,
+} from "@codexteam/icons";
 
 export default class DocLibAlignmentTune implements BlockTune {
   private api: API;
@@ -10,10 +15,12 @@ export default class DocLibAlignmentTune implements BlockTune {
     { name: "left", icon: IconAlignLeft, title: "DocLib Align Left" },
     { name: "center", icon: IconAlignCenter, title: "DocLib Align Center" },
     { name: "right", icon: IconAlignRight, title: "DocLib Align Right" },
-    { name: "justify", icon: IconAlignJustify, title: "DocLib Justify" }
+    { name: "justify", icon: IconAlignJustify, title: "DocLib Justify" },
   ];
 
-  static get isTune() { return true; }
+  static get isTune() {
+    return true;
+  }
 
   constructor({ api, data, block }: any) {
     this.api = api;
@@ -24,10 +31,10 @@ export default class DocLibAlignmentTune implements BlockTune {
   render() {
     this.wrapper = document.createElement("div");
 
-    this.alignments.forEach(align => {
+    this.alignments.forEach((align) => {
       const btn = document.createElement("button");
       btn.classList.add(this.api.styles.settingsButton);
-      btn.type = 'button';
+      btn.type = "button";
       btn.innerHTML = align.icon;
 
       if (this.data.alignment === align.name) {
@@ -37,8 +44,7 @@ export default class DocLibAlignmentTune implements BlockTune {
       btn.addEventListener("click", () => {
         this.data.alignment = align.name;
         this.applyAlignment();
-        
-        
+
         Array.from(this.wrapper!.children).forEach((child: any) => {
           child.classList.remove(this.api.styles.settingsButtonActive);
         });
@@ -65,9 +71,9 @@ export default class DocLibAlignmentTune implements BlockTune {
     if (idx !== undefined && idx >= 0) {
       const blockContent = this.api.blocks.getBlockByIndex(idx)?.holder;
       if (blockContent) {
-         blockContent.style.textAlign = this.data.alignment;
-         blockContent.style.width = "100%";
-         blockContent.style.display = "block";
+        blockContent.style.textAlign = this.data.alignment;
+        blockContent.style.width = "100%";
+        blockContent.style.display = "block";
       }
     }
   }

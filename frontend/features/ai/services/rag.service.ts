@@ -8,13 +8,17 @@ export async function queryRagAPI(
   const token = getToken();
   const res = await fetch(`${API_URL}/ai/truy-van`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ document_id: documentId, query, useSmart }),
   });
   const data = await res.json();
   if (!res.ok)
     throw new Error(
-      data.detail || "Cố vấn AI đang bận xử lý dữ liệu khác, vui lòng thử lại sau",
+      data.detail ||
+        "Cố vấn AI đang bận xử lý dữ liệu khác, vui lòng thử lại sau",
     );
   return data;
 }
@@ -31,7 +35,10 @@ export async function streamAiChatAPI(payload: {
   const token = getToken();
   return fetch(`${API_URL}/ai/luong`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       query: payload.query,
       useSmart: payload.useSmart,

@@ -9,7 +9,7 @@ export default class DocLibDelimiter implements BlockTool {
   static get toolbox() {
     return {
       title: "DocLib Delimiter",
-      icon: IconDelimiter
+      icon: IconDelimiter,
     };
   }
 
@@ -17,31 +17,30 @@ export default class DocLibDelimiter implements BlockTool {
     return true;
   }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = data || {};
   }
 
   render() {
-    this.wrapper = document.createElement('div');
+    this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
-    
-    const asterisks = document.createElement('div');
-    asterisks.classList.add('ce-delimiter');
-    asterisks.style.lineHeight = '1.6em';
-    asterisks.style.width = '100%';
-    asterisks.style.textAlign = 'center';
-    asterisks.style.color = '#7e838b';
-    asterisks.style.fontSize = '30px';
-    asterisks.style.letterSpacing = '0.2em';
-    asterisks.innerHTML = '***';
+
+    const asterisks = document.createElement("div");
+    asterisks.classList.add("ce-delimiter");
+    asterisks.style.lineHeight = "1.6em";
+    asterisks.style.width = "100%";
+    asterisks.style.textAlign = "center";
+    asterisks.style.color = "#7e838b";
+    asterisks.style.fontSize = "30px";
+    asterisks.style.letterSpacing = "0.2em";
+    asterisks.innerHTML = "***";
 
     this.wrapper.appendChild(asterisks);
     return this.wrapper;
   }
 
   save() {
-    return {}; 
+    return {};
   }
 }

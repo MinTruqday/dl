@@ -3,33 +3,35 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibSimpleImage implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { url: string, caption: string };
+  private data: { url: string; caption: string };
 
   static get toolbox() {
     return {
-      title: 'DocLib Image (URL)',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>'
+      title: "DocLib Image (URL)",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>',
     };
   }
 
-  static get isReadOnlySupported() { return true; }
+  static get isReadOnlySupported() {
+    return true;
+  }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-        url: data.url || '',
-        caption: data.caption || ''
+      url: data.url || "",
+      caption: data.caption || "",
     };
   }
 
   render() {
-    this.wrapper = document.createElement('div');
+    this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
-    if (!document.getElementById('doclib-simple-image-styles')) {
-        const style = document.createElement('style');
-        style.id = 'doclib-simple-image-styles';
-        style.innerHTML = `
+
+    if (!document.getElementById("doclib-simple-image-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-simple-image-styles";
+      style.innerHTML = `
             .doclib-simple-img-wrapper { text-align: center; }
             .doclib-simple-img { max-width: 100%; border-radius: 8px; margin-bottom: 8px; }
             .doclib-simple-caption { outline: none; text-align: center; color: #64748b; font-size: 0.9em; padding: 4px; }
@@ -37,62 +39,62 @@ export default class DocLibSimpleImage implements BlockTool {
             .doclib-simple-input-container { display: flex; align-items: center; }
             .doclib-simple-input { flex-grow: 1; margin-right: 12px; }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
     }
-    
-    this.wrapper.classList.add('doclib-simple-img-wrapper');
+
+    this.wrapper.classList.add("doclib-simple-img-wrapper");
     this.buildUI();
     return this.wrapper;
   }
-  
+
   private buildUI() {
-      if (!this.wrapper) return;
-      this.wrapper.innerHTML = '';
-      
-      if (this.data.url) {
-          const img = document.createElement('img');
-          img.src = this.data.url;
-          img.classList.add('doclib-simple-img');
-          
-          const caption = document.createElement('div');
-          caption.contentEditable = 'true';
-          caption.innerHTML = this.data.caption;
-          caption.classList.add('doclib-simple-caption');
-          
-          caption.addEventListener('input', () => {
-              this.data.caption = caption.innerHTML;
-          });
-          
-          this.wrapper.appendChild(img);
-          this.wrapper.appendChild(caption);
-      } else {
-          const container = document.createElement('div');
-          container.classList.add('doclib-simple-input-container');
-          
-          const input = document.createElement('input');
-          input.classList.add(this.api.styles.input, 'doclib-simple-input');
-          input.placeholder = 'Enter image URL';
-          
-          const btn = document.createElement('button');
-          btn.classList.add(this.api.styles.button);
-          btn.innerText = 'Insert';
-          
-          const insertImg = () => {
-              if (input.value) {
-                  this.data.url = input.value;
-                  this.buildUI();
-              }
-          };
-          
-          btn.addEventListener('click', insertImg);
-          input.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter') insertImg();
-          });
-          
-          container.appendChild(input);
-          container.appendChild(btn);
-          this.wrapper.appendChild(container);
-      }
+    if (!this.wrapper) return;
+    this.wrapper.innerHTML = "";
+
+    if (this.data.url) {
+      const img = document.createElement("img");
+      img.src = this.data.url;
+      img.classList.add("doclib-simple-img");
+
+      const caption = document.createElement("div");
+      caption.contentEditable = "true";
+      caption.innerHTML = this.data.caption;
+      caption.classList.add("doclib-simple-caption");
+
+      caption.addEventListener("input", () => {
+        this.data.caption = caption.innerHTML;
+      });
+
+      this.wrapper.appendChild(img);
+      this.wrapper.appendChild(caption);
+    } else {
+      const container = document.createElement("div");
+      container.classList.add("doclib-simple-input-container");
+
+      const input = document.createElement("input");
+      input.classList.add(this.api.styles.input, "doclib-simple-input");
+      input.placeholder = "Enter image URL";
+
+      const btn = document.createElement("button");
+      btn.classList.add(this.api.styles.button);
+      btn.innerText = "Insert";
+
+      const insertImg = () => {
+        if (input.value) {
+          this.data.url = input.value;
+          this.buildUI();
+        }
+      };
+
+      btn.addEventListener("click", insertImg);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") insertImg();
+      });
+
+      container.appendChild(input);
+      container.appendChild(btn);
+      this.wrapper.appendChild(container);
+    }
   }
 
   save() {

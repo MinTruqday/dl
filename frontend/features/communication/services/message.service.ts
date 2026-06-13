@@ -7,14 +7,15 @@ export const getConversationsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách hội thoại");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách hội thoại");
   return data;
 };
 
 export const getMessagesAPI = async (
   otherUserId: string,
   limit: number = 50,
-  cursor?: string
+  cursor?: string,
 ) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
@@ -26,7 +27,8 @@ export const getMessagesAPI = async (
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử tin nhắn");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch sử tin nhắn");
   return data;
 };
 
@@ -102,9 +104,12 @@ export const recallMessageAPI = async (messageId: string) => {
 export const searchMessagesAPI = async (otherUserId: string, q: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/message/search/${otherUserId}?q=${encodeURIComponent(q)}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/message/search/${otherUserId}?q=${encodeURIComponent(q)}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lỗi tìm kiếm tin nhắn");
   return data;
@@ -122,7 +127,8 @@ export const addReactionAPI = async (messageId: string, reaction: string) => {
     body: JSON.stringify({ reaction }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể thực hiện bày tỏ cảm xúc");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể thực hiện bày tỏ cảm xúc");
   return data;
 };
 
@@ -138,7 +144,10 @@ export const markAsReadAPI = async (otherUserId: string) => {
   return data;
 };
 
-export const shareDocumentAPI = async (receiverId: string, documentId: string) => {
+export const shareDocumentAPI = async (
+  receiverId: string,
+  documentId: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/message/chia-se-tai-lieu/${receiverId}`, {
@@ -157,9 +166,12 @@ export const shareDocumentAPI = async (receiverId: string, documentId: string) =
 export const getSharedAttachmentsAPI = async (otherUserId: string) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/message/tai-lieu-chia-se/${otherUserId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetch(
+    `${API_URL}/message/tai-lieu-chia-se/${otherUserId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải tệp tin chia sẻ");
   return data;
@@ -212,7 +224,10 @@ export const togglePinConversationAPI = async (otherUserId: string) => {
   return data;
 };
 
-export const translateMessageAPI = async (messageId: string, targetLang: string) => {
+export const translateMessageAPI = async (
+  messageId: string,
+  targetLang: string,
+) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/message/dich/${messageId}`, {
@@ -228,7 +243,10 @@ export const translateMessageAPI = async (messageId: string, targetLang: string)
   return data;
 };
 
-export const createGroupAPI = async (groupName: string, memberIds: string[]) => {
+export const createGroupAPI = async (
+  groupName: string,
+  memberIds: string[],
+) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/message/nhom`, {
@@ -271,7 +289,10 @@ export const getDraftAPI = async (otherUserId: string) => {
   return data;
 };
 
-export const toggleSelfDestructAPI = async (otherUserId: string, seconds: number) => {
+export const toggleSelfDestructAPI = async (
+  otherUserId: string,
+  seconds: number,
+) => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(`${API_URL}/message/tu-huy/${otherUserId}`, {

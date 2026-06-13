@@ -3,35 +3,45 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibCodeMirror implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { code: string, language: string };
+  private data: { code: string; language: string };
   private readOnly: boolean;
 
   static get toolbox() {
     return {
-      title: 'DocLib CodeMirror',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>'
+      title: "DocLib CodeMirror",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
     };
   }
 
-  static get isReadOnlySupported() { return true; }
+  static get isReadOnlySupported() {
+    return true;
+  }
 
-  constructor({ api, data, readOnly }: { api: API, data?: any, readOnly?: boolean }) {
+  constructor({
+    api,
+    data,
+    readOnly,
+  }: {
+    api: API;
+    data?: any;
+    readOnly?: boolean;
+  }) {
     this.api = api;
     this.readOnly = !!readOnly;
     this.data = {
-      code: data.code || '',
-      language: data.language || 'javascript'
+      code: data.code || "",
+      language: data.language || "javascript",
     };
   }
 
   render() {
-    this.wrapper = document.createElement('div');
+    this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
-    if (!document.getElementById('doclib-codemirror-styles')) {
-        const style = document.createElement('style');
-        style.id = 'doclib-codemirror-styles';
-        style.innerHTML = `
+
+    if (!document.getElementById("doclib-codemirror-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-codemirror-styles";
+      style.innerHTML = `
             .doclib-cm-wrapper { background: #1e293b; border-radius: 8px; padding: 16px; margin: 16px 0; display: flex; flex-direction: column; gap: 8px; }
             .doclib-cm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; }
             .doclib-cm-dots { display: flex; gap: 6px; }
@@ -41,59 +51,60 @@ export default class DocLibCodeMirror implements BlockTool {
             .doclib-cm-editor { color: #e2e8f0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 14px; line-height: 1.5; outline: none; min-height: 100px; white-space: pre-wrap; word-break: break-all; }
             .doclib-cm-editor:empty::before { content: 'Enter source code here'; color: #475569; }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
     }
-    
+
     this.buildUI();
     return this.wrapper;
   }
-  
+
   private buildUI() {
-      if (!this.wrapper) return;
-      this.wrapper.innerHTML = '';
-      
-      const container = document.createElement('div');
-      container.classList.add('doclib-cm-wrapper');
-      
-      const header = document.createElement('div');
-      header.classList.add('doclib-cm-header');
-      
-      const dots = document.createElement('div');
-      dots.classList.add('doclib-cm-dots');
-      ['#ef4444', '#f59e0b', '#10b981'].forEach(c => {
-          const dot = document.createElement('div');
-          dot.classList.add('doclib-cm-dot');
-          dot.style.backgroundColor = c;
-          dots.appendChild(dot);
-      });
-      
-      const lang = document.createElement('div');
-      lang.classList.add('doclib-cm-lang');
-      lang.contentEditable = !this.readOnly ? 'true' : 'false';
-      lang.innerHTML = this.data.language;
-      lang.addEventListener('input', () => this.data.language = lang.innerHTML);
-      
-      header.appendChild(dots);
-      header.appendChild(lang);
-      
-      const editor = document.createElement('div');
-      editor.classList.add('doclib-cm-editor');
-      editor.contentEditable = !this.readOnly ? 'true' : 'false';
-      editor.innerHTML = this.data.code;
-      editor.addEventListener('input', () => this.data.code = editor.innerHTML);
-      
-      
-      editor.addEventListener('keydown', (e) => {
-          if (e.key === 'Tab') {
-              e.preventDefault();
-              document.execCommand('insertText', false, '  ');
-          }
-      });
-      
-      container.appendChild(header);
-      container.appendChild(editor);
-      this.wrapper.appendChild(container);
+    if (!this.wrapper) return;
+    this.wrapper.innerHTML = "";
+
+    const container = document.createElement("div");
+    container.classList.add("doclib-cm-wrapper");
+
+    const header = document.createElement("div");
+    header.classList.add("doclib-cm-header");
+
+    const dots = document.createElement("div");
+    dots.classList.add("doclib-cm-dots");
+    ["#ef4444", "#f59e0b", "#10b981"].forEach((c) => {
+      const dot = document.createElement("div");
+      dot.classList.add("doclib-cm-dot");
+      dot.style.backgroundColor = c;
+      dots.appendChild(dot);
+    });
+
+    const lang = document.createElement("div");
+    lang.classList.add("doclib-cm-lang");
+    lang.contentEditable = !this.readOnly ? "true" : "false";
+    lang.innerHTML = this.data.language;
+    lang.addEventListener("input", () => (this.data.language = lang.innerHTML));
+
+    header.appendChild(dots);
+    header.appendChild(lang);
+
+    const editor = document.createElement("div");
+    editor.classList.add("doclib-cm-editor");
+    editor.contentEditable = !this.readOnly ? "true" : "false";
+    editor.innerHTML = this.data.code;
+    editor.addEventListener("input", () => (this.data.code = editor.innerHTML));
+
+    editor.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        document.execCommand("insertText", false, "  ");
+      }
+    });
+
+    container.appendChild(header);
+    container.appendChild(editor);
+    this.wrapper.appendChild(container);
   }
 
-  save() { return this.data; }
+  save() {
+    return this.data;
+  }
 }

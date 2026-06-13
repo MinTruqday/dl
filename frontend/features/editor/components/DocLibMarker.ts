@@ -8,9 +8,15 @@ export default class DocLibMarker implements InlineTool {
   private tag = "MARK";
   private class = "cdx-marker";
 
-  static get isInline() { return true; }
-  static get title() { return "DocLib Marker"; }
-  static get sanitize() { return { mark: { class: true } }; }
+  static get isInline() {
+    return true;
+  }
+  static get title() {
+    return "DocLib Marker";
+  }
+  static get sanitize() {
+    return { mark: { class: true } };
+  }
 
   constructor({ api }: { api: API }) {
     this.api = api;
@@ -48,7 +54,10 @@ export default class DocLibMarker implements InlineTool {
     const parentNode = this.api.selection.findParentTag(this.tag, this.class);
     this._state = !!parentNode;
     if (this.button) {
-      this.button.classList.toggle(this.api.styles.inlineToolButtonActive, this._state);
+      this.button.classList.toggle(
+        this.api.styles.inlineToolButtonActive,
+        this._state,
+      );
     }
     return this._state;
   }

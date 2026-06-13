@@ -5,7 +5,8 @@ export async function getApprovalQueueAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách phê duyệt");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách phê duyệt");
   return data;
 }
 
@@ -14,17 +15,14 @@ export async function moderateDocumentAPI(
   action: string,
   reason: string = "",
 ) {
-  const res = await fetch(
-    `${API_URL}/draft/${documentId}/kiem-duyet`,
-    {
-      method: "POST",
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ action, reason }),
+  const res = await fetch(`${API_URL}/draft/${documentId}/kiem-duyet`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(),
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({ action, reason }),
+  });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.detail || "Thao tác kiểm duyệt thất bại");

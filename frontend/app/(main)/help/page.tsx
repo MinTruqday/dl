@@ -43,9 +43,7 @@ export default function HelpPage() {
 
   return (
     <>
-      <div
-        className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans animate-in fade-in slide-in-from-bottom-8 duration-300"
-      >
+      <div className="max-w-4xl mx-auto px-6 py-12 md:py-20 font-sans animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div className="text-center mb-20 space-y-6">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-black">
             Trung tâm hỗ trợ
@@ -65,7 +63,10 @@ export default function HelpPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <div
+          className="grid md:grid-cols-3 gap-6 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           {[
             {
               icon: Book,
@@ -96,7 +97,10 @@ export default function HelpPage() {
           ))}
         </div>
 
-        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <div
+          className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           <h2 className="text-2xl font-bold text-black border-b border-zinc-100 pb-6 tracking-tight">
             Câu hỏi thường gặp
           </h2>

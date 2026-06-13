@@ -3,35 +3,43 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibHeader implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { text: string, level: number };
+  private data: { text: string; level: number };
 
   static get toolbox() {
     return {
-      title: 'DocLib Header',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"></path><path d="M4 18V6"></path><path d="M12 18V6"></path><path d="M21 16h-4v-8h4"></path><path d="M17 12h4"></path></svg>'
+      title: "DocLib Header",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h8"></path><path d="M4 18V6"></path><path d="M12 18V6"></path><path d="M21 16h-4v-8h4"></path><path d="M17 12h4"></path></svg>',
     };
   }
-  static get isReadOnlySupported() { return true; }
-  static get enableLineBreaks() { return false; }
-  static get sanitize() { return { text: { br: true, b: true, i: true, a: true, span: true } } }
-  static get conversionConfig() { return { export: 'text', import: 'text' }; }
+  static get isReadOnlySupported() {
+    return true;
+  }
+  static get enableLineBreaks() {
+    return false;
+  }
+  static get sanitize() {
+    return { text: { br: true, b: true, i: true, a: true, span: true } };
+  }
+  static get conversionConfig() {
+    return { export: "text", import: "text" };
+  }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
-    this.data = { text: data.text || '', level: data.level || 2 };
+    this.data = { text: data.text || "", level: data.level || 2 };
   }
 
   render() {
     this.wrapper = document.createElement(`h${this.data.level}`);
-    this.wrapper.classList.add(this.api.styles.block, 'doclib-header');
-    this.wrapper.contentEditable = 'true';
+    this.wrapper.classList.add(this.api.styles.block, "doclib-header");
+    this.wrapper.contentEditable = "true";
     this.wrapper.innerHTML = this.data.text;
     this.wrapper.dataset.placeholder = `Heading ${this.data.level}`;
-    
-    if (!document.getElementById('doclib-header-styles')) {
-        const style = document.createElement('style');
-        style.id = 'doclib-header-styles';
-        style.innerHTML = `
+
+    if (!document.getElementById("doclib-header-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-header-styles";
+      style.innerHTML = `
             .doclib-header { outline: none; margin: 16px 0 8px 0; font-weight: 700; line-height: 1.3; }
             h1.doclib-header { font-size: 2.25em; }
             h2.doclib-header { font-size: 1.75em; }
@@ -41,54 +49,63 @@ export default class DocLibHeader implements BlockTool {
             h6.doclib-header { font-size: 1em; }
             .doclib-header[data-placeholder]:empty::before { content: attr(data-placeholder); color: #94a3b8; pointer-events: none; font-weight: normal; }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
     }
-    
-    this.wrapper.addEventListener('input', () => { this.data.text = this.wrapper!.innerHTML; });
-    this.wrapper.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            this.api.blocks.insert();
-            this.api.caret.setToBlock(this.api.blocks.getCurrentBlockIndex() + 1);
-        }
+
+    this.wrapper.addEventListener("input", () => {
+      this.data.text = this.wrapper!.innerHTML;
+    });
+    this.wrapper.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.api.blocks.insert();
+        this.api.caret.setToBlock(this.api.blocks.getCurrentBlockIndex() + 1);
+      }
     });
 
     return this.wrapper;
   }
-  
+
   renderSettings() {
-      const wrapper = document.createElement('div');
-      [1, 2, 3, 4, 5, 6].forEach(level => {
-          const btn = document.createElement('div');
-          btn.classList.add(this.api.styles.settingsButton);
-          if (this.data.level === level) btn.classList.add(this.api.styles.settingsButtonActive);
-          btn.innerHTML = `H${level}`;
-          btn.addEventListener('click', () => {
-              this.data.level = level;
-              if (this.wrapper) {
-                  const newWrapper = document.createElement(`h${level}`);
-                  newWrapper.classList.add(this.api.styles.block, 'doclib-header');
-                  newWrapper.contentEditable = 'true';
-                  newWrapper.innerHTML = this.wrapper.innerHTML;
-                  newWrapper.dataset.placeholder = `Heading ${level}`;
-                  newWrapper.addEventListener('input', () => { this.data.text = newWrapper.innerHTML; });
-                  newWrapper.addEventListener('keydown', (e) => {
-                      if (e.key === 'Enter') {
-                          e.preventDefault();
-                          this.api.blocks.insert();
-                          this.api.caret.setToBlock(this.api.blocks.getCurrentBlockIndex() + 1);
-                      }
-                  });
-                  this.wrapper.replaceWith(newWrapper);
-                  this.wrapper = newWrapper;
-              }
-              
-              Array.from(wrapper.children).forEach(c => c.classList.remove(this.api.styles.settingsButtonActive));
-              btn.classList.add(this.api.styles.settingsButtonActive);
+    const wrapper = document.createElement("div");
+    [1, 2, 3, 4, 5, 6].forEach((level) => {
+      const btn = document.createElement("div");
+      btn.classList.add(this.api.styles.settingsButton);
+      if (this.data.level === level)
+        btn.classList.add(this.api.styles.settingsButtonActive);
+      btn.innerHTML = `H${level}`;
+      btn.addEventListener("click", () => {
+        this.data.level = level;
+        if (this.wrapper) {
+          const newWrapper = document.createElement(`h${level}`);
+          newWrapper.classList.add(this.api.styles.block, "doclib-header");
+          newWrapper.contentEditable = "true";
+          newWrapper.innerHTML = this.wrapper.innerHTML;
+          newWrapper.dataset.placeholder = `Heading ${level}`;
+          newWrapper.addEventListener("input", () => {
+            this.data.text = newWrapper.innerHTML;
           });
-          wrapper.appendChild(btn);
+          newWrapper.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              this.api.blocks.insert();
+              this.api.caret.setToBlock(
+                this.api.blocks.getCurrentBlockIndex() + 1,
+              );
+            }
+          });
+          this.wrapper.replaceWith(newWrapper);
+          this.wrapper = newWrapper;
+        }
+
+        Array.from(wrapper.children).forEach((c) =>
+          c.classList.remove(this.api.styles.settingsButtonActive),
+        );
+        btn.classList.add(this.api.styles.settingsButtonActive);
       });
-      return wrapper;
+      wrapper.appendChild(btn);
+    });
+    return wrapper;
   }
 
   save(blockContent: HTMLElement) {

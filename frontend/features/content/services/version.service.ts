@@ -5,15 +5,19 @@ export async function getDocumentVersionsAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách phiên bản");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách phiên bản");
   return data.data || data;
 }
 
 export async function saveVersionAPI(documentId: string, versionNote: string) {
-  const res = await fetch(`${API_URL}/version/luu/${documentId}?version_note=${encodeURIComponent(versionNote)}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/version/luu/${documentId}?version_note=${encodeURIComponent(versionNote)}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Lưu phiên bản thất bại");
   return data.data || data;

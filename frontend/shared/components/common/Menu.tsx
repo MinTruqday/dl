@@ -77,28 +77,30 @@ export default function Menu({
         href={href}
         onClick={isMobileOverlay ? onMobileClose : undefined}
         title={!isOpen ? label : undefined}
-        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-2xl transition-all duration-150 ${isOpen ? "px-6 gap-4 hover:bg-zinc-100" : "px-0 justify-center hover:bg-zinc-100"
-          } ${active
+        className={`flex items-center text-[13px] tracking-tight  group relative w-full h-12 shrink-0 rounded-2xl transition-all duration-150 ${
+          isOpen
+            ? "px-6 gap-4 hover:bg-zinc-100"
+            : "px-0 justify-center hover:bg-zinc-100"
+        } ${
+          active
             ? "font-semibold text-black border-l-2 border-black bg-zinc-50"
             : "font-medium text-zinc-500 border-l-2 border-transparent"
-          }`}
+        }`}
       >
         <div className="flex items-center justify-center shrink-0 w-6">
           <Icon
-            className={`w-[18px] h-[18px] transition-all duration-150 ${active
-                ? "text-black"
-                : "text-zinc-400 "
-              }`}
+            className={`w-[18px] h-[18px] transition-all duration-150 ${
+              active ? "text-black" : "text-zinc-400 "
+            }`}
           />
         </div>
         <span
-          className={`whitespace-nowrap overflow-hidden transition-all duration-150 font-sans ${isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
-            }`}
+          className={`whitespace-nowrap overflow-hidden transition-all duration-150 font-sans ${
+            isOpen ? "opacity-100 max-w-[180px]" : "opacity-0 max-w-0"
+          }`}
         >
           {label}
         </span>
-
-
       </Link>
     );
   };
@@ -144,7 +146,12 @@ export default function Menu({
           />
           <NavLink icon={User} href="/profile" label="Hồ sơ" requireAuth />
           <NavLink icon={Wallet} href="/wallet" label="Ví" requireAuth />
-          <NavLink icon={Settings} href="/settings" label="Cài đặt" requireAuth />
+          <NavLink
+            icon={Settings}
+            href="/settings"
+            label="Cài đặt"
+            requireAuth
+          />
 
           {isAuthorOrAdmin && (
             <>

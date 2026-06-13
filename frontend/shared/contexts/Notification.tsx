@@ -7,7 +7,10 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { API_URL, getToken } from "@/features/auth/services/authentication.service";
+import {
+  API_URL,
+  getToken,
+} from "@/features/auth/services/authentication.service";
 import {
   getNotificationsAPI,
   markNotificationReadAPI,
@@ -30,9 +33,7 @@ interface NotificationProps {
   markAsRead: (id: string) => Promise<void>;
 }
 
-const Notification = createContext<NotificationProps | undefined>(
-  undefined,
-);
+const Notification = createContext<NotificationProps | undefined>(undefined);
 
 export function NotificationProvider({
   children,
@@ -48,7 +49,9 @@ export function NotificationProvider({
     try {
       const data = await getNotificationsAPI();
       setNotifications(data.data || data || []);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }, [user]);
 
   const markAsRead = useCallback(async (id: string) => {
@@ -57,7 +60,9 @@ export function NotificationProvider({
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, is_read: true } : n)),
       );
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
 
   useEffect(() => {
@@ -79,8 +84,13 @@ export function NotificationProvider({
       try {
         const newNotif = JSON.parse(event.data);
         setNotifications((prev) => [newNotif, ...prev]);
-        showToast(newNotif.message || newNotif.body || "Bạn có thông báo mới", "info");
-      } catch (e) { console.error(e); }
+        showToast(
+          newNotif.message || newNotif.body || "Bạn có thông báo mới",
+          "info",
+        );
+      } catch (e) {
+        console.error(e);
+      }
     };
 
     eventSource.onerror = (e) => {

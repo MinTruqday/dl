@@ -16,15 +16,22 @@ export async function getWithdrawalQueueAPI(status: string = "PENDING") {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải hàng đợi thanh toán");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải hàng đợi thanh toán");
   return data;
 }
 
-export async function verifyWithdrawalAPI(withdrawalId: string, action: string) {
-  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/auth?action=${action}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+export async function verifyWithdrawalAPI(
+  withdrawalId: string,
+  action: string,
+) {
+  const res = await fetch(
+    `${API_URL}/withdrawal/${withdrawalId}/auth?action=${action}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xử lý thanh toán thất bại");
   return data;
@@ -45,6 +52,7 @@ export async function getMyWithdrawalsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách yêu cầu rút tiền");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách yêu cầu rút tiền");
   return data;
 }

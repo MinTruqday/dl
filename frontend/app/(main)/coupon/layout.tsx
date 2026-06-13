@@ -15,7 +15,11 @@ export default function PromotionLayout({
   const pathname = usePathname();
   const { user } = useAuth() as any;
   const isAdmin = user?.role === "admin";
-  const [stats, setStats] = useState({ totalUsed: 0, activeCount: 0, pendingCount: 0 });
+  const [stats, setStats] = useState({
+    totalUsed: 0,
+    activeCount: 0,
+    pendingCount: 0,
+  });
 
   useEffect(() => {
     fetchStats();
@@ -26,16 +30,32 @@ export default function PromotionLayout({
       const data = await getCouponsAPI();
       const list = data.data || data || [];
       setStats({
-        totalUsed: list.reduce((acc: number, c: any) => acc + (c.used_count || 0), 0),
-        activeCount: list.filter((c: any) => c.is_active && c.status === 'approved').length,
-        pendingCount: list.filter((c: any) => c.status === 'pending').length,
+        totalUsed: list.reduce(
+          (acc: number, c: any) => acc + (c.used_count || 0),
+          0,
+        ),
+        activeCount: list.filter(
+          (c: any) => c.is_active && c.status === "approved",
+        ).length,
+        pendingCount: list.filter((c: any) => c.status === "pending").length,
       });
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const navItems = [
     { id: "all", label: "Tất cả mã ưu đãi", href: "/coupon" },
-    ...(isAdmin ? [{ id: "pending", label: "Duyệt mã ưu đãi", href: "/coupon/duyet-ma-uu-dai", badge: stats.pendingCount }] : []),
+    ...(isAdmin
+      ? [
+          {
+            id: "pending",
+            label: "Duyệt mã ưu đãi",
+            href: "/coupon/duyet-ma-uu-dai",
+            badge: stats.pendingCount,
+          },
+        ]
+      : []),
   ];
 
   const isActive = (href: string) => {
@@ -76,7 +96,10 @@ export default function PromotionLayout({
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <div
+            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "100ms", animationFillMode: "both" }}
+          >
             <div className="text-sm font-semibold text-black mb-1">
               Thống kê nhanh
             </div>
@@ -86,8 +109,12 @@ export default function PromotionLayout({
                   <Activity className="w-4 h-4 text-zinc-400" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-zinc-400 uppercase">Tổng lượt dùng</div>
-                  <div className="text-sm font-bold text-black">{stats.totalUsed} lượt</div>
+                  <div className="text-[10px] font-bold text-zinc-400 uppercase">
+                    Tổng lượt dùng
+                  </div>
+                  <div className="text-sm font-bold text-black">
+                    {stats.totalUsed} lượt
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -95,8 +122,12 @@ export default function PromotionLayout({
                   <Users className="w-4 h-4 text-zinc-400" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-zinc-400 uppercase">Mã đang chạy</div>
-                  <div className="text-sm font-bold text-black">{stats.activeCount} mã</div>
+                  <div className="text-[10px] font-bold text-zinc-400 uppercase">
+                    Mã đang chạy
+                  </div>
+                  <div className="text-sm font-bold text-black">
+                    {stats.activeCount} mã
+                  </div>
                 </div>
               </div>
             </div>

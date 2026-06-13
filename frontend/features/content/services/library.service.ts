@@ -29,27 +29,36 @@ export async function getReadingListByIdAPI(listId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải chi tiết danh sách");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải chi tiết danh sách");
   return data;
 }
 
 export async function addDocumentToListAPI(listId: string, documentId: string) {
-  const res = await fetch(`${API_URL}/library/danh-sach/${listId}/document/${documentId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/library/danh-sach/${listId}/document/${documentId}`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Thêm vào danh sách thất bại");
   return data;
 }
 
-export async function removeDocumentFromListAPI(listId: string, documentId: string) {
-  const res = await fetch(`${API_URL}/library/danh-sach/${listId}/document/${documentId}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+export async function removeDocumentFromListAPI(
+  listId: string,
+  documentId: string,
+) {
+  const res = await fetch(
+    `${API_URL}/library/danh-sach/${listId}/document/${documentId}`,
+    {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xóa khỏi danh sách thất bại");
   return data;
 }
-

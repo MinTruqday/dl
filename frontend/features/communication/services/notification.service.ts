@@ -27,7 +27,8 @@ export const markAllNotificationsReadAPI = async () => {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể đánh dấu tất cả thông báo");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể đánh dấu tất cả thông báo");
   return data;
 };
 
@@ -37,7 +38,8 @@ export const getNotificationSettingsAPI = async () => {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cấu hình thông báo");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cấu hình thông báo");
   return data;
 };
 
@@ -52,6 +54,7 @@ export const updateNotificationSettingsAPI = async (settings: any) => {
     body: JSON.stringify(settings),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể cập nhật cấu hình thông báo");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể cập nhật cấu hình thông báo");
   return data;
 };

@@ -180,7 +180,7 @@ export default function Comment({
                       )}
                     </div>
                     <div>
-                        <span className="font-bold text-sm text-black uppercase tracking-tight">
+                      <span className="font-bold text-sm text-black uppercase tracking-tight">
                         {c.user?.full_name || "Độc giả"}
                       </span>
                       <div className="text-[9px] font-bold text-zinc-300 uppercase tracking-widest mt-1">
@@ -193,7 +193,7 @@ export default function Comment({
                   {c.text || c.content}
                 </p>
                 <div className="flex justify-end mt-4">
-                    <button
+                  <button
                     onClick={() => {
                       setReplyTo(c._id);
                       window.scrollTo({ top: 0, behavior: "smooth" });

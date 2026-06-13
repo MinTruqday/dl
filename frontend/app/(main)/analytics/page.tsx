@@ -76,9 +76,7 @@ export default function AuthorAnalyticsPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-16 border-b border-zinc-100 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-300"
-      >
+      <div className="mb-16 border-b border-zinc-100 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div className="space-y-4">
           <h1 className="text-6xl font-bold tracking-tighter leading-none text-black">
             Phân tích dữ liệu
@@ -92,7 +90,7 @@ export default function AuthorAnalyticsPage() {
 
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        style={{ animationDelay: "150ms", animationFillMode: "both" }}
       >
         {[
           {
@@ -121,9 +119,7 @@ export default function AuthorAnalyticsPage() {
           },
         ].map((item, i) => (
           <div key={i} className="p-10 border border-zinc-100 bg-white group">
-            <item.icon
-              className={`w-5 h-5 mb-8 ${item.color}`}
-            />
+            <item.icon className={`w-5 h-5 mb-8 ${item.color}`} />
             <h3 className="text-4xl font-bold text-black tracking-tighter mb-2">
               {typeof item.val === "number" && item.val > 1000
                 ? `${(item.val / 1000).toFixed(1)}K`
@@ -138,7 +134,7 @@ export default function AuthorAnalyticsPage() {
 
       <div
         className="grid lg:grid-cols-12 gap-16 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+        style={{ animationDelay: "300ms", animationFillMode: "both" }}
       >
         <div className="lg:col-span-5 space-y-12">
           <div className="border border-zinc-100 p-10 bg-white space-y-10">

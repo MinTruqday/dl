@@ -95,9 +95,7 @@ export default function PaymentResultPage() {
 
   return (
     <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in slide-in-from-bottom-8 duration-300"
-      >
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div
           className={`w-20 h-20 flex items-center justify-center border ${current.bgClass} rounded-none`}
         >
@@ -106,15 +104,23 @@ export default function PaymentResultPage() {
           />
         </div>
 
-        <div className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-          <h1 className="text-2xl font-semibold text-black tracking-tight">{current.title}</h1>
+        <div
+          className="text-center space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
+          <h1 className="text-2xl font-semibold text-black tracking-tight">
+            {current.title}
+          </h1>
           <p className="text-sm font-medium text-zinc-500 max-w-md leading-relaxed">
             {current.description}
           </p>
         </div>
 
         {paymentInfo && status === "success" && (
-          <div className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <div
+            className="border border-zinc-200 bg-white p-6 w-full max-w-sm space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
               <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest">
                 Mã giao dịch
@@ -129,7 +135,7 @@ export default function PaymentResultPage() {
               </span>
               <span className="text-xs font-semibold text-black tracking-tight">
                 {Number(
-                  paymentInfo.amount_paid || paymentInfo.amount || 0
+                  paymentInfo.amount_paid || paymentInfo.amount || 0,
                 ).toLocaleString()}{" "}
                 VNĐ
               </span>

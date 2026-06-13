@@ -1,9 +1,6 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function triggerCollectionAPI(
-  source: string,
-  pages: number,
-) {
+export async function triggerCollectionAPI(source: string, pages: number) {
   const res = await fetch(`${API_URL}/collect/noi-bo/kich-hoat`, {
     method: "POST",
     headers: {
@@ -13,7 +10,8 @@ export async function triggerCollectionAPI(
     body: JSON.stringify({ source, pages }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể kích hoạt tiến trình thu thập");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể kích hoạt tiến trình thu thập");
   return data;
 }
 
@@ -23,7 +21,8 @@ export async function stopCollectionAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể dừng tiến trình thu thập");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể dừng tiến trình thu thập");
   return data;
 }
 
@@ -32,7 +31,8 @@ export async function getCollectorStatsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải trạng thái thu thập");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải trạng thái thu thập");
   return data;
 }
 

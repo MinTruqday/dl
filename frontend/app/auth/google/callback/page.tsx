@@ -17,7 +17,7 @@ export default function GoogleCallbackPage() {
       const handleCallback = async () => {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/feedback?code=${code}`
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/feedback?code=${code}`,
           );
           const data = await res.json();
           const authData = data.data || data;

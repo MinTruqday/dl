@@ -48,7 +48,7 @@ export default function Review({ documentId }: ReviewProps) {
       showToast("Vui lòng đăng nhập để gửi nhận xét", "error");
       return;
     }
-      setSubmitting(true);
+    setSubmitting(true);
     try {
       await createDocumentReviewAPI(documentId, rating, comment);
       showToast("Đã đăng nhận xét thành công", "success");
@@ -133,8 +133,8 @@ export default function Review({ documentId }: ReviewProps) {
         </form>
       ) : (
         <div className="py-20 border border-dashed border-zinc-100 bg-white/20 text-center rounded-sm">
-            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-              Đăng nhập để gửi đánh giá
+          <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+            Đăng nhập để gửi đánh giá
           </p>
         </div>
       )}

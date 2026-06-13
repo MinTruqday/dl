@@ -16,7 +16,7 @@ export interface StorageItem {
   parent_id?: string;
   description?: string;
   tags?: string[];
-  shared_with?: Array<{user_id: string; role: string}>;
+  shared_with?: Array<{ user_id: string; role: string }>;
   is_shortcut?: boolean;
   target_id?: string;
   color?: string;
@@ -50,12 +50,15 @@ export const createFolderAPI = async (name: string, parent_id?: string) => {
   return data.data;
 };
 
-export const listStorageItemsAPI = async (parent_id?: string, is_trashed: boolean = false) => {
+export const listStorageItemsAPI = async (
+  parent_id?: string,
+  is_trashed: boolean = false,
+) => {
   const token = getAuthToken();
   const query = new URLSearchParams();
   if (parent_id) query.append("parent_id", parent_id);
   if (is_trashed) query.append("is_trashed", "true");
-  
+
   const res = await fetch(`${API_URL}/storage/danh-sach?${query.toString()}`, {
     method: "GET",
     headers: {
@@ -67,7 +70,10 @@ export const listStorageItemsAPI = async (parent_id?: string, is_trashed: boolea
   return data.data as StorageItem[];
 };
 
-export const updateStorageItemAPI = async (id: string, updates: Partial<StorageItem>) => {
+export const updateStorageItemAPI = async (
+  id: string,
+  updates: Partial<StorageItem>,
+) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/storage/tap-tin/${id}`, {
     method: "PUT",
@@ -82,14 +88,20 @@ export const updateStorageItemAPI = async (id: string, updates: Partial<StorageI
   return data.data;
 };
 
-export const deleteStorageItemAPI = async (id: string, hard_delete: boolean = false) => {
+export const deleteStorageItemAPI = async (
+  id: string,
+  hard_delete: boolean = false,
+) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/tap-tin/${id}?hard_delete=${hard_delete}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `${API_URL}/storage/tap-tin/${id}?hard_delete=${hard_delete}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to delete item");
   return data.data;
@@ -99,7 +111,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   const token = getAuthToken();
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const res = await fetch(`${API_URL}/upload/tap-tin`, {
     method: "POST",
     headers: {
@@ -108,10 +120,11 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
     body: formData,
   });
   const uploadData = await res.json();
-  if (!res.ok) throw new Error(uploadData.message || "Failed to upload file to storage");
-  
+  if (!res.ok)
+    throw new Error(uploadData.message || "Failed to upload file to storage");
+
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
-  
+
   const registerRes = await fetch(`${API_URL}/storage/tap-tin`, {
     method: "POST",
     headers: {
@@ -126,10 +139,11 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
       url: fileUrl,
     }),
   });
-  
+
   const fileData = await registerRes.json();
-  if (!registerRes.ok) throw new Error(fileData.message || "Failed to register file");
-  
+  if (!registerRes.ok)
+    throw new Error(fileData.message || "Failed to register file");
+
   return fileData.data;
 };
 
@@ -138,7 +152,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
   const query = new URLSearchParams();
   query.append("q", q);
   if (type) query.append("type", type);
-  
+
   const res = await fetch(`${API_URL}/storage/search?${query.toString()}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
@@ -159,13 +173,16 @@ export const getRecentStorageItemsAPI = async (limit: number = 20) => {
   return data.data as StorageItem[];
 };
 
-export const copyStorageItemAPI = async (id: string, target_parent_id?: string) => {
+export const copyStorageItemAPI = async (
+  id: string,
+  target_parent_id?: string,
+) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/storage/tap-tin/${id}/copy`, {
     method: "POST",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}` 
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ target_parent_id }),
   });
@@ -178,7 +195,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   const token = getAuthToken();
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const res = await fetch(`${API_URL}/upload/tap-tin`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
@@ -186,9 +203,9 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   });
   const uploadData = await res.json();
   if (!res.ok) throw new Error(uploadData.message || "Failed to upload file");
-  
+
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
-  
+
   const versionRes = await fetch(`${API_URL}/storage/tap-tin/${id}/version`, {
     method: "POST",
     headers: {
@@ -200,13 +217,18 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
       size: file.size,
     }),
   });
-  
+
   const versionData = await versionRes.json();
-  if (!versionRes.ok) throw new Error(versionData.message || "Failed to add version");
+  if (!versionRes.ok)
+    throw new Error(versionData.message || "Failed to add version");
   return versionData.data;
 };
 
-export const shareStorageItemAPI = async (id: string, email: string, role: string = "viewer") => {
+export const shareStorageItemAPI = async (
+  id: string,
+  email: string,
+  role: string = "viewer",
+) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/storage/tap-tin/${id}/chia-se`, {
     method: "POST",
@@ -232,7 +254,10 @@ export const getStorageQuotaAPI = async () => {
   return data.data as { used: number; limit: number };
 };
 
-export const createShortcutAPI = async (id: string, target_parent_id?: string) => {
+export const createShortcutAPI = async (
+  id: string,
+  target_parent_id?: string,
+) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/storage/tap-tin/${id}/shortcut`, {
     method: "POST",
@@ -251,20 +276,20 @@ export const downloadZipAPI = async (ids: string[]) => {
   const token = getAuthToken();
   const query = ids.join(",");
   const url = `${API_URL}/storage/tai-xuong-zip?ids=${query}`;
-  
+
   const res = await fetch(url, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
-  
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to download zip");
   }
-  
+
   const blob = await res.blob();
   const downloadUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = downloadUrl;
   a.download = "storage_download.zip";
   document.body.appendChild(a);
@@ -273,7 +298,10 @@ export const downloadZipAPI = async (ids: string[]) => {
   window.URL.revokeObjectURL(downloadUrl);
 };
 
-export const translateStorageDocumentAPI = async (id: string, target_lang: string = "vi") => {
+export const translateStorageDocumentAPI = async (
+  id: string,
+  target_lang: string = "vi",
+) => {
   const token = getAuthToken();
   const res = await fetch(`${API_URL}/ai/tai-lieu-luu-tru/${id}/dich`, {
     method: "POST",
@@ -297,6 +325,7 @@ export const getRelatedStorageItemsAPI = async (id: string) => {
     },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to get related documents");
+  if (!res.ok)
+    throw new Error(data.message || "Failed to get related documents");
   return data.data as StorageItem[];
 };

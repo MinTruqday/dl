@@ -41,11 +41,7 @@ function bytesToB64url(bytes: ArrayBuffer): string {
   return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-export default function Passkey({
-  email,
-  onClose,
-  onSuccess,
-}: PasskeyProps) {
+export default function Passkey({ email, onClose, onSuccess }: PasskeyProps) {
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
 
@@ -96,7 +92,12 @@ export default function Passkey({
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} showCloseButton={!loading} className="max-w-md rounded-2xl">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      showCloseButton={!loading}
+      className="max-w-md rounded-2xl"
+    >
       <ModalHeader>
         <ModalTitle>Bảo mật bằng Passkey</ModalTitle>
       </ModalHeader>
@@ -129,13 +130,10 @@ export default function Passkey({
           disabled={loading}
           className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center rounded-2xl hover:bg-zinc-800 transition-colors"
         >
-          {loading ? (
-            <Loader2 className="w-3 h-3 animate-spin mr-2" />
-          ) : null}
+          {loading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
           {loading ? "Đang xử lý" : "Xác nhận kích hoạt"}
         </button>
       </ModalFooter>
     </Modal>
   );
 }
-

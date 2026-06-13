@@ -14,7 +14,8 @@ export async function getMyQuotaAPI(): Promise<QuotaUsage> {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể lấy thông tin hạn mức");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể lấy thông tin hạn mức");
   return data.data;
 }
 

@@ -15,7 +15,8 @@ export async function getBookmarksAPI(limit: number = 100) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách dấu trang");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách dấu trang");
   return data;
 }
 
@@ -26,7 +27,8 @@ export async function createBookmarkFolderAPI(name: string) {
     body: JSON.stringify({ name }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tạo thư mục dấu trang thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Tạo thư mục dấu trang thất bại");
   return data;
 }
 
@@ -35,11 +37,17 @@ export async function getBookmarkFoldersAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thư mục dấu trang");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải danh sách thư mục dấu trang",
+    );
   return data;
 }
 
-export async function assignBookmarksToFolderAPI(folderId: string, bookmarkIds: string[]) {
+export async function assignBookmarksToFolderAPI(
+  folderId: string,
+  bookmarkIds: string[],
+) {
   const res = await fetch(`${API_URL}/bookmark/thu-muc/${folderId}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

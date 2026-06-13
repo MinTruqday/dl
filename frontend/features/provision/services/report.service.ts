@@ -1,11 +1,19 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function getReportsAPI(status: string = "pending", skip: number = 0, limit: number = 30) {
-  const res = await fetch(`${API_URL}/report/hang-doi?status=${status}&skip=${skip}&limit=${limit}`, {
-    headers: getAuthHeaders(),
-  });
+export async function getReportsAPI(
+  status: string = "pending",
+  skip: number = 0,
+  limit: number = 30,
+) {
+  const res = await fetch(
+    `${API_URL}/report/hang-doi?status=${status}&skip=${skip}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách báo cáo");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách báo cáo");
   return data;
 }
 

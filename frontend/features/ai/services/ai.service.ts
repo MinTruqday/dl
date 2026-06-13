@@ -1,50 +1,66 @@
 import { API_URL, getAuthHeaders, getToken } from "./authentication.service";
 
-export async function processTextAPI(text: string, action: string, context: string = "", targetLang: string = "Vietnamese") {
+export async function processTextAPI(
+  text: string,
+  action: string,
+  context: string = "",
+  targetLang: string = "Vietnamese",
+) {
   const res = await fetch(`${API_URL}/ai/van-ban`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xử lý văn bản bằng AI thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Xử lý văn bản bằng AI thất bại");
   return data;
 }
 
 export async function smartSearchAIAPI(query: string) {
-  const res = await fetch(`${API_URL}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`, {
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
   return data;
 }
 
-
 export async function getAiSessionsAPI(documentId?: string) {
-  const url = documentId 
+  const url = documentId
     ? `${API_URL}/ai/lich-su?document_id=${documentId}`
     : `${API_URL}/ai/lich-su`;
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử hội thoại");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải lịch sử hội thoại");
   return data;
 }
 
-export async function createAiSessionAPI(documentId: string, firstQuery: string = "") {
+export async function createAiSessionAPI(
+  documentId: string,
+  firstQuery: string = "",
+) {
   const res = await fetch(`${API_URL}/ai/lich-su`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khởi tạo hội thoại mới thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Khởi tạo hội thoại mới thất bại");
   return data;
 }
 
-export async function updateAiSessionTitleAPI(sessionId: string, title: string) {
+export async function updateAiSessionTitleAPI(
+  sessionId: string,
+  title: string,
+) {
   const res = await fetch(`${API_URL}/ai/lich-su/${sessionId}/tieu-de`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -76,21 +92,33 @@ export async function streamAiChatAPI(payload: any) {
   });
 }
 
-export async function queryRagAPI(documentId: string, query: string, useSmart: boolean = false, sessionId?: string) {
+export async function queryRagAPI(
+  documentId: string,
+  query: string,
+  useSmart: boolean = false,
+  sessionId?: string,
+) {
   const res = await fetch(`${API_URL}/ai/chat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ document_id: documentId, query, useSmart, session_id: sessionId }),
+    body: JSON.stringify({
+      document_id: documentId,
+      query,
+      useSmart,
+      session_id: sessionId,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Truy vấn AI thất bại");
   return data;
 }
 
-export async function translateTextAPI(text: string, targetLang: string = "vi") {
+export async function translateTextAPI(
+  text: string,
+  targetLang: string = "vi",
+) {
   return await processTextAPI(text, "translate", "", targetLang);
 }
-
 
 export async function suggestCitationsAPI(text: string, style: string = "APA") {
   const res = await fetch(`${API_URL}/ai/trich-dan-thong-minh`, {
@@ -103,7 +131,11 @@ export async function suggestCitationsAPI(text: string, style: string = "APA") {
   return data;
 }
 
-export async function transformToneAPI(text: string, tone: string, expansion: boolean = false) {
+export async function transformToneAPI(
+  text: string,
+  tone: string,
+  expansion: boolean = false,
+) {
   const res = await fetch(`${API_URL}/ai/bien-doi-van-ban`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -125,7 +157,10 @@ export async function peerReviewAPI(text: string, criteria: string[] = []) {
   return data;
 }
 
-export async function multiDocSynthesisAPI(documentIds: string[], query: string) {
+export async function multiDocSynthesisAPI(
+  documentIds: string[],
+  query: string,
+) {
   const res = await fetch(`${API_URL}/ai/tong-hop-da-tai-lieu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

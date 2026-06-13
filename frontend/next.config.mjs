@@ -1,4 +1,4 @@
-import path from 'path';
+import path from "path";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -80,37 +80,115 @@ const nextConfig = {
     "@editorjs/table",
     "@editorjs/text-variant-tune",
     "@editorjs/underline",
-    "@editorjs/warning"
+    "@editorjs/warning",
   ],
   webpack: (config, { dir }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "editorjs-comment": path.resolve(dir, "node_modules/editorjs-comment/dist/index.js"),
-      "editorjs-chartjs": path.resolve(dir, "node_modules/editorjs-chartjs/src/index.js"),
-      "cropperjs": path.resolve(dir, "node_modules/cropperjs/dist/cropper.common.js"),
-      "@skchawala/editorjs-text-style": path.resolve(dir, "node_modules/@skchawala/editorjs-text-style/dist/index.umd.js"),
-      "@editorjs/header": path.resolve(dir, "node_modules/@editorjs/header/dist/header.umd.js"),
-      "@editorjs/paragraph": path.resolve(dir, "node_modules/@editorjs/paragraph/dist/paragraph.umd.js"),
-      "@editorjs/list": path.resolve(dir, "node_modules/@editorjs/list/dist/editorjs-list.umd.js"),
-      "@editorjs/quote": path.resolve(dir, "node_modules/@editorjs/quote/dist/quote.umd.js"),
-      "@editorjs/table": path.resolve(dir, "node_modules/@editorjs/table/dist/table.umd.js"),
-      "@editorjs/checklist": path.resolve(dir, "node_modules/@editorjs/checklist/dist/checklist.umd.js"),
-      "@editorjs/attaches": path.resolve(dir, "node_modules/@editorjs/attaches/dist/attaches.umd.js"),
-      "@editorjs/code": path.resolve(dir, "node_modules/@editorjs/code/dist/code.umd.js"),
-      "@editorjs/delimiter": path.resolve(dir, "node_modules/@editorjs/delimiter/dist/delimiter.umd.js"),
-      "@editorjs/embed": path.resolve(dir, "node_modules/@editorjs/embed/dist/embed.umd.js"),
-      "@editorjs/image": path.resolve(dir, "node_modules/@editorjs/image/dist/image.umd.js"),
-      "@editorjs/inline-code": path.resolve(dir, "node_modules/@editorjs/inline-code/dist/inline-code.umd.js"),
-      "@editorjs/link": path.resolve(dir, "node_modules/@editorjs/link/dist/link.umd.js"),
-      "@editorjs/marker": path.resolve(dir, "node_modules/@editorjs/marker/dist/marker.umd.js"),
-      "@editorjs/raw": path.resolve(dir, "node_modules/@editorjs/raw/dist/raw.umd.js"),
-      "@editorjs/underline": path.resolve(dir, "node_modules/@editorjs/underline/dist/underline.umd.js"),
-      "@editorjs/warning": path.resolve(dir, "node_modules/@editorjs/warning/dist/warning.umd.js"),
-      "editorjs-undo": path.resolve(dir, "node_modules/editorjs-undo/dist/bundle.js"),
-      "editorjs-drag-drop": path.resolve(dir, "node_modules/editorjs-drag-drop/dist/bundle.js"),
-      "editor-js-alignment-tune": path.resolve(dir, "node_modules/editor-js-alignment-tune/dist/bundle.js"),
-      "editorjs-indent-tune": path.resolve(dir, "node_modules/editorjs-indent-tune/dist/bundle.js"),
-      "editorjs-text-color-plugin": path.resolve(dir, "node_modules/editorjs-text-color-plugin/dist/bundle.js"),
+      "editorjs-comment": path.resolve(
+        dir,
+        "node_modules/editorjs-comment/dist/index.js",
+      ),
+      "editorjs-chartjs": path.resolve(
+        dir,
+        "node_modules/editorjs-chartjs/src/index.js",
+      ),
+      cropperjs: path.resolve(
+        dir,
+        "node_modules/cropperjs/dist/cropper.common.js",
+      ),
+      "@skchawala/editorjs-text-style": path.resolve(
+        dir,
+        "node_modules/@skchawala/editorjs-text-style/dist/index.umd.js",
+      ),
+      "@editorjs/header": path.resolve(
+        dir,
+        "node_modules/@editorjs/header/dist/header.umd.js",
+      ),
+      "@editorjs/paragraph": path.resolve(
+        dir,
+        "node_modules/@editorjs/paragraph/dist/paragraph.umd.js",
+      ),
+      "@editorjs/list": path.resolve(
+        dir,
+        "node_modules/@editorjs/list/dist/editorjs-list.umd.js",
+      ),
+      "@editorjs/quote": path.resolve(
+        dir,
+        "node_modules/@editorjs/quote/dist/quote.umd.js",
+      ),
+      "@editorjs/table": path.resolve(
+        dir,
+        "node_modules/@editorjs/table/dist/table.umd.js",
+      ),
+      "@editorjs/checklist": path.resolve(
+        dir,
+        "node_modules/@editorjs/checklist/dist/checklist.umd.js",
+      ),
+      "@editorjs/attaches": path.resolve(
+        dir,
+        "node_modules/@editorjs/attaches/dist/attaches.umd.js",
+      ),
+      "@editorjs/code": path.resolve(
+        dir,
+        "node_modules/@editorjs/code/dist/code.umd.js",
+      ),
+      "@editorjs/delimiter": path.resolve(
+        dir,
+        "node_modules/@editorjs/delimiter/dist/delimiter.umd.js",
+      ),
+      "@editorjs/embed": path.resolve(
+        dir,
+        "node_modules/@editorjs/embed/dist/embed.umd.js",
+      ),
+      "@editorjs/image": path.resolve(
+        dir,
+        "node_modules/@editorjs/image/dist/image.umd.js",
+      ),
+      "@editorjs/inline-code": path.resolve(
+        dir,
+        "node_modules/@editorjs/inline-code/dist/inline-code.umd.js",
+      ),
+      "@editorjs/link": path.resolve(
+        dir,
+        "node_modules/@editorjs/link/dist/link.umd.js",
+      ),
+      "@editorjs/marker": path.resolve(
+        dir,
+        "node_modules/@editorjs/marker/dist/marker.umd.js",
+      ),
+      "@editorjs/raw": path.resolve(
+        dir,
+        "node_modules/@editorjs/raw/dist/raw.umd.js",
+      ),
+      "@editorjs/underline": path.resolve(
+        dir,
+        "node_modules/@editorjs/underline/dist/underline.umd.js",
+      ),
+      "@editorjs/warning": path.resolve(
+        dir,
+        "node_modules/@editorjs/warning/dist/warning.umd.js",
+      ),
+      "editorjs-undo": path.resolve(
+        dir,
+        "node_modules/editorjs-undo/dist/bundle.js",
+      ),
+      "editorjs-drag-drop": path.resolve(
+        dir,
+        "node_modules/editorjs-drag-drop/dist/bundle.js",
+      ),
+      "editor-js-alignment-tune": path.resolve(
+        dir,
+        "node_modules/editor-js-alignment-tune/dist/bundle.js",
+      ),
+      "editorjs-indent-tune": path.resolve(
+        dir,
+        "node_modules/editorjs-indent-tune/dist/bundle.js",
+      ),
+      "editorjs-text-color-plugin": path.resolve(
+        dir,
+        "node_modules/editorjs-text-color-plugin/dist/bundle.js",
+      ),
     };
     return config;
   },

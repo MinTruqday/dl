@@ -16,10 +16,16 @@ export async function updateTypographyAPI(data: {
   return result;
 }
 
-export async function getReadingHistoryAPI(skip: number = 0, limit: number = 20) {
-  const res = await fetch(`${API_URL}/reading/lich-su?skip=${skip}&limit=${limit}`, {
-    headers: getAuthHeaders(),
-  });
+export async function getReadingHistoryAPI(
+  skip: number = 0,
+  limit: number = 20,
+) {
+  const res = await fetch(
+    `${API_URL}/reading/lich-su?skip=${skip}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải lịch sử đọc");
   return data;
@@ -39,8 +45,6 @@ export async function updateReadingProgressAPI(data: {
   if (!res.ok) throw new Error(result.message || "Cập nhật tiến độ thất bại");
   return result;
 }
-
-
 
 export async function setReadingGoalAPI(data: {
   target_documents?: number;
@@ -62,7 +66,8 @@ export async function getReadingGoalAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin mục tiêu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải thông tin mục tiêu");
   return data;
 }
 
@@ -96,14 +101,17 @@ export async function unpinDocumentAPI(documentId: string) {
 }
 
 export async function searchInDocumentAPI(documentId: string, query: string) {
-  const res = await fetch(`${API_URL}/reading/document/${documentId}/search?q=${encodeURIComponent(query)}`, {
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/reading/document/${documentId}/search?q=${encodeURIComponent(query)}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tìm kiếm trong tài liệu thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Tìm kiếm trong tài liệu thất bại");
   return data;
 }
-
 
 export async function clearReadingHistoryAPI() {
   const res = await fetch(`${API_URL}/reading/lich-su`, {
@@ -130,17 +138,23 @@ export async function getMySeriesAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách chuỗi tài liệu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách chuỗi tài liệu");
   return data;
 }
 
-export async function createSeriesAPI(data: { title: string; description: string; document_ids: string[] }) {
+export async function createSeriesAPI(data: {
+  title: string;
+  description: string;
+  document_ids: string[];
+}) {
   const res = await fetch(`${API_URL}/document/chuoi-tai-lieu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể tạo chuỗi tài liệu mới");
+  if (!res.ok)
+    throw new Error(result.message || "Không thể tạo chuỗi tài liệu mới");
   return result;
 }

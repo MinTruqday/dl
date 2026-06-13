@@ -20,12 +20,19 @@ export default function CreateDocumentPage() {
 
   useEffect(() => {
     if (user) {
-      setPublisherName(user.role === "admin" ? "DocLib" : (user.full_name || ""));
+      setPublisherName(user.role === "admin" ? "DocLib" : user.full_name || "");
     }
   }, [user]);
 
   const slugify = (text: string) => {
-    return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[đĐ]/g, "d")
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -45,7 +52,9 @@ export default function CreateDocumentPage() {
       if (res) {
         showToast("Khởi tạo tác phẩm thành công.", "success");
         setTimeout(() => {
-          router.push(`/compose?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`);
+          router.push(
+            `/compose?tai-lieu=${res.data?.id || res.data?._id || res.id || res._id}`,
+          );
         }, 1000);
       }
     } catch (err: any) {
@@ -57,11 +66,15 @@ export default function CreateDocumentPage() {
 
   return (
     <form onSubmit={handleCreate} className="space-y-8">
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-
+      <div
+        className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+        style={{ animationDelay: "150ms", animationFillMode: "both" }}
+      >
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-black">Tiêu đề tác phẩm</label>
+            <label className="text-sm font-semibold text-black">
+              Tiêu đề tác phẩm
+            </label>
             <input
               required
               type="text"
@@ -72,7 +85,9 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-black">Người đăng / Nhà xuất bản</label>
+            <label className="text-sm font-semibold text-black">
+              Người đăng / Nhà xuất bản
+            </label>
             <input
               readOnly={user?.role === "admin"}
               type="text"
@@ -83,7 +98,9 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-black">Tóm tắt nội dung (Tùy chọn)</label>
+            <label className="text-sm font-semibold text-black">
+              Tóm tắt nội dung (Tùy chọn)
+            </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -92,11 +109,21 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-sm font-semibold text-black">Chế độ hiển thị</label>
+            <label className="text-sm font-semibold text-black">
+              Chế độ hiển thị
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { id: "public", label: "Công khai", desc: "Mọi độc giả đều có thể tiếp cận." },
-                { id: "private", label: "Riêng tư", desc: "Chỉ bạn hoặc cộng tác viên." },
+                {
+                  id: "public",
+                  label: "Công khai",
+                  desc: "Mọi độc giả đều có thể tiếp cận.",
+                },
+                {
+                  id: "private",
+                  label: "Riêng tư",
+                  desc: "Chỉ bạn hoặc cộng tác viên.",
+                },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -105,8 +132,12 @@ export default function CreateDocumentPage() {
                   className={`p-4 border text-left flex items-start gap-4 rounded-2xl transition-colors ${visibility === opt.id ? "border-black bg-zinc-50" : "bg-white text-zinc-500 border-zinc-200 hover:border-black/30"}`}
                 >
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-black">{opt.label}</p>
-                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">{opt.desc}</p>
+                    <p className="text-sm font-semibold text-black">
+                      {opt.label}
+                    </p>
+                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">
+                      {opt.desc}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -114,11 +145,21 @@ export default function CreateDocumentPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="text-sm font-semibold text-black">Môi trường soạn thảo</label>
+            <label className="text-sm font-semibold text-black">
+              Môi trường soạn thảo
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
-                { id: "json", label: "Soạn thảo chuẩn", desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng." },
-                { id: "latex", label: "Soạn thảo LaTeX", desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp." },
+                {
+                  id: "json",
+                  label: "Soạn thảo chuẩn",
+                  desc: "Soạn thảo dạng Block hiện đại, trực quan, dễ dùng.",
+                },
+                {
+                  id: "latex",
+                  label: "Soạn thảo LaTeX",
+                  desc: "Soạn thảo mã nguồn LaTeX chuyên nghiệp.",
+                },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -127,8 +168,12 @@ export default function CreateDocumentPage() {
                   className={`p-4 border text-left flex items-start gap-4 rounded-2xl transition-colors ${contentFormat === opt.id ? "border-black bg-zinc-50" : "bg-white text-zinc-500 border-zinc-200 hover:border-black/30"}`}
                 >
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-black">{opt.label}</p>
-                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">{opt.desc}</p>
+                    <p className="text-sm font-semibold text-black">
+                      {opt.label}
+                    </p>
+                    <p className="text-[10px] font-medium leading-relaxed text-zinc-500">
+                      {opt.desc}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -139,8 +184,12 @@ export default function CreateDocumentPage() {
         <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-zinc-500">Khởi tạo bởi: {publisherName}</p>
-              <p className="text-xs font-semibold text-black">Sẵn sàng thiết lập không gian soạn thảo</p>
+              <p className="text-xs font-medium text-zinc-500">
+                Khởi tạo bởi: {publisherName}
+              </p>
+              <p className="text-xs font-semibold text-black">
+                Sẵn sàng thiết lập không gian soạn thảo
+              </p>
             </div>
           </div>
           <button

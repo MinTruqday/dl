@@ -3,8 +3,14 @@
 import { useToast } from "@/shared/contexts/Toast";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getToken, API_URL } from "@/features/auth/services/authentication.service";
-import { queryRagAPI, translateTextAPI } from "@/features/ai/services/ai.service";
+import {
+  getToken,
+  API_URL,
+} from "@/features/auth/services/authentication.service";
+import {
+  queryRagAPI,
+  translateTextAPI,
+} from "@/features/ai/services/ai.service";
 import {
   createHighlightAPI,
   getHighlightsAPI,
@@ -68,7 +74,11 @@ export default function DocumentViewer() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const [zipTree, setZipTree] = useState<any[]>([]);
-  const [selectedZipFile, setSelectedZipFile] = useState<{name: string, content: string, type: string} | null>(null);
+  const [selectedZipFile, setSelectedZipFile] = useState<{
+    name: string;
+    content: string;
+    type: string;
+  } | null>(null);
   const [zipLoading, setZipLoading] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -103,7 +113,9 @@ export default function DocumentViewer() {
           bookmarks.data.some((b: any) => (b.id || b._id) === docId),
         );
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   }, [id]);
 
   const fetchDocument = useCallback(
@@ -147,9 +159,11 @@ export default function DocumentViewer() {
           }
           if (data.data?.content_format === "zip" && data.data?.file_url) {
             setSidebarTab("zip");
-            fetch(`${API_URL}/reading/cay-thu-muc-zip?file_url=${encodeURIComponent(data.data.file_url)}`)
-              .then(r => r.json())
-              .then(res => setZipTree(res.data || []))
+            fetch(
+              `${API_URL}/reading/cay-thu-muc-zip?file_url=${encodeURIComponent(data.data.file_url)}`,
+            )
+              .then((r) => r.json())
+              .then((res) => setZipTree(res.data || []))
               .catch(console.error);
           }
         } else {
@@ -266,9 +280,7 @@ export default function DocumentViewer() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
-          res.data?.answer ||
-          res.answer ||
-          "Không thể trích xuất phản hồi.",
+          res.data?.answer || res.answer || "Không thể trích xuất phản hồi.",
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e: any) {
@@ -357,9 +369,7 @@ export default function DocumentViewer() {
       await toggleBookmarkAPI(id);
       setIsBookmarked(!isBookmarked);
       showToast(
-        isBookmarked
-          ? "Đã gỡ khỏi dấu trang"
-          : "Đã thêm vào dấu trang",
+        isBookmarked ? "Đã gỡ khỏi dấu trang" : "Đã thêm vào dấu trang",
         "success",
       );
     } catch (err: any) {
@@ -385,7 +395,11 @@ export default function DocumentViewer() {
         <div className="w-full h-full min-h-[500px] flex flex-col bg-zinc-50 border border-zinc-200">
           <div className="h-12 border-b border-zinc-200 bg-white flex items-center px-4 shrink-0">
             <FileText className="w-4 h-4 mr-2 text-zinc-500" />
-            <span className="text-sm font-medium">{selectedZipFile ? selectedZipFile.name : "Trình duyệt mã nguồn ZIP"}</span>
+            <span className="text-sm font-medium">
+              {selectedZipFile
+                ? selectedZipFile.name
+                : "Trình duyệt mã nguồn ZIP"}
+            </span>
           </div>
           <div className="flex-1 overflow-auto p-4 bg-white">
             {zipLoading ? (
@@ -394,17 +408,23 @@ export default function DocumentViewer() {
               </div>
             ) : selectedZipFile ? (
               selectedZipFile.type === "text" ? (
-                <pre className="text-xs font-mono text-black whitespace-pre-wrap leading-relaxed">{selectedZipFile.content}</pre>
+                <pre className="text-xs font-mono text-black whitespace-pre-wrap leading-relaxed">
+                  {selectedZipFile.content}
+                </pre>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-zinc-500">
                   <AlertTriangle className="w-8 h-8 mb-4 opacity-20" />
-                  <p className="text-sm">Định dạng nhị phân không được hỗ trợ hiển thị</p>
+                  <p className="text-sm">
+                    Định dạng nhị phân không được hỗ trợ hiển thị
+                  </p>
                 </div>
               )
             ) : (
               <div className="flex h-full flex-col items-center justify-center text-zinc-400">
                 <Folder className="w-12 h-12 mb-4 opacity-20" />
-                <p className="text-sm">Chọn một tệp từ cây thư mục bên phải để xem mã nguồn</p>
+                <p className="text-sm">
+                  Chọn một tệp từ cây thư mục bên phải để xem mã nguồn
+                </p>
               </div>
             )}
           </div>
@@ -418,7 +438,10 @@ export default function DocumentViewer() {
       "Không có nội dung hiển thị";
     if (readingMode === "double" && document?.content_format !== "zip") {
       return (
-        <div className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap" style={{ columnCount: 2, columnGap: "4rem" }}>
+        <div
+          className="prose prose-zinc max-w-none text-black leading-relaxed text-base font-medium whitespace-pre-wrap"
+          style={{ columnCount: 2, columnGap: "4rem" }}
+        >
           {content}
         </div>
       );
@@ -471,9 +494,7 @@ export default function DocumentViewer() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white font-sans">
         <AlertTriangle className="w-12 h-12 text-zinc-300 mb-6" />
-        <p className="text-sm font-medium text-zinc-500 mb-8">
-          {error}
-        </p>
+        <p className="text-sm font-medium text-zinc-500 mb-8">{error}</p>
         <button
           onClick={() => router.back()}
           className="h-10 px-6 bg-black text-white text-sm font-medium rounded-none  "
@@ -537,9 +558,10 @@ export default function DocumentViewer() {
               {document?.title}
             </h1>
           </div>
-          
+
           <div className="flex-1 flex justify-center text-sm font-medium text-zinc-500">
-             Trang {currentPage} / {totalPages} ({(currentPage / totalPages * 100).toFixed(0)}%)
+            Trang {currentPage} / {totalPages} (
+            {((currentPage / totalPages) * 100).toFixed(0)}%)
           </div>
 
           <div className="flex items-center justify-end gap-6 flex-1">
@@ -560,9 +582,9 @@ export default function DocumentViewer() {
                 <ZoomIn className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="w-px h-4 bg-zinc-300" />
-            
+
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setReadingMode("single")}
@@ -593,11 +615,17 @@ export default function DocumentViewer() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <main
+          className="flex-1 overflow-auto bg-zinc-50 p-8 md:p-12 relative flex justify-center animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           <div
             className={`mx-auto bg-white border border-zinc-200 ${document?.content_format === "zip" ? "p-0 h-full max-w-full" : "p-12 md:p-24 min-h-full origin-top"} rounded-none ${readingMode === "double" && document?.content_format !== "zip" ? "w-full max-w-6xl" : document?.content_format !== "zip" ? "w-full max-w-3xl" : "w-full h-full"}`}
             style={{
-              transform: document?.content_format === "zip" ? "none" : `scale(${zoom / 100})`,
+              transform:
+                document?.content_format === "zip"
+                  ? "none"
+                  : `scale(${zoom / 100})`,
             }}
           >
             {getPageContent()}
@@ -631,7 +659,10 @@ export default function DocumentViewer() {
                   <Languages className="w-4 h-4" />
                 )}
               </button>
-              <button className="p-2 text-zinc-600  " title="Giải thích bằng AI">
+              <button
+                className="p-2 text-zinc-600  "
+                title="Giải thích bằng AI"
+              >
                 <Zap className="w-4 h-4" />
               </button>
             </div>
@@ -678,7 +709,10 @@ export default function DocumentViewer() {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <div
+          className="flex-1 overflow-y-auto p-6 scrollbar-thin animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           {sidebarTab === "chat" ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
               {messages.map((msg, i) => (
@@ -717,7 +751,8 @@ export default function DocumentViewer() {
                           onKeyDown={(e: any) =>
                             e.key === "Enter" &&
                             !e.shiftKey &&
-                            (e.preventDefault(), handleEditAndResend(msg.id, e.target.value))
+                            (e.preventDefault(),
+                            handleEditAndResend(msg.id, e.target.value))
                           }
                         />
                         <div className="flex justify-end gap-2">
@@ -727,9 +762,10 @@ export default function DocumentViewer() {
                           >
                             Hủy bỏ
                           </button>
-                          <button 
+                          <button
                             onClick={(ev) => {
-                              const ta = ev.currentTarget.parentElement?.previousElementSibling as HTMLTextAreaElement;
+                              const ta = ev.currentTarget.parentElement
+                                ?.previousElementSibling as HTMLTextAreaElement;
                               handleEditAndResend(msg.id, ta.value);
                             }}
                             className="text-xs font-medium px-4 py-2 bg-black text-white  rounded-none "
@@ -818,19 +854,31 @@ export default function DocumentViewer() {
                   onClick={() => {
                     if (!item.is_dir) {
                       setZipLoading(true);
-                      fetch(`${API_URL}/reading/noi-dung-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`)
-                        .then(r => r.json())
-                        .then(res => {
-                          setSelectedZipFile({ name: item.name, content: res.data?.content || "", type: res.data?.type || "text" });
+                      fetch(
+                        `${API_URL}/reading/noi-dung-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`,
+                      )
+                        .then((r) => r.json())
+                        .then((res) => {
+                          setSelectedZipFile({
+                            name: item.name,
+                            content: res.data?.content || "",
+                            type: res.data?.type || "text",
+                          });
                         })
                         .catch(() => showToast("Không thể mở tệp", "error"))
                         .finally(() => setZipLoading(false));
                     }
                   }}
                   className={`flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100 cursor-pointer rounded-none whitespace-nowrap ${!item.is_dir && selectedZipFile?.name === item.name ? "bg-zinc-100 font-medium" : "text-zinc-600"}`}
-                  style={{ paddingLeft: `${item.path.split('/').length * 12}px` }}
+                  style={{
+                    paddingLeft: `${item.path.split("/").length * 12}px`,
+                  }}
                 >
-                  {item.is_dir ? <Folder className="w-4 h-4 text-zinc-400 shrink-0" /> : <FileText className="w-4 h-4 text-zinc-400 shrink-0" />}
+                  {item.is_dir ? (
+                    <Folder className="w-4 h-4 text-zinc-400 shrink-0" />
+                  ) : (
+                    <FileText className="w-4 h-4 text-zinc-400 shrink-0" />
+                  )}
                   <span className="truncate">{item.name}</span>
                 </div>
               ))}
@@ -864,7 +912,10 @@ export default function DocumentViewer() {
                   <span className="text-xs font-medium text-black uppercase tracking-wide">
                     Đính kèm tài liệu
                   </span>
-                  <button onClick={() => setShowAttachments(false)} className="text-zinc-500  ">
+                  <button
+                    onClick={() => setShowAttachments(false)}
+                    className="text-zinc-500  "
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>

@@ -7,7 +7,8 @@ export async function createDepositLinkAPI(amount: number) {
     body: JSON.stringify({ amount, method: "payos" }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Khởi tạo liên kết nạp tiền thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Khởi tạo liên kết nạp tiền thất bại");
   return data;
 }
 
@@ -16,6 +17,7 @@ export async function verifyDepositAPI(orderCode: number) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể kiểm tra trạng thái nạp tiền");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể kiểm tra trạng thái nạp tiền");
   return data;
 }

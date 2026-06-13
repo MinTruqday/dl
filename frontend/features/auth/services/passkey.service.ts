@@ -5,7 +5,10 @@ export async function getPasskeyRegistrationOptionsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải tùy chọn đăng ký khóa truy cập");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải tùy chọn đăng ký khóa truy cập",
+    );
   return data;
 }
 
@@ -16,14 +19,20 @@ export async function verifyPasskeyRegistrationAPI(attestationResponse: any) {
     body: JSON.stringify(attestationResponse),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Xác thực đăng ký khóa truy cập thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Xác thực đăng ký khóa truy cập thất bại");
   return data;
 }
 
 export async function getPasskeyLoginOptionsAPI(email: string) {
-  const res = await fetch(`${API_URL}/auth/passkey/options/login?email=${encodeURIComponent(email)}`);
+  const res = await fetch(
+    `${API_URL}/auth/passkey/options/login?email=${encodeURIComponent(email)}`,
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải tùy chọn đăng nhập khóa truy cập");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải tùy chọn đăng nhập khóa truy cập",
+    );
   return data;
 }
 
@@ -34,6 +43,7 @@ export async function verifyPasskeyLoginAPI(assertionResponse: any) {
     body: JSON.stringify(assertionResponse),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đăng nhập bằng khóa truy cập thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Đăng nhập bằng khóa truy cập thất bại");
   return data;
 }

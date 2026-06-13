@@ -1,10 +1,16 @@
 "use client";
 import { streamAiChatAPI } from "@/features/ai/services/ai.service";
-import { getToken, API_URL } from "@/features/auth/services/authentication.service";
+import {
+  getToken,
+  API_URL,
+} from "@/features/auth/services/authentication.service";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth/contexts/Auth";
-import { getMyQuotaAPI, QuotaUsage } from "@/features/provision/services/quota.service";
+import {
+  getMyQuotaAPI,
+  QuotaUsage,
+} from "@/features/provision/services/quota.service";
 import { useToast } from "@/shared/contexts/Toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -928,7 +934,6 @@ export default function TroChuyenPage() {
                                           const language = match
                                             ? match[1]
                                             : "";
-
 
                                           return (
                                             <code

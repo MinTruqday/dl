@@ -16,7 +16,6 @@ export function middleware(request: NextRequest) {
   const isPublicRoute =
     pathname === "/" ||
     pathname.startsWith("/discovery") ||
-
     pathname.startsWith("/search") ||
     pathname.startsWith("/document") ||
     pathname.startsWith("/tac-gia") ||
@@ -40,7 +39,7 @@ export function middleware(request: NextRequest) {
 
   if (role === "author") {
     if (
-      pathname.startsWith("/operation") || 
+      pathname.startsWith("/operation") ||
       pathname.startsWith("/tac-gia-tiem-nang") ||
       pathname.startsWith("/admin")
     ) {

@@ -3,34 +3,36 @@ import { API, BlockTool } from "@editorjs/editorjs";
 export default class DocLibToggle implements BlockTool {
   private api: API;
   private wrapper: HTMLElement | null = null;
-  private data: { title: string, content: string, status: 'open' | 'closed' };
+  private data: { title: string; content: string; status: "open" | "closed" };
 
   static get toolbox() {
     return {
-      title: 'DocLib Toggle',
-      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+      title: "DocLib Toggle",
+      icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
     };
   }
 
-  static get isReadOnlySupported() { return true; }
+  static get isReadOnlySupported() {
+    return true;
+  }
 
-  constructor({ api, data }: { api: API, data: any }) {
+  constructor({ api, data }: { api: API; data: any }) {
     this.api = api;
     this.data = {
-      title: data.title || '',
-      content: data.content || '',
-      status: data.status || 'closed'
+      title: data.title || "",
+      content: data.content || "",
+      status: data.status || "closed",
     };
   }
 
   render() {
-    this.wrapper = document.createElement('div');
+    this.wrapper = document.createElement("div");
     this.wrapper.classList.add(this.api.styles.block);
-    
-    if (!document.getElementById('doclib-toggle-styles')) {
-        const style = document.createElement('style');
-        style.id = 'doclib-toggle-styles';
-        style.innerHTML = `
+
+    if (!document.getElementById("doclib-toggle-styles")) {
+      const style = document.createElement("style");
+      style.id = "doclib-toggle-styles";
+      style.innerHTML = `
             .doclib-toggle-wrapper { margin: 12px 0; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
             .doclib-toggle-details { width: 100%; }
             .doclib-toggle-summary { padding: 12px 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; outline: none; border-bottom: 1px solid transparent; transition: border-bottom 0.2s; }
@@ -43,58 +45,64 @@ export default class DocLibToggle implements BlockTool {
             .doclib-toggle-content { padding: 16px; min-height: 80px; outline: none; line-height: 1.6; }
             .doclib-toggle-content:empty::before { content: 'Enter inner content'; color: #94a3b8; pointer-events: none; }
         `;
-        document.head.appendChild(style);
+      document.head.appendChild(style);
     }
-    
+
     this.buildUI();
     return this.wrapper;
   }
-  
+
   private buildUI() {
-      if (!this.wrapper) return;
-      this.wrapper.innerHTML = '';
-      
-      const container = document.createElement('div');
-      container.classList.add('doclib-toggle-wrapper');
-      
-      const details = document.createElement('details');
-      details.classList.add('doclib-toggle-details');
-      if (this.data.status === 'open') details.open = true;
-      
-      details.addEventListener('toggle', () => {
-          this.data.status = details.open ? 'open' : 'closed';
-      });
-      
-      const summary = document.createElement('summary');
-      summary.classList.add('doclib-toggle-summary');
-      
-      const icon = document.createElement('span');
-      icon.classList.add('doclib-toggle-icon');
-      icon.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-      
-      const title = document.createElement('span');
-      title.classList.add('doclib-toggle-title');
-      title.contentEditable = 'true';
-      title.innerHTML = this.data.title;
-      title.addEventListener('input', () => this.data.title = title.innerHTML);
-      
-      title.addEventListener('click', (e) => e.preventDefault());
-      
-      summary.appendChild(icon);
-      summary.appendChild(title);
-      
-      const content = document.createElement('div');
-      content.classList.add('doclib-toggle-content');
-      content.contentEditable = 'true';
-      content.innerHTML = this.data.content;
-      content.addEventListener('input', () => this.data.content = content.innerHTML);
-      
-      details.appendChild(summary);
-      details.appendChild(content);
-      container.appendChild(details);
-      
-      this.wrapper.appendChild(container);
+    if (!this.wrapper) return;
+    this.wrapper.innerHTML = "";
+
+    const container = document.createElement("div");
+    container.classList.add("doclib-toggle-wrapper");
+
+    const details = document.createElement("details");
+    details.classList.add("doclib-toggle-details");
+    if (this.data.status === "open") details.open = true;
+
+    details.addEventListener("toggle", () => {
+      this.data.status = details.open ? "open" : "closed";
+    });
+
+    const summary = document.createElement("summary");
+    summary.classList.add("doclib-toggle-summary");
+
+    const icon = document.createElement("span");
+    icon.classList.add("doclib-toggle-icon");
+    icon.innerHTML =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+
+    const title = document.createElement("span");
+    title.classList.add("doclib-toggle-title");
+    title.contentEditable = "true";
+    title.innerHTML = this.data.title;
+    title.addEventListener("input", () => (this.data.title = title.innerHTML));
+
+    title.addEventListener("click", (e) => e.preventDefault());
+
+    summary.appendChild(icon);
+    summary.appendChild(title);
+
+    const content = document.createElement("div");
+    content.classList.add("doclib-toggle-content");
+    content.contentEditable = "true";
+    content.innerHTML = this.data.content;
+    content.addEventListener(
+      "input",
+      () => (this.data.content = content.innerHTML),
+    );
+
+    details.appendChild(summary);
+    details.appendChild(content);
+    container.appendChild(details);
+
+    this.wrapper.appendChild(container);
   }
 
-  save() { return this.data; }
+  save() {
+    return this.data;
+  }
 }

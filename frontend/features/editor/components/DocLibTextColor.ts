@@ -18,7 +18,7 @@ export default class DocLibColorPicker implements InlineTool {
 
   static get sanitize() {
     return {
-      span: { class: true, style: { color: true, 'background-color': true } }
+      span: { class: true, style: { color: true, "background-color": true } },
     };
   }
 
@@ -39,9 +39,24 @@ export default class DocLibColorPicker implements InlineTool {
     this.parentClass = "cdx-text-color";
     this.hasCustomPicker = this.config.customPicker !== false;
     this.colorCollections = this.config.colorCollections || [
-      "#FF1300", "#EC7878", "#9C27B0", "#673AB7", "#3F51B5", "#0070FF",
-      "#03A9F4", "#00BCD4", "#4CAF50", "#8BC34A", "#CDDC39", "#FFE500",
-      "#FFBF00", "#FF9800", "#795548", "#9E9E9E", "#5A5A5A", "#FFF",
+      "#FF1300",
+      "#EC7878",
+      "#9C27B0",
+      "#673AB7",
+      "#3F51B5",
+      "#0070FF",
+      "#03A9F4",
+      "#00BCD4",
+      "#4CAF50",
+      "#8BC34A",
+      "#CDDC39",
+      "#FFE500",
+      "#FFBF00",
+      "#FF9800",
+      "#795548",
+      "#9E9E9E",
+      "#5A5A5A",
+      "#FFF",
     ];
   }
 
@@ -50,8 +65,8 @@ export default class DocLibColorPicker implements InlineTool {
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
     this.button.innerHTML = this.getIcon();
-    
-    this.button.addEventListener('mousedown', (e) => {
+
+    this.button.addEventListener("mousedown", (e) => {
       e.preventDefault();
     });
 
@@ -78,10 +93,16 @@ export default class DocLibColorPicker implements InlineTool {
   }
 
   checkState() {
-    const parentNode = this.api.selection.findParentTag("SPAN", this.parentClass);
+    const parentNode = this.api.selection.findParentTag(
+      "SPAN",
+      this.parentClass,
+    );
     this._state = !!parentNode;
     if (this.button) {
-      this.button.classList.toggle(this.api.styles.inlineToolButtonActive, this._state);
+      this.button.classList.toggle(
+        this.api.styles.inlineToolButtonActive,
+        this._state,
+      );
     }
     return this._state;
   }
@@ -102,14 +123,18 @@ export default class DocLibColorPicker implements InlineTool {
       colorItem.style.borderRadius = "100%";
       colorItem.style.transition = "transform 0.2s ease";
       colorItem.style.backgroundColor = colorValue;
-      
-      colorItem.onmouseenter = () => { colorItem.style.transform = "scale(1.1)"; };
-      colorItem.onmouseleave = () => { colorItem.style.transform = "scale(1)"; };
+
+      colorItem.onmouseenter = () => {
+        colorItem.style.transform = "scale(1.1)";
+      };
+      colorItem.onmouseleave = () => {
+        colorItem.style.transform = "scale(1)";
+      };
 
       colorItem.onclick = () => {
         this.applyColor(this.lastRange, colorValue);
       };
-      
+
       container.appendChild(colorItem);
     });
 
@@ -121,10 +146,15 @@ export default class DocLibColorPicker implements InlineTool {
       customBtn.style.cursor = "pointer";
       customBtn.style.borderRadius = "100%";
       customBtn.style.transition = "transform 0.2s ease";
-      customBtn.style.background = "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)";
-      
-      customBtn.onmouseenter = () => { customBtn.style.transform = "scale(1.1)"; };
-      customBtn.onmouseleave = () => { customBtn.style.transform = "scale(1)"; };
+      customBtn.style.background =
+        "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)";
+
+      customBtn.onmouseenter = () => {
+        customBtn.style.transform = "scale(1.1)";
+      };
+      customBtn.onmouseleave = () => {
+        customBtn.style.transform = "scale(1)";
+      };
 
       const nativeColorInput = document.createElement("input");
       nativeColorInput.type = "color";
@@ -149,18 +179,18 @@ export default class DocLibColorPicker implements InlineTool {
 
   private applyColor(range: Range | null, color: string) {
     if (!range) return;
-    
+
     const selectedText = range.extractContents();
     const span = document.createElement("span");
     span.classList.add(this.parentClass);
     span.appendChild(selectedText);
-    
+
     if (this.pluginType === "marker") {
       span.style.backgroundColor = color;
     } else {
       span.style.color = color;
     }
-    
+
     span.innerHTML = span.textContent || "";
     range.insertNode(span);
     this.api.selection.expandToTag(span);

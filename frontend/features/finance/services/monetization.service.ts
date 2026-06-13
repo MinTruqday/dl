@@ -19,7 +19,8 @@ export async function createSubscriptionPlanAPI(data: {
 export async function getAuthorPlansAPI(authorId: string) {
   const res = await fetch(`${API_URL}/monetization/goi-hoi-vien/${authorId}`);
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách gói hội viên");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách gói hội viên");
   return data;
 }
 
@@ -33,13 +34,22 @@ export async function subscribeToAuthorAPI(planId: string) {
   return data;
 }
 
-
-export async function setDocumentPricingAPI(documentId: string, priceDl: number, isDrmProtected: boolean = true) {
-  const res = await fetch(`${API_URL}/monetization/document/${documentId}/gia-ban`, {
-    method: "PUT",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ price_dl: priceDl, is_drm_protected: isDrmProtected }),
-  });
+export async function setDocumentPricingAPI(
+  documentId: string,
+  priceDl: number,
+  isDrmProtected: boolean = true,
+) {
+  const res = await fetch(
+    `${API_URL}/monetization/document/${documentId}/gia-ban`,
+    {
+      method: "PUT",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        price_dl: priceDl,
+        is_drm_protected: isDrmProtected,
+      }),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Cập nhật giá bán thất bại");
   return data;
@@ -50,6 +60,7 @@ export async function getAuthorRevenueAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải số liệu doanh thu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải số liệu doanh thu");
   return data;
 }

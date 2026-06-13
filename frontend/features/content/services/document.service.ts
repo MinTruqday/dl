@@ -25,8 +25,6 @@ export async function saveDocumentDraftAPI(
   return data;
 }
 
-
-
 export async function getDocumentDraftAPI(documentId: string) {
   const token = getToken();
   if (!token) throw new Error("Không có quyền truy cập");
@@ -43,8 +41,6 @@ export async function getDocumentDraftAPI(documentId: string) {
   return data;
 }
 
-
-
 export async function getDocumentsAPI(
   search?: string,
   sortBy?: string,
@@ -55,7 +51,7 @@ export async function getDocumentsAPI(
   fmt?: string,
   author_slug?: string,
   cursor?: string,
-  limit: number = 50
+  limit: number = 50,
 ) {
   const token = getToken();
   let url = `${API_URL}/document`;
@@ -104,31 +100,28 @@ export async function getDocumentBySlugAPI(slug: string) {
   return data;
 }
 
-export async function getMyDocumentsAPI(search: string = "", cursor: string = "", limit: number = 50) {
+export async function getMyDocumentsAPI(
+  search: string = "",
+  cursor: string = "",
+  limit: number = 50,
+) {
   const token = getToken();
   const params = new URLSearchParams({ limit: limit.toString() });
   if (search) params.append("q", search);
   if (cursor) params.append("cursor", cursor);
 
-  const res = await fetch(
-    `${API_URL}/document/ca-nhan?${params.toString()}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const res = await fetch(`${API_URL}/document/ca-nhan?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
 
   const json = await res.json();
   if (!res.ok)
-    throw new Error(
-      json.message || "Không thể lấy danh sách tài liệu của bạn",
-    );
+    throw new Error(json.message || "Không thể lấy danh sách tài liệu của bạn");
   return json.data || json;
 }
-
-
 
 export async function createDocumentAPI(data: any) {
   const token = getToken();
@@ -142,7 +135,8 @@ export async function createDocumentAPI(data: any) {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể khởi tạo tài liệu mới");
+  if (!res.ok)
+    throw new Error(result.message || "Không thể khởi tạo tài liệu mới");
   return result;
 }
 
@@ -182,13 +176,10 @@ export async function deleteAdminDocumentAPI(docId: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Không thể xóa tài liệu hệ thống");
+  if (!res.ok)
+    throw new Error(result.message || "Không thể xóa tài liệu hệ thống");
   return result;
 }
-
-
-
-
 
 export async function getTrashAPI() {
   const token = getToken();
@@ -232,7 +223,8 @@ export const getFoldersAPI = async (parent_id?: string) => {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách thư mục");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách thư mục");
   return data;
 };
 
@@ -280,7 +272,10 @@ export const lockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${id}/bao-ve`, {
     method: "POST",
-    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    headers: {
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ password }),
   });
   const data = await res.json();
@@ -292,15 +287,16 @@ export const unlockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${id}/mo-khoa`, {
     method: "POST",
-    headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+    headers: {
+      Authorization: "Bearer " + token,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ password }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Mật mã không chính xác");
   return data;
 };
-
-
 
 export async function transferDocumentAPI(id: string, newOwnerId: string) {
   const token = getToken();
@@ -349,31 +345,37 @@ export async function getAcademicMetricsAPI(id: string) {
   return res.ok ? res.json() : null;
 }
 
-
-export async function updateAuthorNoteAPI(documentId: string, chapterIndex: number, note: string) {
+export async function updateAuthorNoteAPI(
+  documentId: string,
+  chapterIndex: number,
+  note: string,
+) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/ghi-chu-tac-gia`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ chapter_index: chapterIndex, note })
+    body: JSON.stringify({ chapter_index: chapterIndex, note }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Cập nhật ghi chú thất bại");
   return data;
 }
 
-export async function updateDRMSettingsAPI(documentId: string, settings: { disable_copy: boolean; hide_from_search: boolean }) {
+export async function updateDRMSettingsAPI(
+  documentId: string,
+  settings: { disable_copy: boolean; hide_from_search: boolean },
+) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/drm`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(settings)
+    body: JSON.stringify(settings),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Cập nhật DRM thất bại");
@@ -384,33 +386,52 @@ export async function updateTagsAPI(documentId: string, tags: string[]) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/tags`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ tags })
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ tags }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Cập nhật thẻ thất bại");
   return data;
 }
 
-export async function schedulePublishAPI(documentId: string, publishAt: string) {
+export async function schedulePublishAPI(
+  documentId: string,
+  publishAt: string,
+) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/hen-gio`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ publish_at: publishAt })
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ publish_at: publishAt }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Lên lịch xuất bản thất bại");
   return data;
 }
 
-export async function updateChapterPaywallAPI(documentId: string, chapterIndex: number, isPremium: boolean) {
+export async function updateChapterPaywallAPI(
+  documentId: string,
+  chapterIndex: number,
+  isPremium: boolean,
+) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/chuong/${chapterIndex}/tra-phi`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ is_premium: isPremium })
-  });
+  const res = await fetch(
+    `${API_URL}/document/${documentId}/chuong/${chapterIndex}/tra-phi`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ is_premium: isPremium }),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Cập nhật trả phí thất bại");
   return data;
@@ -420,20 +441,30 @@ export async function updateNSFWAPI(documentId: string, isNsfw: boolean) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/nsfw`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ is_nsfw: isNsfw })
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ is_nsfw: isNsfw }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Cập nhật giới hạn độ tuổi thất bại");
+  if (!res.ok)
+    throw new Error(data.detail || "Cập nhật giới hạn độ tuổi thất bại");
   return data;
 }
 
-export async function broadcastNotificationAPI(documentId: string, message: string) {
+export async function broadcastNotificationAPI(
+  documentId: string,
+  message: string,
+) {
   const token = getToken();
   const res = await fetch(`${API_URL}/document/${documentId}/notification`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ message })
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || "Gửi thông báo thất bại");

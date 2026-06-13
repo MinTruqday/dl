@@ -16,7 +16,7 @@ export default function LatexEditor({
   onChange,
   setReadingTime,
   setStats,
-  setLastKeystroke
+  setLastKeystroke,
 }: LatexEditorProps) {
   const editorRef = React.useRef<any>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -43,11 +43,19 @@ export default function LatexEditor({
     timeoutRef.current = setTimeout(() => {
       if (setLastKeystroke) setLastKeystroke(Date.now());
       if (onChange) onChange(text);
-      
+
       if (setStats || setReadingTime) {
-         const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-         if (setStats) setStats({ words, charCount: text.length, wpm: Math.round(words / 1.5) });
-         if (setReadingTime) setReadingTime(Math.max(1, Math.ceil(words / 200)));
+        const words = text
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length;
+        if (setStats)
+          setStats({
+            words,
+            charCount: text.length,
+            wpm: Math.round(words / 1.5),
+          });
+        if (setReadingTime) setReadingTime(Math.max(1, Math.ceil(words / 200)));
       }
     }, 1000);
   };
@@ -72,8 +80,8 @@ export default function LatexEditor({
           overviewRulerBorder: false,
           scrollbar: {
             verticalScrollbarSize: 8,
-            horizontalScrollbarSize: 8
-          }
+            horizontalScrollbarSize: 8,
+          },
         }}
         className="border-none focus:outline-none bg-transparent"
       />

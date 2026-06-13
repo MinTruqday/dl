@@ -5,7 +5,8 @@ export async function getSystemStatsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thống kê hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải thống kê hệ thống");
   return data;
 }
 
@@ -14,7 +15,8 @@ export async function getSystemHealthAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể kiểm tra sức khỏe hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể kiểm tra sức khỏe hệ thống");
   return data;
 }
 
@@ -23,7 +25,8 @@ export async function getAuditLogsAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải nhật ký hệ thống");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải nhật ký hệ thống");
   return data;
 }
 
@@ -32,6 +35,9 @@ export async function getModeratorActivityAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải nhật ký hoạt động điều hành");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Không thể tải nhật ký hoạt động điều hành",
+    );
   return data;
 }

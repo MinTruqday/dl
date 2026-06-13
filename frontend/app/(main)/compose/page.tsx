@@ -2,19 +2,67 @@
 
 import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, deleteFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/features/content/services/document.service";
+import {
+  getDocumentDraftAPI,
+  getDocumentsAPI,
+  getMyDocumentsAPI,
+  saveDocumentDraftAPI,
+  updateDocumentAPI,
+  softDeleteDocumentAPI,
+  restoreDocumentAPI,
+  getTrashAPI,
+  createDocumentAPI,
+  lockDocumentAPI,
+  unlockDocumentAPI,
+  getFoldersAPI,
+  createFolderAPI,
+  deleteFolderAPI,
+  toggleStarDocumentAPI,
+  transferDocumentAPI,
+  getDocumentAnalyticsAPI,
+  getAcademicMetricsAPI,
+  updateAuthorNoteAPI,
+  updateDRMSettingsAPI,
+  updateTagsAPI,
+  schedulePublishAPI,
+  updateChapterPaywallAPI,
+  updateNSFWAPI,
+  broadcastNotificationAPI,
+} from "@/features/content/services/document.service";
 import { compileDocumentAPI } from "@/features/editor/services/compilation.service";
-import { exportDocumentPdfAPI, exportDocumentEpubAPI, exportDocumentDocxAPI } from "@/features/provision/services/export.service";
-import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/features/communication/services/comment.service";
-import { inviteCollaboratorAPI, getCollaboratorsAPI, removeCollaboratorAPI } from "@/features/content/services/collaboration.service";
-import { createCouponAPI, getCouponsAPI } from "@/features/finance/services/coupon.service";
+import {
+  exportDocumentPdfAPI,
+  exportDocumentEpubAPI,
+  exportDocumentDocxAPI,
+} from "@/features/provision/services/export.service";
+import {
+  getCommentsByItemAPI,
+  createCommentAPI,
+  deleteCommentAPI,
+} from "@/features/communication/services/comment.service";
+import {
+  inviteCollaboratorAPI,
+  getCollaboratorsAPI,
+  removeCollaboratorAPI,
+} from "@/features/content/services/collaboration.service";
+import {
+  createCouponAPI,
+  getCouponsAPI,
+} from "@/features/finance/services/coupon.service";
 import { publishDocumentAPI } from "@/features/content/services/publication.service";
-import { getDocumentVersionsAPI, restoreVersionAPI } from "@/features/content/services/version.service";
+import {
+  getDocumentVersionsAPI,
+  restoreVersionAPI,
+} from "@/features/content/services/version.service";
 import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
 import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
 import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/monetization.service";
 import { API_URL } from "@/features/auth/services/authentication.service";
-import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/features/finance/services/wallet.service";
+import {
+  getWalletBalanceAPI as getWalletAPI,
+  getDetailedHistoryAPI as getTransactionsAPI,
+  getAuthorStatsAPI,
+} from "@/features/finance/services/wallet.service";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "@/shared/contexts/Toast";
 import {
@@ -66,40 +114,62 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-const Editor = dynamic(() => import("@/features/editor/components/Editor"), { ssr: false });
+const Editor = dynamic(() => import("@/features/editor/components/Editor"), {
+  ssr: false,
+});
 import edjsHTML from "editorjs-html";
 import { compileLatexPreviewAPI } from "@/features/editor/services/latex.service";
 
 const customParsers = {
-  alert: (block: any) => `<div class="p-4 rounded-md border my-4 bg-zinc-50 border-zinc-200"><strong>${block.data.type || 'Lưu ý'}</strong>: ${block.data.message}</div>`,
-  table: (block: any) => `<table class="w-full border-collapse border border-zinc-200 my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class="border border-zinc-200 p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
-  toggle: (block: any) => `<details class="p-4 border border-zinc-200 rounded-md my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-sm text-zinc-600">${block.data.items}</div></details>`,
-  checklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.text}</span></li>`).join("")}</ul>`,
-  nestedChecklist: (block: any) => `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.content}</span></li>`).join("")}</ul>`,
-  originalQuote: (block: any) => `<blockquote class="border-l-4 border-zinc-300 pl-4 py-2 italic my-4 text-zinc-600">${block.data.text} <br/><cite class="text-sm font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
+  alert: (block: any) =>
+    `<div class="p-4 rounded-md border my-4 bg-zinc-50 border-zinc-200"><strong>${block.data.type || "Lưu ý"}</strong>: ${block.data.message}</div>`,
+  table: (block: any) =>
+    `<table class="w-full border-collapse border border-zinc-200 my-4">${(block.data.content || []).map((row: any) => `<tr>${row.map((cell: any) => `<td class="border border-zinc-200 p-2">${cell}</td>`).join("")}</tr>`).join("")}</table>`,
+  toggle: (block: any) =>
+    `<details class="p-4 border border-zinc-200 rounded-md my-4"><summary class="font-semibold cursor-pointer">${block.data.text}</summary><div class="mt-2 text-sm text-zinc-600">${block.data.items}</div></details>`,
+  checklist: (block: any) =>
+    `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.text}</span></li>`).join("")}</ul>`,
+  nestedChecklist: (block: any) =>
+    `<ul class="list-none pl-0 my-4">${(block.data.items || []).map((item: any) => `<li class="flex items-start gap-2"><input type="checkbox" ${item.checked ? "checked" : ""} disabled /> <span>${item.content}</span></li>`).join("")}</ul>`,
+  originalQuote: (block: any) =>
+    `<blockquote class="border-l-4 border-zinc-300 pl-4 py-2 italic my-4 text-zinc-600">${block.data.text} <br/><cite class="text-sm font-semibold mt-2 block">- ${block.data.caption}</cite></blockquote>`,
   divider: () => `<hr class="my-6 border-zinc-200" />`,
-  math: (block: any) => `<div class="p-4 bg-zinc-50 font-mono text-sm my-4 overflow-x-auto border border-zinc-200 rounded-md">${block.data.math}</div>`,
-  mermaid: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 text-sm text-zinc-500 italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
-  attaches: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 flex flex-col gap-1 text-sm bg-zinc-50"><span class="font-semibold text-zinc-900">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-blue-600 hover:underline break-all">${block.data.file?.url}</a></div>`,
-  personality: (block: any) => `<div class="p-4 border border-zinc-200 rounded-md my-4 flex gap-4 items-center bg-zinc-50"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-zinc-900">${block.data.name}</div><div class="text-sm text-zinc-600">${block.data.description}</div></div></div>`,
+  math: (block: any) =>
+    `<div class="p-4 bg-zinc-50 font-mono text-sm my-4 overflow-x-auto border border-zinc-200 rounded-md">${block.data.math}</div>`,
+  mermaid: (block: any) =>
+    `<div class="p-4 border border-zinc-200 rounded-md my-4 text-sm text-zinc-500 italic">[Biểu đồ Mermaid không được hỗ trợ trong xem trước]</div>`,
+  attaches: (block: any) =>
+    `<div class="p-4 border border-zinc-200 rounded-md my-4 flex flex-col gap-1 text-sm bg-zinc-50"><span class="font-semibold text-zinc-900">${block.data.title || "Tập tin đính kèm"}</span><a href="${block.data.file?.url}" class="text-blue-600 hover:underline break-all">${block.data.file?.url}</a></div>`,
+  personality: (block: any) =>
+    `<div class="p-4 border border-zinc-200 rounded-md my-4 flex gap-4 items-center bg-zinc-50"><img src="${block.data.photo}" class="w-16 h-16 rounded-full object-cover" /><div><div class="font-semibold text-zinc-900">${block.data.name}</div><div class="text-sm text-zinc-600">${block.data.description}</div></div></div>`,
 };
 
 const edjsParser = edjsHTML(customParsers);
 
 const safeParseEditorJs = (data: any) => {
   if (!data || !data.blocks) return "";
-  const supportedTypes = ['paragraph', 'header', 'list', 'quote', 'image', 'delimiter', ...Object.keys(customParsers)];
+  const supportedTypes = [
+    "paragraph",
+    "header",
+    "list",
+    "quote",
+    "image",
+    "delimiter",
+    ...Object.keys(customParsers),
+  ];
   const sanitizedData = {
     ...data,
     blocks: data.blocks.map((b: any) => {
       if (!supportedTypes.includes(b.type)) {
         return {
-           type: 'paragraph',
-           data: { text: `<div class="p-4 border border-red-200 bg-red-50 text-red-600 text-sm my-4 rounded-md"><strong>Khối chưa hỗ trợ xem trước:</strong> ${b.type}</div>` }
+          type: "paragraph",
+          data: {
+            text: `<div class="p-4 border border-red-200 bg-red-50 text-red-600 text-sm my-4 rounded-md"><strong>Khối chưa hỗ trợ xem trước:</strong> ${b.type}</div>`,
+          },
         };
       }
       return b;
-    })
+    }),
   };
   return edjsParser.parse(sanitizedData).join("");
 };
@@ -133,7 +203,9 @@ function renderLineDiff(textA: string, textB: string) {
     try {
       const parsed = JSON.parse(txt);
       if (parsed.blocks) {
-        return parsed.blocks.map((b: any) => b.data?.text || b.data?.code || b.data?.html || "").join("\n");
+        return parsed.blocks
+          .map((b: any) => b.data?.text || b.data?.code || b.data?.html || "")
+          .join("\n");
       }
     } catch (err: any) {
       console.warn("Could not extract plain text", err.message || err);
@@ -172,11 +244,18 @@ function renderLineDiff(textA: string, textB: string) {
   return (
     <div className="flex flex-col font-mono text-xs divide-y divide-zinc-100 w-full overflow-x-auto">
       {diffRows.map((row, idx) => (
-        <div key={idx} className="flex min-h-[28px] border-l-4 border-transparent  ">
-          <div className={`flex-1 p-3 border-r border-zinc-200 whitespace-pre-wrap break-all ${row.type === "diff" && row.a ? "bg-red-50 text-red-800 border-l-4 border-red-500 font-semibold" : "text-zinc-600"}`}>
+        <div
+          key={idx}
+          className="flex min-h-[28px] border-l-4 border-transparent  "
+        >
+          <div
+            className={`flex-1 p-3 border-r border-zinc-200 whitespace-pre-wrap break-all ${row.type === "diff" && row.a ? "bg-red-50 text-red-800 border-l-4 border-red-500 font-semibold" : "text-zinc-600"}`}
+          >
             {row.type === "diff" && row.a ? `- ${row.a}` : row.a}
           </div>
-          <div className={`flex-1 p-3 whitespace-pre-wrap break-all ${row.type === "diff" && row.b ? "bg-green-50 text-green-800 border-l-4 border-green-500 font-semibold" : "text-zinc-600"}`}>
+          <div
+            className={`flex-1 p-3 whitespace-pre-wrap break-all ${row.type === "diff" && row.b ? "bg-green-50 text-green-800 border-l-4 border-green-500 font-semibold" : "text-zinc-600"}`}
+          >
             {row.type === "diff" && row.b ? `+ ${row.b}` : row.b}
           </div>
         </div>
@@ -193,7 +272,9 @@ function StudioContent() {
   const docIdFromUrl = rawDocId && rawDocId !== "undefined" ? rawDocId : "";
 
   const [documents, setDocuments] = useState<StudioDocument[]>([]);
-  const [selectedDocumentId, setSelectedDocumentId] = useState(docIdFromUrl || "");
+  const [selectedDocumentId, setSelectedDocumentId] = useState(
+    docIdFromUrl || "",
+  );
   const [viewMode, setViewMode] = useState<ViewMode>("edit");
   const [editorMode, setEditorMode] = useState<EditorMode>("edit");
   const [content, setContent] = useState("");
@@ -216,11 +297,21 @@ function StudioContent() {
 
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [withdrawalAmount, setWithdrawalAmount] = useState(0);
-  const [bankInfo, setBankInfo] = useState({ bank_name: "", account_number: "", account_name: "" });
+  const [bankInfo, setBankInfo] = useState({
+    bank_name: "",
+    account_number: "",
+    account_name: "",
+  });
   const [requestingWithdrawal, setRequestingWithdrawal] = useState(false);
 
-  const [selectedChapterIndex, setSelectedChapterIndex] = useState<number | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; text: string } | null>(null);
+  const [selectedChapterIndex, setSelectedChapterIndex] = useState<
+    number | null
+  >(null);
+  const [confirmAction, setConfirmAction] = useState<{
+    type: string;
+    id: string;
+    text: string;
+  } | null>(null);
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState("");
   const [visible, setVisible] = useState(false);
@@ -231,13 +322,17 @@ function StudioContent() {
   const [newDocFormat, setNewDocFormat] = useState("json");
   const [isCreatingDoc, setIsCreatingDoc] = useState(false);
   const [showEditChapterModal, setShowEditChapterModal] = useState(false);
-  const [editingChapterIndex, setEditingChapterIndex] = useState<number | null>(null);
+  const [editingChapterIndex, setEditingChapterIndex] = useState<number | null>(
+    null,
+  );
   const [editingChapterTitle, setEditingChapterTitle] = useState("");
   const [lockPassword, setLockPassword] = useState("");
   const [unlockPassword, setUnlockPassword] = useState("");
   const [isLocking, setIsLocking] = useState(false);
   const [folders, setFolders] = useState<any[]>([]);
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [expandedFolders, setExpandedFolders] = useState<
+    Record<string, boolean>
+  >({});
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [transferUserId, setTransferUserId] = useState("");
@@ -274,12 +369,17 @@ function StudioContent() {
   const [isPreviewCompiling, setIsPreviewCompiling] = useState(false);
 
   const selectedDocument = useMemo(
-    () => documents.find((b: any) => (b._id || b.id) === selectedDocumentId) || null,
-    [documents, selectedDocumentId]
+    () =>
+      documents.find((b: any) => (b._id || b.id) === selectedDocumentId) ||
+      null,
+    [documents, selectedDocumentId],
   );
 
   const currentChapterContent = useMemo(() => {
-    if (selectedChapterIndex !== null && selectedDocument?.chapters?.[selectedChapterIndex]) {
+    if (
+      selectedChapterIndex !== null &&
+      selectedDocument?.chapters?.[selectedChapterIndex]
+    ) {
       return selectedDocument.chapters[selectedChapterIndex].content || "";
     }
     return content;
@@ -288,7 +388,10 @@ function StudioContent() {
   useEffect(() => {
     let currentUrl: string | null = null;
 
-    if (editorMode === "preview" && selectedDocument?.content_format === "latex") {
+    if (
+      editorMode === "preview" &&
+      selectedDocument?.content_format === "latex"
+    ) {
       setIsPreviewCompiling(true);
       compileLatexPreviewAPI(currentChapterContent, false)
         .then((blob) => {
@@ -296,7 +399,10 @@ function StudioContent() {
           setPreviewPdfUrl(currentUrl);
         })
         .catch((err: any) => {
-          showToast("Lỗi biên dịch: " + (err.message || "Lỗi không xác định"), "error");
+          showToast(
+            "Lỗi biên dịch: " + (err.message || "Lỗi không xác định"),
+            "error",
+          );
         })
         .finally(() => {
           setIsPreviewCompiling(false);
@@ -309,7 +415,12 @@ function StudioContent() {
       }
       setPreviewPdfUrl(null);
     };
-  }, [editorMode, selectedDocument?.content_format, currentChapterContent, showToast]);
+  }, [
+    editorMode,
+    selectedDocument?.content_format,
+    currentChapterContent,
+    showToast,
+  ]);
 
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
@@ -321,12 +432,12 @@ function StudioContent() {
       } else {
         data = await getMyDocumentsAPI();
       }
-      
+
       const list = data.data || data || [];
       const folderList = (foldersData as any).data || foldersData || [];
       setDocuments(list);
       setFolders(folderList);
-      
+
       if (list.length > 0) {
         if (docIdFromUrl) {
           setSelectedDocumentId(docIdFromUrl);
@@ -349,8 +460,12 @@ function StudioContent() {
       const data = await getDocumentDraftAPI(selectedDocumentId);
       const draft = data.data || data;
       setContent(draft?.content || "");
-      setDocuments(prev => {
-        const existingIdx = prev.findIndex(d => (d as any).id === selectedDocumentId || (d as any)._id === selectedDocumentId);
+      setDocuments((prev) => {
+        const existingIdx = prev.findIndex(
+          (d) =>
+            (d as any).id === selectedDocumentId ||
+            (d as any)._id === selectedDocumentId,
+        );
         if (existingIdx === -1) {
           return [draft, ...prev];
         } else {
@@ -414,9 +529,15 @@ function StudioContent() {
       try {
         if (selectedChapterIndex !== null && selectedDocument) {
           const newChapters = [...(selectedDocument.chapters || [])];
-          await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
+          await updateDocumentAPI(selectedDocumentId, {
+            chapters: newChapters,
+          });
         } else if (content) {
-          await saveDocumentDraftAPI(selectedDocumentId, content, selectedDocument?.content_format || "json");
+          await saveDocumentDraftAPI(
+            selectedDocumentId,
+            content,
+            selectedDocument?.content_format || "json",
+          );
         }
         setStatusMsg("Đã lưu bản nháp");
         setTimeout(() => setStatusMsg("Sẵn sàng"), 2000);
@@ -426,7 +547,12 @@ function StudioContent() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [content, selectedChapterIndex, selectedDocumentId, selectedDocument?.chapters]);
+  }, [
+    content,
+    selectedChapterIndex,
+    selectedDocumentId,
+    selectedDocument?.chapters,
+  ]);
 
   useEffect(() => {
     if (selectedDocumentId) {
@@ -439,7 +565,9 @@ function StudioContent() {
         fetchCoupons();
         if (selectedDocument) {
           setDrmCopy(selectedDocument.drm_settings?.disable_copy || false);
-          setDrmSearch(selectedDocument.drm_settings?.hide_from_search || false);
+          setDrmSearch(
+            selectedDocument.drm_settings?.hide_from_search || false,
+          );
           setDocTags(selectedDocument.tags || []);
           setIsNsfw(selectedDocument.is_nsfw || false);
         }
@@ -451,7 +579,14 @@ function StudioContent() {
       setContent("");
     }
     if (viewMode === "trash") fetchTrash();
-  }, [selectedDocumentId, viewMode, loadDraft, fetchStatsData, fetchVersions, fetchTrash]);
+  }, [
+    selectedDocumentId,
+    viewMode,
+    loadDraft,
+    fetchStatsData,
+    fetchVersions,
+    fetchTrash,
+  ]);
 
   const handleRestoreVersion = async (versionId: string) => {
     setConfirmAction({
@@ -473,7 +608,11 @@ function StudioContent() {
   };
 
   const handleSoftDelete = async (docId: string) => {
-    setConfirmAction({ type: "delete_doc", id: docId, text: "Bạn có chắc muốn chuyển tài liệu này vào thùng rác?" });
+    setConfirmAction({
+      type: "delete_doc",
+      id: docId,
+      text: "Bạn có chắc muốn chuyển tài liệu này vào thùng rác?",
+    });
   };
 
   const executeConfirm = async () => {
@@ -507,8 +646,12 @@ function StudioContent() {
   };
 
   const toggleVersionSelection = (id: string) => {
-    setSelectedVersions(prev => 
-      prev.includes(id) ? prev.filter(v => v !== id) : prev.length < 2 ? [...prev, id] : [prev[1], id]
+    setSelectedVersions((prev) =>
+      prev.includes(id)
+        ? prev.filter((v) => v !== id)
+        : prev.length < 2
+          ? [...prev, id]
+          : [prev[1], id],
     );
   };
 
@@ -516,8 +659,13 @@ function StudioContent() {
     if (selectedVersions.length !== 2) return;
     setIsComparing(true);
     try {
-      const { getVersionDiffAPI } = await import("@/features/editor/services/editor.service");
-      const data = await getVersionDiffAPI(selectedDocumentId, selectedVersions[0], selectedVersions[1]);
+      const { getVersionDiffAPI } =
+        await import("@/features/editor/services/editor.service");
+      const data = await getVersionDiffAPI(
+        selectedDocumentId,
+        selectedVersions[0],
+        selectedVersions[1],
+      );
       setDiffData(data);
     } catch (err: any) {
       showToast(err.message || "Không thể so sánh phiên bản", "error");
@@ -540,14 +688,17 @@ function StudioContent() {
       setStatusMsg("Sẵn sàng");
     }
   };
-  
 
   const handleSave = async () => {
     if (!selectedDocumentId) return;
     setIsSaving(true);
     setStatusMsg("Đang lưu");
     try {
-      await saveDocumentDraftAPI(selectedDocumentId, content, selectedDocument?.content_format || "json");
+      await saveDocumentDraftAPI(
+        selectedDocumentId,
+        content,
+        selectedDocument?.content_format || "json",
+      );
       showToast("Đã lưu bản nháp thành công", "success");
     } catch (err: any) {
       console.error(err.message || err);
@@ -642,14 +793,17 @@ function StudioContent() {
     }
   };
 
-  const handleViewDeepAnalytics = async (docId: string, e: React.MouseEvent) => {
+  const handleViewDeepAnalytics = async (
+    docId: string,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation();
     setLoadingAnalytics(true);
     setShowAnalyticsModal(true);
     try {
       const [analyticsData, academicData] = await Promise.all([
         getDocumentAnalyticsAPI(docId).catch(() => null),
-        getAcademicMetricsAPI(docId).catch(() => null)
+        getAcademicMetricsAPI(docId).catch(() => null),
       ]);
       setSelectedAnalytics(analyticsData?.data || analyticsData);
       setSelectedAcademic(academicData?.data || academicData);
@@ -666,7 +820,10 @@ function StudioContent() {
     const targetIdx = direction === "up" ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= newChapters.length) return;
 
-    [newChapters[idx], newChapters[targetIdx]] = [newChapters[targetIdx], newChapters[idx]];
+    [newChapters[idx], newChapters[targetIdx]] = [
+      newChapters[targetIdx],
+      newChapters[idx],
+    ];
 
     try {
       await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
@@ -681,7 +838,7 @@ function StudioContent() {
     if (!selectedDocument || !selectedDocument.chapters) return;
     const newChapters = [...selectedDocument.chapters];
     const currentLevel = newChapters[idx].level || 0;
-    
+
     let newLevel = Math.max(0, currentLevel + delta);
     if (newLevel === currentLevel) return;
 
@@ -697,7 +854,10 @@ function StudioContent() {
 
   const addChapter = async () => {
     if (!newChapterTitle.trim()) return;
-    const newChapter = { title: newChapterTitle, content: "Bắt đầu viết chương mới tại đây" };
+    const newChapter = {
+      title: newChapterTitle,
+      content: "Bắt đầu viết chương mới tại đây",
+    };
     const newChapters = [...(selectedDocument?.chapters || []), newChapter];
 
     try {
@@ -717,11 +877,12 @@ function StudioContent() {
     try {
       const data = await getCommentsByItemAPI(selectedDocumentId);
       setComments(data.data || data || []);
-    } catch (err: any) { 
+    } catch (err: any) {
       console.warn("Failed to load comments:", err.message || err);
-      setComments([]); 
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
     }
-    finally { setLoadingComments(false); }
   };
 
   const handleReplyComment = async () => {
@@ -731,7 +892,7 @@ function StudioContent() {
         item_id: selectedDocumentId,
         item_type: "document",
         content: replyContent.trim(),
-        parent_id: replyingTo
+        parent_id: replyingTo,
       });
       showToast("Đã gửi phản hồi", "success");
       setReplyContent("");
@@ -758,11 +919,12 @@ function StudioContent() {
     try {
       const data = await getCollaboratorsAPI(selectedDocumentId);
       setCollaborators(data.data || data || []);
-    } catch (err: any) { 
+    } catch (err: any) {
       console.warn("Failed to load collabs:", err.message || err);
-      setCollaborators([]); 
+      setCollaborators([]);
+    } finally {
+      setLoadingCollabs(false);
     }
-    finally { setLoadingCollabs(false); }
   };
 
   const handleInviteCollab = async () => {
@@ -791,9 +953,9 @@ function StudioContent() {
     try {
       const data = await getCouponsAPI();
       setCoupons(data.data || data || []);
-    } catch (err: any) { 
+    } catch (err: any) {
       console.warn("Failed to load coupons:", err.message || err);
-      setCoupons([]); 
+      setCoupons([]);
     }
   };
 
@@ -807,7 +969,7 @@ function StudioContent() {
         code: newCouponCode.trim(),
         discount_percent: newCouponDiscount,
         max_uses: newCouponQuantity,
-        document_id: selectedDocumentId || undefined
+        document_id: selectedDocumentId || undefined,
       });
       showToast("Đã tạo mã ưu đãi", "success");
       setNewCouponCode("");
@@ -821,24 +983,35 @@ function StudioContent() {
     if (selectedChapterIndex === null || !selectedDocumentId) return;
     setSavingNote(true);
     try {
-      await updateAuthorNoteAPI(selectedDocumentId, selectedChapterIndex, authorNote);
+      await updateAuthorNoteAPI(
+        selectedDocumentId,
+        selectedChapterIndex,
+        authorNote,
+      );
       showToast("Đã lưu ghi chú tác giả", "success");
       fetchDocuments();
     } catch (e: any) {
       showToast(e.message || "Lưu ghi chú thất bại", "error");
-    } finally { setSavingNote(false); }
+    } finally {
+      setSavingNote(false);
+    }
   };
 
   const handleSaveDRM = async () => {
     if (!selectedDocumentId) return;
     setSavingDrm(true);
     try {
-      await updateDRMSettingsAPI(selectedDocumentId, { disable_copy: drmCopy, hide_from_search: drmSearch });
+      await updateDRMSettingsAPI(selectedDocumentId, {
+        disable_copy: drmCopy,
+        hide_from_search: drmSearch,
+      });
       showToast("Đã cập nhật bảo vệ bản quyền", "success");
       fetchDocuments();
     } catch (e: any) {
       showToast(e.message || "Cập nhật DRM thất bại", "error");
-    } finally { setSavingDrm(false); }
+    } finally {
+      setSavingDrm(false);
+    }
   };
 
   const handleAddTag = async (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -851,19 +1024,23 @@ function StudioContent() {
           setDocTags(newTags);
           setNewTagInput("");
           fetchDocuments();
-        } catch (err: any) { showToast(err.message || "Thêm thẻ thất bại", "error"); }
+        } catch (err: any) {
+          showToast(err.message || "Thêm thẻ thất bại", "error");
+        }
       }
     }
   };
 
   const handleRemoveTag = async (tagToRemove: string) => {
     if (!selectedDocumentId) return;
-    const newTags = docTags.filter(t => t !== tagToRemove);
+    const newTags = docTags.filter((t) => t !== tagToRemove);
     try {
       await updateTagsAPI(selectedDocumentId, newTags);
       setDocTags(newTags);
       fetchDocuments();
-    } catch (err: any) { showToast(err.message || "Xóa thẻ thất bại", "error"); }
+    } catch (err: any) {
+      showToast(err.message || "Xóa thẻ thất bại", "error");
+    }
   };
 
   const handleToggleNSFW = async () => {
@@ -873,7 +1050,9 @@ function StudioContent() {
       setIsNsfw(!isNsfw);
       fetchDocuments();
       showToast("Đã cập nhật cảnh báo nội dung", "success");
-    } catch (err: any) { showToast(err.message || "Cập nhật thất bại", "error"); }
+    } catch (err: any) {
+      showToast(err.message || "Cập nhật thất bại", "error");
+    }
   };
 
   const handleSchedulePublish = async () => {
@@ -882,17 +1061,25 @@ function StudioContent() {
       await schedulePublishAPI(selectedDocumentId, scheduleDate);
       fetchDocuments();
       showToast("Đã lên lịch xuất bản", "success");
-    } catch (err: any) { showToast(err.message || "Lên lịch thất bại", "error"); }
+    } catch (err: any) {
+      showToast(err.message || "Lên lịch thất bại", "error");
+    }
   };
 
-  const handleToggleChapterPaywall = async (e: React.MouseEvent, index: number, currentPremium: boolean) => {
+  const handleToggleChapterPaywall = async (
+    e: React.MouseEvent,
+    index: number,
+    currentPremium: boolean,
+  ) => {
     e.stopPropagation();
     if (!selectedDocumentId) return;
     try {
       await updateChapterPaywallAPI(selectedDocumentId, index, !currentPremium);
       loadDraft();
       showToast("Đã cập nhật khóa chương", "success");
-    } catch (err: any) { showToast(err.message || "Cập nhật khóa thất bại", "error"); }
+    } catch (err: any) {
+      showToast(err.message || "Cập nhật khóa thất bại", "error");
+    }
   };
 
   const handleBroadcast = async () => {
@@ -902,8 +1089,11 @@ function StudioContent() {
       await broadcastNotificationAPI(selectedDocumentId, broadcastMsg.trim());
       setBroadcastMsg("");
       showToast("Đã gửi thông báo đến độc giả", "success");
-    } catch (err: any) { showToast(err.message || "Gửi thông báo thất bại", "error"); }
-    finally { setIsBroadcasting(false); }
+    } catch (err: any) {
+      showToast(err.message || "Gửi thông báo thất bại", "error");
+    } finally {
+      setIsBroadcasting(false);
+    }
   };
 
   const handleWithdrawal = async () => {
@@ -911,7 +1101,11 @@ function StudioContent() {
       showToast("Số tiền không hợp lệ", "error");
       return;
     }
-    if (!bankInfo.bank_name || !bankInfo.account_number || !bankInfo.account_name) {
+    if (
+      !bankInfo.bank_name ||
+      !bankInfo.account_number ||
+      !bankInfo.account_name
+    ) {
       showToast("Vui lòng nhập đủ thông tin ngân hàng", "error");
       return;
     }
@@ -950,8 +1144,10 @@ function StudioContent() {
       setNewDocFormat("json");
       const newDoc = result?.data || result;
       if (newDoc) {
-        setDocuments(prev => {
-          const exists = prev.find(d => (d._id || d.id) === (newDoc._id || newDoc.id));
+        setDocuments((prev) => {
+          const exists = prev.find(
+            (d) => (d._id || d.id) === (newDoc._id || newDoc.id),
+          );
           if (exists) return prev;
           return [newDoc, ...prev];
         });
@@ -985,12 +1181,14 @@ function StudioContent() {
     e.stopPropagation();
     try {
       await toggleStarDocumentAPI(id);
-      setDocuments(prev => prev.map(doc => {
-        if ((doc._id || doc.id) === id) {
-          return { ...doc, is_starred: !doc.is_starred };
-        }
-        return doc;
-      }));
+      setDocuments((prev) =>
+        prev.map((doc) => {
+          if ((doc._id || doc.id) === id) {
+            return { ...doc, is_starred: !doc.is_starred };
+          }
+          return doc;
+        }),
+      );
     } catch (e: any) {
       showToast(e.message || "Không thể gắn sao tác phẩm", "error");
     }
@@ -1038,7 +1236,10 @@ function StudioContent() {
       return;
     }
     const newChapters = [...selectedDocument.chapters];
-    newChapters[editingChapterIndex] = { ...newChapters[editingChapterIndex], title: editingChapterTitle.trim() };
+    newChapters[editingChapterIndex] = {
+      ...newChapters[editingChapterIndex],
+      title: editingChapterTitle.trim(),
+    };
     try {
       await updateDocumentAPI(selectedDocumentId, { chapters: newChapters });
       showToast("Đã cập nhật tiêu đề chương", "success");
@@ -1097,30 +1298,48 @@ function StudioContent() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 h-[calc(100dvh-var(--navbar-height))] flex flex-col gap-6 bg-[#fafafa] selection:bg-black selection:text-white relative font-sans">
-      <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} className="max-w-sm">
+      <Modal
+        isOpen={!!confirmAction}
+        onClose={() => setConfirmAction(null)}
+        className="max-w-sm"
+      >
         <ModalHeader>
           <ModalTitle>Xác nhận thao tác</ModalTitle>
         </ModalHeader>
         <ModalContent>
-          <p className="text-xs font-medium text-zinc-500 leading-relaxed">{confirmAction?.text}</p>
+          <p className="text-xs font-medium text-zinc-500 leading-relaxed">
+            {confirmAction?.text}
+          </p>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setConfirmAction(null)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
+          <button
+            onClick={() => setConfirmAction(null)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center"
+          >
             Bỏ qua
           </button>
-          <button onClick={executeConfirm} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
+          <button
+            onClick={executeConfirm}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center"
+          >
             Xác nhận
           </button>
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showCreateFolderModal} onClose={() => setShowCreateFolderModal(false)} className="max-w-sm">
+      <Modal
+        isOpen={showCreateFolderModal}
+        onClose={() => setShowCreateFolderModal(false)}
+        className="max-w-sm"
+      >
         <ModalHeader>
           <ModalTitle>Tạo thư mục mới</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên thư mục</label>
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Tên thư mục
+            </label>
             <input
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
@@ -1131,16 +1350,26 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowCreateFolderModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center">
+          <button
+            onClick={() => setShowCreateFolderModal(false)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black flex items-center justify-center"
+          >
             Hủy
           </button>
-          <button onClick={handleCreateFolder} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center">
+          <button
+            onClick={handleCreateFolder}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black flex items-center justify-center"
+          >
             Lưu
           </button>
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showAnalyticsModal} onClose={() => setShowAnalyticsModal(false)} className="max-w-2xl">
+      <Modal
+        isOpen={showAnalyticsModal}
+        onClose={() => setShowAnalyticsModal(false)}
+        className="max-w-2xl"
+      >
         <ModalHeader>
           <ModalTitle>Phân tích & Chỉ số học thuật</ModalTitle>
         </ModalHeader>
@@ -1153,53 +1382,98 @@ function StudioContent() {
             ) : (
               <>
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">Tương tác độc giả</h3>
+                  <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+                    Tương tác độc giả
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt xem</p>
-                      <p className="text-lg font-medium text-black">{(selectedAnalytics?.views || 0).toLocaleString()}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Lượt xem
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {(selectedAnalytics?.views || 0).toLocaleString()}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Thời gian đọc TB</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.avg_read_time || "0 phút"}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Thời gian đọc TB
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAnalytics?.avg_read_time || "0 phút"}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt lưu</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.saves || 0}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Lượt lưu
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAnalytics?.saves || 0}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Bình luận</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.comments || 0}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Bình luận
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAnalytics?.comments || 0}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Đánh giá</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.reviews || 0} ({selectedAnalytics?.avg_rating || 0}/5)</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Đánh giá
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAnalytics?.reviews || 0} (
+                        {selectedAnalytics?.avg_rating || 0}/5)
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Lượt mua</p>
-                      <p className="text-lg font-medium text-black">{selectedAnalytics?.purchases || 0}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Lượt mua
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAnalytics?.purchases || 0}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">Chỉ số học thuật</h3>
+                  <h3 className="text-sm font-semibold text-black border-b border-zinc-200 pb-2">
+                    Chỉ số học thuật
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tổng số từ</p>
-                      <p className="text-lg font-medium text-black">{(selectedAcademic?.word_count || 0).toLocaleString()}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Tổng số từ
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {(selectedAcademic?.word_count || 0).toLocaleString()}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Độ đọc hiểu</p>
-                      <p className="text-lg font-medium text-black">{selectedAcademic?.readability_score || 0}/100</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Độ đọc hiểu
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAcademic?.readability_score || 0}/100
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Số câu</p>
-                      <p className="text-lg font-medium text-black">{selectedAcademic?.sentence_count || 0}</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Số câu
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAcademic?.sentence_count || 0}
+                      </p>
                     </div>
                     <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-none space-y-1">
-                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Độ dài câu TB</p>
-                      <p className="text-lg font-medium text-black">{selectedAcademic?.avg_sentence_length || 0} từ</p>
+                      <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                        Độ dài câu TB
+                      </p>
+                      <p className="text-lg font-medium text-black">
+                        {selectedAcademic?.avg_sentence_length || 0} từ
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1209,13 +1483,19 @@ function StudioContent() {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={showChapterModal} onClose={() => setShowChapterModal(false)} className="max-w-sm">
+      <Modal
+        isOpen={showChapterModal}
+        onClose={() => setShowChapterModal(false)}
+        className="max-w-sm"
+      >
         <ModalHeader>
           <ModalTitle>Thêm chương mới</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề chương</label>
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Tiêu đề chương
+            </label>
             <input
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
@@ -1226,78 +1506,117 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
+          <button
+            onClick={() => setShowChapterModal(false)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center"
+          >
             Hủy
           </button>
-          <button onClick={addChapter} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
+          <button
+            onClick={addChapter}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center"
+          >
             Lưu chương
           </button>
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showWithdrawalModal} onClose={() => setShowWithdrawalModal(false)} className="max-w-md">
+      <Modal
+        isOpen={showWithdrawalModal}
+        onClose={() => setShowWithdrawalModal(false)}
+        className="max-w-md"
+      >
         <ModalHeader>
           <ModalTitle>Yêu cầu rút tiền</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-4">
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền rút (dl)</label>
-               <input
-                 type="number"
-                 value={withdrawalAmount}
-                 onChange={(e) => setWithdrawalAmount(parseInt(e.target.value) || 0)}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
-               />
-             </div>
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên ngân hàng</label>
-               <input
-                 value={bankInfo.bank_name}
-                 onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
-               />
-             </div>
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tài khoản</label>
-               <input
-                 value={bankInfo.account_number}
-                 onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
-               />
-             </div>
-             <div className="space-y-1.5">
-               <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tên chủ tài khoản</label>
-               <input
-                 value={bankInfo.account_name}
-                 onChange={(e) => setBankInfo({ ...bankInfo, account_name: e.target.value })}
-                 className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
-               />
-             </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Số tiền rút (dl)
+              </label>
+              <input
+                type="number"
+                value={withdrawalAmount}
+                onChange={(e) =>
+                  setWithdrawalAmount(parseInt(e.target.value) || 0)
+                }
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Tên ngân hàng
+              </label>
+              <input
+                value={bankInfo.bank_name}
+                onChange={(e) =>
+                  setBankInfo({ ...bankInfo, bank_name: e.target.value })
+                }
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Số tài khoản
+              </label>
+              <input
+                value={bankInfo.account_number}
+                onChange={(e) =>
+                  setBankInfo({ ...bankInfo, account_number: e.target.value })
+                }
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Tên chủ tài khoản
+              </label>
+              <input
+                value={bankInfo.account_name}
+                onChange={(e) =>
+                  setBankInfo({ ...bankInfo, account_name: e.target.value })
+                }
+                className="w-full h-10 border border-zinc-200 px-3 text-xs font-medium rounded-none outline-none focus:border-black  bg-white"
+              />
+            </div>
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowWithdrawalModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
+          <button
+            onClick={() => setShowWithdrawalModal(false)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center"
+          >
             Hủy
           </button>
-          <button 
-            onClick={handleWithdrawal} 
+          <button
+            onClick={handleWithdrawal}
             disabled={requestingWithdrawal}
             className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center gap-2"
           >
-            {requestingWithdrawal ? <Loader2 className="w-3 h-3 animate-spin" /> : "Gửi yêu cầu"}
+            {requestingWithdrawal ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Gửi yêu cầu"
+            )}
           </button>
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showCreateDocModal} onClose={() => setShowCreateDocModal(false)} className="max-w-md">
+      <Modal
+        isOpen={showCreateDocModal}
+        onClose={() => setShowCreateDocModal(false)}
+        className="max-w-md"
+      >
         <ModalHeader>
           <ModalTitle>Khởi tạo tác phẩm mới</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề tác phẩm</label>
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Tiêu đề tác phẩm
+              </label>
               <input
                 value={newDocTitle}
                 onChange={(e) => setNewDocTitle(e.target.value)}
@@ -1307,7 +1626,9 @@ function StudioContent() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Mô tả ngắn</label>
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Mô tả ngắn
+              </label>
               <textarea
                 value={newDocDescription}
                 onChange={(e) => setNewDocDescription(e.target.value)}
@@ -1317,7 +1638,9 @@ function StudioContent() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Giá bán (dl)</label>
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Giá bán (dl)
+              </label>
               <input
                 type="number"
                 value={newDocPrice}
@@ -1326,7 +1649,9 @@ function StudioContent() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Loại trình soạn thảo</label>
+              <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                Loại trình soạn thảo
+              </label>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1337,7 +1662,9 @@ function StudioContent() {
                     onChange={(e) => setNewDocFormat(e.target.value)}
                     className="accent-black w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-xs font-medium text-black">Soạn thảo chuẩn (Khối)</span>
+                  <span className="text-xs font-medium text-black">
+                    Soạn thảo chuẩn (Khối)
+                  </span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -1348,14 +1675,19 @@ function StudioContent() {
                     onChange={(e) => setNewDocFormat(e.target.value)}
                     className="accent-black w-4 h-4 cursor-pointer"
                   />
-                  <span className="text-xs font-medium text-black">Soạn thảo LaTeX (Mã nguồn)</span>
+                  <span className="text-xs font-medium text-black">
+                    Soạn thảo LaTeX (Mã nguồn)
+                  </span>
                 </label>
               </div>
             </div>
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowCreateDocModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
+          <button
+            onClick={() => setShowCreateDocModal(false)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center"
+          >
             Hủy
           </button>
           <button
@@ -1363,18 +1695,28 @@ function StudioContent() {
             disabled={isCreatingDoc}
             className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center gap-2"
           >
-            {isCreatingDoc ? <Loader2 className="w-3 h-3 animate-spin" /> : "Tạo tác phẩm"}
+            {isCreatingDoc ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Tạo tác phẩm"
+            )}
           </button>
         </ModalFooter>
       </Modal>
 
-      <Modal isOpen={showEditChapterModal} onClose={() => setShowEditChapterModal(false)} className="max-w-sm">
+      <Modal
+        isOpen={showEditChapterModal}
+        onClose={() => setShowEditChapterModal(false)}
+        className="max-w-sm"
+      >
         <ModalHeader>
           <ModalTitle>Sửa tiêu đề chương</ModalTitle>
         </ModalHeader>
         <ModalContent>
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Tiêu đề mới</label>
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Tiêu đề mới
+            </label>
             <input
               value={editingChapterTitle}
               onChange={(e) => setEditingChapterTitle(e.target.value)}
@@ -1385,26 +1727,30 @@ function StudioContent() {
           </div>
         </ModalContent>
         <ModalFooter>
-          <button onClick={() => setShowEditChapterModal(false)} className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center">
+          <button
+            onClick={() => setShowEditChapterModal(false)}
+            className="flex-1 py-2 border border-zinc-200 bg-white text-xs font-medium text-black  flex items-center justify-center"
+          >
             Hủy
           </button>
-          <button onClick={handleSaveChapterTitle} className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center">
+          <button
+            onClick={handleSaveChapterTitle}
+            className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black  flex items-center justify-center"
+          >
             Lưu tiêu đề
           </button>
         </ModalFooter>
       </Modal>
 
-      <div 
-        className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 animate-in fade-in slide-in-from-bottom-8 duration-300"
-      >
+      <div className="h-16 border border-zinc-200 px-6 flex items-center justify-between bg-white rounded-2xl shadow-sm shrink-0 z-30 animate-in fade-in slide-in-from-bottom-8 duration-300">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
-                <FileText className="w-4 h-4 text-white" />
-             </div>
-             <span className="text-base font-medium text-black truncate max-w-[200px]">
-               {selectedDocument?.title || "Không tên"}
-             </span>
+            <div className="w-8 h-8 bg-black flex items-center justify-center rounded-none">
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-base font-medium text-black truncate max-w-[200px]">
+              {selectedDocument?.title || "Không tên"}
+            </span>
           </div>
         </div>
 
@@ -1450,14 +1796,23 @@ function StudioContent() {
                 onChange={(e) => setScheduleDate(e.target.value)}
                 className="bg-transparent text-xs outline-none w-auto"
               />
-              <button onClick={handleSchedulePublish} className="ml-2 text-xs font-semibold ">Hẹn giờ</button>
+              <button
+                onClick={handleSchedulePublish}
+                className="ml-2 text-xs font-semibold "
+              >
+                Hẹn giờ
+              </button>
             </div>
             <button
               onClick={handleSave}
               disabled={!selectedDocumentId || isSaving}
               className="h-9 px-4 border border-zinc-200 text-sm font-medium text-zinc-700 disabled:opacity-50 flex items-center gap-2 rounded-xl bg-white ml-2 transition-colors hover:bg-zinc-50"
             >
-              {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              {isSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
               Lưu bản nháp
             </button>
             <button
@@ -1471,123 +1826,165 @@ function StudioContent() {
         </div>
       </div>
 
-      <div 
+      <div
         className="flex flex-1 overflow-hidden w-full animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        style={{ animationDelay: "150ms", animationFillMode: "both" }}
       >
         <main className="flex-1 w-full flex flex-col bg-white overflow-hidden relative border border-zinc-200 rounded-2xl shadow-sm">
-              <div className="h-12 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0">
-                 <div className="flex items-center h-full gap-4 lg:gap-6">
-                    {(["edit", "preview", "raw"] as const).map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setEditorMode(m)}
-                        className={`h-full text-sm font-medium border-b-2 flex items-center ${
-                          editorMode === m ? "border-black text-black" : "border-transparent text-zinc-500"
-                        }`}
-                      >
-                        {m === "edit" ? "Soạn thảo" : m === "preview" ? "Xem trước" : "Mã nguồn"}
-                      </button>
-                    ))}
-                 </div>
-              </div>
-              <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
-                   <div className="w-full h-full animate-in fade-in ">
-                      {editorMode === "edit" ? (
-                        <div className="flex flex-col h-full">
-                          {selectedChapterIndex !== null && (
-                            <div className="border-b border-zinc-200 bg-zinc-50 px-8 py-4">
-                              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                <StickyNote className="w-3 h-3" /> Lời tác giả
-                              </label>
-                              <div className="flex gap-3">
-                                <textarea
-                                  value={authorNote}
-                                  onChange={(e) => setAuthorNote(e.target.value)}
-                                  placeholder="Ghi chú dành cho độc giả ở đầu chương"
-                                  rows={2}
-                                  className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
-                                />
-                                <button
-                                  onClick={handleSaveAuthorNote}
-                                  disabled={savingNote}
-                                  className="h-full px-4 bg-black text-white text-xs font-medium  disabled:opacity-50 rounded-none shrink-0"
-                                >
-                                  {savingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : "Lưu"}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                          <Editor 
-                            documentId={selectedDocumentId}
-                            initialContent={currentChapterContent} 
-                            contentFormat={selectedDocument?.content_format || "json"}
-                            onSave={(val) => {
-                              if (selectedChapterIndex !== null && selectedDocument) {
-                                const newChapters = [...(selectedDocument.chapters || [])];
-                                newChapters[selectedChapterIndex].content = val;
-                              } else {
-                                setContent(val);
-                              }
-                            }} 
-                          />
-                        </div>
-                      ) : editorMode === "preview" ? (
-                        <div className="bg-white p-12 min-h-full">
-                          {selectedDocument?.content_format === "latex" ? (
-                            isPreviewCompiling ? (
-                              <div className="flex flex-col items-center justify-center h-full text-zinc-500 min-h-[400px]">
-                                <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                                <p className="text-sm">Đang biên dịch mã nguồn LaTeX...</p>
-                              </div>
-                            ) : previewPdfUrl ? (
-                              <iframe src={previewPdfUrl} className="w-full h-[calc(100vh-200px)] min-h-[800px] border-0 rounded-md shadow-sm" title="Preview PDF" />
-                            ) : (
-                              <div className="text-zinc-500 text-center italic mt-12 min-h-[400px]">Không có dữ liệu PDF để hiển thị.</div>
-                            )
+          <div className="h-12 border-b border-zinc-200 bg-white px-4 lg:px-6 flex items-center justify-between shrink-0">
+            <div className="flex items-center h-full gap-4 lg:gap-6">
+              {(["edit", "preview", "raw"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setEditorMode(m)}
+                  className={`h-full text-sm font-medium border-b-2 flex items-center ${
+                    editorMode === m
+                      ? "border-black text-black"
+                      : "border-transparent text-zinc-500"
+                  }`}
+                >
+                  {m === "edit"
+                    ? "Soạn thảo"
+                    : m === "preview"
+                      ? "Xem trước"
+                      : "Mã nguồn"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
+            <div className="w-full h-full animate-in fade-in ">
+              {editorMode === "edit" ? (
+                <div className="flex flex-col h-full">
+                  {selectedChapterIndex !== null && (
+                    <div className="border-b border-zinc-200 bg-zinc-50 px-8 py-4">
+                      <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-2">
+                        <StickyNote className="w-3 h-3" /> Lời tác giả
+                      </label>
+                      <div className="flex gap-3">
+                        <textarea
+                          value={authorNote}
+                          onChange={(e) => setAuthorNote(e.target.value)}
+                          placeholder="Ghi chú dành cho độc giả ở đầu chương"
+                          rows={2}
+                          className="flex-1 border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:border-black  rounded-none bg-white placeholder:text-zinc-400 resize-none"
+                        />
+                        <button
+                          onClick={handleSaveAuthorNote}
+                          disabled={savingNote}
+                          className="h-full px-4 bg-black text-white text-xs font-medium  disabled:opacity-50 rounded-none shrink-0"
+                        >
+                          {savingNote ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
                           ) : (
-                            <div 
-                              className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black" 
-                              dangerouslySetInnerHTML={{ 
-                                __html: (() => {
-                                  try {
-                                    const data = JSON.parse(currentChapterContent || content);
-                                    if (data.blocks) return safeParseEditorJs(data);
-                                    return currentChapterContent || content;
-                                  } catch (e) {
-                                    return currentChapterContent || content;
-                                  }
-                                })()
-                              }} 
-                            />
+                            "Lưu"
                           )}
-                        </div>
-                      ) : (
-                        <pre className="p-8 bg-zinc-50 text-black text-sm font-mono leading-relaxed overflow-auto min-h-full">
-                          {content || "Nội dung hiện đang trống"}
-                        </pre>
-                      )}
-                   </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <Editor
+                    documentId={selectedDocumentId}
+                    initialContent={currentChapterContent}
+                    contentFormat={selectedDocument?.content_format || "json"}
+                    onSave={(val) => {
+                      if (selectedChapterIndex !== null && selectedDocument) {
+                        const newChapters = [
+                          ...(selectedDocument.chapters || []),
+                        ];
+                        newChapters[selectedChapterIndex].content = val;
+                      } else {
+                        setContent(val);
+                      }
+                    }}
+                  />
                 </div>
-            <Modal isOpen={!!diffData} onClose={() => setDiffData(null)} className="max-w-5xl h-[80vh] flex flex-col">
-              <ModalHeader>
-                <ModalTitle>So sánh sự khác biệt</ModalTitle>
-              </ModalHeader>
-              <ModalContent className="flex-1 overflow-hidden p-0 flex flex-col">
-                 <div className="flex bg-zinc-50 border-b border-zinc-200 divide-x divide-zinc-200">
-                    <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản A (Cũ)</div>
-                    <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phiên bản B (Mới)</div>
-                 </div>
-                 <div className="flex-1 overflow-y-auto bg-white p-0">
-                    {diffData ? renderLineDiff(diffData.version_a || "", diffData.version_b || "") : (
-                      <div className="p-8 text-center text-zinc-500 text-sm italic">Không có dữ liệu so sánh</div>
-                    )}
-                 </div>
-              </ModalContent>
-              <ModalFooter>
-                 <button onClick={() => setDiffData(null)} className="px-6 py-2 bg-black text-white text-xs font-medium border border-black ">Đóng cửa sổ</button>
-              </ModalFooter>
-            </Modal>
+              ) : editorMode === "preview" ? (
+                <div className="bg-white p-12 min-h-full">
+                  {selectedDocument?.content_format === "latex" ? (
+                    isPreviewCompiling ? (
+                      <div className="flex flex-col items-center justify-center h-full text-zinc-500 min-h-[400px]">
+                        <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                        <p className="text-sm">
+                          Đang biên dịch mã nguồn LaTeX...
+                        </p>
+                      </div>
+                    ) : previewPdfUrl ? (
+                      <iframe
+                        src={previewPdfUrl}
+                        className="w-full h-[calc(100vh-200px)] min-h-[800px] border-0 rounded-md shadow-sm"
+                        title="Preview PDF"
+                      />
+                    ) : (
+                      <div className="text-zinc-500 text-center italic mt-12 min-h-[400px]">
+                        Không có dữ liệu PDF để hiển thị.
+                      </div>
+                    )
+                  ) : (
+                    <div
+                      className="prose prose-zinc max-w-none font-sans text-base leading-relaxed text-black"
+                      dangerouslySetInnerHTML={{
+                        __html: (() => {
+                          try {
+                            const data = JSON.parse(
+                              currentChapterContent || content,
+                            );
+                            if (data.blocks) return safeParseEditorJs(data);
+                            return currentChapterContent || content;
+                          } catch (e) {
+                            return currentChapterContent || content;
+                          }
+                        })(),
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
+                <pre className="p-8 bg-zinc-50 text-black text-sm font-mono leading-relaxed overflow-auto min-h-full">
+                  {content || "Nội dung hiện đang trống"}
+                </pre>
+              )}
+            </div>
+          </div>
+          <Modal
+            isOpen={!!diffData}
+            onClose={() => setDiffData(null)}
+            className="max-w-5xl h-[80vh] flex flex-col"
+          >
+            <ModalHeader>
+              <ModalTitle>So sánh sự khác biệt</ModalTitle>
+            </ModalHeader>
+            <ModalContent className="flex-1 overflow-hidden p-0 flex flex-col">
+              <div className="flex bg-zinc-50 border-b border-zinc-200 divide-x divide-zinc-200">
+                <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Phiên bản A (Cũ)
+                </div>
+                <div className="flex-1 p-3 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                  Phiên bản B (Mới)
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto bg-white p-0">
+                {diffData ? (
+                  renderLineDiff(
+                    diffData.version_a || "",
+                    diffData.version_b || "",
+                  )
+                ) : (
+                  <div className="p-8 text-center text-zinc-500 text-sm italic">
+                    Không có dữ liệu so sánh
+                  </div>
+                )}
+              </div>
+            </ModalContent>
+            <ModalFooter>
+              <button
+                onClick={() => setDiffData(null)}
+                className="px-6 py-2 bg-black text-white text-xs font-medium border border-black "
+              >
+                Đóng cửa sổ
+              </button>
+            </ModalFooter>
+          </Modal>
         </main>
       </div>
     </div>
@@ -1596,7 +1993,13 @@ function StudioContent() {
 
 export default function AuthorStudioPage() {
   return (
-    <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-zinc-300" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex-1 flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-zinc-300" />
+        </div>
+      }
+    >
       <StudioContent />
     </Suspense>
   );

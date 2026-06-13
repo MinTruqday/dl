@@ -91,8 +91,12 @@ export default function ReportsManagementPage() {
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
         <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-semibold text-black">Vi phạm & Báo cáo</h1>
-            <p className="text-sm text-zinc-500 mt-1">Quản trị an toàn và tuân thủ DocLib</p>
+            <h1 className="text-3xl font-semibold text-black">
+              Vi phạm & Báo cáo
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              Quản trị an toàn và tuân thủ DocLib
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -124,28 +128,48 @@ export default function ReportsManagementPage() {
           </div>
         </div>
 
-        <div className="border border-zinc-200 bg-white overflow-x-auto animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <div
+          className="border border-zinc-200 bg-white overflow-x-auto animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50">
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Đối tượng</th>
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Nội dung báo cáo</th>
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Người báo cáo</th>
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Trạng thái</th>
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Ngày gửi</th>
-                <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Thao tác</th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                  Đối tượng
+                </th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                  Nội dung báo cáo
+                </th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                  Người báo cáo
+                </th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                  Trạng thái
+                </th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                  Ngày gửi
+                </th>
+                <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">
+                  Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredReports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-24 text-center">
-                    <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
+                    <p className="text-sm font-medium text-zinc-500">
+                      Chưa có dữ liệu
+                    </p>
                   </td>
                 </tr>
               ) : (
                 filteredReports.map((report: any) => (
-                  <tr key={report.id} className="border-b border-zinc-200 last:border-0">
+                  <tr
+                    key={report.id}
+                    className="border-b border-zinc-200 last:border-0"
+                  >
                     <td className="py-4 px-6 align-top">
                       <div className="flex flex-col gap-1">
                         <span className="text-[10px] font-bold text-black uppercase tracking-widest">
@@ -158,9 +182,14 @@ export default function ReportsManagementPage() {
                     </td>
                     <td className="py-4 px-6 align-top max-w-sm">
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-semibold text-black">{report.reason}</span>
+                        <span className="text-sm font-semibold text-black">
+                          {report.reason}
+                        </span>
                         <p className="text-xs text-zinc-600 line-clamp-2">
-                          "{report.description || "Không có mô tả chi tiết kèm theo."}"
+                          "
+                          {report.description ||
+                            "Không có mô tả chi tiết kèm theo."}
+                          "
                         </p>
                       </div>
                     </td>
@@ -170,9 +199,12 @@ export default function ReportsManagementPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 align-top whitespace-nowrap">
-                      {report.status === "RESOLVED" || report.status === "DISMISSED" ? (
+                      {report.status === "RESOLVED" ||
+                      report.status === "DISMISSED" ? (
                         <span className="text-xs font-medium text-zinc-400 uppercase tracking-widest">
-                          {report.status === "RESOLVED" ? "Đã xử lý" : "Đã bỏ qua"}
+                          {report.status === "RESOLVED"
+                            ? "Đã xử lý"
+                            : "Đã bỏ qua"}
                         </span>
                       ) : (
                         <span className="text-xs font-bold text-black border border-black px-2 py-1 uppercase tracking-widest">
@@ -182,26 +214,41 @@ export default function ReportsManagementPage() {
                     </td>
                     <td className="py-4 px-6 align-top whitespace-nowrap">
                       <span className="text-xs font-medium text-zinc-500">
-                        {report.created_at ? new Date(report.created_at).toLocaleDateString("vi-VN") : "--"}
+                        {report.created_at
+                          ? new Date(report.created_at).toLocaleDateString(
+                              "vi-VN",
+                            )
+                          : "--"}
                       </span>
                     </td>
                     <td className="py-4 px-6 align-top text-right">
-                      {report.status !== "RESOLVED" && report.status !== "DISMISSED" && (
-                        <div className="flex justify-end gap-4">
-                          <button
-                            onClick={() => setConfirmModal({ reportId: report.id, action: "DISMISSED" })}
-                            className="text-xs font-bold text-zinc-500 uppercase tracking-wider"
-                          >
-                            Bỏ qua
-                          </button>
-                          <button
-                            onClick={() => setConfirmModal({ reportId: report.id, action: "RESOLVED" })}
-                            className="text-xs font-bold text-black uppercase tracking-wider border border-black px-2 py-1"
-                          >
-                            Xử lý
-                          </button>
-                        </div>
-                      )}
+                      {report.status !== "RESOLVED" &&
+                        report.status !== "DISMISSED" && (
+                          <div className="flex justify-end gap-4">
+                            <button
+                              onClick={() =>
+                                setConfirmModal({
+                                  reportId: report.id,
+                                  action: "DISMISSED",
+                                })
+                              }
+                              className="text-xs font-bold text-zinc-500 uppercase tracking-wider"
+                            >
+                              Bỏ qua
+                            </button>
+                            <button
+                              onClick={() =>
+                                setConfirmModal({
+                                  reportId: report.id,
+                                  action: "RESOLVED",
+                                })
+                              }
+                              className="text-xs font-bold text-black uppercase tracking-wider border border-black px-2 py-1"
+                            >
+                              Xử lý
+                            </button>
+                          </div>
+                        )}
                     </td>
                   </tr>
                 ))
@@ -211,10 +258,16 @@ export default function ReportsManagementPage() {
         </div>
       </div>
 
-      <Modal isOpen={!!confirmModal} onClose={() => !isProcessing && setConfirmModal(null)} className="max-w-md">
+      <Modal
+        isOpen={!!confirmModal}
+        onClose={() => !isProcessing && setConfirmModal(null)}
+        className="max-w-md"
+      >
         <ModalHeader>
           <ModalTitle>
-            {confirmModal?.action === "RESOLVED" ? "Xác nhận xử lý vi phạm" : "Xác nhận bỏ qua báo cáo"}
+            {confirmModal?.action === "RESOLVED"
+              ? "Xác nhận xử lý vi phạm"
+              : "Xác nhận bỏ qua báo cáo"}
           </ModalTitle>
         </ModalHeader>
         <ModalContent>
@@ -237,7 +290,8 @@ export default function ReportsManagementPage() {
             disabled={isProcessing}
             className="flex-1 py-2 bg-black text-white text-xs font-medium border border-black disabled:opacity-50 flex items-center justify-center gap-2 rounded-none"
           >
-            {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác nhận
+            {isProcessing && <Loader2 className="w-3 h-3 animate-spin" />} Xác
+            nhận
           </button>
         </ModalFooter>
       </Modal>

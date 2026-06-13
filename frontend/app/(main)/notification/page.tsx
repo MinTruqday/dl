@@ -55,7 +55,9 @@ export default function NotificationsPage() {
       if (res && (res.data || res.settings)) {
         setSettings(res.data || res.settings);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
 
   useEffect(() => {
@@ -126,7 +128,13 @@ export default function NotificationsPage() {
     }
   };
 
-  const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+  const Toggle = ({
+    checked,
+    onChange,
+  }: {
+    checked: boolean;
+    onChange: () => void;
+  }) => (
     <button
       type="button"
       onClick={onChange}
@@ -147,12 +155,8 @@ export default function NotificationsPage() {
       <div className="max-w-4xl mx-auto px-6 py-12">
         <header className="mb-8 border-b border-zinc-200 pb-6 flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-black">
-              Thông báo
-            </h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              Trung tâm hoạt động
-            </p>
+            <h1 className="text-3xl font-semibold text-black">Thông báo</h1>
+            <p className="text-sm text-zinc-500 mt-1">Trung tâm hoạt động</p>
           </div>
           <button
             onClick={handleMarkAllRead}
@@ -198,7 +202,9 @@ export default function NotificationsPage() {
                   <div
                     key={n._id || n.id}
                     className={`py-5 border-b border-zinc-200 flex gap-4 ${
-                      n.is_read ? "" : "border-l-2 border-l-black pl-4 ml-[-2px]"
+                      n.is_read
+                        ? ""
+                        : "border-l-2 border-l-black pl-4 ml-[-2px]"
                     }`}
                   >
                     <div className="w-10 h-10 border border-zinc-200 flex items-center justify-center shrink-0 bg-white">
@@ -208,7 +214,9 @@ export default function NotificationsPage() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
                         <h3
                           className={`text-sm truncate ${
-                            n.is_read ? "font-normal text-zinc-600" : "font-semibold text-black"
+                            n.is_read
+                              ? "font-normal text-zinc-600"
+                              : "font-semibold text-black"
                           }`}
                         >
                           {n.title}
@@ -264,7 +272,10 @@ export default function NotificationsPage() {
             )}
           </div>
 
-          <aside className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <aside
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
             <div className="border border-zinc-200 bg-white p-6 space-y-6">
               <div>
                 <h3 className="text-sm font-semibold text-black flex items-center gap-2 mb-1">
@@ -280,7 +291,9 @@ export default function NotificationsPage() {
                   <span className="text-sm text-black">Bình luận mới</span>
                   <Toggle
                     checked={settings.comments}
-                    onChange={() => updateSetting("comments", !settings.comments)}
+                    onChange={() =>
+                      updateSetting("comments", !settings.comments)
+                    }
                   />
                 </div>
                 <div className="flex items-center justify-between">

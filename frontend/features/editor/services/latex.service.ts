@@ -6,11 +6,15 @@ export async function cleanTempFilesAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Dọn dẹp tập tin tạm thời thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Dọn dẹp tập tin tạm thời thất bại");
   return data;
 }
 
-export async function compileLatexPreviewAPI(content: string, isFragment: boolean = false) {
+export async function compileLatexPreviewAPI(
+  content: string,
+  isFragment: boolean = false,
+) {
   const res = await fetch(`${API_URL}/latex/bien-dich-xem-truoc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -30,7 +34,8 @@ export async function formatLatexAPI(content: string) {
     body: JSON.stringify({ content }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Định dạng mã nguồn LaTeX thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Định dạng mã nguồn LaTeX thất bại");
   return data;
 }
 

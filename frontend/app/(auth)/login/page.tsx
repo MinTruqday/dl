@@ -66,12 +66,10 @@ export default function LoginPage() {
           rpId: begin.rpId,
           timeout: begin.timeout,
           userVerification: begin.userVerification,
-          allowCredentials: (begin.allowCredentials || []).map(
-            (c: any) => ({
-              type: c.type,
-              id: b64urlToBuffer(c.id),
-            }),
-          ),
+          allowCredentials: (begin.allowCredentials || []).map((c: any) => ({
+            type: c.type,
+            id: b64urlToBuffer(c.id),
+          })),
         },
       });
 
@@ -127,7 +125,7 @@ export default function LoginPage() {
         setPendingPasskeyEmail(data.user?.email || email);
         showToast(
           "Đăng nhập thành công. Hãy cân nhắc thiết lập Passkey",
-          "success"
+          "success",
         );
         setIsSubmitting(false);
       } else {
@@ -146,7 +144,6 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-80px)] flex flex-col justify-center items-center mt-16">
         <div className="w-full max-w-md w-full animate-in fade-in slide-in-from-bottom-8 duration-300">
-
           {pendingPasskeyEmail && (
             <Passkey
               email={pendingPasskeyEmail}
@@ -256,7 +253,9 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                     className="w-full flex justify-center items-center gap-3 h-12 border border-transparent rounded-2xl text-sm font-medium text-white bg-black focus:outline-none disabled:bg-zinc-200 disabled:text-zinc-500 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isSubmitting && (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    )}
                     {isSubmitting ? "Đang xử lý" : "Đăng nhập"}
                   </button>
                 </div>

@@ -58,9 +58,7 @@ export default function SeriesDetailPage() {
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-6 md:px-12 py-12 font-sans text-black selection:bg-black selection:text-white">
-      <div
-        className="mb-12 flex items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-300"
-      >
+      <div className="mb-12 flex items-center justify-between animate-in fade-in slide-in-from-bottom-8 duration-300">
         <button
           onClick={() => router.push("/collection")}
           className="flex items-center gap-4 text-[10px] font-bold tracking-[0.2em] uppercase text-zinc-400"
@@ -84,7 +82,7 @@ export default function SeriesDetailPage() {
 
       <div
         className="mb-20 border-b border-zinc-100 pb-16 animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        style={{ animationDelay: "150ms", animationFillMode: "both" }}
       >
         <div className="max-w-4xl space-y-10">
           <div className="flex items-center gap-4">
@@ -101,14 +99,15 @@ export default function SeriesDetailPage() {
             </div>
           </div>
           <p className="text-xl font-medium text-zinc-400 leading-relaxed max-w-3xl">
-            {series.description || "Thực thể này chưa có nội dung tóm lược hệ thống"}
+            {series.description ||
+              "Thực thể này chưa có nội dung tóm lược hệ thống"}
           </p>
         </div>
       </div>
 
       <div
         className="w-full animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+        style={{ animationDelay: "300ms", animationFillMode: "both" }}
       >
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
@@ -156,15 +155,18 @@ export default function SeriesDetailPage() {
                   <div className="flex items-center gap-8">
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                        Biên soạn: {doc.author?.full_name || "DocLib Contributor"}
+                        Biên soạn:{" "}
+                        {doc.author?.full_name || "DocLib Contributor"}
                       </span>
                     </div>
                     <div className="flex items-center gap-6">
                       <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                        <Eye className="w-4 h-4 text-zinc-300" /> {doc.view_count || 0}
+                        <Eye className="w-4 h-4 text-zinc-300" />{" "}
+                        {doc.view_count || 0}
                       </span>
                       <span className="flex items-center gap-2 text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
-                        <Star className="w-4 h-4 text-zinc-300" /> {doc.average_rating?.toFixed(1) || "0.0"}
+                        <Star className="w-4 h-4 text-zinc-300" />{" "}
+                        {doc.average_rating?.toFixed(1) || "0.0"}
                       </span>
                     </div>
                   </div>

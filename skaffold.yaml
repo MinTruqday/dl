@@ -45,9 +45,9 @@ build:
     docker:
       dockerfile: websocket/Dockerfile
   - image: doclib-frontend
-    context: ./frontend
+    context: .
     docker:
-      dockerfile: Dockerfile
+      dockerfile: frontend/Dockerfile
 manifests:
   kustomize:
     paths:

@@ -32,7 +32,8 @@ export async function getUserProfileAPI(slug: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải thông tin thành viên");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải thông tin thành viên");
   return data;
 }
 
@@ -50,7 +51,7 @@ export async function getBadgesAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách huy hiệu");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách huy hiệu");
   return data;
 }
-

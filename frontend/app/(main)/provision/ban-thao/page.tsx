@@ -31,7 +31,6 @@ export default function DraftsPage() {
 
   return (
     <div className="space-y-6">
-
       {loading ? (
         <div className="py-24 flex justify-center border border-zinc-200 bg-white rounded-2xl">
           <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
@@ -41,11 +40,16 @@ export default function DraftsPage() {
           <p className="text-sm font-medium text-zinc-500">Chưa có dữ liệu</p>
         </div>
       ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+        <div
+          className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
           {drafts.map((draft: any) => (
             <button
               key={draft._id || draft.id}
-              onClick={() => router.push(`/compose?tai-lieu=${draft._id || draft.id}`)}
+              onClick={() =>
+                router.push(`/compose?tai-lieu=${draft._id || draft.id}`)
+              }
               className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden text-left"
             >
               <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-100 relative overflow-hidden">
@@ -64,17 +68,23 @@ export default function DraftsPage() {
 
               <div className="p-3 flex flex-col flex-1 gap-2 w-full">
                 <div className="flex flex-wrap gap-1.5">
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md">Bản nháp</span>
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md">
+                    Bản nháp
+                  </span>
                 </div>
                 <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
                   {draft.title}
                 </h3>
-                
+
                 <div className="text-xs text-zinc-500 flex items-center gap-1.5 mt-auto pt-3 border-t border-zinc-100">
-                  <span className="truncate text-black font-medium">Cập nhật</span>
+                  <span className="truncate text-black font-medium">
+                    Cập nhật
+                  </span>
                   <span>•</span>
                   <span className="shrink-0">
-                    {new Date(draft.updated_at || draft.created_at).toLocaleDateString("vi-VN")}
+                    {new Date(
+                      draft.updated_at || draft.created_at,
+                    ).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
               </div>

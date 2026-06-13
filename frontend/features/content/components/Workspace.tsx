@@ -11,7 +11,10 @@ interface WorkspaceProps {
   requireAuth?: boolean;
 }
 
-export default function Workspace({ children, requireAuth = false }: WorkspaceProps) {
+export default function Workspace({
+  children,
+  requireAuth = false,
+}: WorkspaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -81,7 +84,9 @@ export default function Workspace({ children, requireAuth = false }: WorkspacePr
       <main
         className="relative pr-2 md:pr-4 pb-2 md:pb-4 transition-all duration-300"
         style={{
-          paddingTop: isMobile ? "calc(var(--navbar-height) + 16px)" : "calc(var(--navbar-height) + 32px)",
+          paddingTop: isMobile
+            ? "calc(var(--navbar-height) + 16px)"
+            : "calc(var(--navbar-height) + 32px)",
           marginLeft: !mounted
             ? "calc(var(--sidebar-width-expanded) + 32px)"
             : isMobile

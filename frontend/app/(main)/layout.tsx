@@ -15,11 +15,11 @@ export default function MainLayout({
 
     if (pathname.startsWith("/author")) return true;
     if (pathname.startsWith("/search")) return true;
-    
+
     if (pathname.startsWith("/document/")) {
       return true;
     }
-    
+
     return false;
   };
 

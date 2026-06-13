@@ -1,5 +1,7 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
-export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || (API_URL ? API_URL.replace("http", "ws") : "");
+export const WS_URL =
+  process.env.NEXT_PUBLIC_WS_URL ||
+  (API_URL ? API_URL.replace("http", "ws") : "");
 
 export function getToken() {
   if (typeof window !== "undefined") {
@@ -120,9 +122,7 @@ export const resetPasswordAPI = async (
   });
   const data = await res.json();
   if (!res.ok)
-    throw new Error(
-      data.message || data.detail || "Đặt lại mật khẩu thất bại",
-    );
+    throw new Error(data.message || data.detail || "Đặt lại mật khẩu thất bại");
   return data.data || data;
 };
 

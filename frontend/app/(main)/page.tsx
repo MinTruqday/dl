@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { getDocumentsAPI } from "@/features/content/services/document.service";
-import { getTagsCategoriesAPI, getTrendingDocumentsAPI, getAIRecommendationsAPI, smartSearchAPI } from "@/features/content/services/discovery.service";
+import {
+  getTagsCategoriesAPI,
+  getTrendingDocumentsAPI,
+  getAIRecommendationsAPI,
+  smartSearchAPI,
+} from "@/features/content/services/discovery.service";
 import { getActiveBannersAPI } from "@/features/provision/services/banner.service";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import Link from "next/link";
@@ -83,12 +88,23 @@ export default function ExplorePage() {
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
       <div className="mb-8 relative h-[120px] md:h-[200px] bg-white border border-zinc-200 flex items-center justify-center rounded-2xl shadow-sm overflow-hidden group animate-in fade-in duration-500">
         {banners.length > 0 ? (
-          <a href={banners[0].link_url || "#"} target="_blank" rel="noreferrer" className="w-full h-full block">
+          <a
+            href={banners[0].link_url || "#"}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full h-full block"
+          >
             {banners[0].image_url ? (
-              <img src={banners[0].image_url} alt={banners[0].title} className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105" />
+              <img
+                src={banners[0].image_url}
+                alt={banners[0].title}
+                className="w-full h-full object-cover grayscale mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-zinc-50">
-                <p className="text-zinc-500 text-sm font-medium">{banners[0].title}</p>
+                <p className="text-zinc-500 text-sm font-medium">
+                  {banners[0].title}
+                </p>
               </div>
             )}
           </a>
@@ -99,21 +115,23 @@ export default function ExplorePage() {
         )}
       </div>
 
-
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
           <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300">
             <div className="text-sm font-semibold text-black mb-1">
               Phân loại
             </div>
-            <nav className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+            <nav
+              className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-bottom-8 duration-300"
+              style={{ animationDelay: "150ms", animationFillMode: "both" }}
+            >
               <button
                 onClick={() => setSelectedCategory(null)}
-                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${!selectedCategory
-                  ? "bg-zinc-100 text-black"
-                  : "bg-white text-zinc-500 hover:bg-zinc-50"
-                  }`}
+                className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
+                  !selectedCategory
+                    ? "bg-zinc-100 text-black"
+                    : "bg-white text-zinc-500 hover:bg-zinc-50"
+                }`}
               >
                 Tất cả tài liệu
                 {!selectedCategory && <ChevronRight className="w-4 h-4" />}
@@ -124,10 +142,11 @@ export default function ExplorePage() {
                   onClick={() =>
                     setSelectedCategory(selectedCategory === cat ? null : cat)
                   }
-                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${selectedCategory === cat
-                    ? "bg-zinc-100 text-black"
-                    : "bg-white text-zinc-500 hover:bg-zinc-50"
-                    }`}
+                  className={`flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
+                    selectedCategory === cat
+                      ? "bg-zinc-100 text-black"
+                      : "bg-white text-zinc-500 hover:bg-zinc-50"
+                  }`}
                 >
                   {cat}
                   {selectedCategory === cat && (
@@ -138,7 +157,10 @@ export default function ExplorePage() {
             </nav>
           </div>
 
-          <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <div
+            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
             <div className="text-sm font-semibold text-black mb-1">
               Xu hướng
             </div>
@@ -158,7 +180,8 @@ export default function ExplorePage() {
                         {document.title}
                       </h4>
                       <div className="text-[11px] font-medium text-zinc-500">
-                        {document.views_count?.toLocaleString("vi-VN") || 0} lượt xem
+                        {document.views_count?.toLocaleString("vi-VN") || 0}{" "}
+                        lượt xem
                       </div>
                     </div>
                   </Link>
@@ -182,7 +205,10 @@ export default function ExplorePage() {
                   Gợi ý dành riêng cho bạn
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+              <div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+                style={{ animationDelay: "150ms", animationFillMode: "both" }}
+              >
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
@@ -226,24 +252,26 @@ export default function ExplorePage() {
                   ? `Kết quả tìm kiếm cho "${searchQuery}"`
                   : "Kho nội dung"}
               </h2>
-              
+
               <div className="flex items-center gap-6">
                 <div className="flex border border-zinc-200 bg-zinc-50 rounded-xl overflow-hidden">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`p-1.5 transition-colors ${viewMode === "grid"
-                      ? "bg-white text-black shadow-sm"
-                      : "bg-transparent text-zinc-500 hover:text-black"
-                      }`}
+                    className={`p-1.5 transition-colors ${
+                      viewMode === "grid"
+                        ? "bg-white text-black shadow-sm"
+                        : "bg-transparent text-zinc-500 hover:text-black"
+                    }`}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`p-1.5 transition-colors ${viewMode === "list"
-                      ? "bg-white text-black shadow-sm"
-                      : "bg-transparent text-zinc-500 hover:text-black"
-                      }`}
+                    className={`p-1.5 transition-colors ${
+                      viewMode === "list"
+                        ? "bg-white text-black shadow-sm"
+                        : "bg-transparent text-zinc-500 hover:text-black"
+                    }`}
                   >
                     <ListIcon className="w-4 h-4" />
                   </button>
@@ -253,40 +281,45 @@ export default function ExplorePage() {
 
             {loading ? (
               <div
-                className={`grid gap-6 ${viewMode === "grid"
-                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                  : "grid-cols-1"
-                  } animate-in fade-in slide-in-from-bottom-8 duration-300`} style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+                className={`grid gap-6 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    : "grid-cols-1"
+                } animate-in fade-in slide-in-from-bottom-8 duration-300`}
+                style={{ animationDelay: "150ms", animationFillMode: "both" }}
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div
                     key={i}
-                    className={`bg-zinc-50 border border-zinc-200 ${viewMode === "grid" ? "aspect-[2/3]" : "h-32"
-                      }`}
+                    className={`bg-zinc-50 border border-zinc-200 ${
+                      viewMode === "grid" ? "aspect-[2/3]" : "h-32"
+                    }`}
                   />
                 ))}
               </div>
             ) : documents.length > 0 ? (
               <div
-                className={`grid gap-6 ${viewMode === "grid"
-                  ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                  : "grid-cols-1"
-                  } animate-in fade-in slide-in-from-bottom-8 duration-300`} style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+                className={`grid gap-6 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    : "grid-cols-1"
+                } animate-in fade-in slide-in-from-bottom-8 duration-300`}
+                style={{ animationDelay: "150ms", animationFillMode: "both" }}
               >
                 {documents.map((document, i) => (
                   <Link
                     key={`doc-${document._id || i}`}
                     href={`/document/${document.slug}`}
-                    className={`group flex ${viewMode === "grid"
-                      ? "flex-col"
-                      : "flex-row gap-6 p-3"
-                      } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
+                    className={`group flex ${
+                      viewMode === "grid" ? "flex-col" : "flex-row gap-6 p-3"
+                    } border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden`}
                   >
                     <div
-                      className={`${viewMode === "grid"
-                        ? "aspect-[2/3] w-full border-b"
-                        : "w-24 h-36 shrink-0 rounded-xl"
-                        } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
+                      className={`${
+                        viewMode === "grid"
+                          ? "aspect-[2/3] w-full border-b"
+                          : "w-24 h-36 shrink-0 rounded-xl"
+                      } border-zinc-200 bg-zinc-100 relative overflow-hidden`}
                     >
                       {document.cover_url ? (
                         <img
@@ -300,27 +333,30 @@ export default function ExplorePage() {
                     </div>
 
                     <div
-                      className={`${viewMode === "grid" ? "p-3" : "flex-1 py-1"
-                        } flex flex-col flex-1 gap-2`}
+                      className={`${
+                        viewMode === "grid" ? "p-3" : "flex-1 py-1"
+                      } flex flex-col flex-1 gap-2`}
                     >
-                      {document.categories && document.categories.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {document.categories
-                            .slice(0, 3)
-                            .map((tag: string, idx: number) => (
-                              <span
-                                key={idx}
-                                className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                        </div>
-                      )}
+                      {document.categories &&
+                        document.categories.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {document.categories
+                              .slice(0, 3)
+                              .map((tag: string, idx: number) => (
+                                <span
+                                  key={idx}
+                                  className="px-1.5 py-0.5 text-[10px] font-medium text-zinc-600 bg-zinc-100 rounded-md"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                          </div>
+                        )}
 
                       <h3
-                        className={`${viewMode === "grid" ? "text-sm" : "text-base"
-                          } font-semibold text-black line-clamp-2 leading-snug`}
+                        className={`${
+                          viewMode === "grid" ? "text-sm" : "text-base"
+                        } font-semibold text-black line-clamp-2 leading-snug`}
                       >
                         {document.title}
                       </h3>
@@ -335,8 +371,8 @@ export default function ExplorePage() {
                         <span className="shrink-0">
                           {document.created_at
                             ? new Date(document.created_at).toLocaleDateString(
-                              "vi-VN"
-                            )
+                                "vi-VN",
+                              )
                             : "Gần đây"}
                         </span>
                       </div>
@@ -361,8 +397,9 @@ export default function ExplorePage() {
                       </div>
 
                       <div
-                        className={`mt-auto pt-3 flex items-center justify-between ${viewMode === "grid" ? "border-t border-zinc-100" : ""
-                          }`}
+                        className={`mt-auto pt-3 flex items-center justify-between ${
+                          viewMode === "grid" ? "border-t border-zinc-100" : ""
+                        }`}
                       >
                         <span className="text-xs font-semibold text-black">
                           {document.is_premium
@@ -378,7 +415,10 @@ export default function ExplorePage() {
                 ))}
               </div>
             ) : (
-              <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+              <div
+                className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
+                style={{ animationDelay: "150ms", animationFillMode: "both" }}
+              >
                 <p className="text-sm font-medium text-zinc-500">
                   Chưa có dữ liệu
                 </p>

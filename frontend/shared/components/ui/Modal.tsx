@@ -42,7 +42,7 @@ export function Modal({
       <div
         className={cn(
           "bg-white w-full max-w-lg border border-zinc-200 animate-in zoom-in-95  rounded-none relative p-0",
-          className
+          className,
         )}
       >
         {showCloseButton && (
@@ -95,7 +95,12 @@ export function ModalDescription({
   className?: string;
 }) {
   return (
-    <p className={cn("text-[10px] font-bold text-zinc-300 uppercase tracking-widest mt-2", className)}>
+    <p
+      className={cn(
+        "text-[10px] font-bold text-zinc-300 uppercase tracking-widest mt-2",
+        className,
+      )}
+    >
       {children}
     </p>
   );
@@ -119,7 +124,12 @@ export function ModalFooter({
   className?: string;
 }) {
   return (
-    <div className={cn("flex gap-3 border-t border-zinc-200 p-5 bg-zinc-50 mt-0 space-y-0", className)}>
+    <div
+      className={cn(
+        "flex gap-3 border-t border-zinc-200 p-5 bg-zinc-50 mt-0 space-y-0",
+        className,
+      )}
+    >
       {children}
     </div>
   );

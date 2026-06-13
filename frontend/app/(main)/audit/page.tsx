@@ -11,7 +11,7 @@ export default function LogsPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
   const router = useRouter();
   const { showToast } = useToast();
-  
+
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -52,8 +52,12 @@ export default function LogsPage() {
       <div className="w-full max-w-[1300px] mx-auto px-6 md:px-12 pt-6 pb-12">
         <header className="mb-8 border-b border-zinc-200 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
           <div>
-            <h1 className="text-3xl font-semibold text-black">Nhật ký hệ thống</h1>
-            <p className="text-sm text-zinc-500 mt-1">Lưu trữ hoạt động quản trị và kiểm duyệt</p>
+            <h1 className="text-3xl font-semibold text-black">
+              Nhật ký hệ thống
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              Lưu trữ hoạt động quản trị và kiểm duyệt
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -66,36 +70,60 @@ export default function LogsPage() {
           </div>
         </header>
 
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-          <h2 className="text-sm font-semibold text-black">Bản ghi nhật ký ({activityLogs.length})</h2>
-          
+        <div
+          className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+          style={{ animationDelay: "150ms", animationFillMode: "both" }}
+        >
+          <h2 className="text-sm font-semibold text-black">
+            Bản ghi nhật ký ({activityLogs.length})
+          </h2>
+
           <div className="border border-zinc-200 bg-white overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50">
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Thao tác</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Đối tượng</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">Thời gian</th>
-                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">Trạng thái</th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                    Thao tác
+                  </th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                    Đối tượng
+                  </th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600">
+                    Thời gian
+                  </th>
+                  <th className="py-3 px-6 text-xs font-semibold text-zinc-600 text-right">
+                    Trạng thái
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {activityLogs.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-24 text-center">
-                      <p className="text-sm font-medium text-zinc-500">Nhật ký hiện đang trống</p>
+                      <p className="text-sm font-medium text-zinc-500">
+                        Nhật ký hiện đang trống
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   activityLogs.map((log: any, idx: number) => (
-                    <tr key={idx} className="border-b border-zinc-200 last:border-0">
+                    <tr
+                      key={idx}
+                      className="border-b border-zinc-200 last:border-0"
+                    >
                       <td className="py-4 px-6 align-top">
-                        <span className="text-sm font-semibold text-black uppercase">{log.action || "Thao tác điều hành"}</span>
+                        <span className="text-sm font-semibold text-black uppercase">
+                          {log.action || "Thao tác điều hành"}
+                        </span>
                       </td>
                       <td className="py-4 px-6 align-top">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold text-black uppercase tracking-widest">{log.target_type}</span>
-                          <span className="text-xs text-zinc-500 font-mono">{log.target_id}</span>
+                          <span className="text-[10px] font-bold text-black uppercase tracking-widest">
+                            {log.target_type}
+                          </span>
+                          <span className="text-xs text-zinc-500 font-mono">
+                            {log.target_id}
+                          </span>
                         </div>
                       </td>
                       <td className="py-4 px-6 align-top whitespace-nowrap">
@@ -104,7 +132,9 @@ export default function LogsPage() {
                         </span>
                       </td>
                       <td className="py-4 px-6 align-top text-right">
-                        <span className="text-xs font-medium text-zinc-500">Hoàn tất</span>
+                        <span className="text-xs font-medium text-zinc-500">
+                          Hoàn tất
+                        </span>
                       </td>
                     </tr>
                   ))

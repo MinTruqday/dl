@@ -1,6 +1,9 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
-export async function compilePreviewAPI(content: string, isFragment: boolean = false) {
+export async function compilePreviewAPI(
+  content: string,
+  isFragment: boolean = false,
+) {
   const res = await fetch(`${API_URL}/latex/bien-dich-xem-truoc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -51,7 +54,10 @@ export async function exportToEpubAPI(documentId: string) {
   return await res.blob();
 }
 
-export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
+export async function analyzeInternalPlagiarismAPI(
+  documentId: string,
+  content: any,
+) {
   const res = await fetch(`${API_URL}/editor/${documentId}/kiem-tra-dao-van`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -63,12 +69,16 @@ export async function analyzeInternalPlagiarismAPI(documentId: string, content: 
 }
 
 export async function checkDeepPlagiarismAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/editor/${documentId}/kiem-tra-dao-van-chuyen-sau`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/editor/${documentId}/kiem-tra-dao-van-chuyen-sau`,
+    {
+      method: "POST",
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Kiểm tra đạo văn chuyên sâu thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Kiểm tra đạo văn chuyên sâu thất bại");
   return data;
 }
 
@@ -94,12 +104,18 @@ export async function addInlineSuggestionAPI(documentId: string, payload: any) {
   return data;
 }
 
-export async function resolveSuggestionAPI(suggestionId: string, action: string) {
-  const res = await fetch(`${API_URL}/editor/goi-y/${suggestionId}/giai-quyet`, {
-    method: "PUT",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ action }),
-  });
+export async function resolveSuggestionAPI(
+  suggestionId: string,
+  action: string,
+) {
+  const res = await fetch(
+    `${API_URL}/editor/goi-y/${suggestionId}/giai-quyet`,
+    {
+      method: "PUT",
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xử lý gợi ý thất bại");
   return data;
@@ -112,7 +128,8 @@ export async function syncPomodoroSessionAPI(payload: any) {
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đồng bộ phiên Pomodoro thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Đồng bộ phiên Pomodoro thất bại");
   return data;
 }
 
@@ -137,7 +154,12 @@ export async function submitForReviewAPI(documentId: string) {
   return data;
 }
 
-export async function globalFindReplaceAPI(documentId: string, search: string, replace: string, matchCase: boolean = false) {
+export async function globalFindReplaceAPI(
+  documentId: string,
+  search: string,
+  replace: string,
+  matchCase: boolean = false,
+) {
   const res = await fetch(`${API_URL}/editor/${documentId}/thay-the-toan-cuc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -148,12 +170,15 @@ export async function globalFindReplaceAPI(documentId: string, search: string, r
   return data;
 }
 
-export async function addChapterAPI(documentId: string, data: {
-  title: string;
-  content: string;
-  is_premium?: boolean;
-  price_dl?: number;
-}) {
+export async function addChapterAPI(
+  documentId: string,
+  data: {
+    title: string;
+    content: string;
+    is_premium?: boolean;
+    price_dl?: number;
+  },
+) {
   const res = await fetch(`${API_URL}/editor/${documentId}/chuong`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -202,11 +227,15 @@ export async function extractSmartTagsAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Tự động phân tích thẻ thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Tự động phân tích thẻ thất bại");
   return data;
 }
 
-export async function addInlineCommentAPI(documentId: string, payload: { block_id: string; text: string; selected_text?: string }) {
+export async function addInlineCommentAPI(
+  documentId: string,
+  payload: { block_id: string; text: string; selected_text?: string },
+) {
   const res = await fetch(`${API_URL}/editor/${documentId}/comment`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -227,13 +256,21 @@ export async function resolveCommentAPI(commentId: string) {
   return data.data;
 }
 
-export async function getVersionDiffAPI(documentId: string, versionIdA: string, versionIdB: string) {
+export async function getVersionDiffAPI(
+  documentId: string,
+  versionIdA: string,
+  versionIdB: string,
+) {
   const res = await fetch(`${API_URL}/editor/${documentId}/so-sanh-phien-ban`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ version_id_a: versionIdA, version_id_b: versionIdB }),
+    body: JSON.stringify({
+      version_id_a: versionIdA,
+      version_id_b: versionIdB,
+    }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lấy so sánh phiên bản thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Lấy so sánh phiên bản thất bại");
   return data.data;
 }

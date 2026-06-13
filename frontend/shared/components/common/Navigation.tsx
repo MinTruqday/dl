@@ -126,14 +126,19 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Link href="/chat" className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150" title="DocLib AI">
+                <Link
+                  href="/chat"
+                  className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150"
+                  title="DocLib AI"
+                >
                   <MessageCircle className="w-5 h-5" />
                 </Link>
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${showNotifications ? "bg-zinc-100 text-black" : ""
-                      }`}
+                    className={`relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${
+                      showNotifications ? "bg-zinc-100 text-black" : ""
+                    }`}
                     aria-label="Thông báo"
                   >
                     <Bell className="w-5 h-5" />
@@ -160,8 +165,11 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                             {notifications.slice(0, 8).map((notif: any) => (
                               <div
                                 key={notif._id}
-                                className={`px-5 py-4 cursor-pointer hover:bg-zinc-50 transition-all duration-150 ${!notif.is_read ? "border-l-2 border-l-black ml-[-2px] bg-white" : "bg-white"
-                                  }`}
+                                className={`px-5 py-4 cursor-pointer hover:bg-zinc-50 transition-all duration-150 ${
+                                  !notif.is_read
+                                    ? "border-l-2 border-l-black ml-[-2px] bg-white"
+                                    : "bg-white"
+                                }`}
                                 onClick={() => {
                                   if (!notif.is_read) markAsRead(notif._id);
                                   if (notif.link) router.push(notif.link);
@@ -170,11 +178,15 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                               >
                                 <div className="flex gap-3 items-start">
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-[13px] leading-relaxed truncate ${notif.is_read ? "text-zinc-500 font-normal" : "text-black font-semibold"}`}>
+                                    <p
+                                      className={`text-[13px] leading-relaxed truncate ${notif.is_read ? "text-zinc-500 font-normal" : "text-black font-semibold"}`}
+                                    >
                                       {notif.message}
                                     </p>
                                     <span className="text-[10px] text-zinc-400 mt-1 block">
-                                      {new Date(notif.created_at).toLocaleDateString("vi-VN")}
+                                      {new Date(
+                                        notif.created_at,
+                                      ).toLocaleDateString("vi-VN")}
                                     </span>
                                   </div>
                                 </div>
@@ -204,8 +216,9 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${showUserMenu ? "bg-zinc-100 text-black" : ""
-                      }`}
+                    className={`flex items-center gap-3 px-2 py-1.5 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150 ${
+                      showUserMenu ? "bg-zinc-100 text-black" : ""
+                    }`}
                   >
                     <div className="w-8 h-8 bg-white border border-zinc-200 text-black flex items-center justify-center relative rounded-2xl overflow-hidden">
                       {user.avatar_url ? (
@@ -232,8 +245,9 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform duration-150 ${showUserMenu ? "rotate-180 text-black" : ""
-                        }`}
+                      className={`w-3.5 h-3.5 text-zinc-400 hidden sm:block transition-transform duration-150 ${
+                        showUserMenu ? "rotate-180 text-black" : ""
+                      }`}
                     />
                   </button>
 
@@ -294,7 +308,6 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           </div>
         </div>
       </nav>
-
     </>
   );
 }

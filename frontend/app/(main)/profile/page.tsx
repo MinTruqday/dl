@@ -6,7 +6,10 @@ import { API_URL } from "@/features/auth/services/authentication.service";
 import { updateProfileAPI } from "@/features/provision/services/setting.service";
 import { getDetailedHistoryAPI } from "@/features/finance/services/wallet.service";
 import { createDepositLinkAPI } from "@/features/finance/services/deposit.service";
-import { applyAuthorAPI, becomeAuthorAPI } from "@/features/provision/services/setting.service";
+import {
+  applyAuthorAPI,
+  becomeAuthorAPI,
+} from "@/features/provision/services/setting.service";
 import { uploadAssetAPI } from "@/features/content/services/upload.service";
 import { getBookmarksAPI } from "@/features/content/services/bookmark.service";
 import {
@@ -42,7 +45,7 @@ export default function ProfilePage() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [visible, setVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "bookmarks" | "history">(
-    "info"
+    "info",
   );
 
   const [historyList, setHistoryList] = useState<any[]>([]);
@@ -128,7 +131,8 @@ export default function ProfilePage() {
     setIsDepositing(true);
     try {
       const res = await createDepositLinkAPI(amount);
-      const checkoutUrl = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
+      const checkoutUrl =
+        res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
       } else {
@@ -177,10 +181,12 @@ export default function ProfilePage() {
     const formData = new FormData();
     formData.append("file", e.target.files[0]);
     try {
-      const res = await uploadAssetAPI(e.target.files[0], 'image');
+      const res = await uploadAssetAPI(e.target.files[0], "image");
       if (res.data?.url) {
         setAvatarUrl(
-          res.data.url.startsWith("http") ? res.data.url : `${API_URL}/storage/${res.data.url}`
+          res.data.url.startsWith("http")
+            ? res.data.url
+            : `${API_URL}/storage/${res.data.url}`,
         );
         showToast("Đã tích hợp ảnh định danh mới", "success");
       }
@@ -204,7 +210,6 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-6 py-6 min-h-[calc(100dvh-var(--navbar-height))] font-sans text-black selection:bg-black selection:text-white">
-
       <div
         className="grid lg:grid-cols-12 gap-6"
         style={{ opacity: visible ? 1 : 0 }}
@@ -251,8 +256,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-
-
             <div className="mt-6">
               <button
                 onClick={logoutState}
@@ -262,124 +265,126 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-
-
-
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-            <div className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h2 className="text-lg font-semibold text-black">
-                    Thông tin định danh
-                  </h2>
-                </div>
+          <div
+            className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h2 className="text-lg font-semibold text-black">
+                  Thông tin định danh
+                </h2>
               </div>
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-black">
-                    Địa chỉ Email
-                  </label>
-                  <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-sm font-medium cursor-not-allowed rounded-2xl">
-                    {user.email}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-black">
-                    Tên hiển thị
-                  </label>
-                  <input
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
-                  />
-                </div>
-              </div>
-
+            <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                  <label className="text-xs font-semibold text-black">
-                    Tiểu sử
-                  </label>
+                <label className="text-xs font-semibold text-black">
+                  Địa chỉ Email
+                </label>
+                <div className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 flex items-center text-zinc-500 text-sm font-medium cursor-not-allowed rounded-2xl">
+                  {user.email}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-black">
+                  Tên hiển thị
+                </label>
                 <input
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Nhập thông tin giới thiệu ngắn gọn"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
                 />
               </div>
+            </div>
 
-              <div className="flex justify-end">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-black">
+                Tiểu sử
+              </label>
+              <input
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Nhập thông tin giới thiệu ngắn gọn"
+                className="w-full h-10 bg-white border border-zinc-200 px-3 text-sm font-medium focus:outline-none focus:border-black rounded-2xl"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Cập nhật định danh
+              </button>
+            </div>
+
+            {user.role === "reader" && (
+              <div className="mt-8 space-y-4">
+                <h3 className="text-sm font-semibold text-black">
+                  Trở thành tác giả
+                </h3>
+                <p className="text-xs text-zinc-500 font-medium">
+                  Bạn có thể nâng cấp tài khoản lên tác giả ngay lập tức để bắt
+                  đầu xuất bản nội dung.
+                </p>
                 <button
-                  onClick={handleSave}
+                  onClick={handleBecomeAuthor}
                   disabled={isSaving}
-                  className="h-10 px-6 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
+                  className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
                 >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  Cập nhật định danh
+                  {isSaving ? "Đang xử lý..." : "Trở thành tác giả ngay"}
                 </button>
               </div>
+            )}
 
-              {user.role === "reader" && (
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-sm font-semibold text-black">
-                    Trở thành tác giả
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    Bạn có thể nâng cấp tài khoản lên tác giả ngay lập tức để bắt đầu xuất bản nội dung.
-                  </p>
+            {user.role === "author" && (
+              <div className="mt-8 space-y-4">
+                <h3 className="text-sm font-semibold text-black">
+                  Ứng tuyển Tác giả tiềm năng
+                </h3>
+                <p className="text-xs text-zinc-500 font-medium">
+                  Nâng cấp lên vị trí tác giả tiềm năng để nhận được nhiều ưu
+                  đãi và hiển thị đặc biệt.
+                </p>
+                <div className="flex items-start gap-4">
+                  <input
+                    value={motivation}
+                    onChange={(e) => setMotivation(e.target.value)}
+                    placeholder="Lý do ứng tuyển tác giả tiềm năng"
+                    className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
+                  />
                   <button
-                    onClick={handleBecomeAuthor}
-                    disabled={isSaving}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium disabled:opacity-50 rounded-2xl hover:bg-zinc-800 transition-colors"
+                    onClick={handleApplyAuthor}
+                    disabled={isApplying}
+                    className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-2xl shrink-0 hover:bg-zinc-50 transition-colors"
                   >
-                    {isSaving ? "Đang xử lý..." : "Trở thành tác giả ngay"}
+                    {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
                   </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {user.role === "author" && (
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-sm font-semibold text-black">
-                    Ứng tuyển Tác giả tiềm năng
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium">
-                    Nâng cấp lên vị trí tác giả tiềm năng để nhận được nhiều ưu đãi và hiển thị đặc biệt.
-                  </p>
-                  <div className="flex items-start gap-4">
-                    <input
-                      value={motivation}
-                      onChange={(e) => setMotivation(e.target.value)}
-                      placeholder="Lý do ứng tuyển tác giả tiềm năng"
-                      className="flex-1 h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-2xl"
-                    />
-                    <button
-                      onClick={handleApplyAuthor}
-                      disabled={isApplying}
-                      className="h-10 px-6 border border-black bg-white text-black text-xs font-medium disabled:opacity-50 rounded-2xl shrink-0 hover:bg-zinc-50 transition-colors"
-                    >
-                      {isApplying ? "Đang gửi" : "Gửi yêu cầu"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {user.role === "potential_author" && (
-                <div className="mt-8 space-y-4">
-                  <h3 className="text-sm font-semibold text-black">
-                    Vị thế Tác giả tiềm năng
-                  </h3>
-                  <p className="text-xs text-zinc-500 font-medium italic">
-                    Chúc mừng! Bạn hiện là tác giả tiềm năng của hệ thống DocLib.
-                  </p>
-                </div>
-              )}
-            </div>
+            {user.role === "potential_author" && (
+              <div className="mt-8 space-y-4">
+                <h3 className="text-sm font-semibold text-black">
+                  Vị thế Tác giả tiềm năng
+                </h3>
+                <p className="text-xs text-zinc-500 font-medium italic">
+                  Chúc mừng! Bạn hiện là tác giả tiềm năng của hệ thống DocLib.
+                </p>
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </div>

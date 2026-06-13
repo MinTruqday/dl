@@ -141,7 +141,7 @@ export default function WalletPage() {
       if (res) {
         showToast(
           "Kích hoạt voucher thành công. Số dư đã được cập nhật",
-          "success"
+          "success",
         );
         setVoucherCode("");
         fetchWalletData();
@@ -149,7 +149,7 @@ export default function WalletPage() {
     } catch (error: any) {
       showToast(
         error.message || "Voucher không hợp lệ hoặc đã hết hạn",
-        "error"
+        "error",
       );
     } finally {
       setIsRedeeming(false);
@@ -164,7 +164,8 @@ export default function WalletPage() {
     setTopupLoading(true);
     try {
       const res = await createDepositLinkAPI(topupAmount);
-      const url = res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
+      const url =
+        res.data?.checkout_url || res.data?.payment_url || res.checkout_url;
       if (url) {
         setCheckoutUrl(url);
       } else {
@@ -245,8 +246,14 @@ export default function WalletPage() {
         className={checkoutUrl ? "max-w-2xl" : "max-w-md"}
       >
         <ModalHeader>
-          <ModalTitle>{checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền (VNĐ)"}</ModalTitle>
-          {!checkoutUrl && <ModalDescription>Chọn mệnh giá hoặc nhập số tiền cần nạp</ModalDescription>}
+          <ModalTitle>
+            {checkoutUrl ? "Thanh toán giao dịch" : "Nạp tiền (VNĐ)"}
+          </ModalTitle>
+          {!checkoutUrl && (
+            <ModalDescription>
+              Chọn mệnh giá hoặc nhập số tiền cần nạp
+            </ModalDescription>
+          )}
         </ModalHeader>
 
         <ModalContent>
@@ -286,21 +293,31 @@ export default function WalletPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền khác</label>
+                <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+                  Số tiền khác
+                </label>
                 <div className="relative">
                   <input
                     type="number"
                     value={topupAmount}
-                    onChange={(e) => setTopupAmount(parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      setTopupAmount(parseInt(e.target.value) || 0)
+                    }
                     className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black  rounded-none"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">VNĐ</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">
+                    VNĐ
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between py-3 border-t border-zinc-200">
-                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Tỷ giá</span>
-                <span className="text-xs font-medium text-black">1.000 VNĐ = 1 dl</span>
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+                  Tỷ giá
+                </span>
+                <span className="text-xs font-medium text-black">
+                  1.000 VNĐ = 1 dl
+                </span>
               </div>
             </div>
           )}
@@ -320,7 +337,11 @@ export default function WalletPage() {
               disabled={topupLoading || topupAmount < 10000}
               className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {topupLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận nạp"}
+              {topupLoading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                "Xác nhận nạp"
+              )}
             </button>
           </ModalFooter>
         )}
@@ -333,12 +354,16 @@ export default function WalletPage() {
       >
         <ModalHeader>
           <ModalTitle>Rút tiền (dl)</ModalTitle>
-          <ModalDescription>Tỷ lệ quy đổi: 1 dl = 1.000 VNĐ (Phí hệ thống 2%)</ModalDescription>
+          <ModalDescription>
+            Tỷ lệ quy đổi: 1 dl = 1.000 VNĐ (Phí hệ thống 2%)
+          </ModalDescription>
         </ModalHeader>
 
         <ModalContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Số tiền rút (dl)</label>
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Số tiền rút (dl)
+            </label>
             <div className="relative">
               <input
                 type="number"
@@ -347,12 +372,16 @@ export default function WalletPage() {
                 className="w-full h-10 bg-zinc-50 border border-zinc-200 px-3 text-xs font-medium focus:outline-none focus:border-black rounded-none"
                 placeholder="Tối thiểu 50.000"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">dl</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-zinc-400">
+                dl
+              </span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">Thông tin ngân hàng</label>
+            <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
+              Thông tin ngân hàng
+            </label>
             <input
               type="text"
               value={bankInfo}
@@ -387,20 +416,31 @@ export default function WalletPage() {
             disabled={withdrawLoading || !withdrawalAmount || !bankInfo}
             className="flex-1 py-2 bg-black border border-black text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {withdrawLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Xác nhận rút"}
+            {withdrawLoading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              "Xác nhận rút"
+            )}
           </button>
         </ModalFooter>
       </Modal>
 
       <div className="grid lg:grid-cols-12 gap-6">
         <aside className="lg:col-span-3 space-y-6">
-          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-            <div className="text-sm font-semibold text-black mb-1">Số dư hiện tại</div>
+          <div
+            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
+            <div className="text-sm font-semibold text-black mb-1">
+              Số dư hiện tại
+            </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-black tracking-tight">{balance.toLocaleString()}</span>
+              <span className="text-4xl font-bold text-black tracking-tight">
+                {balance.toLocaleString()}
+              </span>
               <span className="text-sm font-semibold text-black">dl</span>
             </div>
-            
+
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => setShowTopupModal(true)}
@@ -419,8 +459,10 @@ export default function WalletPage() {
             </div>
           </div>
 
-
-          <div className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <div
+            className="border border-zinc-200 bg-white p-5 space-y-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
             <div className="text-sm font-semibold text-black mb-1">
               Kích hoạt Voucher
             </div>
@@ -437,35 +479,55 @@ export default function WalletPage() {
                 disabled={isRedeeming || !voucherCode.trim()}
                 className="w-full h-10 bg-white text-black border border-zinc-200 text-xs font-medium disabled:opacity-50 rounded-2xl flex items-center justify-center hover:bg-zinc-50 transition-colors"
               >
-                {isRedeeming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Xác nhận mã"}
+                {isRedeeming ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Xác nhận mã"
+                )}
               </button>
             </form>
           </div>
         </aside>
 
         <main className="lg:col-span-9 space-y-6">
-          <div className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <div
+            className="border border-zinc-200 bg-white p-5 rounded-2xl shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
+            style={{ animationDelay: "150ms", animationFillMode: "both" }}
+          >
             <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold text-black">
                 Nhật ký giao dịch
               </h2>
-              <span className="text-sm font-medium text-zinc-500">{history.length} giao dịch</span>
+              <span className="text-sm font-medium text-zinc-500">
+                {history.length} giao dịch
+              </span>
             </div>
 
             <div>
               {isLoading ? (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+                <div
+                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
+                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                >
                   <Loader2 className="animate-spin w-4 h-4 text-zinc-400 mb-2" />
-                  <p className="text-sm font-medium text-zinc-500">Đang tải dữ liệu...</p>
+                  <p className="text-sm font-medium text-zinc-500">
+                    Đang tải dữ liệu...
+                  </p>
                 </div>
               ) : history.length === 0 ? (
-                <div className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+                <div
+                  className="py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl animate-in fade-in slide-in-from-bottom-8 duration-300"
+                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                >
                   <p className="text-sm font-medium text-zinc-500">
                     Chưa có dữ liệu
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+                <div
+                  className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
+                  style={{ animationDelay: "150ms", animationFillMode: "both" }}
+                >
                   {history.map((tx) => (
                     <div
                       key={tx._id}
@@ -479,14 +541,20 @@ export default function WalletPage() {
                               : "border-black bg-black text-white"
                           }`}
                         >
-                          {tx.type === "TOPUP" ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                          {tx.type === "TOPUP" ? (
+                            <ArrowDownLeft className="w-5 h-5" />
+                          ) : (
+                            <ArrowUpRight className="w-5 h-5" />
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-black">
-                            {tx.note || (tx.type === "TOPUP" ? "Nạp tiền" : "Giao dịch")}
+                            {tx.note ||
+                              (tx.type === "TOPUP" ? "Nạp tiền" : "Giao dịch")}
                           </p>
                           <p className="text-[10px] font-medium text-zinc-500 mt-1">
-                            {new Date(tx.created_at).toLocaleString("vi-VN")} • TX-{tx._id.slice(-8)}
+                            {new Date(tx.created_at).toLocaleString("vi-VN")} •
+                            TX-{tx._id.slice(-8)}
                           </p>
                         </div>
                       </div>
@@ -497,16 +565,19 @@ export default function WalletPage() {
                             tx.type === "TOPUP" ? "text-black" : "text-zinc-500"
                           }`}
                         >
-                          {tx.type === "TOPUP" ? "+" : "-"}{tx.amount.toLocaleString()} dl
+                          {tx.type === "TOPUP" ? "+" : "-"}
+                          {tx.amount.toLocaleString()} dl
                         </span>
                         <span className="text-[10px] font-medium text-zinc-500 mt-1 flex items-center gap-1.5">
                           {tx.status === "COMPLETED" ? (
                             <>
-                              <div className="w-1.5 h-1.5 bg-black rounded-none"></div> Hoàn tất
+                              <div className="w-1.5 h-1.5 bg-black rounded-none"></div>{" "}
+                              Hoàn tất
                             </>
                           ) : (
                             <>
-                              <div className="w-1.5 h-1.5 bg-zinc-300 rounded-none"></div> {tx.status}
+                              <div className="w-1.5 h-1.5 bg-zinc-300 rounded-none"></div>{" "}
+                              {tx.status}
                             </>
                           )}
                         </span>

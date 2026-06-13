@@ -4,7 +4,7 @@ export async function createHighlightAPI(
   documentId: string,
   textOrData: string | { text: string; color?: string; note?: string },
   color?: string,
-  note?: string
+  note?: string,
 ) {
   let bodyData: any = {};
   if (typeof textOrData === "object" && textOrData !== null) {
@@ -36,18 +36,23 @@ export async function getHighlightsAPI(documentId: string) {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách nêu bật");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách nêu bật");
   return data;
 }
 
-export async function updateHighlightNoteAPI(highlightId: string, note: string) {
+export async function updateHighlightNoteAPI(
+  highlightId: string,
+  note: string,
+) {
   const res = await fetch(`${API_URL}/highlight/${highlightId}/ghi-chu`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Cập nhật ghi chú nêu bật thất bại");
+  if (!res.ok)
+    throw new Error(data.message || "Cập nhật ghi chú nêu bật thất bại");
   return data;
 }
 
@@ -62,11 +67,15 @@ export async function deleteHighlightAPI(highlightId: string) {
 }
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
-  const res = await fetch(`${API_URL}/highlight/ghi-chu?skip=${skip}&limit=${limit}`, {
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/highlight/ghi-chu?skip=${skip}&limit=${limit}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải danh sách ghi chú");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải danh sách ghi chú");
   return data;
 }
 
@@ -75,7 +84,8 @@ export async function getReadingPreferencesAPI() {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Không thể tải cài đặt tùy chỉnh đọc");
+  if (!res.ok)
+    throw new Error(data.message || "Không thể tải cài đặt tùy chỉnh đọc");
   return data;
 }
 
@@ -92,14 +102,18 @@ export async function updateReadingPreferencesAPI(data: {
     body: JSON.stringify(data),
   });
   const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Cập nhật cài đặt đọc thất bại");
+  if (!res.ok)
+    throw new Error(result.message || "Cập nhật cài đặt đọc thất bại");
   return result;
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/highlight/document/${documentId}/export`, {
-    headers: getAuthHeaders(),
-  });
+  const res = await fetch(
+    `${API_URL}/highlight/document/${documentId}/export`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Xuất dữ liệu nêu bật thất bại");
   return data;

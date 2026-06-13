@@ -7,9 +7,15 @@ export default class DocLibInlineCode implements InlineTool {
   private tag = "CODE";
   private class = "inline-code";
 
-  static get isInline() { return true; }
-  static get title() { return "DocLib Inline Code"; }
-  static get sanitize() { return { code: { class: true } }; }
+  static get isInline() {
+    return true;
+  }
+  static get title() {
+    return "DocLib Inline Code";
+  }
+  static get sanitize() {
+    return { code: { class: true } };
+  }
 
   constructor({ api }: { api: API }) {
     this.api = api;
@@ -19,7 +25,8 @@ export default class DocLibInlineCode implements InlineTool {
     this.button = document.createElement("button");
     this.button.type = "button";
     this.button.classList.add(this.api.styles.inlineToolButton);
-    this.button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18l-6-6 6-6"/><path d="M14 6l6 6-6 6"/></svg>';
+    this.button.innerHTML =
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 18l-6-6 6-6"/><path d="M14 6l6 6-6 6"/></svg>';
     return this.button;
   }
 
@@ -47,7 +54,10 @@ export default class DocLibInlineCode implements InlineTool {
     const parentNode = this.api.selection.findParentTag(this.tag, this.class);
     this._state = !!parentNode;
     if (this.button) {
-      this.button.classList.toggle(this.api.styles.inlineToolButtonActive, this._state);
+      this.button.classList.toggle(
+        this.api.styles.inlineToolButtonActive,
+        this._state,
+      );
     }
     return this._state;
   }
