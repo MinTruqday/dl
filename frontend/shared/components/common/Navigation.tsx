@@ -13,6 +13,7 @@ import {
   X,
   Monitor,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useNotifications } from "@/shared/contexts/Notification";
@@ -126,6 +127,14 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <>
+                <Link
+                  href="/upgrade"
+                  className="relative px-3 py-1.5 flex items-center gap-2 text-zinc-600 bg-zinc-100 hover:bg-zinc-200 rounded-xl transition-all duration-150"
+                  title="Nâng cấp AI"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span className="text-xs font-bold text-black hidden md:block">Nâng cấp AI</span>
+                </Link>
                 <Link
                   href="/chat"
                   className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150"

@@ -32,6 +32,12 @@ class RoleEnum(str, Enum):
     ADMIN = "admin"
 
 
+class AITierEnum(str, Enum):
+    BASIC = "BASIC"
+    PRO = "PRO"
+    PREMIUM = "PREMIUM"
+
+
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
@@ -57,6 +63,7 @@ class UserBase(BaseModel):
         * 1024
         * 1024
     )
+    ai_tier: AITierEnum = AITierEnum.BASIC
 
     @field_validator("kyc_status", "author_status", mode="before")
     @classmethod

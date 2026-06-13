@@ -18,7 +18,9 @@ from core.schemas.inference import (
     ToneRequest,
     TranslationRequest,
 )
-from fastapi import APIRouter, HTTPException
+from core.dependency import get_current_user
+from core.schemas.user import UserInDB, RoleEnum
+from fastapi import APIRouter, HTTPException, Depends
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
@@ -28,12 +30,60 @@ router = APIRouter()
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
 
+async def _check_quota(current_user: UserInDB):
+    try:
+        async with httpx.AsyncClient() as c:
+            resp = await c.get(
+                f"{settings.PROVISION_URL}/quota/check",
+                params={
+                    "user_id": str(current_user.id),
+                    "role": current_user.role.value,
+                    "ai_tier": current_user.ai_tier.value,
+                    "feature": "chat",
+                },
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+            if resp.status_code != 200:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Bạn đã vượt quá hạn mức AI hoặc lỗi hệ thống",
+                )
+            return resp.json().get("data", {})
+    except HTTPException:
+        raise
+    except Exception:
+        logger.error("Lỗi kiểm tra quota")
+        return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
+
+
+async def _consume_quota(
+    current_user: UserInDB, tokens: int, req_reset_hours: int = 24
+):
+    try:
+        async with httpx.AsyncClient() as c:
+            await c.post(
+                f"{settings.PROVISION_URL}/quota/consume",
+                json={
+                    "user_id": str(current_user.id),
+                    "feature": "chat",
+                    "req_reset_hours": req_reset_hours,
+                    "tokens": tokens,
+                },
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+    except Exception:
+        logger.error("Lỗi trừ quota")
+
+
 async def _chat_direct(
-    messages: List[dict], max_tokens: int = 500, temperature: float = 0.3
+    messages: List[dict],
+    max_tokens: int = 500,
+    temperature: float = 0.3,
+    model: str = settings.LLAMA_MODEL,
 ) -> str:
     try:
         response = await client.chat_completion(
-            model=settings.LLAMA_MODEL,
+            model=model,
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
@@ -44,10 +94,31 @@ async def _chat_direct(
         raise e
 
 
+async def _run_ai_with_quota(
+    current_user: UserInDB,
+    messages: List[dict],
+    max_tokens: int = 500,
+    temperature: float = 0.3,
+) -> str:
+    limits = await _check_quota(current_user)
+    model = limits.get("model", settings.QWEN_MODEL)
+
+    result = await _chat_direct(messages, max_tokens, temperature, model)
+
+    prompt_len = sum(len(m.get("content", "")) for m in messages)
+    tokens_used = (prompt_len + len(result)) // 4
+    await _consume_quota(current_user, tokens_used, limits.get("req_reset_hours", 24))
+
+    return result
+
+
 @router.post("/generate-content")
-async def generate_text(req: GenerationRequest):
+async def generate_text(
+    req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": req.prompt}],
             max_tokens=req.max_tokens,
             temperature=req.temperature,
@@ -60,12 +131,15 @@ async def generate_text(req: GenerationRequest):
 
 
 @router.post("/translate")
-async def translate_text(req: TranslationRequest):
+async def translate_text(
+    req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         prompt = prompt_registry.get(PromptType.TRANSLATE).format(
             target_lang=req.target_lang, text=req.text
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) * 3,
             temperature=0.1,
@@ -78,7 +152,9 @@ async def translate_text(req: TranslationRequest):
 
 
 @router.post("/sentiment-analysis")
-async def analyze_sentiment(req: SentimentRequest):
+async def analyze_sentiment(
+    req: SentimentRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         texts_to_analyze = req.texts or []
 
@@ -111,7 +187,8 @@ async def analyze_sentiment(req: SentimentRequest):
             prompt = prompt_registry.get(PromptType.SENTIMENT_ANALYSIS).format(
                 text=text
             )
-            sentiment = await _chat_direct(
+            sentiment = await _run_ai_with_quota(
+                current_user,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=10,
                 temperature=0.1,
@@ -132,8 +209,10 @@ async def analyze_sentiment(req: SentimentRequest):
         summary_prompt = prompt_registry.get(PromptType.SENTIMENT_SUMMARY).format(
             reviews="; ".join(texts_to_analyze[:5])
         )
-        summary = await _chat_direct(
-            messages=[{"role": "user", "content": summary_prompt}], max_tokens=100
+        summary = await _run_ai_with_quota(
+            current_user,
+            messages=[{"role": "user", "content": summary_prompt}],
+            max_tokens=100,
         )
 
         from collections import Counter
@@ -160,12 +239,15 @@ async def analyze_sentiment(req: SentimentRequest):
 
 
 @router.post("/generate-code")
-async def generate_code(req: CodeRequest):
+async def generate_code(
+    req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         prompt = prompt_registry.get(PromptType.CODE_GENERATION).format(
             language=req.language, prompt=req.prompt
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
             temperature=0.2,
@@ -178,10 +260,22 @@ async def generate_code(req: CodeRequest):
 
 
 @router.post("/check-grammar")
-async def grammar_check(req: GrammarRequest):
+async def grammar_check(
+    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=len(req.text) + 200,
             temperature=0.1,
@@ -203,12 +297,15 @@ async def grammar_check(req: GrammarRequest):
 
 
 @router.post("/summarize")
-async def summarize_text(req: SummarizeRequest):
+async def summarize_text(
+    req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         prompt = prompt_registry.get(PromptType.SUMMARIZE).format(
             language=req.language, text=req.text
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
             temperature=0.3,
@@ -221,8 +318,19 @@ async def summarize_text(req: SummarizeRequest):
 
 
 @router.post("/check-plagiarism")
-async def check_plagiarism(req: GrammarRequest):
+async def check_plagiarism(
+    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
 
@@ -248,7 +356,8 @@ async def check_plagiarism(req: GrammarRequest):
         prompt = prompt_registry.get(PromptType.PLAGIARISM_DETECTION).format(
             text=req.text[:1000], context=context
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
             temperature=0.1,
@@ -281,7 +390,9 @@ async def check_plagiarism(req: GrammarRequest):
 
 
 @router.post("/actions")
-async def unified_action(req: ActionRequest):
+async def unified_action(
+    req: ActionRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         prompts = {
             "autocomplete": prompt_registry.get(PromptType.AUTOCOMPLETE).format(
@@ -305,7 +416,8 @@ async def unified_action(req: ActionRequest):
         if not prompt:
             raise HTTPException(status_code=400, detail="Hành động không hợp lệ")
 
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
             temperature=0.3,
@@ -319,10 +431,22 @@ async def unified_action(req: ActionRequest):
 
 
 @router.post("/synonyms")
-async def get_synonyms(req: GrammarRequest):
+async def get_synonyms(
+    req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
             temperature=0.5,
@@ -335,8 +459,19 @@ async def get_synonyms(req: GrammarRequest):
 
 
 @router.post("/smart-citation")
-async def suggest_citations(req: CitationRequest):
+async def suggest_citations(
+    req: CitationRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
 
@@ -353,7 +488,8 @@ async def suggest_citations(req: CitationRequest):
         prompt = prompt_registry.get(PromptType.SUGGEST_CITATIONS).format(
             style=req.style, text=req.text, sources="\\n".join(sources)
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=500,
             temperature=0.3,
@@ -366,13 +502,25 @@ async def suggest_citations(req: CitationRequest):
 
 
 @router.post("/text-transform")
-async def transform_tone(req: ToneRequest):
+async def transform_tone(
+    req: ToneRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         action = "expand and transform" if req.expansion else "transform"
         prompt = prompt_registry.get(PromptType.TRANSFORM_TONE).format(
             action=action.capitalize(), tone=req.tone, text=req.text
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000 if req.expansion else 500,
             temperature=0.4,
@@ -385,8 +533,19 @@ async def transform_tone(req: ToneRequest):
 
 
 @router.post("/content-moderation")
-async def peer_review(req: ReviewRequest):
+async def peer_review(
+    req: ReviewRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
+        if (
+            current_user.role != RoleEnum.ADMIN
+            and current_user.ai_tier.value != "PREMIUM"
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+            )
+
         criteria_str = (
             ", ".join(req.criteria)
             if req.criteria
@@ -395,7 +554,8 @@ async def peer_review(req: ReviewRequest):
         prompt = prompt_registry.get(PromptType.CONTENT_REVIEW).format(
             criteria_str=criteria_str, text=req.text[:3000]
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
             temperature=0.2,
@@ -408,7 +568,9 @@ async def peer_review(req: ReviewRequest):
 
 
 @router.post("/multi-doc-synthesis")
-async def multi_doc_synthesis(req: SynthesisRequest):
+async def multi_doc_synthesis(
+    req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         from src.rag.embedder import embedding_service
         from src.store.vector_store import vector_store
@@ -426,7 +588,8 @@ async def multi_doc_synthesis(req: SynthesisRequest):
         prompt = prompt_registry.get(PromptType.MULTI_DOC_SYNTHESIS).format(
             query=req.query, context="\\n".join(all_context[:10])
         )
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
             temperature=0.3,
@@ -439,7 +602,7 @@ async def multi_doc_synthesis(req: SynthesisRequest):
 
 
 @router.post("/extract-text")
-async def extract_text(req: dict):
+async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_user)):
     try:
         file_url = req.get("file_url")
         if not file_url:
@@ -458,7 +621,9 @@ async def extract_text(req: dict):
 
 
 @router.post("/document-analysis")
-async def analyze_document(req: dict):
+async def analyze_document(
+    req: dict, current_user: UserInDB = Depends(get_current_user)
+):
     try:
         context = req.get("context", "")
         ext = req.get("ext", "txt")
@@ -468,7 +633,8 @@ async def analyze_document(req: dict):
             ext=ext, folder_str=folder_str, context=context[:3000]
         )
 
-        result = await _chat_direct(
+        result = await _run_ai_with_quota(
+            current_user,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1000,
             temperature=0.2,

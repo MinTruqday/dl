@@ -64,3 +64,16 @@ export async function getAuthorRevenueAPI() {
     throw new Error(data.message || "Không thể tải số liệu doanh thu");
   return data;
 }
+
+export async function buyAITierAPI(tier: "PRO" | "PREMIUM") {
+  const res = await fetch(`${API_URL}/finance/monetization/ai-tier`, {
+    method: "POST",
+    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ tier }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || errorData?.message || "Nâng cấp gói AI thất bại");
+  }
+  return await res.json();
+}

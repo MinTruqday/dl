@@ -35,7 +35,7 @@ async def get_all_users(
 
 
 @router.put(
-    "/{user_id}/vai-tro",
+    "/{user_id}/role",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -78,7 +78,7 @@ async def warn_user(
 
 
 @router.post(
-    "/{user_id}/khoa",
+    "/{user_id}/lock",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )

@@ -106,7 +106,9 @@ async def get_activities(
     )
 
 
-@router.post("/document/{document_id}/chuyen-quyen", response_model=APIResponse[Any])
+@router.post(
+    "/document/{document_id}/transfer-ownership", response_model=APIResponse[Any]
+)
 async def transfer_ownership(
     document_id: str,
     data: TransferOwnershipRequest,
@@ -133,7 +135,7 @@ async def ping_status(
     )
 
 
-@router.get("/document/{document_id}/truc-tuyen", response_model=APIResponse[Any])
+@router.get("/document/{document_id}/online", response_model=APIResponse[Any])
 async def get_online_collaborators(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -145,7 +147,7 @@ async def get_online_collaborators(
     )
 
 
-@router.patch("/{collaboration_id}/vai-tro", response_model=APIResponse[Any])
+@router.patch("/{collaboration_id}/role", response_model=APIResponse[Any])
 async def update_collaborator_role(
     collaboration_id: str,
     data: UpdateCollaboratorRoleRequest,
@@ -202,7 +204,7 @@ async def update_collab_access(
     )
 
 
-@router.get("/document/{document_id}/loi-moi-da-gui", response_model=APIResponse[Any])
+@router.get("/document/{document_id}/sent-invitations", response_model=APIResponse[Any])
 async def get_sent_pending_invites(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -272,7 +274,7 @@ async def get_snapshots(
     )
 
 
-@router.post("/document/{document_id}/khoa", response_model=APIResponse[Any])
+@router.post("/document/{document_id}/lock", response_model=APIResponse[Any])
 async def acquire_lock(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -284,7 +286,7 @@ async def acquire_lock(
     )
 
 
-@router.post("/document/{document_id}/mo-khoa", response_model=APIResponse[Any])
+@router.post("/document/{document_id}/unlock", response_model=APIResponse[Any])
 async def release_lock(
     document_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),

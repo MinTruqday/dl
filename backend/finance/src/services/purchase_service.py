@@ -12,6 +12,74 @@ from uuid6 import uuid7
 class PurchaseService:
 
     @staticmethod
+    async def buy_ai_tier(tier: str, current_user, db=None) -> dict:
+        if db is None:
+            db = db_client.mongodb.get_default_database()
+
+        tier = tier.upper()
+        if tier not in ["PRO", "PREMIUM"]:
+            raise HTTPException(status_code=400, detail="Gói AI không hợp lệ")
+
+        price = 750 if tier == "PRO" else 2500
+
+        wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
+        if not wallet or wallet.get("balance", 0) < price:
+            raise HTTPException(
+                status_code=400, detail=f"Số dư không đủ cần {price} dl"
+            )
+
+        if current_user.ai_tier.value == tier:
+            raise HTTPException(
+                status_code=400, detail=f"Bạn đang sử dụng gói {tier} rồi"
+            )
+
+        session = await db_client.mongodb.start_session()
+        session.start_transaction()
+        try:
+            deduct_result = await db["wallets"].update_one(
+                {"_id": str(current_user.id), "balance": {"$gte": price}},
+                {"$inc": {"balance": -price}},
+                session=session,
+            )
+            if deduct_result.modified_count == 0:
+                await session.abort_transaction()
+                raise HTTPException(
+                    status_code=400, detail=f"Số dư không đủ cần {price} dl"
+                )
+
+            await db["users"].update_one(
+                {"_id": str(current_user.id)},
+                {"$set": {"ai_tier": tier}},
+                session=session,
+            )
+
+            tx = Transaction(
+                user_id=str(current_user.id),
+                type=TransactionType.WITHDRAW,
+                amount=-price,
+                note=f"Nâng cấp gói AI: {tier}",
+            )
+            await db["transactions"].insert_one(
+                tx.model_dump(by_alias=True), session=session
+            )
+
+            await session.commit_transaction()
+
+            return {
+                "message": f"Đã nâng cấp lên gói {tier} thành công",
+                "status": "success",
+                "tier": tier,
+            }
+        except HTTPException:
+            raise
+        except Exception:
+            await session.abort_transaction()
+            logger.error("Lỗi nâng cấp gói AI")
+            raise HTTPException(status_code=500, detail="Giao dịch thất bại")
+        finally:
+            await session.end_session()
+
+    @staticmethod
     async def purchase_document(
         document_id: str, current_user, db=None, session=None
     ) -> dict:

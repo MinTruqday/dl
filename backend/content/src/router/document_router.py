@@ -51,7 +51,7 @@ async def create_document(
     )
 
 
-@router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}/content", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
@@ -221,7 +221,7 @@ async def get_document_by_slug(
     )
 
 
-@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
+@router.get("/preview/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
@@ -507,7 +507,7 @@ async def get_document_analytics(
     )
 
 
-@router.get("/{document_id}/metrics-hoc-thuat", response_model=APIResponse[Any])
+@router.get("/{document_id}/academic-metrics", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -674,7 +674,7 @@ async def broadcast_notification(
     )
 
 
-@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
+@router.post("/{document_id}/unlock", response_model=APIResponse[Any])
 async def unlock_document(
     document_id: str,
     password: str = Body(..., embed=True),

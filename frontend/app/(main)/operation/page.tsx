@@ -130,9 +130,9 @@ export default function OperationDashboard() {
   };
 
   const roleLabels: Record<string, string> = {
-    reader: "Độc giả",
-    author: "Tác giả",
-    moderator: "Kiểm duyệt viên",
+    BASIC: "Cơ bản",
+    PRO: "Nâng cao",
+    PREMIUM: "Cao cấp",
     admin: "Quản trị viên",
   };
 
@@ -471,7 +471,7 @@ export default function OperationDashboard() {
                   {Object.keys(quotaConfigs || {})
                     .filter((role) => roleLabels[role])
                     .sort((a, b) => {
-                      const order = ["reader", "author", "moderator", "admin"];
+                      const order = ["BASIC", "PRO", "PREMIUM", "admin"];
                       return order.indexOf(a) - order.indexOf(b);
                     })
                     .map((role) => {

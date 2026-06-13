@@ -240,7 +240,7 @@ export default function TroChuyenPage() {
   const handleAttach = () => {
     if (!useSmart) {
       showToast(
-        "Vui lòng bật Chế độ chuyên sâu để phân tích tài liệu đính kèm",
+        "Vui lòng bật Chế độ Suy nghĩ để phân tích tài liệu đính kèm",
         "info",
       );
       return;
@@ -282,7 +282,7 @@ export default function TroChuyenPage() {
     if (!userMessage || isSending) return;
 
     if (useSmart && (user?.wallet_balance || 0) < 20) {
-      showToast("Cần tối thiểu 20 dl để duy trì Chế độ chuyên sâu", "error");
+      showToast("Cần tối thiểu 20 dl để duy trì Chế độ Suy nghĩ", "error");
       return;
     }
 
@@ -566,6 +566,15 @@ export default function TroChuyenPage() {
                   <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+            <div className="px-5 pb-3 shrink-0">
+              <button 
+                onClick={() => window.location.href = "/upgrade"}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-zinc-800 transition-colors"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                Nâng cấp Gói AI
+              </button>
             </div>
             <div
               className="overflow-y-auto px-5 pb-5 pt-1 flex flex-col gap-2 overflow-x-hidden min-h-0 shrink animate-in fade-in slide-in-from-bottom-8 duration-300"
@@ -1103,15 +1112,16 @@ export default function TroChuyenPage() {
                         disabled={isSending}
                         className="flex-1 min-w-0 h-full py-4 text-sm bg-transparent outline-none font-medium text-black placeholder:text-zinc-400"
                       />
-                      <label className="flex items-center gap-2 cursor-pointer group shrink-0 pl-3 border-l border-zinc-100">
+                      <label className={`flex items-center gap-2 ${user?.ai_tier !== 'PREMIUM' && user?.role !== 'admin' ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} group shrink-0 pl-3 border-l border-zinc-100`}>
                         <span className="text-sm font-medium text-zinc-500 transition-colors select-none">
-                          Nâng cao
+                          Suy nghĩ
                         </span>
                         <div className="relative inline-flex items-center">
                           <input
                             type="checkbox"
                             checked={useSmart}
                             onChange={handleToggleSmart}
+                            disabled={user?.ai_tier !== 'PREMIUM' && user?.role !== 'admin'}
                             className="sr-only peer"
                           />
                           <div className="w-8 h-4 bg-zinc-200 peer-focus:outline-none rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-3 after:w-3 after:rounded-full peer-checked:after:translate-x-4 peer-checked:bg-black transition-colors"></div>

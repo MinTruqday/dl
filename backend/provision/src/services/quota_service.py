@@ -1,116 +1,170 @@
 import json
+import math
 from datetime import datetime, timezone
 
 from core.config import settings
 from core.database import db_client
-from core.repositories.base_repository import RepositoryFactory
-from core.schemas.quota import GlobalQuotaConfig, QuotaLimit
+from core.schemas.quota import QuotaLimit
 from fastapi import HTTPException
 from loguru import logger
 
 
 class QuotaService:
+    @staticmethod
+    async def get_global_config_from_db(db=None) -> dict:
+        config = await db_client.db.quota_configs.find_one({"_id": "global"})
+        if config and "role_limits" in config:
+            return config["role_limits"]
+
+        default_limits = {
+            "BASIC": {
+                "daily_requests": 10,
+                "daily_tokens": 3000,
+                "req_reset_hours": 24,
+                "max_docs": 1,
+                "model": settings.QWEN_MODEL,
+                "thinking": False,
+            },
+            "PRO": {
+                "daily_requests": 25,
+                "daily_tokens": 7500,
+                "req_reset_hours": 5,
+                "max_docs": 5,
+                "model": settings.QWEN_MODEL,
+                "thinking": False,
+            },
+            "PREMIUM": {
+                "daily_requests": 100,
+                "daily_tokens": 30000,
+                "req_reset_hours": 5,
+                "max_docs": -1,
+                "model": settings.LLAMA_MODEL,
+                "thinking": True,
+            },
+            "admin": {
+                "daily_requests": -1,
+                "daily_tokens": -1,
+                "req_reset_hours": 24,
+                "max_docs": -1,
+                "model": settings.LLAMA_MODEL,
+                "thinking": True,
+            },
+        }
+
+        await db_client.db.quota_configs.update_one(
+            {"_id": "global"}, {"$set": {"role_limits": default_limits}}, upsert=True
+        )
+        return default_limits
 
     @staticmethod
-    async def _get_global_config(db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        config_data = await RepositoryFactory.get("quota_configs").find_one(
-            {"_id": "global"}
-        )
-        default_config = GlobalQuotaConfig()
-        if not config_data:
-            await RepositoryFactory.get("quota_configs").insert_one(
-                {"_id": "global", **default_config.model_dump()}
+    async def update_role_quota(tier: str, limits_dict: dict, db=None):
+        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+        if tier in global_cfg:
+            global_cfg[tier].update(limits_dict)
+            await db_client.db.quota_configs.update_one(
+                {"_id": "global"}, {"$set": {f"role_limits.{tier}": global_cfg[tier]}}
             )
-            return default_config
-        db_role_limits = config_data.get("role_limits", {})
-        merged_limits = default_config.role_limits.copy()
-        for role, limits in db_role_limits.items():
-            if role in merged_limits:
-                merged_limits[role] = QuotaLimit(**limits)
-        default_config.role_limits = merged_limits
-        return default_config
 
     @staticmethod
-    async def get_user_limits(user_id: str, role: str, db=None) -> QuotaLimit:
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        user_override = await RepositoryFactory.get("user_quotas").find_one(
-            {"user_id": user_id}
+    async def get_user_limits(
+        user_id: str, role: str, ai_tier: str = "BASIC", db=None
+    ) -> QuotaLimit:
+        global_cfg = await QuotaService.get_global_config_from_db(db=db)
+
+        target_tier = "admin" if role == "admin" else ai_tier
+        tier_cfg = global_cfg.get(target_tier, global_cfg.get("BASIC", {}))
+
+        def _parse_inf(val):
+            return math.inf if val == -1 else val
+
+        return QuotaLimit(
+            daily_requests=_parse_inf(tier_cfg.get("daily_requests", 0)),
+            daily_tokens=_parse_inf(tier_cfg.get("daily_tokens", 0)),
+            req_reset_hours=tier_cfg.get("req_reset_hours", 24),
+            max_docs=_parse_inf(tier_cfg.get("max_docs", 1)),
+            model=tier_cfg.get("model", settings.QWEN_MODEL),
+            thinking=tier_cfg.get("thinking", False),
         )
-        if user_override:
-            return QuotaLimit(**user_override["limits"])
-        global_config = await QuotaService._get_global_config()
-        return global_config.role_limits.get(role, global_config.role_limits["reader"])
 
     @staticmethod
-    async def check_quota(user_id: str, role: str, feature: str = "chat", db=None):
-        limits = await QuotaService.get_user_limits(user_id, role)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        req_key = f"quota:{user_id}:{feature}:req:{today}"
+    async def check_quota(
+        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
+    ):
+        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+
+        req_key = f"quota:{user_id}:{feature}:req"
         current_reqs = await db_client.redis.get(req_key)
         current_reqs = int(current_reqs) if current_reqs else 0
+
         if current_reqs >= limits.daily_requests:
             raise HTTPException(
                 status_code=429,
                 detail="Tài khoản của bạn đã đạt giới hạn yêu cầu trong ngày",
             )
-        token_key = f"quota:{user_id}:{feature}:token:{today}"
+
+        token_key = f"quota:{user_id}:{feature}:token"
         current_tokens = await db_client.redis.get(token_key)
         current_tokens = int(current_tokens) if current_tokens else 0
+
         if current_tokens >= limits.daily_tokens:
             raise HTTPException(
                 status_code=429,
-                detail="Tài khoản của bạn đã sử dụng hết hạn mức token hôm nay",
+                detail="Tài khoản của bạn đã sử dụng hết hạn mức token trong ngày",
             )
         return limits
 
     @staticmethod
-    async def consume_request(user_id: str, feature: str = "chat", db=None):
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        req_key = f"quota:{user_id}:{feature}:req:{today}"
-        await db_client.redis.incr(req_key)
-        await db_client.redis.expire(req_key, 86400)
+    async def consume_request(
+        user_id: str, feature: str = "chat", req_reset_hours: int = 24, db=None
+    ):
+        req_key = f"quota:{user_id}:{feature}:req"
+        current = await db_client.redis.incr(req_key)
+        if current == 1:
+            await db_client.redis.expire(req_key, req_reset_hours * 3600)
 
     @staticmethod
-    async def consume_tokens(user_id: str, tokens: int, feature: str = "chat", db=None):
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        token_key = f"quota:{user_id}:{feature}:token:{today}"
-        await db_client.redis.incrby(token_key, tokens)
-        await db_client.redis.expire(token_key, 86400)
+    async def consume_tokens(
+        user_id: str,
+        tokens: int,
+        feature: str = "chat",
+        req_reset_hours: int = 24,
+        db=None,
+    ):
+        if tokens <= 0:
+            return
+        token_key = f"quota:{user_id}:{feature}:token"
+        current = await db_client.redis.incrby(token_key, tokens)
+        if current == tokens:
+            await db_client.redis.expire(token_key, req_reset_hours * 3600)
 
     @staticmethod
     async def get_current_usage(
-        user_id: str, role: str, feature: str = "chat", db=None
+        user_id: str, role: str, ai_tier: str = "BASIC", feature: str = "chat", db=None
     ):
-        limits = await QuotaService.get_user_limits(user_id, role)
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        req_key = f"quota:{user_id}:{feature}:req:{today}"
-        token_key = f"quota:{user_id}:{feature}:token:{today}"
+        limits = await QuotaService.get_user_limits(user_id, role, ai_tier, db=db)
+        req_key = f"quota:{user_id}:{feature}:req"
+        token_key = f"quota:{user_id}:{feature}:token"
         used_reqs = int(await db_client.redis.get(req_key) or 0)
         used_tokens = int(await db_client.redis.get(token_key) or 0)
         return {
-            "limit_requests": limits.daily_requests,
-            "limit_tokens": limits.daily_tokens,
+            "limit_requests": (
+                limits.daily_requests if limits.daily_requests != math.inf else -1
+            ),
+            "limit_tokens": (
+                limits.daily_tokens if limits.daily_tokens != math.inf else -1
+            ),
             "used_requests": used_reqs,
             "used_tokens": used_tokens,
-            "remaining_requests": max(0, limits.daily_requests - used_reqs),
-            "remaining_tokens": max(0, limits.daily_tokens - used_tokens),
+            "remaining_requests": (
+                max(0, limits.daily_requests - used_reqs)
+                if limits.daily_requests != math.inf
+                else -1
+            ),
+            "remaining_tokens": (
+                max(0, limits.daily_tokens - used_tokens)
+                if limits.daily_tokens != math.inf
+                else -1
+            ),
+            "tier": ai_tier,
+            "reset_hours": limits.req_reset_hours,
         }
-
-    @staticmethod
-    async def update_global_limits(role: str, limits: QuotaLimit, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        await RepositoryFactory.get("quota_configs").update_one(
-            {"_id": "global"},
-            {
-                "$set": {
-                    f"role_limits.{role}": limits.model_dump(),
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
-            upsert=True,
-        )
-        return {"message": f"Đã cập nhật hạn mức cho nhóm {role}"}

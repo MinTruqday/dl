@@ -5,7 +5,8 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import StandardEditor from "./StandardEditor";
 import LatexEditor from "./LatexEditor";
-import { useToast } from "@/shared/contexts/Toast";
+import { useToast } from "@/shared/hooks/useToast";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   compilePreviewAPI,
   globalFindReplaceAPI,
@@ -80,11 +81,18 @@ export default function Editor({
   const [loadingSidebar, setLoadingSidebar] = useState(false);
   const [stats, setStats] = useState({ wpm: 0, charCount: 0, goalProgress: 0 });
   const [readingTime, setReadingTime] = useState<number>(0);
-  const [lastKeystroke, setLastKeystroke] = useState<number>(Date.now());
+  const [lastKeystroke, setLastKeystroke] = useState(Date.now());
   const lastContentRef = useRef<string>(initialContent || "");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>("Đã lưu");
   const { showToast } = useToast();
+  const { user } = useAuth() as any;
+
+  const checkPremiumAI = () => {
+    if (user?.ai_tier === "PREMIUM" || user?.role === "admin") return true;
+    showToast("Tính năng AI này chỉ dành cho gói Cao cấp", "error");
+    return false;
+  };
 
   const [isExportingWord, setIsExportingWord] = useState(false);
   const [isExportingEpub, setIsExportingEpub] = useState(false);
@@ -131,6 +139,7 @@ export default function Editor({
   }, [documentId]);
 
   const handleGrammarCheck = async () => {
+    if (!checkPremiumAI()) return;
     if (!editorRef.current) return;
     try {
       const data = await editorRef.current.save();
@@ -244,6 +253,7 @@ ${latexCode}
   };
 
   const handleSynonyms = async () => {
+    if (!checkPremiumAI()) return;
     if (!editorRef.current) return;
     setIsSuggesting(true);
     try {
@@ -296,6 +306,7 @@ ${latexCode}
   };
 
   const handleSummarize = async () => {
+    if (!checkPremiumAI()) return;
     if (!documentId) return;
     setIsSummarizing(true);
     showToast("Đang tóm tắt tài liệu bằng AI", "info");
@@ -311,6 +322,7 @@ ${latexCode}
   };
 
   const handleExtractTags = async () => {
+    if (!checkPremiumAI()) return;
     if (!documentId) return;
     setIsExtractingTags(true);
     showToast("Đang phân tích thẻ tự động", "info");
@@ -326,6 +338,7 @@ ${latexCode}
   };
 
   const handlePlagiarismScan = async () => {
+    if (!checkPremiumAI()) return;
     if (!documentId || !editorRef.current) return;
     setIsScanningPlagiarism(true);
     showToast("Đang quét đạo văn nội bộ", "info");
@@ -378,6 +391,7 @@ ${latexCode}
   }, [fetchSidebarData]);
 
   const handleConsistencyCheck = async () => {
+    if (!checkPremiumAI()) return;
     if (!editorRef.current || !documentId) return;
     setIsSuggesting(true);
     try {
@@ -407,6 +421,7 @@ ${latexCode}
   };
 
   const handleAiWritingPartner = async () => {
+    if (!checkPremiumAI()) return;
     if (!editorRef.current || !documentId) return;
     setIsSuggesting(true);
     try {
@@ -435,6 +450,7 @@ ${latexCode}
   };
 
   const handleTranslate = async () => {
+    if (!checkPremiumAI()) return;
     if (!editorRef.current && contentFormat === "json") return;
     setIsTranslating(true);
     setShowTranslateModal(false);

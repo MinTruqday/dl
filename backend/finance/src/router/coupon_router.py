@@ -10,7 +10,7 @@ from src.services.coupon_service import CouponService
 router = APIRouter(prefix="/coupon")
 
 
-@router.get("/kiem-tra", response_model=APIResponse[Any])
+@router.get("/check", response_model=APIResponse[Any])
 async def validate_coupon(
     code: str,
     document_id: Optional[str] = None,
@@ -47,7 +47,7 @@ async def create_coupon(
     )
 
 
-@router.post("/{coupon_id}/phe-duyet", response_model=APIResponse[Any])
+@router.post("/{coupon_id}/approve", response_model=APIResponse[Any])
 async def approve_coupon(
     coupon_id: str,
     action: str = "approve",

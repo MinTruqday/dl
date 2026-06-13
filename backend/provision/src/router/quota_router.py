@@ -11,9 +11,15 @@ router = APIRouter(prefix="/quota")
 
 
 @router.get("/check", response_model=APIResponse[Any], include_in_schema=False)
-async def check_quota_internal(user_id: str, role: str, db=Depends(get_db)):
-    await QuotaService.check_quota(user_id, role, db=db)
-    return APIResponse(data=None, message="Trong hạn mức", status=200)
+async def check_quota_internal(
+    user_id: str,
+    role: str,
+    ai_tier: str = "BASIC",
+    feature: str = "chat",
+    db=Depends(get_db),
+):
+    limits = await QuotaService.check_quota(user_id, role, ai_tier, feature, db=db)
+    return APIResponse(data=limits.model_dump(), message="Trong hạn mức", status=200)
 
 
 @router.get("/me", response_model=APIResponse[Any])
@@ -21,7 +27,7 @@ async def get_my_quota(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     usage = await QuotaService.get_current_usage(
-        str(current_user.id), current_user.role.value, db=db
+        str(current_user.id), current_user.role.value, current_user.ai_tier.value, db=db
     )
     return APIResponse(data=usage, message="Đã tải thông tin hạn mức")
 
@@ -33,13 +39,41 @@ async def update_role_quota(
     current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])),
     db=Depends(get_db),
 ):
-    result = await QuotaService.update_global_limits(role, limits, db=db)
-    return APIResponse(data=result, message="Đã cập nhật cấu hình hạn mức")
+    await QuotaService.update_role_quota(role, limits.model_dump(), db=db)
+    return APIResponse(
+        data={},
+        message="Đã cập nhật cấu hình hạn mức",
+    )
 
 
 @router.get("/config", response_model=APIResponse[Any])
 async def get_global_config(
     current_user: UserInDB = Depends(require_role([RoleEnum.ADMIN])), db=Depends(get_db)
 ):
-    config = await QuotaService._get_global_config(db=db)
-    return APIResponse(data=config.role_limits, message="Đã tải cấu hình hạn mức")
+    global_cfg = await QuotaService.get_global_config_from_db(db=db)
+    return APIResponse(
+        data=global_cfg,
+        message="Đã tải cấu hình hạn mức",
+    )
+
+
+from pydantic import BaseModel
+
+
+class ConsumeQuotaRequest(BaseModel):
+    user_id: str
+    feature: str = "chat"
+    req_reset_hours: int = 24
+    tokens: int = 0
+
+
+@router.post("/consume", response_model=APIResponse[Any], include_in_schema=False)
+async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
+    await QuotaService.consume_request(
+        req.user_id, req.feature, req.req_reset_hours, db=db
+    )
+    if req.tokens > 0:
+        await QuotaService.consume_tokens(
+            req.user_id, req.tokens, req.feature, req.req_reset_hours, db=db
+        )
+    return APIResponse(data=None, message="Đã trừ hạn mức", status=200)

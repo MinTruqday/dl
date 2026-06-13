@@ -35,7 +35,7 @@ async def get_sys_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/kiem-tra",
+    "/check",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

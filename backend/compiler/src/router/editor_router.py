@@ -22,13 +22,18 @@ from src.schemas.editor_schema import (
 )
 from src.services.editor_service import EditorService
 
+def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
+    if current_user.ai_tier.value not in ["PREMIUM"] and current_user.role.value != "admin":
+        raise HTTPException(status_code=403, detail="Tính năng AI này chỉ dành cho gói Cao cấp")
+    return current_user
+
 router = APIRouter(prefix="/editor")
 
 
 @router.post("/{document_id}/check-plagiarism")
 async def check_plagiarism(
     document_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
@@ -142,7 +147,8 @@ async def global_find_replace(
 @router.post("/{document_id}/ai-suggest")
 async def get_ai_suggestions(
     document_id: str,
-    payload: current_user = Depends(get_current_user),
+    payload: AISuggestionRequest,
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
@@ -157,7 +163,7 @@ async def get_ai_suggestions(
 @router.post("/{document_id}/summarize")
 async def summarize_document(
     document_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
@@ -172,7 +178,7 @@ async def summarize_document(
 @router.post("/{document_id}/analyze-tags")
 async def extract_smart_tags(
     document_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
@@ -188,7 +194,7 @@ async def extract_smart_tags(
 async def check_logic(
     document_id: str,
     payload: dict,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {
@@ -203,7 +209,7 @@ async def check_logic(
 @router.post("/{document_id}/check-grammar")
 async def check_grammar(
     document_id: str,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_premium_ai),
     agentic_ai_url: str = Header(settings.AGENTIC_AI_URL),
 ):
     return {

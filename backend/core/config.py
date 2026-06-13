@@ -49,6 +49,7 @@ class Settings(BaseModel):
     MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES"))
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
+    QWEN_MODEL: str = os.getenv("QWEN_MODEL")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL")
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")

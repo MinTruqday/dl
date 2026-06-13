@@ -9,6 +9,7 @@ from core.schemas.wallet import (
     DocumentPricingRequest,
     FlashSaleRequest,
 )
+from pydantic import BaseModel
 from src.services.subscription_service import SubscriptionService
 from src.services.pricing_service import PricingService
 from src.services.withdrawal_service import WithdrawalService
@@ -31,7 +32,7 @@ async def create_plan(
     )
 
 
-@router.get("/goi-hoi-vien/{author_id}", response_model=APIResponse[Any])
+@router.get("/membership-plan/{author_id}", response_model=APIResponse[Any])
 async def get_plans(author_id: str, db=Depends(get_db)):
     from core.database import db_client
 
@@ -52,7 +53,7 @@ async def subscribe(
     )
 
 
-@router.get("/subscriptions/ca-nhan", response_model=APIResponse[Any])
+@router.get("/subscriptions/personal", response_model=APIResponse[Any])
 async def get_my_subscriptions(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -62,9 +63,7 @@ async def get_my_subscriptions(
     )
 
 
-@router.post(
-    "/subscriptions/{subscription_id}/tam-dung", response_model=APIResponse[Any]
-)
+@router.post("/subscriptions/{subscription_id}/pause", response_model=APIResponse[Any])
 async def pause_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -78,9 +77,7 @@ async def pause_subscription(
     )
 
 
-@router.post(
-    "/subscriptions/{subscription_id}/tiep-tuc", response_model=APIResponse[Any]
-)
+@router.post("/subscriptions/{subscription_id}/resume", response_model=APIResponse[Any])
 async def resume_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -94,7 +91,7 @@ async def resume_subscription(
     )
 
 
-@router.post("/subscriptions/{subscription_id}/huy", response_model=APIResponse[Any])
+@router.post("/subscriptions/{subscription_id}/cancel", response_model=APIResponse[Any])
 async def cancel_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -108,7 +105,7 @@ async def cancel_subscription(
     )
 
 
-@router.put("/document/{document_id}/gia-ban", response_model=APIResponse[Any])
+@router.put("/document/{document_id}/pricing", response_model=APIResponse[Any])
 async def set_document_pricing(
     document_id: str,
     data: DocumentPricingRequest,
@@ -151,4 +148,22 @@ async def get_author_revenue(
     return APIResponse(
         data=await WithdrawalService.get_revenue(current_user, db=db),
         message="Đã tải thống kê doanh thu",
+    )
+
+
+class UpgradeTierRequest(BaseModel):
+    tier: str
+
+
+@router.post("/ai-tier/upgrade", response_model=APIResponse[Any])
+async def upgrade_ai_tier(
+    req: UpgradeTierRequest,
+    current_user: UserInDB = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    from src.services.purchase_service import PurchaseService
+
+    return APIResponse(
+        data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
+        message=f"Giao dịch nâng cấp gói AI thành công",
     )

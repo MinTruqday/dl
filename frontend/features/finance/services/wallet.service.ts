@@ -43,20 +43,6 @@ export async function redeemVoucherAPI(code: string) {
   return data;
 }
 
-export async function voteItemAPI(
-  itemId: string,
-  itemType: string,
-  amount: number,
-) {
-  const res = await fetch(`${API_URL}/wallet/vote`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify({ item_id: itemId, item_type: itemType, amount }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Bình chọn thất bại");
-  return data;
-}
 
 export async function unlockPostAPI(postId: string) {
   const res = await fetch(`${API_URL}/wallet/unlock`, {

@@ -5,11 +5,16 @@ import math
 from pydantic import BaseModel, Field
 
 
+from core.schemas.user import AITierEnum
+
+
 class QuotaLimit(BaseModel):
     daily_requests: Union[int, float] = 0
     daily_tokens: Union[int, float] = 0
-    monthly_requests: Optional[Union[int, float]] = None
-    monthly_tokens: Optional[Union[int, float]] = None
+    req_reset_hours: Union[int, float] = 24
+    max_docs: Union[int, float] = 1
+    model: str = ""
+    thinking: bool = False
 
 
 class UserQuota(BaseModel):
