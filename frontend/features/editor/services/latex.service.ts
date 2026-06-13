@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function cleanTempFilesAPI() {
-  const res = await fetch(`${API_URL}/soan-thao-latex/don-dep`, {
+  const res = await fetch(`${API_URL}/latex/don-dep`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -11,7 +11,7 @@ export async function cleanTempFilesAPI() {
 }
 
 export async function compileLatexPreviewAPI(content: string, isFragment: boolean = false) {
-  const res = await fetch(`${API_URL}/soan-thao-latex/bien-dich-xem-truoc`, {
+  const res = await fetch(`${API_URL}/latex/bien-dich-xem-truoc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, is_fragment: isFragment }),
@@ -24,7 +24,7 @@ export async function compileLatexPreviewAPI(content: string, isFragment: boolea
 }
 
 export async function formatLatexAPI(content: string) {
-  const res = await fetch(`${API_URL}/soan-thao-latex/dinh-dang`, {
+  const res = await fetch(`${API_URL}/latex/dinh-dang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -35,7 +35,7 @@ export async function formatLatexAPI(content: string) {
 }
 
 export async function exportLatexAPI(content: string, format: string = "docx") {
-  const res = await fetch(`${API_URL}/soan-thao-latex/xuat-tai-lieu`, {
+  const res = await fetch(`${API_URL}/latex/export`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, format }),
@@ -48,7 +48,7 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
 }
 
 export async function cloudAutoSaveAPI(documentId: string, content: string) {
-  const res = await fetch(`${API_URL}/soan-thao-latex/tu-dong-luu`, {
+  const res = await fetch(`${API_URL}/latex/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, content }),
@@ -59,7 +59,7 @@ export async function cloudAutoSaveAPI(documentId: string, content: string) {
 }
 
 export async function exportProjectZipAPI(content: string) {
-  const res = await fetch(`${API_URL}/soan-thao-latex/xuat-zip`, {
+  const res = await fetch(`${API_URL}/latex/xuat-zip`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),

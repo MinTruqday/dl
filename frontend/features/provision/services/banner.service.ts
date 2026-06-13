@@ -1,14 +1,14 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getActiveBannersAPI() {
-  const res = await fetch(`${API_URL}/bieu-ngu`);
+  const res = await fetch(`${API_URL}/banner`);
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Không thể tải danh sách biểu ngữ");
   return data;
 }
 
 export async function getAllBannersAPI() {
-  const res = await fetch(`${API_URL}/bieu-ngu/tat-ca`, {
+  const res = await fetch(`${API_URL}/banner/tat-ca`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -22,7 +22,7 @@ export async function createBannerAPI(data: {
   link_url?: string;
   priority?: number;
 }) {
-  const res = await fetch(`${API_URL}/bieu-ngu`, {
+  const res = await fetch(`${API_URL}/banner`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -33,7 +33,7 @@ export async function createBannerAPI(data: {
 }
 
 export async function deleteBannerAPI(id: string) {
-  const res = await fetch(`${API_URL}/bieu-ngu/${id}`, {
+  const res = await fetch(`${API_URL}/banner/${id}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

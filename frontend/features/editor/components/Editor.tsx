@@ -75,7 +75,7 @@ export default function Editor({
 
   useEffect(() => {
     if (!documentId) return;
-    let wsUrl = `ws://localhost:8200/soan-thao/ws-crdt/${documentId}`;
+    let wsUrl = `ws://localhost:8200/editor/ws-crdt/${documentId}`;
     let ws: WebSocket;
     try {
       ws = new WebSocket(wsUrl);
@@ -306,7 +306,7 @@ ${latexCode}
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {
-        const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
+        const res = await fetch(`${API_URL}/editor/${documentId}/comment`, {
             headers: getAuthHeaders()
         });
         if (!res.ok) throw new Error("Lỗi xác thực hoặc không thể tải nhận xét");
@@ -331,7 +331,7 @@ ${latexCode}
       const data = await editorRef.current.save();
       const text = data.blocks.map(b => b.data?.text || "").join(" ");
       const contextText = text.length > 3000 ? text.slice(-3000) : text;
-      const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-logic`, {
+      const res = await fetch(`${API_URL}/editor/${documentId}/kiem-tra-logic`, {
           method: "POST",
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
           body: JSON.stringify({ content: contextText })

@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function validateCouponAPI(code: string, documentId?: string) {
-  const url = `${API_URL}/ma-uu-dai/kiem-tra?code=${encodeURIComponent(code)}` + (documentId ? `&document_id=${documentId}` : "");
+  const url = `${API_URL}/coupon/kiem-tra?code=${encodeURIComponent(code)}` + (documentId ? `&document_id=${documentId}` : "");
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -11,7 +11,7 @@ export async function validateCouponAPI(code: string, documentId?: string) {
 }
 
 export async function getCouponsAPI() {
-  const res = await fetch(`${API_URL}/ma-uu-dai`, {
+  const res = await fetch(`${API_URL}/coupon`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -20,7 +20,7 @@ export async function getCouponsAPI() {
 }
 
 export async function createCouponAPI(payload: any) {
-  const res = await fetch(`${API_URL}/ma-uu-dai`, {
+  const res = await fetch(`${API_URL}/coupon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -31,7 +31,7 @@ export async function createCouponAPI(payload: any) {
 }
 
 export async function approveCouponAPI(couponId: string, action: "approve" | "reject") {
-  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}/phe-duyet?action=${action}`, {
+  const res = await fetch(`${API_URL}/coupon/${couponId}/phe-duyet?action=${action}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -41,7 +41,7 @@ export async function approveCouponAPI(couponId: string, action: "approve" | "re
 }
 
 export async function toggleCouponStatusAPI(couponId: string) {
-  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}/trang-thai`, {
+  const res = await fetch(`${API_URL}/coupon/${couponId}/trang-thai`, {
     method: "PATCH",
     headers: getAuthHeaders(),
   });
@@ -51,7 +51,7 @@ export async function toggleCouponStatusAPI(couponId: string) {
 }
 
 export async function deleteCouponAPI(couponId: string) {
-  const res = await fetch(`${API_URL}/ma-uu-dai/${couponId}`, {
+  const res = await fetch(`${API_URL}/coupon/${couponId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

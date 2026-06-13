@@ -62,7 +62,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
     setIsSearching(true);
     try {
       await smartSearchAPI(searchQuery);
-      router.push(`/tim-kiem?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     } catch (err: any) {
       console.error("Error smart searching:", err);
     } finally {
@@ -126,7 +126,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Link href="/tro-chuyen" className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150" title="DocLib AI">
+                <Link href="/chat" className="relative p-2 text-zinc-500 hover:text-black hover:bg-zinc-100 rounded-xl transition-all duration-150" title="DocLib AI">
                   <MessageCircle className="w-5 h-5" />
                 </Link>
                 <div className="relative" ref={notifRef}>
@@ -191,7 +191,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                         )}
                       </div>
                       <Link
-                        href="/thong-bao"
+                        href="/notification"
                         onClick={() => setShowNotifications(false)}
                         className="block py-3 text-center text-xs font-medium text-zinc-500 border-t border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-black transition-all duration-150"
                       >
@@ -248,7 +248,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                         </p>
                       </div>
                       <Link
-                        href="/ho-so"
+                        href="/profile"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 hover:text-black transition-all duration-150"
                       >
@@ -256,7 +256,7 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
                         Hồ sơ cá nhân
                       </Link>
                       <Link
-                        href="/cai-dat"
+                        href="/settings"
                         onClick={() => setShowUserMenu(false)}
                         className="flex items-center gap-3 px-5 py-2.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 hover:text-black transition-all duration-150"
                       >
@@ -278,13 +278,13 @@ export default function Navigation({ onToggleSidebar }: NavigationProps) {
             ) : (
               <div className="flex items-center gap-2">
                 <Link
-                  href="/dang-nhap"
+                  href="/login"
                   className="px-4 py-2 text-sm font-medium text-zinc-600 hover:text-black transition-all duration-150"
                 >
                   Đăng nhập
                 </Link>
                 <Link
-                  href="/dang-ky"
+                  href="/register"
                   className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-zinc-800 rounded-2xl transition-all duration-150"
                 >
                   Đăng ký

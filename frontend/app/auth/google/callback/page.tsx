@@ -17,7 +17,7 @@ export default function GoogleCallbackPage() {
       const handleCallback = async () => {
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/xac-thuc/google/phan-hoi?code=${code}`
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/google/feedback?code=${code}`
           );
           const data = await res.json();
           const authData = data.data || data;
@@ -65,7 +65,7 @@ export default function GoogleCallbackPage() {
           </h2>
           <p className="mt-3 text-base text-zinc-500">{error}</p>
           <button
-            onClick={() => router.push("/dang-nhap")}
+            onClick={() => router.push("/login")}
             className="mt-8 w-full py-3 bg-black text-white font-bold text-sm active:scale-95 rounded-2xl hover:bg-zinc-800 transition-colors"
           >
             Quay lại đăng nhập

@@ -127,24 +127,24 @@ export default function Menu({
           <NavLink
             icon={MessageSquare}
             label="Tin nhắn"
-            href="/tin-nhan"
+            href="/message"
             requireAuth
           />
           <NavLink
             icon={Sparkles}
             label="Trò chuyện"
-            href="/tro-chuyen"
+            href="/chat"
             requireAuth
           />
           <NavLink
             icon={Library}
-            href="/thu-vien"
+            href="/library"
             label="Thư viện"
             requireAuth
           />
-          <NavLink icon={User} href="/ho-so" label="Hồ sơ" requireAuth />
-          <NavLink icon={Wallet} href="/vi-tien" label="Ví" requireAuth />
-          <NavLink icon={Settings} href="/cai-dat" label="Cài đặt" requireAuth />
+          <NavLink icon={User} href="/profile" label="Hồ sơ" requireAuth />
+          <NavLink icon={Wallet} href="/wallet" label="Ví" requireAuth />
+          <NavLink icon={Settings} href="/settings" label="Cài đặt" requireAuth />
 
           {isAuthorOrAdmin && (
             <>
@@ -157,31 +157,31 @@ export default function Menu({
               </div>
 
               <NavLink
-                href="/khoi-tao"
+                href="/provision"
                 label="Sáng tác"
                 icon={PenTool}
                 roles={["author", "admin"]}
               />
               <NavLink
-                href="/ma-uu-dai"
+                href="/coupon"
                 label="Ưu đãi"
                 icon={Ticket}
                 roles={["author", "admin"]}
               />
               <NavLink
-                href="/cong-tac"
+                href="/collaboration"
                 label="Hợp tác"
                 icon={Users}
                 roles={["author", "admin"]}
               />
               <NavLink
-                href="/luu-tru"
+                href="/storage"
                 label="Kho lưu trữ"
                 icon={FolderOpen}
                 roles={["author", "admin"]}
               />
               <NavLink
-                href="/tai-lieu"
+                href="/document"
                 label="Kho tài liệu"
                 icon={Files}
                 roles={["admin", "author"]}
@@ -200,37 +200,37 @@ export default function Menu({
               </div>
 
               <NavLink
-                href="/nhat-ky"
+                href="/audit"
                 label="Nhật ký hệ thống"
                 icon={Clock}
                 roles={["moderator", "admin"]}
               />
               <NavLink
-                href="/thu-thap"
+                href="/collect"
                 label="Thu thập dữ liệu"
                 icon={Database}
                 roles={["admin"]}
               />
               <NavLink
-                href="/nguoi-dung"
+                href="/user"
                 label="Quản lý người dùng"
                 icon={Users}
                 roles={["admin"]}
               />
               <NavLink
-                href="/bao-cao"
+                href="/report"
                 label="Báo cáo vi phạm"
                 icon={AlertTriangle}
                 roles={["admin", "moderator"]}
               />
               <NavLink
-                href="/van-hanh"
+                href="/operation"
                 label="Vận hành hệ thống"
                 icon={Shield}
                 roles={["admin"]}
               />
               <NavLink
-                href="/bieu-ngu"
+                href="/banner"
                 label="Quản lý biểu ngữ"
                 icon={Presentation}
                 roles={["admin"]}

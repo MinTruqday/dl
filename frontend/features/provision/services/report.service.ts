@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getReportsAPI(status: string = "pending", skip: number = 0, limit: number = 30) {
-  const res = await fetch(`${API_URL}/bao-cao/hang-doi?status=${status}&skip=${skip}&limit=${limit}`, {
+  const res = await fetch(`${API_URL}/report/hang-doi?status=${status}&skip=${skip}&limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -10,7 +10,7 @@ export async function getReportsAPI(status: string = "pending", skip: number = 0
 }
 
 export async function resolveReportAPI(reportId: string, action: string) {
-  const res = await fetch(`${API_URL}/bao-cao/${reportId}/giai-quyet`, {
+  const res = await fetch(`${API_URL}/report/${reportId}/giai-quyet`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -29,7 +29,7 @@ export async function submitReportAPI(payload: {
   reason: string;
   detail: string;
 }) {
-  const res = await fetch(`${API_URL}/phan-hoi/bao-cao`, {
+  const res = await fetch(`${API_URL}/feedback/report`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

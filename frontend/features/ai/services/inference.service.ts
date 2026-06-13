@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function translateTextAPI(text: string, targetLang: string = "vi") {
-  const res = await fetch(`${API_URL}/suy-luan/dich-thuat`, {
+  const res = await fetch(`${API_URL}/inference/dich-thuat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, target_lang: targetLang }),
@@ -12,7 +12,7 @@ export async function translateTextAPI(text: string, targetLang: string = "vi") 
 }
 
 export async function analyzeSentimentAPI(text: string) {
-  const res = await fetch(`${API_URL}/suy-luan/phan-tich-cam-xuc`, {
+  const res = await fetch(`${API_URL}/inference/phan-tich-cam-xuc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -23,7 +23,7 @@ export async function analyzeSentimentAPI(text: string) {
 }
 
 export async function grammarCheckAPI(text: string) {
-  const res = await fetch(`${API_URL}/suy-luan/kiem-tra-ngu-phap`, {
+  const res = await fetch(`${API_URL}/inference/kiem-tra-ngu-phap`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -34,7 +34,7 @@ export async function grammarCheckAPI(text: string) {
 }
 
 export async function getSynonymsAPI(text: string) {
-  const res = await fetch(`${API_URL}/suy-luan/tu-dong-nghia`, {
+  const res = await fetch(`${API_URL}/inference/tu-dong-nghia`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -45,7 +45,7 @@ export async function getSynonymsAPI(text: string) {
 }
 
 export async function generateCodeAPI(prompt: string) {
-  const res = await fetch(`${API_URL}/suy-luan/tao-ma-nguon`, {
+  const res = await fetch(`${API_URL}/inference/tao-ma-nguon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),

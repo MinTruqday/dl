@@ -4,7 +4,7 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/van-hanh/don-ung-tuyen/tac-gia?status=${status}`,
+    `${API_URL}/operation/don-ung-tuyen/tac-gia?status=${status}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -22,7 +22,7 @@ export async function reviewAuthorApplicationAPI(
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/van-hanh/don-ung-tuyen/tac-gia/${applicationId}/xet-duyet`,
+    `${API_URL}/operation/don-ung-tuyen/tac-gia/${applicationId}/xet-duyet`,
     {
       method: "PUT",
       headers: {
@@ -40,7 +40,7 @@ export async function reviewAuthorApplicationAPI(
 export async function getAdminConfigAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/cau-hinh`, {
+  const res = await fetch(`${API_URL}/operation/cau-hinh`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -51,7 +51,7 @@ export async function getAdminConfigAPI() {
 export async function updateAdminConfigAPI(config: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/cau-hinh`, {
+  const res = await fetch(`${API_URL}/operation/cau-hinh`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ export async function updateAdminConfigAPI(config: any) {
 export async function getSystemHealthAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/suc-khoe-he-thong`, {
+  const res = await fetch(`${API_URL}/operation/suc-khoe-he-thong`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -78,7 +78,7 @@ export async function getSystemHealthAPI() {
 export async function getMaintenanceModeAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/bao-tri`, {
+  const res = await fetch(`${API_URL}/operation/bao-tri`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -91,7 +91,7 @@ export async function toggleMaintenanceModeAPI(
 ) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/bao-tri?enabled=${enabled}`, {
+  const res = await fetch(`${API_URL}/operation/bao-tri?enabled=${enabled}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -105,7 +105,7 @@ export async function toggleMaintenanceModeAPI(
 export async function triggerBackupAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/sao-luu`, {
+  const res = await fetch(`${API_URL}/operation/sao-luu`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -125,7 +125,7 @@ export async function triggerBackupAPI() {
 export async function getAdminReportsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/bao-cao`, {
+  const res = await fetch(`${API_URL}/operation/report`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -136,7 +136,7 @@ export async function getAdminReportsAPI() {
 export async function getMinioStatsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/van-hanh/minio/thong-ke`, {
+  const res = await fetch(`${API_URL}/operation/minio/thong-ke`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();

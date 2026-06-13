@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getWalletBalanceAPI() {
-  const res = await fetch(`${API_URL}/vi-tien/so-du`, {
+  const res = await fetch(`${API_URL}/wallet/so-du`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -10,7 +10,7 @@ export async function getWalletBalanceAPI() {
 }
 
 export async function getWalletHistoryAPI() {
-  const res = await fetch(`${API_URL}/vi-tien/lich-su`, {
+  const res = await fetch(`${API_URL}/wallet/lich-su`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -19,7 +19,7 @@ export async function getWalletHistoryAPI() {
 }
 
 export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30) {
-  const res = await fetch(`${API_URL}/vi-tien/lich-su?limit=${limit}`, {
+  const res = await fetch(`${API_URL}/wallet/lich-su?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -28,7 +28,7 @@ export async function getDetailedHistoryAPI(skip: number = 0, limit: number = 30
 }
 
 export async function redeemVoucherAPI(code: string) {
-  const res = await fetch(`${API_URL}/vi-tien/ma-qua-tang/doi-ma`, {
+  const res = await fetch(`${API_URL}/wallet/ma-qua-tang/doi-ma`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ code }),
@@ -39,7 +39,7 @@ export async function redeemVoucherAPI(code: string) {
 }
 
 export async function voteItemAPI(itemId: string, itemType: string, amount: number) {
-  const res = await fetch(`${API_URL}/vi-tien/binh-chon`, {
+  const res = await fetch(`${API_URL}/wallet/binh-chon`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ item_id: itemId, item_type: itemType, amount }),
@@ -50,7 +50,7 @@ export async function voteItemAPI(itemId: string, itemType: string, amount: numb
 }
 
 export async function unlockPostAPI(postId: string) {
-  const res = await fetch(`${API_URL}/vi-tien/mo-khoa`, {
+  const res = await fetch(`${API_URL}/wallet/mo-khoa`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ post_id: postId }),
@@ -62,7 +62,7 @@ export async function unlockPostAPI(postId: string) {
 
 
 export async function getAuthorStatsAPI() {
-  const res = await fetch(`${API_URL}/vi-tien/doanh-thu`, {
+  const res = await fetch(`${API_URL}/wallet/doanh-thu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -71,7 +71,7 @@ export async function getAuthorStatsAPI() {
 }
 
 export async function purchaseDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/vi-tien/giao-dich-mua/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/wallet/giao-dich-mua/document/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -81,7 +81,7 @@ export async function purchaseDocumentAPI(documentId: string) {
 }
 
 export async function purchaseChapterAPI(documentId: string, chapterId: string) {
-  const res = await fetch(`${API_URL}/vi-tien/giao-dich-mua/tai-lieu/${documentId}/chuong/${chapterId}`, {
+  const res = await fetch(`${API_URL}/wallet/giao-dich-mua/document/${documentId}/chuong/${chapterId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

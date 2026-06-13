@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function compileDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/bien-dich`, {
+  const res = await fetch(`${API_URL}/document/${documentId}/compile`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

@@ -147,7 +147,7 @@ export default function ExplorePage() {
                 trending.map((document, i) => (
                   <Link
                     key={`trending-${document._id || i}`}
-                    href={`/tai-lieu/${document.slug}`}
+                    href={`/document/${document.slug}`}
                     className="flex gap-3 group items-center p-2 rounded-xl hover:bg-zinc-50 transition-colors -mx-2"
                   >
                     <span className="text-sm font-semibold text-zinc-400 w-5 text-center">
@@ -186,7 +186,7 @@ export default function ExplorePage() {
                 {recommendations.map((doc, i) => (
                   <Link
                     key={`rec-${doc._id || i}`}
-                    href={`/tai-lieu/${doc.slug}`}
+                    href={`/document/${doc.slug}`}
                     className="flex gap-4 p-3 border border-zinc-200 bg-white rounded-2xl hover:border-black transition-all duration-150 group"
                   >
                     <div className="w-20 h-28 shrink-0 bg-zinc-100 rounded-xl overflow-hidden relative">
@@ -276,7 +276,7 @@ export default function ExplorePage() {
                 {documents.map((document, i) => (
                   <Link
                     key={`doc-${document._id || i}`}
-                    href={`/tai-lieu/${document.slug}`}
+                    href={`/document/${document.slug}`}
                     className={`group flex ${viewMode === "grid"
                       ? "flex-col"
                       : "flex-row gap-6 p-3"

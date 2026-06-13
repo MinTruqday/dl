@@ -9,70 +9,70 @@ spec:
   rules:
   - http:
       paths:
-      - path: /vi-tien(/|$)(.*)
+      - path: /wallet(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: finance
             port:
               number: 8350
-      - path: /thong-bao(/|$)(.*)
+      - path: /notification(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: signal
             port:
               number: 8150
-      - path: /suy-luan(/|$)(.*)
+      - path: /inference(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: agentic_ai
             port:
               number: 8400
-      - path: /thu-thap(/|$)(.*)
+      - path: /collect(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: collector
             port:
               number: 8250
-      - path: /bien-dich(/|$)(.*)
+      - path: /compile(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: compiler
             port:
               number: 8300
-      - path: /xac-thuc(/|$)(.*)
+      - path: /auth(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: authentication
             port:
               number: 8500
-      - path: /nguoi-dung(/|$)(.*)
+      - path: /user(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: provision
             port:
               number: 8050
-      - path: /nhan-tin(/|$)(.*)
+      - path: /contact(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: contact
             port:
               number: 8100
-      - path: /tin-nhan(/|$)(.*)
+      - path: /message(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:
             name: websocket
             port:
               number: 8200
-      - path: /tai-lieu(/|$)(.*)
+      - path: /document(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:

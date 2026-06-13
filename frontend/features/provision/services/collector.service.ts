@@ -4,7 +4,7 @@ export async function triggerCollectionAPI(
   source: string,
   pages: number,
 ) {
-  const res = await fetch(`${API_URL}/thu-thap/noi-bo/kich-hoat`, {
+  const res = await fetch(`${API_URL}/collect/noi-bo/kich-hoat`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -18,7 +18,7 @@ export async function triggerCollectionAPI(
 }
 
 export async function stopCollectionAPI() {
-  const res = await fetch(`${API_URL}/thu-thap/dung`, {
+  const res = await fetch(`${API_URL}/collect/dung`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -28,7 +28,7 @@ export async function stopCollectionAPI() {
 }
 
 export async function getCollectorStatsAPI() {
-  const res = await fetch(`${API_URL}/thu-thap/thong-ke`, {
+  const res = await fetch(`${API_URL}/collect/thong-ke`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -37,7 +37,7 @@ export async function getCollectorStatsAPI() {
 }
 
 export async function getCollectorLogsAPI() {
-  const res = await fetch(`${API_URL}/thu-thap/logs`, {
+  const res = await fetch(`${API_URL}/collect/logs`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

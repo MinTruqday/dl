@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getSystemStatsAPI() {
-  const res = await fetch(`${API_URL}/do-luong/thong-ke`, {
+  const res = await fetch(`${API_URL}/telemetry/thong-ke`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -10,7 +10,7 @@ export async function getSystemStatsAPI() {
 }
 
 export async function getSystemHealthAPI() {
-  const res = await fetch(`${API_URL}/do-luong/suc-khoe-he-thong`, {
+  const res = await fetch(`${API_URL}/telemetry/suc-khoe-he-thong`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -19,7 +19,7 @@ export async function getSystemHealthAPI() {
 }
 
 export async function getAuditLogsAPI() {
-  const res = await fetch(`${API_URL}/do-luong/kiem-tra`, {
+  const res = await fetch(`${API_URL}/telemetry/kiem-tra`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -28,7 +28,7 @@ export async function getAuditLogsAPI() {
 }
 
 export async function getModeratorActivityAPI() {
-  const res = await fetch(`${API_URL}/do-luong/hoat-dong`, {
+  const res = await fetch(`${API_URL}/telemetry/hoat-dong`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

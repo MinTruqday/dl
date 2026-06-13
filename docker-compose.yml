@@ -134,7 +134,7 @@ services:
       - "8350:8350"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.finance.rule=PathPrefix(`/vi-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/rut-tien`) || PathPrefix(`/ma-uu-dai`)"
+      - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`) || PathPrefix(`/deposit`) || PathPrefix(`/withdrawal`) || PathPrefix(`/coupon`)"
       - "traefik.http.services.finance.loadbalancer.server.port=8350"
     env_file:
       - .env
@@ -158,7 +158,7 @@ services:
       - "8150:8150"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.signal.rule=PathPrefix(`/thong-bao`)"
+      - "traefik.http.routers.signal.rule=PathPrefix(`/notification`)"
       - "traefik.http.services.signal.loadbalancer.server.port=8150"
     env_file:
       - .env
@@ -182,7 +182,7 @@ services:
       - "8400:8400"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/suy-luan`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/han-muc`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/feedback`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/han-muc`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env
@@ -257,7 +257,7 @@ services:
       - "8250:8250"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
+      - "traefik.http.routers.collector.rule=PathPrefix(`/collect`)"
       - "traefik.http.services.collector.loadbalancer.server.port=8250"
     depends_on:
       - rabbitmq
@@ -282,7 +282,7 @@ services:
       - "8300:8300"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.compiler.rule=PathPrefix(`/bien-dich`)"
+      - "traefik.http.routers.compiler.rule=PathPrefix(`/compile`)"
       - "traefik.http.services.compiler.loadbalancer.server.port=8300"
     depends_on:
       - rabbitmq
@@ -307,7 +307,7 @@ services:
   #       - "8350:8350"
   #     labels:
   #       - "traefik.enable=true"
-  #       - "traefik.http.routers.finance.rule=PathPrefix(`/vi-tien`, `/nap-tien`, `/rut-tien`, `/ma-uu-dai`, `/kiem-tien`)"
+  #       - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`, `/deposit`, `/withdrawal`, `/coupon`, `/monetization`)"
   #       - "traefik.http.services.finance.loadbalancer.server.port=8350"
   #     depends_on:
   #       - mongodb
@@ -330,7 +330,7 @@ services:
       - "8500:8500"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/xac-thuc`, `/dinh-danh`)"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`, `/dinh-danh`)"
       - "traefik.http.services.auth.loadbalancer.server.port=8500"
     depends_on:
       - mongodb
@@ -355,7 +355,7 @@ services:
       - "8050:8050"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.provision.rule=PathPrefix(`/nguoi-dung`, `/nhat-ky`, `/do-luong`, `/van-hanh`)"
+      - "traefik.http.routers.provision.rule=PathPrefix(`/user`, `/audit`, `/telemetry`, `/operation`)"
       - "traefik.http.services.provision.loadbalancer.server.port=8050"
     depends_on:
       - mongodb
@@ -380,7 +380,7 @@ services:
   #       - "8100:8100"
   #     labels:
   #       - "traefik.enable=true"
-  #       - "traefik.http.routers.contact.rule=PathPrefix(`/nhan-tin`)"
+  #       - "traefik.http.routers.contact.rule=PathPrefix(`/contact`)"
   #       - "traefik.http.services.contact.loadbalancer.server.port=8100"
   #     depends_on:
   #       - mongodb
@@ -403,7 +403,7 @@ services:
   #       - "8150:8150"
   #     labels:
   #       - "traefik.enable=true"
-  #       - "traefik.http.routers.signal.rule=PathPrefix(`/thong-bao`)"
+  #       - "traefik.http.routers.signal.rule=PathPrefix(`/notification`)"
   #       - "traefik.http.services.signal.loadbalancer.server.port=8150"
   #     depends_on:
   #       - mongodb
@@ -429,7 +429,7 @@ services:
       - "8200:8200"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ws.rule=PathPrefix(`/tin-nhan`) || PathPrefix(`/soan-thao`)"
+      - "traefik.http.routers.ws.rule=PathPrefix(`/message`) || PathPrefix(`/editor`)"
       - "traefik.http.services.ws.loadbalancer.server.port=8200"
     depends_on:
       - redis
@@ -452,7 +452,7 @@ services:
   #       - "8050:8050"
   #     labels:
   #       - "traefik.enable=true"
-  #       - "traefik.http.routers.provision.rule=PathPrefix(`/nguoi-dung`, `/nhat-ky`, `/do-luong`, `/van-hanh`)"
+  #       - "traefik.http.routers.provision.rule=PathPrefix(`/user`, `/audit`, `/telemetry`, `/operation`)"
   #       - "traefik.http.services.provision.loadbalancer.server.port=8050"
   #     depends_on:
   #       - mongodb
@@ -485,7 +485,7 @@ services:
       - doclib_network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/tai-lieu`, `/danh-gia`, `/phien-ban`, `/doc`, `/danh-dau`, `/thu-vien`, `/tai-len`, `/kham-pha`, `/xuat-tai-lieu`, `/cong-tac`, `/xuat-ban`, `/luu-tru`, `/neu-bat`, `/soan-thao`, `/ban-nhap`, `/ghim`, `/han-muc`)"
+      - "traefik.http.routers.content.rule=PathPrefix(`/document`, `/review`, `/version`, `/reading`, `/danh-dau`, `/library`, `/upload`, `/discovery`, `/export`, `/collaboration`, `/publication`, `/storage`, `/highlight`, `/editor`, `/draft`, `/highlight`, `/han-muc`)"
       - "traefik.http.services.content.loadbalancer.server.port=8450"
 
 networks:

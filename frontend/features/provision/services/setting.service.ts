@@ -3,7 +3,7 @@ import { API_URL, getToken } from "./authentication.service";
 export async function getPrivacySettingsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
+  const res = await fetch(`${API_URL}/profile/settings`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -14,7 +14,7 @@ export async function getPrivacySettingsAPI() {
 export async function updatePrivacySettingsAPI(settings: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
+  const res = await fetch(`${API_URL}/profile/settings`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -30,7 +30,7 @@ export async function updatePrivacySettingsAPI(settings: any) {
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/doc/trinh-bay`, {
+  const res = await fetch(`${API_URL}/reading/trinh-bay`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -46,7 +46,7 @@ export async function updateTypographyAPI(typography: any) {
 export async function updateGeneralSettingsAPI(settings: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
+  const res = await fetch(`${API_URL}/profile/settings`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -61,7 +61,7 @@ export async function updateGeneralSettingsAPI(settings: any) {
 
 export async function updateProfileAPI(data: any) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/ho-so/ca-nhan`, {
+  const res = await fetch(`${API_URL}/profile/ca-nhan`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

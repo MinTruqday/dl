@@ -21,7 +21,7 @@ export async function createHighlightAPI(
     };
   }
 
-  const res = await fetch(`${API_URL}/neu-bat/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/highlight/document/${documentId}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(bodyData),
@@ -32,7 +32,7 @@ export async function createHighlightAPI(
 }
 
 export async function getHighlightsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/neu-bat/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/highlight/document/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -41,7 +41,7 @@ export async function getHighlightsAPI(documentId: string) {
 }
 
 export async function updateHighlightNoteAPI(highlightId: string, note: string) {
-  const res = await fetch(`${API_URL}/neu-bat/${highlightId}/ghi-chu`, {
+  const res = await fetch(`${API_URL}/highlight/${highlightId}/ghi-chu`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
@@ -52,7 +52,7 @@ export async function updateHighlightNoteAPI(highlightId: string, note: string) 
 }
 
 export async function deleteHighlightAPI(highlightId: string) {
-  const res = await fetch(`${API_URL}/neu-bat/${highlightId}`, {
+  const res = await fetch(`${API_URL}/highlight/${highlightId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -62,7 +62,7 @@ export async function deleteHighlightAPI(highlightId: string) {
 }
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
-  const res = await fetch(`${API_URL}/neu-bat/ghi-chu?skip=${skip}&limit=${limit}`, {
+  const res = await fetch(`${API_URL}/highlight/ghi-chu?skip=${skip}&limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -71,7 +71,7 @@ export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
 }
 
 export async function getReadingPreferencesAPI() {
-  const res = await fetch(`${API_URL}/tuy-chinh`, {
+  const res = await fetch(`${API_URL}/setting`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -86,7 +86,7 @@ export async function updateReadingPreferencesAPI(data: {
   font_family?: string;
   is_dyslexic_mode?: boolean;
 }) {
-  const res = await fetch(`${API_URL}/tuy-chinh`, {
+  const res = await fetch(`${API_URL}/setting`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -97,7 +97,7 @@ export async function updateReadingPreferencesAPI(data: {
 }
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/neu-bat/tai-lieu/${documentId}/xuat-tai-lieu`, {
+  const res = await fetch(`${API_URL}/highlight/document/${documentId}/export`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

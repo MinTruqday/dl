@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function publishDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -11,7 +11,7 @@ export async function publishDocumentAPI(documentId: string) {
 }
 
 export async function schedulePublishAPI(documentId: string, publishAt: string) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/len-lich`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/len-lich`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ publish_at: publishAt }),
@@ -22,7 +22,7 @@ export async function schedulePublishAPI(documentId: string, publishAt: string) 
 }
 
 export async function configPremiumAPI(documentId: string, premiumChapters: string[]) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/tinh-phi`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/tinh-phi`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ premium_chapters: premiumChapters }),
@@ -33,7 +33,7 @@ export async function configPremiumAPI(documentId: string, premiumChapters: stri
 }
 
 export async function setFreePreviewAPI(documentId: string, chapterIds: string[]) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/doc-thu`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/doc-thu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(chapterIds),
@@ -49,7 +49,7 @@ export async function updateSeoMetadataAPI(documentId: string, metadata: {
   slug?: string;
   description?: string;
 }) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/seo`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/seo`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(metadata),
@@ -60,7 +60,7 @@ export async function updateSeoMetadataAPI(documentId: string, metadata: {
 }
 
 export async function getReadabilityScoreAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat-ban/${documentId}/doc-hieu`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/doc-hieu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

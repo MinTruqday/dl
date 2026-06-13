@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function compilePreviewAPI(content: string, isFragment: boolean = false) {
-  const res = await fetch(`${API_URL}/soan-thao-latex/bien-dich-xem-truoc`, {
+  const res = await fetch(`${API_URL}/latex/bien-dich-xem-truoc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, is_fragment: isFragment }),
@@ -20,7 +20,7 @@ export async function compilePreviewAPI(content: string, isFragment: boolean = f
 }
 
 export async function exportToWordAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat-tai-lieu/${documentId}/docx`, {
+  const res = await fetch(`${API_URL}/export/${documentId}/docx`, {
     method: "GET",
     headers: getAuthHeaders(),
   });
@@ -36,7 +36,7 @@ export async function exportToWordAPI(documentId: string) {
 }
 
 export async function exportToEpubAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat-tai-lieu/${documentId}/epub`, {
+  const res = await fetch(`${API_URL}/export/${documentId}/epub`, {
     method: "GET",
     headers: getAuthHeaders(),
   });
@@ -52,7 +52,7 @@ export async function exportToEpubAPI(documentId: string) {
 }
 
 export async function analyzeInternalPlagiarismAPI(documentId: string, content: any) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/kiem-tra-dao-van`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(content),
@@ -63,7 +63,7 @@ export async function analyzeInternalPlagiarismAPI(documentId: string, content: 
 }
 
 export async function checkDeepPlagiarismAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/kiem-tra-dao-van-chuyen-sau`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/kiem-tra-dao-van-chuyen-sau`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -73,7 +73,7 @@ export async function checkDeepPlagiarismAPI(documentId: string) {
 }
 
 export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/dong-bo-thao-tac`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/dong-bo-thao-tac`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -84,7 +84,7 @@ export async function syncKeystrokeBufferAPI(documentId: string, payload: any) {
 }
 
 export async function addInlineSuggestionAPI(documentId: string, payload: any) {
-  const res = await fetch(`${API_URL}/soan-thao/tai-lieu/${documentId}/goi-y`, {
+  const res = await fetch(`${API_URL}/editor/document/${documentId}/goi-y`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -95,7 +95,7 @@ export async function addInlineSuggestionAPI(documentId: string, payload: any) {
 }
 
 export async function resolveSuggestionAPI(suggestionId: string, action: string) {
-  const res = await fetch(`${API_URL}/soan-thao/goi-y/${suggestionId}/giai-quyet`, {
+  const res = await fetch(`${API_URL}/editor/goi-y/${suggestionId}/giai-quyet`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ action }),
@@ -106,7 +106,7 @@ export async function resolveSuggestionAPI(suggestionId: string, action: string)
 }
 
 export async function syncPomodoroSessionAPI(payload: any) {
-  const res = await fetch(`${API_URL}/soan-thao/pomodoro`, {
+  const res = await fetch(`${API_URL}/editor/pomodoro`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -117,7 +117,7 @@ export async function syncPomodoroSessionAPI(payload: any) {
 }
 
 export async function autoSaveDraftAPI(documentId: string, content: any) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/tu-dong-luu`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -128,7 +128,7 @@ export async function autoSaveDraftAPI(documentId: string, content: any) {
 }
 
 export async function submitForReviewAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/gui-duyet`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/gui-duyet`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -138,7 +138,7 @@ export async function submitForReviewAPI(documentId: string) {
 }
 
 export async function globalFindReplaceAPI(documentId: string, search: string, replace: string, matchCase: boolean = false) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/thay-the-toan-cuc`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/thay-the-toan-cuc`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ search, replace, match_case: matchCase }),
@@ -154,7 +154,7 @@ export async function addChapterAPI(documentId: string, data: {
   is_premium?: boolean;
   price_dl?: number;
 }) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/chuong`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/chuong`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -165,7 +165,7 @@ export async function addChapterAPI(documentId: string, data: {
 }
 
 export async function updateCoverAPI(documentId: string, coverUrl: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/anh-bia`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/anh-bia`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ cover_url: coverUrl }),
@@ -176,7 +176,7 @@ export async function updateCoverAPI(documentId: string, coverUrl: string) {
 }
 
 export async function getAiSuggestionsAPI(documentId: string, context: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/goi-y-ai`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/goi-y-ai`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ context }),
@@ -187,7 +187,7 @@ export async function getAiSuggestionsAPI(documentId: string, context: string) {
 }
 
 export async function summarizeDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/tom-tat`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/tom-tat`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -197,7 +197,7 @@ export async function summarizeDocumentAPI(documentId: string) {
 }
 
 export async function extractSmartTagsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/phan-tich-the`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/phan-tich-the`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -207,7 +207,7 @@ export async function extractSmartTagsAPI(documentId: string) {
 }
 
 export async function addInlineCommentAPI(documentId: string, payload: { block_id: string; text: string; selected_text?: string }) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/comment`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -218,7 +218,7 @@ export async function addInlineCommentAPI(documentId: string, payload: { block_i
 }
 
 export async function resolveCommentAPI(commentId: string) {
-  const res = await fetch(`${API_URL}/soan-thao/binh-luan/${commentId}/giai-quyet`, {
+  const res = await fetch(`${API_URL}/editor/comment/${commentId}/giai-quyet`, {
     method: "PUT",
     headers: getAuthHeaders(),
   });
@@ -228,7 +228,7 @@ export async function resolveCommentAPI(commentId: string) {
 }
 
 export async function getVersionDiffAPI(documentId: string, versionIdA: string, versionIdB: string) {
-  const res = await fetch(`${API_URL}/soan-thao/${documentId}/so-sanh-phien-ban`, {
+  const res = await fetch(`${API_URL}/editor/${documentId}/so-sanh-phien-ban`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ version_id_a: versionIdA, version_id_b: versionIdB }),

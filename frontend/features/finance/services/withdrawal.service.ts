@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
-  const res = await fetch(`${API_URL}/rut-tien`, {
+  const res = await fetch(`${API_URL}/withdrawal`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ amount, bank_info: bankInfo }),
@@ -12,7 +12,7 @@ export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
 }
 
 export async function getWithdrawalQueueAPI(status: string = "PENDING") {
-  const res = await fetch(`${API_URL}/rut-tien/hang-doi?status=${status}`, {
+  const res = await fetch(`${API_URL}/withdrawal/hang-doi?status=${status}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -21,7 +21,7 @@ export async function getWithdrawalQueueAPI(status: string = "PENDING") {
 }
 
 export async function verifyWithdrawalAPI(withdrawalId: string, action: string) {
-  const res = await fetch(`${API_URL}/rut-tien/${withdrawalId}/xac-thuc?action=${action}`, {
+  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/auth?action=${action}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -31,7 +31,7 @@ export async function verifyWithdrawalAPI(withdrawalId: string, action: string) 
 }
 
 export async function cancelWithdrawalAPI(withdrawalId: string) {
-  const res = await fetch(`${API_URL}/rut-tien/${withdrawalId}/huy-bo`, {
+  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/huy-bo`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -41,7 +41,7 @@ export async function cancelWithdrawalAPI(withdrawalId: string) {
 }
 
 export async function getMyWithdrawalsAPI() {
-  const res = await fetch(`${API_URL}/rut-tien/ca-nhan`, {
+  const res = await fetch(`${API_URL}/withdrawal/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

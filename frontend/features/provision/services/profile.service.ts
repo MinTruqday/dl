@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function getMyProfileAPI() {
-  const res = await fetch(`${API_URL}/ho-so/ca-nhan`, {
+  const res = await fetch(`${API_URL}/profile/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -17,7 +17,7 @@ export async function updateMyProfileAPI(data: {
   location?: string;
   website?: string;
 }) {
-  const res = await fetch(`${API_URL}/ho-so/ca-nhan`, {
+  const res = await fetch(`${API_URL}/profile/ca-nhan`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -28,7 +28,7 @@ export async function updateMyProfileAPI(data: {
 }
 
 export async function getUserProfileAPI(slug: string) {
-  const res = await fetch(`${API_URL}/ho-so/thanh-vien/${slug}`, {
+  const res = await fetch(`${API_URL}/profile/thanh-vien/${slug}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -37,7 +37,7 @@ export async function getUserProfileAPI(slug: string) {
 }
 
 export async function getReadingStreaksAPI() {
-  const res = await fetch(`${API_URL}/ho-so/chuoi-ngay`, {
+  const res = await fetch(`${API_URL}/profile/chuoi-ngay`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -46,7 +46,7 @@ export async function getReadingStreaksAPI() {
 }
 
 export async function getBadgesAPI() {
-  const res = await fetch(`${API_URL}/ho-so/huy-hieu`, {
+  const res = await fetch(`${API_URL}/profile/huy-hieu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

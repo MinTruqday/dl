@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "./authentication.service";
 
 export async function inviteCollaboratorAPI(documentId: string, email: string, role: string = "editor") {
-  const res = await fetch(`${API_URL}/cong-tac/loi-moi`, {
+  const res = await fetch(`${API_URL}/collaboration/loi-moi`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, email, role }),
@@ -12,7 +12,7 @@ export async function inviteCollaboratorAPI(documentId: string, email: string, r
 }
 
 export async function getCollaboratorsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -21,7 +21,7 @@ export async function getCollaboratorsAPI(documentId: string) {
 }
 
 export async function removeCollaboratorAPI(collaborationId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/${collaborationId}`, {
+  const res = await fetch(`${API_URL}/collaboration/${collaborationId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -31,7 +31,7 @@ export async function removeCollaboratorAPI(collaborationId: string) {
 }
 
 export async function getCollaborationInvitesAPI() {
-  const res = await fetch(`${API_URL}/cong-tac/loi-moi`, {
+  const res = await fetch(`${API_URL}/collaboration/loi-moi`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -40,7 +40,7 @@ export async function getCollaborationInvitesAPI() {
 }
 
 export async function respondToInviteAPI(inviteId: string, status: string) {
-  const res = await fetch(`${API_URL}/cong-tac/loi-moi/${inviteId}`, {
+  const res = await fetch(`${API_URL}/collaboration/loi-moi/${inviteId}`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -51,7 +51,7 @@ export async function respondToInviteAPI(inviteId: string, status: string) {
 }
 
 export async function getCollaborationActivitiesAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/hoat-dong`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/hoat-dong`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -60,7 +60,7 @@ export async function getCollaborationActivitiesAPI(documentId: string) {
 }
 
 export async function transferOwnershipAPI(documentId: string, userId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/chuyen-quyen`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/chuyen-quyen`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ user_id: userId }),
@@ -71,7 +71,7 @@ export async function transferOwnershipAPI(documentId: string, userId: string) {
 }
 
 export async function pingCollaborationStatusAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/ping`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/ping`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -81,7 +81,7 @@ export async function pingCollaborationStatusAPI(documentId: string) {
 }
 
 export async function getOnlineCollaboratorsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/truc-tuyen`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/truc-tuyen`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -90,7 +90,7 @@ export async function getOnlineCollaboratorsAPI(documentId: string) {
 }
 
 export async function updateCollaboratorRoleAPI(collaborationId: string, role: string) {
-  const res = await fetch(`${API_URL}/cong-tac/${collaborationId}/vai-tro`, {
+  const res = await fetch(`${API_URL}/collaboration/${collaborationId}/vai-tro`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ role }),
@@ -101,7 +101,7 @@ export async function updateCollaboratorRoleAPI(collaborationId: string, role: s
 }
 
 export async function sendMemoAPI(documentId: string, message: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/tin-nhan`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/message`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
@@ -112,7 +112,7 @@ export async function sendMemoAPI(documentId: string, message: string) {
 }
 
 export async function getMemosAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/tin-nhan`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/message`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -121,7 +121,7 @@ export async function getMemosAPI(documentId: string) {
 }
 
 export async function updateCollabAccessAPI(documentId: string, accessLevel: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/quyen-truy-cap`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/quyen-truy-cap`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ access_level: accessLevel }),
@@ -132,7 +132,7 @@ export async function updateCollabAccessAPI(documentId: string, accessLevel: str
 }
 
 export async function getSentPendingInvitesAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/loi-moi-da-gui`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/loi-moi-da-gui`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -141,7 +141,7 @@ export async function getSentPendingInvitesAPI(documentId: string) {
 }
 
 export async function revokeInviteAPI(inviteId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/loi-moi/${inviteId}`, {
+  const res = await fetch(`${API_URL}/collaboration/loi-moi/${inviteId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -151,7 +151,7 @@ export async function revokeInviteAPI(inviteId: string) {
 }
 
 export async function getContributionStatsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/thong-ke-dong-gop`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/thong-ke-dong-gop`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -160,7 +160,7 @@ export async function getContributionStatsAPI(documentId: string) {
 }
 
 export async function createSnapshotAPI(documentId: string, versionName: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/phien-ban`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/version`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ version_name: versionName }),
@@ -171,7 +171,7 @@ export async function createSnapshotAPI(documentId: string, versionName: string)
 }
 
 export async function getSnapshotsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/phien-ban`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/version`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -180,7 +180,7 @@ export async function getSnapshotsAPI(documentId: string) {
 }
 
 export async function acquireLockAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/khoa`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/khoa`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -190,7 +190,7 @@ export async function acquireLockAPI(documentId: string) {
 }
 
 export async function releaseLockAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/mo-khoa`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/mo-khoa`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -200,7 +200,7 @@ export async function releaseLockAPI(documentId: string) {
 }
 
 export async function getLockStatusAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/trang-thai-khoa`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/trang-thai-khoa`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -209,7 +209,7 @@ export async function getLockStatusAPI(documentId: string) {
 }
 
 export async function generateInviteCodeAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/ma-moi`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/ma-moi`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -219,7 +219,7 @@ export async function generateInviteCodeAPI(documentId: string) {
 }
 
 export async function joinViaInviteCodeAPI(inviteCode: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tham-gia/${inviteCode}`, {
+  const res = await fetch(`${API_URL}/collaboration/tham-gia/${inviteCode}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -229,7 +229,7 @@ export async function joinViaInviteCodeAPI(inviteCode: string) {
 }
 
 export async function createCollabTaskAPI(documentId: string, taskDesc: string, assignedTo: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/nhiem-vu`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/nhiem-vu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ task_desc: taskDesc, assigned_to: assignedTo }),
@@ -240,7 +240,7 @@ export async function createCollabTaskAPI(documentId: string, taskDesc: string, 
 }
 
 export async function getCollabTasksAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/tai-lieu/${documentId}/nhiem-vu`, {
+  const res = await fetch(`${API_URL}/collaboration/document/${documentId}/nhiem-vu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -249,7 +249,7 @@ export async function getCollabTasksAPI(documentId: string) {
 }
 
 export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
-  const res = await fetch(`${API_URL}/cong-tac/nhiem-vu/${taskId}`, {
+  const res = await fetch(`${API_URL}/collaboration/nhiem-vu/${taskId}`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ is_done: isDone }),
@@ -260,7 +260,7 @@ export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
 }
 
 export async function addTaskCommentAPI(taskId: string, commentText: string) {
-  const res = await fetch(`${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`, {
+  const res = await fetch(`${API_URL}/collaboration/nhiem-vu/${taskId}/comment`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ comment_text: commentText }),
@@ -271,7 +271,7 @@ export async function addTaskCommentAPI(taskId: string, commentText: string) {
 }
 
 export async function getTaskCommentsAPI(taskId: string) {
-  const res = await fetch(`${API_URL}/cong-tac/nhiem-vu/${taskId}/binh-luan`, {
+  const res = await fetch(`${API_URL}/collaboration/nhiem-vu/${taskId}/comment`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

@@ -94,7 +94,7 @@ export default class DocLibAiText implements BlockTool {
               this.data.status = 'generating';
               this.buildUI();
               
-              const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/suy-luan/tao-noi-dung';
+              const apiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + '/inference/tao-noi-dung';
               fetch(apiUrl, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

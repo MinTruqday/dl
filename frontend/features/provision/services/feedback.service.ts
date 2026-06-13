@@ -6,7 +6,7 @@ export async function submitReportAPI(payload: {
   reason: string;
   description?: string;
 }) {
-  const res = await fetch(`${API_URL}/phan-hoi/bao-cao`, {
+  const res = await fetch(`${API_URL}/feedback/report`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -17,7 +17,7 @@ export async function submitReportAPI(payload: {
 }
 
 export async function rateDocumentAPI(documentId: string, rating: number, reviewText?: string) {
-  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/danh-gia`, {
+  const res = await fetch(`${API_URL}/feedback/document/${documentId}/review`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ rating, review_text: reviewText }),
@@ -28,7 +28,7 @@ export async function rateDocumentAPI(documentId: string, rating: number, review
 }
 
 export async function rateChapterAPI(documentId: string, chapterSlug: string, rating: number) {
-  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/chuong/danh-gia`, {
+  const res = await fetch(`${API_URL}/feedback/document/${documentId}/chuong/review`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ chapter_slug: chapterSlug, rating }),
@@ -43,7 +43,7 @@ export async function reportTypoAPI(documentId: string, payload: {
   text_excerpt: string;
   description?: string;
 }) {
-  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/loi-chinh-ta`, {
+  const res = await fetch(`${API_URL}/feedback/document/${documentId}/loi-chinh-ta`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -54,7 +54,7 @@ export async function reportTypoAPI(documentId: string, payload: {
 }
 
 export async function getTypoReportsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/loi-chinh-ta`, {
+  const res = await fetch(`${API_URL}/feedback/document/${documentId}/loi-chinh-ta`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
