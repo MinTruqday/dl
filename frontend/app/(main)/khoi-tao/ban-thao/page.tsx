@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMyDocumentsAPI } from "@/services/document.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import { Loader2, FolderOpen, FileText, ArrowRight } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 
 export default function DraftsPage() {
   const router = useRouter();

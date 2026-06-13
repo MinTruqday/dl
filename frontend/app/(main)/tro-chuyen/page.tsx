@@ -1,11 +1,11 @@
 "use client";
-import { streamAiChatAPI } from "@/services/ai.service";
-import { getToken, API_URL } from "@/services/authentication.service";
+import { streamAiChatAPI } from "@/features/ai/services/ai.service";
+import { getToken, API_URL } from "@/features/auth/services/authentication.service";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/contexts/Auth";
-import { getMyQuotaAPI, QuotaUsage } from "@/services/quota.service";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { getMyQuotaAPI, QuotaUsage } from "@/features/provision/services/quota.service";
+import { useToast } from "@/shared/contexts/Toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";

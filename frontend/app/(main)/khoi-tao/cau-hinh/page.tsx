@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI, updateDRMSettingsAPI, updateTagsAPI, updateNSFWAPI, updateDocumentAPI, getFoldersAPI, transferDocumentAPI } from "@/services/document.service";
-import { getCollaboratorsAPI, inviteCollaboratorAPI, removeCollaboratorAPI } from "@/services/collaboration.service";
-import { createCouponAPI, getCouponsAPI } from "@/services/coupon.service";
-import { ingestDocumentAPI } from "@/services/rag.service";
-import { API_URL } from "@/services/authentication.service";
-import { useToast } from "@/contexts/Toast";
+import { getMyDocumentsAPI, updateDRMSettingsAPI, updateTagsAPI, updateNSFWAPI, updateDocumentAPI, getFoldersAPI, transferDocumentAPI } from "@/features/content/services/document.service";
+import { getCollaboratorsAPI, inviteCollaboratorAPI, removeCollaboratorAPI } from "@/features/content/services/collaboration.service";
+import { createCouponAPI, getCouponsAPI } from "@/features/finance/services/coupon.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
+import { API_URL } from "@/features/auth/services/authentication.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, Settings, Hash, Folder, Brain, Sparkles, Lock, Unlock, Shield, AlertTriangle, Users, Trash2, Tag, X } from "lucide-react";
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 
 export default function ConfigPage() {
   const { showToast } = useToast();

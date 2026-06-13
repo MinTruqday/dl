@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/services/document.service";
-import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/services/comment.service";
-import { useToast } from "@/contexts/Toast";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/features/communication/services/comment.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, MessageSquare, Trash2 } from "lucide-react";
 
 export default function CommentsPage() {

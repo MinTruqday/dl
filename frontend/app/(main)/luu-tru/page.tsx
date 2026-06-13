@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getToken as getAuthToken } from "@/services/authentication.service";
+import { getToken as getAuthToken } from "@/features/auth/services/authentication.service";
 import { 
   StorageItem, 
   listStorageItemsAPI, 
@@ -17,8 +17,8 @@ import {
   getStorageQuotaAPI,
   createShortcutAPI,
   downloadZipAPI
-} from "@/services/storage.service";
-import { useToast } from "@/contexts/Toast";
+} from "@/features/content/services/storage.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { 
   Folder, 
   File, 
@@ -46,7 +46,7 @@ import {
   Archive,
   Home
 } from "lucide-react";
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 
 export default function StoragePage() {
   const { showToast } = useToast();
@@ -142,7 +142,7 @@ export default function StoragePage() {
 
   useEffect(() => {
     if (detailsItem && activeSidebarTab === 'info') {
-      import('@/services/storage.service').then(m => {
+      import('@/features/content/services/storage.service').then(m => {
         m.getRelatedStorageItemsAPI(detailsItem._id)
          .then(data => setRelatedItems(data))
          .catch(err => console.error(err));
@@ -1354,7 +1354,7 @@ export default function StoragePage() {
                       onClick={async () => {
                         setChatHistory(prev => [...prev, { role: 'user', content: 'Hãy tạo một bản dịch tài liệu này sang tiếng Việt.' }]);
                         try {
-                          const { translateStorageDocumentAPI } = await import('@/services/storage.service');
+                          const { translateStorageDocumentAPI } = await import('@/features/content/services/storage.service');
                           await translateStorageDocumentAPI(detailsItem._id, "vi");
                           setChatHistory(prev => [...prev, { role: 'bot', content: 'Tuyệt vời, tôi đã tạo xong một bản dịch tiếng Việt cho tài liệu này và lưu vào cùng thư mục.' }]);
                           fetchItems(currentFolderId);

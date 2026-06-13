@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getDocumentsAPI } from "@/services/document.service";
+import { getDocumentsAPI } from "@/features/content/services/document.service";
 import {
   Search,
   Filter,

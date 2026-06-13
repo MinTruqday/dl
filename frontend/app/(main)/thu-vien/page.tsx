@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useAuth } from "@/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   getBookmarkFoldersAPI,
   createBookmarkFolderAPI,
-} from "@/services/bookmark.service";
+} from "@/features/content/services/bookmark.service";
 import {
   createReadingListAPI,
   getMyReadingListsAPI as getReadingListsAPI,
-} from "@/services/library.service";
+} from "@/features/content/services/library.service";
 import {
   getPinnedDocumentsAPI,
   getReadingHistoryAPI,
@@ -17,8 +17,8 @@ import {
   deleteReadingHistoryItemAPI,
   getMySeriesAPI,
   createSeriesAPI,
-} from "@/services/reading.service";
-import { API_URL } from "@/services/authentication.service";
+} from "@/features/content/services/reading.service";
+import { API_URL } from "@/features/auth/services/authentication.service";
 import {
   LayoutGrid,
   List as ListIcon,
@@ -46,9 +46,9 @@ import {
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
-import { useToast } from "@/contexts/Toast";
-import { multiDocSynthesisAPI } from "@/services/ai.service";
+} from "@/shared/components/ui/Modal";
+import { useToast } from "@/shared/contexts/Toast";
+import { multiDocSynthesisAPI } from "@/features/ai/services/ai.service";
 import ReactMarkdown from "react-markdown";
 
 interface PinnedDocument {

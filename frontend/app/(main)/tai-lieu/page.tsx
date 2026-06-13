@@ -12,8 +12,8 @@ import {
   deleteFolderAPI,
   lockDocumentAPI,
   toggleStarDocumentAPI
-} from "@/services/document.service";
-import { uploadDocumentAPI } from "@/services/upload.service";
+} from "@/features/content/services/document.service";
+import { uploadDocumentAPI } from "@/features/content/services/upload.service";
 import { QRCodeSVG } from "qrcode.react";
 import {
   AlertTriangle,
@@ -40,8 +40,8 @@ import {
   Star,
   Home
 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import { 
   Modal, 
   ModalHeader, 
@@ -49,7 +49,7 @@ import {
   ModalDescription, 
   ModalContent, 
   ModalFooter 
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function DocumentsPage() {
   const { user, isLoading: authLoading } = useAuth() as any;

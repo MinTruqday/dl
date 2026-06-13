@@ -16,14 +16,14 @@ import {
   CheckCircle2,
   Flag,
 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
-import { getDocumentBySlugAPI } from "@/services/document.service";
-import { purchaseDocumentAPI } from "@/services/wallet.service";
-import { toggleBookmarkAPI } from "@/services/bookmark.service";
-import Review from "@/components/Review";
-import Comment from "@/components/Comment";
-import Report from "@/components/Report";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
+import { getDocumentBySlugAPI } from "@/features/content/services/document.service";
+import { purchaseDocumentAPI } from "@/features/finance/services/wallet.service";
+import { toggleBookmarkAPI } from "@/features/content/services/bookmark.service";
+import Review from "@/features/content/components/Review";
+import Comment from "@/features/communication/components/Comment";
+import Report from "@/features/provision/components/Report";
 import { QRCodeSVG } from "qrcode.react";
 
 export default function DocumentDetailsPage() {

@@ -1,19 +1,19 @@
 "use client";
 
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getToken, API_URL } from "@/services/authentication.service";
-import { queryRagAPI, translateTextAPI } from "@/services/ai.service";
+import { getToken, API_URL } from "@/features/auth/services/authentication.service";
+import { queryRagAPI, translateTextAPI } from "@/features/ai/services/ai.service";
 import {
   createHighlightAPI,
   getHighlightsAPI,
   deleteHighlightAPI,
-} from "@/services/highlight.service";
+} from "@/features/content/services/highlight.service";
 import {
   toggleBookmarkAPI,
   getBookmarksAPI,
-} from "@/services/bookmark.service";
+} from "@/features/content/services/bookmark.service";
 import {
   Lock,
   AlertTriangle,

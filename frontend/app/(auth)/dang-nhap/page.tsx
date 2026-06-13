@@ -1,6 +1,6 @@
 "use client";
 
-import Navigation from "@/components/Navigation";
+import Navigation from "@/shared/components/common/Navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, KeyRound } from "lucide-react";
@@ -9,10 +9,10 @@ import {
   passkeyLoginBeginAPI,
   passkeyLoginFinishAPI,
   getGoogleLoginUrlAPI,
-} from "@/services/authentication.service";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
-import Passkey from "@/components/Passkey";
+} from "@/features/auth/services/authentication.service";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
+import Passkey from "@/features/auth/components/Passkey";
 
 function b64urlToBuffer(b64url: string): ArrayBuffer {
   const pad = "=".repeat((4 - (b64url.length % 4)) % 4);

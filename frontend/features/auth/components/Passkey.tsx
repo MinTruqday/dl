@@ -5,15 +5,15 @@ import { Loader2 } from "lucide-react";
 import {
   passkeyRegisterBeginAPI,
   passkeyRegisterFinishAPI,
-} from "@/services/authentication.service";
-import { useToast } from "@/contexts/Toast";
+} from "@/features/auth/services/authentication.service";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 interface PasskeyProps {
   email: string;

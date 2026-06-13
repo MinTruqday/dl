@@ -5,7 +5,7 @@ import type EditorJS from "@editorjs/editorjs";
 import type { OutputData } from "@editorjs/editorjs";
 import StandardEditor from "./StandardEditor";
 import LatexEditor from "./LatexEditor";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import { 
     compilePreviewAPI, 
     globalFindReplaceAPI, 
@@ -16,9 +16,9 @@ import {
     extractSmartTagsAPI,
     exportToEpubAPI,
     checkDeepPlagiarismAPI
-} from "@/services/editor.service";
-import { grammarCheckAPI, getSynonymsAPI, translateTextAPI } from "@/services/inference.service";
-import { API_URL, getAuthHeaders } from "@/services/authentication.service";
+} from "@/features/editor/services/editor.service";
+import { grammarCheckAPI, getSynonymsAPI, translateTextAPI } from "@/features/ai/services/inference.service";
+import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 import { Sparkles, CheckSquare, FileText, Download, Loader2, Maximize2, Minimize2, MessageSquare, History, Wand2, X, Brain, Bot, ShieldCheck, Languages, Binary, CheckCheck, Scale, PenLine, Network, Clock, Search, FileEdit, List } from "lucide-react";
 import MonacoEditor from "@monaco-editor/react";
 
@@ -166,7 +166,7 @@ ${latexCode}
     setIsExportingWord(true);
     showToast("Đang xuất tài liệu sang Word", "info");
     try {
-      const { exportToWordAPI } = await import("@/services/editor.service");
+      const { exportToWordAPI } = await import("@/features/editor/services/editor.service");
       const blob = await exportToWordAPI(documentId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -302,7 +302,7 @@ ${latexCode}
     setLoadingSidebar(true);
     try {
       if (activeSidebar === "history") {
-        const { getDocumentVersionsAPI } = await import("@/services/version.service");
+        const { getDocumentVersionsAPI } = await import("@/features/content/services/version.service");
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {

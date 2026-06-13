@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTrashAPI, restoreDocumentAPI } from "@/services/document.service";
-import { useToast } from "@/contexts/Toast";
+import { getTrashAPI, restoreDocumentAPI } from "@/features/content/services/document.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, Trash2, X, FileText, RotateCcw } from "lucide-react";
 
 export default function TrashPage() {

@@ -1,5 +1,5 @@
-import { getToken as getAuthToken } from "@/services/authentication.service";
-import { API_URL } from "@/services/authentication.service";
+import { getToken as getAuthToken } from "@/features/auth/services/authentication.service";
+import { API_URL } from "@/features/auth/services/authentication.service";
 
 export interface StorageItem {
   _id: string;

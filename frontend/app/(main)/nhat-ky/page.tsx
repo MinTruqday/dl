@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getModeratorActivityAPI } from "@/services/audit.service";
+import { getModeratorActivityAPI } from "@/features/provision/services/audit.service";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import { useRouter } from "next/navigation";
 
 export default function LogsPage() {

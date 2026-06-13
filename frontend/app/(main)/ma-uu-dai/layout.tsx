@@ -3,9 +3,9 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Ticket, Activity, Users } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import { useEffect, useState } from "react";
-import { getCouponsAPI } from "@/services/coupon.service";
+import { getCouponsAPI } from "@/features/finance/services/coupon.service";
 
 export default function PromotionLayout({
   children,

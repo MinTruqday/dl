@@ -16,8 +16,8 @@ import {
   ArrowRight,
   Layers,
 } from "lucide-react";
-import { getSeriesByIdAPI } from "@/services/reading.service";
-import { API_URL } from "@/services/authentication.service";
+import { getSeriesByIdAPI } from "@/features/content/services/reading.service";
+import { API_URL } from "@/features/auth/services/authentication.service";
 import Link from "next/link";
 
 export default function SeriesDetailPage() {

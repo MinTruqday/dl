@@ -380,7 +380,7 @@ export default function StandardEditor({
             saveTimeoutRef.current = setTimeout(async () => {
                if (documentId) {
                   try {
-                     const { autoSaveDraftAPI } = await import("@/services/editor.service");
+                     const { autoSaveDraftAPI } = await import("@/features/editor/services/editor.service");
                      await autoSaveDraftAPI(documentId, saved);
                      if (setSaveStatus) setSaveStatus("Đã lưu");
                   } catch (e: any) {

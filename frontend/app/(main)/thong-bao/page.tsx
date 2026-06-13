@@ -7,7 +7,7 @@ import {
   markAllNotificationsReadAPI,
   getNotificationSettingsAPI,
   updateNotificationSettingsAPI,
-} from "@/services/notification.service";
+} from "@/features/communication/services/notification.service";
 import {
   Bell,
   Check,
@@ -22,7 +22,7 @@ import {
   UserPlus,
   BookOpen,
 } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import Link from "next/link";
 
 export default function NotificationsPage() {

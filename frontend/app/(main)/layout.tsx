@@ -1,6 +1,6 @@
 "use client";
 
-import Workspace from "@/components/Workspace";
+import Workspace from "@/features/content/components/Workspace";
 import { usePathname } from "next/navigation";
 
 export default function MainLayout({

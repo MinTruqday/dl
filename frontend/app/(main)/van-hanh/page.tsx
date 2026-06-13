@@ -7,11 +7,11 @@ import {
   toggleMaintenanceModeAPI,
   triggerBackupAPI,
   getMinioStatsAPI,
-} from "@/services/operation.service";
-import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/services/quota.service";
+} from "@/features/provision/services/operation.service";
+import { getGlobalQuotaConfigAPI, updateRoleQuotaAPI } from "@/features/provision/services/quota.service";
 import { Loader2, Save } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 
 export default function OperationDashboard() {
   const { user, isLoading: authLoading } = useAuth() as any;

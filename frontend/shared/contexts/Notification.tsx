@@ -7,11 +7,11 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { API_URL, getToken } from "@/services/authentication.service";
+import { API_URL, getToken } from "@/features/auth/services/authentication.service";
 import {
   getNotificationsAPI,
   markNotificationReadAPI,
-} from "@/services/notification.service";
+} from "@/features/communication/services/notification.service";
 import { useAuth } from "./Auth";
 import { useToast } from "./Toast";
 

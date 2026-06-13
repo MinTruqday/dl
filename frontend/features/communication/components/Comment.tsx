@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getCommentsByItemAPI,
   createCommentAPI,
-} from "@/services/comment.service";
+} from "@/features/communication/services/comment.service";
 import {
   MessageSquare,
   CornerDownRight,
@@ -13,8 +13,8 @@ import {
   Loader2,
   User,
 } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
-import { useAuth } from "@/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
 
 interface CommentUser {
   id: string;

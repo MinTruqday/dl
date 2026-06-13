@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Send, Loader2, ShieldAlert } from "lucide-react";
-import { submitReportAPI } from "@/services/report.service";
-import { useToast } from "@/contexts/Toast";
+import { submitReportAPI } from "@/features/provision/services/report.service";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
@@ -11,7 +11,7 @@ import {
   ModalDescription,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 interface ReportProps {
   itemId: string;

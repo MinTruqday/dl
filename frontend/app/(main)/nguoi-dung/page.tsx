@@ -6,7 +6,7 @@ import {
   updateUserRoleAPI,
   updateUserStatusAPI,
   deleteUserAPI,
-} from "@/services/user.service";
+} from "@/features/provision/services/user.service";
 import {
   Loader2,
   Search,
@@ -21,15 +21,15 @@ import {
   MoreVertical,
   Trash2,
 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function UsersManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;

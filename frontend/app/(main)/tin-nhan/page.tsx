@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import { useAuth } from "@/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   getConversationsAPI,
   getMessagesAPI,
@@ -26,18 +26,18 @@ import {
   toggleMuteAPI,
   getConversationSettingsAPI,
   deleteConversationAPI,
-} from "@/services/chat.service";
-import { searchUsersAPI } from "@/services/user.service";
-import { getMyDocumentsAPI } from "@/services/document.service";
-import { API_URL, WS_URL, getToken } from "@/services/authentication.service";
-import { useToast } from "@/contexts/Toast";
+} from "@/features/ai/services/chat.service";
+import { searchUsersAPI } from "@/features/provision/services/user.service";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { API_URL, WS_URL, getToken } from "@/features/auth/services/authentication.service";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalDescription,
   ModalContent,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 import {
   ImageIcon,
   Quote,
@@ -79,7 +79,7 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { parseUTC } from "@/lib/utils";
+import { parseUTC } from "@/shared/lib/utils";
 
 const CustomAudioPlayer = ({ src, isSender }: { src: string, isSender: boolean }) => {
   const [isPlaying, setIsPlaying] = useState(false);

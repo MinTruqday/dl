@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { register } from "@/services/authentication.service";
-import Navigation from "@/components/Navigation";
+import { register } from "@/features/auth/services/authentication.service";
+import Navigation from "@/shared/components/common/Navigation";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
-import Passkey from "@/components/Passkey";
+import { useToast } from "@/shared/contexts/Toast";
+import Passkey from "@/features/auth/components/Passkey";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function RegisterPage() {
   const [displayName, setDisplayName] = useState("");

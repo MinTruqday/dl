@@ -11,10 +11,10 @@ import {
   BookOpen,
   Award,
 } from "lucide-react";
-import { getMyDocumentsAPI } from "@/services/document.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
-import { analyzeSentimentAPI as getDocumentSentimentAPI } from "@/services/inference.service";
-import { useToast } from "@/contexts/Toast";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/monetization.service";
+import { analyzeSentimentAPI as getDocumentSentimentAPI } from "@/features/ai/services/inference.service";
+import { useToast } from "@/shared/contexts/Toast";
 
 export default function AuthorAnalyticsPage() {
   const { showToast } = useToast();

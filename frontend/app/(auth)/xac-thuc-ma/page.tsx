@@ -1,10 +1,10 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
-import Navigation from "@/components/Navigation";
-import { verifyCodeAPI, forgotPasswordAPI } from "@/services/authentication.service";
+import Navigation from "@/shared/components/common/Navigation";
+import { verifyCodeAPI, forgotPasswordAPI } from "@/features/auth/services/authentication.service";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2 } from "lucide-react";
 
 export default function VerifyCodePage() {

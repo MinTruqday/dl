@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApprovalQueueAPI, moderateDocumentAPI } from "@/services/draft.service";
+import { getApprovalQueueAPI, moderateDocumentAPI } from "@/features/content/services/draft.service";
 import { Loader2, ShieldCheck, Eye } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
+import { useToast } from "@/shared/contexts/Toast";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 
 export default function ApprovalPage() {
   const { showToast } = useToast();

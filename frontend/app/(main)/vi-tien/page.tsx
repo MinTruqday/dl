@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/Auth";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import {
   History,
   CreditCard,
@@ -19,11 +19,11 @@ import {
   getWalletBalanceAPI,
   getWalletHistoryAPI,
   redeemVoucherAPI,
-} from "@/services/wallet.service";
-import { createDepositLinkAPI } from "@/services/deposit.service";
-import { requestWithdrawalAPI } from "@/services/withdrawal.service";
-import { getAuthorRevenueAPI } from "@/services/monetization.service";
-import { useToast } from "@/contexts/Toast";
+} from "@/features/finance/services/wallet.service";
+import { createDepositLinkAPI } from "@/features/finance/services/deposit.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
+import { getAuthorRevenueAPI } from "@/features/finance/services/monetization.service";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
@@ -31,7 +31,7 @@ import {
   ModalDescription,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 import { usePayOS } from "@payos/payos-checkout";
 
 interface Transaction {

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMyDocumentsAPI } from "@/services/document.service";
-import { getDocumentVersionsAPI, restoreVersionAPI } from "@/services/version.service";
-import { useToast } from "@/contexts/Toast";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
+import { getDocumentVersionsAPI, restoreVersionAPI } from "@/features/content/services/version.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2, Clock, Eye, RotateCcw } from "lucide-react";
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 
 function renderLineDiff(textA: string, textB: string) {
   const cleanText = (txt: string) => {
@@ -120,7 +120,7 @@ export default function HistoryPage() {
     if (selectedVersions.length !== 2) return;
     setIsComparing(true);
     try {
-      const { getVersionDiffAPI } = await import("@/services/editor.service");
+      const { getVersionDiffAPI } = await import("@/features/editor/services/editor.service");
       const data = await getVersionDiffAPI(selectedDocumentId, selectedVersions[0], selectedVersions[1]);
       setDiffData(data);
     } catch (err: any) {

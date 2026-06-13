@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useToast } from "@/contexts/Toast";
-import { getAuthorStatsAPI } from "@/services/wallet.service";
-import { getAuthorRevenueAPI } from "@/services/monetization.service";
-import { getDocumentAnalyticsAPI, getAcademicMetricsAPI } from "@/services/document.service";
-import { broadcastNotificationAPI, createDocumentAPI } from "@/services/document.service";
-import { ingestDocumentAPI } from "@/services/rag.service";
-import { requestWithdrawalAPI } from "@/services/withdrawal.service";
+import { useToast } from "@/shared/contexts/Toast";
+import { getAuthorStatsAPI } from "@/features/finance/services/wallet.service";
+import { getAuthorRevenueAPI } from "@/features/finance/services/monetization.service";
+import { getDocumentAnalyticsAPI, getAcademicMetricsAPI } from "@/features/content/services/document.service";
+import { broadcastNotificationAPI, createDocumentAPI } from "@/features/content/services/document.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
 import { Eye, Database, Wallet, Plus, Brain, Settings, RadioTower, Banknote, ChevronRight, Loader2 } from "lucide-react";
-import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/components/ui/Modal";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "@/shared/components/ui/Modal";
 import { useRouter } from "next/navigation";
 
 export default function StatsPage() {

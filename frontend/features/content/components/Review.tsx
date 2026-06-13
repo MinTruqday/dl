@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getDocumentReviewsAPI,
   createDocumentReviewAPI,
-} from "@/services/review.service";
+} from "@/features/content/services/review.service";
 import { Star, User, Send, Loader2, MessageCircle } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 
 interface ReviewProps {
   documentId: string;

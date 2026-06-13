@@ -6,7 +6,7 @@ import {
   createCouponAPI,
   toggleCouponStatusAPI,
   deleteCouponAPI,
-} from "@/services/coupon.service";
+} from "@/features/finance/services/coupon.service";
 import {
   Ticket,
   Plus,
@@ -22,15 +22,15 @@ import {
   Check,
   Ban
 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function ManageCouponsPage() {
   const { user } = useAuth() as any;

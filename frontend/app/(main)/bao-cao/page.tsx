@@ -4,17 +4,17 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getReportsAPI as getAdminReportsAPI,
   resolveReportAPI,
-} from "@/services/report.service";
+} from "@/features/provision/services/report.service";
 import { Loader2, Search } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function ReportsManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;

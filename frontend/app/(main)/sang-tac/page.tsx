@@ -2,28 +2,28 @@
 
 import { useEffect, useMemo, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, deleteFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/services/document.service";
-import { compileDocumentAPI } from "@/services/compilation.service";
-import { exportDocumentPdfAPI, exportDocumentEpubAPI, exportDocumentDocxAPI } from "@/services/export.service";
-import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/services/comment.service";
-import { inviteCollaboratorAPI, getCollaboratorsAPI, removeCollaboratorAPI } from "@/services/collaboration.service";
-import { createCouponAPI, getCouponsAPI } from "@/services/coupon.service";
-import { publishDocumentAPI } from "@/services/publication.service";
-import { getDocumentVersionsAPI, restoreVersionAPI } from "@/services/version.service";
-import { ingestDocumentAPI } from "@/services/rag.service";
-import { requestWithdrawalAPI } from "@/services/withdrawal.service";
-import { getAuthorRevenueAPI as getRevenueAPI } from "@/services/monetization.service";
-import { API_URL } from "@/services/authentication.service";
-import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/services/wallet.service";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { getDocumentDraftAPI, getDocumentsAPI, getMyDocumentsAPI, saveDocumentDraftAPI, updateDocumentAPI, softDeleteDocumentAPI, restoreDocumentAPI, getTrashAPI, createDocumentAPI, lockDocumentAPI, unlockDocumentAPI, getFoldersAPI, createFolderAPI, deleteFolderAPI, toggleStarDocumentAPI, transferDocumentAPI, getDocumentAnalyticsAPI, getAcademicMetricsAPI, updateAuthorNoteAPI, updateDRMSettingsAPI, updateTagsAPI, schedulePublishAPI, updateChapterPaywallAPI, updateNSFWAPI, broadcastNotificationAPI } from "@/features/content/services/document.service";
+import { compileDocumentAPI } from "@/features/editor/services/compilation.service";
+import { exportDocumentPdfAPI, exportDocumentEpubAPI, exportDocumentDocxAPI } from "@/features/provision/services/export.service";
+import { getCommentsByItemAPI, createCommentAPI, deleteCommentAPI } from "@/features/communication/services/comment.service";
+import { inviteCollaboratorAPI, getCollaboratorsAPI, removeCollaboratorAPI } from "@/features/content/services/collaboration.service";
+import { createCouponAPI, getCouponsAPI } from "@/features/finance/services/coupon.service";
+import { publishDocumentAPI } from "@/features/content/services/publication.service";
+import { getDocumentVersionsAPI, restoreVersionAPI } from "@/features/content/services/version.service";
+import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
+import { requestWithdrawalAPI } from "@/features/finance/services/withdrawal.service";
+import { getAuthorRevenueAPI as getRevenueAPI } from "@/features/finance/services/monetization.service";
+import { API_URL } from "@/features/auth/services/authentication.service";
+import { getWalletBalanceAPI as getWalletAPI, getDetailedHistoryAPI as getTransactionsAPI, getAuthorStatsAPI } from "@/features/finance/services/wallet.service";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 import {
   FileText,
   Settings,
@@ -66,9 +66,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-const Editor = dynamic(() => import("@/components/editor/Editor"), { ssr: false });
+const Editor = dynamic(() => import("@/features/editor/components/Editor"), { ssr: false });
 import edjsHTML from "editorjs-html";
-import { compileLatexPreviewAPI } from "@/services/latex.service";
+import { compileLatexPreviewAPI } from "@/features/editor/services/latex.service";
 
 const customParsers = {
   alert: (block: any) => `<div class="p-4 rounded-md border my-4 bg-zinc-50 border-zinc-200"><strong>${block.data.type || 'Lưu ý'}</strong>: ${block.data.message}</div>`,
@@ -516,7 +516,7 @@ function StudioContent() {
     if (selectedVersions.length !== 2) return;
     setIsComparing(true);
     try {
-      const { getVersionDiffAPI } = await import("@/services/editor.service");
+      const { getVersionDiffAPI } = await import("@/features/editor/services/editor.service");
       const data = await getVersionDiffAPI(selectedDocumentId, selectedVersions[0], selectedVersions[1]);
       setDiffData(data);
     } catch (err: any) {

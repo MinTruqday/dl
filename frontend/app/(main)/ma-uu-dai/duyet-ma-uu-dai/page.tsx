@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getCouponsAPI, approveCouponAPI } from "@/services/coupon.service";
+import { getCouponsAPI, approveCouponAPI } from "@/features/finance/services/coupon.service";
 import { Ticket, Loader2, Check, Ban, Clock, User, Users, UserPlus, Star } from "lucide-react";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 
 export default function CouponApprovalPage() {
   const { showToast } = useToast();

@@ -20,6 +20,8 @@
       }
     ],
     "paths": {
+      "@/shared/*": ["./shared/*"],
+      "@/features/*": ["./features/*"],
       "@/*": ["./*"]
     }
   },

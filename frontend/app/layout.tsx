@@ -12,10 +12,10 @@ export const metadata: Metadata = {
   description: "Hệ thống quản lý tài liệu thông minh",
 };
 
-import { AuthProvider } from "@/contexts/Auth";
+import { AuthProvider } from "@/features/auth/contexts/Auth";
 import { Theme } from "@/components/Theme";
-import { ToastProvider } from "@/contexts/Toast";
-import { NotificationProvider } from "@/contexts/Notification";
+import { ToastProvider } from "@/shared/contexts/Toast";
+import { NotificationProvider } from "@/shared/contexts/Notification";
 
 export default function RootLayout({
   children,

@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
@@ -17,13 +17,13 @@ import {
   updateGeneralSettingsAPI,
   applyAuthorAPI,
   updateProfileAPI,
-} from "@/services/setting.service";
+} from "@/features/provision/services/setting.service";
 import {
   getMaintenanceModeAPI,
   getAdminConfigAPI,
   toggleMaintenanceModeAPI,
   updateAdminConfigAPI,
-} from "@/services/operation.service";
+} from "@/features/provision/services/operation.service";
 import {
   Settings,
   Type,

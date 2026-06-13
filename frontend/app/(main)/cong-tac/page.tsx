@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/Auth";
-import { getMyDocumentsAPI } from "@/services/document.service";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { getMyDocumentsAPI } from "@/features/content/services/document.service";
 import {
   getCollaborationInvitesAPI,
   inviteCollaboratorAPI,
@@ -32,7 +32,7 @@ import {
   updateCollabTaskAPI,
   addTaskCommentAPI,
   getTaskCommentsAPI,
-} from "@/services/collaboration.service";
+} from "@/features/content/services/collaboration.service";
 import {
   UserPlus,
   Mail,
@@ -57,14 +57,14 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import {
   Modal,
   ModalHeader,
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function StudioCollabPage() {
   const { user, isLoading } = useAuth() as any;

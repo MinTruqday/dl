@@ -1,9 +1,9 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState } from "react";
-import Navigation from "@/components/Navigation";
-import { forgotPasswordAPI } from "@/services/authentication.service";
-import { useToast } from "@/contexts/Toast";
+import Navigation from "@/shared/components/common/Navigation";
+import { forgotPasswordAPI } from "@/features/auth/services/authentication.service";
+import { useToast } from "@/shared/contexts/Toast";
 import { Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {

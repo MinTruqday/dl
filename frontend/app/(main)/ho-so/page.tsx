@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/Auth";
-import { API_URL } from "@/services/authentication.service";
-import { updateProfileAPI } from "@/services/setting.service";
-import { getDetailedHistoryAPI } from "@/services/wallet.service";
-import { createDepositLinkAPI } from "@/services/deposit.service";
-import { applyAuthorAPI, becomeAuthorAPI } from "@/services/setting.service";
-import { uploadAssetAPI } from "@/services/upload.service";
-import { getBookmarksAPI } from "@/services/bookmark.service";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { API_URL } from "@/features/auth/services/authentication.service";
+import { updateProfileAPI } from "@/features/provision/services/setting.service";
+import { getDetailedHistoryAPI } from "@/features/finance/services/wallet.service";
+import { createDepositLinkAPI } from "@/features/finance/services/deposit.service";
+import { applyAuthorAPI, becomeAuthorAPI } from "@/features/provision/services/setting.service";
+import { uploadAssetAPI } from "@/features/content/services/upload.service";
+import { getBookmarksAPI } from "@/features/content/services/bookmark.service";
 import {
   User,
   Camera,
@@ -27,7 +27,7 @@ import {
   ArrowDownLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/contexts/Toast";
+import { useToast } from "@/shared/contexts/Toast";
 import Link from "next/link";
 
 export default function ProfilePage() {

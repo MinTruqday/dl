@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getCollectorStatsAPI, triggerCollectionAPI, getCollectorLogsAPI, stopCollectionAPI } from "@/services/collector.service";
+import { getCollectorStatsAPI, triggerCollectionAPI, getCollectorLogsAPI, stopCollectionAPI } from "@/features/provision/services/collector.service";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 import { useRouter } from "next/navigation";
 import {
   Modal,
@@ -12,7 +12,7 @@ import {
   ModalTitle,
   ModalContent,
   ModalFooter,
-} from "@/components/ui/Modal";
+} from "@/shared/components/ui/Modal";
 
 export default function CollectorPage() {
   const { user, isLoading: authLoading } = useAuth() as any;

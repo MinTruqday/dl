@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getAllBannersAPI, createBannerAPI, deleteBannerAPI } from "@/services/banner.service";
+import { getAllBannersAPI, createBannerAPI, deleteBannerAPI } from "@/features/provision/services/banner.service";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { useAuth } from "@/contexts/Auth";
-import { useToast } from "@/contexts/Toast";
+import { useAuth } from "@/features/auth/contexts/Auth";
+import { useToast } from "@/shared/contexts/Toast";
 
 export default function BannerManagementPage() {
   const { user, isLoading: authLoading } = useAuth() as any;
