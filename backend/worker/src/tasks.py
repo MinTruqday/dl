@@ -50,7 +50,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
 
         rag_url = settings.AGENTIC_AI_URL
         if rag_url:
-            httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=10)
+            httpx.delete(f"{rag_url}/inference/vector/{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT)
         logger.info(f"Đã xóa hoàn toàn tài liệu {document_id}")
     except Exception as e:
         logger.error("Lỗi xóa tài liệu {document_id}")

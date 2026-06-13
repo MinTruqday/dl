@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from uuid6 import uuid7
+from core.config import settings
 
 
 class KYCStatusEnum(str, Enum):
@@ -50,7 +51,7 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
     is_verified: bool = False
-    storage_limit: int = 1 * 1024 * 1024 * 1024
+    storage_limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT) * 1024 * 1024 * 1024
 
     @field_validator("kyc_status", "author_status", mode="before")
     @classmethod

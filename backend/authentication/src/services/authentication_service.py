@@ -50,7 +50,7 @@ class AuthenticationService:
                         "slug": user_in.slug,
                         "role": "READER",
                     },
-                    timeout=5.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 400:
 
@@ -103,12 +103,12 @@ class AuthenticationService:
                 if is_email:
                     resp = await client.get(
                         f"{settings.PROVISION_URL}/user/email/{username}",
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 else:
                     resp = await client.get(
                         f"{settings.PROVISION_URL}/user/slug/{username}",
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 if resp.status_code == 200:
                     user_doc = resp.json().get("data")
@@ -172,7 +172,7 @@ class AuthenticationService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/email/{email}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user = resp.json().get("data") if resp.status_code == 200 else None
         except Exception:
@@ -293,7 +293,7 @@ class AuthenticationService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/email/{email}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
         except Exception:
@@ -319,7 +319,7 @@ class AuthenticationService:
                             + secrets.token_hex(2),
                             "role": "READER",
                         },
-                        timeout=5.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code != 201:
                         raise HTTPException(

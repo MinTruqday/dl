@@ -66,7 +66,7 @@ async def update_document(
 
 @router.get("", response_model=APIResponse[List[DocumentResponse]])
 async def list_documents(
-    limit: int = 10,
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     cursor: Optional[str] = None,
     q: Optional[str] = None,
     sort_by: str = "latest",
@@ -422,7 +422,7 @@ async def transfer_document(
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{settings.PROVISION_URL}/user/{new_owner_id}",
-                timeout=3.0,
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
                 target = resp.json().get("data")
@@ -647,7 +647,7 @@ async def broadcast_notification(
                             "body": req.message,
                             "type": "SYSTEM",
                         },
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 except Exception as e:
                     pass

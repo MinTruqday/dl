@@ -75,7 +75,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/balance", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/balance", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -100,7 +100,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/history", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/history", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -134,7 +134,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
             f"{INTERNAL_API_URL}/wallet/coupon-code/redeem",
             json={"code": code.strip()},
             headers=headers,
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             res_data = response.json().get("data", {})
@@ -157,7 +157,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/revenue", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/revenue", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -179,7 +179,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/document/personal", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/document/personal", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -207,7 +207,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/document/trash", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/document/trash", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -236,7 +236,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
             "DELETE",
             f"{INTERNAL_API_URL}/document/{document_id}",
             headers=headers,
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             try:
@@ -266,7 +266,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             "POST",
             f"{INTERNAL_API_URL}/document/{document_id}/restore",
             headers=headers,
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             return "Đã khôi phục tài liệu"
@@ -291,7 +291,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             "GET",
             f"{INTERNAL_API_URL}/document/{document_id}/analyze/dropoff",
             headers=headers,
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -310,7 +310,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
             "GET",
             f"{INTERNAL_API_URL}/document/{document_id}",
             headers={"Authorization": token},
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
@@ -333,7 +333,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = CitationRequest(text=safe_text, style="APA")
@@ -353,7 +353,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 4, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ReviewRequest(text=safe_text, criteria=["logic", "rõ ràng"])
@@ -375,7 +375,7 @@ async def agent_transform_tone(
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ToneRequest(text=safe_text, tone=tone, expansion=False)
@@ -399,7 +399,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             f"{INTERNAL_API_URL}/deposit/tao-link",
             json={"amount": amount},
             headers=headers,
-            timeout=30,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code in [200, 201]:
             data = response.json().get("data", {})
@@ -447,7 +447,7 @@ async def create_document(
     user_name = "Người dùng"
     try:
         res_profile = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/ho-so/personal", headers=headers, timeout=10
+            "GET", f"{INTERNAL_API_URL}/ho-so/personal", headers=headers, timeout=settings.DEFAULT_HTTP_TIMEOUT
         )
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})

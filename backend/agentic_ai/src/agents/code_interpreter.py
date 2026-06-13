@@ -5,6 +5,7 @@ import tempfile
 from langchain_core.messages import HumanMessage, SystemMessage
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
+from core.config import settings
 
 
 class CodeInterpreter:
@@ -93,7 +94,7 @@ class CodeInterpreter:
 
                 try:
                     stdout, stderr = await asyncio.wait_for(
-                        proc.communicate(), timeout=15
+                        proc.communicate(), timeout=settings.DEFAULT_HTTP_TIMEOUT
                     )
                 except asyncio.TimeoutError:
                     proc.kill()

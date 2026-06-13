@@ -95,7 +95,7 @@ class DepositService:
                         "x-api-key": settings.PAYOS_API_KEY,
                         "Content-Type": "application/json",
                     },
-                    timeout=15,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
             res_data = response.json()
             if res_data.get("code") == "00":
@@ -210,7 +210,7 @@ class DepositService:
                         "x-client-id": settings.PAYOS_CLIENT_ID,
                         "x-api-key": settings.PAYOS_API_KEY,
                     },
-                    timeout=10,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
             res_data = response.json()
             if res_data.get("code") == "00":
@@ -324,7 +324,7 @@ class DepositService:
                                 "body": f"Tài khoản vừa được cộng thêm {dl_to_add} dl",
                                 "type": "topup",
                             },
-                            timeout=3.0,
+                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
                 logger.warning("Lỗi gửi thông báo")

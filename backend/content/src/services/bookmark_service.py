@@ -6,6 +6,7 @@ from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+from core.config import settings
 
 
 class BookmarkService:
@@ -46,7 +47,7 @@ class BookmarkService:
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}
 
     @staticmethod
-    async def get_bookmarks(current_user, limit: int = 100, db=None) -> list:
+    async def get_bookmarks(current_user, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         profile = await RepositoryFactory.get("user_content_profiles").find_one(

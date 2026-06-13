@@ -7,6 +7,7 @@ import tempfile
 
 from loguru import logger
 from uuid6 import uuid7
+from core.config import settings
 
 
 class EditorJSEngine:
@@ -437,7 +438,7 @@ class EditorJSEngine:
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024 * 2,
             )
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
 
             if not os.path.exists(pdf_path):
                 error_msg = stderr.decode("utf-8") if stderr else "Không rõ lỗi"

@@ -5,8 +5,9 @@ from typing import Any, Callable, Coroutine, Optional
 
 from loguru import logger
 
-DEFAULT_TOOL_TIMEOUT_SECONDS = 30
-DEFAULT_MAX_RETRIES = 2
+from core.config import settings
+DEFAULT_TOOL_TIMEOUT_SECONDS = settings.TOOL_TIMEOUT_SECONDS
+DEFAULT_MAX_RETRIES = settings.TOOL_MAX_RETRIES
 RETRY_BASE_DELAY_SECONDS = 0.5
 
 

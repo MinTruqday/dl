@@ -11,7 +11,7 @@ from loguru import logger
 
 async def check_quota(current_user: UserInDB = Depends(get_current_user)):
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
                 f"{settings.PROVISION_URL}/quota/kiem-tra",
                 params={

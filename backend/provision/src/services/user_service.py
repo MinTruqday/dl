@@ -15,7 +15,7 @@ class UserService:
 
     @staticmethod
     async def get_all_users(
-        limit: int = 50, offset: int = 0, cursor: str = None, db=None
+        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, cursor: str = None, db=None
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -125,7 +125,7 @@ class UserService:
                             "body": f"Hệ thống ghi nhận vi phạm từ tài khoản của bạn. Lý do: {reason}",
                             "type": "WARNING",
                         },
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception as e:
             logger.warning("Lỗi khi gửi thông báo")
@@ -269,7 +269,7 @@ class UserService:
     async def get_report_queue(
         status_filter: str = "pending",
         cursor: str = None,
-        limit: int = 30,
+        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
         skip: int = 0,
         db=None,
     ) -> list:
@@ -398,7 +398,7 @@ class UserService:
 
     @staticmethod
     async def search_users(
-        query: str, limit: int = 10, db=None
+        query: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()

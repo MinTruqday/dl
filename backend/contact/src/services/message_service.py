@@ -126,7 +126,7 @@ class MessageService:
 
     @staticmethod
     async def get_messages(
-        other_user_id: str, current_user, limit: int = 50, cursor: str = None, db=None
+        other_user_id: str, current_user, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), cursor: str = None, db=None
     ):
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -207,7 +207,7 @@ class MessageService:
                     resp = await client.post(
                         "{settings.PROVISION_URL}/user/multiple-users",
                         json=other_user_ids,
-                        timeout=5.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
                         users_list = resp.json().get("data", [])

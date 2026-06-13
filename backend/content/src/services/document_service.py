@@ -56,7 +56,7 @@ class DocumentService:
         }
 
     @staticmethod
-    async def get_trending_documents(limit: int = 5) -> List[dict]:
+    async def get_trending_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = (
@@ -70,7 +70,7 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    async def get_text_search(query: str, limit: int = 10) -> List[dict]:
+    async def get_text_search(query: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = docs_col.find(
@@ -102,7 +102,7 @@ class DocumentService:
 
     @staticmethod
     async def get_my_documents(
-        current_user, q: str = None, cursor: str = None, limit: int = 50
+        current_user, q: str = None, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)
     ) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
@@ -199,7 +199,7 @@ class DocumentService:
                             "body": "Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật",
                             "type": "DOCUMENT_UPDATE",
                         },
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
                 logger.error(
@@ -461,7 +461,7 @@ class DocumentService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/email/{email}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
@@ -549,7 +549,7 @@ class DocumentService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/{document['author_id']}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     author = resp.json().get("data")
@@ -661,7 +661,7 @@ class DocumentService:
         ]
 
     @staticmethod
-    async def get_approval_queue(cursor: str = None, limit: int = 30) -> list:
+    async def get_approval_queue(cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"status": "processing_publish"}
         if cursor:
@@ -777,7 +777,7 @@ class DocumentService:
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
 
     @staticmethod
-    async def get_trending_tags(limit: int = 10) -> List[str]:
+    async def get_trending_tags(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[str]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         pipeline = [
@@ -790,7 +790,7 @@ class DocumentService:
         return [r["_id"] for r in results]
 
     @staticmethod
-    async def get_suggested_documents(limit: int = 5) -> List[dict]:
+    async def get_suggested_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)

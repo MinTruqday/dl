@@ -16,7 +16,8 @@ logger.add(
     level="INFO",
 )
 
-from src.api import editor, editorjs, latex
+from src.api import editor_router as editor, editorjs_router as editorjs, latex_router as latex
+from core.config import settings
 
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
@@ -29,9 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(latex.router, prefix="/compile/latex", tags=["LaTeX"])
-app.include_router(editorjs.router, prefix="/compile/editorjs", tags=["EditorJS"])
-app.include_router(editor.router, tags=["Editor"])
+app.include_router(latex.router)
+app.include_router(editorjs.router)
+app.include_router(editor.router)
 
 
 @app.on_event("startup")

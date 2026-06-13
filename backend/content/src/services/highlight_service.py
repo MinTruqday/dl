@@ -6,6 +6,7 @@ from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
+from core.config import settings
 
 ALLOWED_HIGHLIGHT_COLORS = ["#18181b", "#71717a", "#e4e4e7"]
 
@@ -93,7 +94,7 @@ class HighlightService:
 
     @staticmethod
     async def get_all_notes(
-        current_user, cursor: str = None, limit: int = 50, skip: int = 0, db=None
+        current_user, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), skip: int = 0, db=None
     ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()

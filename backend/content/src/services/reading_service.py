@@ -4,13 +4,14 @@ from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
+from core.config import settings
 
 
 class ReadingService:
 
     @staticmethod
     async def get_reading_history(
-        current_user, cursor: str = None, limit: int = 20, db=None
+        current_user, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
     ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()

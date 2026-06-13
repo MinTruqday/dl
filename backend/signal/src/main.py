@@ -16,6 +16,7 @@ logger.add(
     level="INFO",
 )
 
+from core.config import settings
 from src.api.notification_router import router as notification_router
 
 app = FastAPI(title="DocLib Signal", version=settings.VERSION)

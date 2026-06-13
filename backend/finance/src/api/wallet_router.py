@@ -4,6 +4,7 @@ from core.config import settings
 from core.dependency import get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import UserInDB
+from src.schemas.wallet_schema import RedeemCouponRequest
 from fastapi import APIRouter, Depends, Query
 from src.services.purchase_service import PurchaseService
 from src.services.wallet_service import WalletService
@@ -94,7 +95,7 @@ async def get_revenue(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/user/{author_id}", timeout=3.0
+                f"{settings.PROVISION_URL}/user/{author_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT
             )
             if resp.status_code == 200:
                 user_doc = resp.json().get("data") or {}

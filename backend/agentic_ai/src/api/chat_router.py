@@ -41,7 +41,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                         "GET",
                         f"{INTERNAL_API_URL}/document/{doc_id}",
                         headers={"Authorization": f"Bearer {req.token}"},
-                        timeout=10,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if doc_res.status_code not in [200, 201]:
                         return {
@@ -148,7 +148,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             "GET",
                             f"{INTERNAL_API_URL}/document/{doc_id}",
                             headers={"Authorization": f"Bearer {req.token}"},
-                            timeout=10,
+                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
                         if doc_res.status_code not in [200, 201]:
                             yield f"event: message\ndata: {json.dumps({'chunk': 'Ban khong co quyen truy cap hoac tai lieu khong ton tai'})}\n\n"

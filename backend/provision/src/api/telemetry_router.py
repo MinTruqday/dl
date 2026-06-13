@@ -5,6 +5,7 @@ from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends
 from src.api.dependency_router import get_current_user, get_db, require_role
 from src.services.telemetry_service import TelemetryService
+from core.config import settings
 
 router = APIRouter(prefix="/do-luong")
 
@@ -38,7 +39,7 @@ async def get_sys_health(db=Depends(get_db)):
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
-async def get_audit_logs(limit: int = 50, offset: int = 0, db=Depends(get_db)):
+async def get_audit_logs(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, db=Depends(get_db)):
     return APIResponse(
         data=await TelemetryService.get_activity_stats(days=30, db=db),
         message="Đã tải nhật ký hệ thống",

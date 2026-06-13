@@ -47,7 +47,7 @@ class PurchaseService:
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
             lock = db_client.redis.lock(
-                f"purchase:{current_user.id}:{document_id}", timeout=15
+                f"purchase:{current_user.id}:{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT
             )
             await lock.acquire()
         try:
@@ -146,7 +146,7 @@ class PurchaseService:
                                             "body": notification["body"],
                                             "type": "purchase",
                                         },
-                                        timeout=3.0,
+                                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
                         except Exception as e:
                             logger.error("Lỗi gửi thông báo")

@@ -7,6 +7,7 @@ import uuid
 
 from loguru import logger
 from uuid6 import uuid7
+from core.config import settings
 
 
 class LatexEngine:
@@ -61,7 +62,7 @@ class LatexEngine:
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024 * 2,
             )
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=30)
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
 
             if not os.path.exists(pdf_path):
                 log_content = ""
@@ -132,7 +133,7 @@ class LatexEngine:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            await asyncio.wait_for(process.communicate(), timeout=30)
+            await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
 
             if not os.path.exists(out_path):
                 raise Exception("Lỗi chuyển đổi định dạng tài liệu")

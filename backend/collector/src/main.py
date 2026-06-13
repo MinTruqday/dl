@@ -17,6 +17,7 @@ logger.add(
     level="INFO",
 )
 
+from core.config import settings
 from src.api.router_router import router
 
 app = FastAPI(title="DocLib Collector", version=settings.VERSION)

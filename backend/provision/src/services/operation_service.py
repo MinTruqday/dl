@@ -13,7 +13,7 @@ class OperationService:
 
     @staticmethod
     async def get_all_users(
-        limit: int = 50, offset: int = 0, cursor: str = None, db=None
+        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, cursor: str = None, db=None
     ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -319,7 +319,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/statistics", timeout=5.0
+                    f"{settings.COLLECTOR_URL}/statistics", timeout=settings.DEFAULT_HTTP_TIMEOUT
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -344,7 +344,7 @@ class OperationService:
                 resp = await client.post(
                     f"{settings.COLLECTOR_URL}/trigger",
                     json={"source": source, "pages": pages},
-                    timeout=5.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -365,7 +365,7 @@ class OperationService:
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.post(f"{settings.COLLECTOR_URL}/pause", timeout=5.0)
+                resp = await client.post(f"{settings.COLLECTOR_URL}/pause", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     return resp.json()
                 else:
@@ -385,7 +385,7 @@ class OperationService:
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.COLLECTOR_URL}/logs", timeout=5.0)
+                resp = await client.get(f"{settings.COLLECTOR_URL}/logs", timeout=settings.DEFAULT_HTTP_TIMEOUT)
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
@@ -401,7 +401,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/running-jobs", timeout=5.0
+                    f"{settings.COLLECTOR_URL}/running-jobs", timeout=settings.DEFAULT_HTTP_TIMEOUT
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -465,7 +465,7 @@ class OperationService:
 
     @staticmethod
     async def get_withdrawal_requests(
-        status: str = "PENDING", limit: int = 50, db=None
+        status: str = "PENDING", limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
     ) -> list:
         import httpx
         from core.config import settings
@@ -475,7 +475,7 @@ class OperationService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.FINANCE_URL}/withdrawal/hang-doi?status={status}&limit={limit}",
-                    timeout=5.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json().get("data", [])
@@ -494,7 +494,7 @@ class OperationService:
                 resp = await client.post(
                     f"{settings.FINANCE_URL}/withdrawal/{withdrawal_id}/xac-thuc",
                     params={"action": "approve"},
-                    timeout=5.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -520,7 +520,7 @@ class OperationService:
                 resp = await client.post(
                     f"{settings.FINANCE_URL}/withdrawal/{withdrawal_id}/xac-thuc",
                     params={"action": "reject", "reason": reason},
-                    timeout=5.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()

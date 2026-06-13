@@ -278,6 +278,8 @@ services:
       dockerfile: ./compiler/Dockerfile
     container_name: doclib_compiler
     restart: always
+    env_file:
+      - .env
     ports:
       - "8300:8300"
     labels:

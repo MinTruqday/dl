@@ -38,5 +38,5 @@ USER appuser
 
 EXPOSE 8400
 
-CMD ["gunicorn", "src.main:app", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "-b", "--host", "0.0.0.0", "--port", "8400", "--timeout", "1200"]
+CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8400 --timeout 1200"]
 

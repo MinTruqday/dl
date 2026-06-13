@@ -5,31 +5,48 @@ from pydantic import BaseModel
 
 
 class Settings(BaseModel):
-    PROJECT_NAME: str = "DocLib"
-    VERSION: str = "1.0.0"
-
+    PROJECT_NAME: str = os.getenv("PROJECT_NAME")
+    VERSION: str = os.getenv("VERSION")
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS")
-
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
+    PLATFORM_ADMIN_ID: str = os.getenv("PLATFORM_ADMIN_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME")
     REDIS_URI: str = os.getenv("REDIS_URI")
     RABBITMQ_URI: str = os.getenv("RABBITMQ_URI")
-
+    QDRANT_URL: str = os.getenv("QDRANT_URL")
+    QDRANT_HOST: str = os.getenv("QDRANT_HOST")
+    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_REDIRECT_URI: Optional[str] = os.getenv("GOOGLE_REDIRECT_URI")
     GOOGLE_AUTH_URL: str = os.getenv("GOOGLE_AUTH_URL")
     GOOGLE_TOKEN_URL: str = os.getenv("GOOGLE_TOKEN_URL")
     GOOGLE_USERINFO_URL: str = os.getenv("GOOGLE_USERINFO_URL")
-
+    PASSKEY_RP_ID: str = os.getenv("PASSKEY_RP_ID")
+    PASSKEY_RP_NAME: str = os.getenv("PASSKEY_RP_NAME")
+    PASSKEY_ALLOWED_ORIGINS: str = os.getenv("PASSKEY_ALLOWED_ORIGINS")
+    PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID")
+    PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
+    PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")
+    PAYOS_RETURN_URL: str = os.getenv("PAYOS_RETURN_URL")
+    PAYOS_API_URL: str = os.getenv("PAYOS_API_URL")
+    SMTP_HOST: str = os.getenv("SMTP_HOST")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
+    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
+    SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
+    SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
+    SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
+    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY")
     MINIO_BUCKET_NAME: str = os.getenv("MINIO_BUCKET_NAME")
     MINIO_REGION: str = os.getenv("MINIO_REGION")
     MINIO_PUBLIC_URL: Optional[str] = os.getenv("MINIO_PUBLIC_URL")
-
+    MIN_FILE_SIZE_BYTES: int = int(os.getenv("MIN_FILE_SIZE_BYTES"))
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     LLAMA_MODEL: str = os.getenv("LLAMA_MODEL")
     EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL")
@@ -37,18 +54,22 @@ class Settings(BaseModel):
     NLLB_MODEL: str = os.getenv("NLLB_MODEL")
     NLI_MODEL_NAME: str = os.getenv("NLI_MODEL_NAME")
     IMAGE_GEN_MODEL: str = os.getenv("IMAGE_GEN_MODEL")
-
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
     HYBRID_ALPHA: float = float(os.getenv("HYBRID_ALPHA"))
     EMBEDDING_DIMENSIONS: int = int(os.getenv("EMBEDDING_DIMENSIONS"))
     EMBEDDING_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE"))
     MEMORY_MAX_TURNS: int = int(os.getenv("MEMORY_MAX_TURNS"))
-
-    TAVILY_API_KEY: Optional[str] = os.getenv("TAVILY_API_KEY")
-
-    QDRANT_URL: str = os.getenv("QDRANT_URL")
-    QDRANT_HOST: str = os.getenv("QDRANT_HOST")
-    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT"))
-
+    MAP_REDUCE_BATCH_SIZE: int = int(os.getenv("MAP_REDUCE_BATCH_SIZE"))
+    MAP_REDUCE_MAX_CHUNKS: int = int(os.getenv("MAP_REDUCE_MAX_CHUNKS"))
+    TOOL_TIMEOUT_SECONDS: float = float(os.getenv("TOOL_TIMEOUT_SECONDS"))
+    TOOL_MAX_RETRIES: int = int(os.getenv("TOOL_MAX_RETRIES"))
+    CIRCUIT_BREAKER_THRESHOLD: int = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD"))
+    CIRCUIT_BREAKER_RESET_SECONDS: float = float(os.getenv("CIRCUIT_BREAKER_RESET_SECONDS"))
+    MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS"))
+    CHARS_PER_TOKEN_APPROX: int = int(os.getenv("CHARS_PER_TOKEN_APPROX"))
+    DEFAULT_CHUNK_SIZE: int = int(os.getenv("DEFAULT_CHUNK_SIZE"))
+    DEFAULT_CHUNK_OVERLAP: int = int(os.getenv("DEFAULT_CHUNK_OVERLAP"))
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
     INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
     CORE_BACKEND_URL: Optional[str] = os.getenv("CORE_BACKEND_URL")
@@ -62,27 +83,10 @@ class Settings(BaseModel):
     CONTENT_URL: str = os.getenv("CONTENT_URL")
     WEBSOCKET_URL: str = os.getenv("WEBSOCKET_URL")
     FLARESOLVERR_URL: str = os.getenv("FLARESOLVERR_URL")
-
-    SMTP_HOST: str = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
-    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
-    SMTP_PASS: Optional[str] = os.getenv("SMTP_PASS")
-    SENDER_EMAIL: Optional[str] = os.getenv("SENDER_EMAIL")
-    SENDER_NAME: Optional[str] = os.getenv("SENDER_NAME")
-
-    PASSKEY_RP_ID: str = os.getenv("PASSKEY_RP_ID")
-    PASSKEY_RP_NAME: str = os.getenv("PASSKEY_RP_NAME")
-    PASSKEY_ALLOWED_ORIGINS: str = os.getenv("PASSKEY_ALLOWED_ORIGINS")
-
-    PLATFORM_ADMIN_ID: str = os.getenv("PLATFORM_ADMIN_ID")
-
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL")
-    PAYOS_CLIENT_ID: str = os.getenv("PAYOS_CLIENT_ID")
-    PAYOS_API_KEY: str = os.getenv("PAYOS_API_KEY")
-    PAYOS_CHECKSUM_KEY: str = os.getenv("PAYOS_CHECKSUM_KEY")
-    PAYOS_RETURN_URL: str = os.getenv("PAYOS_RETURN_URL")
-    PAYOS_API_URL: str = os.getenv("PAYOS_API_URL")
+    DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
+    MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
+    DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
+    LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
 
 
 settings = Settings()

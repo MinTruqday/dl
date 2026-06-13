@@ -1,5 +1,6 @@
 import uvicorn
 from core.config import settings
+from loguru import logger
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

@@ -122,7 +122,7 @@ class WalletService:
                                 "body": f"Tài khoản vừa được cộng thêm {bonus_dl} dl",
                                 "type": "topup",
                             },
-                            timeout=3.0,
+                            timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
                 logger.warning("Lỗi gửi thông báo")
@@ -154,7 +154,7 @@ class WalletService:
     async def get_history(
         current_user,
         cursor: str = None,
-        limit: int = 30,
+        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
         tx_type: str = None,
         skip: int = 0,
         db=None,

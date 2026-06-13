@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from core.database import db_client
+from core.config import settings
 
 
 class WalletRepository:
@@ -54,7 +55,7 @@ class WalletRepository:
 
     @staticmethod
     async def get_transactions(
-        query: dict, skip: int = 0, limit: int = 30, db=None
+        query: dict, skip: int = 0, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()

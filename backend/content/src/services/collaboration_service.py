@@ -49,7 +49,7 @@ class CollaborationService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/email/{invitee_email}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     invitee = resp.json().get("data")
@@ -187,7 +187,7 @@ class CollaborationService:
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(
                         f"{settings.PROVISION_URL}/user/{inv['invitee_id']}",
-                        timeout=3.0,
+                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
                         user_info = resp.json().get("data")
@@ -303,7 +303,7 @@ class CollaborationService:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
                     f"{settings.PROVISION_URL}/user/{target_user_id}",
-                    timeout=3.0,
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
