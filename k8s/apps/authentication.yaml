@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication
+  template:
+    metadata:
+      labels:
+        app: authentication
+    spec:
+      containers:
+      - name: authentication
+        image: doclib-authentication:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: doclib-env
+        ports:
+        - containerPort: 8500
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentication
+spec:
+  ports:
+  - port: 8500
+  selector:
+    app: authentication

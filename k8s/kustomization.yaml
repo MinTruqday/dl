@@ -1,0 +1,30 @@
+namespace: doclib
+
+resources:
+  - namespace.yaml
+  - infrastructure/mongodb.yaml
+  - infrastructure/redis.yaml
+  - infrastructure/rabbitmq.yaml
+  - infrastructure/minio.yaml
+  - infrastructure/qdrant.yaml
+  - infrastructure/ollama.yaml
+  - infrastructure/flaresolverr.yaml
+  - observability/prometheus.yaml
+  - observability/grafana.yaml
+  - apps/agentic_ai.yaml
+  - apps/authentication.yaml
+  - apps/collector.yaml
+  - apps/compiler.yaml
+  - apps/contact.yaml
+  - apps/content.yaml
+  - apps/finance.yaml
+  - apps/provision.yaml
+  - apps/signal.yaml
+  - apps/websocket.yaml
+  - apps/frontend.yaml
+  - ingress/ingress.yaml
+
+secretGenerator:
+  - name: doclib-env
+    envs:
+      - ../.env

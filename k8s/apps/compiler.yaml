@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compiler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compiler
+  template:
+    metadata:
+      labels:
+        app: compiler
+    spec:
+      containers:
+      - name: compiler
+        image: doclib-compiler:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: doclib-env
+        ports:
+        - containerPort: 8300
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: compiler
+spec:
+  ports:
+  - port: 8300
+  selector:
+    app: compiler

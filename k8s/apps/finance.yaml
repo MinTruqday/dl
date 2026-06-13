@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finance
+  template:
+    metadata:
+      labels:
+        app: finance
+    spec:
+      containers:
+      - name: finance
+        image: doclib-finance:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: doclib-env
+        ports:
+        - containerPort: 8350
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finance
+spec:
+  ports:
+  - port: 8350
+  selector:
+    app: finance

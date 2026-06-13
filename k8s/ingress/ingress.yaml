@@ -1,0 +1,89 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: doclib-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /vi-tien(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: finance
+            port:
+              number: 8350
+      - path: /thong-bao(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: signal
+            port:
+              number: 8150
+      - path: /suy-luan(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: agentic_ai
+            port:
+              number: 8400
+      - path: /thu-thap(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: collector
+            port:
+              number: 8250
+      - path: /bien-dich(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: compiler
+            port:
+              number: 8300
+      - path: /xac-thuc(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: authentication
+            port:
+              number: 8500
+      - path: /nguoi-dung(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: provision
+            port:
+              number: 8050
+      - path: /nhan-tin(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: contact
+            port:
+              number: 8100
+      - path: /tin-nhan(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: websocket
+            port:
+              number: 8200
+      - path: /tai-lieu(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: content
+            port:
+              number: 8450
+      # Frontend default route
+      - path: /(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 3000

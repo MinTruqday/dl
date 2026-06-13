@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: signal
+  template:
+    metadata:
+      labels:
+        app: signal
+    spec:
+      containers:
+      - name: signal
+        image: doclib-signal:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: doclib-env
+        ports:
+        - containerPort: 8150
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: signal
+spec:
+  ports:
+  - port: 8150
+  selector:
+    app: signal

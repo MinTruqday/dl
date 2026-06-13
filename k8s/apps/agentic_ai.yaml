@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentic_ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agentic_ai
+  template:
+    metadata:
+      labels:
+        app: agentic_ai
+    spec:
+      containers:
+      - name: agentic_ai
+        image: doclib-agentic-ai:latest
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: doclib-env
+        ports:
+        - containerPort: 8400
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentic_ai
+spec:
+  ports:
+  - port: 8400
+  selector:
+    app: agentic_ai

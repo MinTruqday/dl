@@ -1,0 +1,54 @@
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: doclib
+build:
+  artifacts:
+  - image: doclib-agentic-ai
+    context: ./backend
+    docker:
+      dockerfile: agentic_ai/Dockerfile
+  - image: doclib-authentication
+    context: ./backend
+    docker:
+      dockerfile: authentication/Dockerfile
+  - image: doclib-collector
+    context: ./backend
+    docker:
+      dockerfile: collector/Dockerfile
+  - image: doclib-compiler
+    context: ./backend
+    docker:
+      dockerfile: compiler/Dockerfile
+  - image: doclib-contact
+    context: ./backend
+    docker:
+      dockerfile: contact/Dockerfile
+  - image: doclib-content
+    context: ./backend
+    docker:
+      dockerfile: content/Dockerfile
+  - image: doclib-finance
+    context: ./backend
+    docker:
+      dockerfile: finance/Dockerfile
+  - image: doclib-provision
+    context: ./backend
+    docker:
+      dockerfile: provision/Dockerfile
+  - image: doclib-signal
+    context: ./backend
+    docker:
+      dockerfile: signal/Dockerfile
+  - image: doclib-websocket
+    context: ./backend
+    docker:
+      dockerfile: websocket/Dockerfile
+  - image: doclib-frontend
+    context: ./frontend
+    docker:
+      dockerfile: Dockerfile
+manifests:
+  kustomize:
+    paths:
+    - k8s

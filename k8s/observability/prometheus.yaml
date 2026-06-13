@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:latest
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus
+        # - name: config
+        #   mountPath: /etc/prometheus/prometheus.yml
+        #   subPath: prometheus.yml
+      volumes:
+      - name: prometheus-data
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+spec:
+  ports:
+  - port: 9090
+  selector:
+    app: prometheus
