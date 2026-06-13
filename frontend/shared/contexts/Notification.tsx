@@ -15,7 +15,7 @@ import {
   getNotificationsAPI,
   markNotificationReadAPI,
 } from "@/features/communication/services/notification.service";
-import { useAuth } from "./Auth";
+import { useAuth } from "@/features/auth/contexts/Auth";
 import { useToast } from "./Toast";
 
 interface NotificationItem {

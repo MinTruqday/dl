@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import Navigation from "./Navigation";
-import Menu from "./Menu";
+import Navigation from "@/shared/components/common/Navigation";
+import Menu from "@/shared/components/common/Menu";
 import { useAuth } from "@/features/auth/contexts/Auth";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";

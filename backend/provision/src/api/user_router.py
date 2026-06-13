@@ -4,7 +4,7 @@ from core.response import APIResponse
 from core.schemas.user import (ModerationActionRequest, NoteRequest, RoleEnum,
                                UpdateRoleRequest, UpdateStatusRequest,
                                UserInDB)
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.api.dependency_router import get_current_user, get_db, require_role
 from src.services.user_service import UserService

@@ -11,7 +11,7 @@ from core.config import settings
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 from core.storage import upload_file
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Query
 from loguru import logger
 from passlib.context import CryptContext
 from src.core.publication import trigger_document_publish_job

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 from loguru import logger
 from core.config import settings
 

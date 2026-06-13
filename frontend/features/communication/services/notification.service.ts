@@ -1,4 +1,4 @@
-import { API_URL, getToken, getAuthHeaders } from "./authentication.service";
+import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export const getNotificationsAPI = async () => {
   const token = getToken();

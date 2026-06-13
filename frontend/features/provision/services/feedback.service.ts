@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders } from "./authentication.service";
+import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function submitReportAPI(payload: {
   item_type: string;

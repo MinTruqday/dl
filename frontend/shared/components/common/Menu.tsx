@@ -23,6 +23,7 @@ import {
   Files,
   Presentation,
   Sparkles,
+  Shield,
 } from "lucide-react";
 
 interface MenuProps {

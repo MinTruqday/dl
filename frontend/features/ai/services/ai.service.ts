@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders, getToken } from "./authentication.service";
+import { API_URL, getAuthHeaders, getToken } from "@/features/auth/services/authentication.service";
 
 export async function processTextAPI(
   text: string,

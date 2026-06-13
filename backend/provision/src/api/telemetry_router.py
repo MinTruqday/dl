@@ -2,7 +2,7 @@ from typing import Any
 
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from src.api.dependency_router import get_current_user, get_db, require_role
 from src.services.telemetry_service import TelemetryService
 from core.config import settings

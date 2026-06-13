@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders } from "./authentication.service";
+import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export const getTrendingDocumentsAPI = async (limit: number = 5) => {
   const res = await fetch(`${API_URL}/discovery/xu-huong?limit=${limit}`);

@@ -7,7 +7,7 @@ import httpx
 from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
 from datasets import Dataset
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7

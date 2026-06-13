@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders } from "./authentication.service";
+import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function toggleBookmarkAPI(documentId: string) {
   const res = await fetch(`${API_URL}/bookmark/${documentId}`, {

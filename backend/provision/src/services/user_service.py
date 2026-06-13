@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import RoleEnum
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 from loguru import logger
 from uuid6 import uuid7
 

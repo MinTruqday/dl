@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 
 from core.database import db_client
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Query
 from loguru import logger
 from src.schemas.wallet_schema import Transaction, TransactionType
 

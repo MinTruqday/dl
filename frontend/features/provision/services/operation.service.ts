@@ -1,4 +1,4 @@
-import { API_URL, getToken } from "./authentication.service";
+import { API_URL, getToken } from "@/features/auth/services/authentication.service";
 
 export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();

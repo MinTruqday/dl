@@ -1,4 +1,4 @@
-import { API_URL, getAuthHeaders } from "./authentication.service";
+import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function getPasskeyRegistrationOptionsAPI() {
   const res = await fetch(`${API_URL}/auth/passkey/options/register`, {
