@@ -18,7 +18,7 @@ async def check_quota(current_user: UserInDB = Depends(get_current_user)):
             if resp.status_code == 429:
                 raise HTTPException(status_code=429, detail=resp.json().get('detail', 'Vượt quá hạn mức'))
             elif resp.status_code != 200:
-                logger.warning(f"Không thể kiểm tra hạn mức từ provision: {resp.status_code}")
-    except httpx.RequestError as e:
-        logger.error("Lỗi kết nối tới provision service")
+                logger.warning(f"Không thể kiểm tra hạn mức từ hệ thống vận hành: {resp.status_code}")
+    except Exception as e:
+        logger.error("Lỗi kết nối tới hệ thống vận hành")
     return current_user

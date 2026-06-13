@@ -34,6 +34,6 @@ app.include_router(coupon_router)
 async def startup_event():
     logger.info("Dịch vụ tài chính đã khởi động")
 
-@app.get("/health")
+@app.get("/kiem-tra-suc-khoe")
 async def health_check():
     return {"status": "ok", "service": "finance"}

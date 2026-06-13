@@ -30,6 +30,6 @@ async def startup_event():
     logger.info("Dịch vụ thông báo của DocLib đã sẵn sàng")
 
 
-@app.get("/health")
+@app.get("/kiem-tra-suc-khoe")
 async def health_check():
     return {"status": "healthy", "service": "signal"}

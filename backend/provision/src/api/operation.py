@@ -54,7 +54,7 @@ async def get_collector_stats(db=Depends(get_db)):
 async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
     return APIResponse(data=await OperationService.trigger_collection(req.source, req.pages, db=db), message='Đã kích hoạt trình thu thập')
 
-@router.post('/thu-thap/dung', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
+@router.post('/thu-thap/tam-dung', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])
 async def stop_collection(db=Depends(get_db)):
     return APIResponse(data=await OperationService.stop_collection(db=db), message='Đã gửi lệnh dừng trình thu thập')
 

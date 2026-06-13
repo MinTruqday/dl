@@ -23,7 +23,7 @@ class Action:
 
     async def execute(self, action: str, params: dict, user_id: str, token: str = None) -> str:
         if not token and action != "public_query":
-            return "Lỗi xác thực: Vui lòng đăng nhập để thực hiện thao tác với hệ thống"
+            return "Vui lòng đăng nhập để thực hiện thao tác với hệ thống"
             
         system_prompt = prompt_registry.get(PromptType.TOOL_DISPATCHER)
 

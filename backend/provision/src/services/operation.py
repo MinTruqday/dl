@@ -202,7 +202,7 @@ class OperationService:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
             logger.error("Lỗi kích hoạt thu thập")
-        return {'status': 'error', 'message': 'Không thể kết nối đến collector'}
+        return {'status': 'error', 'message': 'Không thể kết nối đến hệ thống thu thập dữ liệu'}
 
     @staticmethod
     async def stop_collection(db=None) -> dict:
@@ -211,14 +211,14 @@ class OperationService:
         from loguru import logger
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.post(f"{settings.COLLECTOR_URL}/dung", timeout=5.0)
+                resp = await client.post(f"{settings.COLLECTOR_URL}/tam-dung", timeout=5.0)
                 if resp.status_code == 200:
                     return resp.json()
                 else:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
             logger.error("Lỗi dừng thu thập")
-        return {'status': 'error', 'message': 'Không thể kết nối đến collector'}
+        return {'status': 'error', 'message': 'Không thể kết nối đến hệ thống thu thập dữ liệu'}
 
     @staticmethod
     async def get_collector_logs(db=None) -> list:
@@ -285,7 +285,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json().get("data", [])
         except Exception as e:
-            logger.error("Lỗi lấy danh sách rút tiền từ finance")
+            logger.error("Lỗi lấy danh sách rút tiền từ hệ thống tài chính")
         return []
 
     @staticmethod
@@ -306,7 +306,7 @@ class OperationService:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
             logger.error(f"Lỗi duyệt rút tiền {withdrawal_id}")
-        return {'status': 'error', 'message': 'Không thể kết nối đến finance'}
+        return {'status': 'error', 'message': 'Không thể kết nối đến hệ thống tài chính'}
 
     @staticmethod
     async def reject_withdrawal(withdrawal_id: str, reason: str, admin_id: str, db=None) -> dict:
@@ -326,4 +326,4 @@ class OperationService:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
             logger.error(f"Lỗi từ chối rút tiền {withdrawal_id}")
-        return {'status': 'error', 'message': 'Không thể kết nối đến finance'}
+        return {'status': 'error', 'message': 'Không thể kết nối đến hệ thống tài chính'}

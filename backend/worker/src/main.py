@@ -21,7 +21,7 @@ async def read_health():
     await redis_client.ping()
     return {"status": "healthy"}
 
-@app.post("/tasks/tectonic/compile")
+@app.post("/cong-viec/tectonic/bien-dich")
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:

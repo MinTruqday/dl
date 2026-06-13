@@ -39,7 +39,7 @@ async def trigger_collection(req: CollectionRequest):
         logger.error('Lỗi bật tiến trình thu thập')
         raise HTTPException(status_code=500, detail='Lỗi chuyển lệnh thu thập vào hàng đợi')
 
-@router.post('/dung')
+@router.post('/tam-dung')
 async def stop_collection():
     try:
         if mq_client.channel:
@@ -80,7 +80,7 @@ async def get_collector_stats():
         'status': 'operational'
     }
 
-@router.get('/logs')
+@router.get('/nhat-ky-he-thong')
 async def get_collector_logs():
     log_file = 'logs/backend.log'
     logs = []

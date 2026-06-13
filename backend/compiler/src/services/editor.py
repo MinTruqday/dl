@@ -37,7 +37,7 @@ class EditorService:
         if not content:
             raise HTTPException(status_code=400, detail='Nội dung tài liệu đang trống')
         try:
-            url = f'{compiler_url}/compile/editorjs/compile'
+            url = f'{compiler_url}/bien-dich/editorjs/bien-dich'
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(url, json={'content': content})
                 if response.status_code != 200:
@@ -63,10 +63,7 @@ class EditorService:
             logger.error('Lỗi đồng bộ thao tác')
             return {'status': 'sync_failed', 'error': str(e)}
 
-    @staticmethod
-    async def get_latex(db=None):
-        from src.services.latex_snippets import LATEX_COMMANDS, LATEX_PACKAGES, LATEX_ENVIRONMENTS
-        return {'snippets': LATEX_COMMANDS + LATEX_PACKAGES + LATEX_ENVIRONMENTS}
+
 
     @staticmethod
     async def add_inline_suggestion(document_id: str, payload: dict, current_user, db=None):

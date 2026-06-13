@@ -15,7 +15,6 @@ from core.config import settings
 
 router = APIRouter(prefix='/soan-thao')
 
-
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def check_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):
     return {"data": await EditorService.check_deep_plagiarism(document_id, current_user, agentic_ai_url), "message": 'Đã hoàn tất kiểm tra đạo văn', "status": 200}
@@ -24,9 +23,7 @@ async def check_plagiarism(document_id: str, current_user = Depends(get_current_
 async def sync_keystroke_buffer(document_id: str, payload: KeystrokeSyncRequest, current_user = Depends(get_current_user)):
     return {"data": await EditorService.sync_keystroke_buffer(document_id, payload.model_dump(), current_user), "message": 'Đã đồng bộ thao tác gõ phím', "status": 200}
 
-@router.get('/latex')
-async def get_latex():
-    return {"data": await EditorService.get_latex(), "message": 'Đã tải mã nguồn tài liệu', "status": 200}
+
 
 @router.post('/tai-lieu/{document_id}/goi-y')
 async def add_inline_suggestion(document_id: str, payload: InlineSuggestionRequest, current_user = Depends(get_current_user)):

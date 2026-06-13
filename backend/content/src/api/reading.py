@@ -6,6 +6,7 @@ from src.schemas.library import TypographyRequest, ProgressUpdate, ReadingGoalCr
 from core.response import APIResponse
 from src.services.reading import ReadingService
 from pydantic import BaseModel
+
 router = APIRouter(prefix='/doc')
 
 @router.get('/lich-su', response_model=APIResponse[Any])
@@ -15,8 +16,6 @@ async def get_history(cursor: str=None, limit: int=Query(20), current_user: User
 @router.post('/tien-do', response_model=APIResponse[Any])
 async def update_progress(data: ProgressUpdate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):
     return APIResponse(data=await ReadingService.update_progress(data, current_user, db=db), message='Đã cập nhật tiến độ')
-
-
 
 @router.post('/muc-tieu', response_model=APIResponse[Any])
 async def set_reading_goal(data: ReadingGoalCreate, current_user: UserInDB=Depends(get_current_user), db=Depends(get_db)):

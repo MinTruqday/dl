@@ -27,7 +27,7 @@ async def startup_event():
 async def shutdown_event():
     await close_db()
 
-@app.get("/health")
+@app.get("/kiem-tra-suc-khoe")
 async def health_check():
     return {"status": "ok", "service": "authentication"}
 

@@ -10,7 +10,7 @@ import json
 import asyncio
 import threading
 
-router = APIRouter(prefix="/finetune")
+router = APIRouter(prefix="/huan-luyen")
 active_jobs = {}
 
 def get_db():

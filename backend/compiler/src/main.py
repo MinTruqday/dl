@@ -22,8 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(latex.router, prefix="/compile/latex", tags=["LaTeX"])
-app.include_router(editorjs.router, prefix="/compile/editorjs", tags=["EditorJS"])
+app.include_router(latex.router, prefix="/bien-dich/latex", tags=["LaTeX"])
+app.include_router(editorjs.router, prefix="/bien-dich/editorjs", tags=["EditorJS"])
 app.include_router(editor.router, tags=["Editor"])
 
 
@@ -32,6 +32,6 @@ async def startup_event():
     logger.info("Dịch vụ biên dịch DocLib 0.1a đã khởi động")
 
 
-@app.get("/health")
+@app.get("/kiem-tra-suc-khoe")
 async def health_check():
     return {"status": "ok", "service": "compiler"}

@@ -27,11 +27,11 @@ app.include_router(feedback_router)
 app.include_router(finetune_router)
 app.include_router(history_router)
 
-@app.get("/health")
+@app.get("/kiem-tra-suc-khoe")
 async def health_check():
     return {"status": "healthy"}
 
-@app.get("/harness/metrics")
+@app.get("/danh-gia/chi-so")
 async def harness_metrics():
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse(
@@ -39,7 +39,7 @@ async def harness_metrics():
         media_type="text/plain; version=0.0.4",
     )
 
-@app.get("/harness/status")
+@app.get("/danh-gia/trang-thai")
 async def harness_status():
     return {
         "orchestration": {
