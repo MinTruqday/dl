@@ -3,8 +3,8 @@ from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.authentication import router as auth_router
-from src.api.passkey import router as passkey_router
+from src.api.authentication_router import router as auth_router
+from src.api.passkey_router import router as passkey_router
 
 app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
 

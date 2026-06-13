@@ -3,7 +3,7 @@ from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.message import router as message_router
+from src.api.message_router import router as message_router
 
 app = FastAPI(title="DocLib Contact", version=settings.VERSION)
 

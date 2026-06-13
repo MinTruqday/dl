@@ -75,7 +75,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/balance", headers=headers, timeout=30
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -100,7 +100,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/history", headers=headers, timeout=30
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -131,7 +131,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma",
+            f"{INTERNAL_API_URL}/wallet/coupon-code/redeem",
             json={"code": code.strip()},
             headers=headers,
             timeout=30,
@@ -157,7 +157,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=30
+            "GET", f"{INTERNAL_API_URL}/wallet/revenue", headers=headers, timeout=30
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -320,7 +320,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 
 from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
-from src.api.inference import peer_review, suggest_citations, transform_tone
+from src.api.inference_router import peer_review, suggest_citations, transform_tone
 
 
 @tool
@@ -395,7 +395,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/nap-tien/tao-link",
+            f"{INTERNAL_API_URL}/deposit/tao-link",
             json={"amount": amount},
             headers=headers,
             timeout=30,
@@ -681,7 +681,7 @@ async def translate_document(
         payload = {"text": text_to_translate, "target_lang": target_language}
         trans_res = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/suy-luan/translate",
+            f"{INTERNAL_API_URL}/inference/translate",
             headers=headers,
             json=payload,
             timeout=60,

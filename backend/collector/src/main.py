@@ -17,7 +17,7 @@ logger.add(
     level="INFO",
 )
 
-from src.api.router import router
+from src.api.router_router import router
 
 app = FastAPI(title="DocLib Collector", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

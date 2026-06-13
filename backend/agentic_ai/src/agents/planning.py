@@ -16,7 +16,7 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
-from src.schemas.plan import ExecutionPlan, PlanStep
+from src.schemas.plan_schema import ExecutionPlan, PlanStep
 
 
 class Planning:

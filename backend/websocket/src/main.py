@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 app.include_router(editor_ws.router, prefix="/soan-thao")
-app.include_router(message_ws.router, prefix="/tin-nhan")
+app.include_router(message_ws.router, prefix="/message")
 
 
 @app.on_event("startup")

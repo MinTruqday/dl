@@ -16,10 +16,10 @@ logger.add(
     level="INFO",
 )
 
-from src.api.coupon import router as coupon_router
-from src.api.deposit import router as deposit_router
-from src.api.wallet import router as wallet_router
-from src.api.withdrawal import router as withdrawal_router
+from src.api.coupon_router import router as coupon_router
+from src.api.deposit_router import router as deposit_router
+from src.api.wallet_router import router as wallet_router
+from src.api.withdrawal_router import router as withdrawal_router
 
 app = FastAPI(title="DocLib Finance", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)

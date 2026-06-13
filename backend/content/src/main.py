@@ -3,21 +3,21 @@ from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.bookmark import router as bookmark_router
-from src.api.collaboration import router as collaboration_router
-from src.api.discovery import router as discovery_router
-from src.api.document import router as document_router
-from src.api.draft import router as draft_router
-from src.api.export import router as export_router
-from src.api.highlight import router as highlight_router
-from src.api.library import router as library_router
-from src.api.pin import router as pin_router
-from src.api.publication import router as publication_router
-from src.api.reading import router as reading_router
-from src.api.review import router as review_router
-from src.api.storage import router as storage_router
-from src.api.upload import router as upload_router
-from src.api.version import router as version_router
+from src.api.bookmark_router import router as bookmark_router
+from src.api.collaboration_router import router as collaboration_router
+from src.api.discovery_router import router as discovery_router
+from src.api.document_router import router as document_router
+from src.api.draft_router import router as draft_router
+from src.api.export_router import router as export_router
+from src.api.highlight_router import router as highlight_router
+from src.api.library_router import router as library_router
+from src.api.pin_router import router as pin_router
+from src.api.publication_router import router as publication_router
+from src.api.reading_router import router as reading_router
+from src.api.review_router import router as review_router
+from src.api.storage_router import router as storage_router
+from src.api.upload_router import router as upload_router
+from src.api.version_router import router as version_router
 
 app = FastAPI(title="DocLib Content", version=settings.VERSION)
 
