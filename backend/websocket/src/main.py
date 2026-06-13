@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api import editor_ws, message_ws
 
-app = FastAPI(title="DocLib WebSocket")
+app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +25,7 @@ app.include_router(message_ws.router, prefix="/tin-nhan")
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Đã khởi tạo hệ thống WebSocket DocLib")
     from core.database import init_db
 
     await init_db()

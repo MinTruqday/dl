@@ -26,6 +26,7 @@ app.include_router(passkey_router)
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Đã khởi tạo hệ thống bảo mật DocLib")
     await init_db()
 
 

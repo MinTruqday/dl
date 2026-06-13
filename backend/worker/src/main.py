@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-app = FastAPI(title="Hệ thống tác vụ biên dịch AI", version="2.0.26")
+app = FastAPI(title="Hệ thống tác vụ AI", version=settings.VERSION)
 redis_client = redis.from_url(settings.REDIS_URI, decode_responses=True)
 
 

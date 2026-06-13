@@ -19,7 +19,7 @@ from src.api.storage import router as storage_router
 from src.api.upload import router as upload_router
 from src.api.version import router as version_router
 
-app = FastAPI(title="DocLib Content")
+app = FastAPI(title="DocLib Content", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,6 +52,7 @@ app.include_router(pin_router)
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Đã khởi tạo hệ thống nội dung DocLib")
     await init_db()
 
 

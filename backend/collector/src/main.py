@@ -19,7 +19,7 @@ logger.add(
 
 from src.api.router import router
 
-app = FastAPI(title="DocLib Collector")
+app = FastAPI(title="DocLib Collector", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
@@ -35,7 +35,7 @@ app.include_router(router, prefix="/collect")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Hệ thống thu thập DocLib khởi động thành công")
+    logger.info("Đã khởi tạo hệ thống thu thập DocLib")
     from src.worker import run_worker
 
     asyncio.create_task(run_worker())

@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-COPY agentic-ai/requirements.txt .
+COPY agentic_ai/requirements.txt .
 RUN pip install --no-cache-dir torch>=2.2.0
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -32,7 +32,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 RUN useradd -m -s /bin/bash appuser
 RUN mkdir -p /home/appuser/.cache/huggingface && chown -R appuser:appuser /home/appuser/.cache
 RUN mkdir -p /tmp/doclib_finetune/models /tmp/doclib_finetune/adapters /tmp/doclib_finetune/gguf && chown -R appuser:appuser /tmp/doclib_finetune
-COPY --chown=appuser:appuser agentic-ai/src/ ./src/
+COPY --chown=appuser:appuser agentic_ai/src/ ./src/
 COPY --chown=appuser:appuser core/ ./core/
 
 USER appuser

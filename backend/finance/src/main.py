@@ -21,7 +21,7 @@ from src.api.deposit import router as deposit_router
 from src.api.wallet import router as wallet_router
 from src.api.withdrawal import router as withdrawal_router
 
-app = FastAPI(title="DocLib Finance")
+app = FastAPI(title="DocLib Finance", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
@@ -40,7 +40,7 @@ app.include_router(coupon_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ tài chính đã khởi động")
+    logger.info("Đã khởi tạo hệ thống tài chính DocLib")
 
 
 @app.get("/health")

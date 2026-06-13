@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.message import router as message_router
 
-app = FastAPI(title="DocLib Contact")
+app = FastAPI(title="DocLib Contact", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,6 +24,7 @@ app.include_router(message_router)
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Đã khởi tạo hệ thống liên hệ DocLib")
     await init_db()
 
 

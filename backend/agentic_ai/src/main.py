@@ -2,6 +2,7 @@ import contextvars
 import sys
 import uuid
 
+
 from core.middleware import (add_trace_id_header, trace_id_ctx_var,
                              trace_id_filter)
 from fastapi import FastAPI, Request
@@ -24,7 +25,7 @@ from src.harness.agentops_harness import agentops_harness
 from src.harness.evaluation_harness import evaluation_harness
 from src.harness.orchestration_harness import orchestration_harness
 
-app = FastAPI(title="DocLib Agentic_ai")
+app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.include_router(inference_router)
@@ -63,7 +64,7 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Khởi tạo hệ thống AI thành công")
+    logger.info("Đã khởi tạo hệ thống DocLib AI")
     from core.config import settings
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.vector_store import vector_store

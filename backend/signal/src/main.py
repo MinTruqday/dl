@@ -18,7 +18,7 @@ logger.add(
 
 from src.api.notification import router as notification_router
 
-app = FastAPI(title="DocLib Signal")
+app = FastAPI(title="DocLib Signal", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
@@ -34,7 +34,7 @@ app.include_router(notification_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ thông báo của DocLib đã sẵn sàng")
+    logger.info("Đã khởi tạo hệ thống thông báo DocLib")
 
 
 @app.get("/health")

@@ -18,7 +18,7 @@ logger.add(
 
 from src.api import editor, editorjs, latex
 
-app = FastAPI(title="DocLib Compiler")
+app = FastAPI(title="DocLib Compiler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
@@ -36,7 +36,7 @@ app.include_router(editor.router, tags=["Editor"])
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Dịch vụ biên dịch DocLib đã khởi động")
+    logger.info("Đã khởi tạo hệ thống biên dịch DocLib")
 
 
 @app.get("/health")

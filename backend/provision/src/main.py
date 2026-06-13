@@ -32,6 +32,7 @@ app.include_router(quota_router)
 
 @app.on_event("startup")
 async def startup_event():
+    logger.info("Đã khởi tạo hệ thống quản lý DocLib")
     await init_db()
 
 
