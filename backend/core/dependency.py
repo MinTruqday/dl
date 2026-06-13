@@ -112,3 +112,15 @@ def require_permissions(required_permissions: List[str]):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Từ chối truy cập do thiếu quyền: {', '.join(missing)}")
         return current_user
     return permission_checker
+
+from fastapi import Header
+
+class AuthenticatedUser:
+    def __init__(self, user_id: str, user_name: str = "User"):
+        self.id = user_id
+        self.full_name = user_name
+
+def get_current_user_from_header(x_user_id: str = Header(None), x_user_name: str = Header("User")):
+    if not x_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing X-User-ID header")
+    return AuthenticatedUser(x_user_id, x_user_name)

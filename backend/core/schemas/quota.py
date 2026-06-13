@@ -19,6 +19,6 @@ class GlobalQuotaConfig(BaseModel):
         "reader": QuotaLimit(daily_requests=0, daily_tokens=0),
         "author": QuotaLimit(daily_requests=0, daily_tokens=0),
         "moderator": QuotaLimit(daily_requests=0, daily_tokens=0),
-        "admin": QuotaLimit(daily_requests=999999, daily_tokens=999999)
+        "admin": QuotaLimit(daily_requests=float('inf'), daily_tokens=float('inf'))
     }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

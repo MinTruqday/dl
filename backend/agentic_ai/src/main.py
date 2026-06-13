@@ -1,14 +1,9 @@
+from core.middleware import trace_id_ctx_var, trace_id_filter, add_trace_id_header
 from fastapi import FastAPI, Request
 from loguru import logger
 import uuid
 import contextvars
 import sys
-
-trace_id_ctx_var = contextvars.ContextVar("trace_id", default="")
-
-def trace_id_filter(record):
-    record["extra"]["trace_id"] = trace_id_ctx_var.get()
-    return True
 
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} {level} [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
@@ -22,7 +17,8 @@ from src.harness.agentops_harness import agentops_harness
 from src.harness.orchestration_harness import orchestration_harness
 from src.harness.evaluation_harness import evaluation_harness
 
-app = FastAPI(title="DocLib Agentic AI")
+app = FastAPI(title="DocLib Agentic_ai")
+app.middleware("http")(add_trace_id_header)
 
 app.include_router(inference_router)
 app.include_router(chat_router)
@@ -30,14 +26,6 @@ app.include_router(ingest_router)
 app.include_router(feedback_router)
 app.include_router(finetune_router)
 app.include_router(history_router)
-
-@app.middleware("http")
-async def add_trace_id_header(request: Request, call_next):
-    trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    trace_id_ctx_var.set(trace_id)
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = trace_id
-    return response
 
 @app.get("/health")
 async def health_check():

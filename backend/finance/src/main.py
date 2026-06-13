@@ -1,3 +1,4 @@
+from core.middleware import trace_id_ctx_var, trace_id_filter, add_trace_id_header
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -5,21 +6,16 @@ import uuid
 import contextvars
 import sys
 
-trace_id_ctx_var = contextvars.ContextVar("trace_id", default="")
-
-def trace_id_filter(record):
-    record["extra"]["trace_id"] = trace_id_ctx_var.get()
-    return True
-
 logger.remove()
 logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
 
-from src.router.wallet import router as wallet_router
-from src.router.deposit import router as deposit_router
-from src.router.withdrawal import router as withdrawal_router
-from src.router.coupon import router as coupon_router
+from src.api.wallet import router as wallet_router
+from src.api.deposit import router as deposit_router
+from src.api.withdrawal import router as withdrawal_router
+from src.api.coupon import router as coupon_router
 
 app = FastAPI(title="DocLib Finance")
+app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,14 +29,6 @@ app.include_router(wallet_router)
 app.include_router(deposit_router)
 app.include_router(withdrawal_router)
 app.include_router(coupon_router)
-
-@app.middleware("http")
-async def add_trace_id_header(request: Request, call_next):
-    trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    trace_id_ctx_var.set(trace_id)
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = trace_id
-    return response
 
 @app.on_event("startup")
 async def startup_event():

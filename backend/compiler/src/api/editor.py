@@ -1,6 +1,7 @@
 from core.schemas.inference import PlagiarismCheckRequest, CoverGenerateRequest, AISuggestionRequest
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter
+from core.dependency import AuthenticatedUser, get_current_user_from_header as get_current_user, Depends, HTTPException, Header
 from loguru import logger
 
 from src.schemas.editor import (
@@ -14,15 +15,6 @@ from core.config import settings
 
 router = APIRouter(prefix='/soan-thao')
 
-class AuthenticatedUser:
-    def __init__(self, user_id: str, user_name: str = "User"):
-        self.id = user_id
-        self.full_name = user_name
-
-def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("User")):
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="Thiếu thông tin người dùng từ hệ thống")
-    return AuthenticatedUser(user_id=x_user_id, user_name=x_user_name)
 
 @router.post('/{document_id}/kiem-tra-dao-van')
 async def check_plagiarism(document_id: str, current_user = Depends(get_current_user), agentic_ai_url: str = Header(settings.AGENTIC_AI_URL)):

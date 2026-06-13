@@ -3,7 +3,7 @@ from core.config import settings
 from fastapi import HTTPException
 from datetime import datetime, timezone
 from loguru import logger
-from src.schemas.quota import QuotaLimit, GlobalQuotaConfig
+from core.schemas.quota import QuotaLimit, GlobalQuotaConfig
 import json
 
 class QuotaService:

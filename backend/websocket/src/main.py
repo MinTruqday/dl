@@ -1,9 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.router import editor_ws, message_ws
+from src.api import editor_ws, message_ws
 from core.config import settings
-from src.core.database import db_client
+from core.database import db_client
 
 app = FastAPI(title="DocLib WebSocket")
 
@@ -20,11 +20,11 @@ app.include_router(message_ws.router, prefix="/tin-nhan")
 
 @app.on_event("startup")
 async def startup_event():
-    await db_client.connect()
+    from core.database import init_db; await init_db()
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await db_client.disconnect()
+    from core.database import close_db; await close_db()
 
 @app.get("/health")
 async def health_check():

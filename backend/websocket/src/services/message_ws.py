@@ -3,7 +3,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
 import json
 import asyncio
-from src.core.database import db_client
+from core.database import db_client
 import httpx
 from core.config import settings
 

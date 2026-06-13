@@ -4,7 +4,7 @@ from loguru import logger
 import os
 from uuid6 import uuid7
 from datetime import datetime, timezone
-from src.schemas.collector import CollectionRequest
+from core.schemas.collector import CollectionRequest
 from src.core.mq import mq_client
 from motor.motor_asyncio import AsyncIOMotorClient
 

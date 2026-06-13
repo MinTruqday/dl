@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.api.dependency import get_db, get_current_user, require_role
 from core.schemas.user import UserInDB, RoleEnum
-from src.schemas.quota import QuotaLimit
+from core.schemas.quota import QuotaLimit
 from src.services.quota import QuotaService
 from core.response import APIResponse
 from typing import Any

@@ -5,7 +5,8 @@ from src.api.dependency import get_db, require_role, get_current_user
 from core.response import APIResponse
 from src.services.operation import OperationService
 from src.services.user import UserService
-from src.schemas.operation import CampaignRequest, CollectionRequest
+from src.schemas.operation import CampaignRequest
+from core.schemas.collector import CollectionRequest
 router = APIRouter(prefix='/van-hanh')
 
 @router.get('/chi-so', response_model=APIResponse[Any], dependencies=[Depends(require_role([RoleEnum.ADMIN]))])

@@ -6,7 +6,7 @@ import time
 import jwt
 from core.config import settings
 from src.services.message_ws import message_manager
-from src.core.database import db_client
+from core.database import db_client
 
 router = APIRouter()
 

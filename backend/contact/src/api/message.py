@@ -1,6 +1,7 @@
 from typing import Any, List
 from core.response import APIResponse
-from fastapi import APIRouter, Depends, Query, Header, HTTPException
+from fastapi import APIRouter
+from core.dependency import AuthenticatedUser, get_current_user_from_header as get_current_user, Depends, Query, Header, HTTPException
 from src.schemas.message import MessageCreate, MessageResponse, ConversationResponse
 from src.services.message import MessageService
 from core.database import db_client
@@ -8,15 +9,6 @@ import json
 
 router = APIRouter(prefix='/tin-nhan')
 
-class AuthenticatedUser:
-    def __init__(self, user_id: str, user_name: str = "User"):
-        self.id = user_id
-        self.full_name = user_name
-
-def get_current_user(x_user_id: str = Header(None), x_user_name: str = Header("User")):
-    if not x_user_id:
-        raise HTTPException(status_code=401, detail="Thiếu thông tin người dùng từ hệ thống")
-    return AuthenticatedUser(user_id=x_user_id, user_name=x_user_name)
 
 async def publish_personal_message(message: dict, receiver_id: str):
     import json
