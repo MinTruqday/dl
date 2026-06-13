@@ -1,4 +1,3 @@
-
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
@@ -41,3 +40,4 @@ USER appuser
 EXPOSE 8001
 
 CMD ["gunicorn", "src.main:app", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8001"]
+

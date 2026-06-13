@@ -16,3 +16,4 @@ COPY core/ ./core/
 EXPOSE 8200
 
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8200"]
+
