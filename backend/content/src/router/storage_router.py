@@ -5,8 +5,11 @@ from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
 from src.router.dependency_router import get_db, require_role
-from src.schemas.storage_schema import (StorageItemCreate, StorageItemResponse,
-                                        StorageItemUpdate)
+from src.schemas.storage_schema import (
+    StorageItemCreate,
+    StorageItemResponse,
+    StorageItemUpdate,
+)
 from src.services.storage_service import StorageService
 
 router = APIRouter(prefix="/storage")

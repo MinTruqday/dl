@@ -2,14 +2,16 @@ import json
 from typing import Any, List
 
 from core.database import db_client
-from core.dependency import (AuthenticatedUser, Depends, Header, HTTPException,
-                             Query)
+from core.dependency import AuthenticatedUser, Depends, Header, HTTPException, Query
 from core.dependency import get_current_user_from_header as get_current_user
 from core.repositories.base_repository import RepositoryFactory
 from core.response import APIResponse
 from fastapi import APIRouter
-from src.schemas.message_schema import (ConversationResponse, MessageCreate,
-                                        MessageResponse)
+from src.schemas.message_schema import (
+    ConversationResponse,
+    MessageCreate,
+    MessageResponse,
+)
 from src.services.message_service import MessageService
 
 router = APIRouter(prefix="/message")

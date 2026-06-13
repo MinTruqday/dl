@@ -3,17 +3,23 @@ from typing import Any, List, Optional
 from core.config import settings
 from core.dependency import AuthenticatedUser, Depends, Header, HTTPException
 from core.dependency import get_current_user_from_header as get_current_user
-from core.schemas.inference import (AISuggestionRequest, CoverGenerateRequest,
-                                    PlagiarismCheckRequest)
+from core.schemas.inference import (
+    AISuggestionRequest,
+    CoverGenerateRequest,
+    PlagiarismCheckRequest,
+)
 from fastapi import APIRouter
 from loguru import logger
-from src.schemas.editor_schema import (AutoSaveRequest, FindReplaceRequest,
-                                       InlineCommentRequest,
-                                       InlineSuggestionRequest,
-                                       KeystrokeSyncRequest,
-                                       PomodoroSyncRequest,
-                                       ResolveSuggestionRequest,
-                                       VersionDiffRequest)
+from src.schemas.editor_schema import (
+    AutoSaveRequest,
+    FindReplaceRequest,
+    InlineCommentRequest,
+    InlineSuggestionRequest,
+    KeystrokeSyncRequest,
+    PomodoroSyncRequest,
+    ResolveSuggestionRequest,
+    VersionDiffRequest,
+)
 from src.services.editor_service import EditorService
 
 router = APIRouter(prefix="/editor")

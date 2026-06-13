@@ -47,7 +47,8 @@ class PurchaseService:
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
             lock = db_client.redis.lock(
-                f"purchase:{current_user.id}:{document_id}", timeout=settings.DEFAULT_HTTP_TIMEOUT
+                f"purchase:{current_user.id}:{document_id}",
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             await lock.acquire()
         try:

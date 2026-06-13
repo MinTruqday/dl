@@ -23,7 +23,9 @@ class EditorService:
             raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
         try:
             url = f"{compiler_url}/export/{format_type}"
-            async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.LONG_PROCESS_TIMEOUT
+            ) as client:
                 response = await client.post(
                     url, json={"content": content, "format": format_type}
                 )
@@ -50,7 +52,9 @@ class EditorService:
             raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
         try:
             url = f"{compiler_url}/compile/editorjs/compile"
-            async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.LONG_PROCESS_TIMEOUT
+            ) as client:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
@@ -348,7 +352,9 @@ class EditorService:
         if len(text.split()) < 20:
             raise HTTPException(status_code=400, detail="Văn bản quá ngắn để tóm tắt")
         try:
-            async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.LONG_PROCESS_TIMEOUT
+            ) as client:
                 resp = await client.post(
                     f"{agentic_ai_url}/inference/actions",
                     json={
@@ -388,7 +394,9 @@ class EditorService:
         except:
             pass
         try:
-            async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.LONG_PROCESS_TIMEOUT
+            ) as client:
                 resp = await client.post(
                     f"{agentic_ai_url}/inference/actions",
                     json={
@@ -519,7 +527,9 @@ class EditorService:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
         content = str(doc.get("content", ""))
         try:
-            async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
+            async with httpx.AsyncClient(
+                timeout=settings.LONG_PROCESS_TIMEOUT
+            ) as client:
                 resp = await client.post(
                     f"{agentic_ai_url}/inference/check-plagiarism",
                     json={"text": content[:5000]},

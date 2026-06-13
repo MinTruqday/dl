@@ -51,7 +51,12 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
     is_verified: bool = False
-    storage_limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT) * 1024 * 1024 * 1024
+    storage_limit: int = (
+        Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)
+        * 1024
+        * 1024
+        * 1024
+    )
 
     @field_validator("kyc_status", "author_status", mode="before")
     @classmethod

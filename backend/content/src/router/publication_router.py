@@ -5,8 +5,7 @@ from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Body, Depends, status
 from pydantic import BaseModel
 from src.router.dependency_router import get_current_user, get_db, require_role
-from src.schemas.document_schema import (SchedulePublishRequest,
-                                         SeoMetadataRequest)
+from src.schemas.document_schema import SchedulePublishRequest, SeoMetadataRequest
 from src.services.document_service import DocumentService
 from src.services.publication_service import PublicationService
 

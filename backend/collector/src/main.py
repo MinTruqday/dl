@@ -3,8 +3,7 @@ import contextvars
 import sys
 import uuid
 
-from core.middleware import (add_trace_id_header, trace_id_ctx_var,
-                             trace_id_filter)
+from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger

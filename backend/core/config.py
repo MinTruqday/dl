@@ -65,7 +65,9 @@ class Settings(BaseModel):
     TOOL_TIMEOUT_SECONDS: float = float(os.getenv("TOOL_TIMEOUT_SECONDS"))
     TOOL_MAX_RETRIES: int = int(os.getenv("TOOL_MAX_RETRIES"))
     CIRCUIT_BREAKER_THRESHOLD: int = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD"))
-    CIRCUIT_BREAKER_RESET_SECONDS: float = float(os.getenv("CIRCUIT_BREAKER_RESET_SECONDS"))
+    CIRCUIT_BREAKER_RESET_SECONDS: float = float(
+        os.getenv("CIRCUIT_BREAKER_RESET_SECONDS")
+    )
     MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS"))
     CHARS_PER_TOKEN_APPROX: int = int(os.getenv("CHARS_PER_TOKEN_APPROX"))
     DEFAULT_CHUNK_SIZE: int = int(os.getenv("DEFAULT_CHUNK_SIZE"))

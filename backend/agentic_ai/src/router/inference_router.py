@@ -5,12 +5,19 @@ from typing import Any, List, Optional
 import httpx
 from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
-from core.schemas.inference import (ActionRequest, CitationRequest,
-                                    CodeRequest, GenerationRequest,
-                                    GrammarRequest, ReviewRequest,
-                                    SentimentRequest, SummarizeRequest,
-                                    SynthesisRequest, ToneRequest,
-                                    TranslationRequest)
+from core.schemas.inference import (
+    ActionRequest,
+    CitationRequest,
+    CodeRequest,
+    GenerationRequest,
+    GrammarRequest,
+    ReviewRequest,
+    SentimentRequest,
+    SummarizeRequest,
+    SynthesisRequest,
+    ToneRequest,
+    TranslationRequest,
+)
 from fastapi import APIRouter, HTTPException
 from huggingface_hub import AsyncInferenceClient
 from loguru import logger

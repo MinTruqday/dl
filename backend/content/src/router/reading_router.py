@@ -5,8 +5,12 @@ from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency_router import get_current_user, get_db
-from src.schemas.library_schema import (PinnedDocumentRequest, ProgressUpdate,
-                                        ReadingGoalCreate, TypographyRequest)
+from src.schemas.library_schema import (
+    PinnedDocumentRequest,
+    ProgressUpdate,
+    ReadingGoalCreate,
+    TypographyRequest,
+)
 from src.services.reading_service import ReadingService
 
 router = APIRouter(prefix="/reading")

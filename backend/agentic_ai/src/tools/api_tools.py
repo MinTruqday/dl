@@ -75,7 +75,10 @@ async def get_user_balance(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/balance", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/wallet/balance",
+            headers=headers,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -100,7 +103,10 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/history", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/wallet/history",
+            headers=headers,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -157,7 +163,10 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/wallet/revenue", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/wallet/revenue",
+            headers=headers,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", {})
@@ -179,7 +188,10 @@ async def get_my_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/document/personal", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/document/personal",
+            headers=headers,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -207,7 +219,10 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/document/trash", headers=headers, timeout=settings.LONG_PROCESS_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/document/trash",
+            headers=headers,
+            timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -320,8 +335,7 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 
 from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
-from src.router.inference_router import (peer_review, suggest_citations,
-                                      transform_tone)
+from src.router.inference_router import peer_review, suggest_citations, transform_tone
 
 
 @tool
@@ -333,7 +347,9 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0
+    )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = CitationRequest(text=safe_text, style="APA")
@@ -353,7 +369,9 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 4, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=settings.DEFAULT_CHUNK_SIZE * 4, chunk_overlap=0
+    )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ReviewRequest(text=safe_text, criteria=["logic", "rõ ràng"])
@@ -375,7 +393,9 @@ async def agent_transform_tone(
         return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0)
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=settings.DEFAULT_CHUNK_SIZE * 2, chunk_overlap=0
+    )
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
         req = ToneRequest(text=safe_text, tone=tone, expansion=False)
@@ -447,7 +467,10 @@ async def create_document(
     user_name = "Người dùng"
     try:
         res_profile = await _make_api_request(
-            "GET", f"{INTERNAL_API_URL}/ho-so/personal", headers=headers, timeout=settings.DEFAULT_HTTP_TIMEOUT
+            "GET",
+            f"{INTERNAL_API_URL}/ho-so/personal",
+            headers=headers,
+            timeout=settings.DEFAULT_HTTP_TIMEOUT,
         )
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})

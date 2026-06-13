@@ -44,7 +44,9 @@ class AdvancedSemanticChunker:
             try:
                 model_name = settings.EMBEDDING_MODEL
                 self.chunker = SemanticChunker(
-                    embedding_model=model_name, chunk_size=settings.DEFAULT_CHUNK_SIZE, similarity_threshold=0.5
+                    embedding_model=model_name,
+                    chunk_size=settings.DEFAULT_CHUNK_SIZE,
+                    similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
                 logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
@@ -53,7 +55,10 @@ class AdvancedSemanticChunker:
                     f"Tải Chonkie SemanticChunker thất bại: {e}. Đang chuyển sang dự phòng TokenChunker"
                 )
                 try:
-                    self.chunker = TokenChunker(chunk_size=settings.DEFAULT_CHUNK_SIZE, chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP)
+                    self.chunker = TokenChunker(
+                        chunk_size=settings.DEFAULT_CHUNK_SIZE,
+                        chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
+                    )
                     self.type = "chonkie_token"
                     logger.info("Loaded Chonkie TokenChunker")
                 except Exception as e2:
@@ -105,8 +110,10 @@ class AdvancedSemanticChunker:
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:
-        from langchain_text_splitters import (MarkdownHeaderTextSplitter,
-                                              RecursiveCharacterTextSplitter)
+        from langchain_text_splitters import (
+            MarkdownHeaderTextSplitter,
+            RecursiveCharacterTextSplitter,
+        )
 
         headers_to_split_on = [
             ("#", "Header 1"),
@@ -120,7 +127,10 @@ class AdvancedSemanticChunker:
             md_documents = markdown_splitter.split_text(text)
             texts = [doc.page_content for doc in md_documents]
         except Exception:
-            splitter = RecursiveCharacterTextSplitter(chunk_size=settings.DEFAULT_CHUNK_SIZE, chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP)
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=settings.DEFAULT_CHUNK_SIZE,
+                chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
+            )
             texts = splitter.split_text(text)
 
         chunks = []

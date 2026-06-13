@@ -11,7 +11,10 @@ router = APIRouter(prefix="/discovery")
 
 
 @router.get("/trending", response_model=APIResponse[Any])
-async def get_trending_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
+async def get_trending_documents(
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
         message="Đã tải danh sách tài liệu xu hướng",
@@ -97,7 +100,10 @@ async def get_ai_recommendations(
 
 
 @router.get("/trending-hashtags", response_model=APIResponse[Any])
-async def get_trending_tags(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
+async def get_trending_tags(
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await DocumentService.get_trending_tags(limit),
         message="Đã tải danh sách hashtag xu hướng",

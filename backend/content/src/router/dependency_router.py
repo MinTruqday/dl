@@ -1,9 +1,15 @@
 import httpx
 from core.config import settings
-from core.dependency import (RateLimiter, get_current_user,
-                             get_current_user_optional,
-                             get_current_user_token_param, get_db,
-                             oauth2_scheme, require_permissions, require_role)
+from core.dependency import (
+    RateLimiter,
+    get_current_user,
+    get_current_user_optional,
+    get_current_user_token_param,
+    get_db,
+    oauth2_scheme,
+    require_permissions,
+    require_role,
+)
 from core.schemas.user import UserInDB
 from fastapi import Depends, HTTPException
 from loguru import logger

@@ -438,7 +438,9 @@ class EditorJSEngine:
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024 * 2,
             )
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
+            )
 
             if not os.path.exists(pdf_path):
                 error_msg = stderr.decode("utf-8") if stderr else "Không rõ lỗi"

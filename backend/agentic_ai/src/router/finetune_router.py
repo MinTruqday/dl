@@ -198,7 +198,12 @@ async def add_samples(dataset_id: str, req: dict):
 
 
 @router.get("/dataset/{dataset_id}/sample")
-async def get_samples(dataset_id: str, user_id: str, skip: int = 0, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)):
+async def get_samples(
+    dataset_id: str,
+    user_id: str,
+    skip: int = 0,
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+):
     db = get_db()
     if not await RepositoryFactory.get("finetune_datasets").find_one(
         {"_id": dataset_id, "user_id": user_id}

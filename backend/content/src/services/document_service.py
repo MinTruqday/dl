@@ -15,8 +15,12 @@ from fastapi import HTTPException, status, Query
 from loguru import logger
 from passlib.context import CryptContext
 from src.core.publication import trigger_document_publish_job
-from src.schemas.document_schema import (DocumentContentUpdate, DocumentCreate,
-                                         DocumentInDB, DocumentStatus)
+from src.schemas.document_schema import (
+    DocumentContentUpdate,
+    DocumentCreate,
+    DocumentInDB,
+    DocumentStatus,
+)
 from uuid6 import uuid7
 
 
@@ -56,7 +60,11 @@ class DocumentService:
         }
 
     @staticmethod
-    async def get_trending_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
+    async def get_trending_documents(
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        )
+    ) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = (
@@ -70,7 +78,12 @@ class DocumentService:
         return [serialize_document(d) for d in documents]
 
     @staticmethod
-    async def get_text_search(query: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
+    async def get_text_search(
+        query: str,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+    ) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = docs_col.find(
@@ -102,7 +115,12 @@ class DocumentService:
 
     @staticmethod
     async def get_my_documents(
-        current_user, q: str = None, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)
+        current_user,
+        q: str = None,
+        cursor: str = None,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
     ) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
@@ -661,7 +679,12 @@ class DocumentService:
         ]
 
     @staticmethod
-    async def get_approval_queue(cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> list:
+    async def get_approval_queue(
+        cursor: str = None,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+    ) -> list:
         db = db_client.mongodb.get_default_database()
         query = {"status": "processing_publish"}
         if cursor:
@@ -777,7 +800,11 @@ class DocumentService:
         return {"message": "Đã giải quyết tranh chấp bản quyền"}
 
     @staticmethod
-    async def get_trending_tags(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[str]:
+    async def get_trending_tags(
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        )
+    ) -> List[str]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         pipeline = [
@@ -790,7 +817,11 @@ class DocumentService:
         return [r["_id"] for r in results]
 
     @staticmethod
-    async def get_suggested_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)) -> List[dict]:
+    async def get_suggested_documents(
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        )
+    ) -> List[dict]:
         db = db_client.mongodb.get_default_database()
         docs_col = RepositoryFactory.get("documents")
         cursor = docs_col.find({"status": "published"}).sort("views", -1).limit(limit)

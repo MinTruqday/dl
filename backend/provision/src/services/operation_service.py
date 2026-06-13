@@ -14,7 +14,12 @@ class OperationService:
 
     @staticmethod
     async def get_all_users(
-        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, cursor: str = None, db=None
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        offset: int = 0,
+        cursor: str = None,
+        db=None,
     ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -320,7 +325,8 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/statistics", timeout=settings.DEFAULT_HTTP_TIMEOUT
+                    f"{settings.COLLECTOR_URL}/statistics",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -366,7 +372,10 @@ class OperationService:
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.post(f"{settings.COLLECTOR_URL}/pause", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.post(
+                    f"{settings.COLLECTOR_URL}/pause",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
                 if resp.status_code == 200:
                     return resp.json()
                 else:
@@ -386,7 +395,10 @@ class OperationService:
 
         try:
             async with httpx.AsyncClient() as client:
-                resp = await client.get(f"{settings.COLLECTOR_URL}/logs", timeout=settings.DEFAULT_HTTP_TIMEOUT)
+                resp = await client.get(
+                    f"{settings.COLLECTOR_URL}/logs",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
+                )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
@@ -402,7 +414,8 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/running-jobs", timeout=settings.DEFAULT_HTTP_TIMEOUT
+                    f"{settings.COLLECTOR_URL}/running-jobs",
+                    timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
@@ -466,7 +479,11 @@ class OperationService:
 
     @staticmethod
     async def get_withdrawal_requests(
-        status: str = "PENDING", limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
+        status: str = "PENDING",
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
     ) -> list:
         import httpx
         from core.config import settings

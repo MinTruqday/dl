@@ -139,8 +139,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
         try:
             if req.document_ids:
-                from src.tools.api_tools import (INTERNAL_API_URL,
-                                                 _make_api_request)
+                from src.tools.api_tools import INTERNAL_API_URL, _make_api_request
 
                 for doc_id in req.document_ids:
                     try:

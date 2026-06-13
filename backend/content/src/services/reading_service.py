@@ -11,7 +11,12 @@ class ReadingService:
 
     @staticmethod
     async def get_reading_history(
-        current_user, cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
+        current_user,
+        cursor: str = None,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
     ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()

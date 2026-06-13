@@ -5,8 +5,11 @@ from fastapi import Query
 
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
-from src.schemas.storage_schema import (StorageItemCreate, StorageItemInDB,
-                                        StorageItemUpdate)
+from src.schemas.storage_schema import (
+    StorageItemCreate,
+    StorageItemInDB,
+    StorageItemUpdate,
+)
 
 
 class StorageService:
@@ -319,7 +322,11 @@ class StorageService:
 
     @staticmethod
     async def get_recent_items(
-        owner_id: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
+        owner_id: str,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
     ) -> List[StorageItemInDB]:
         query = {
             "$or": [{"owner_id": owner_id}, {"shared_with.user_id": owner_id}],

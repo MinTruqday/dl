@@ -5,6 +5,7 @@ from typing import Any, Optional
 from loguru import logger
 
 from core.config import settings
+
 CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
 DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS
 HISTORY_MAX_TURNS = settings.MEMORY_MAX_TURNS

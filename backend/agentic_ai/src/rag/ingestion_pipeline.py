@@ -61,8 +61,7 @@ class IngestionPipeline:
         async def get_summary_chunk(first_pages, extract_method):
             try:
                 from langchain_core.prompts import PromptTemplate
-                from langchain_huggingface import (ChatHuggingFace,
-                                                   HuggingFaceEndpoint)
+                from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 
                 llama_model = settings.LLAMA_MODEL
                 hf_token = settings.HF_TOKEN

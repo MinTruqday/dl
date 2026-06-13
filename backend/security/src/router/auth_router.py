@@ -2,9 +2,14 @@ from typing import Any
 
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
-from core.schemas.user import (ForgotPasswordRequest, ResetPasswordRequest,
-                               UserCreate, UserInDB, UserResponse,
-                               VerifyCodeRequest)
+from core.schemas.user import (
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    UserCreate,
+    UserInDB,
+    UserResponse,
+    VerifyCodeRequest,
+)
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -69,9 +74,7 @@ async def forgot_password(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await AuthService.forgot_password(
-            payload.email, client_ip, db=db
-        ),
+        data=await AuthService.forgot_password(payload.email, client_ip, db=db),
         message="Yêu cầu khôi phục mật khẩu đã được gửi",
         status=status.HTTP_200_OK,
     )
@@ -97,9 +100,7 @@ async def verify_code(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await AuthService.verify_reset_code(
-            payload.token, client_ip, db=db
-        ),
+        data=await AuthService.verify_reset_code(payload.token, client_ip, db=db),
         message="Mã xác thực hợp lệ",
         status=status.HTTP_200_OK,
     )

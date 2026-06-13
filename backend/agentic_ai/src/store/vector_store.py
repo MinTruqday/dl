@@ -7,9 +7,15 @@ import httpx
 from core.config import settings
 from loguru import logger
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import (Distance, FieldCondition, Filter,
-                                       MatchAny, MatchValue, PointStruct,
-                                       VectorParams)
+from qdrant_client.http.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchAny,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 
 class VectorStore:
@@ -86,7 +92,9 @@ class VectorStore:
         self,
         query_vector: List[float],
         document_ids: Optional[List[str]] = None,
-        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
     ) -> List[Dict]:
         query_filter = None
         if document_ids:

@@ -155,7 +155,9 @@ class WalletService:
     async def get_history(
         current_user,
         cursor: str = None,
-        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
         tx_type: str = None,
         skip: int = 0,
         db=None,

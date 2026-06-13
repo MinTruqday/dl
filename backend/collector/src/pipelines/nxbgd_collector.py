@@ -15,6 +15,7 @@ from src.core.storage import storage
 from uuid6 import uuid7
 
 from core.config import settings
+
 MIN_FILE_SIZE_BYTES = settings.MIN_FILE_SIZE_BYTES
 
 

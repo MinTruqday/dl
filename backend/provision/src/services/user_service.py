@@ -16,7 +16,12 @@ class UserService:
 
     @staticmethod
     async def get_all_users(
-        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, cursor: str = None, db=None
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        offset: int = 0,
+        cursor: str = None,
+        db=None,
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -270,7 +275,9 @@ class UserService:
     async def get_report_queue(
         status_filter: str = "pending",
         cursor: str = None,
-        limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
         skip: int = 0,
         db=None,
     ) -> list:
@@ -399,7 +406,11 @@ class UserService:
 
     @staticmethod
     async def search_users(
-        query: str, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
+        query: str,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()

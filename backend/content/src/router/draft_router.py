@@ -16,7 +16,11 @@ router = APIRouter(prefix="/draft")
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
-async def get_approval_queue(cursor: str = None, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
+async def get_approval_queue(
+    cursor: str = None,
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await DocumentService.get_approval_queue(cursor, limit, db=db),
         message="Đã tải danh sách chờ phê duyệt",

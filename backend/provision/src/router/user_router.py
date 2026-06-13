@@ -1,9 +1,14 @@
 from typing import Any, Optional
 
 from core.response import APIResponse
-from core.schemas.user import (ModerationActionRequest, NoteRequest, RoleEnum,
-                               UpdateRoleRequest, UpdateStatusRequest,
-                               UserInDB)
+from core.schemas.user import (
+    ModerationActionRequest,
+    NoteRequest,
+    RoleEnum,
+    UpdateRoleRequest,
+    UpdateStatusRequest,
+    UserInDB,
+)
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from src.router.dependency_router import get_current_user, get_db, require_role
@@ -18,7 +23,11 @@ router = APIRouter(prefix="/user")
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))],
 )
-async def get_all_users(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, db=Depends(get_db)):
+async def get_all_users(
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    offset: int = 0,
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await UserService.get_all_users(limit, offset, db=db),
         message="Đã tải danh sách người dùng",
@@ -137,7 +146,11 @@ async def add_moderator_note(
 
 
 @router.get("/search", response_model=APIResponse[Any])
-async def search_users(q: str = "", limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
+async def search_users(
+    q: str = "",
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await UserService.search_users(q, limit, db=db),
         message="Đã hoàn tất tìm kiếm người dùng",

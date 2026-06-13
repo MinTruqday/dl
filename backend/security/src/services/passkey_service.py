@@ -10,19 +10,26 @@ from core.schemas.user import UserInDB
 from fastapi import HTTPException
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository
-from webauthn import (generate_authentication_options,
-                      generate_registration_options, options_to_json,
-                      verify_authentication_response,
-                      verify_registration_response)
-from webauthn.helpers.exceptions import (InvalidAuthenticationResponse,
-                                         InvalidRegistrationResponse)
-from webauthn.helpers.structs import (AuthenticationCredential,
-                                      AuthenticatorAttachment,
-                                      AuthenticatorSelectionCriteria,
-                                      PublicKeyCredentialDescriptor,
-                                      PublicKeyCredentialType,
-                                      RegistrationCredential,
-                                      UserVerificationRequirement)
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers.exceptions import (
+    InvalidAuthenticationResponse,
+    InvalidRegistrationResponse,
+)
+from webauthn.helpers.structs import (
+    AuthenticationCredential,
+    AuthenticatorAttachment,
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,
+    RegistrationCredential,
+    UserVerificationRequirement,
+)
 
 RP_ID = settings.PASSKEY_RP_ID
 RP_NAME = settings.PASSKEY_RP_NAME
@@ -132,6 +139,4 @@ class PasskeyService:
 
         from src.services.auth_service import AuthService
 
-        return await AuthService.issue_token_for_user(
-            user_doc, "passkey_login"
-        )
+        return await AuthService.issue_token_for_user(user_doc, "passkey_login")

@@ -6,8 +6,7 @@ from datetime import datetime, timedelta, timezone
 from core.config import settings
 from core.database import db_client
 from core.schemas.user import RoleEnum, UserCreate, UserInDB
-from core.security import (create_access_token, get_password_hash,
-                           verify_password)
+from core.security import create_access_token, get_password_hash, verify_password
 from fastapi import HTTPException, status
 from loguru import logger
 from src.repositories.auth_repository import AuthRepository

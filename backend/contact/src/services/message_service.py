@@ -128,7 +128,13 @@ class MessageService:
 
     @staticmethod
     async def get_messages(
-        other_user_id: str, current_user, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), cursor: str = None, db=None
+        other_user_id: str,
+        current_user,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        cursor: str = None,
+        db=None,
     ):
         if db is None:
             db = db_client.mongodb.get_default_database()

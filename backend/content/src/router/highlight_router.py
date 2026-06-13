@@ -4,9 +4,11 @@ from core.response import APIResponse
 from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.router.dependency_router import get_current_user, get_db
-from src.schemas.highlight_schema import (HighlightCreateRequest,
-                                          HighlightNoteUpdateRequest,
-                                          ReadingPreferenceUpdate)
+from src.schemas.highlight_schema import (
+    HighlightCreateRequest,
+    HighlightNoteUpdateRequest,
+    ReadingPreferenceUpdate,
+)
 from src.services.highlight_service import HighlightService
 
 router = APIRouter(prefix="/highlight")

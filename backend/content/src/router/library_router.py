@@ -5,9 +5,11 @@ from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.router.dependency_router import get_current_user, get_db
-from src.schemas.library_schema import (BookmarkFolderAssign,
-                                        BookmarkFolderCreate,
-                                        ReadingListCreate)
+from src.schemas.library_schema import (
+    BookmarkFolderAssign,
+    BookmarkFolderCreate,
+    ReadingListCreate,
+)
 from src.services.library_service import LibraryService
 
 router = APIRouter(prefix="/library")

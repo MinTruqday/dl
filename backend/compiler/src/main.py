@@ -2,8 +2,7 @@ import contextvars
 import sys
 import uuid
 
-from core.middleware import (add_trace_id_header, trace_id_ctx_var,
-                             trace_id_filter)
+from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -16,7 +15,11 @@ logger.add(
     level="INFO",
 )
 
-from src.router import editor_router as editor, editorjs_router as editorjs, latex_router as latex
+from src.router import (
+    editor_router as editor,
+    editorjs_router as editorjs,
+    latex_router as latex,
+)
 from core.config import settings
 
 app = FastAPI(title="DocLib Compiler", version=settings.VERSION)

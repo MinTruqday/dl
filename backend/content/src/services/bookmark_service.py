@@ -22,7 +22,7 @@ class BookmarkService:
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message="Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ"
+            message = "Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ"
             is_bookmarked = False
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -34,7 +34,7 @@ class BookmarkService:
             )
         else:
             bookmarks.append(document_id)
-            message="Đã thêm tài liệu vào danh sách lưu trữ"
+            message = "Đã thêm tài liệu vào danh sách lưu trữ"
             is_bookmarked = True
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -47,7 +47,13 @@ class BookmarkService:
         return {"status": "success", "message": message, "is_bookmarked": is_bookmarked}
 
     @staticmethod
-    async def get_bookmarks(current_user, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None) -> list:
+    async def get_bookmarks(
+        current_user,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
+    ) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         profile = await RepositoryFactory.get("user_content_profiles").find_one(

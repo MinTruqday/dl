@@ -56,7 +56,12 @@ class WalletRepository:
 
     @staticmethod
     async def get_transactions(
-        query: dict, skip: int = 0, limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=None
+        query: dict,
+        skip: int = 0,
+        limit: int = Query(
+            default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT
+        ),
+        db=None,
     ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()

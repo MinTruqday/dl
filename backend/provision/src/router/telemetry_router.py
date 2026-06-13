@@ -39,7 +39,11 @@ async def get_sys_health(db=Depends(get_db)):
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
-async def get_audit_logs(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), offset: int = 0, db=Depends(get_db)):
+async def get_audit_logs(
+    limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
+    offset: int = 0,
+    db=Depends(get_db),
+):
     return APIResponse(
         data=await TelemetryService.get_activity_stats(days=30, db=db),
         message="Đã tải nhật ký hệ thống",
