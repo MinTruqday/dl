@@ -5,15 +5,15 @@ from core.schemas.user import RoleEnum, UserInDB
 from fastapi import APIRouter, Depends
 from src.api.dependency_router import get_db, require_role
 from src.schemas.document_schema import (CoauthorInviteRequest,
-                                  CollabMemoCreateRequest,
-                                  CollaborationResponse,
-                                  CollabTaskCreateRequest,
-                                  CreateDraftSnapshotRequest,
-                                  TaskCommentCreateRequest,
-                                  TransferOwnershipRequest,
-                                  UpdateCollabAccessRequest,
-                                  UpdateCollaboratorRoleRequest,
-                                  UpdateTaskStatusRequest)
+                                         CollabMemoCreateRequest,
+                                         CollaborationResponse,
+                                         CollabTaskCreateRequest,
+                                         CreateDraftSnapshotRequest,
+                                         TaskCommentCreateRequest,
+                                         TransferOwnershipRequest,
+                                         UpdateCollabAccessRequest,
+                                         UpdateCollaboratorRoleRequest,
+                                         UpdateTaskStatusRequest)
 from src.services.collaboration_service import CollaborationService
 
 router = APIRouter(prefix="/collaboration")

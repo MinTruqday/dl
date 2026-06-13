@@ -5,10 +5,11 @@ from core.database import db_client
 from core.dependency import (AuthenticatedUser, Depends, Header, HTTPException,
                              Query)
 from core.dependency import get_current_user_from_header as get_current_user
+from core.repositories.base_repository import RepositoryFactory
 from core.response import APIResponse
 from fastapi import APIRouter
 from src.schemas.message_schema import (ConversationResponse, MessageCreate,
-                                 MessageResponse)
+                                        MessageResponse)
 from src.services.message_service import MessageService
 
 router = APIRouter(prefix="/message")
@@ -23,7 +24,9 @@ async def publish_personal_message(message: dict, receiver_id: str):
     db = db_client.mongodb.get_default_database()
     targets = [receiver_id]
     if receiver_id.startswith("group_"):
-        group = await db["message_groups"].find_one({"_id": receiver_id})
+        group = await RepositoryFactory.get("message_groups").find_one(
+            {"_id": receiver_id}
+        )
         if group:
             targets = group.get("members", [])
     for target_id in targets:

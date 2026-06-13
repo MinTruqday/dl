@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -32,9 +33,9 @@ class SeriesService:
             "document_ids": data.get("document_ids", []),
             "created_at": datetime.now(timezone.utc),
         }
-        await db["series"].insert_one(series)
+        await RepositoryFactory.get("series").insert_one(series)
         if series["document_ids"]:
-            await db["documents"].update_many(
+            await RepositoryFactory.get("documents").update_many(
                 {
                     "_id": {"$in": series["document_ids"]},
                     "author_id": str(current_user.id),
@@ -49,7 +50,7 @@ class SeriesService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         series_docs = (
-            await db["series"]
+            await RepositoryFactory.get("series")
             .find({"author_id": str(current_user.id)})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -60,13 +61,13 @@ class SeriesService:
     async def get_series_by_id(series_id: str, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one({"_id": series_id})
+        series = await RepositoryFactory.get("series").find_one({"_id": series_id})
         if not series:
             raise HTTPException(status_code=404, detail="Chuỗi tài liệu không tồn tại")
         series = serialize_document(series)
         if series.get("document_ids"):
             docs = (
-                await db["documents"]
+                await RepositoryFactory.get("documents")
                 .find({"_id": {"$in": series["document_ids"]}})
                 .to_list(length=100)
             )
@@ -77,7 +78,7 @@ class SeriesService:
     async def update_series(series_id: str, data: dict, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one(
+        series = await RepositoryFactory.get("series").find_one(
             {"_id": series_id, "author_id": str(current_user.id)}
         )
         if not series:
@@ -93,7 +94,9 @@ class SeriesService:
         if not update_fields:
             raise HTTPException(status_code=400, detail="Không có trường cập nhật")
         update_fields["updated_at"] = datetime.now(timezone.utc)
-        await db["series"].update_one({"_id": series_id}, {"$set": update_fields})
+        await RepositoryFactory.get("series").update_one(
+            {"_id": series_id}, {"$set": update_fields}
+        )
         logger.info(f"Người dùng {current_user.id} cập nhật bộ tài liệu {series_id}")
         return {"message": "Đã cập nhật chuỗi tài liệu", "series_id": series_id}
 
@@ -101,7 +104,7 @@ class SeriesService:
     async def delete_series(series_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one(
+        series = await RepositoryFactory.get("series").find_one(
             {"_id": series_id, "author_id": str(current_user.id)}
         )
         if not series:
@@ -112,9 +115,11 @@ class SeriesService:
         session = await db_client.mongodb.start_session()
         try:
             async with session.start_transaction():
-                await db["series"].delete_one({"_id": series_id}, session=session)
+                await RepositoryFactory.get("series").delete_one(
+                    {"_id": series_id}, session=session
+                )
                 if series.get("document_ids"):
-                    await db["documents"].update_many(
+                    await RepositoryFactory.get("documents").update_many(
                         {"_id": {"$in": series["document_ids"]}},
                         {"$unset": {"series_id": ""}},
                         session=session,
@@ -137,7 +142,7 @@ class SeriesService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one(
+        series = await RepositoryFactory.get("series").find_one(
             {"_id": series_id, "author_id": str(current_user.id)}
         )
         if not series:
@@ -146,7 +151,7 @@ class SeriesService:
                 detail="Chuỗi tài liệu không tồn tại hoặc không có quyền",
             )
         docs = (
-            await db["documents"]
+            await RepositoryFactory.get("documents")
             .find({"_id": {"$in": document_ids}, "author_id": str(current_user.id)})
             .to_list(length=500)
         )
@@ -155,7 +160,7 @@ class SeriesService:
                 status_code=400,
                 detail="Tài liệu không tồn tại hoặc không thuộc quyền sở hữu",
             )
-        await db["series"].update_one(
+        await RepositoryFactory.get("series").update_one(
             {"_id": series_id},
             {
                 "$set": {
@@ -175,20 +180,20 @@ class SeriesService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        series = await db["series"].find_one(
+        series = await RepositoryFactory.get("series").find_one(
             {"_id": series_id, "author_id": str(current_user.id)}
         )
         if not series:
             raise HTTPException(status_code=404, detail="Chuỗi tài liệu không tồn tại")
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
-        await db["series"].update_one(
+        await RepositoryFactory.get("series").update_one(
             {"_id": series_id}, {"$addToSet": {"document_ids": document_id}}
         )
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$set": {"series_id": series_id}}
         )
         logger.info(

@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from core.config import settings
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -40,7 +41,7 @@ async def create_session(data: dict, db=Depends(get_db)):
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
-    await db["ai_sessions"].insert_one(session)
+    await RepositoryFactory.get("ai_sessions").insert_one(session)
     return session
 
 
@@ -51,17 +52,23 @@ async def get_user_sessions(
     query = {"user_id": user_id}
     if document_id:
         query["document_id"] = document_id
-    cursor = db["ai_sessions"].find(query, {"messages": 0}).sort("updated_at", -1)
+    cursor = (
+        RepositoryFactory.get("ai_sessions")
+        .find(query, {"messages": 0})
+        .sort("updated_at", -1)
+    )
     return await cursor.to_list(length=50)
 
 
 @router.get("/{session_id}", response_model=Dict[str, Any])
 async def get_session_detail(session_id: str, user_id: str, db=Depends(get_db)):
-    session = await db["ai_sessions"].find_one({"_id": session_id, "user_id": user_id})
+    session = await RepositoryFactory.get("ai_sessions").find_one(
+        {"_id": session_id, "user_id": user_id}
+    )
     if not session:
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     messages = (
-        await db["ai_messages"]
+        await RepositoryFactory.get("ai_messages")
         .find({"session_id": session_id})
         .sort("created_at", 1)
         .to_list(length=100)
@@ -72,7 +79,7 @@ async def get_session_detail(session_id: str, user_id: str, db=Depends(get_db)):
 
 @router.put("/{session_id}/title", response_model=Dict[str, Any])
 async def update_title(session_id: str, data: dict, user_id: str, db=Depends(get_db)):
-    result = await db["ai_sessions"].update_one(
+    result = await RepositoryFactory.get("ai_sessions").update_one(
         {"_id": session_id, "user_id": user_id},
         {
             "$set": {
@@ -88,7 +95,9 @@ async def update_title(session_id: str, data: dict, user_id: str, db=Depends(get
 
 @router.delete("/{session_id}", response_model=Dict[str, Any])
 async def delete_session(session_id: str, user_id: str, db=Depends(get_db)):
-    result = await db["ai_sessions"].delete_one({"_id": session_id, "user_id": user_id})
+    result = await RepositoryFactory.get("ai_sessions").delete_one(
+        {"_id": session_id, "user_id": user_id}
+    )
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Không tìm thấy hội thoại")
     return {"status": "success"}
@@ -110,8 +119,8 @@ async def add_message(session_id: str, data: dict, db=Depends(get_db)):
         "content": content,
         "created_at": datetime.now(timezone.utc),
     }
-    await db["ai_messages"].insert_one(message)
-    await db["ai_sessions"].update_one(
+    await RepositoryFactory.get("ai_messages").insert_one(message)
+    await RepositoryFactory.get("ai_sessions").update_one(
         {"_id": session_id, "user_id": user_id},
         {"$set": {"updated_at": datetime.now(timezone.utc)}},
     )

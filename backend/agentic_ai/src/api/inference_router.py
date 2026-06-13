@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 import httpx
 from core.config import settings
+from core.repositories.base_repository import RepositoryFactory
 from core.schemas.inference import (ActionRequest, CitationRequest,
                                     CodeRequest, GenerationRequest,
                                     GrammarRequest, ReviewRequest,
@@ -80,7 +81,7 @@ async def analyze_sentiment(req: SentimentRequest):
             mongo_client = AsyncIOMotorClient(settings.MONGODB_URI)
             db = mongo_client.get_default_database()
             cursor = (
-                db["comments"]
+                RepositoryFactory.get("comments")
                 .find({"document_id": req.document_id}, {"content": 1})
                 .limit(20)
             )

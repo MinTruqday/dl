@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional
 
+from core.repositories.base_repository import RepositoryFactory
 from loguru import logger
 
 
@@ -159,7 +160,7 @@ class AgentOpsHarness:
                     else 0
                 ),
             }
-            await db["agent_traces"].insert_one(doc)
+            await RepositoryFactory.get("agent_traces").insert_one(doc)
             logger.info("Ghi lịch sử vào cơ sở dữ liệu thành công")
         except Exception as e:
             logger.error("Lỗi ghi lịch sử vào cơ sở dữ liệu")

@@ -12,7 +12,10 @@ class WalletService:
     @staticmethod
     async def get_balance(current_user, db=None):
         from src.repositories.wallet_repository import WalletRepository
-        wallet = await WalletRepository.get_wallet_by_user_id(str(current_user.id), db=db)
+
+        wallet = await WalletRepository.get_wallet_by_user_id(
+            str(current_user.id), db=db
+        )
         return {"balance": wallet.get("balance", 0) if wallet else 0}
 
     @staticmethod
@@ -64,7 +67,9 @@ class WalletService:
         from src.repositories.wallet_repository import WalletRepository
 
         try:
-            coupon = await WalletRepository.get_coupon_by_code(req.code, db=db, session=session)
+            coupon = await WalletRepository.get_coupon_by_code(
+                req.code, db=db, session=session
+            )
             if not coupon:
                 if should_close_session:
                     await session.abort_transaction()
@@ -96,7 +101,9 @@ class WalletService:
                 amount=bonus_dl,
                 note=f"Đổi coupon: {req.code}",
             )
-            await WalletRepository.insert_transaction(tx.model_dump(by_alias=True), db=db, session=session)
+            await WalletRepository.insert_transaction(
+                tx.model_dump(by_alias=True), db=db, session=session
+            )
 
             if should_close_session:
                 await session.commit_transaction()
@@ -153,6 +160,7 @@ class WalletService:
         db=None,
     ):
         from src.repositories.wallet_repository import WalletRepository
+
         query = {"user_id": str(current_user.id)}
         if tx_type:
             query["type"] = tx_type.lower()
@@ -163,7 +171,9 @@ class WalletService:
                 }
             except Exception as e:
                 logger.warning("Định dạng con trỏ phân trang không hợp lệ")
-        txs = await WalletRepository.get_transactions(query, skip=skip, limit=limit, db=db)
+        txs = await WalletRepository.get_transactions(
+            query, skip=skip, limit=limit, db=db
+        )
         type_translations = {
             "topup": "Nạp tiền",
             "purchase": "Mua tài liệu",

@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -14,7 +15,7 @@ class PublicationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": str(document_id), "author_id": user_id}
         )
         if not doc:
@@ -22,7 +23,7 @@ class PublicationService:
                 status_code=403,
                 detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
             )
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": str(document_id)},
             {
                 "$set": {
@@ -43,7 +44,9 @@ class PublicationService:
     async def get_readability_score(document_id: str, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one({"_id": str(document_id)})
+        doc = await RepositoryFactory.get("documents").find_one(
+            {"_id": str(document_id)}
+        )
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
         content = doc.get("content")
@@ -81,7 +84,7 @@ class PublicationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": document_id, "author_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
@@ -94,7 +97,7 @@ class PublicationService:
     async def publish_document(document_id: str, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        docs_collection = db["documents"]
+        docs_collection = RepositoryFactory.get("documents")
         user_id = str(current_user.id)
         document = await docs_collection.find_one(
             {"_id": document_id, "author_id": user_id}

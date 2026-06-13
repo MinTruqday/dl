@@ -5,8 +5,8 @@ from core.schemas.user import UserInDB
 from fastapi import APIRouter, Depends, Query
 from src.api.dependency_router import get_current_user, get_db
 from src.schemas.highlight_schema import (HighlightCreateRequest,
-                                   HighlightNoteUpdateRequest,
-                                   ReadingPreferenceUpdate)
+                                          HighlightNoteUpdateRequest,
+                                          ReadingPreferenceUpdate)
 from src.services.highlight_service import HighlightService
 
 router = APIRouter(prefix="/neu-bat")

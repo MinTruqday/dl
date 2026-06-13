@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import RoleEnum
 from fastapi import HTTPException
 from loguru import logger
@@ -24,7 +25,7 @@ class UserService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         users = (
-            await db["users"]
+            await RepositoryFactory.get("users")
             .find(query)
             .sort("created_at", -1)
             .skip(offset)
@@ -51,7 +52,7 @@ class UserService:
     async def update_user_role(user_id: str, role: str, db=None) -> Dict[str, str]:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one(
+        res = await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -68,7 +69,7 @@ class UserService:
     ) -> Dict[str, str]:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one(
+        res = await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -88,7 +89,7 @@ class UserService:
     async def warn_user(user_id: str, reason: str, current_moderator, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"_id": user_id})
+        user = await RepositoryFactory.get("users").find_one({"_id": user_id})
         if not user:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy thông tin người dùng này"
@@ -100,8 +101,8 @@ class UserService:
             "reason": reason,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["warnings"].insert_one(warning)
-        await db["audit_logs"].insert_one(
+        await RepositoryFactory.get("warnings").insert_one(warning)
+        await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": "WARN_USER",
                 "actor_id": str(current_moderator.id),
@@ -138,7 +139,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         lock_until = datetime.now(timezone.utc) + timedelta(hours=duration_hours)
-        await db["users"].update_one(
+        await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -149,7 +150,7 @@ class UserService:
                 }
             },
         )
-        await db["audit_logs"].insert_one(
+        await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": "LOCK_USER",
                 "actor_id": str(current_moderator.id),
@@ -170,7 +171,7 @@ class UserService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["users"].update_one(
+        await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -180,7 +181,7 @@ class UserService:
             },
         )
         action = "SHADOWBAN" if is_banned else "UNSHADOWBAN"
-        await db["audit_logs"].insert_one(
+        await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": action,
                 "actor_id": str(current_moderator.id),
@@ -197,7 +198,7 @@ class UserService:
     async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["users"].update_one(
+        await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -207,7 +208,7 @@ class UserService:
                 }
             },
         )
-        await db["audit_logs"].insert_one(
+        await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": f"KYC_{status}",
                 "actor_id": str(current_moderator.id),
@@ -225,7 +226,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         notes = (
-            await db["moderator_notes"]
+            await RepositoryFactory.get("moderator_notes")
             .find({"user_id": user_id})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -250,7 +251,7 @@ class UserService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["moderator_notes"].insert_one(
+        await RepositoryFactory.get("moderator_notes").insert_one(
             {
                 "_id": str(uuid7()),
                 "user_id": user_id,
@@ -301,7 +302,11 @@ class UserService:
                 {"$unwind": {"path": "$reporter", "preserveNullAndEmptyArrays": True}},
             ]
         )
-        reports = await db["reports"].aggregate(pipeline).to_list(length=limit)
+        reports = (
+            await RepositoryFactory.get("reports")
+            .aggregate(pipeline)
+            .to_list(length=limit)
+        )
         result = []
         for r in reports:
             reporter = r.get("reporter", {})
@@ -331,7 +336,7 @@ class UserService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["reports"].update_one(
+        await RepositoryFactory.get("reports").update_one(
             {"_id": report_id},
             {
                 "$set": {
@@ -352,7 +357,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         logs = (
-            await db["audit_logs"]
+            await RepositoryFactory.get("audit_logs")
             .find({"actor_id": moderator_id})
             .sort("timestamp", -1)
             .limit(50)
@@ -406,7 +411,7 @@ class UserService:
             "is_active": True,
         }
         users = (
-            await db["users"]
+            await RepositoryFactory.get("users")
             .find(
                 search_query,
                 {"full_name": 1, "username": 1, "slug": 1, "avatar_url": 1, "role": 1},
@@ -431,7 +436,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         now = datetime.now(timezone.utc)
-        res = await db["users"].update_many(
+        res = await RepositoryFactory.get("users").update_many(
             {"locked_until": {"$lt": now}, "is_active": False},
             {
                 "$set": {"is_active": True},
@@ -448,7 +453,7 @@ class UserService:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one(
+        user = await RepositoryFactory.get("users").find_one(
             {"_id": user_id}, {"password_hash": 0, "passkeys": 0}
         )
         if not user:
@@ -467,7 +472,7 @@ class UserService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         users = (
-            await db["users"]
+            await RepositoryFactory.get("users")
             .find({"_id": {"$in": user_ids}}, {"password_hash": 0, "passkeys": 0})
             .to_list(length=len(user_ids))
         )
@@ -485,7 +490,7 @@ class UserService:
     ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"email": email})
+        user = await RepositoryFactory.get("users").find_one({"email": email})
         if not user:
             return None
         user["_id"] = str(user["_id"])
@@ -499,7 +504,7 @@ class UserService:
     async def internal_get_user_by_slug(slug: str, db=None) -> Optional[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one({"slug": slug})
+        user = await RepositoryFactory.get("users").find_one({"slug": slug})
         if not user:
             return None
         user["_id"] = str(user["_id"])
@@ -518,5 +523,5 @@ class UserService:
         user_data["created_at"] = datetime.now(timezone.utc)
         user_data["is_active"] = True
         user_data["wallet_balance"] = 0
-        await db["users"].insert_one(user_data)
+        await RepositoryFactory.get("users").insert_one(user_data)
         return user_id

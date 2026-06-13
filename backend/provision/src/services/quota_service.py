@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from core.config import settings
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from core.schemas.quota import GlobalQuotaConfig, QuotaLimit
 from fastapi import HTTPException
 from loguru import logger
@@ -14,10 +15,12 @@ class QuotaService:
     async def _get_global_config(db=None):
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        config_data = await db["quota_configs"].find_one({"_id": "global"})
+        config_data = await RepositoryFactory.get("quota_configs").find_one(
+            {"_id": "global"}
+        )
         default_config = GlobalQuotaConfig()
         if not config_data:
-            await db["quota_configs"].insert_one(
+            await RepositoryFactory.get("quota_configs").insert_one(
                 {"_id": "global", **default_config.model_dump()}
             )
             return default_config
@@ -33,7 +36,9 @@ class QuotaService:
     async def get_user_limits(user_id: str, role: str, db=None) -> QuotaLimit:
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        user_override = await db["user_quotas"].find_one({"user_id": user_id})
+        user_override = await RepositoryFactory.get("user_quotas").find_one(
+            {"user_id": user_id}
+        )
         if user_override:
             return QuotaLimit(**user_override["limits"])
         global_config = await QuotaService._get_global_config()
@@ -98,7 +103,7 @@ class QuotaService:
     async def update_global_limits(role: str, limits: QuotaLimit, db=None):
         if db is None:
             db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        await db["quota_configs"].update_one(
+        await RepositoryFactory.get("quota_configs").update_one(
             {"_id": "global"},
             {
                 "$set": {

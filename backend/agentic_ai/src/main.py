@@ -2,9 +2,9 @@ import contextvars
 import sys
 import uuid
 
-
 from core.middleware import (add_trace_id_header, trace_id_ctx_var,
                              trace_id_filter)
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import FastAPI, Request
 from loguru import logger
 
@@ -79,16 +79,16 @@ async def startup_event():
         if settings.MONGODB_URI:
             client = AsyncIOMotorClient(settings.MONGODB_URI)
             db = client.get_default_database()
-            await db["finetune_datasets"].create_index(
+            await RepositoryFactory.get("finetune_datasets").create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )
-            await db["finetune_samples"].create_index(
+            await RepositoryFactory.get("finetune_samples").create_index(
                 [("dataset_id", 1), ("created_at", 1)], background=True
             )
-            await db["finetune_jobs"].create_index(
+            await RepositoryFactory.get("finetune_jobs").create_index(
                 [("user_id", 1), ("created_at", -1)], background=True
             )
-            await db["finetune_jobs"].create_index(
+            await RepositoryFactory.get("finetune_jobs").create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
             logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")

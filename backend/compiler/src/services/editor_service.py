@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import httpx
 from bson import ObjectId
 from core.config import settings
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -87,7 +88,7 @@ class EditorService:
         document_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        await db["editor_suggestions"].insert_one(
+        await RepositoryFactory.get("editor_suggestions").insert_one(
             {
                 "document_id": str(document_id),
                 "reviewer_id": user_id,
@@ -108,10 +109,14 @@ class EditorService:
         suggestion_id: str, payload: dict, current_user, db=None
     ):
         user_id = str(current_user.id)
-        sug = await db["editor_suggestions"].find_one({"_id": ObjectId(suggestion_id)})
+        sug = await RepositoryFactory.get("editor_suggestions").find_one(
+            {"_id": ObjectId(suggestion_id)}
+        )
         if not sug:
             raise HTTPException(status_code=404, detail="Không tìm thấy gợi ý")
-        doc = await db["documents"].find_one({"_id": sug["document_id"]})
+        doc = await RepositoryFactory.get("documents").find_one(
+            {"_id": sug["document_id"]}
+        )
         if (
             doc
             and str(doc.get("author_id")) != user_id
@@ -121,7 +126,7 @@ class EditorService:
                 status_code=403, detail="Bạn không có quyền xử lý gợi ý này"
             )
 
-        await db["editor_suggestions"].update_one(
+        await RepositoryFactory.get("editor_suggestions").update_one(
             {"_id": ObjectId(suggestion_id)},
             {
                 "$set": {
@@ -140,7 +145,7 @@ class EditorService:
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
         user_id = str(current_user.id)
-        await db["pomodoro_sessions"].insert_one(
+        await RepositoryFactory.get("pomodoro_sessions").insert_one(
             {
                 "user_id": user_id,
                 "document_id": str(payload.get("document_id")),
@@ -199,7 +204,7 @@ class EditorService:
             logger.error("Lỗi phân tích bản nháp tài liệu {document_id}")
 
         reading_time_minutes = max(1, words // 200)
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {
                 "_id": document_id,
                 "$or": [{"author_id": user_id}, {"co_authors": user_id}],
@@ -221,7 +226,7 @@ class EditorService:
     @staticmethod
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": document_id, "author_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
         )
@@ -242,7 +247,7 @@ class EditorService:
         import re
 
         user_id = str(current_user.id)
-        document = await db["documents"].find_one(
+        document = await RepositoryFactory.get("documents").find_one(
             {"_id": str(document_id), "author_id": user_id}
         )
         if not document:
@@ -282,10 +287,10 @@ class EditorService:
         }
         if new_content:
             update_data["content"] = new_content
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": str(document_id)}, {"$set": update_data}
         )
-        await db["document_versions"].insert_one(
+        await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": str(document_id),
                 "author_id": user_id,
@@ -306,7 +311,7 @@ class EditorService:
     async def get_ai_suggestions(
         document_id: str, context: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 f"{agentic_ai_url}/inference/actions",
@@ -324,7 +329,7 @@ class EditorService:
     async def summarize_document(
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
         content = doc.get("draft_content") or doc.get("content", "")
@@ -354,7 +359,7 @@ class EditorService:
                 )
                 if resp.status_code == 200:
                     summary = resp.json().get("result", "Đã tóm tắt tài liệu")
-                    await db["documents"].update_one(
+                    await RepositoryFactory.get("documents").update_one(
                         {"_id": document_id}, {"$set": {"description": summary}}
                     )
                     return {"summary": summary}
@@ -367,7 +372,7 @@ class EditorService:
     async def extract_smart_tags(
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
         content = doc.get("draft_content") or doc.get("content", "")
@@ -404,7 +409,7 @@ class EditorService:
                             if t.strip()
                         ]
                     tags = tags[:5]
-                    await db["documents"].update_one(
+                    await RepositoryFactory.get("documents").update_one(
                         {"_id": document_id}, {"$addToSet": {"tags": {"$each": tags}}}
                     )
                     return {"tags": tags}
@@ -429,7 +434,7 @@ class EditorService:
             "status": "open",
             "created_at": datetime.now(timezone.utc),
         }
-        await db["editor_comments"].insert_one(comment)
+        await RepositoryFactory.get("editor_comments").insert_one(comment)
         return {"_id": comment_id, "message": "Đã thêm nhận xét"}
 
     @staticmethod
@@ -437,7 +442,7 @@ class EditorService:
         document_id: str, current_user, db=None
     ) -> List[dict]:
         cursor = (
-            db["editor_comments"]
+            RepositoryFactory.get("editor_comments")
             .find({"document_id": document_id, "status": "open"})
             .sort("created_at", -1)
         )
@@ -452,11 +457,15 @@ class EditorService:
 
     @staticmethod
     async def resolve_comment(comment_id: str, current_user, db=None) -> dict:
-        comment = await db["editor_comments"].find_one({"_id": comment_id})
+        comment = await RepositoryFactory.get("editor_comments").find_one(
+            {"_id": comment_id}
+        )
         if not comment:
             raise HTTPException(status_code=404, detail="Không tìm thấy bình luận")
 
-        doc = await db["documents"].find_one({"_id": comment["document_id"]})
+        doc = await RepositoryFactory.get("documents").find_one(
+            {"_id": comment["document_id"]}
+        )
         if (
             doc
             and str(doc.get("author_id")) != str(current_user.id)
@@ -466,7 +475,7 @@ class EditorService:
                 status_code=403, detail="Bạn không có quyền xử lý bình luận này"
             )
 
-        await db["editor_comments"].update_one(
+        await RepositoryFactory.get("editor_comments").update_one(
             {"_id": comment_id},
             {
                 "$set": {
@@ -482,8 +491,12 @@ class EditorService:
     async def get_version_diff(
         document_id: str, version_id_a: str, version_id_b: str, current_user, db=None
     ) -> dict:
-        v_a = await db["document_versions"].find_one({"_id": version_id_a})
-        v_b = await db["document_versions"].find_one({"_id": version_id_b})
+        v_a = await RepositoryFactory.get("document_versions").find_one(
+            {"_id": version_id_a}
+        )
+        v_b = await RepositoryFactory.get("document_versions").find_one(
+            {"_id": version_id_b}
+        )
         if not v_a or not v_b:
             raise HTTPException(
                 status_code=404, detail="Không tìm thấy phiên bản để so sánh"
@@ -499,7 +512,7 @@ class EditorService:
     async def check_deep_plagiarism(
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
@@ -525,7 +538,7 @@ class EditorService:
     async def check_logic(
         document_id: str, content: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one({"_id": document_id})
+        doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         previous_content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
@@ -545,7 +558,7 @@ class EditorService:
     async def check_grammar(
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:

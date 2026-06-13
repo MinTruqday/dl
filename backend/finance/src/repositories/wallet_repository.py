@@ -1,5 +1,5 @@
-from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 from core.database import db_client
 
@@ -19,11 +19,13 @@ class WalletRepository:
             {"_id": user_id},
             {"$inc": {"balance": amount}},
             upsert=True,
-            session=session
+            session=session,
         )
 
     @staticmethod
-    async def get_coupon_by_code(code: str, db=None, session=None) -> Optional[Dict[str, Any]]:
+    async def get_coupon_by_code(
+        code: str, db=None, session=None
+    ) -> Optional[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
         return await db["coupons"].find_one({"code": code}, session=session)
@@ -51,7 +53,9 @@ class WalletRepository:
         return await db["transactions"].insert_one(tx_data, session=session)
 
     @staticmethod
-    async def get_transactions(query: dict, skip: int = 0, limit: int = 30, db=None) -> List[Dict[str, Any]]:
+    async def get_transactions(
+        query: dict, skip: int = 0, limit: int = 30, db=None
+    ) -> List[Dict[str, Any]]:
         if db is None:
             db = db_client.mongodb.get_default_database()
         tx_cursor = db["transactions"].find(query).sort("created_at", -1)

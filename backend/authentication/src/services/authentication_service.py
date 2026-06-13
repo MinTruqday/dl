@@ -10,6 +10,7 @@ from core.security import (create_access_token, get_password_hash,
                            verify_password)
 from fastapi import HTTPException, status
 from loguru import logger
+from src.repositories.auth_repository import AuthRepository
 from src.services.email_service import EmailService
 from uuid6 import uuid7
 
@@ -31,9 +32,7 @@ class AuthenticationService:
 
     @staticmethod
     async def register_user(user_in: UserCreate, client_ip: str, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        config = await db["settings"].find_one({"_id": "system_config"})
+        config = await AuthRepository.get_system_config(db=db)
         if config and (not config.get("registration_enabled", True)):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -73,15 +72,16 @@ class AuthenticationService:
             "password_hash": get_password_hash(user_in.password),
             "passkeys": [],
         }
-        await db["auth_credentials"].insert_one(auth_cred)
+        await AuthRepository.create_auth_credential(auth_cred, db=db)
 
-        await db["audit_logs"].insert_one(
+        await AuthRepository.insert_audit_log(
             {
                 "action": "REGISTER_USER",
                 "actor_email": user_in.email,
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
-            }
+            },
+            db=db,
         )
         logger.info(f"Người dùng {user_in.email} đăng ký từ {client_ip}")
         return {
@@ -94,8 +94,6 @@ class AuthenticationService:
 
     @staticmethod
     async def login_user(username: str, password: str, client_ip: str, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
         is_email = "@" in username
         import httpx
 
@@ -122,17 +120,20 @@ class AuthenticationService:
                 status_code=401, detail="Tài khoản hoặc email không tồn tại"
             )
 
-        auth_cred = await db["auth_credentials"].find_one({"_id": str(user_doc["_id"])})
+        auth_cred = await AuthRepository.get_auth_credential_by_id(
+            str(user_doc["_id"]), db=db
+        )
         password_hash = auth_cred.get("password_hash") if auth_cred else "invalid"
 
         if not verify_password(password, password_hash):
-            await db["audit_logs"].insert_one(
+            await AuthRepository.insert_audit_log(
                 {
                     "action": "LOGIN_FAILED_WRONG_PASSWORD",
                     "actor_email": user_doc["email"],
                     "ip": client_ip,
                     "timestamp": datetime.now(timezone.utc),
-                }
+                },
+                db=db,
             )
             logger.warning(
                 f"Tài khoản {username} đăng nhập sai mật khẩu từ {client_ip}"
@@ -142,9 +143,7 @@ class AuthenticationService:
             raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa")
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
-        if db_client.redis:
-            await db_client.redis.sadd(f"user_sessions:{user_id_str}", session_id)
-            await db_client.redis.setex(f"session_meta:{session_id}", 604800, client_ip)
+        await AuthRepository.register_session(user_id_str, session_id, client_ip)
         access_token = create_access_token(
             data={"sub": user_doc["email"], "sid": session_id}
         )
@@ -160,20 +159,13 @@ class AuthenticationService:
 
     @staticmethod
     async def revoke_all_sessions(current_user: UserInDB, db=None):
-        if not db_client.redis:
-            return {"message": "Tính năng đang bảo trì"}
         user_id_str = str(current_user.id)
-        sessions = await db_client.redis.smembers(f"user_sessions:{user_id_str}")
-        for sid in sessions:
-            await db_client.redis.delete(f"session_meta:{sid}")
-        await db_client.redis.delete(f"user_sessions:{user_id_str}")
+        await AuthRepository.revoke_all_sessions(user_id_str)
         logger.info(f"Vô hiệu hóa toàn bộ phiên đăng nhập của {user_id_str}")
         return {"message": "Đăng xuất khỏi tất cả thiết bị thành công"}
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
         import httpx
 
         try:
@@ -187,7 +179,7 @@ class AuthenticationService:
             user = None
         if user:
             otp_code = "".join([str(secrets.randbelow(10)) for _ in range(6)])
-            await db["password_reset_tokens"].insert_one(
+            await AuthRepository.create_password_reset_token(
                 {
                     "_id": secrets.token_hex(8),
                     "email": email,
@@ -195,15 +187,17 @@ class AuthenticationService:
                     "expires_at": datetime.now(timezone.utc) + timedelta(minutes=1),
                     "used": False,
                     "created_at": datetime.now(timezone.utc),
-                }
+                },
+                db=db,
             )
-            await db["audit_logs"].insert_one(
+            await AuthRepository.insert_audit_log(
                 {
                     "action": "FORGOT_PASSWORD_REQUEST",
                     "actor_email": email,
                     "ip": client_ip,
                     "timestamp": datetime.now(timezone.utc),
-                }
+                },
+                db=db,
             )
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
@@ -213,42 +207,34 @@ class AuthenticationService:
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        token_doc = await db["password_reset_tokens"].find_one(
-            {"token": token, "used": False}
-        )
+        token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn"
             )
-        auth_cred = await db["auth_credentials"].find_one({"email": token_doc["email"]})
-        if auth_cred:
-            await db["auth_credentials"].update_one(
-                {"email": token_doc["email"]},
-                {"$set": {"password_hash": get_password_hash(new_password)}},
-            )
-        await db["password_reset_tokens"].update_one(
-            {"_id": token_doc["_id"]}, {"$set": {"used": True}}
+        auth_cred = await AuthRepository.get_auth_credential_by_email(
+            token_doc["email"], db=db
         )
-        await db["audit_logs"].insert_one(
+        if auth_cred:
+            await AuthRepository.update_password_hash(
+                token_doc["email"], get_password_hash(new_password), db=db
+            )
+        await AuthRepository.mark_password_reset_token_used(token_doc["_id"], db=db)
+        await AuthRepository.insert_audit_log(
             {
                 "action": "RESET_PASSWORD_SUCCESS",
                 "actor_email": token_doc["email"],
                 "ip": client_ip,
                 "timestamp": datetime.now(timezone.utc),
-            }
+            },
+            db=db,
         )
         logger.info(f"Tài khoản {token_doc['email']} đổi mật khẩu từ {client_ip}")
         return {"status": "ok", "message": "Thay đổi mật khẩu thành công"}
 
     @staticmethod
     async def verify_reset_code(token: str, client_ip: str, db=None):
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
-        token_doc = await db["password_reset_tokens"].find_one(
-            {"token": token, "used": False}
-        )
+        token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400, detail="Mã xác thực không hợp lệ hoặc đã hết hạn"
@@ -261,13 +247,13 @@ class AuthenticationService:
             raise HTTPException(status_code=403, detail="Tài khoản đang bị khóa")
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
-        if db_client.redis:
-            await db_client.redis.sadd(f"user_sessions:{user_id_str}", session_id)
-            await db_client.redis.setex(f"session_meta:{session_id}", 604800, client_ip)
+        await AuthRepository.register_session(user_id_str, session_id, client_ip)
         access_token = create_access_token(
             data={"sub": user_doc["email"], "sid": session_id}
         )
-        auth_cred = await db["auth_credentials"].find_one({"_id": str(user_doc["_id"])})
+        auth_cred = await AuthRepository.get_auth_credential_by_id(
+            str(user_doc["_id"]), db=db
+        )
         has_passkey = len(auth_cred.get("passkeys", [])) > 0 if auth_cred else False
         return {
             "access_token": access_token,
@@ -302,8 +288,6 @@ class AuthenticationService:
                 headers={"Authorization": f"Bearer {token_data['access_token']}"},
             )
             google_user = user_resp.json()
-        if db is None:
-            db = db_client.mongodb[settings.MONGODB_DB_NAME]
         email = google_user.get("email")
         try:
             async with httpx.AsyncClient() as client:
@@ -315,7 +299,7 @@ class AuthenticationService:
         except Exception:
             user_doc = None
         if not user_doc:
-            config = await db["settings"].find_one({"_id": "system_config"})
+            config = await AuthRepository.get_system_config(db=db)
             if config and (not config.get("registration_enabled", True)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -349,7 +333,7 @@ class AuthenticationService:
                         "password_hash": "google_oauth_no_password",
                         "passkeys": [],
                     }
-                    await db["auth_credentials"].insert_one(auth_cred)
+                    await AuthRepository.create_auth_credential(auth_cred, db=db)
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError:
                 raise HTTPException(

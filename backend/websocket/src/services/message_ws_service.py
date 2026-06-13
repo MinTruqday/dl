@@ -5,6 +5,7 @@ from typing import Any, List
 import httpx
 from core.config import settings
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import WebSocket, WebSocketDisconnect
 from loguru import logger
 
@@ -74,7 +75,9 @@ class MessageConnectionManager:
         if receiver_id.startswith("group_"):
             if db_client.mongodb:
                 db = db_client.mongodb.get_default_database()
-                group = await db["chat_groups"].find_one({"_id": receiver_id})
+                group = await RepositoryFactory.get("chat_groups").find_one(
+                    {"_id": receiver_id}
+                )
                 if group:
                     targets = group.get("members", [])
         for target_id in targets:
@@ -112,7 +115,11 @@ class MessageConnectionManager:
             return
         disconnected = []
         if last_message_id:
-            groups = await db["chat_groups"].find({"members": user_id}).to_list(100)
+            groups = (
+                await RepositoryFactory.get("chat_groups")
+                .find({"members": user_id})
+                .to_list(100)
+            )
             group_ids = [g["_id"] for g in groups]
             query = {
                 "_id": {"$gt": last_message_id},
@@ -123,7 +130,7 @@ class MessageConnectionManager:
                 ],
             }
             new_messages = (
-                await db["messages"]
+                await RepositoryFactory.get("messages")
                 .find(query)
                 .sort("created_at", 1)
                 .to_list(length=200)
@@ -137,7 +144,7 @@ class MessageConnectionManager:
                     except Exception:
                         disconnected.append(ws)
         active_finetunes = (
-            await db["finetune_jobs"]
+            await RepositoryFactory.get("finetune_jobs")
             .find({"status": {"$in": ["running", "pending"]}})
             .to_list(50)
         )
@@ -180,7 +187,7 @@ class MessageConnectionManager:
         if not db_client.mongodb:
             return
         db = db_client.mongodb.get_default_database()
-        await db["messages"].update_many(
+        await RepositoryFactory.get("messages").update_many(
             {"sender_id": other_user_id, "receiver_id": user_id, "is_read": False},
             {"$set": {"is_read": True}},
         )

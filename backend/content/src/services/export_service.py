@@ -2,6 +2,7 @@ import asyncio
 import io
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -29,7 +30,9 @@ class ExportService:
             )
         if db is None:
             db = db_client.mongodb.get_default_database()
-        document = await db["documents"].find_one({"_id": str(document_id)})
+        document = await RepositoryFactory.get("documents").find_one(
+            {"_id": str(document_id)}
+        )
         if not document:
             raise HTTPException(
                 status_code=404, detail="Tài liệu không tồn tại trên hệ thống"
@@ -48,7 +51,7 @@ class ExportService:
                 or current_user.role not in ["ADMIN", "MODERATOR"]
             )
         ):
-            purchases_col = db["purchases"]
+            purchases_col = RepositoryFactory.get("purchases")
             purchase = await purchases_col.find_one(
                 {"user_id": user_id, "item_id": str(document["_id"])}
             )

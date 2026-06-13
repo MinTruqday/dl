@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -15,12 +16,12 @@ class VersionsService:
     async def save_version(document_id, version_note, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
-        await db["document_versions"].insert_one(
+        await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,
                 "author_id": str(current_user.id),
@@ -44,7 +45,7 @@ class VersionsService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         cursor = (
-            db["document_versions"]
+            RepositoryFactory.get("document_versions")
             .find({"document_id": document_id, "author_id": str(current_user.id)})
             .sort("created_at", -1)
         )
@@ -58,7 +59,7 @@ class VersionsService:
     async def restore_version(version_id: str, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        version = await db["document_versions"].find_one(
+        version = await RepositoryFactory.get("document_versions").find_one(
             {"_id": ObjectId(version_id), "author_id": str(current_user.id)}
         )
         if not version:
@@ -71,7 +72,7 @@ class VersionsService:
             }
         else:
             update_data = {**snapshot, "updated_at": datetime.now(timezone.utc)}
-        await db["documents"].update_one(
+        await RepositoryFactory.get("documents").update_one(
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info(

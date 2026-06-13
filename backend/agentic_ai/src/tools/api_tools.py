@@ -320,7 +320,8 @@ async def _get_doc_text(document_id: str, token: str) -> str:
 
 
 from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
-from src.api.inference_router import peer_review, suggest_citations, transform_tone
+from src.api.inference_router import (peer_review, suggest_citations,
+                                      transform_tone)
 
 
 @tool

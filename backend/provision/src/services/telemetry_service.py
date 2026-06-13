@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from bson import ObjectId
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import UserInDB
 from loguru import logger
 from uuid6 import uuid7
@@ -27,7 +28,7 @@ class TelemetryService:
             "user_id": str(current_user.id) if current_user else "anonymous",
             "timestamp": datetime.now(timezone.utc),
         }
-        await db["telemetry"].insert_one(telemetry_event)
+        await RepositoryFactory.get("telemetry").insert_one(telemetry_event)
         logger.debug(
             f"Đã ghi nhận sự kiện hệ thống: {event_name} bởi người dùng {telemetry_event['user_id']}"
         )
@@ -43,7 +44,7 @@ class TelemetryService:
             {"$group": {"_id": "$event_name", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}},
         ]
-        cursor = db["telemetry"].aggregate(pipeline)
+        cursor = RepositoryFactory.get("telemetry").aggregate(pipeline)
         return await cursor.to_list(length=100)
 
     @staticmethod
@@ -58,9 +59,11 @@ class TelemetryService:
     async def get_system_stats(db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        total_users = await db["users"].count_documents({})
-        total_documents = await db["documents"].count_documents({})
-        total_authors = await db["users"].count_documents({"role": "AUTHOR"})
+        total_users = await RepositoryFactory.get("users").count_documents({})
+        total_documents = await RepositoryFactory.get("documents").count_documents({})
+        total_authors = await RepositoryFactory.get("users").count_documents(
+            {"role": "AUTHOR"}
+        )
         return {
             "total_users": total_users,
             "total_documents": total_documents,
@@ -88,7 +91,7 @@ class TelemetryService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         return (
-            await db["moderator_activity"]
+            await RepositoryFactory.get("moderator_activity")
             .find({"moderator_id": moderator_id})
             .sort("timestamp", -1)
             .to_list(length=100)

@@ -8,9 +8,12 @@ from core.schemas.inference import (AISuggestionRequest, CoverGenerateRequest,
 from fastapi import APIRouter
 from loguru import logger
 from src.schemas.editor_schema import (AutoSaveRequest, FindReplaceRequest,
-                                InlineCommentRequest, InlineSuggestionRequest,
-                                KeystrokeSyncRequest, PomodoroSyncRequest,
-                                ResolveSuggestionRequest, VersionDiffRequest)
+                                       InlineCommentRequest,
+                                       InlineSuggestionRequest,
+                                       KeystrokeSyncRequest,
+                                       PomodoroSyncRequest,
+                                       ResolveSuggestionRequest,
+                                       VersionDiffRequest)
 from src.services.editor_service import EditorService
 
 router = APIRouter(prefix="/soan-thao")

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -14,7 +15,7 @@ class BookmarkService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        profile = await db["user_content_profiles"].find_one(
+        profile = await RepositoryFactory.get("user_content_profiles").find_one(
             {"_id": user_id}, {"bookmarks": 1}
         )
         bookmarks = profile.get("bookmarks", []) if profile else []
@@ -22,7 +23,7 @@ class BookmarkService:
             bookmarks.remove(document_id)
             message = "Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ"
             is_bookmarked = False
-            await db["user_content_profiles"].update_one(
+            await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {
                     "$pull": {"bookmarks": document_id},
@@ -34,7 +35,7 @@ class BookmarkService:
             bookmarks.append(document_id)
             message = "Đã thêm tài liệu vào danh sách lưu trữ"
             is_bookmarked = True
-            await db["user_content_profiles"].update_one(
+            await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {
                     "$addToSet": {"bookmarks": document_id},
@@ -48,14 +49,14 @@ class BookmarkService:
     async def get_bookmarks(current_user, limit: int = 100, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        profile = await db["user_content_profiles"].find_one(
+        profile = await RepositoryFactory.get("user_content_profiles").find_one(
             {"_id": str(current_user.id)}, {"bookmarks": 1}
         )
         bookmark_ids = profile.get("bookmarks", []) if profile else []
         if not bookmark_ids:
             return []
         docs = (
-            await db["documents"]
+            await RepositoryFactory.get("documents")
             .find({"_id": {"$in": bookmark_ids}})
             .limit(limit)
             .to_list(length=limit)
@@ -88,7 +89,7 @@ class BookmarkService:
             "bookmark_ids": [],
             "created_at": datetime.now(timezone.utc),
         }
-        await db["bookmark_folders"].insert_one(folder)
+        await RepositoryFactory.get("bookmark_folders").insert_one(folder)
         logger.info(f"Đã tạo thư mục {folder['_id']} cho người dùng {current_user.id}")
         return folder
 
@@ -97,7 +98,7 @@ class BookmarkService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         folders = (
-            await db["bookmark_folders"]
+            await RepositoryFactory.get("bookmark_folders")
             .find({"user_id": str(current_user.id)})
             .sort("created_at", -1)
             .to_list(length=50)
@@ -122,7 +123,7 @@ class BookmarkService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        result = await db["bookmark_folders"].update_one(
+        result = await RepositoryFactory.get("bookmark_folders").update_one(
             {"_id": folder_id, "user_id": str(current_user.id)},
             {
                 "$set": {
@@ -139,7 +140,7 @@ class BookmarkService:
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        result = await db["bookmark_folders"].delete_one(
+        result = await RepositoryFactory.get("bookmark_folders").delete_one(
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from core.schemas.user import RoleEnum
 from fastapi import HTTPException
 from loguru import logger
@@ -22,7 +23,7 @@ class OperationService:
                 "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
             }
         users = (
-            await db["users"]
+            await RepositoryFactory.get("users")
             .find(query)
             .sort("created_at", -1)
             .skip(offset)
@@ -49,7 +50,7 @@ class OperationService:
     async def update_user_role(user_id: str, role: str, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one(
+        res = await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {"$set": {"role": role, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -64,7 +65,7 @@ class OperationService:
     async def update_user_status(user_id: str, is_active: bool, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        res = await db["users"].update_one(
+        res = await RepositoryFactory.get("users").update_one(
             {"_id": user_id},
             {
                 "$set": {
@@ -86,7 +87,7 @@ class OperationService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["system_config"].update_one(
+        await RepositoryFactory.get("system_config").update_one(
             {"key": "maintenance_mode"},
             {
                 "$set": {
@@ -117,7 +118,7 @@ class OperationService:
             import secrets
 
             key_value = secrets.token_urlsafe(32)
-        await db["api_keys"].insert_one(
+        await RepositoryFactory.get("api_keys").insert_one(
             {
                 "_id": str(uuid7()),
                 "name": name,
@@ -141,7 +142,7 @@ class OperationService:
             "status": "active",
             "created_at": datetime.now(timezone.utc),
         }
-        await db["marketing_campaigns"].insert_one(campaign)
+        await RepositoryFactory.get("marketing_campaigns").insert_one(campaign)
         logger.info("Chiến dịch '{campaign['title']}' đã được khởi tạo")
         return {"message": "Đã tạo chiến dịch tiếp thị"}
 
@@ -204,7 +205,9 @@ class OperationService:
     async def get_maintenance_mode(db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        config = await db["system_config"].find_one({"key": "maintenance_mode"})
+        config = await RepositoryFactory.get("system_config").find_one(
+            {"key": "maintenance_mode"}
+        )
         if not config:
             return {"enabled": False, "message": ""}
         return {
@@ -411,7 +414,7 @@ class OperationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         report_id = str(uuid7())
-        await db["bug_reports"].insert_one(
+        await RepositoryFactory.get("bug_reports").insert_one(
             {
                 "_id": report_id,
                 "title": data["title"],
@@ -435,7 +438,7 @@ class OperationService:
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
-        await db["moderator_tasks"].insert_one(task)
+        await RepositoryFactory.get("moderator_tasks").insert_one(task)
         logger.info(
             f"Đã giao việc cho {data['moderator_id']} bởi {current_moderator.id}"
         )
@@ -446,7 +449,7 @@ class OperationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         proposal_id = str(uuid7())
-        await db["policy_proposals"].insert_one(
+        await RepositoryFactory.get("policy_proposals").insert_one(
             {
                 "_id": proposal_id,
                 "author_id": str(current_moderator.id),

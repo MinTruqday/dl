@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from src.schemas.storage_schema import (StorageItemCreate, StorageItemInDB,
-                                 StorageItemUpdate)
+                                        StorageItemUpdate)
 
 
 class StorageService:

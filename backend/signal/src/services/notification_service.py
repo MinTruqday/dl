@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from core.config import settings
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException, status
 from loguru import logger
 from src.schemas.notification_schema import Notification, NotificationCreate
@@ -13,15 +14,17 @@ class NotificationService:
     @staticmethod
     async def get_notifications(user_id: str, skip: int, limit: int, db):
         cursor = (
-            db["notifications"]
+            RepositoryFactory.get("notifications")
             .find({"target_user_id": user_id})
             .sort("created_at", -1)
             .skip(skip)
             .limit(limit)
         )
         docs = await cursor.to_list(length=limit)
-        total = await db["notifications"].count_documents({"target_user_id": user_id})
-        unread = await db["notifications"].count_documents(
+        total = await RepositoryFactory.get("notifications").count_documents(
+            {"target_user_id": user_id}
+        )
+        unread = await RepositoryFactory.get("notifications").count_documents(
             {"target_user_id": user_id, "is_read": False}
         )
         for doc in docs:
@@ -30,7 +33,7 @@ class NotificationService:
 
     @staticmethod
     async def mark_as_read(notif_id: str, user_id: str, db):
-        result = await db["notifications"].update_one(
+        result = await RepositoryFactory.get("notifications").update_one(
             {"_id": notif_id, "target_user_id": user_id}, {"$set": {"is_read": True}}
         )
         if result.matched_count == 0:
@@ -41,14 +44,14 @@ class NotificationService:
 
     @staticmethod
     async def mark_all_as_read(user_id: str, db):
-        await db["notifications"].update_many(
+        await RepositoryFactory.get("notifications").update_many(
             {"target_user_id": user_id, "is_read": False}, {"$set": {"is_read": True}}
         )
         return {"success": True}
 
     @staticmethod
     async def delete_notification(notif_id: str, user_id: str, db):
-        result = await db["notifications"].delete_one(
+        result = await RepositoryFactory.get("notifications").delete_one(
             {"_id": notif_id, "target_user_id": user_id}
         )
         if result.deleted_count == 0:
@@ -69,7 +72,7 @@ class NotificationService:
             "type": data.type,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["notifications"].insert_one(doc)
+        await RepositoryFactory.get("notifications").insert_one(doc)
         if db_client.redis:
             try:
                 import json

@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -12,7 +13,7 @@ class PinService:
     async def get_pinned_documents(current_user, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        profile = await db["user_content_profiles"].find_one(
+        profile = await RepositoryFactory.get("user_content_profiles").find_one(
             {"_id": str(current_user.id)}, {"pinned_documents": 1}
         )
         if not profile or "pinned_documents" not in profile:
@@ -29,7 +30,7 @@ class PinService:
                 doc_ids.append(d_id)
                 pinned_at_map[d_id] = item.get("pinned_at")
         docs = (
-            await db["documents"]
+            await RepositoryFactory.get("documents")
             .find({"_id": {"$in": doc_ids}})
             .to_list(length=len(doc_ids))
         )
@@ -54,7 +55,7 @@ class PinService:
     async def pin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["user_content_profiles"].update_one(
+        await RepositoryFactory.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {
                 "$addToSet": {
@@ -73,7 +74,7 @@ class PinService:
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["user_content_profiles"].update_one(
+        await RepositoryFactory.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
@@ -84,7 +85,7 @@ class PinService:
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["user_content_profiles"].update_one(
+        await RepositoryFactory.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,

@@ -8,11 +8,13 @@ from core.schemas.user import RoleEnum, UserInDB
 from fastapi import (APIRouter, Body, Depends, Header, HTTPException, Query,
                      Request, Response, status)
 from pydantic import BaseModel
-from src.api.dependency_router import (get_current_user, get_current_user_optional,
-                                get_db, require_role)
-from src.schemas.document_schema import (CoauthorInviteRequest, DocumentContentUpdate,
-                                  DocumentCreate, DocumentPasswordRequest,
-                                  DocumentResponse, DocumentUpdate)
+from src.api.dependency_router import (get_current_user,
+                                       get_current_user_optional, get_db,
+                                       require_role)
+from src.schemas.document_schema import (CoauthorInviteRequest,
+                                         DocumentContentUpdate, DocumentCreate,
+                                         DocumentPasswordRequest,
+                                         DocumentResponse, DocumentUpdate)
 from src.schemas.series_schema import SeriesCreateRequest, SeriesResponse
 from src.services.document_service import DocumentService
 from src.services.series_service import SeriesService

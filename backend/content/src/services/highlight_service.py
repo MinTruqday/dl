@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -31,7 +32,7 @@ class HighlightService:
             "note": data.get("note", ""),
             "created_at": datetime.now(timezone.utc),
         }
-        await db["highlights"].insert_one(highlight)
+        await RepositoryFactory.get("highlights").insert_one(highlight)
         logger.info(
             f"Người dùng {current_user.id} đánh dấu nội dung tài liệu {document_id}"
         )
@@ -42,7 +43,7 @@ class HighlightService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         highlights = (
-            await db["highlights"]
+            await RepositoryFactory.get("highlights")
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", -1)
             .to_list(length=200)
@@ -70,7 +71,7 @@ class HighlightService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        result = await db["highlights"].update_one(
+        result = await RepositoryFactory.get("highlights").update_one(
             {"_id": highlight_id, "user_id": str(current_user.id)},
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
         )
@@ -82,7 +83,7 @@ class HighlightService:
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        result = await db["highlights"].delete_one(
+        result = await RepositoryFactory.get("highlights").delete_one(
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
@@ -121,7 +122,11 @@ class HighlightService:
                 {"$unwind": {"path": "$doc", "preserveNullAndEmptyArrays": True}},
             ]
         )
-        highlights = await db["highlights"].aggregate(pipeline).to_list(length=limit)
+        highlights = (
+            await RepositoryFactory.get("highlights")
+            .aggregate(pipeline)
+            .to_list(length=limit)
+        )
         result = []
         for h in highlights:
             document = h.get("doc", {})
@@ -149,10 +154,12 @@ class HighlightService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        document = await db["documents"].find_one({"_id": document_id}, {"title": 1})
+        document = await RepositoryFactory.get("documents").find_one(
+            {"_id": document_id}, {"title": 1}
+        )
         document_title = document.get("title", "Untitled") if document else "Untitled"
         highlights = (
-            await db["highlights"]
+            await RepositoryFactory.get("highlights")
             .find({"user_id": str(current_user.id), "document_id": document_id})
             .sort("created_at", 1)
             .to_list(length=500)

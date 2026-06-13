@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 
@@ -43,7 +44,11 @@ class ReadingService:
             },
             {"$unwind": {"path": "$author", "preserveNullAndEmptyArrays": True}},
         ]
-        history = await db["reading_history"].aggregate(pipeline).to_list(length=limit)
+        history = (
+            await RepositoryFactory.get("reading_history")
+            .aggregate(pipeline)
+            .to_list(length=limit)
+        )
         result = []
         for h in history:
             doc = h.get("doc") or {}
@@ -71,7 +76,7 @@ class ReadingService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         now = datetime.now(timezone.utc)
-        await db["reading_history"].update_one(
+        await RepositoryFactory.get("reading_history").update_one(
             {"user_id": user_id, "document_id": data.document_id},
             {
                 "$set": {
@@ -83,7 +88,7 @@ class ReadingService:
             },
             upsert=True,
         )
-        profile = await db["user_content_profiles"].find_one(
+        profile = await RepositoryFactory.get("user_content_profiles").find_one(
             {"_id": user_id}, {"reading_stats": 1}
         )
         stats = profile.get("reading_stats", {}) if profile else {}
@@ -99,7 +104,7 @@ class ReadingService:
                 current_streak = 1
             if current_streak > longest_streak:
                 longest_streak = current_streak
-            await db["user_content_profiles"].update_one(
+            await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {
                     "$set": {
@@ -111,7 +116,7 @@ class ReadingService:
                 upsert=True,
             )
         if data.progress_percentage >= 100:
-            await db["user_content_profiles"].update_one(
+            await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
                 {"$addToSet": {"badges": {"name": "Mọt Sách", "awarded_at": now}}},
                 upsert=True,
@@ -122,7 +127,7 @@ class ReadingService:
     async def set_reading_goal(data, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["reading_goals"].update_one(
+        await RepositoryFactory.get("reading_goals").update_one(
             {"user_id": str(current_user.id)},
             {
                 "$set": {
@@ -144,7 +149,9 @@ class ReadingService:
     async def get_reading_goal(current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        goal = await db["reading_goals"].find_one({"user_id": str(current_user.id)})
+        goal = await RepositoryFactory.get("reading_goals").find_one(
+            {"user_id": str(current_user.id)}
+        )
         if not goal:
             return {
                 "target_documents": 0,
@@ -152,7 +159,7 @@ class ReadingService:
                 "period": "monthly",
                 "progress_documents": 0,
             }
-        history_count = await db["reading_history"].count_documents(
+        history_count = await RepositoryFactory.get("reading_history").count_documents(
             {"user_id": str(current_user.id), "progress_percentage": 100}
         )
         return {
@@ -168,7 +175,7 @@ class ReadingService:
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one(
+        doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
@@ -200,7 +207,7 @@ class ReadingService:
             update_data["line_height"] = data.line_height
         if data.letter_spacing is not None:
             update_data["letter_spacing"] = data.letter_spacing
-        await db["user_content_profiles"].update_one(
+        await RepositoryFactory.get("user_content_profiles").update_one(
             {"_id": str(current_user.id)},
             {"$set": {"typography": update_data}},
             upsert=True,
@@ -211,14 +218,16 @@ class ReadingService:
     async def clear_reading_history(current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["reading_history"].delete_many({"user_id": str(current_user.id)})
+        await RepositoryFactory.get("reading_history").delete_many(
+            {"user_id": str(current_user.id)}
+        )
         return {"status": "success", "message": "Đã xóa toàn bộ lịch sử đọc"}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["reading_history"].delete_one(
+        await RepositoryFactory.get("reading_history").delete_one(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
         return {"status": "success", "message": "Đã xóa lịch sử đọc"}

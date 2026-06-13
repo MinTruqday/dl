@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from core.database import db_client
+from core.repositories.base_repository import RepositoryFactory
 from fastapi import HTTPException
 from loguru import logger
 from uuid6 import uuid7
@@ -13,7 +14,7 @@ class ReviewService:
     async def rate_document(document_id: str, rating_data, current_user, db=None):
         if db is None:
             db = db_client.mongodb.get_default_database()
-        await db["reviews"].update_one(
+        await RepositoryFactory.get("reviews").update_one(
             {"user_id": str(current_user.id), "document_id": document_id},
             {
                 "$set": {
@@ -50,7 +51,7 @@ class ReviewService:
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
-        await db["typo_reports"].insert_one(report)
+        await RepositoryFactory.get("typo_reports").insert_one(report)
         logger.info(
             f"Người dùng {current_user.id} báo lỗi chính tả tài liệu {document_id}"
         )
@@ -61,7 +62,7 @@ class ReviewService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         reports = (
-            await db["typo_reports"]
+            await RepositoryFactory.get("typo_reports")
             .find({"document_id": document_id, "user_id": str(current_user.id)})
             .sort("created_at", -1)
             .to_list(length=50)
@@ -101,7 +102,7 @@ class ReviewService:
             "comment": content_text,
             "created_at": datetime.now(timezone.utc),
         }
-        await db["reviews"].update_one(
+        await RepositoryFactory.get("reviews").update_one(
             {"user_id": str(current_user.id), "document_id": document_id},
             {"$set": review_item},
             upsert=True,
@@ -116,7 +117,7 @@ class ReviewService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         reviews = (
-            await db["reviews"]
+            await RepositoryFactory.get("reviews")
             .find({"document_id": document_id})
             .sort("created_at", -1)
             .to_list(length=100)
@@ -151,6 +152,6 @@ class ReviewService:
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
-        await db["reports"].insert_one(report)
+        await RepositoryFactory.get("reports").insert_one(report)
         logger.info(f"Người dùng {current_user.id} báo cáo {item_type} mã {item_id}")
         return {"message": "Cảm ơn bạn báo cáo nội dung"}
