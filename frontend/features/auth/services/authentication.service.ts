@@ -81,7 +81,7 @@ export async function getUserMe() {
 
   userMePromise = (async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/ca-nhan`, {
+      const res = await fetch(`${API_URL}/auth/personal`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,7 +127,7 @@ export const resetPasswordAPI = async (
 };
 
 export const verifyCodeAPI = async (token: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/ma-xac-thuc`, {
+  const res = await fetch(`${API_URL}/auth/verify-code`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
@@ -139,7 +139,7 @@ export const verifyCodeAPI = async (token: string): Promise<any> => {
 };
 
 export const passkeyLoginBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/login/bat-dau`, {
+  const res = await fetch(`${API_URL}/auth/passkey/login/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -170,7 +170,7 @@ export const passkeyLoginFinishAPI = async (
 };
 
 export const passkeyRegisterBeginAPI = async (email: string): Promise<any> => {
-  const res = await fetch(`${API_URL}/auth/passkey/register/bat-dau`, {
+  const res = await fetch(`${API_URL}/auth/passkey/register/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),

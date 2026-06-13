@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function getSystemStatsAPI() {
-  const res = await fetch(`${API_URL}/telemetry/thong-ke`, {
+  const res = await fetch(`${API_URL}/telemetry/statistics`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -11,7 +11,7 @@ export async function getSystemStatsAPI() {
 }
 
 export async function getSystemHealthAPI() {
-  const res = await fetch(`${API_URL}/telemetry/suc-khoe-he-thong`, {
+  const res = await fetch(`${API_URL}/telemetry/health`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -21,7 +21,7 @@ export async function getSystemHealthAPI() {
 }
 
 export async function getAuditLogsAPI() {
-  const res = await fetch(`${API_URL}/telemetry/kiem-tra`, {
+  const res = await fetch(`${API_URL}/telemetry/check`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -31,7 +31,7 @@ export async function getAuditLogsAPI() {
 }
 
 export async function getModeratorActivityAPI() {
-  const res = await fetch(`${API_URL}/telemetry/hoat-dong`, {
+  const res = await fetch(`${API_URL}/telemetry/activity`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

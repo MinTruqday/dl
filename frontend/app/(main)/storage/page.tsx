@@ -457,7 +457,7 @@ export default function StoragePage() {
         showToast("Đã bật chia sẻ liên kết công khai.", "success");
         fetchItems(currentFolderId);
       } else {
-        const link = `${window.location.origin}/storage/chia-se/${item.share_token}`;
+        const link = `${window.location.origin}/storage/share/${item.share_token}`;
         navigator.clipboard.writeText(link);
         showToast("Đã copy liên kết công khai", "success");
       }
@@ -1760,7 +1760,7 @@ export default function StoragePage() {
 
                         try {
                           const res = await fetch(
-                            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/chat`,
+                            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/chat/chat`,
                             {
                               method: "POST",
                               headers: {

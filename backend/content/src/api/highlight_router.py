@@ -70,7 +70,7 @@ async def delete_highlight(
     )
 
 
-@router.get("/ghi-chu", response_model=APIResponse[Any])
+@router.get("/note", response_model=APIResponse[Any])
 async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),

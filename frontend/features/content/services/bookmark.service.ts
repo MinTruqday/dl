@@ -21,7 +21,7 @@ export async function getBookmarksAPI(limit: number = 100) {
 }
 
 export async function createBookmarkFolderAPI(name: string) {
-  const res = await fetch(`${API_URL}/bookmark/thu-muc`, {
+  const res = await fetch(`${API_URL}/bookmark/folder`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -33,7 +33,7 @@ export async function createBookmarkFolderAPI(name: string) {
 }
 
 export async function getBookmarkFoldersAPI() {
-  const res = await fetch(`${API_URL}/bookmark/thu-muc`, {
+  const res = await fetch(`${API_URL}/bookmark/folder`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -48,7 +48,7 @@ export async function assignBookmarksToFolderAPI(
   folderId: string,
   bookmarkIds: string[],
 ) {
-  const res = await fetch(`${API_URL}/bookmark/thu-muc/${folderId}`, {
+  const res = await fetch(`${API_URL}/bookmark/folder/${folderId}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ bookmark_ids: bookmarkIds }),
@@ -59,7 +59,7 @@ export async function assignBookmarksToFolderAPI(
 }
 
 export async function deleteBookmarkFolderAPI(folderId: string) {
-  const res = await fetch(`${API_URL}/bookmark/thu-muc/${folderId}`, {
+  const res = await fetch(`${API_URL}/bookmark/folder/${folderId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

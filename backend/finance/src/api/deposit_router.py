@@ -10,7 +10,7 @@ from src.services.deposit_service import DepositService
 router = APIRouter(prefix="/deposit")
 
 
-@router.post("/tao-link", response_model=APIResponse[Any])
+@router.post("/create-link", response_model=APIResponse[Any])
 async def create_deposit_link(
     req: TopupRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -30,7 +30,7 @@ async def payos_webhook(request: Request, db=Depends(get_db)):
     return await DepositService.deposit_webhook(request, db=db)
 
 
-@router.get("/kiem-tra/{order_code}", response_model=APIResponse[Any])
+@router.get("/check/{order_code}", response_model=APIResponse[Any])
 async def verify_deposit(
     order_code: int,
     current_user: UserInDB = Depends(get_current_user),

@@ -63,7 +63,7 @@ async def login(
     )
 
 
-@router.post("/quen-mat-khau", response_model=APIResponse[Any])
+@router.post("/forgot-password", response_model=APIResponse[Any])
 async def forgot_password(
     payload: ForgotPasswordRequest, request: Request, db=Depends(get_db)
 ) -> Any:
@@ -77,7 +77,7 @@ async def forgot_password(
     )
 
 
-@router.post("/dat-lai-mat-khau", response_model=APIResponse[Any])
+@router.post("/reset-password", response_model=APIResponse[Any])
 async def reset_password(
     payload: ResetPasswordRequest, request: Request, db=Depends(get_db)
 ) -> Any:
@@ -91,7 +91,7 @@ async def reset_password(
     )
 
 
-@router.post("/ma-xac-thuc", response_model=APIResponse[Any])
+@router.post("/verify-code", response_model=APIResponse[Any])
 async def verify_code(
     payload: VerifyCodeRequest, request: Request, db=Depends(get_db)
 ) -> Any:

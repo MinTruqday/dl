@@ -10,7 +10,7 @@ from src.services.quota_service import QuotaService
 router = APIRouter(prefix="/quota")
 
 
-@router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/check", response_model=APIResponse[Any], include_in_schema=False)
 async def check_quota_internal(user_id: str, role: str, db=Depends(get_db)):
     await QuotaService.check_quota(user_id, role, db=db)
     return APIResponse(data=None, message="Trong hạn mức", status=200)

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from core.database import db_client
+from core.config import settings
 
 
 class AuthRepository:

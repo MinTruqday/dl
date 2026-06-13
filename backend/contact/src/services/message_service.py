@@ -1,3 +1,4 @@
+from core.config import settings
 from fastapi import Query
 import asyncio
 from datetime import datetime, timezone

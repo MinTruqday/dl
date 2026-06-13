@@ -136,7 +136,7 @@ async def add_moderator_note(
     )
 
 
-@router.get("/tim-kiem", response_model=APIResponse[Any])
+@router.get("/search", response_model=APIResponse[Any])
 async def search_users(q: str = "", limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
     return APIResponse(
         data=await UserService.search_users(q, limit, db=db),

@@ -27,7 +27,7 @@ async def get_history(
     )
 
 
-@router.post("/tien-do", response_model=APIResponse[Any])
+@router.post("/progress", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -39,7 +39,7 @@ async def update_progress(
     )
 
 
-@router.post("/muc-tieu", response_model=APIResponse[Any])
+@router.post("/goal", response_model=APIResponse[Any])
 async def set_reading_goal(
     data: ReadingGoalCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -52,7 +52,7 @@ async def set_reading_goal(
     )
 
 
-@router.get("/muc-tieu", response_model=APIResponse[Any])
+@router.get("/goal", response_model=APIResponse[Any])
 async def get_reading_goal(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -62,7 +62,7 @@ async def get_reading_goal(
     )
 
 
-@router.put("/trinh-bay", response_model=APIResponse[Any])
+@router.put("/layout", response_model=APIResponse[Any])
 async def update_typography(
     data: TypographyRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -145,7 +145,7 @@ def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     return True
 
 
-@router.get("/cay-thu-muc-zip", response_model=APIResponse[Any])
+@router.get("/tree-zip", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
     try:
         validate_url_ssrf(file_url)
@@ -180,7 +180,7 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
         return APIResponse(data=None, message=str(e), status=500)
 
 
-@router.get("/noi-dung-zip", response_model=APIResponse[Any])
+@router.get("/content-zip", response_model=APIResponse[Any])
 async def get_zip_content(
     file_url: str = Query(...), path: str = Query(...), db=Depends(get_db)
 ):

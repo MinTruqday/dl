@@ -1,3 +1,4 @@
+from loguru import logger
 import uvicorn
 from core.config import settings
 from core.database import close_db, init_db

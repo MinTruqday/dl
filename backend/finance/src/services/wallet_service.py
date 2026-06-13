@@ -1,3 +1,4 @@
+from core.config import settings
 import json
 from datetime import datetime, timezone
 

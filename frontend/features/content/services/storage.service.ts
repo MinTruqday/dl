@@ -37,7 +37,7 @@ export interface StorageItem {
 
 export const createFolderAPI = async (name: string, parent_id?: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/thu-muc`, {
+  const res = await fetch(`${API_URL}/storage/folder`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -59,7 +59,7 @@ export const listStorageItemsAPI = async (
   if (parent_id) query.append("parent_id", parent_id);
   if (is_trashed) query.append("is_trashed", "true");
 
-  const res = await fetch(`${API_URL}/storage/danh-sach?${query.toString()}`, {
+  const res = await fetch(`${API_URL}/storage/list?${query.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -75,7 +75,7 @@ export const updateStorageItemAPI = async (
   updates: Partial<StorageItem>,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/tap-tin/${id}`, {
+  const res = await fetch(`${API_URL}/storage/file/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export const deleteStorageItemAPI = async (
 ) => {
   const token = getAuthToken();
   const res = await fetch(
-    `${API_URL}/storage/tap-tin/${id}?hard_delete=${hard_delete}`,
+    `${API_URL}/storage/file/${id}?hard_delete=${hard_delete}`,
     {
       method: "DELETE",
       headers: {
@@ -112,7 +112,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/upload/tap-tin`, {
+  const res = await fetch(`${API_URL}/upload/file`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -125,7 +125,7 @@ export const uploadStorageFileAPI = async (file: File, parent_id?: string) => {
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
-  const registerRes = await fetch(`${API_URL}/storage/tap-tin`, {
+  const registerRes = await fetch(`${API_URL}/storage/file`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -164,7 +164,7 @@ export const searchStorageItemsAPI = async (q: string, type?: string) => {
 
 export const getRecentStorageItemsAPI = async (limit: number = 20) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/gan-day?limit=${limit}`, {
+  const res = await fetch(`${API_URL}/storage/recent?limit=${limit}`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -178,7 +178,7 @@ export const copyStorageItemAPI = async (
   target_parent_id?: string,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/tap-tin/${id}/copy`, {
+  const res = await fetch(`${API_URL}/storage/file/${id}/copy`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -196,7 +196,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/upload/tap-tin`, {
+  const res = await fetch(`${API_URL}/upload/file`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData,
@@ -206,7 +206,7 @@ export const uploadFileVersionAPI = async (id: string, file: File) => {
 
   const fileUrl = uploadData.data?.url || uploadData.data?.filename;
 
-  const versionRes = await fetch(`${API_URL}/storage/tap-tin/${id}/version`, {
+  const versionRes = await fetch(`${API_URL}/storage/file/${id}/version`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -230,7 +230,7 @@ export const shareStorageItemAPI = async (
   role: string = "viewer",
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/tap-tin/${id}/chia-se`, {
+  const res = await fetch(`${API_URL}/storage/file/${id}/chia-se`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -259,7 +259,7 @@ export const createShortcutAPI = async (
   target_parent_id?: string,
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/tap-tin/${id}/shortcut`, {
+  const res = await fetch(`${API_URL}/storage/file/${id}/shortcut`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -275,7 +275,7 @@ export const createShortcutAPI = async (
 export const downloadZipAPI = async (ids: string[]) => {
   const token = getAuthToken();
   const query = ids.join(",");
-  const url = `${API_URL}/storage/tai-xuong-zip?ids=${query}`;
+  const url = `${API_URL}/storage/download-zip?ids=${query}`;
 
   const res = await fetch(url, {
     method: "GET",
@@ -303,7 +303,7 @@ export const translateStorageDocumentAPI = async (
   target_lang: string = "vi",
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/ai/tai-lieu-luu-tru/${id}/dich`, {
+  const res = await fetch(`${API_URL}/inference/document-analysis/${id}/dich`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -318,7 +318,7 @@ export const translateStorageDocumentAPI = async (
 
 export const getRelatedStorageItemsAPI = async (id: string) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/ai/tai-lieu-luu-tru/${id}/lien-quan`, {
+  const res = await fetch(`${API_URL}/inference/document-analysis/${id}/lien-quan`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,

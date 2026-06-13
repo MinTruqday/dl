@@ -1,3 +1,4 @@
+from core.config import settings
 from typing import Any, List, Optional
 
 from core.response import APIResponse
@@ -11,7 +12,7 @@ from src.services.storage_service import StorageService
 router = APIRouter(prefix="/storage")
 
 
-@router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
+@router.post("/folder", response_model=APIResponse[StorageItemResponse])
 async def create_folder(
     data: StorageItemCreate = Body(...),
     current_user: UserInDB = Depends(
@@ -28,7 +29,7 @@ async def create_folder(
     )
 
 
-@router.post("/tap-tin", response_model=APIResponse[StorageItemResponse])
+@router.post("/file", response_model=APIResponse[StorageItemResponse])
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
@@ -70,7 +71,7 @@ async def list_items(
     )
 
 
-@router.get("/tim-kiem", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/search", response_model=APIResponse[List[StorageItemResponse]])
 async def search_items(
     q: str,
     type: Optional[str] = None,
@@ -87,7 +88,7 @@ async def search_items(
     )
 
 
-@router.get("/gan-day", response_model=APIResponse[List[StorageItemResponse]])
+@router.get("/recent", response_model=APIResponse[List[StorageItemResponse]])
 async def get_recent_items(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     current_user: UserInDB = Depends(
@@ -178,7 +179,7 @@ async def download_zip(
     )
 
 
-@router.put("/tap-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
+@router.put("/file/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
@@ -216,7 +217,7 @@ async def update_item(
     )
 
 
-@router.delete("/tap-tin/{item_id}", response_model=APIResponse[Any])
+@router.delete("/file/{item_id}", response_model=APIResponse[Any])
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
@@ -288,7 +289,7 @@ async def add_version(
     )
 
 
-@router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
+@router.post("/file/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),
@@ -304,7 +305,7 @@ async def share_archive(
     return APIResponse(data=None, message=res["message"], status=200)
 
 
-@router.get("/chia-se/{share_token}", response_model=APIResponse[StorageItemResponse])
+@router.get("/share/{share_token}", response_model=APIResponse[StorageItemResponse])
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:

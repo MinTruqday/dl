@@ -160,7 +160,7 @@ export default function DocumentViewer() {
           if (data.data?.content_format === "zip" && data.data?.file_url) {
             setSidebarTab("zip");
             fetch(
-              `${API_URL}/reading/cay-thu-muc-zip?file_url=${encodeURIComponent(data.data.file_url)}`,
+              `${API_URL}/reading/tree-zip?file_url=${encodeURIComponent(data.data.file_url)}`,
             )
               .then((r) => r.json())
               .then((res) => setZipTree(res.data || []))
@@ -181,7 +181,7 @@ export default function DocumentViewer() {
   const fetchSessions = useCallback(async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/ai/lich-su?document_id=${id}`, {
+      const res = await fetch(`${API_URL}/history?document_id=${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -233,7 +233,7 @@ export default function DocumentViewer() {
     if (!sessionId) {
       try {
         const token = getToken();
-        const res = await fetch(`${API_URL}/ai/lich-su`, {
+        const res = await fetch(`${API_URL}/history`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -855,7 +855,7 @@ export default function DocumentViewer() {
                     if (!item.is_dir) {
                       setZipLoading(true);
                       fetch(
-                        `${API_URL}/reading/noi-dung-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`,
+                        `${API_URL}/reading/content-zip?file_url=${encodeURIComponent(document?.file_url)}&path=${encodeURIComponent(item.path)}`,
                       )
                         .then((r) => r.json())
                         .then((res) => {

@@ -6,7 +6,7 @@ export async function processTextAPI(
   context: string = "",
   targetLang: string = "Vietnamese",
 ) {
-  const res = await fetch(`${API_URL}/ai/van-ban`, {
+  const res = await fetch(`${API_URL}/inference/generate-content`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, action, context, target_lang: targetLang }),
@@ -31,8 +31,8 @@ export async function smartSearchAIAPI(query: string) {
 
 export async function getAiSessionsAPI(documentId?: string) {
   const url = documentId
-    ? `${API_URL}/ai/lich-su?document_id=${documentId}`
-    : `${API_URL}/ai/lich-su`;
+    ? `${API_URL}/history?document_id=${documentId}`
+    : `${API_URL}/history`;
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
@@ -46,7 +46,7 @@ export async function createAiSessionAPI(
   documentId: string,
   firstQuery: string = "",
 ) {
-  const res = await fetch(`${API_URL}/ai/lich-su`, {
+  const res = await fetch(`${API_URL}/history`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, first_query: firstQuery }),
@@ -61,7 +61,7 @@ export async function updateAiSessionTitleAPI(
   sessionId: string,
   title: string,
 ) {
-  const res = await fetch(`${API_URL}/ai/lich-su/${sessionId}/tieu-de`, {
+  const res = await fetch(`${API_URL}/history/${sessionId}/tieu-de`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ title }),
@@ -72,7 +72,7 @@ export async function updateAiSessionTitleAPI(
 }
 
 export async function deleteAiSessionAPI(sessionId: string) {
-  const res = await fetch(`${API_URL}/ai/lich-su/${sessionId}`, {
+  const res = await fetch(`${API_URL}/history/${sessionId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -82,7 +82,7 @@ export async function deleteAiSessionAPI(sessionId: string) {
 }
 export async function streamAiChatAPI(payload: any) {
   const token = getToken();
-  return await fetch(`${API_URL}/ai/chat`, {
+  return await fetch(`${API_URL}/chat/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export async function queryRagAPI(
   useSmart: boolean = false,
   sessionId?: string,
 ) {
-  const res = await fetch(`${API_URL}/ai/chat`, {
+  const res = await fetch(`${API_URL}/chat/chat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -121,7 +121,7 @@ export async function translateTextAPI(
 }
 
 export async function suggestCitationsAPI(text: string, style: string = "APA") {
-  const res = await fetch(`${API_URL}/ai/trich-dan-thong-minh`, {
+  const res = await fetch(`${API_URL}/inference/smart-citation`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, style }),
@@ -136,7 +136,7 @@ export async function transformToneAPI(
   tone: string,
   expansion: boolean = false,
 ) {
-  const res = await fetch(`${API_URL}/ai/bien-doi-van-ban`, {
+  const res = await fetch(`${API_URL}/inference/text-transform`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, tone, expansion }),
@@ -147,7 +147,7 @@ export async function transformToneAPI(
 }
 
 export async function peerReviewAPI(text: string, criteria: string[] = []) {
-  const res = await fetch(`${API_URL}/ai/tham-dinh-noi-dung`, {
+  const res = await fetch(`${API_URL}/inference/content-moderation`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text, criteria }),
@@ -161,7 +161,7 @@ export async function multiDocSynthesisAPI(
   documentIds: string[],
   query: string,
 ) {
-  const res = await fetch(`${API_URL}/ai/tong-hop-da-tai-lieu`, {
+  const res = await fetch(`${API_URL}/inference/multi-doc-synthesis`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_ids: documentIds, query }),

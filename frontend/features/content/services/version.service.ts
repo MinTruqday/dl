@@ -12,7 +12,7 @@ export async function getDocumentVersionsAPI(documentId: string) {
 
 export async function saveVersionAPI(documentId: string, versionNote: string) {
   const res = await fetch(
-    `${API_URL}/version/luu/${documentId}?version_note=${encodeURIComponent(versionNote)}`,
+    `${API_URL}/version/save/${documentId}?version_note=${encodeURIComponent(versionNote)}`,
     {
       method: "POST",
       headers: getAuthHeaders(),

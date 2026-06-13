@@ -19,7 +19,7 @@ from src.services.collaboration_service import CollaborationService
 router = APIRouter(prefix="/collaboration")
 
 
-@router.post("/loi-moi", response_model=APIResponse[Any])
+@router.post("/invite", response_model=APIResponse[Any])
 async def invite_collaborator(
     data: CoauthorInviteRequest,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -34,7 +34,7 @@ async def invite_collaborator(
     )
 
 
-@router.get("/loi-moi", response_model=APIResponse[Any])
+@router.get("/invite", response_model=APIResponse[Any])
 async def get_my_collaboration_invites(
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
     db=Depends(get_db),
@@ -47,7 +47,7 @@ async def get_my_collaboration_invites(
     )
 
 
-@router.patch("/loi-moi/{invite_id}", response_model=APIResponse[Any])
+@router.patch("/invite/{invite_id}", response_model=APIResponse[Any])
 async def respond_to_collaboration_invite(
     invite_id: str,
     data: CollaborationResponse,
@@ -214,7 +214,7 @@ async def get_sent_pending_invites(
     )
 
 
-@router.delete("/loi-moi/{invite_id}", response_model=APIResponse[Any])
+@router.delete("/invite/{invite_id}", response_model=APIResponse[Any])
 async def revoke_invite(
     invite_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -320,7 +320,7 @@ async def generate_invite_code(
     )
 
 
-@router.post("/tham-gia/{invite_code}", response_model=APIResponse[Any])
+@router.post("/join/{invite_code}", response_model=APIResponse[Any])
 async def join_via_invite_code(
     invite_code: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),
@@ -362,7 +362,7 @@ async def get_tasks(
     )
 
 
-@router.patch("/nhiem-vu/{task_id}", response_model=APIResponse[Any])
+@router.patch("/task/{task_id}", response_model=APIResponse[Any])
 async def update_task(
     task_id: str,
     data: UpdateTaskStatusRequest,
@@ -377,7 +377,7 @@ async def update_task(
     )
 
 
-@router.post("/nhiem-vu/{task_id}/comment", response_model=APIResponse[Any])
+@router.post("/task/{task_id}/comment", response_model=APIResponse[Any])
 async def add_task_comment(
     task_id: str,
     data: TaskCommentCreateRequest,
@@ -393,7 +393,7 @@ async def add_task_comment(
     )
 
 
-@router.get("/nhiem-vu/{task_id}/comment", response_model=APIResponse[Any])
+@router.get("/task/{task_id}/comment", response_model=APIResponse[Any])
 async def get_task_comments(
     task_id: str,
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR])),

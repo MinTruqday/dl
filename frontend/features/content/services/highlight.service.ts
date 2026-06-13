@@ -68,7 +68,7 @@ export async function deleteHighlightAPI(highlightId: string) {
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   const res = await fetch(
-    `${API_URL}/highlight/ghi-chu?skip=${skip}&limit=${limit}`,
+    `${API_URL}/highlight/note?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },

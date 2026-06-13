@@ -4,7 +4,7 @@ from src.rag.ingestion_pipeline import ingestion_pipeline
 from src.schemas.ingest_schema import IngestRequest
 from src.store.vector_store import vector_store
 
-router = APIRouter()
+router = APIRouter(prefix="/ingest")
 
 
 @router.post("/ingest")

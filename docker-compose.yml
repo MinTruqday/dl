@@ -182,7 +182,7 @@ services:
       - "8400:8400"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/nap-du-lieu`) || PathPrefix(`/feedback`) || PathPrefix(`/huan-luyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/quota`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/ingest`) || PathPrefix(`/feedback`) || PathPrefix(`/finetune`) || PathPrefix(`/history`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env

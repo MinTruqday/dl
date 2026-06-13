@@ -1,3 +1,4 @@
+from core.config import settings
 import json
 import uuid
 from datetime import datetime, timedelta, timezone

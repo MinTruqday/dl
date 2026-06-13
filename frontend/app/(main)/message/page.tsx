@@ -532,7 +532,7 @@ export default function MessagesPage() {
         setUploadingImage(true);
         const formData = new FormData();
         formData.append("file", imageFile);
-        const resUpload = await fetch(`${API_URL}/upload/tap-tin`, {
+        const resUpload = await fetch(`${API_URL}/upload/file`, {
           method: "POST",
           headers: { Authorization: `Bearer ${getToken()}` },
           body: formData,
@@ -592,7 +592,7 @@ export default function MessagesPage() {
           const formData = new FormData();
           formData.append("file", file);
 
-          const resUpload = await fetch(`${API_URL}/upload/tap-tin`, {
+          const resUpload = await fetch(`${API_URL}/upload/file`, {
             method: "POST",
             headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,

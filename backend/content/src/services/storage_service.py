@@ -1,3 +1,4 @@
+from core.config import settings
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import Query

@@ -22,7 +22,7 @@ export const markNotificationReadAPI = async (id: string) => {
 };
 
 export const markAllNotificationsReadAPI = async () => {
-  const res = await fetch(`${API_URL}/notification/danh-dau-tat-ca`, {
+  const res = await fetch(`${API_URL}/notification/read-all`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

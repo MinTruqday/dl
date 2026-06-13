@@ -9,7 +9,7 @@ from src.services.version_service import VersionsService
 router = APIRouter(prefix="/version")
 
 
-@router.post("/luu/{document_id}", response_model=APIResponse[Any])
+@router.post("/save/{document_id}", response_model=APIResponse[Any])
 async def save_version(
     document_id: str,
     version_note: str,

@@ -25,7 +25,7 @@ async def validate_svg(file: UploadFile):
         await file.seek(0)
 
 
-@router.post("/hinh-anh", response_model=APIResponse[Any])
+@router.post("/image", response_model=APIResponse[Any])
 async def upload_image(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
@@ -52,7 +52,7 @@ async def upload_document(
     )
 
 
-@router.post("/tap-tin", response_model=APIResponse[Any])
+@router.post("/file", response_model=APIResponse[Any])
 async def upload_asset(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(
@@ -91,7 +91,7 @@ async def get_presigned_download_url(
     )
 
 
-@router.post("/phan-doan", response_model=APIResponse[Any])
+@router.post("/chunk", response_model=APIResponse[Any])
 async def upload_chunk(
     file: UploadFile = File(...),
     upload_id: str = Form(...),

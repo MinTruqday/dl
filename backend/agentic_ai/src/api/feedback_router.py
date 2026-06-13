@@ -6,7 +6,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.schemas.feedback_schema import FeedbackRequest
 
-router = APIRouter()
+router = APIRouter(prefix="/feedback")
 
 
 @router.post("/feedback")

@@ -6,7 +6,7 @@ export async function queryRagAPI(
   useSmart: boolean = false,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/ai/truy-van`, {
+  const res = await fetch(`${API_URL}/chat/rag-query`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -33,7 +33,7 @@ export async function streamAiChatAPI(payload: {
   file_data?: string | null;
 }) {
   const token = getToken();
-  return fetch(`${API_URL}/ai/luong`, {
+  return fetch(`${API_URL}/chat/stream`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -53,7 +53,7 @@ export async function streamAiChatAPI(payload: {
 
 export async function ingestDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/ai/dong-bo/${documentId}`, {
+  const res = await fetch(`${API_URL}/ingest/sync/${documentId}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });

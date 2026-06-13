@@ -211,7 +211,7 @@ export default function TroChuyenPage() {
   const fetchHistory = async () => {
     try {
       const token = getToken();
-      const res = await fetch(`${API_URL}/ai/lich-su`, {
+      const res = await fetch(`${API_URL}/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -290,7 +290,7 @@ export default function TroChuyenPage() {
     if (!sessionId) {
       try {
         const token = getToken();
-        const res = await fetch(`${API_URL}/ai/lich-su`, {
+        const res = await fetch(`${API_URL}/history`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -592,7 +592,7 @@ export default function TroChuyenPage() {
                           setView("chat");
                           try {
                             const res = await fetch(
-                              `${API_URL}/ai/lich-su/${s._id}`,
+                              `${API_URL}/history/${s._id}`,
                               {
                                 headers: { Authorization: `Bearer ${token}` },
                               },
@@ -641,7 +641,7 @@ export default function TroChuyenPage() {
                                 try {
                                   const token = getToken();
                                   const res = await fetch(
-                                    `${API_URL}/ai/lich-su/${s._id}/tieu-de`,
+                                    `${API_URL}/history/${s._id}/tieu-de`,
                                     {
                                       method: "PUT",
                                       headers: {
@@ -717,7 +717,7 @@ export default function TroChuyenPage() {
                                     try {
                                       const token = getToken();
                                       const res = await fetch(
-                                        `${API_URL}/ai/lich-su/${s._id}`,
+                                        `${API_URL}/history/${s._id}`,
                                         {
                                           method: "DELETE",
                                           headers: {

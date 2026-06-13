@@ -6,7 +6,7 @@ export async function updateTypographyAPI(data: {
   line_height?: number;
   letter_spacing?: number;
 }) {
-  const res = await fetch(`${API_URL}/reading/trinh-bay`, {
+  const res = await fetch(`${API_URL}/reading/layout`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -36,7 +36,7 @@ export async function updateReadingProgressAPI(data: {
   progress_percentage: number;
   current_chapter_slug?: string;
 }) {
-  const res = await fetch(`${API_URL}/reading/tien-do`, {
+  const res = await fetch(`${API_URL}/reading/progress`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -51,7 +51,7 @@ export async function setReadingGoalAPI(data: {
   target_pages?: number;
   period?: string;
 }) {
-  const res = await fetch(`${API_URL}/reading/muc-tieu`, {
+  const res = await fetch(`${API_URL}/reading/goal`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -62,7 +62,7 @@ export async function setReadingGoalAPI(data: {
 }
 
 export async function getReadingGoalAPI() {
-  const res = await fetch(`${API_URL}/reading/muc-tieu`, {
+  const res = await fetch(`${API_URL}/reading/goal`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -134,7 +134,7 @@ export async function deleteReadingHistoryItemAPI(documentId: string) {
 }
 
 export async function getMySeriesAPI() {
-  const res = await fetch(`${API_URL}/document/chuoi-tai-lieu/ca-nhan`, {
+  const res = await fetch(`${API_URL}/document/series/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -148,7 +148,7 @@ export async function createSeriesAPI(data: {
   description: string;
   document_ids: string[];
 }) {
-  const res = await fetch(`${API_URL}/document/chuoi-tai-lieu`, {
+  const res = await fetch(`${API_URL}/document/series`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),

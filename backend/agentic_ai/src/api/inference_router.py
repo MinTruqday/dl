@@ -16,7 +16,7 @@ from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 
-router = APIRouter()
+router = APIRouter(prefix="/inference")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 

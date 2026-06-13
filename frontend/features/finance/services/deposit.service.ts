@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function createDepositLinkAPI(amount: number) {
-  const res = await fetch(`${API_URL}/deposit/tao-link`, {
+  const res = await fetch(`${API_URL}/deposit/create-link`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ amount, method: "payos" }),
@@ -13,7 +13,7 @@ export async function createDepositLinkAPI(amount: number) {
 }
 
 export async function verifyDepositAPI(orderCode: number) {
-  const res = await fetch(`${API_URL}/deposit/kiem-tra/${orderCode}`, {
+  const res = await fetch(`${API_URL}/deposit/check/${orderCode}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

@@ -5,7 +5,7 @@ export async function inviteCollaboratorAPI(
   email: string,
   role: string = "editor",
 ) {
-  const res = await fetch(`${API_URL}/collaboration/loi-moi`, {
+  const res = await fetch(`${API_URL}/collaboration/invite`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, email, role }),
@@ -36,7 +36,7 @@ export async function removeCollaboratorAPI(collaborationId: string) {
 }
 
 export async function getCollaborationInvitesAPI() {
-  const res = await fetch(`${API_URL}/collaboration/loi-moi`, {
+  const res = await fetch(`${API_URL}/collaboration/invite`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -46,7 +46,7 @@ export async function getCollaborationInvitesAPI() {
 }
 
 export async function respondToInviteAPI(inviteId: string, status: string) {
-  const res = await fetch(`${API_URL}/collaboration/loi-moi/${inviteId}`, {
+  const res = await fetch(`${API_URL}/collaboration/invite/${inviteId}`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -71,7 +71,7 @@ export async function getCollaborationActivitiesAPI(documentId: string) {
 
 export async function transferOwnershipAPI(documentId: string, userId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/chuyen-quyen`,
+    `${API_URL}/collaboration/document/${documentId}/transfer-owner`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -98,7 +98,7 @@ export async function pingCollaborationStatusAPI(documentId: string) {
 
 export async function getOnlineCollaboratorsAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/truc-tuyen`,
+    `${API_URL}/collaboration/document/${documentId}/online`,
     {
       headers: getAuthHeaders(),
     },
@@ -160,7 +160,7 @@ export async function updateCollabAccessAPI(
   accessLevel: string,
 ) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/quyen-truy-cap`,
+    `${API_URL}/collaboration/document/${documentId}/access`,
     {
       method: "PATCH",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -187,7 +187,7 @@ export async function getSentPendingInvitesAPI(documentId: string) {
 }
 
 export async function revokeInviteAPI(inviteId: string) {
-  const res = await fetch(`${API_URL}/collaboration/loi-moi/${inviteId}`, {
+  const res = await fetch(`${API_URL}/collaboration/invite/${inviteId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -243,7 +243,7 @@ export async function getSnapshotsAPI(documentId: string) {
 
 export async function acquireLockAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/khoa`,
+    `${API_URL}/collaboration/document/${documentId}/lock`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -256,7 +256,7 @@ export async function acquireLockAPI(documentId: string) {
 
 export async function releaseLockAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/mo-khoa`,
+    `${API_URL}/collaboration/document/${documentId}/unlock`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -281,7 +281,7 @@ export async function getLockStatusAPI(documentId: string) {
 
 export async function generateInviteCodeAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/ma-moi`,
+    `${API_URL}/collaboration/document/${documentId}/invite-code`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -293,7 +293,7 @@ export async function generateInviteCodeAPI(documentId: string) {
 }
 
 export async function joinViaInviteCodeAPI(inviteCode: string) {
-  const res = await fetch(`${API_URL}/collaboration/tham-gia/${inviteCode}`, {
+  const res = await fetch(`${API_URL}/collaboration/join/${inviteCode}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -336,7 +336,7 @@ export async function getCollabTasksAPI(documentId: string) {
 }
 
 export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
-  const res = await fetch(`${API_URL}/collaboration/nhiem-vu/${taskId}`, {
+  const res = await fetch(`${API_URL}/collaboration/task/${taskId}`, {
     method: "PATCH",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ is_done: isDone }),
@@ -348,7 +348,7 @@ export async function updateCollabTaskAPI(taskId: string, isDone: boolean) {
 
 export async function addTaskCommentAPI(taskId: string, commentText: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/nhiem-vu/${taskId}/comment`,
+    `${API_URL}/collaboration/task/${taskId}/comment`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -363,7 +363,7 @@ export async function addTaskCommentAPI(taskId: string, commentText: string) {
 
 export async function getTaskCommentsAPI(taskId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/nhiem-vu/${taskId}/comment`,
+    `${API_URL}/collaboration/task/${taskId}/comment`,
     {
       headers: getAuthHeaders(),
     },

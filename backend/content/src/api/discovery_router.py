@@ -1,3 +1,4 @@
+from core.config import settings
 from typing import Any, List, Optional
 
 from core.response import APIResponse
@@ -9,7 +10,7 @@ from src.services.document_service import DocumentService
 router = APIRouter(prefix="/discovery")
 
 
-@router.get("/xu-huong", response_model=APIResponse[Any])
+@router.get("/trending", response_model=APIResponse[Any])
 async def get_trending_documents(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
@@ -18,7 +19,7 @@ async def get_trending_documents(limit: int = Query(default=settings.DEFAULT_PAG
     )
 
 
-@router.get("/phan-loai", response_model=APIResponse[Any])
+@router.get("/classification", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_tags_categories(),
@@ -27,7 +28,7 @@ async def get_tags_categories(db=Depends(get_db)):
     )
 
 
-@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
+@router.get("/smart-search", response_model=APIResponse[Any])
 async def smart_search(
     query: str,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -95,7 +96,7 @@ async def get_ai_recommendations(
     )
 
 
-@router.get("/hashtag-xu-huong", response_model=APIResponse[Any])
+@router.get("/trending-hashtags", response_model=APIResponse[Any])
 async def get_trending_tags(limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT), db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_trending_tags(limit),

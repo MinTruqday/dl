@@ -110,7 +110,7 @@ export async function getMyDocumentsAPI(
   if (search) params.append("q", search);
   if (cursor) params.append("cursor", cursor);
 
-  const res = await fetch(`${API_URL}/document/ca-nhan?${params.toString()}`, {
+  const res = await fetch(`${API_URL}/document/personal?${params.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -183,7 +183,7 @@ export async function deleteAdminDocumentAPI(docId: string) {
 
 export async function getTrashAPI() {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/thung-rac`, {
+  const res = await fetch(`${API_URL}/document/trash`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -219,7 +219,7 @@ export const getFoldersAPI = async (parent_id?: string) => {
   const params = new URLSearchParams();
   if (parent_id) params.append("parent_id", parent_id);
 
-  const res = await fetch(`${API_URL}/document/thu-muc?${params.toString()}`, {
+  const res = await fetch(`${API_URL}/document/folder?${params.toString()}`, {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
@@ -233,7 +233,7 @@ export const createFolderAPI = async (
   parent_id: string | null = null,
 ) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/thu-muc`, {
+  const res = await fetch(`${API_URL}/document/folder`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -248,7 +248,7 @@ export const createFolderAPI = async (
 
 export const deleteFolderAPI = async (id: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/thu-muc/${id}`, {
+  const res = await fetch(`${API_URL}/document/folder/${id}`, {
     method: "DELETE",
     headers: { Authorization: "Bearer " + token },
   });
@@ -285,7 +285,7 @@ export const lockDocumentAPI = async (id: string, password: string) => {
 
 export const unlockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/mo-khoa`, {
+  const res = await fetch(`${API_URL}/document/${id}/unlock`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,

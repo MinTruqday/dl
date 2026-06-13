@@ -13,7 +13,7 @@ from src.harness.security_harness import security_harness
 from src.schemas.chat_schema import ChatRequest
 from src.workflow.supervisor import supervisor
 
-router = APIRouter()
+router = APIRouter(prefix="/chat")
 
 
 @router.post("/chat")
