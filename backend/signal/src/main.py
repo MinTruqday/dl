@@ -1,13 +1,20 @@
-from core.middleware import trace_id_ctx_var, trace_id_filter, add_trace_id_header
+import contextvars
+import sys
+import uuid
+
+from core.middleware import (add_trace_id_header, trace_id_ctx_var,
+                             trace_id_filter)
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-import uuid
-import contextvars
-import sys
 
 logger.remove()
-logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", filter=trace_id_filter, level="INFO")
+logger.add(
+    sys.stdout,
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}",
+    filter=trace_id_filter,
+    level="INFO",
+)
 
 from src.api.notification import router as notification_router
 

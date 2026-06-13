@@ -1,9 +1,10 @@
-from loguru import logger
-from typing import List, Dict
 import json
-from langchain_huggingface import HuggingFaceEndpoint
+from typing import Dict, List
+
 from core.config import settings
-from src.core.prompt_registry import prompt_registry, PromptType
+from langchain_huggingface import HuggingFaceEndpoint
+from loguru import logger
+from src.core.prompt_registry import PromptType, prompt_registry
 
 
 class Reasoning:
@@ -17,32 +18,38 @@ class Reasoning:
         prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
             from huggingface_hub import AsyncInferenceClient
-            from src.utils.hf import HFInferenceChat
             from langchain_core.messages import HumanMessage
+            from src.utils.hf import HFInferenceChat
+
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
             llm = HFInferenceChat(client=client, model=self._model)
-            
+
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
             logger.error("Thực thi thất bại do lỗi")
             return f"Lỗi suy luận: {str(e)}"
 
-    async def evaluate_quality(self, query: str, answer: str, context_documents: List[Dict]) -> Dict:
+    async def evaluate_quality(
+        self, query: str, answer: str, context_documents: List[Dict]
+    ) -> Dict:
         context_str = self._build_context(context_documents[:3])
 
-        eval_prompt = prompt_registry.get(PromptType.QUALITY_EVALUATION).format(query=query, answer=answer, context_str=context_str[:3000])
+        eval_prompt = prompt_registry.get(PromptType.QUALITY_EVALUATION).format(
+            query=query, answer=answer, context_str=context_str[:3000]
+        )
 
         try:
             from huggingface_hub import AsyncInferenceClient
-            from src.utils.hf import HFInferenceChat
             from langchain_core.messages import HumanMessage
+            from src.utils.hf import HFInferenceChat
+
             client = AsyncInferenceClient(model=self._model, token=self._hf_token)
             llm = HFInferenceChat(client=client, model=self._model)
-            
+
             result_text = await llm.ainvoke([HumanMessage(content=eval_prompt)])
             result_text = result_text.content.strip()
-            
+
             if "```" in result_text:
                 parts = result_text.split("```")
                 for p in parts:
@@ -53,11 +60,15 @@ class Reasoning:
                     elif p.startswith("{"):
                         result_text = p
                         break
-            
+
             return json.loads(result_text)
         except Exception as e:
             logger.error("Đánh giá chất lượng thất bại do lỗi")
-            return {"overall": 0.5, "should_retry": False, "feedback": f"Evaluation lỗi: {str(e)}"}
+            return {
+                "overall": 0.5,
+                "should_retry": False,
+                "feedback": f"Evaluation lỗi: {str(e)}",
+            }
 
     def _build_context(self, documents: List[Dict]) -> str:
         if not documents:
@@ -71,5 +82,6 @@ class Reasoning:
             parts.append(f"[Source {i}] {title} - {author}\n{text}")
 
         return "\n\n".join(parts)
+
 
 reasoning = Reasoning()

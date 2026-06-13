@@ -1,18 +1,25 @@
-from core.middleware import trace_id_ctx_var, trace_id_filter, add_trace_id_header
+import contextvars
+import sys
+import uuid
+
+from core.middleware import (add_trace_id_header, trace_id_ctx_var,
+                             trace_id_filter)
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-import uuid
-import contextvars
-import sys
 
 logger.remove()
-logger.add(sys.stdout, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}", filter=trace_id_filter, level="INFO")
+logger.add(
+    sys.stdout,
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}",
+    filter=trace_id_filter,
+    level="INFO",
+)
 
-from src.api.wallet import router as wallet_router
-from src.api.deposit import router as deposit_router
-from src.api.withdrawal import router as withdrawal_router
 from src.api.coupon import router as coupon_router
+from src.api.deposit import router as deposit_router
+from src.api.wallet import router as wallet_router
+from src.api.withdrawal import router as withdrawal_router
 
 app = FastAPI(title="DocLib Finance")
 app.middleware("http")(add_trace_id_header)
@@ -30,9 +37,11 @@ app.include_router(deposit_router)
 app.include_router(withdrawal_router)
 app.include_router(coupon_router)
 
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Dịch vụ tài chính đã khởi động")
+
 
 @app.get("/kiem-tra-suc-khoe")
 async def health_check():

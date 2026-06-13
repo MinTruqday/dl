@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
+
+from pydantic import BaseModel, Field
 from uuid6 import uuid7
+
 
 class MessageBase(BaseModel):
     sender_id: str
@@ -22,6 +24,7 @@ class MessageBase(BaseModel):
     self_destruct_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+
 class MessageCreate(BaseModel):
     receiver_id: str
     client_msg_id: Optional[str] = None
@@ -31,15 +34,19 @@ class MessageCreate(BaseModel):
     attachments: Optional[List[dict]] = []
     reply_to_id: Optional[str] = None
 
+
 class MessageInDB(MessageBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
 class MessageResponse(MessageInDB):
     id: str = Field(alias="_id")
     replied_message: Optional[dict] = None
+
     class Config:
         populate_by_name = True
+
 
 class ConversationResponse(BaseModel):
     other_user_id: str

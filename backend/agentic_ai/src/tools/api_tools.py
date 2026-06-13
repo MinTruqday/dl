@@ -1,21 +1,25 @@
-import httpx
 import asyncio
-from loguru import logger
 from typing import Optional
 
+import httpx
+from loguru import logger
+
 _http_client: Optional[httpx.AsyncClient] = None
+
 
 def _get_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.AsyncClient(
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-            timeout=httpx.Timeout(30.0)
+            timeout=httpx.Timeout(30.0),
         )
     return _http_client
 
+
 async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
     from uuid6 import uuid7
+
     if method.upper() in ["POST", "PUT", "PATCH", "DELETE"]:
         headers = kwargs.get("headers", {})
         if "Idempotency-Key" not in headers:
@@ -34,27 +38,33 @@ async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
         except Exception as e:
             if attempt == max_retries - 1:
                 raise e
-        await asyncio.sleep(2 ** attempt)
+        await asyncio.sleep(2**attempt)
     return response
 
+
 import jwt
+
+
 def _check_admin(token: str) -> bool:
     try:
         from core.config import settings
+
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
         return role in ["admin", "moderator"]
     except:
         return False
 
+
+from core.config import settings
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
-from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langgraph.prebuilt import create_react_agent
 from loguru import logger
-from core.config import settings
 
 INTERNAL_API_URL = settings.INTERNAL_API_URL
+
 
 @tool
 async def get_user_balance(config: RunnableConfig) -> str:
@@ -64,17 +74,22 @@ async def get_user_balance(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để thực hiện thao tác này"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/vi-tien/so-du", headers=headers, timeout=30
+        )
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
             return f"Số dư tài khoản hiện tại: {balance} dl"
         elif response.status_code == 401:
             return "Lỗi xác thực: Phiên đăng nhập đã hết hạn"
-        return f"Lỗi hệ thống: Không thể truy xuất số dư (Mã lỗi: {response.status_code})"
+        return (
+            f"Lỗi hệ thống: Không thể truy xuất số dư (Mã lỗi: {response.status_code})"
+        )
     except Exception as e:
         logger.error("Gọi API số dư thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+
 
 @tool
 async def get_transaction_history(config: RunnableConfig) -> str:
@@ -84,13 +99,15 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập lại để xem lịch sử"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/vi-tien/lich-su", headers=headers, timeout=30
+        )
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
                 return "Bạn chưa thực hiện giao dịch nào trong hệ thống"
             history_text = ""
-            for i, tx in enumerate(data[:5]): 
+            for i, tx in enumerate(data[:5]):
                 tx_type = "Nạp tiền" if tx.get("type") == "TOPUP" else "Thanh toán"
                 amount = tx.get("amount", 0)
                 note = tx.get("note", "Không có nội dung")
@@ -100,6 +117,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     except Exception as e:
         logger.error("Gọi API lịch sử thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+
 
 @tool
 async def redeem_voucher(code: str, config: RunnableConfig) -> str:
@@ -111,12 +129,13 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         return "Lỗi: Mã quà tặng không hợp lệ"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("POST",
-                f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma",
-                json={"code": code.strip()},
-                headers=headers,
-                timeout=30
-            )
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/vi-tien/ma-qua-tang/doi-ma",
+            json={"code": code.strip()},
+            headers=headers,
+            timeout=30,
+        )
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
@@ -128,6 +147,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         logger.error("Gọi API đổi thưởng thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
 async def get_revenue_report(config: RunnableConfig) -> str:
     """View revenue report from document sales, intended for authors"""
@@ -136,7 +156,9 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem doanh thu"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/vi-tien/doanh-thu", headers=headers, timeout=30
+        )
         if response.status_code == 200:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
@@ -148,7 +170,6 @@ async def get_revenue_report(config: RunnableConfig) -> str:
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
 
-
 @tool
 async def get_my_documents(config: RunnableConfig) -> str:
     """List all personal tài liệu owned or published by the current user"""
@@ -157,7 +178,9 @@ async def get_my_documents(config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để xem tài liệu"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/ca-nhan", headers=headers, timeout=30
+        )
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -171,6 +194,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
         logger.error("Lấy danh sách tài liệu thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
 async def get_trash_documents(config: RunnableConfig) -> str:
     """View deleted tài liệu currently in the trash bin"""
@@ -182,7 +206,9 @@ async def get_trash_documents(config: RunnableConfig) -> str:
 
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/thung-rac", headers=headers, timeout=30
+        )
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
@@ -196,6 +222,7 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         logger.error("Lấy danh sách thùng rác thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
 async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """Delete a document by ID, moving it to the trash bin"""
@@ -205,10 +232,16 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
 
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("DELETE", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "DELETE",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            headers=headers,
+            timeout=30,
+        )
         if response.status_code == 200:
             try:
                 from src.store.vector_store import vector_store
+
                 await vector_store.delete_by_document(document_id)
                 logger.info(f"Đã dọn dẹp xong vector cho tài liệu {document_id}")
             except Exception as ve:
@@ -219,6 +252,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
         logger.error("Xóa tài liệu thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
 async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """Restore a document from the trash bin by its ID"""
@@ -228,14 +262,18 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
 
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/khoi-phuc",
+            headers=headers,
+            timeout=30,
+        )
         if response.status_code == 200:
             return "Đã khôi phục tài liệu"
         return "Khôi phục thất bại"
     except Exception as e:
         logger.error("Khôi phục tài liệu thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
-
 
 
 @tool
@@ -249,7 +287,12 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
 
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot", headers=headers, timeout=30)
+        response = await _make_api_request(
+            "GET",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}/phan-tich/roi-rot",
+            headers=headers,
+            timeout=30,
+        )
         if response.status_code == 200:
             data = response.json().get("data", {})
             readers = data.get("readers_started", 0)
@@ -260,17 +303,24 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
         logger.error("Lấy dữ liệu phân tích thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 async def _get_doc_text(document_id: str, token: str) -> str:
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers={"Authorization": token}, timeout=30)
+        res = await _make_api_request(
+            "GET",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            headers={"Authorization": token},
+            timeout=30,
+        )
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
     except Exception as e:
         logger.error("Tải tài liệu thất bại")
     return ""
 
-from src.api.inference import suggest_citations, peer_review, transform_tone
+
 from core.schemas.inference import CitationRequest, ReviewRequest, ToneRequest
+from src.api.inference import peer_review, suggest_citations, transform_tone
 
 
 @tool
@@ -278,8 +328,10 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     """Suggest academic citations for a document by its ID"""
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
-    if not text: return "Không tìm thấy nội dung tài liệu"
+    if not text:
+        return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -290,13 +342,16 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
         logger.error("Gặp lỗi trong citations")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
 async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     """Perform a peer review of a document, evaluating strengths and weaknesses"""
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
-    if not text: return "Không tìm thấy nội dung tài liệu"
+    if not text:
+        return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -307,13 +362,18 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
         logger.error("Gặp lỗi trong peer review")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 @tool
-async def agent_transform_tone(document_id: str, tone: str, config: RunnableConfig) -> str:
+async def agent_transform_tone(
+    document_id: str, tone: str, config: RunnableConfig
+) -> str:
     """Transform the writing tone of a document, e.g. academic, professional, casual"""
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
-    if not text: return "Không tìm thấy nội dung tài liệu"
+    if not text:
+        return "Không tìm thấy nội dung tài liệu"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
+
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     safe_text = splitter.split_text(text)[0] if text else ""
     try:
@@ -333,12 +393,13 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         return "Lỗi xác thực: Vui lòng đăng nhập để nạp tiền"
     headers = {"Authorization": token}
     try:
-        response = await _make_api_request("POST", 
-                f"{INTERNAL_API_URL}/nap-tien/tao-link", 
-                json={"amount": amount}, 
-                headers=headers, 
-                timeout=30
-            )
+        response = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/nap-tien/tao-link",
+            json={"amount": amount},
+            headers=headers,
+            timeout=30,
+        )
         if response.status_code in [200, 201]:
             data = response.json().get("data", {})
             checkout_url = data.get("checkout_url") or data.get("payment_url")
@@ -350,11 +411,15 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
         logger.error("Gọi API nạp tiền thất bại")
         return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
 
+
 from src.workflow.map_reduce import agent_summarize_long_document
 
+
 @tool
-async def create_document(title: str, description: str, content: str, format: str, config: RunnableConfig) -> str:
-    """Create a new document. 
+async def create_document(
+    title: str, description: str, content: str, format: str, config: RunnableConfig
+) -> str:
+    """Create a new document.
     format: must be 'json' (for Standard Editor) or 'latex' (for LaTeX Editor).
     title: The title of the document.
     description: A short summary.
@@ -367,30 +432,39 @@ async def create_document(title: str, description: str, content: str, format: st
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
     headers = {"Authorization": token}
-    
+
+    import datetime
     import re
     import unicodedata
-    import datetime
-    
-    slug = unicodedata.normalize('NFKD', title).encode('ascii', 'ignore').decode('ascii')
-    slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
-    slug = re.sub(r'[-\s]+', '-', slug)
-    
+
+    slug = (
+        unicodedata.normalize("NFKD", title).encode("ascii", "ignore").decode("ascii")
+    )
+    slug = re.sub(r"[^\w\s-]", "", slug).strip().lower()
+    slug = re.sub(r"[-\s]+", "-", slug)
+
     user_name = "Người dùng"
     try:
-        res_profile = await _make_api_request("GET", f"{INTERNAL_API_URL}/ho-so/ca-nhan", headers=headers, timeout=10)
+        res_profile = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/ho-so/ca-nhan", headers=headers, timeout=10
+        )
         if res_profile.status_code == 200:
             profile_data = res_profile.json().get("data", {})
-            user_name = profile_data.get("full_name") or profile_data.get("name") or "Người dùng"
+            user_name = (
+                profile_data.get("full_name")
+                or profile_data.get("name")
+                or "Người dùng"
+            )
     except Exception as e:
         logger.warning("Không thể tải hồ sơ người dùng để lấy tên tác giả")
 
-    if format == 'latex':
-        if '\\documentclass' not in content:
+    if format == "latex":
+        if "\\documentclass" not in content:
             month_year = datetime.datetime.now().strftime("Tháng %m năm %Y")
             content = f"\\documentclass[12pt,a4paper]{{article}}\n\\usepackage{{graphicx}}\n\\usepackage{{amsmath}}\n\\title{{{title}}}\n\\author{{{user_name}}}\n\\date{{{month_year}}}\n\\begin{{document}}\n\\maketitle\n\n{content}\n\\end{{document}}"
-    elif format == 'json':
+    elif format == "json":
         import json
+
         try:
             parsed = json.loads(content)
             if "blocks" not in parsed:
@@ -403,17 +477,16 @@ async def create_document(title: str, description: str, content: str, format: st
             blocks = []
             for paragraph in content.split("\n\n"):
                 if paragraph.strip():
-                    blocks.append({
-                        "type": "paragraph",
-                        "data": {
-                            "text": paragraph.strip()
-                        }
-                    })
-            content = json.dumps({
-                "time": int(datetime.datetime.now().timestamp() * 1000),
-                "blocks": blocks,
-                "version": "2.29.1"
-            })
+                    blocks.append(
+                        {"type": "paragraph", "data": {"text": paragraph.strip()}}
+                    )
+            content = json.dumps(
+                {
+                    "time": int(datetime.datetime.now().timestamp() * 1000),
+                    "blocks": blocks,
+                    "version": "2.29.1",
+                }
+            )
 
     try:
         create_payload = {
@@ -423,9 +496,14 @@ async def create_document(title: str, description: str, content: str, format: st
             "visibility": "private",
             "content_format": format,
             "content": content,
-            "status": "draft"
+            "status": "draft",
         }
-        res_create = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", headers=headers, json=create_payload)
+        res_create = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/tai-lieu/",
+            headers=headers,
+            json=create_payload,
+        )
         if res_create.status_code in [200, 201]:
             new_doc = res_create.json().get("data", {})
             doc_id = new_doc.get("id") or new_doc.get("_id")
@@ -436,6 +514,7 @@ async def create_document(title: str, description: str, content: str, format: st
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
 
+
 @tool
 async def read_document(document_id: str, config: RunnableConfig) -> str:
     """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
@@ -445,7 +524,9 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
 
     headers = {"Authorization": token}
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+        )
         if res.status_code != 200:
             return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
         doc_data = res.json().get("data", {})
@@ -454,16 +535,23 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
 
     format = doc_data.get("content_format", "json")
     content = doc_data.get("content", "")
-    
-    if format == 'json':
+
+    if format == "json":
         return f"Định dạng: Standard Editor (json)\nNội dung (RAW JSON EditorJS - Hãy giữ nguyên hoặc chỉnh sửa cấu trúc blocks này):\n{content}"
-    elif format == 'latex':
+    elif format == "latex":
         return f"Định dạng: LaTeX Editor\nNội dung (Full LaTeX Source):\n{content}"
     else:
         return f"Định dạng: Khác ({format})\nNội dung:\n{content}"
 
+
 @tool
-async def update_document(document_id: str, new_content: str = None, title: str = None, description: str = None, config: RunnableConfig = None) -> str:
+async def update_document(
+    document_id: str,
+    new_content: str = None,
+    title: str = None,
+    description: str = None,
+    config: RunnableConfig = None,
+) -> str:
     """Update an existing document's content, title, or description by its ID. Only provide the fields you want to update.
     - If format is 'json', new_content MUST be a valid EditorJS JSON string (with "blocks" array).
     - If format is 'latex', new_content MUST be the full LaTeX source code.
@@ -473,11 +561,15 @@ async def update_document(document_id: str, new_content: str = None, title: str 
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
     headers = {"Authorization": token}
-    
+
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+        )
         if res.status_code != 200:
-            return f"Lỗi bảo mật hoặc tài liệu không tồn tại. (Mã lỗi: {res.status_code})"
+            return (
+                f"Lỗi bảo mật hoặc tài liệu không tồn tại. (Mã lỗi: {res.status_code})"
+            )
         doc_data = res.json().get("data", {})
     except Exception as e:
         return f"Lỗi hệ thống khi tải tài liệu: {e}"
@@ -490,52 +582,70 @@ async def update_document(document_id: str, new_content: str = None, title: str 
 
     if new_content:
         format = doc_data.get("content_format", "json")
-        if format == 'json':
-            import json, datetime
+        if format == "json":
+            import datetime
+            import json
+
             try:
                 parsed = json.loads(new_content)
                 if "blocks" not in parsed:
-                    parsed["blocks"] = [{"type": "paragraph", "data": {"text": new_content}}]
+                    parsed["blocks"] = [
+                        {"type": "paragraph", "data": {"text": new_content}}
+                    ]
                 parsed["time"] = int(datetime.datetime.now().timestamp() * 1000)
                 final_content = json.dumps(parsed)
             except:
                 blocks = []
                 for p in new_content.split("\n\n"):
                     if p.strip():
-                        blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
-                final_content = json.dumps({
-                    "time": int(datetime.datetime.now().timestamp() * 1000),
-                    "blocks": blocks,
-                    "version": "2.29.1"
-                })
-        elif format == 'latex':
+                        blocks.append(
+                            {"type": "paragraph", "data": {"text": p.strip()}}
+                        )
+                final_content = json.dumps(
+                    {
+                        "time": int(datetime.datetime.now().timestamp() * 1000),
+                        "blocks": blocks,
+                        "version": "2.29.1",
+                    }
+                )
+        elif format == "latex":
             final_content = new_content
         else:
             final_content = new_content
         payload["content"] = final_content
-        
+
     if not payload:
         return "Không có thông tin nào được cập nhật"
 
     try:
-        res_update = await _make_api_request("PUT", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers, json=payload)
+        res_update = await _make_api_request(
+            "PUT",
+            f"{INTERNAL_API_URL}/tai-lieu/{document_id}",
+            headers=headers,
+            json=payload,
+        )
         if res_update.status_code in [200, 201]:
             return f"Đã cập nhật tài liệu! [Xem tài liệu](/sang-tac?tai-lieu={document_id})"
         return f"Lỗi cập nhật tài liệu (Mã lỗi: {res_update.status_code})"
     except Exception as e:
         return f"Lỗi hệ thống: {e}"
 
+
 @tool
-async def translate_document(document_id: str, target_language: str, config: RunnableConfig) -> str:
+async def translate_document(
+    document_id: str, target_language: str, config: RunnableConfig
+) -> str:
     """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document"""
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Lỗi xác thực: Vui lòng đăng nhập"
 
     headers = {"Authorization": token}
-    
+
     try:
-        res = await _make_api_request("GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers)
+        res = await _make_api_request(
+            "GET", f"{INTERNAL_API_URL}/tai-lieu/{document_id}", headers=headers
+        )
         if res.status_code != 200:
             return f"Không thể lấy thông tin tài liệu. (Mã lỗi: {res.status_code})"
         doc_data = res.json().get("data", {})
@@ -545,13 +655,14 @@ async def translate_document(document_id: str, target_language: str, config: Run
     original_content = doc_data.get("content", "")
     format = doc_data.get("content_format", "json")
     original_title = doc_data.get("title", "Tài liệu")
-    
+
     if not original_content:
         return "Tài liệu trống, không có nội dung để dịch"
 
     import json
+
     text_to_translate = ""
-    if format == 'json':
+    if format == "json":
         try:
             parsed = json.loads(original_content)
             blocks = parsed.get("blocks", [])
@@ -568,7 +679,13 @@ async def translate_document(document_id: str, target_language: str, config: Run
 
     try:
         payload = {"text": text_to_translate, "target_lang": target_language}
-        trans_res = await _make_api_request("POST", f"{INTERNAL_API_URL}/suy-luan/dich-thuat", headers=headers, json=payload, timeout=60)
+        trans_res = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/suy-luan/dich-thuat",
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
         if trans_res.status_code != 200:
             return "Dịch thuật thất bại từ AI service"
         translated_text = trans_res.json().get("translation", "")
@@ -579,40 +696,54 @@ async def translate_document(document_id: str, target_language: str, config: Run
         return "Không có văn bản nào được dịch"
 
     import datetime
+
     new_title = f"[Bản dịch {target_language}] {original_title}"
-    
-    if format == 'json':
+
+    if format == "json":
         new_blocks = []
         for p in translated_text.split("\n\n"):
             if p.strip():
                 new_blocks.append({"type": "paragraph", "data": {"text": p.strip()}})
-        new_blocks.append({
-            "type": "paragraph",
-            "data": {
-                "text": "<i>Nội dung được tạo bởi DocLib AI</i>"
+        new_blocks.append(
+            {
+                "type": "paragraph",
+                "data": {"text": "<i>Nội dung được tạo bởi DocLib AI</i>"},
             }
-        })
-        new_content = json.dumps({
-            "time": int(datetime.datetime.now().timestamp() * 1000),
-            "blocks": new_blocks,
-            "version": "2.29.1"
-        })
-    elif format == 'latex':
-        if '\\end{document}' in translated_text:
-            new_content = translated_text.replace('\\end{document}', '\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}\n\\end{document}')
+        )
+        new_content = json.dumps(
+            {
+                "time": int(datetime.datetime.now().timestamp() * 1000),
+                "blocks": new_blocks,
+                "version": "2.29.1",
+            }
+        )
+    elif format == "latex":
+        if "\\end{document}" in translated_text:
+            new_content = translated_text.replace(
+                "\\end{document}",
+                "\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}\n\\end{document}",
+            )
         else:
-            new_content = translated_text + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}"
+            new_content = (
+                translated_text
+                + "\n\n\\vspace{1em}\n\\noindent\\textit{Nội dung được tạo bởi DocLib AI}"
+            )
     else:
         new_content = translated_text + "\n\n(Nội dung được tạo bởi DocLib AI)"
-        
+
     try:
-        import unicodedata
-        import re
         import datetime
-        slug = unicodedata.normalize('NFKD', new_title).encode('ascii', 'ignore').decode('ascii')
-        slug = re.sub(r'[^\w\s-]', '', slug).strip().lower()
-        slug = re.sub(r'[-\s]+', '-', slug)
-        
+        import re
+        import unicodedata
+
+        slug = (
+            unicodedata.normalize("NFKD", new_title)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+        slug = re.sub(r"[^\w\s-]", "", slug).strip().lower()
+        slug = re.sub(r"[-\s]+", "-", slug)
+
         create_payload = {
             "title": new_title,
             "slug": f"{slug}-{int(datetime.datetime.now().timestamp())}",
@@ -620,9 +751,14 @@ async def translate_document(document_id: str, target_language: str, config: Run
             "visibility": "private",
             "content_format": format,
             "content": new_content,
-            "status": "draft"
+            "status": "draft",
         }
-        res_create = await _make_api_request("POST", f"{INTERNAL_API_URL}/tai-lieu/", headers=headers, json=create_payload)
+        res_create = await _make_api_request(
+            "POST",
+            f"{INTERNAL_API_URL}/tai-lieu/",
+            headers=headers,
+            json=create_payload,
+        )
         if res_create.status_code in [200, 201]:
             new_doc = res_create.json().get("data", {})
             new_doc_id = new_doc.get("id") or new_doc.get("_id")
@@ -652,16 +788,17 @@ tools = [
     create_document,
     update_document,
     create_deposit_link,
-    translate_document
+    translate_document,
 ]
 
 llama_model = settings.LLAMA_MODEL
 hf_token = settings.HF_TOKEN
 
-_hf_endpoint = HuggingFaceEndpoint(task="conversational", 
+_hf_endpoint = HuggingFaceEndpoint(
+    task="conversational",
     repo_id=llama_model,
     huggingfacehub_api_token=hf_token,
-    temperature=0.1
+    temperature=0.1,
 )
 
 llm = ChatHuggingFace(llm=_hf_endpoint)

@@ -1,6 +1,7 @@
 import csv
 import os
 
+
 def get_nllb_codes():
     file_path = os.path.join(os.path.dirname(__file__), "metrics.csv")
     codes = set()
@@ -12,6 +13,7 @@ def get_nllb_codes():
             codes.add(src)
             codes.add(tgt)
     return sorted(list(codes))
+
 
 NAME_TO_NLLB = {
     "vietnamese": "vie_Latn",
@@ -29,8 +31,9 @@ NAME_TO_NLLB = {
     "japanese": "jpn_Jpan",
     "ja": "jpn_Jpan",
     "korean": "kor_Hang",
-    "ko": "kor_Hang"
+    "ko": "kor_Hang",
 }
+
 
 def map_to_nllb(lang_name: str) -> str:
     lang_name = lang_name.lower().strip()

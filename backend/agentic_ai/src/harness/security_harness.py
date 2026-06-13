@@ -1,8 +1,9 @@
+import asyncio
 import re
 import time
-import asyncio
 from dataclasses import dataclass, field
 from typing import Optional
+
 from loguru import logger
 
 PROMPT_INJECTION_PATTERNS = [
@@ -39,6 +40,7 @@ PII_PATTERNS = {
     "national_id_vn": (r"\b\d{9}(?:\d{3})?\b", "[CCCD_AN]"),
 }
 
+
 @dataclass
 class ScanResult:
     passed: bool
@@ -47,15 +49,14 @@ class ScanResult:
     violations: list = field(default_factory=list)
     blocked: bool = False
 
+
 class SecurityHarness:
     def __init__(self):
         self._compiled_injection = [
-            re.compile(p, re.IGNORECASE | re.DOTALL)
-            for p in PROMPT_INJECTION_PATTERNS
+            re.compile(p, re.IGNORECASE | re.DOTALL) for p in PROMPT_INJECTION_PATTERNS
         ]
         self._compiled_credential = [
-            re.compile(p, re.IGNORECASE)
-            for p in CREDENTIAL_LEAK_PATTERNS
+            re.compile(p, re.IGNORECASE) for p in CREDENTIAL_LEAK_PATTERNS
         ]
         self._compiled_pii = {
             name: (re.compile(pattern, re.IGNORECASE), replacement)
@@ -88,11 +89,15 @@ class SecurityHarness:
     def _anomaly_score(self, text: str) -> float:
         if not text:
             return 0.0
-        special_ratio = sum(1 for c in text if not c.isalnum() and not c.isspace()) / max(len(text), 1)
+        special_ratio = sum(
+            1 for c in text if not c.isalnum() and not c.isspace()
+        ) / max(len(text), 1)
         length_penalty = min(len(text) / 10000, 0.3)
         return min(special_ratio * 0.5 + length_penalty, 1.0)
 
-    def scan_input(self, text: str, session_id: str = "", user_id: str = "") -> ScanResult:
+    def scan_input(
+        self, text: str, session_id: str = "", user_id: str = ""
+    ) -> ScanResult:
         if not text or not text.strip():
             return ScanResult(passed=True, risk_score=0.0, sanitized_text=text or "")
 
@@ -105,7 +110,7 @@ class SecurityHarness:
         risk_score = min(injection_score + anomaly * 0.2, 1.0)
 
         if injection_violations:
-            logger.warning('Đã chặn nỗ lực chèn mã độc')
+            logger.warning("Đã chặn nỗ lực chèn mã độc")
             return ScanResult(
                 passed=False,
                 blocked=True,
@@ -115,7 +120,7 @@ class SecurityHarness:
             )
 
         if pii_violations:
-            logger.info('Đã ẩn thông tin cá nhân nhạy cảm')
+            logger.info("Đã ẩn thông tin cá nhân nhạy cảm")
 
         return ScanResult(
             passed=True,
@@ -130,7 +135,7 @@ class SecurityHarness:
             return text
         credential_violations = self._detect_credential_leak(text)
         if credential_violations:
-            logger.error('Đã chặn rò rỉ thông tin xác thực')
+            logger.error("Đã chặn rò rỉ thông tin xác thực")
             return "Phản hồi bị chặn do phát hiện thông tin nhạy cảm, vui lòng thử lại"
         sanitized, _ = self._redact_pii(text)
         return sanitized

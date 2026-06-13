@@ -1,7 +1,9 @@
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime, timezone
 import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
+
+from pydantic import BaseModel
+
 
 class HighlightCreateRequest(BaseModel):
     text: str
@@ -10,8 +12,10 @@ class HighlightCreateRequest(BaseModel):
     end_offset: int = 0
     note: str = ""
 
+
 class HighlightNoteUpdateRequest(BaseModel):
     note: str
+
 
 class ReadingPreferenceUpdate(BaseModel):
     theme: Optional[str] = None

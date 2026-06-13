@@ -4,7 +4,8 @@ from src.services.editor_ws import manager
 
 router = APIRouter()
 
-@router.websocket('/ws-crdt/{document_id}')
+
+@router.websocket("/ws-crdt/{document_id}")
 async def editor_websocket(websocket: WebSocket, document_id: str):
     try:
         await manager.connect(websocket, document_id)
@@ -14,5 +15,5 @@ async def editor_websocket(websocket: WebSocket, document_id: str):
     except WebSocketDisconnect:
         manager.disconnect(websocket, document_id)
     except Exception as e:
-        logger.error(f'Lỗi kết nối dữ liệu cho tài liệu {document_id}')
+        logger.error(f"Lỗi kết nối dữ liệu cho tài liệu {document_id}")
         manager.disconnect(websocket, document_id)

@@ -1,7 +1,9 @@
-import httpx
 import time
+
+import httpx
 from fastapi import HTTPException
 from loguru import logger
+
 
 class CircuitBreaker:
     def __init__(self, max_failures=5, reset_timeout=60):
@@ -17,24 +19,26 @@ class CircuitBreaker:
                 self.state = "HALF_OPEN"
             else:
                 raise HTTPException(status_code=503, detail="AI đang bảo trì")
-                
+
     def on_success(self):
         self.failure_count = 0
         self.state = "CLOSED"
-        
+
     def on_failure(self):
         self.failure_count += 1
         self.last_failure_time = time.time()
         if self.failure_count >= self.max_failures:
             self.state = "OPEN"
-            logger.warning('Ngắt kết nối dịch vụ AI')
+            logger.warning("Ngắt kết nối dịch vụ AI")
+
 
 ai_circuit_breaker = CircuitBreaker()
 
 ai_http_client = httpx.AsyncClient(
     limits=httpx.Limits(max_keepalive_connections=100, max_connections=200),
-    timeout=httpx.Timeout(30.0)
+    timeout=httpx.Timeout(30.0),
 )
+
 
 async def make_ai_request(url: str, json_data: dict, timeout: float = 30.0):
     ai_circuit_breaker.check()

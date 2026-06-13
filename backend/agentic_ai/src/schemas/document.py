@@ -1,9 +1,12 @@
 from pydantic import BaseModel, Field
 
+
 class CreateDocument(BaseModel):
     title: str = Field(description="The title of the document")
     description: str = Field(description="A short summary of the document")
-    format: str = Field(description="Must be 'json' (for Editor.js) or 'latex' (for LaTeX)")
+    format: str = Field(
+        description="Must be 'json' (for Editor.js) or 'latex' (for LaTeX)"
+    )
     content: str = Field(
         description=(
             "The main body of the document. "
@@ -13,6 +16,7 @@ class CreateDocument(BaseModel):
             "Use advanced blocks/tags appropriate for the requested format"
         )
     )
+
 
 class UpdateDocument(BaseModel):
     document_id: str = Field(description="The ID of the document to update")

@@ -1,11 +1,13 @@
 import asyncio
 import json
+
 from loguru import logger
 from src.core.mq import mq_client
 from src.pipelines.anna_archive_collector import AnnaArchiveCollector
+from src.pipelines.ctan_collector import CTANCollector
 from src.pipelines.nxbgd_collector import NXBGDCollector
 from src.pipelines.nxbst_collector import NXBSTCollector
-from src.pipelines.ctan_collector import CTANCollector
+
 
 async def run_worker():
     await mq_client.connect()
@@ -16,7 +18,7 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error('Lỗi xử lý lệnh')
+            logger.error("Lỗi xử lý lệnh")
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)
@@ -79,23 +81,33 @@ async def run_worker():
     await queue_anna.consume(lambda m: process_msg_with_sem(m, route_anna_collector))
     await queue_ctan.consume(lambda m: process_msg_with_sem(m, route_ctan_collector))
     await queue_list.consume(lambda m: process_msg_with_sem(m, route_list_collector))
-    await queue_detail.consume(lambda m: process_msg_with_sem(m, route_detail_collector))
+    await queue_detail.consume(
+        lambda m: process_msg_with_sem(m, route_detail_collector)
+    )
 
-    await queue_download.consume(lambda m: process_msg_with_sem(m, route_download_processor))
+    await queue_download.consume(
+        lambda m: process_msg_with_sem(m, route_download_processor)
+    )
 
-    await queue_nxbgd.consume(lambda m: process_msg_with_sem(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
+    await queue_nxbgd.consume(
+        lambda m: process_msg_with_sem(
+            m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()
+        )
+    )
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
-    logger.info('Hệ thống thu thập DocLib khởi động lắng nghe tín hiệu RabbitMQ thành công')
+    logger.info(
+        "Hệ thống thu thập DocLib khởi động lắng nghe tín hiệu RabbitMQ thành công"
+    )
 
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info('Nhận lệnh tắt đang dừng tiến trình')
+        logger.info("Nhận lệnh tắt đang dừng tiến trình")
         stop_event.set()
 
     await stop_event.wait()
 
-    logger.info('Đóng kết nối MQ')
+    logger.info("Đóng kết nối MQ")
     await mq_client.connection.close()
-    logger.info('Tắt hệ thống an toàn thành công')
+    logger.info("Tắt hệ thống an toàn thành công")

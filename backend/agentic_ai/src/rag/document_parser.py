@@ -1,10 +1,11 @@
-import tempfile
 import asyncio
-import boto3
+import tempfile
 from pathlib import Path
-from loguru import logger
 from typing import Dict, List
+
+import boto3
 from core.config import settings
+from loguru import logger
 
 
 class DocumentParser:
@@ -22,6 +23,7 @@ class DocumentParser:
     def _get_marker_models(self):
         if self._marker_models is None:
             from marker.models import create_model_dict
+
             self._marker_models = create_model_dict()
             logger.info("Đã tải từ điển cấu hình Marker")
         return self._marker_models
@@ -29,6 +31,7 @@ class DocumentParser:
     def _get_ocr_engine(self, lang: str = "en"):
         if self._ocr_engine is None or getattr(self, "_ocr_lang", None) != lang:
             from paddleocr import PaddleOCR
+
             self._ocr_engine = PaddleOCR(
                 use_angle_cls=True,
                 lang=lang,
@@ -41,6 +44,7 @@ class DocumentParser:
     def _get_pp_structure(self, lang: str = "en"):
         if self._pp_structure is None or getattr(self, "_pp_lang", None) != lang:
             from paddleocr import PPStructure
+
             self._pp_structure = PPStructure(
                 show_log=False,
                 image_orientation=True,
@@ -50,7 +54,9 @@ class DocumentParser:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info(f"Đã tải công cụ PPStructure hỗ trợ bố cục, bảng, OCR với ngôn ngữ: {lang}")
+            logger.info(
+                f"Đã tải công cụ PPStructure hỗ trợ bố cục, bảng, OCR với ngôn ngữ: {lang}"
+            )
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
@@ -78,8 +84,8 @@ class DocumentParser:
         artifact_dict = self._get_marker_models()
 
         def _convert():
-            from marker.converters.pdf import PdfConverter
             from marker.config.parser import ConfigParser
+            from marker.converters.pdf import PdfConverter
             from marker.output import text_from_rendered
 
             config = {
@@ -111,9 +117,15 @@ class DocumentParser:
 
         page_count = 0
         if hasattr(rendered, "metadata") and rendered.metadata:
-            page_count = rendered.metadata.get("page_count", 0) if isinstance(rendered.metadata, dict) else 0
+            page_count = (
+                rendered.metadata.get("page_count", 0)
+                if isinstance(rendered.metadata, dict)
+                else 0
+            )
 
-        logger.info(f"Marker đã phân tích {len(chunks)} đoạn, {page_count} trang từ tệp {file_path.suffix}")
+        logger.info(
+            f"Marker đã phân tích {len(chunks)} đoạn, {page_count} trang từ tệp {file_path.suffix}"
+        )
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -135,8 +147,8 @@ class DocumentParser:
             artifact_dict = self._get_marker_models()
 
             def _extract():
-                from marker.converters.table import TableConverter
                 from marker.config.parser import ConfigParser
+                from marker.converters.table import TableConverter
                 from marker.output import text_from_rendered
 
                 config = {
@@ -165,13 +177,17 @@ class DocumentParser:
                 for i, block in enumerate(table_text.split("\n\n")):
                     cleaned = block.strip()
                     if cleaned and ("|" in cleaned or "<table" in cleaned.lower()):
-                        tables.append({
-                            "text": cleaned,
-                            "chunk_type": "table",
-                            "index": i,
-                        })
+                        tables.append(
+                            {
+                                "text": cleaned,
+                                "chunk_type": "table",
+                                "index": i,
+                            }
+                        )
 
-            logger.info(f"Đã trích xuất {len(tables)} bảng dữ liệu bằng Marker TableConverter")
+            logger.info(
+                f"Đã trích xuất {len(tables)} bảng dữ liệu bằng Marker TableConverter"
+            )
             return tables
         except Exception as e:
             logger.error("Trích xuất bảng dữ liệu thất bại")
@@ -184,6 +200,7 @@ class DocumentParser:
 
         def _run_structure():
             import cv2
+
             img = cv2.imread(str(file_path))
             if img is None:
                 return None
@@ -212,7 +229,11 @@ class DocumentParser:
                     if isinstance(line, dict) and "text" in line:
                         block_text += line["text"] + "\n"
                     elif isinstance(line, (list, tuple)) and len(line) >= 2:
-                        line_text = line[1][0] if isinstance(line[1], (list, tuple)) else str(line[1])
+                        line_text = (
+                            line[1][0]
+                            if isinstance(line[1], (list, tuple))
+                            else str(line[1])
+                        )
                         block_text += line_text + "\n"
                 block_text = block_text.strip()
                 if len(block_text) > 10:
@@ -271,24 +292,44 @@ class DocumentParser:
         for line in markdown.split("\n"):
             if line.startswith("#"):
                 if current_chunk.strip() and len(current_chunk.strip()) > 30:
-                    chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                    chunks.append(
+                        {"text": current_chunk.strip(), "chunk_type": current_type}
+                    )
                 current_chunk = line + "\n"
                 current_type = "heading"
             elif line.startswith("|") or line.startswith("<table"):
-                if current_chunk.strip() and current_type != "table" and len(current_chunk.strip()) > 30:
-                    chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                if (
+                    current_chunk.strip()
+                    and current_type != "table"
+                    and len(current_chunk.strip()) > 30
+                ):
+                    chunks.append(
+                        {"text": current_chunk.strip(), "chunk_type": current_type}
+                    )
                     current_chunk = ""
                 current_chunk += line + "\n"
                 current_type = "table"
             elif line.startswith("```"):
-                if current_chunk.strip() and current_type != "code" and len(current_chunk.strip()) > 30:
-                    chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                if (
+                    current_chunk.strip()
+                    and current_type != "code"
+                    and len(current_chunk.strip()) > 30
+                ):
+                    chunks.append(
+                        {"text": current_chunk.strip(), "chunk_type": current_type}
+                    )
                     current_chunk = ""
                 current_chunk += line + "\n"
                 current_type = "code" if current_type != "code" else "text"
             elif line.startswith("$$") or line.startswith("\\["):
-                if current_chunk.strip() and current_type != "equation" and len(current_chunk.strip()) > 30:
-                    chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                if (
+                    current_chunk.strip()
+                    and current_type != "equation"
+                    and len(current_chunk.strip()) > 30
+                ):
+                    chunks.append(
+                        {"text": current_chunk.strip(), "chunk_type": current_type}
+                    )
                     current_chunk = ""
                 current_chunk += line + "\n"
                 current_type = "equation"
@@ -296,14 +337,18 @@ class DocumentParser:
                 if current_type in ("heading",) and line.strip() == "":
                     current_chunk += line + "\n"
                     if len(current_chunk.strip()) > 30:
-                        chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                        chunks.append(
+                            {"text": current_chunk.strip(), "chunk_type": current_type}
+                        )
                     current_chunk = ""
                     current_type = "text"
                 else:
                     current_chunk += line + "\n"
 
                 if len(current_chunk) > 1500 and current_type == "text":
-                    chunks.append({"text": current_chunk.strip(), "chunk_type": current_type})
+                    chunks.append(
+                        {"text": current_chunk.strip(), "chunk_type": current_type}
+                    )
                     current_chunk = ""
 
         if current_chunk.strip() and len(current_chunk.strip()) > 30:
@@ -326,7 +371,7 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning('Phân tích tài liệu thất bại trong quá trình nạp dữ liệu')
+            logger.warning("Phân tích tài liệu thất bại trong quá trình nạp dữ liệu")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -346,11 +391,13 @@ class DocumentParser:
             text = chunk.get("text", "")
             if len(text.strip()) < 30:
                 continue
-            ingestion_chunks.append({
-                "text": text,
-                "chunk_type": chunk.get("chunk_type", "text"),
-                "index": i,
-            })
+            ingestion_chunks.append(
+                {
+                    "text": text,
+                    "chunk_type": chunk.get("chunk_type", "text"),
+                    "index": i,
+                }
+            )
 
         logger.info(f"Đã tạo {len(ingestion_chunks)} đoạn văn bản để nạp dữ liệu")
         return ingestion_chunks
@@ -362,17 +409,22 @@ class DocumentParser:
     async def _download_from_minio(self, file_url: str) -> tuple:
         try:
             from urllib.parse import urlparse
+
             if file_url.startswith("http"):
                 parsed = urlparse(file_url)
                 path_parts = parsed.path.lstrip("/").split("/", 1)
                 bucket = path_parts[0] if len(path_parts) == 2 else self._bucket
-                object_key = path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
+                object_key = (
+                    path_parts[1] if len(path_parts) == 2 else parsed.path.lstrip("/")
+                )
             else:
                 bucket = self._bucket
                 object_key = file_url
 
             if "" in object_key:
-                logger.error(f"Phát hiện nỗ lực duyệt qua đường dẫn trong khóa đối tượng: {object_key}")
+                logger.error(
+                    f"Phát hiện nỗ lực duyệt qua đường dẫn trong khóa đối tượng: {object_key}"
+                )
                 return None, ""
 
             s3 = boto3.client(
@@ -386,10 +438,17 @@ class DocumentParser:
             data = obj["Body"].read()
 
             ext_map = {
-                ".epub": ".epub", ".docx": ".docx", ".xlsx": ".xlsx",
-                ".pptx": ".pptx", ".html": ".html",
-                ".png": ".png", ".jpg": ".jpg", ".jpeg": ".jpeg",
-                ".bmp": ".bmp", ".tiff": ".tiff", ".webp": ".webp",
+                ".epub": ".epub",
+                ".docx": ".docx",
+                ".xlsx": ".xlsx",
+                ".pptx": ".pptx",
+                ".html": ".html",
+                ".png": ".png",
+                ".jpg": ".jpg",
+                ".jpeg": ".jpeg",
+                ".bmp": ".bmp",
+                ".tiff": ".tiff",
+                ".webp": ".webp",
             }
             ext = ".pdf"
             for suffix, mapped_ext in ext_map.items():
@@ -403,5 +462,6 @@ class DocumentParser:
         except Exception as e:
             logger.error("Tải xuống từ MinIO thất bại")
             return None, ""
+
 
 document_parser = DocumentParser()

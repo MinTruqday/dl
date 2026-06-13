@@ -1,11 +1,12 @@
 import asyncio
 import json
+
 from loguru import logger
 from src.core.mq import mq_client
 from src.pipelines.anna_archive_collector import AnnaArchiveCollector
+from src.pipelines.ctan_collector import CTANCollector
 from src.pipelines.nxbgd_collector import NXBGDCollector
 from src.pipelines.nxbst_collector import NXBSTCollector
-from src.pipelines.ctan_collector import CTANCollector
 
 
 async def run_worker():
@@ -17,7 +18,9 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error(f"Thất bại khi xử lý tin nhắn: {e}\nPayload: {message.body.decode()}")
+            logger.error(
+                f"Thất bại khi xử lý tin nhắn: {e}\nPayload: {message.body.decode()}"
+            )
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)
@@ -80,14 +83,24 @@ async def run_worker():
     await queue_anna.consume(lambda m: process_msg_with_sem(m, route_anna_collector))
     await queue_ctan.consume(lambda m: process_msg_with_sem(m, route_ctan_collector))
     await queue_list.consume(lambda m: process_msg_with_sem(m, route_list_collector))
-    await queue_detail.consume(lambda m: process_msg_with_sem(m, route_detail_collector))
+    await queue_detail.consume(
+        lambda m: process_msg_with_sem(m, route_detail_collector)
+    )
 
-    await queue_download.consume(lambda m: process_msg_with_sem(m, route_download_processor))
+    await queue_download.consume(
+        lambda m: process_msg_with_sem(m, route_download_processor)
+    )
 
-    await queue_nxbgd.consume(lambda m: process_msg_with_sem(m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()))
+    await queue_nxbgd.consume(
+        lambda m: process_msg_with_sem(
+            m, lambda p: NXBGDCollector(p.get("target_class", "-1")).execute()
+        )
+    )
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
-    logger.info("Đã khởi tạo hệ thống DocLib Collector 0.1a, đang chờ sự kiện từ RabbitMQ")
+    logger.info(
+        "Đã khởi tạo hệ thống DocLib Collector 0.1a, đang chờ sự kiện từ RabbitMQ"
+    )
 
     stop_event = asyncio.Event()
 

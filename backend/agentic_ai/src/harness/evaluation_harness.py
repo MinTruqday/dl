@@ -3,6 +3,7 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Optional
+
 from loguru import logger
 
 
@@ -28,8 +29,12 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     brevity_penalty = min(1.0, math.exp(1 - len(ref_tokens) / max(len(hyp_tokens), 1)))
     precisions = []
     for n in range(1, max_n + 1):
-        ref_ngrams = Counter(tuple(ref_tokens[i:i + n]) for i in range(len(ref_tokens) - n + 1))
-        hyp_ngrams = Counter(tuple(hyp_tokens[i:i + n]) for i in range(len(hyp_tokens) - n + 1))
+        ref_ngrams = Counter(
+            tuple(ref_tokens[i : i + n]) for i in range(len(ref_tokens) - n + 1)
+        )
+        hyp_ngrams = Counter(
+            tuple(hyp_tokens[i : i + n]) for i in range(len(hyp_tokens) - n + 1)
+        )
         clipped = sum(min(hyp_ngrams[ng], ref_ngrams[ng]) for ng in hyp_ngrams)
         total = max(sum(hyp_ngrams.values()), 1)
         precisions.append(clipped / total)
@@ -62,8 +67,8 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
 
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
     from core.config import settings
-    from src.core.prompt_registry import prompt_registry, PromptType
     from huggingface_hub import AsyncInferenceClient
+    from src.core.prompt_registry import PromptType, prompt_registry
 
     prompt = prompt_registry.get(PromptType.EVAL_JUDGE).format(
         instruction=instruction,
@@ -71,7 +76,9 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
         actual=actual,
     )
     try:
-        client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
+        client = AsyncInferenceClient(
+            model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
+        )
         resp = await client.chat_completion(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=256,
@@ -90,8 +97,13 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning('Lỗi đánh giá từ mô hình ngôn ngữ')
-        return {"accuracy": 0, "completeness": 0, "relevance": 0, "explanation": f"Judge lỗi: {e}"}
+        logger.warning("Lỗi đánh giá từ mô hình ngôn ngữ")
+        return {
+            "accuracy": 0,
+            "completeness": 0,
+            "relevance": 0,
+            "explanation": f"Judge lỗi: {e}",
+        }
 
 
 class EvaluationHarness:
@@ -103,9 +115,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info('Tải dữ liệu kiểm tra thành công')
+            logger.info("Tải dữ liệu kiểm tra thành công")
         except Exception as e:
-            logger.error('Lỗi tải dữ liệu kiểm tra')
+            logger.error("Lỗi tải dữ liệu kiểm tra")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -118,10 +130,13 @@ class EvaluationHarness:
     ) -> EvalReport:
         retrieval_precision = 0.0
         if contexts and expected_answer:
-            significant_words = [w for w in expected_answer.lower().split() if len(w) > 4]
+            significant_words = [
+                w for w in expected_answer.lower().split() if len(w) > 4
+            ]
             if significant_words:
                 matched = sum(
-                    1 for ctx in contexts
+                    1
+                    for ctx in contexts
                     if any(word in ctx.lower() for word in significant_words)
                 )
                 retrieval_precision = min(matched / len(contexts), 1.0)
@@ -137,8 +152,14 @@ class EvaluationHarness:
             judge_scores = await _llm_judge(query, expected_answer, actual_answer)
 
         if judge_scores:
-            judge_avg = (judge_scores["accuracy"] + judge_scores["completeness"] + judge_scores["relevance"]) / 30
-            overall = (retrieval_precision + gen_faithfulness + answer_relevance + judge_avg) / 4
+            judge_avg = (
+                judge_scores["accuracy"]
+                + judge_scores["completeness"]
+                + judge_scores["relevance"]
+            ) / 30
+            overall = (
+                retrieval_precision + gen_faithfulness + answer_relevance + judge_avg
+            ) / 4
         else:
             overall = (retrieval_precision + gen_faithfulness + answer_relevance) / 3
 
@@ -155,7 +176,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info('Đánh giá RAG hoàn tất')
+        logger.info("Đánh giá RAG hoàn tất")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -184,14 +205,16 @@ class EvaluationHarness:
                 )
                 actual = resp.choices[0].message.content.strip()
             except Exception as e:
-                results.append({
-                    "instruction": instruction,
-                    "expected": expected,
-                    "actual": "Lỗi đánh giá mô hình",
-                    "bleu": 0.0,
-                    "rouge_l": 0.0,
-                    "judge_scores": None,
-                })
+                results.append(
+                    {
+                        "instruction": instruction,
+                        "expected": expected,
+                        "actual": "Lỗi đánh giá mô hình",
+                        "bleu": 0.0,
+                        "rouge_l": 0.0,
+                        "judge_scores": None,
+                    }
+                )
                 continue
 
             bleu = round(_compute_bleu(expected, actual), 4)
@@ -200,15 +223,17 @@ class EvaluationHarness:
             if use_judge:
                 judge_scores = await _llm_judge(instruction, expected, actual)
 
-            results.append({
-                "instruction": instruction,
-                "input": inp,
-                "expected": expected,
-                "actual": actual,
-                "bleu": bleu,
-                "rouge_l": rouge,
-                "judge_scores": judge_scores,
-            })
+            results.append(
+                {
+                    "instruction": instruction,
+                    "input": inp,
+                    "expected": expected,
+                    "actual": actual,
+                    "bleu": bleu,
+                    "rouge_l": rouge,
+                    "judge_scores": judge_scores,
+                }
+            )
 
         valid = [r for r in results if isinstance(r["bleu"], float)]
         avg_bleu = round(sum(r["bleu"] for r in valid) / max(len(valid), 1), 4)
@@ -218,9 +243,16 @@ class EvaluationHarness:
         avg_judge = None
         if judge_results:
             avg_judge = {
-                "accuracy": round(sum(j["accuracy"] for j in judge_results) / len(judge_results), 2),
-                "completeness": round(sum(j["completeness"] for j in judge_results) / len(judge_results), 2),
-                "relevance": round(sum(j["relevance"] for j in judge_results) / len(judge_results), 2),
+                "accuracy": round(
+                    sum(j["accuracy"] for j in judge_results) / len(judge_results), 2
+                ),
+                "completeness": round(
+                    sum(j["completeness"] for j in judge_results) / len(judge_results),
+                    2,
+                ),
+                "relevance": round(
+                    sum(j["relevance"] for j in judge_results) / len(judge_results), 2
+                ),
             }
 
         summary = {
@@ -231,22 +263,33 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info('Đánh giá mô hình thành công')
+        logger.info("Đánh giá mô hình thành công")
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
-            return {"status": "Chưa có đánh giá nào được ghi nhận", "total_evaluations": 0}
+            return {
+                "status": "Chưa có đánh giá nào được ghi nhận",
+                "total_evaluations": 0,
+            }
         count = len(self._reports)
         return {
             "total_evaluations": count,
             "average_metrics": {
-                "retrieval_precision": round(sum(r.retrieval_precision for r in self._reports) / count, 4),
-                "generation_faithfulness": round(sum(r.generation_faithfulness for r in self._reports) / count, 4),
-                "answer_relevance": round(sum(r.answer_relevance for r in self._reports) / count, 4),
+                "retrieval_precision": round(
+                    sum(r.retrieval_precision for r in self._reports) / count, 4
+                ),
+                "generation_faithfulness": round(
+                    sum(r.generation_faithfulness for r in self._reports) / count, 4
+                ),
+                "answer_relevance": round(
+                    sum(r.answer_relevance for r in self._reports) / count, 4
+                ),
                 "bleu": round(sum(r.bleu for r in self._reports) / count, 4),
                 "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4),
-                "overall_score": round(sum(r.overall_score for r in self._reports) / count, 4),
+                "overall_score": round(
+                    sum(r.overall_score for r in self._reports) / count, 4
+                ),
             },
             "status": "ready",
         }

@@ -1,21 +1,25 @@
 import os
 import uuid
-from uuid6 import uuid7
 from typing import Dict, List, Optional
-from motor.motor_asyncio import AsyncIOMotorClient
-from loguru import logger
+
 from core.config import settings
+from loguru import logger
+from motor.motor_asyncio import AsyncIOMotorClient
 from src.rag.chunker import chunker
 from src.rag.embedder import embedding_service
 from src.store.vector_store import vector_store
+from uuid6 import uuid7
+
 
 class IngestionPipeline:
     _mongo_client = None
-    
+
     def __init__(self):
         mongo_uri = settings.MONGODB_URI
         if IngestionPipeline._mongo_client is None:
-            IngestionPipeline._mongo_client = AsyncIOMotorClient(mongo_uri, maxPoolSize=100)
+            IngestionPipeline._mongo_client = AsyncIOMotorClient(
+                mongo_uri, maxPoolSize=100
+            )
         self._mongo = IngestionPipeline._mongo_client
         self._db = self._mongo.doclib
         minio_endpoint = settings.MINIO_ENDPOINT
@@ -23,7 +27,9 @@ class IngestionPipeline:
         self._bucket = settings.MINIO_BUCKET_NAME
 
     async def ingest_document(self, document_id: str) -> Dict:
-        document = await self._db.documents.find_one({"_id": __import__("bson").ObjectId(document_id)})
+        document = await self._db.documents.find_one(
+            {"_id": __import__("bson").ObjectId(document_id)}
+        )
         if not document:
             raise ValueError(f"Document {document_id} not found in database")
 
@@ -42,36 +48,49 @@ class IngestionPipeline:
             "author": author,
             "content_format": document.get("content_format", "unknown"),
             "source": "anna_archive",
-            "file_url": file_url
+            "file_url": file_url,
         }
 
         extraction_method = "local"
         chunks = []
 
         from src.rag.document_parser import document_parser
+
         doc_chunks = await document_parser.get_doc_chunks_for_ingestion(file_url)
 
         async def get_summary_chunk(first_pages, extract_method):
             try:
-                from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
                 from langchain_core.prompts import PromptTemplate
-                
+                from langchain_huggingface import (ChatHuggingFace,
+                                                   HuggingFaceEndpoint)
+
                 llama_model = settings.LLAMA_MODEL
                 hf_token = settings.HF_TOKEN
-                
-                _hf = HuggingFaceEndpoint(task="conversational", repo_id=llama_model, huggingfacehub_api_token=hf_token, temperature=0.1)
+
+                _hf = HuggingFaceEndpoint(
+                    task="conversational",
+                    repo_id=llama_model,
+                    huggingfacehub_api_token=hf_token,
+                    temperature=0.1,
+                )
                 llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
                     template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: (Tên)\nTác giả: (Tác giả)\nNăm xuất bản/Bối cảnh: (Năm/Bối cảnh)\nTóm tắt nội dung chính: (Nội dung)\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
-                    input_variables=["text"]
+                    input_variables=["text"],
                 )
                 response = await llm_summary.ainvoke(prompt.format(text=first_pages))
                 global_summary_text = response.content.strip()
-                
+
                 return {
                     "id": f"{document_id}_global_summary",
                     "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nTài liệu: {title}\nTác giả: {author}\n{global_summary_text}",
-                    "metadata": {**metadata, "chunk_id": "summary_001", "chunk_type": "summary", "chunk_index": -1, "extraction_method": extract_method}
+                    "metadata": {
+                        **metadata,
+                        "chunk_id": "summary_001",
+                        "chunk_type": "summary",
+                        "chunk_index": -1,
+                        "extraction_method": extract_method,
+                    },
                 }
             except Exception as e:
                 logger.error("Không thể tạo đoạn tóm tắt toàn cục")
@@ -93,16 +112,20 @@ class IngestionPipeline:
                     "chunk_index": i,
                     "extraction_method": "ade",
                 }
-                chunks.append({
-                    "id": f"{document_id}_{chunk_id}",
-                    "text": ac["text"],
-                    "metadata": chunk_meta,
-                })
+                chunks.append(
+                    {
+                        "id": f"{document_id}_{chunk_id}",
+                        "text": ac["text"],
+                        "metadata": chunk_meta,
+                    }
+                )
         else:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
-                raise ValueError(f"Văn bản trích xuất quá ngắn đối với tài liệu {document_id}")
-                
+                raise ValueError(
+                    f"Văn bản trích xuất quá ngắn đối với tài liệu {document_id}"
+                )
+
             first_few_pages = raw_text[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
             if summary_chunk:
@@ -120,20 +143,19 @@ class IngestionPipeline:
         metadatas = [c["metadata"] for c in chunks]
 
         await vector_store.upsert(
-            ids=ids,
-            embeddings=embeddings,
-            documents=texts,
-            metadatas=metadatas
+            ids=ids, embeddings=embeddings, documents=texts, metadatas=metadatas
         )
         await vector_store.wait_upsert()
 
         await self._db.documents.update_one(
             {"_id": __import__("bson").ObjectId(document_id)},
-            {"$set": {
-                "indexing_status": "indexed",
-                "indexed_chunks": len(chunks),
-                "extraction_method": extraction_method,
-            }}
+            {
+                "$set": {
+                    "indexing_status": "indexed",
+                    "indexed_chunks": len(chunks),
+                    "extraction_method": extraction_method,
+                }
+            },
         )
 
         return {
@@ -141,44 +163,59 @@ class IngestionPipeline:
             "title": title,
             "chunks": len(chunks),
             "extraction_method": extraction_method,
-            "status": "indexed"
+            "status": "indexed",
         }
 
     async def _extract_text(self, file_url: str) -> str:
         file_bytes = await self._download_file(file_url)
         if not file_bytes:
             return ""
-        
+
         ext = os.path.splitext(file_url.split("?")[0])[1].lower()
-        
+
         if ext == ".zip":
             logger.info(f"Phát hiện tệp ZIP trong quá trình nạp dữ liệu: {file_url}")
             return await self._extract_from_zip(file_bytes)
-            
+
         return self._extract_with_markitdown(file_bytes, file_url)
 
     async def _extract_from_zip(self, zip_data: bytes) -> str:
-        import zipfile
-        import tempfile
         import shutil
-        
+        import tempfile
+        import zipfile
+
         all_text = []
-        supported_exts = {".pdf", ".txt", ".doc", ".docx", ".xls", ".xlsx", ".epub", ".mobi", ".ppt", ".pptx", ".md", ".tex"}
-        
+        supported_exts = {
+            ".pdf",
+            ".txt",
+            ".doc",
+            ".docx",
+            ".xls",
+            ".xlsx",
+            ".epub",
+            ".mobi",
+            ".ppt",
+            ".pptx",
+            ".md",
+            ".tex",
+        }
+
         with tempfile.TemporaryDirectory(prefix="ingestion_zip_") as tmp_dir:
             zip_path = os.path.join(tmp_dir, "archive.zip")
             with open(zip_path, "wb") as f:
                 f.write(zip_data)
-                
+
             extract_path = os.path.join(tmp_dir, "extracted")
             os.makedirs(extract_path)
-            
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 zip_ref.extractall(extract_path)
-            
+
             search_root = extract_path
             top_contents = os.listdir(extract_path)
-            if len(top_contents) == 1 and os.path.isdir(os.path.join(extract_path, top_contents[0])):
+            if len(top_contents) == 1 and os.path.isdir(
+                os.path.join(extract_path, top_contents[0])
+            ):
                 search_root = os.path.join(extract_path, top_contents[0])
                 logger.info(f"Navigating into nested folder: {top_contents[0]}")
 
@@ -191,17 +228,20 @@ class IngestionPipeline:
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
-                                file_text = self._extract_with_markitdown(content_bytes, f)
+                                file_text = self._extract_with_markitdown(
+                                    content_bytes, f
+                                )
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
                             logger.error("Lỗi nạp dữ liệu từ {f}")
-                            
+
         return "\n\n".join(all_text)
 
     async def _download_file(self, url: str) -> Optional[bytes]:
         try:
             from urllib.parse import urlparse
+
             access_key = settings.MINIO_ACCESS_KEY
             secret_key = settings.MINIO_SECRET_KEY
 
@@ -218,9 +258,12 @@ class IngestionPipeline:
                 bucket = self._bucket
                 object_key = url
 
-            logger.info(f"Đang tải xuống từ không gian lưu trữ {bucket}, key={object_key}")
+            logger.info(
+                f"Đang tải xuống từ không gian lưu trữ {bucket}, key={object_key}"
+            )
 
             import boto3
+
             s3 = boto3.client(
                 "s3",
                 endpoint_url=self._minio_base,
@@ -238,23 +281,24 @@ class IngestionPipeline:
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
         try:
-            import tempfile
             import os
+            import tempfile
+
             from markitdown import MarkItDown
-            
+
             ext = os.path.splitext(file_url)[1] or ".pdf"
-            
+
             with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
                 tmp.write(data)
                 tmp_path = tmp.name
-                
+
             logger.info(f"Đang tiến hành phân tích dữ liệu cho tệp {ext}")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
-            
+
             os.remove(tmp_path)
-            
+
             logger.info(f"Đã phân tích thành công {len(full_text)} ký tự")
             return full_text
         except ImportError:
@@ -263,5 +307,6 @@ class IngestionPipeline:
         except Exception as e:
             logger.error("Quá trình phân tích dữ liệu thất bại do lỗi")
             return ""
+
 
 ingestion_pipeline = IngestionPipeline()

@@ -2,17 +2,20 @@ import asyncio
 import time
 from dataclasses import dataclass
 from typing import AsyncGenerator, Literal, Optional
+
 from loguru import logger
 
 SESSION_HARD_TIMEOUT_SECONDS = 120
 CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
 CIRCUIT_BREAKER_RESET_SECONDS = 60
 
+
 @dataclass
 class SessionState:
     session_id: str
     status: Literal["running", "done", "failed", "cancelled", "timeout"] = "running"
     started_at: float = 0.0
+
 
 class CircuitBreaker:
     def __init__(self, threshold: int, reset_seconds: float):
@@ -25,7 +28,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error('Hệ thống bảo vệ bị ngắt do lỗi liên tục')
+            logger.error("Hệ thống bảo vệ bị ngắt do lỗi liên tục")
 
     def record_success(self):
         self._failures = 0
@@ -36,7 +39,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info('Khởi động lại hệ thống bảo vệ')
+            logger.info("Khởi động lại hệ thống bảo vệ")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -46,6 +49,7 @@ class CircuitBreaker:
         if not self._tripped_at:
             return 0.0
         return max(0.0, self._reset_seconds - (time.monotonic() - self._tripped_at))
+
 
 class OrchestrationHarness:
     def __init__(self):
@@ -62,7 +66,9 @@ class OrchestrationHarness:
             started_at=time.monotonic(),
         )
 
-    def _close_session(self, session_id: str, status: Literal["done", "failed", "cancelled", "timeout"]):
+    def _close_session(
+        self, session_id: str, status: Literal["done", "failed", "cancelled", "timeout"]
+    ):
         state = self._sessions.pop(session_id, None)
         if state:
             state.status = status
@@ -75,7 +81,7 @@ class OrchestrationHarness:
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
             remaining = int(self._circuit_breaker.remaining_seconds())
-            logger.error('Hệ thống bảo vệ chặn yêu cầu')
+            logger.error("Hệ thống bảo vệ chặn yêu cầu")
             yield {
                 "type": "error",
                 "message": f"Hệ thống đang tạm ngưng do quá tải, vui lòng thử lại sau {remaining} giây",
@@ -83,26 +89,26 @@ class OrchestrationHarness:
             return
 
         self._open_session(session_id)
-        logger.info('Bắt đầu phiên làm việc')
+        logger.info("Bắt đầu phiên làm việc")
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info('Phiên làm việc bị hủy')
+                        logger.info("Phiên làm việc bị hủy")
                         yield {"type": "error", "message": "Phiên làm việc đã bị huỷ"}
                         return
                     yield event
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info('Phiên làm việc thành công')
+            logger.info("Phiên làm việc thành công")
 
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error('Phiên làm việc quá hạn')
+            logger.error("Phiên làm việc quá hạn")
             yield {
                 "type": "error",
                 "message": f"Yêu cầu vượt quá thời gian xử lý cho phép ({SESSION_HARD_TIMEOUT_SECONDS}s), vui lòng thử lại",
@@ -110,20 +116,26 @@ class OrchestrationHarness:
 
         except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.warning('Đã hủy phiên làm việc')
-            yield {"type": "error", "message": "Phiên làm việc bị huỷ do kết nối bị đứt"}
+            logger.warning("Đã hủy phiên làm việc")
+            yield {
+                "type": "error",
+                "message": "Phiên làm việc bị huỷ do kết nối bị đứt",
+            }
 
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.exception('Lỗi phiên làm việc')
-            yield {"type": "error", "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau"}
+            logger.exception("Lỗi phiên làm việc")
+            yield {
+                "type": "error",
+                "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
+            }
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info('Nhận yêu cầu hủy phiên làm việc')
+            logger.info("Nhận yêu cầu hủy phiên làm việc")
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())
@@ -133,5 +145,6 @@ class OrchestrationHarness:
             "is_open": self._circuit_breaker.is_open(),
             "remaining_seconds": int(self._circuit_breaker.remaining_seconds()),
         }
+
 
 orchestration_harness = OrchestrationHarness()

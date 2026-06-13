@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Literal, Optional
+
 from loguru import logger
 
 UserRole = Literal["guest", "reader", "author", "admin"]
@@ -15,14 +16,26 @@ ROLE_POLICIES: dict[str, dict] = {
     "reader": {
         "max_tool_calls_per_session": 12,
         "max_tokens_per_session": 8000,
-        "allowed_tools": {"SearchEngine", "Knowledge", "Reasoning", "CodeInterpreter", "Action"},
+        "allowed_tools": {
+            "SearchEngine",
+            "Knowledge",
+            "Reasoning",
+            "CodeInterpreter",
+            "Action",
+        },
         "blocked_tools": set(),
         "max_plan_steps": 6,
     },
     "author": {
         "max_tool_calls_per_session": 25,
         "max_tokens_per_session": 20000,
-        "allowed_tools": {"SearchEngine", "Knowledge", "Reasoning", "CodeInterpreter", "Action"},
+        "allowed_tools": {
+            "SearchEngine",
+            "Knowledge",
+            "Reasoning",
+            "CodeInterpreter",
+            "Action",
+        },
         "blocked_tools": set(),
         "max_plan_steps": 10,
     },
@@ -42,6 +55,7 @@ class PolicyDecision:
     reason: str = ""
     blocked_tool: Optional[str] = None
 
+
 @dataclass
 class SessionGovernanceState:
     session_id: str
@@ -50,8 +64,10 @@ class SessionGovernanceState:
     tool_calls_used: int = 0
     estimated_tokens_used: int = 0
 
+
 def _estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
+
 
 class GovernanceHarness:
     def __init__(self):
@@ -66,7 +82,9 @@ class GovernanceHarness:
             user_id=user_id,
             role=role,
         )
-        logger.info(f"Đã mở phiên làm việc mới (phiên: {session_id} user={user_id} role={role}")
+        logger.info(
+            f"Đã mở phiên làm việc mới (phiên: {session_id} user={user_id} role={role}"
+        )
 
     def close_session(self, session_id: str):
         self._sessions.pop(session_id, None)
@@ -74,7 +92,10 @@ class GovernanceHarness:
     def check_tool_allowed(self, session_id: str, tool_name: str) -> PolicyDecision:
         state = self._sessions.get(session_id)
         if not state:
-            return PolicyDecision(allowed=False, reason="Session Chưa được đăng ký with governance harness")
+            return PolicyDecision(
+                allowed=False,
+                reason="Session Chưa được đăng ký with governance harness",
+            )
 
         policy = self._get_policy(state.role)
 
@@ -83,14 +104,25 @@ class GovernanceHarness:
                 f"Đã chặn công cụ do vi phạm quyền (phiên: {session_id} user={state.user_id} "
                 f"role={state.role} tool={tool_name} reason=blocked_for_role"
             )
-            return PolicyDecision(allowed=False, reason=f"Tool {tool_name!r} không được phép với vai trò {state.role}", blocked_tool=tool_name)
+            return PolicyDecision(
+                allowed=False,
+                reason=f"Tool {tool_name!r} không được phép với vai trò {state.role}",
+                blocked_tool=tool_name,
+            )
 
-        if policy["allowed_tools"] is not None and tool_name not in policy["allowed_tools"]:
+        if (
+            policy["allowed_tools"] is not None
+            and tool_name not in policy["allowed_tools"]
+        ):
             logger.warning(
                 f"Đã chặn công cụ do vi phạm quyền (phiên: {session_id} user={state.user_id} "
                 f"role={state.role} tool={tool_name} reason=not_in_allowlist"
             )
-            return PolicyDecision(allowed=False, reason=f"Tool {tool_name!r} không nằm trong danh sách cho phép", blocked_tool=tool_name)
+            return PolicyDecision(
+                allowed=False,
+                reason=f"Tool {tool_name!r} không nằm trong danh sách cho phép",
+                blocked_tool=tool_name,
+            )
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
@@ -98,7 +130,10 @@ class GovernanceHarness:
                 f"Đã chặn do vượt hạn mức sử dụng công cụ (phiên: {session_id} user={state.user_id} "
                 f"role={state.role} used={state.tool_calls_used} max={max_calls}"
             )
-            return PolicyDecision(allowed=False, reason=f"Đã sử dụng hết {max_calls} lượt công cụ cho phiên này")
+            return PolicyDecision(
+                allowed=False,
+                reason=f"Đã sử dụng hết {max_calls} lượt công cụ cho phiên này",
+            )
 
         return PolicyDecision(allowed=True)
 
@@ -125,18 +160,25 @@ class GovernanceHarness:
             )
         return PolicyDecision(allowed=True)
 
-    def check_token_budget(self, session_id: str, additional_tokens: int) -> PolicyDecision:
+    def check_token_budget(
+        self, session_id: str, additional_tokens: int
+    ) -> PolicyDecision:
         state = self._sessions.get(session_id)
         if not state:
             return PolicyDecision(allowed=True)
         policy = self._get_policy(state.role)
         max_tokens = policy["max_tokens_per_session"]
-        if max_tokens != -1 and (state.estimated_tokens_used + additional_tokens) > max_tokens:
+        if (
+            max_tokens != -1
+            and (state.estimated_tokens_used + additional_tokens) > max_tokens
+        ):
             logger.warning(
                 f"Đã chặn do vượt hạn mức token (phiên: {session_id} role={state.role} "
                 f"used={state.estimated_tokens_used} additional={additional_tokens} max={max_tokens}"
             )
-            return PolicyDecision(allowed=False, reason="Vượt quá giới hạn token cho phiên này")
+            return PolicyDecision(
+                allowed=False, reason="Vượt quá giới hạn token cho phiên này"
+            )
         return PolicyDecision(allowed=True)
 
     def get_session_summary(self, session_id: str) -> dict:
@@ -152,5 +194,6 @@ class GovernanceHarness:
             "estimated_tokens_used": state.estimated_tokens_used,
             "tokens_limit": policy["max_tokens_per_session"],
         }
+
 
 governance_harness = GovernanceHarness()

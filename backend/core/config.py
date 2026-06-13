@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 import os
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class Settings(BaseModel):
@@ -18,9 +19,15 @@ class Settings(BaseModel):
     GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
     GOOGLE_REDIRECT_URI: Optional[str] = os.getenv("GOOGLE_REDIRECT_URI")
-    GOOGLE_AUTH_URL: str = os.getenv("GOOGLE_AUTH_URL", "https://accounts.google.com/o/oauth2/v2/auth")
-    GOOGLE_TOKEN_URL: str = os.getenv("GOOGLE_TOKEN_URL", "https://oauth2.googleapis.com/token")
-    GOOGLE_USERINFO_URL: str = os.getenv("GOOGLE_USERINFO_URL", "https://www.googleapis.com/oauth2/v3/userinfo")
+    GOOGLE_AUTH_URL: str = os.getenv(
+        "GOOGLE_AUTH_URL", "https://accounts.google.com/o/oauth2/v2/auth"
+    )
+    GOOGLE_TOKEN_URL: str = os.getenv(
+        "GOOGLE_TOKEN_URL", "https://oauth2.googleapis.com/token"
+    )
+    GOOGLE_USERINFO_URL: str = os.getenv(
+        "GOOGLE_USERINFO_URL", "https://www.googleapis.com/oauth2/v3/userinfo"
+    )
 
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT")
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY")

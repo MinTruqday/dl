@@ -1,12 +1,14 @@
-import os
+import asyncio
 import hashlib
 import json
-import redis
-import asyncio
+import os
 from typing import List
+
+import redis
+from core.config import settings
 from loguru import logger
 from sentence_transformers import SentenceTransformer
-from core.config import settings
+
 
 class EmbeddingService:
     def __init__(self):
@@ -57,19 +59,22 @@ class EmbeddingService:
 
         if uncached_texts:
             for batch_start in range(0, len(uncached_texts), self._batch_size):
-                batch = uncached_texts[batch_start:batch_start + self._batch_size]
+                batch = uncached_texts[batch_start : batch_start + self._batch_size]
                 batch_embeddings = self._model.encode(batch, convert_to_numpy=True)
-                
+
                 for j, emb in enumerate(batch_embeddings):
                     real_idx = uncached_indices[batch_start + j]
                     emb_list = emb.tolist()
                     all_embeddings[real_idx] = emb_list
                     if self._cache:
-                        self._cache.setex(self._cache_key(batch[j]), 86400 * 7, json.dumps(emb_list))
+                        self._cache.setex(
+                            self._cache_key(batch[j]), 86400 * 7, json.dumps(emb_list)
+                        )
 
         return all_embeddings
 
     async def embed_batch(self, texts: List[str]) -> List[List[float]]:
         return await asyncio.to_thread(self._embed_batch, texts)
+
 
 embedding_service = EmbeddingService()

@@ -1,9 +1,11 @@
 import json
-from loguru import logger
-from typing import Dict, List, Optional
-from core.config import settings
 from datetime import datetime, timezone
+from typing import Dict, List, Optional
+
 import redis
+from core.config import settings
+from loguru import logger
+
 
 class MemoryManager:
     def __init__(self):
@@ -45,7 +47,9 @@ class MemoryManager:
             if len(history) > max_turns:
                 history = history[-max_turns:]
 
-            self._redis.setex(key, self._short_term_ttl, json.dumps(history, ensure_ascii=False))
+            self._redis.setex(
+                key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
+            )
         except Exception as e:
             logger.debug("Lỗi lưu bộ nhớ ngắn hạn do")
 
@@ -62,7 +66,9 @@ class MemoryManager:
             if len(history) > 200:
                 history = history[-200:]
 
-            self._redis.setex(key, self._long_term_ttl, json.dumps(history, ensure_ascii=False))
+            self._redis.setex(
+                key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
+            )
         except Exception as e:
             logger.debug("Lỗi lưu bộ nhớ dài hạn do")
 
@@ -95,9 +101,9 @@ class MemoryManager:
         return {
             "total_queries": len(history),
             "frequent_documents": sorted_topics[:5],
-            "avg_quality": sum(
-                e.get("answer_quality", 0) for e in history
-            ) / max(len(history), 1)
+            "avg_quality": sum(e.get("answer_quality", 0) for e in history)
+            / max(len(history), 1),
         }
+
 
 memory_manager = MemoryManager()

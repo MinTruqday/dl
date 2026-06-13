@@ -1,5 +1,7 @@
 from enum import Enum
+
 from pydantic import BaseModel
+
 
 class PromptType(Enum):
     BRAIN_SYSTEM = "brain_system"
@@ -40,6 +42,7 @@ class PromptType(Enum):
     MULTI_DOC_SYNTHESIS = "multi_doc_synthesis"
     EVAL_JUDGE = "eval_judge"
     STORAGE_FILE_ANALYSIS = "storage_file_analysis"
+
 
 class PromptRegistry:
     _prompts = {
@@ -87,7 +90,6 @@ RULES:
 </example>
 
 {format_instructions}""",
-        
         PromptType.CONTEXTUALIZE: """SYSTEM IDENTITY: DocLib Core System - Contextualization Engine.
 OBJECTIVE: Reconstruct the latest user query into an independent, fully contextualized query by performing anaphora and co-reference resolution based on the conversation history.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -110,7 +112,6 @@ CONVERSATION HISTORY:
 
 LATEST USER INPUT: {question}
 OUTPUT:""",
-
         PromptType.ROUTE: """SYSTEM IDENTITY: DocLib Core System - Secondary Router.
 OBJECTIVE: Classify the query into either an internal database search or a direct response.
 
@@ -132,7 +133,6 @@ RULES:
 
 USER INPUT: "{question}"
 OUTPUT:""",
-
         PromptType.RETRIEVAL_STRATEGY: """SYSTEM IDENTITY: DocLib Core System - Search Strategy Engine.
 OBJECTIVE: Decompose the user query into optimal search paths using a Tree of Thoughts approach.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -156,7 +156,6 @@ Features of the Premium plan
 
 USER INPUT: "{question}"
 OUTPUT:""",
-
         PromptType.GRADE_DOCUMENT: """SYSTEM IDENTITY: DocLib Core System - Document Grading Engine.
 OBJECTIVE: Evaluate whether the provided document contains information relevant to answering the user's query.
 OUTPUT_LANGUAGE: Exact string match.
@@ -170,7 +169,6 @@ RULES:
 DOCUMENT: {context}
 USER QUERY: {question}
 CONCLUSION:""",
-
         PromptType.OPTIMIZE_QUERY: """SYSTEM IDENTITY: DocLib Core System - Query Optimization Engine.
 OBJECTIVE: Rewrite the given query to maximize vector search retrieval performance.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -181,14 +179,12 @@ RULES:
 
 ORIGINAL QUERY: {question}
 OPTIMIZED QUERY:""",
-
         PromptType.GENERATE_DIRECT: """SYSTEM IDENTITY: DocLib Core System - Direct Response Engine.
 OBJECTIVE: Provide a helpful and conversational response to the user.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 USER QUERY: {question}
 RESPONSE:""",
-
         PromptType.SYNTHESIS: """SYSTEM IDENTITY: DocLib Core System - Answer Synthesis Engine.
 OBJECTIVE: Synthesize a highly accurate, coherent, and professional response based on the provided reference documents.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -208,7 +204,6 @@ REFERENCE DOCUMENTS ({source_name}):
 
 USER QUERY: {question}
 RESPONSE:""",
-
         PromptType.SELF_REFLECTION: """SYSTEM IDENTITY: DocLib Core System - Self Reflection Engine.
 OBJECTIVE: Analyze the tool execution result and determine if it is a technical failure.
 OUTPUT_LANGUAGE: Exact string match.
@@ -234,7 +229,6 @@ ZeroDivisionError: division by zero</result>
 RESULT:
 {res}
 OUTPUT:""",
-
         PromptType.PRIMARY_ROUTER: """SYSTEM IDENTITY: DocLib Core System - Primary Router.
 OBJECTIVE: Analyze the user's intent and determine the primary processing route.
 OUTPUT_LANGUAGE: The JSON values must exactly match the language of the user's input query.
@@ -273,7 +267,6 @@ RULES:
 </example>
 
 USER INPUT: {question}""",
-
         PromptType.AGGREGATOR: """SYSTEM IDENTITY: DocLib Core System - Final Aggregator Engine.
 OBJECTIVE: Consolidate data from multiple sub-systems into a single, cohesive, and professional response.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -292,13 +285,11 @@ USER QUERY: "{query}"
 </gathered_data>
 
 RESPONSE:""",
-
         PromptType.CHAT_ASSISTANT: """SYSTEM IDENTITY: DocLib Core System - Conversational Assistant.
 OBJECTIVE: Provide a concise and friendly response.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
 
 USER QUERY: {query}""",
-
         PromptType.MULTI_QUERY: """SYSTEM IDENTITY: DocLib Core System - Multi-Query Generator.
 OBJECTIVE: Generate 3 alternative versions of the given question to improve vector search recall.
 OUTPUT_LANGUAGE: Must exactly match the language of the original question.
@@ -309,7 +300,6 @@ RULES:
 
 ORIGINAL QUESTION: {question}
 OUTPUT:""",
-
         PromptType.PLAGIARISM_DETECTION: """SYSTEM IDENTITY: DocLib Core System - Plagiarism Detection Engine.
 OBJECTIVE: Evaluate whether the similarity between the submitted text and matched sources indicates plagiarism.
 OUTPUT_LANGUAGE: Must match the language of the submitted text.
@@ -325,19 +315,15 @@ INSTRUCTIONS:
 2. Calculate a Plagiarism Score (0-100).
 3. Output ONLY valid JSON: {{"plagiarism_score": float, "status": "clean|warning|danger", "message": "text", "matched_sources": []}}
 """,
-
         PromptType.CONTENT_REVIEW: """SYSTEM IDENTITY: DocLib Core System - Content Review Engine.
 OBJECTIVE: Evaluate the following text based on these criteria: {criteria_str}. Provide a detailed report with Strengths, Weaknesses, and Improvement Suggestions.
 OUTPUT_LANGUAGE: Must match the language of the input text.
 
 TEXT: {text}""",
-
         PromptType.TOOL_DISPATCHER: """SYSTEM IDENTITY: DocLib Core System - API Tool Dispatcher.
 OBJECTIVE: Analyze the user intent and select the appropriate system tool for execution.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query""",
-
         PromptType.CODE_INTERPRETER_SYSTEM: """SYSTEM IDENTITY: DocLib Core System - Python Execution Engine""",
-
         PromptType.ANALYTICAL_ENGINE: """SYSTEM IDENTITY: DocLib Core System - Analytical Engine.
 OBJECTIVE: Perform deep logical analysis, evaluate cause-and-effect, and provide coherent conclusions.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -346,7 +332,6 @@ TASK: {task}
 
 INSTRUCTIONS:
 Provide a step-by-step logical breakdown of the problem before delivering the final conclusion""",
-
         PromptType.QUALITY_EVALUATION: """SYSTEM IDENTITY: DocLib Core System - Quality Evaluation Engine.
 OBJECTIVE: Evaluate the quality of the generated response against the provided context.
 OUTPUT_LANGUAGE: You must output ONLY a valid JSON object.
@@ -367,7 +352,6 @@ JSON SCHEMA:
 
 RULES:
 - Output nothing but the requested JSON structure""",
-
         PromptType.DOCUMENT_GENERATION: """SYSTEM IDENTITY: DocLib Core System - Document Generation Engine.
 OBJECTIVE: Generate a comprehensive and professional document draft in {format_type} format.
 OUTPUT_LANGUAGE: Must exactly match the language of the user's input query.
@@ -376,7 +360,6 @@ RULES:
 - Maintain a highly professional, academic, or formal tone depending on the context.
 - Ensure the output strictly conforms to the requested format ({format_type}).
 - If LaTeX is requested, return a fully compilable document structure""",
-
         PromptType.TRANSLATE: "SYSTEM IDENTITY: DocLib Core System - Translation Engine.\nOBJECTIVE: Translate the following text into {target_lang}. Output ONLY the translated text.\n\nTEXT:\n{text}",
         PromptType.SENTIMENT_ANALYSIS: "SYSTEM IDENTITY: DocLib Core System - Sentiment Engine.\nOBJECTIVE: Analyze the sentiment of the following text. Output ONLY one word: Positive, Negative, or Neutral.\n\nTEXT:\n{text}",
         PromptType.SENTIMENT_SUMMARY: "SYSTEM IDENTITY: DocLib Core System - Sentiment Engine.\nOBJECTIVE: Based on the following reviews, write a one-sentence summary of the overall reader sentiment.\nOUTPUT_LANGUAGE: Must match the language of the reviews.\n\nREVIEWS: {reviews}",
@@ -390,7 +373,6 @@ RULES:
         PromptType.SUGGEST_CITATIONS: "SYSTEM IDENTITY: DocLib Core System - Citation Engine.\nOBJECTIVE: Based on the user's text and the reference sources found, suggest citations in {style} format.\nOUTPUT_LANGUAGE: Must match the language of the user's text.\n\nUSER TEXT: {text}\n\nREFERENCE SOURCES:\n{sources}",
         PromptType.TRANSFORM_TONE: "SYSTEM IDENTITY: DocLib Core System - Tone Engine.\nOBJECTIVE: {action} the following text to match the tone '{tone}'. Preserve core meaning while adjusting the linguistic style.\nOUTPUT_LANGUAGE: Must match the language of the input text.\n\nTEXT: {text}",
         PromptType.MULTI_DOC_SYNTHESIS: "SYSTEM IDENTITY: DocLib Core System - Synthesis Engine.\nOBJECTIVE: Synthesize information from multiple documents to answer the query: '{query}'.\nOUTPUT_LANGUAGE: Must match the language of the query.\n\nCONTEXT:\n{context}",
-
         PromptType.EVAL_JUDGE: """SYSTEM IDENTITY: DocLib Core System - Evaluation Judge Engine.
 OBJECTIVE: Score the quality of an AI-generated response compared to the expected answer on three criteria.
 OUTPUT_LANGUAGE: You must output ONLY a valid JSON object.
@@ -411,7 +393,6 @@ QUESTION: {instruction}
 EXPECTED ANSWER: {expected}
 AI RESPONSE: {actual}
 JSON SCORE:""",
-        
         PromptType.STORAGE_FILE_ANALYSIS: """SYSTEM IDENTITY: DocLib Core System - Document Analysis Engine.
 OBJECTIVE: Analyze the provided document text and extract metadata including summary, filename, tags, entities, moderation status, and folder routing.
 OUTPUT_LANGUAGE: Must be Vietnamese unless specified otherwise.
@@ -437,12 +418,12 @@ FOLDER OPTIONS: {folder_str}
 
 DOCUMENT TEXT:
 {context}
-"""
+""",
     }
-
 
     @classmethod
     def get(cls, prompt_type: PromptType) -> str:
         return cls._prompts.get(prompt_type, "")
-        
+
+
 prompt_registry = PromptRegistry()

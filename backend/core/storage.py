@@ -1,10 +1,10 @@
-from loguru import logger
 import os
-import aioboto3
-from botocore.exceptions import ClientError
-import brotli
 
+import aioboto3
+import brotli
+from botocore.exceptions import ClientError
 from core.config import settings
+from loguru import logger
 
 MINIO_ENDPOINT = settings.MINIO_ENDPOINT
 MINIO_ACCESS_KEY = settings.MINIO_ACCESS_KEY
@@ -14,6 +14,7 @@ MINIO_PUBLIC_URL = settings.MINIO_PUBLIC_URL
 
 session = aioboto3.Session()
 _storage_client = None
+
 
 async def get_storage_client():
     global _storage_client
@@ -26,52 +27,68 @@ async def get_storage_client():
         ).__aenter__()
     return _storage_client
 
+
 async def initialize_bucket():
     storage_client = await get_storage_client()
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError:
-        logger.info(f'Khởi tạo không gian lưu trữ {MINIO_BUCKET_NAME}')
+        logger.info(f"Khởi tạo không gian lưu trữ {MINIO_BUCKET_NAME}")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
         logger.info(f"Đã tạo không gian lưu trữ {MINIO_BUCKET_NAME}")
 
-async def upload_file(file_content: bytes, object_name: str, content_type: str = "application/pdf", compress: bool = False) -> str:
+
+async def upload_file(
+    file_content: bytes,
+    object_name: str,
+    content_type: str = "application/pdf",
+    compress: bool = False,
+) -> str:
     kwargs = {
         "Bucket": MINIO_BUCKET_NAME,
         "Key": object_name,
-        "ContentType": content_type
+        "ContentType": content_type,
     }
-    
-    if compress or content_type.startswith("text/") or content_type == "application/json":
+
+    if (
+        compress
+        or content_type.startswith("text/")
+        or content_type == "application/json"
+    ):
         import asyncio
+
         loop = asyncio.get_event_loop()
-        file_content = await loop.run_in_executor(None, lambda: brotli.compress(file_content, quality=11))
+        file_content = await loop.run_in_executor(
+            None, lambda: brotli.compress(file_content, quality=11)
+        )
         kwargs["ContentEncoding"] = "br"
-        
+
     kwargs["Body"] = file_content
 
     storage_client = await get_storage_client()
     await storage_client.put_object(**kwargs)
     return object_name
 
+
 async def download_file(object_name: str) -> tuple[bytes, str]:
     storage_client = await get_storage_client()
-    response = await storage_client.get_object(Bucket=MINIO_BUCKET_NAME, Key=object_name)
+    response = await storage_client.get_object(
+        Bucket=MINIO_BUCKET_NAME, Key=object_name
+    )
     content = await response["Body"].read()
-    
+
     if response.get("ContentEncoding") == "br":
         content = brotli.decompress(content)
-        
+
     return content, response.get("ContentType", "application/octet-stream")
+
 
 async def generate_presigned_url(object_name: str, expiration: int = 3600) -> str:
     storage_client = await get_storage_client()
     params = {"Bucket": MINIO_BUCKET_NAME, "Key": object_name}
-        
+
     response = await storage_client.generate_presigned_url(
-        "get_object",
-        Params=params,
-        ExpiresIn=expiration
+        "get_object", Params=params, ExpiresIn=expiration
     )
     if MINIO_PUBLIC_URL and MINIO_ENDPOINT in response:
         response = response.replace(MINIO_ENDPOINT, MINIO_PUBLIC_URL)

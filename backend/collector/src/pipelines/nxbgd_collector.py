@@ -1,21 +1,21 @@
 import asyncio
+import hashlib
 import os
 import re
-import hashlib
-import urllib.parse
 import shutil
-from uuid6 import uuid7
+import urllib.parse
 
 import img2pdf
-from playwright.async_api import async_playwright, Response
 from loguru import logger
-
+from playwright.async_api import Response, async_playwright
+from src.core.browser import get_stealth_context, managed_browser
 from src.core.db import db_client
-from src.core.storage import storage
 from src.core.redis_client import dedup
-from src.core.browser import managed_browser, get_stealth_context
+from src.core.storage import storage
+from uuid6 import uuid7
 
 MIN_FILE_SIZE_BYTES = 20000
+
 
 class NXBGDCollector:
     def __init__(self, target_class: str):
@@ -31,40 +31,45 @@ class NXBGDCollector:
     async def _handle_response(self, response: Response):
         if not self.is_capturing or not self.temp_dir:
             return
-            
+
         try:
             url = response.url
-            content_type = response.headers.get('content-type', '')
-            
-            if 'image' in content_type or any(ext in url.lower() for ext in ['.jpg', '.jpeg', '.png']):
-                if any(skip in url for skip in ['icon', 'avatar', 'logo', 'button', 'blank_book_page']):
+            content_type = response.headers.get("content-type", "")
+
+            if "image" in content_type or any(
+                ext in url.lower() for ext in [".jpg", ".jpeg", ".png"]
+            ):
+                if any(
+                    skip in url
+                    for skip in ["icon", "avatar", "logo", "button", "blank_book_page"]
+                ):
                     return
-                
+
                 try:
                     body = await response.body()
                     if len(body) > MIN_FILE_SIZE_BYTES:
                         content_hash = hashlib.md5(body).hexdigest()
-                        
+
                         if content_hash in self.captured_hashes:
                             return
-                        
+
                         ext = ".jpg"
                         if "png" in url.lower() or "png" in content_type:
                             ext = ".png"
-                            
+
                         filename = f"nxbgd_page_{self.page_counter:03d}{ext}"
                         save_path = os.path.join(self.temp_dir, filename)
-                        
-                        with open(save_path, 'wb') as f:
+
+                        with open(save_path, "wb") as f:
                             f.write(body)
-                        
+
                         logger.info(f"Chụp xong trang #{self.page_counter}: {filename}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.warning('Không lấy được dữ liệu trả về từ NXBGD')
+                    logger.warning("Không lấy được dữ liệu trả về từ NXBGD")
         except Exception as e:
-            logger.warning('Lỗi xử lý phản hồi từ NXBGD')
+            logger.warning("Lỗi xử lý phản hồi từ NXBGD")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -75,35 +80,42 @@ class NXBGDCollector:
     async def close(self):
         if self.context:
             await self.context.close()
-        if hasattr(self, '_browser_cm'):
+        if hasattr(self, "_browser_cm"):
             await self._browser_cm.__aexit__(None, None, None)
 
     async def compile_and_upload(self, title: str):
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
         final_pdf_name = f"{safe_title}_{uuid7().hex[:6]}.pdf"
-        
+
         pdf_path = os.path.join(self.temp_dir, final_pdf_name)
-        
-        image_files = sorted([
-            os.path.join(self.temp_dir, f) 
-            for f in os.listdir(self.temp_dir) 
-            if f.startswith("nxbgd_page_") and (f.endswith(".jpg") or f.endswith(".png"))
-        ])
+
+        image_files = sorted(
+            [
+                os.path.join(self.temp_dir, f)
+                for f in os.listdir(self.temp_dir)
+                if f.startswith("nxbgd_page_")
+                and (f.endswith(".jpg") or f.endswith(".png"))
+            ]
+        )
 
         if not image_files:
-            logger.warning(f'Bỏ qua PDF {title} vì không có nội dung')
+            logger.warning(f"Bỏ qua PDF {title} vì không có nội dung")
             return
 
         try:
-            logger.info(f"Đang gom {len(image_files)} trang thành '{final_pdf_name}' bằng thư viện img2pdf")
+            logger.info(
+                f"Đang gom {len(image_files)} trang thành '{final_pdf_name}' bằng thư viện img2pdf"
+            )
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info(f'Tạo PDF {pdf_path} thành công')
-                
-            logger.info(f'Đẩy file {final_pdf_name} lên lưu trữ')
-            minio_url = await storage.upload_local_file(f"tài liệu/nxbgd/{final_pdf_name}", pdf_path)
-            
+            logger.info(f"Tạo PDF {pdf_path} thành công")
+
+            logger.info(f"Đẩy file {final_pdf_name} lên lưu trữ")
+            minio_url = await storage.upload_local_file(
+                f"tài liệu/nxbgd/{final_pdf_name}", pdf_path
+            )
+
             if minio_url:
                 document_metadata = {
                     "title": title,
@@ -118,15 +130,15 @@ class NXBGDCollector:
                     "author_id": "nxbgd",
                     "status": "published",
                     "views": 0,
-                    "average_rating": 0.0
+                    "average_rating": 0.0,
                 }
-                
+
                 doc_id = await db_client.insert_document(document_metadata)
                 if doc_id:
                     pass
-                    
+
         except Exception as e:
-            logger.error('Lỗi hệ thống')
+            logger.error("Lỗi hệ thống")
             raise
         finally:
 
@@ -134,124 +146,150 @@ class NXBGDCollector:
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.warning(f'Lỗi xóa thư mục tạm {self.temp_dir}')
+                logger.warning(f"Lỗi xóa thư mục tạm {self.temp_dir}")
 
     async def execute(self):
         await self.init_browser()
-        
+
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
             logger.info(f"Đang truy cập URL gốc OLM: {url}")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
-            
+
             has_next = True
-            
+
             while has_next:
-                document_elements = await self.page.query_selector_all("a[href*='/chi-tiet-sach/']")
+                document_elements = await self.page.query_selector_all(
+                    "a[href*='/chi-tiet-sach/']"
+                )
                 document_urls = []
                 for b in document_elements:
                     href = await b.get_attribute("href")
                     if href and href not in document_urls:
                         document_urls.append(href)
-                
-                logger.info(f'Tìm thấy {len(document_urls)} tài liệu trên trang')
-                
+
+                logger.info(f"Tìm thấy {len(document_urls)} tài liệu trên trang")
+
                 for doc_url in document_urls:
-                    full_doc_url = f"https://taphuan.nxbgd.vn{doc_url}" if doc_url.startswith("/") else doc_url
-                    logger.info(f'Xem thông tin tài liệu {full_doc_url}')
-                    
+                    full_doc_url = (
+                        f"https://taphuan.nxbgd.vn{doc_url}"
+                        if doc_url.startswith("/")
+                        else doc_url
+                    )
+                    logger.info(f"Xem thông tin tài liệu {full_doc_url}")
+
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
                         await asyncio.sleep(4)
-                        
-                        doc_links = await self.page.query_selector_all("a[href*='/doc-sach/']")
+
+                        doc_links = await self.page.query_selector_all(
+                            "a[href*='/doc-sach/']"
+                        )
                         if not doc_links:
                             continue
-                        
+
                         for doc_link in doc_links:
                             res_name = await doc_link.text_content()
                             res_name = res_name.strip()
                             full_title = res_name
-                            
+
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f'Bỏ qua {full_title} do đã có trong Redis')
+                                logger.info(f"Bỏ qua {full_title} do đã có trong Redis")
                                 continue
-                                
+
                             await dedup.mark_collected("taphuan_book", full_title)
-                            
+
                             viewer_url = await doc_link.get_attribute("href")
-                            if viewer_url.startswith("/"): viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
-                            
-                            logger.info(f'Xử lý tài nguyên {full_title} tại {viewer_url}')
-                            
+                            if viewer_url.startswith("/"):
+                                viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
+
+                            logger.info(
+                                f"Xử lý tài nguyên {full_title} tại {viewer_url}"
+                            )
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             import tempfile
-                            self.temp_dir = tempfile.mkdtemp(prefix=f"nxbgd_{safe_title[:20]}_")
+
+                            self.temp_dir = tempfile.mkdtemp(
+                                prefix=f"nxbgd_{safe_title[:20]}_"
+                            )
                             os.makedirs(self.temp_dir, exist_ok=True)
-                            
+
                             self.captured_hashes = set()
                             self.page_counter = 0
                             self.is_capturing = True
-                            
+
                             viewer_page = await self.context.new_page()
                             viewer_page.on("response", self._handle_response)
                             await viewer_page.goto(viewer_url, timeout=60000)
                             await asyncio.sleep(5)
-                            
+
                             last_page_count = 0
                             stable_count = 0
                             for _ in range(150):
                                 try:
-                                    next_btn = await viewer_page.query_selector("button i.fa-angle-right")
+                                    next_btn = await viewer_page.query_selector(
+                                        "button i.fa-angle-right"
+                                    )
                                     if next_btn:
                                         await next_btn.click()
                                     else:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.warning('Lỗi điều hướng trình xem tài liệu')
-                                await asyncio.sleep(2)  
-                                
+                                    logger.warning("Lỗi điều hướng trình xem tài liệu")
+                                await asyncio.sleep(2)
+
                                 current_pages = len(self.captured_hashes)
-                                if current_pages > 0 and current_pages == last_page_count:
+                                if (
+                                    current_pages > 0
+                                    and current_pages == last_page_count
+                                ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(f'Thu thập {current_pages} trang thành công')
+                                        logger.info(
+                                            f"Thu thập {current_pages} trang thành công"
+                                        )
                                         break
                                 else:
                                     stable_count = 0
                                 last_page_count = current_pages
-                            
+
                             self.is_capturing = False
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.error('Lỗi kiểm tra chi tiết tài liệu')
-                        
+                        logger.error("Lỗi kiểm tra chi tiết tài liệu")
+
                 try:
                     await self.page.goto(url, timeout=60000)
                     await asyncio.sleep(5)
                     next_btn = await self.page.query_selector("button.p-paginator-next")
-                    if next_btn and not await next_btn.is_disabled() and "p-disabled" not in (await next_btn.get_attribute("class") or ""):
+                    if (
+                        next_btn
+                        and not await next_btn.is_disabled()
+                        and "p-disabled"
+                        not in (await next_btn.get_attribute("class") or "")
+                    ):
                         logger.info("Đang chuyển sang trang tiếp theo")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info('Đến trang cuối hoặc không có nút chuyển trang')
+                        logger.info("Đến trang cuối hoặc không có nút chuyển trang")
                 except Exception as e:
-                    logger.error('Lỗi chuyển trang')
+                    logger.error("Lỗi chuyển trang")
                     has_next = False
-                    
+
                 break
 
         except Exception as e:
-            logger.error('Lỗi nguồn NXBGD')
+            logger.error("Lỗi nguồn NXBGD")
             raise
         finally:
             await self.close()
+
 
 async def run_nxbgd_collector(target_class: str):
     logger.info("Bắt đầu kéo dữ liệu từ NXBGD cho toàn bộ các lớp")

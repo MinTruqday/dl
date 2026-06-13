@@ -1,7 +1,9 @@
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
+
 from core.config import settings
 from loguru import logger
+from motor.motor_asyncio import AsyncIOMotorClient
+
 
 class DocLibDatabase:
     def __init__(self):
@@ -15,15 +17,19 @@ class DocLibDatabase:
             logger.success(f"Đã thêm mới tài liệu mang mã: {res.inserted_id}")
             return str(res.inserted_id)
         except Exception as e:
-            logger.error('Lỗi thêm tài liệu')
+            logger.error("Lỗi thêm tài liệu")
             return None
 
     async def update_document(self, document_id: str, update_data: dict):
         try:
             from bson import ObjectId
-            await self.db.documents.update_one({"_id": ObjectId(document_id)}, {"$set": update_data})
-            logger.success(f'Cập nhật tài liệu {document_id} thành công')
+
+            await self.db.documents.update_one(
+                {"_id": ObjectId(document_id)}, {"$set": update_data}
+            )
+            logger.success(f"Cập nhật tài liệu {document_id} thành công")
         except Exception as e:
-            logger.error('Lỗi cập nhật tài liệu')
+            logger.error("Lỗi cập nhật tài liệu")
+
 
 db_client = DocLibDatabase()
