@@ -15,7 +15,7 @@ export async function translateTextAPI(
 }
 
 export async function analyzeSentimentAPI(text: string) {
-  const res = await fetch(`${API_URL}/inference/phan-tich-reaction`, {
+  const res = await fetch(`${API_URL}/inference/reaction-analysis`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -26,7 +26,7 @@ export async function analyzeSentimentAPI(text: string) {
 }
 
 export async function grammarCheckAPI(text: string) {
-  const res = await fetch(`${API_URL}/inference/kiem-tra-ngu-phap`, {
+  const res = await fetch(`${API_URL}/inference/grammar-check`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -48,7 +48,7 @@ export async function getSynonymsAPI(text: string) {
 }
 
 export async function generateCodeAPI(prompt: string) {
-  const res = await fetch(`${API_URL}/inference/generate-code`, {
+  const res = await fetch(`${API_URL}/inference/tao-ma`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),

@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function getDocumentVersionsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/version/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/phien-ban/tai-lieu/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -12,7 +12,7 @@ export async function getDocumentVersionsAPI(documentId: string) {
 
 export async function saveVersionAPI(documentId: string, versionNote: string) {
   const res = await fetch(
-    `${API_URL}/version/save/${documentId}?version_note=${encodeURIComponent(versionNote)}`,
+    `${API_URL}/phien-ban/luu/${documentId}?version_note=${encodeURIComponent(versionNote)}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -24,7 +24,7 @@ export async function saveVersionAPI(documentId: string, versionNote: string) {
 }
 
 export async function restoreVersionAPI(versionId: string) {
-  const res = await fetch(`${API_URL}/version/${versionId}/restore`, {
+  const res = await fetch(`${API_URL}/phien-ban/${versionId}/khoi-phuc`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

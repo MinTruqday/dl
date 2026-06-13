@@ -11,7 +11,7 @@ router = APIRouter(prefix="/telemetry")
 
 
 @router.get(
-    "/statistics",
+    "/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -35,7 +35,7 @@ async def get_sys_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/check",
+    "/kiem-tra",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -51,7 +51,7 @@ async def get_audit_logs(
 
 
 @router.get(
-    "/operation",
+    "/hoat-dong",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )

@@ -84,7 +84,7 @@ class WithdrawalService:
 
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/{current_user.id}",
+                    f"{settings.PROVISION_URL}/nguoi-dung/{current_user.id}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

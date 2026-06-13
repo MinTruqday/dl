@@ -7,7 +7,7 @@ from src.router.dependency_router import get_current_user, get_db
 from src.services.document_service import DocumentService
 from src.services.export_service import ExportService
 
-router = APIRouter(prefix="/export")
+router = APIRouter(prefix="/xuat")
 
 
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])

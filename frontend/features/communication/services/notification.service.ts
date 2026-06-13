@@ -3,7 +3,7 @@ import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/auth
 export const getNotificationsAPI = async () => {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/notification`, {
+  const res = await fetch(`${API_URL}/thong-bao`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -12,7 +12,7 @@ export const getNotificationsAPI = async () => {
 };
 
 export const markNotificationReadAPI = async (id: string) => {
-  const res = await fetch(`${API_URL}/notification/${id}/read`, {
+  const res = await fetch(`${API_URL}/thong-bao/${id}/read`, {
     method: "PUT",
     headers: getAuthHeaders(),
   });
@@ -22,7 +22,7 @@ export const markNotificationReadAPI = async (id: string) => {
 };
 
 export const markAllNotificationsReadAPI = async () => {
-  const res = await fetch(`${API_URL}/notification/read-all`, {
+  const res = await fetch(`${API_URL}/thong-bao/doc-tat-ca`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -34,7 +34,7 @@ export const markAllNotificationsReadAPI = async () => {
 
 export const getNotificationSettingsAPI = async () => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/notification/settings`, {
+  const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -45,7 +45,7 @@ export const getNotificationSettingsAPI = async () => {
 
 export const updateNotificationSettingsAPI = async (settings: any) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/notification/settings`, {
+  const res = await fetch(`${API_URL}/thong-bao/cai-dat`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,

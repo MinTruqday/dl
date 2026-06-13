@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from src.router.dependency_router import get_current_user, get_db
 from src.services.bookmark_service import BookmarkService
 
-router = APIRouter(prefix="/bookmark")
+router = APIRouter(prefix="/dau-trang")
 
 
 class BookmarkFolderCreate(BaseModel):
@@ -43,7 +43,7 @@ async def get_bookmarks(
     )
 
 
-@router.post("/folder", response_model=APIResponse[Any])
+@router.post("/thu-muc", response_model=APIResponse[Any])
 async def create_bookmark_folder(
     data: BookmarkFolderCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -58,7 +58,7 @@ async def create_bookmark_folder(
     )
 
 
-@router.get("/folder", response_model=APIResponse[Any])
+@router.get("/thu-muc", response_model=APIResponse[Any])
 async def get_bookmark_folders(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -68,7 +68,7 @@ async def get_bookmark_folders(
     )
 
 
-@router.put("/folder/{folder_id}", response_model=APIResponse[Any])
+@router.put("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def assign_bookmarks(
     folder_id: str,
     data: BookmarkFolderAssign,
@@ -83,7 +83,7 @@ async def assign_bookmarks(
     )
 
 
-@router.delete("/folder/{folder_id}", response_model=APIResponse[Any])
+@router.delete("/thu-muc/{folder_id}", response_model=APIResponse[Any])
 async def delete_bookmark_folder(
     folder_id: str,
     current_user: UserInDB = Depends(get_current_user),

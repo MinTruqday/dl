@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function cleanTempFilesAPI() {
-  const res = await fetch(`${API_URL}/latex/cleanup`, {
+  const res = await fetch(`${API_URL}/latex/don-dep`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -28,7 +28,7 @@ export async function compileLatexPreviewAPI(
 }
 
 export async function formatLatexAPI(content: string) {
-  const res = await fetch(`${API_URL}/latex/format`, {
+  const res = await fetch(`${API_URL}/latex/dinh-dang`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -40,7 +40,7 @@ export async function formatLatexAPI(content: string) {
 }
 
 export async function exportLatexAPI(content: string, format: string = "docx") {
-  const res = await fetch(`${API_URL}/latex/export`, {
+  const res = await fetch(`${API_URL}/latex/xuat`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content, format }),
@@ -53,7 +53,7 @@ export async function exportLatexAPI(content: string, format: string = "docx") {
 }
 
 export async function cloudAutoSaveAPI(documentId: string, content: string) {
-  const res = await fetch(`${API_URL}/latex/auto-save`, {
+  const res = await fetch(`${API_URL}/latex/tu-dong-luu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ document_id: documentId, content }),

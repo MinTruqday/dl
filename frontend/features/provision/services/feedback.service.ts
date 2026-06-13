@@ -6,7 +6,7 @@ export async function submitReportAPI(payload: {
   reason: string;
   description?: string;
 }) {
-  const res = await fetch(`${API_URL}/feedback/report`, {
+  const res = await fetch(`${API_URL}/phan-hoi/bao-cao`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -22,7 +22,7 @@ export async function rateDocumentAPI(
   rating: number,
   reviewText?: string,
 ) {
-  const res = await fetch(`${API_URL}/feedback/document/${documentId}/review`, {
+  const res = await fetch(`${API_URL}/phan-hoi/tai-lieu/${documentId}/danh-gia`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ rating, review_text: reviewText }),
@@ -38,7 +38,7 @@ export async function rateChapterAPI(
   rating: number,
 ) {
   const res = await fetch(
-    `${API_URL}/feedback/document/${documentId}/chapter/review`,
+    `${API_URL}/phan-hoi/tai-lieu/${documentId}/chuong/danh-gia`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -59,7 +59,7 @@ export async function reportTypoAPI(
   },
 ) {
   const res = await fetch(
-    `${API_URL}/feedback/document/${documentId}/loi-chinh-ta`,
+    `${API_URL}/phan-hoi/tai-lieu/${documentId}/loi-chinh-ta`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -74,7 +74,7 @@ export async function reportTypoAPI(
 
 export async function getTypoReportsAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/feedback/document/${documentId}/loi-chinh-ta`,
+    `${API_URL}/phan-hoi/tai-lieu/${documentId}/loi-chinh-ta`,
     {
       headers: getAuthHeaders(),
     },

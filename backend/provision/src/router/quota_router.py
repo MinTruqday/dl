@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.router.dependency_router import get_current_user, get_db, require_role
 from src.services.quota_service import QuotaService
 
-router = APIRouter(prefix="/quota")
+router = APIRouter(prefix="/han-muc")
 
 
-@router.get("/check", response_model=APIResponse[Any], include_in_schema=False)
+@router.get("/kiem-tra", response_model=APIResponse[Any], include_in_schema=False)
 async def check_quota_internal(
     user_id: str,
     role: str,
@@ -22,7 +22,7 @@ async def check_quota_internal(
     return APIResponse(data=limits.model_dump(), message="Trong hạn mức", status=200)
 
 
-@router.get("/me", response_model=APIResponse[Any])
+@router.get("/cua-toi", response_model=APIResponse[Any])
 async def get_my_quota(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -67,7 +67,7 @@ class ConsumeQuotaRequest(BaseModel):
     tokens: int = 0
 
 
-@router.post("/consume", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/su-dung", response_model=APIResponse[Any], include_in_schema=False)
 async def consume_quota(req: ConsumeQuotaRequest, db=Depends(get_db)):
     await QuotaService.consume_request(
         req.user_id, req.feature, req.req_reset_hours, db=db

@@ -5,7 +5,7 @@ export async function uploadAssetAPI(file: File, type: string = "document") {
   formData.append("file", file);
   formData.append("type", type);
 
-  const res = await fetch(`${API_URL}/upload/file`, {
+  const res = await fetch(`${API_URL}/tai-len/file`, {
     method: "POST",
     headers: { ...getAuthHeaders() },
     body: formData,
@@ -19,7 +19,7 @@ export async function uploadDocumentAPI(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/upload/document`, {
+  const res = await fetch(`${API_URL}/tai-len/tai-lieu`, {
     method: "POST",
     headers: { ...getAuthHeaders() },
     body: formData,

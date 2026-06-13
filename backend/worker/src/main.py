@@ -17,13 +17,13 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def read_health():
     await redis_client.ping()
     return {"status": "healthy"}
 
 
-@app.post("/jobs/tectonic/compile")
+@app.post("/jobs/tectonic/bien-dich")
 def compile_document(payload: dict):
     doc_id = payload.get("document_id")
     if not doc_id:

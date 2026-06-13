@@ -6,10 +6,10 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.schemas.feedback_schema import FeedbackRequest
 
-router = APIRouter(prefix="/feedback")
+router = APIRouter(prefix="/phan-hoi")
 
 
-@router.post("/feedback")
+@router.post("/phan-hoi")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)

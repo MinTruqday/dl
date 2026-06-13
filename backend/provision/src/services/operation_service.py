@@ -180,7 +180,7 @@ class OperationService:
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:
-                    resp = await client.get(f"{rag_url}/health")
+                    resp = await client.get(f"{rag_url}/trang-thai")
                     rag_status = "healthy" if resp.status_code == 200 else "degraded"
             except Exception:
                 rag_status = "unreachable"
@@ -325,7 +325,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/statistics",
+                    f"{settings.COLLECTOR_URL}/thong-ke",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -349,7 +349,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/trigger",
+                    f"{settings.COLLECTOR_URL}/kich-hoat",
                     json={"source": source, "pages": pages},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -373,7 +373,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/pause",
+                    f"{settings.COLLECTOR_URL}/tam-dung",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -396,7 +396,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/logs",
+                    f"{settings.COLLECTOR_URL}/nhat-ky",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -414,7 +414,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/running-jobs",
+                    f"{settings.COLLECTOR_URL}/tien-trinh-dang-chay",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -492,7 +492,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.FINANCE_URL}/withdrawal/hang-doi?status={status}&limit={limit}",
+                    f"{settings.FINANCE_URL}/rut-tien/hang-doi?status={status}&limit={limit}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -510,7 +510,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/withdrawal/{withdrawal_id}/xac-thuc",
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
                     params={"action": "approve"},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -536,7 +536,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/withdrawal/{withdrawal_id}/xac-thuc",
+                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
                     params={"action": "reject", "reason": reason},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )

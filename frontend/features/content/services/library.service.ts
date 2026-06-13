@@ -5,7 +5,7 @@ export async function createReadingListAPI(data: {
   description?: string;
   is_public?: boolean;
 }) {
-  const res = await fetch(`${API_URL}/library/list`, {
+  const res = await fetch(`${API_URL}/thu-vien/danh-sach`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -16,7 +16,7 @@ export async function createReadingListAPI(data: {
 }
 
 export async function getMyReadingListsAPI() {
-  const res = await fetch(`${API_URL}/library/list`, {
+  const res = await fetch(`${API_URL}/thu-vien/danh-sach`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -25,7 +25,7 @@ export async function getMyReadingListsAPI() {
 }
 
 export async function getReadingListByIdAPI(listId: string) {
-  const res = await fetch(`${API_URL}/library/list/${listId}`, {
+  const res = await fetch(`${API_URL}/thu-vien/danh-sach/${listId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -36,7 +36,7 @@ export async function getReadingListByIdAPI(listId: string) {
 
 export async function addDocumentToListAPI(listId: string, documentId: string) {
   const res = await fetch(
-    `${API_URL}/library/list/${listId}/document/${documentId}`,
+    `${API_URL}/thu-vien/danh-sach/${listId}/tai-lieu/${documentId}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -52,7 +52,7 @@ export async function removeDocumentFromListAPI(
   documentId: string,
 ) {
   const res = await fetch(
-    `${API_URL}/library/list/${listId}/document/${documentId}`,
+    `${API_URL}/thu-vien/danh-sach/${listId}/tai-lieu/${documentId}`,
     {
       method: "DELETE",
       headers: getAuthHeaders(),

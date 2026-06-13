@@ -27,10 +27,10 @@ def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_use
         raise HTTPException(status_code=403, detail="Tính năng AI này chỉ dành cho gói Cao cấp")
     return current_user
 
-router = APIRouter(prefix="/editor")
+router = APIRouter(prefix="/soan-thao")
 
 
-@router.post("/{document_id}/check-plagiarism")
+@router.post("/{document_id}/kiem-tra-dao-van")
 async def check_plagiarism(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -60,7 +60,7 @@ async def sync_keystroke_buffer(
     }
 
 
-@router.post("/document/{document_id}/suggestion")
+@router.post("/tai-lieu/{document_id}/suggestion")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -103,7 +103,7 @@ async def sync_pomodoro_session(
     }
 
 
-@router.post("/{document_id}/auto-save")
+@router.post("/{document_id}/tu-dong-luu")
 async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
@@ -116,7 +116,7 @@ async def auto_save_draft(
     }
 
 
-@router.post("/{document_id}/submit-review")
+@router.post("/{document_id}/gui-kiem-duyet")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.submit_for_review(document_id, current_user),
@@ -125,7 +125,7 @@ async def submit_for_review(document_id: str, current_user=Depends(get_current_u
     }
 
 
-@router.post("/{document_id}/replace-all")
+@router.post("/{document_id}/thay-the-tat-ca")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -144,7 +144,7 @@ async def global_find_replace(
     }
 
 
-@router.post("/{document_id}/ai-suggest")
+@router.post("/{document_id}/goi-y-ai")
 async def get_ai_suggestions(
     document_id: str,
     payload: AISuggestionRequest,
@@ -160,7 +160,7 @@ async def get_ai_suggestions(
     }
 
 
-@router.post("/{document_id}/summarize")
+@router.post("/{document_id}/tom-tat")
 async def summarize_document(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -175,7 +175,7 @@ async def summarize_document(
     }
 
 
-@router.post("/{document_id}/analyze-tags")
+@router.post("/{document_id}/phan-tich-the")
 async def extract_smart_tags(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -206,7 +206,7 @@ async def check_logic(
     }
 
 
-@router.post("/{document_id}/check-grammar")
+@router.post("/{document_id}/kiem-tra-ngu-phap")
 async def check_grammar(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -221,7 +221,7 @@ async def check_grammar(
     }
 
 
-@router.post("/{document_id}/comment")
+@router.post("/{document_id}/binh-luan")
 async def add_inline_comment(
     document_id: str,
     payload: InlineCommentRequest,
@@ -236,7 +236,7 @@ async def add_inline_comment(
     }
 
 
-@router.get("/{document_id}/comment")
+@router.get("/{document_id}/binh-luan")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.get_inline_comments(document_id, current_user),
@@ -245,7 +245,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
     }
 
 
-@router.put("/comment/{comment_id}/resolve")
+@router.put("/binh-luan/{comment_id}/resolve")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),
@@ -254,7 +254,7 @@ async def resolve_comment(comment_id: str, current_user=Depends(get_current_user
     }
 
 
-@router.post("/{document_id}/compare-version")
+@router.post("/{document_id}/so-sanh-phien-ban")
 async def get_version_diff(
     document_id: str,
     payload: VersionDiffRequest,

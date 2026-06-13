@@ -10,10 +10,10 @@ from src.services.purchase_service import PurchaseService
 from src.services.wallet_service import WalletService
 from src.services.withdrawal_service import WithdrawalService
 
-router = APIRouter(prefix="/wallet")
+router = APIRouter(prefix="/vi-tien")
 
 
-@router.get("/balance", response_model=APIResponse[Any])
+@router.get("/so-du", response_model=APIResponse[Any])
 async def get_balance(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -37,7 +37,7 @@ async def redeem_coupon(
     )
 
 
-@router.get("/history", response_model=APIResponse[Any])
+@router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = Query(None),
     limit: int = Query(30, ge=1, le=100),
@@ -54,7 +54,7 @@ async def get_history(
     )
 
 
-@router.get("/revenue", response_model=APIResponse[Any])
+@router.get("/doanh-thu", response_model=APIResponse[Any])
 async def get_revenue(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -95,7 +95,7 @@ async def get_revenue(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/user/{author_id}",
+                f"{settings.PROVISION_URL}/nguoi-dung/{author_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -113,7 +113,7 @@ async def get_revenue(
     return APIResponse(data=revenue_data, message="Đã tải số liệu doanh thu")
 
 
-@router.post("/purchase/document/{document_id}", response_model=APIResponse[Any])
+@router.post("/mua-hang/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def purchase_document(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -126,7 +126,7 @@ async def purchase_document(
     )
 
 
-@router.post("/purchase/{purchase_id}/cancel", response_model=APIResponse[Any])
+@router.post("/mua-hang/{purchase_id}/huy", response_model=APIResponse[Any])
 async def cancel_purchase(
     purchase_id: str,
     current_user: UserInDB = Depends(get_current_user),

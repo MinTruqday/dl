@@ -9,7 +9,7 @@ from src.schemas.operation_schema import CampaignRequest
 from src.services.operation_service import OperationService
 from src.services.user_service import UserService
 
-router = APIRouter(prefix="/operation")
+router = APIRouter(prefix="/hoat-dong")
 
 
 @router.get(
@@ -88,7 +88,7 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
 
 
 @router.get(
-    "/settings",
+    "/cai-dat",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -97,7 +97,7 @@ async def get_system_config(db=Depends(get_db)):
 
 
 @router.get(
-    "/health",
+    "/trang-thai",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -109,7 +109,7 @@ async def get_system_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/report",
+    "/bao-cao",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -121,7 +121,7 @@ async def get_admin_reports(db=Depends(get_db)):
 
 
 @router.get(
-    "/collect/statistics",
+    "/thu-thap/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -133,7 +133,7 @@ async def get_collector_stats(db=Depends(get_db)):
 
 
 @router.post(
-    "/collect/trigger",
+    "/thu-thap/kich-hoat",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -145,7 +145,7 @@ async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
 
 
 @router.post(
-    "/collect/pause",
+    "/thu-thap/tam-dung",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -157,7 +157,7 @@ async def stop_collection(db=Depends(get_db)):
 
 
 @router.get(
-    "/collect/logs",
+    "/thu-thap/nhat-ky",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -169,7 +169,7 @@ async def get_collector_logs(db=Depends(get_db)):
 
 
 @router.get(
-    "/collect/running-jobs",
+    "/thu-thap/tien-trinh-dang-chay",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -181,7 +181,7 @@ async def get_active_collector_jobs(db=Depends(get_db)):
 
 
 @router.post(
-    "/user/{user_id}/shadowban",
+    "/nguoi-dung/{user_id}/shadowban",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -197,7 +197,7 @@ async def shadowban_user(
 
 
 @router.post(
-    "/user/{user_id}/kyc/{status}",
+    "/nguoi-dung/{user_id}/kyc/{status}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -213,7 +213,7 @@ async def verify_kyc(
 
 
 @router.get(
-    "/minio/statistics",
+    "/minio/thong-ke",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

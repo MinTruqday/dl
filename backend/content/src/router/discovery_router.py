@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, Query, status
 from src.router.dependency_router import get_current_user_optional, get_db
 from src.services.document_service import DocumentService
 
-router = APIRouter(prefix="/discovery")
+router = APIRouter(prefix="/kham-pha")
 
 
-@router.get("/trending", response_model=APIResponse[Any])
+@router.get("/thinh-hanh", response_model=APIResponse[Any])
 async def get_trending_documents(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     db=Depends(get_db),
@@ -22,7 +22,7 @@ async def get_trending_documents(
     )
 
 
-@router.get("/tags-categories", response_model=APIResponse[Any])
+@router.get("/the-loai", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_tags_categories(),
@@ -31,7 +31,7 @@ async def get_tags_categories(db=Depends(get_db)):
     )
 
 
-@router.get("/smart-search", response_model=APIResponse[Any])
+@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
 async def smart_search(
     query: str,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -59,7 +59,7 @@ async def smart_search(
     try:
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{rag_url}/chat",
+                f"{rag_url}/tro-chuyen",
                 json={
                     "query": f"Tìm kiếm tài liệu liên quan đến: {query}",
                     "user_id": str(current_user.id),
@@ -87,7 +87,7 @@ async def smart_search(
         )
 
 
-@router.get("/ai-suggestion", response_model=APIResponse[Any])
+@router.get("/goi-y-ai", response_model=APIResponse[Any])
 async def get_ai_recommendations(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     current_user: UserInDB = Depends(get_current_user_optional),

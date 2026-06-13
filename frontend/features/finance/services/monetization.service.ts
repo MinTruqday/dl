@@ -6,7 +6,7 @@ export async function createSubscriptionPlanAPI(data: {
   price_dl: number;
   benefits: string[];
 }) {
-  const res = await fetch(`${API_URL}/monetization/membership-plan`, {
+  const res = await fetch(`${API_URL}/kiem-tien/goi-thanh-vien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -17,7 +17,7 @@ export async function createSubscriptionPlanAPI(data: {
 }
 
 export async function getAuthorPlansAPI(authorId: string) {
-  const res = await fetch(`${API_URL}/monetization/membership-plan/${authorId}`);
+  const res = await fetch(`${API_URL}/kiem-tien/goi-thanh-vien/${authorId}`);
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể tải danh sách gói hội viên");
@@ -25,7 +25,7 @@ export async function getAuthorPlansAPI(authorId: string) {
 }
 
 export async function subscribeToAuthorAPI(planId: string) {
-  const res = await fetch(`${API_URL}/monetization/register/${planId}`, {
+  const res = await fetch(`${API_URL}/kiem-tien/register/${planId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -40,7 +40,7 @@ export async function setDocumentPricingAPI(
   isDrmProtected: boolean = true,
 ) {
   const res = await fetch(
-    `${API_URL}/monetization/document/${documentId}/gia-ban`,
+    `${API_URL}/kiem-tien/tai-lieu/${documentId}/gia-ban`,
     {
       method: "PUT",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -56,7 +56,7 @@ export async function setDocumentPricingAPI(
 }
 
 export async function getAuthorRevenueAPI() {
-  const res = await fetch(`${API_URL}/monetization/statistics/revenue`, {
+  const res = await fetch(`${API_URL}/kiem-tien/thong-ke/doanh-thu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -66,7 +66,7 @@ export async function getAuthorRevenueAPI() {
 }
 
 export async function buyAITierAPI(tier: "PRO" | "PREMIUM") {
-  const res = await fetch(`${API_URL}/finance/monetization/ai-tier`, {
+  const res = await fetch(`${API_URL}/finance/kiem-tien/ai-tier`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ tier }),

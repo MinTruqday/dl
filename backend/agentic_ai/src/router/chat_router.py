@@ -13,10 +13,10 @@ from src.harness.security_harness import security_harness
 from src.schemas.chat_schema import ChatRequest
 from src.workflow.supervisor import supervisor
 
-router = APIRouter(prefix="/chat")
+router = APIRouter(prefix="/tro-chuyen")
 
 
-@router.post("/chat")
+@router.post("/tro-chuyen")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
@@ -39,7 +39,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 try:
                     doc_res = await _make_api_request(
                         "GET",
-                        f"{INTERNAL_API_URL}/document/{doc_id}",
+                        f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
                         headers={"Authorization": f"Bearer {req.token}"},
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
@@ -145,7 +145,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     try:
                         doc_res = await _make_api_request(
                             "GET",
-                            f"{INTERNAL_API_URL}/document/{doc_id}",
+                            f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
                             headers={"Authorization": f"Bearer {req.token}"},
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )

@@ -167,7 +167,7 @@ async def retrieve_db(state: AgentState):
                 title = meta.get("title", "Tài liệu")
                 file_url = meta.get("file_url", "")
                 extracted_documents.append(
-                    f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}"
+                    f"[Nguồn: {title}] (PDF: {file_url}/)\n{_mask_pii(doc.get('text', ''))}"
                 )
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
         except Exception as e:
@@ -250,7 +250,7 @@ async def retrieve_db(state: AgentState):
             title = meta.get("title", "Tài liệu")
             file_url = meta.get("file_url", "")
             extracted_documents.append(
-                f"[Nguồn: {title}] (PDF: {file_url})\n{_mask_pii(doc.get('text', ''))}"
+                f"[Nguồn: {title}] (PDF: {file_url}/)\n{_mask_pii(doc.get('text', ''))}"
             )
 
     return {"documents": list(set(extracted_documents)), "current_source": "db"}

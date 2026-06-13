@@ -21,7 +21,7 @@ export async function createHighlightAPI(
     };
   }
 
-  const res = await fetch(`${API_URL}/highlight/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/to-dam/tai-lieu/${documentId}`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(bodyData),
@@ -32,7 +32,7 @@ export async function createHighlightAPI(
 }
 
 export async function getHighlightsAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/highlight/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/to-dam/tai-lieu/${documentId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -45,7 +45,7 @@ export async function updateHighlightNoteAPI(
   highlightId: string,
   note: string,
 ) {
-  const res = await fetch(`${API_URL}/highlight/${highlightId}/ghi-chu`, {
+  const res = await fetch(`${API_URL}/to-dam/${highlightId}/ghi-chu`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ note }),
@@ -57,7 +57,7 @@ export async function updateHighlightNoteAPI(
 }
 
 export async function deleteHighlightAPI(highlightId: string) {
-  const res = await fetch(`${API_URL}/highlight/${highlightId}`, {
+  const res = await fetch(`${API_URL}/to-dam/${highlightId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -68,7 +68,7 @@ export async function deleteHighlightAPI(highlightId: string) {
 
 export async function getAllNotesAPI(skip: number = 0, limit: number = 50) {
   const res = await fetch(
-    `${API_URL}/highlight/note?skip=${skip}&limit=${limit}`,
+    `${API_URL}/to-dam/ghi-chu?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -109,7 +109,7 @@ export async function updateReadingPreferencesAPI(data: {
 
 export async function exportHighlightsMarkdownAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/highlight/document/${documentId}/export`,
+    `${API_URL}/to-dam/tai-lieu/${documentId}/xuat`,
     {
       headers: getAuthHeaders(),
     },

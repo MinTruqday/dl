@@ -371,7 +371,7 @@ ${latexCode}
         const data = await getDocumentVersionsAPI(documentId);
         setSidebarData(data || []);
       } else if (activeSidebar === "comments") {
-        const res = await fetch(`${API_URL}/editor/${documentId}/comment`, {
+        const res = await fetch(`${API_URL}/soan-thao/${documentId}/binh-luan`, {
           headers: getAuthHeaders(),
         });
         if (!res.ok)
@@ -399,7 +399,7 @@ ${latexCode}
       const text = data.blocks.map((b) => b.data?.text || "").join(" ");
       const contextText = text.length > 3000 ? text.slice(-3000) : text;
       const res = await fetch(
-        `${API_URL}/editor/${documentId}/kiem-tra-logic`,
+        `${API_URL}/soan-thao/${documentId}/kiem-tra-logic`,
         {
           method: "POST",
           headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

@@ -26,7 +26,7 @@ class AuthService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Dịch vụ đăng nhập Google chưa được thiết lập",
             )
-        auth_url = f"{settings.GOOGLE_AUTH_URL}?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
+        auth_url = f"{settings.GOOGLE_AUTH_URL}/?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
         return auth_url
 
     @staticmethod
@@ -42,7 +42,7 @@ class AuthService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    "{settings.PROVISION_URL}/user/create",
+                    "{settings.PROVISION_URL}/nguoi-dung/tao-moi",
                     json={
                         "email": user_in.email,
                         "full_name": user_in.full_name,
@@ -101,12 +101,12 @@ class AuthService:
             async with httpx.AsyncClient() as client:
                 if is_email:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/user/email/{username}",
+                        f"{settings.PROVISION_URL}/nguoi-dung/email/{username}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 else:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/user/slug/{username}",
+                        f"{settings.PROVISION_URL}/nguoi-dung/slug/{username}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                 if resp.status_code == 200:
@@ -170,7 +170,7 @@ class AuthService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/email/{email}",
+                    f"{settings.PROVISION_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user = resp.json().get("data") if resp.status_code == 200 else None
@@ -291,7 +291,7 @@ class AuthService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/email/{email}",
+                    f"{settings.PROVISION_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 user_doc = resp.json().get("data") if resp.status_code == 200 else None
@@ -309,7 +309,7 @@ class AuthService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        "{settings.PROVISION_URL}/user/create",
+                        "{settings.PROVISION_URL}/nguoi-dung/tao-moi",
                         json={
                             "email": email,
                             "full_name": google_user.get("name"),

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from src.router.dependency_router import get_db, require_role
 from src.services.upload_service import UploadService
 
-router = APIRouter(prefix="/upload")
+router = APIRouter(prefix="/tai-len")
 import re
 
 from fastapi import HTTPException
@@ -25,7 +25,7 @@ async def validate_svg(file: UploadFile):
         await file.seek(0)
 
 
-@router.post("/image", response_model=APIResponse[Any])
+@router.post("/hinh-anh", response_model=APIResponse[Any])
 async def upload_image(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
@@ -39,7 +39,7 @@ async def upload_image(
     )
 
 
-@router.post("/document", response_model=APIResponse[Any])
+@router.post("/tai-lieu", response_model=APIResponse[Any])
 async def upload_document(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
@@ -91,7 +91,7 @@ async def get_presigned_download_url(
     )
 
 
-@router.post("/chunk", response_model=APIResponse[Any])
+@router.post("/phan-doan", response_model=APIResponse[Any])
 async def upload_chunk(
     file: UploadFile = File(...),
     upload_id: str = Form(...),

@@ -34,7 +34,7 @@ async def _check_quota(current_user: UserInDB):
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
-                f"{settings.PROVISION_URL}/quota/check",
+                f"{settings.PROVISION_URL}/han-muc/kiem-tra",
                 params={
                     "user_id": str(current_user.id),
                     "role": current_user.role.value,
@@ -62,7 +62,7 @@ async def _consume_quota(
     try:
         async with httpx.AsyncClient() as c:
             await c.post(
-                f"{settings.PROVISION_URL}/quota/consume",
+                f"{settings.PROVISION_URL}/han-muc/su-dung",
                 json={
                     "user_id": str(current_user.id),
                     "feature": "chat",
@@ -112,7 +112,7 @@ async def _run_ai_with_quota(
     return result
 
 
-@router.post("/generate-content")
+@router.post("/tao-noi-dung")
 async def generate_text(
     req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -130,7 +130,7 @@ async def generate_text(
         )
 
 
-@router.post("/translate")
+@router.post("/dich-thuat")
 async def translate_text(
     req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -151,7 +151,7 @@ async def translate_text(
         )
 
 
-@router.post("/sentiment-analysis")
+@router.post("/phan-tich-cam-xuc")
 async def analyze_sentiment(
     req: SentimentRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -238,7 +238,7 @@ async def analyze_sentiment(
         )
 
 
-@router.post("/generate-code")
+@router.post("/tao-ma")
 async def generate_code(
     req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -259,7 +259,7 @@ async def generate_code(
         )
 
 
-@router.post("/check-grammar")
+@router.post("/kiem-tra-ngu-phap")
 async def grammar_check(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -296,7 +296,7 @@ async def grammar_check(
         )
 
 
-@router.post("/summarize")
+@router.post("/tom-tat")
 async def summarize_text(
     req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -317,7 +317,7 @@ async def summarize_text(
         )
 
 
-@router.post("/check-plagiarism")
+@router.post("/kiem-tra-dao-van")
 async def check_plagiarism(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -430,7 +430,7 @@ async def unified_action(
         )
 
 
-@router.post("/synonyms")
+@router.post("/tu-dong-nghia")
 async def get_synonyms(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -458,7 +458,7 @@ async def get_synonyms(
         )
 
 
-@router.post("/smart-citation")
+@router.post("/trich-dan-thong-minh")
 async def suggest_citations(
     req: CitationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -501,7 +501,7 @@ async def suggest_citations(
         )
 
 
-@router.post("/text-transform")
+@router.post("/bien-doi-van-ban")
 async def transform_tone(
     req: ToneRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -567,7 +567,7 @@ async def peer_review(
         )
 
 
-@router.post("/multi-doc-synthesis")
+@router.post("/tong-hop-nhieu-tai-lieu")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -601,7 +601,7 @@ async def multi_doc_synthesis(
         )
 
 
-@router.post("/extract-text")
+@router.post("/trich-xuat-van-ban")
 async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_user)):
     try:
         file_url = req.get("file_url")
@@ -620,7 +620,7 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
         )
 
 
-@router.post("/document-analysis")
+@router.post("/phan-tich-tai-lieu")
 async def analyze_document(
     req: dict, current_user: UserInDB = Depends(get_current_user)
 ):

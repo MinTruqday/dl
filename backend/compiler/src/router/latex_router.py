@@ -8,7 +8,7 @@ from src.services.latex_engine_service import LatexEngine
 router = APIRouter()
 
 
-@router.post("/compile")
+@router.post("/bien-dich")
 async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
@@ -20,7 +20,7 @@ async def compile_latex(req: CompileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/export/{format}")
+@router.post("/xuat/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
         raise HTTPException(status_code=400, detail="Định dạng không hỗ trợ")
@@ -40,7 +40,7 @@ async def export_document(format: str, req: CompileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/format")
+@router.post("/dinh-dang")
 async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
 

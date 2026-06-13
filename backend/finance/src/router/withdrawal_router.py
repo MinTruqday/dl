@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from src.schemas.withdrawal_schema import WithdrawalRequest
 from src.services.withdrawal_service import WithdrawalService
 
-router = APIRouter(prefix="/withdrawal")
+router = APIRouter(prefix="/rut-tien")
 
 
 @router.post(
@@ -42,7 +42,7 @@ async def get_withdrawal_queue(status: str = "PENDING", db=Depends(get_db)):
 
 
 @router.post(
-    "/{withdrawal_id}/xac-thuc",
+    "/{withdrawal_id}/auth",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -61,7 +61,7 @@ async def verify_withdrawal(
 
 
 @router.post(
-    "/{withdrawal_id}/cancel",
+    "/{withdrawal_id}/huy",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )
@@ -79,7 +79,7 @@ async def cancel_withdrawal(
 
 
 @router.get(
-    "/personal",
+    "/ca-nhan",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )

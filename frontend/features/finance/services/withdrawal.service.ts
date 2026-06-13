@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
-  const res = await fetch(`${API_URL}/withdrawal`, {
+  const res = await fetch(`${API_URL}/rut-tien`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ amount, bank_info: bankInfo }),
@@ -12,7 +12,7 @@ export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
 }
 
 export async function getWithdrawalQueueAPI(status: string = "PENDING") {
-  const res = await fetch(`${API_URL}/withdrawal/queue?status=${status}`, {
+  const res = await fetch(`${API_URL}/rut-tien/hang-doi?status=${status}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -26,7 +26,7 @@ export async function verifyWithdrawalAPI(
   action: string,
 ) {
   const res = await fetch(
-    `${API_URL}/withdrawal/${withdrawalId}/auth?action=${action}`,
+    `${API_URL}/rut-tien/${withdrawalId}/auth?action=${action}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -38,7 +38,7 @@ export async function verifyWithdrawalAPI(
 }
 
 export async function cancelWithdrawalAPI(withdrawalId: string) {
-  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/cancel`, {
+  const res = await fetch(`${API_URL}/rut-tien/${withdrawalId}/huy`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -48,7 +48,7 @@ export async function cancelWithdrawalAPI(withdrawalId: string) {
 }
 
 export async function getMyWithdrawalsAPI() {
-  const res = await fetch(`${API_URL}/withdrawal/personal`, {
+  const res = await fetch(`${API_URL}/rut-tien/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

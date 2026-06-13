@@ -124,7 +124,7 @@ class UserService:
             if settings.SIGNAL_URL:
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/notification/trigger",
+                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": user_id,
                             "title": "Bạn có một thông báo nhắc nhở từ hệ thống",

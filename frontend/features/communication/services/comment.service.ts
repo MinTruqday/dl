@@ -6,7 +6,7 @@ export async function createCommentAPI(payload: {
   content: string;
   parent_id?: string | null;
 }) {
-  const res = await fetch(`${API_URL}/comment`, {
+  const res = await fetch(`${API_URL}/binh-luan`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -17,7 +17,7 @@ export async function createCommentAPI(payload: {
 }
 
 export async function getCommentsByItemAPI(itemId: string) {
-  const res = await fetch(`${API_URL}/comment/target/${itemId}`, {
+  const res = await fetch(`${API_URL}/binh-luan/target/${itemId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -27,7 +27,7 @@ export async function getCommentsByItemAPI(itemId: string) {
 }
 
 export async function editCommentAPI(commentId: string, content: string) {
-  const res = await fetch(`${API_URL}/comment/${commentId}`, {
+  const res = await fetch(`${API_URL}/binh-luan/${commentId}`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ content }),
@@ -38,7 +38,7 @@ export async function editCommentAPI(commentId: string, content: string) {
 }
 
 export async function deleteCommentAPI(commentId: string) {
-  const res = await fetch(`${API_URL}/comment/target/${commentId}`, {
+  const res = await fetch(`${API_URL}/binh-luan/target/${commentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

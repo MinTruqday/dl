@@ -45,6 +45,6 @@ async def startup_event():
     logger.info("Đã khởi tạo hệ thống tài chính DocLib")
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def health_check():
     return {"status": "ok", "service": "finance"}

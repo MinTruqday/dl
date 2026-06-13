@@ -22,7 +22,7 @@ class EditorService:
         if not content:
             raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
         try:
-            url = f"{compiler_url}/export/{format_type}"
+            url = f"{compiler_url}/xuat/{format_type}"
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
@@ -51,7 +51,7 @@ class EditorService:
         if not content:
             raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
         try:
-            url = f"{compiler_url}/compile/editorjs/compile"
+            url = f"{compiler_url}/bien-dich/editorjs/bien-dich"
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
@@ -531,7 +531,7 @@ class EditorService:
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/check-plagiarism",
+                    f"{agentic_ai_url}/inference/kiem-tra-dao-van",
                     json={"text": content[:5000]},
                 )
                 if resp.status_code == 200:
@@ -576,7 +576,7 @@ class EditorService:
         content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/check-grammar",
+                f"{agentic_ai_url}/inference/kiem-tra-ngu-phap",
                 json={"text": content[:5000]},
             )
             if resp.status_code == 200:

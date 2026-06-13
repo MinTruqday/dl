@@ -35,7 +35,7 @@ app.include_router(finetune_router)
 app.include_router(history_router)
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def health_check():
     return {"status": "healthy"}
 

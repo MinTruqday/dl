@@ -15,7 +15,7 @@ from src.router.dependency_router import get_current_user, get_db, require_role
 from src.services.user_service import UserService
 from core.config import settings
 
-router = APIRouter(prefix="/user")
+router = APIRouter(prefix="/nguoi-dung")
 
 
 @router.get(
@@ -35,7 +35,7 @@ async def get_all_users(
 
 
 @router.put(
-    "/{user_id}/role",
+    "/{user_id}/vai-tro",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -78,7 +78,7 @@ async def warn_user(
 
 
 @router.post(
-    "/{user_id}/lock",
+    "/{user_id}/khoa",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -145,7 +145,7 @@ async def add_moderator_note(
     )
 
 
-@router.get("/search", response_model=APIResponse[Any])
+@router.get("/tim-kiem", response_model=APIResponse[Any])
 async def search_users(
     q: str = "",
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -191,7 +191,7 @@ class InternalCreateUserRequest(BaseModel):
     slug: str
 
 
-@router.post("/create", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/tao-moi", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.dict(), db)
     return APIResponse(

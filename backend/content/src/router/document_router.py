@@ -36,7 +36,7 @@ from src.schemas.series_schema import SeriesCreateRequest, SeriesResponse
 from src.services.document_service import DocumentService
 from src.services.series_service import SeriesService
 
-router = APIRouter(prefix="/document")
+router = APIRouter(prefix="/tai-lieu")
 
 
 @router.post("", response_model=APIResponse[DocumentResponse])
@@ -51,7 +51,7 @@ async def create_document(
     )
 
 
-@router.put("/{document_id}/content", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
@@ -166,7 +166,7 @@ async def delete_folder(
 
 
 @router.get(
-    "/personal",
+    "/ca-nhan",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -184,7 +184,7 @@ async def get_my_documents(
 
 
 @router.get(
-    "/trash",
+    "/thung-rac",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -221,7 +221,7 @@ async def get_document_by_slug(
     )
 
 
-@router.get("/preview/{slug}", response_model=APIResponse[Any])
+@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
@@ -230,7 +230,7 @@ async def get_document_preview(slug: str):
 
 
 @router.get(
-    "/document-series/personal",
+    "/document-series/ca-nhan",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -298,7 +298,7 @@ async def delete_series(
 
 
 @router.patch(
-    "/document-series/{series_id}/document",
+    "/document-series/{series_id}/tai-lieu",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -345,7 +345,7 @@ async def soft_delete_document(
 
 
 @router.post(
-    "/{document_id}/restore",
+    "/{document_id}/khoi-phuc",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -359,7 +359,7 @@ async def restore_document(
 
 
 @router.post(
-    "/{document_id}/bao-ve",
+    "/{document_id}/protect",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -377,7 +377,7 @@ async def set_document_password(
 
 
 @router.get(
-    "/{document_id}/nhat-ky-hoat-dong",
+    "/{document_id}/activity-log",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -438,7 +438,7 @@ async def transfer_document(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/user/{new_owner_id}",
+                f"{settings.PROVISION_URL}/nguoi-dung/{new_owner_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -459,7 +459,7 @@ async def transfer_document(
     )
 
 
-@router.get("/{document_id}/analyze", response_model=APIResponse[Any])
+@router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
 async def get_document_analytics(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -507,7 +507,7 @@ async def get_document_analytics(
     )
 
 
-@router.get("/{document_id}/academic-metrics", response_model=APIResponse[Any])
+@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -587,7 +587,7 @@ class ScheduleUpdate(BaseModel):
 
 
 @router.put(
-    "/{document_id}/hen-gio",
+    "/{document_id}/len-lich",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -629,7 +629,7 @@ class BroadcastRequest(BaseModel):
 
 
 @router.post(
-    "/{document_id}/notification",
+    "/{document_id}/thong-bao",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -657,7 +657,7 @@ async def broadcast_notification(
             for lib in libraries:
                 try:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/notification/trigger",
+                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                         json={
                             "target_user_id": lib["user_id"],
                             "title": "Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
@@ -674,7 +674,7 @@ async def broadcast_notification(
     )
 
 
-@router.post("/{document_id}/unlock", response_model=APIResponse[Any])
+@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
 async def unlock_document(
     document_id: str,
     password: str = Body(..., embed=True),

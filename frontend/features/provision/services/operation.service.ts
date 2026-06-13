@@ -4,7 +4,7 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/operation/application/author?status=${status}`,
+    `${API_URL}/hoat-dong/don-dang-ky/tac-gia?status=${status}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -23,7 +23,7 @@ export async function reviewAuthorApplicationAPI(
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/operation/application/author/${applicationId}/xet-duyet`,
+    `${API_URL}/hoat-dong/don-dang-ky/tac-gia/${applicationId}/xet-duyet`,
     {
       method: "PUT",
       headers: {
@@ -41,7 +41,7 @@ export async function reviewAuthorApplicationAPI(
 export async function getAdminConfigAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/config`, {
+  const res = await fetch(`${API_URL}/hoat-dong/config`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -53,7 +53,7 @@ export async function getAdminConfigAPI() {
 export async function updateAdminConfigAPI(config: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/config`, {
+  const res = await fetch(`${API_URL}/hoat-dong/config`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ export async function updateAdminConfigAPI(config: any) {
 export async function getSystemHealthAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/system-health`, {
+  const res = await fetch(`${API_URL}/hoat-dong/system-health`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -82,7 +82,7 @@ export async function getSystemHealthAPI() {
 export async function getMaintenanceModeAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/maintenance`, {
+  const res = await fetch(`${API_URL}/hoat-dong/maintenance`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -94,7 +94,7 @@ export async function getMaintenanceModeAPI() {
 export async function toggleMaintenanceModeAPI(enabled: boolean) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/maintenance?enabled=${enabled}`, {
+  const res = await fetch(`${API_URL}/hoat-dong/maintenance?enabled=${enabled}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -109,7 +109,7 @@ export async function toggleMaintenanceModeAPI(enabled: boolean) {
 export async function triggerBackupAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/backup`, {
+  const res = await fetch(`${API_URL}/hoat-dong/backup`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -123,7 +123,7 @@ export async function triggerBackupAPI() {
 export async function getAdminReportsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/report`, {
+  const res = await fetch(`${API_URL}/hoat-dong/bao-cao`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -135,7 +135,7 @@ export async function getAdminReportsAPI() {
 export async function getMinioStatsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/minio/statistics`, {
+  const res = await fetch(`${API_URL}/hoat-dong/minio/thong-ke`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();

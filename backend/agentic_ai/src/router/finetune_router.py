@@ -242,7 +242,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
 
 
-@router.post("/input/feedback")
+@router.post("/input/phan-hoi")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -300,7 +300,7 @@ async def import_feedback(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/input/document")
+@router.post("/input/tai-lieu")
 async def import_documents(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
@@ -480,7 +480,7 @@ async def get_job(job_id: str, user_id: str):
     return job
 
 
-@router.post("/jobs/{job_id}/cancel")
+@router.post("/jobs/{job_id}/huy")
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
     result = await RepositoryFactory.get("finetune_jobs").update_one(

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Request
 from src.schemas.wallet_schema import TopupRequest
 from src.services.deposit_service import DepositService
 
-router = APIRouter(prefix="/deposit")
+router = APIRouter(prefix="/nap-tien")
 
 
 @router.post("/create-link", response_model=APIResponse[Any])
@@ -30,7 +30,7 @@ async def payos_webhook(request: Request, db=Depends(get_db)):
     return await DepositService.deposit_webhook(request, db=db)
 
 
-@router.get("/check/{order_code}", response_model=APIResponse[Any])
+@router.get("/kiem-tra/{order_code}", response_model=APIResponse[Any])
 async def verify_deposit(
     order_code: int,
     current_user: UserInDB = Depends(get_current_user),

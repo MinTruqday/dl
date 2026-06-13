@@ -8,7 +8,7 @@ export async function saveDocumentDraftAPI(
   const token = getToken();
   if (!token) throw new Error("Không có quyền truy cập");
 
-  const res = await fetch(`${API_URL}/document/${documentId}/noi-dung`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/noi-dung`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -29,7 +29,7 @@ export async function getDocumentDraftAPI(documentId: string) {
   const token = getToken();
   if (!token) throw new Error("Không có quyền truy cập");
 
-  const res = await fetch(`${API_URL}/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ export async function getDocumentsAPI(
   limit: number = 50,
 ) {
   const token = getToken();
-  let url = `${API_URL}/document`;
+  let url = `${API_URL}/tai-lieu`;
   const params = new URLSearchParams();
   if (search) params.append("q", search);
   if (sortBy) params.append("sort_by", sortBy);
@@ -85,7 +85,7 @@ export async function getDocumentsAPI(
 
 export async function getDocumentBySlugAPI(slug: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/d/${slug}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/d/${slug}`, {
     method: "GET",
     headers: token
       ? {
@@ -110,7 +110,7 @@ export async function getMyDocumentsAPI(
   if (search) params.append("q", search);
   if (cursor) params.append("cursor", cursor);
 
-  const res = await fetch(`${API_URL}/document/personal?${params.toString()}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/ca-nhan?${params.toString()}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -126,7 +126,7 @@ export async function getMyDocumentsAPI(
 export async function createDocumentAPI(data: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/document`, {
+  const res = await fetch(`${API_URL}/tai-lieu`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -143,7 +143,7 @@ export async function createDocumentAPI(data: any) {
 export async function updateDocumentAPI(id: string, data: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/document/${id}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -159,7 +159,7 @@ export async function updateDocumentAPI(id: string, data: any) {
 export async function deleteAuthorDocumentAPI(docId: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/document/${docId}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${docId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -171,7 +171,7 @@ export async function deleteAuthorDocumentAPI(docId: string) {
 export async function deleteAdminDocumentAPI(docId: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/document/${docId}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${docId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -183,7 +183,7 @@ export async function deleteAdminDocumentAPI(docId: string) {
 
 export async function getTrashAPI() {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/trash`, {
+  const res = await fetch(`${API_URL}/tai-lieu/thung-rac`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -193,7 +193,7 @@ export async function getTrashAPI() {
 
 export async function restoreDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/restore`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/khoi-phuc`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -204,7 +204,7 @@ export async function restoreDocumentAPI(documentId: string) {
 
 export async function softDeleteDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -219,7 +219,7 @@ export const getFoldersAPI = async (parent_id?: string) => {
   const params = new URLSearchParams();
   if (parent_id) params.append("parent_id", parent_id);
 
-  const res = await fetch(`${API_URL}/document/folder?${params.toString()}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/thu-muc?${params.toString()}`, {
     headers: { Authorization: "Bearer " + token },
   });
   const data = await res.json();
@@ -233,7 +233,7 @@ export const createFolderAPI = async (
   parent_id: string | null = null,
 ) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/folder`, {
+  const res = await fetch(`${API_URL}/tai-lieu/thu-muc`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -248,7 +248,7 @@ export const createFolderAPI = async (
 
 export const deleteFolderAPI = async (id: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/folder/${id}`, {
+  const res = await fetch(`${API_URL}/tai-lieu/thu-muc/${id}`, {
     method: "DELETE",
     headers: { Authorization: "Bearer " + token },
   });
@@ -259,7 +259,7 @@ export const deleteFolderAPI = async (id: string) => {
 
 export const toggleStarDocumentAPI = async (id: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/dau-sao`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/star`, {
     method: "PUT",
     headers: { Authorization: "Bearer " + token },
   });
@@ -270,7 +270,7 @@ export const toggleStarDocumentAPI = async (id: string) => {
 
 export const lockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/bao-ve`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/protect`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -285,7 +285,7 @@ export const lockDocumentAPI = async (id: string, password: string) => {
 
 export const unlockDocumentAPI = async (id: string, password: string) => {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/unlock`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/mo-khoa`, {
     method: "POST",
     headers: {
       Authorization: "Bearer " + token,
@@ -301,7 +301,7 @@ export const unlockDocumentAPI = async (id: string, password: string) => {
 export async function transferDocumentAPI(id: string, newOwnerId: string) {
   const token = getToken();
   const res = await fetch(
-    `${API_URL}/document/${id}/chuyen-nhuong?new_owner_id=${newOwnerId}`,
+    `${API_URL}/tai-lieu/${id}/chuyen-nhuong?new_owner_id=${newOwnerId}`,
     {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -316,32 +316,23 @@ export async function transferDocumentAPI(id: string, newOwnerId: string) {
 export async function getAuditLogsAPI(id: string) {
   if (!id || id === "undefined") return [];
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/nhat-ky-hoat-dong`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/activity-log`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return [];
   return res.json();
 }
 
-export async function shareToFeedAPI(id: string) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/share-bang-tin`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.json();
-}
-
 export async function getDocumentAnalyticsAPI(id: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/analytics`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/phan-tich`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.ok ? res.json() : null;
 }
 
 export async function getAcademicMetricsAPI(id: string) {
-  const res = await fetch(`${API_URL}/document/${id}/chi-so-hoc-thuat`);
+  const res = await fetch(`${API_URL}/tai-lieu/${id}/chi-so-hoc-thuat`);
   return res.ok ? res.json() : null;
 }
 
@@ -351,7 +342,7 @@ export async function updateAuthorNoteAPI(
   note: string,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/ghi-chu-tac-gia`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/ghi-chu-tac-gia`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -369,7 +360,7 @@ export async function updateDRMSettingsAPI(
   settings: { disable_copy: boolean; hide_from_search: boolean },
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/drm`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/drm`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -384,7 +375,7 @@ export async function updateDRMSettingsAPI(
 
 export async function updateTagsAPI(documentId: string, tags: string[]) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/tags`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/tags`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -402,7 +393,7 @@ export async function schedulePublishAPI(
   publishAt: string,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/hen-gio`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/len-lich`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -422,7 +413,7 @@ export async function updateChapterPaywallAPI(
 ) {
   const token = getToken();
   const res = await fetch(
-    `${API_URL}/document/${documentId}/chapter/${chapterIndex}/tra-phi`,
+    `${API_URL}/tai-lieu/${documentId}/chuong/${chapterIndex}/tra-phi`,
     {
       method: "PUT",
       headers: {
@@ -439,7 +430,7 @@ export async function updateChapterPaywallAPI(
 
 export async function updateNSFWAPI(documentId: string, isNsfw: boolean) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/nsfw`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/nsfw`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -458,7 +449,7 @@ export async function broadcastNotificationAPI(
   message: string,
 ) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/notification`, {
+  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/thong-bao`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

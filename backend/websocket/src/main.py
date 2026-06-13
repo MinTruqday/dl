@@ -19,8 +19,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(editor_ws.router, prefix="/editor")
-app.include_router(message_ws.router, prefix="/message")
+app.include_router(editor_ws.router, prefix="/soan-thao")
+app.include_router(message_ws.router, prefix="/tin-nhan")
 
 
 @app.on_event("startup")
@@ -38,7 +38,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def health_check():
     return {"status": "ok", "service": "websocket"}
 

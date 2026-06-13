@@ -46,7 +46,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def health_check():
     return {"status": "ok", "service": "provision"}
 

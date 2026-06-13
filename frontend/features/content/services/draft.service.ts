@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function getApprovalQueueAPI() {
-  const res = await fetch(`${API_URL}/draft/queue`, {
+  const res = await fetch(`${API_URL}/ban-nhap/hang-doi`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -15,7 +15,7 @@ export async function moderateDocumentAPI(
   action: string,
   reason: string = "",
 ) {
-  const res = await fetch(`${API_URL}/draft/${documentId}/kiem-duyet`, {
+  const res = await fetch(`${API_URL}/ban-nhap/${documentId}/kiem-duyet`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),

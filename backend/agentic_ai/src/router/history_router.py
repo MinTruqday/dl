@@ -9,7 +9,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-router = APIRouter(prefix="/history")
+router = APIRouter(prefix="/lich-su")
 
 
 def get_db():
@@ -77,7 +77,7 @@ async def get_session_detail(session_id: str, user_id: str, db=Depends(get_db)):
     return session
 
 
-@router.put("/{session_id}/title", response_model=Dict[str, Any])
+@router.put("/{session_id}/tieu-de", response_model=Dict[str, Any])
 async def update_title(session_id: str, data: dict, user_id: str, db=Depends(get_db)):
     result = await RepositoryFactory.get("ai_sessions").update_one(
         {"_id": session_id, "user_id": user_id},
@@ -103,7 +103,7 @@ async def delete_session(session_id: str, user_id: str, db=Depends(get_db)):
     return {"status": "success"}
 
 
-@router.post("/{session_id}/message", response_model=Dict[str, Any])
+@router.post("/{session_id}/tin-nhan", response_model=Dict[str, Any])
 async def add_message(session_id: str, data: dict, db=Depends(get_db)):
     user_id = data.get("user_id")
     role = data.get("role")

@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function exportDocumentPdfAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/export/${documentId}/pdf`, {
+  const res = await fetch(`${API_URL}/xuat/${documentId}/pdf`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {
@@ -12,7 +12,7 @@ export async function exportDocumentPdfAPI(documentId: string) {
 }
 
 export async function exportDocumentEpubAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/export/${documentId}/epub`, {
+  const res = await fetch(`${API_URL}/xuat/${documentId}/epub`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {
@@ -23,7 +23,7 @@ export async function exportDocumentEpubAPI(documentId: string) {
 }
 
 export async function exportDocumentDocxAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/export/${documentId}/docx`, {
+  const res = await fetch(`${API_URL}/xuat/${documentId}/docx`, {
     headers: getAuthHeaders(),
   });
   if (!res.ok) {

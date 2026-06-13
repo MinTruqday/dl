@@ -3,7 +3,7 @@ import { API_URL, getToken } from "@/features/auth/services/authentication.servi
 export async function getPrivacySettingsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/profile/settings`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -15,7 +15,7 @@ export async function getPrivacySettingsAPI() {
 export async function updatePrivacySettingsAPI(settings: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/profile/settings`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -32,7 +32,7 @@ export async function updatePrivacySettingsAPI(settings: any) {
 export async function updateTypographyAPI(typography: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/reading/layout`, {
+  const res = await fetch(`${API_URL}/doc-sach/giao-dien`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -48,7 +48,7 @@ export async function updateTypographyAPI(typography: any) {
 export async function updateGeneralSettingsAPI(settings: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/profile/settings`, {
+  const res = await fetch(`${API_URL}/ho-so/cai-dat`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -64,7 +64,7 @@ export async function updateGeneralSettingsAPI(settings: any) {
 
 export async function updateProfileAPI(data: any) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/profile/personal`, {
+  const res = await fetch(`${API_URL}/ho-so/ca-nhan`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

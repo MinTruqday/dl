@@ -30,7 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/collect")
+app.include_router(router, prefix="/thu-thap")
 
 
 @app.on_event("startup")
@@ -41,6 +41,6 @@ async def startup_event():
     asyncio.create_task(run_worker())
 
 
-@app.get("/health")
+@app.get("/trang-thai")
 async def health_check():
     return {"status": "ok", "service": "collector"}

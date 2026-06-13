@@ -13,10 +13,10 @@ from pydantic import BaseModel
 import json
 import io
 
-router = APIRouter(prefix="/profile")
+router = APIRouter(prefix="/ho-so")
 
 
-@router.get("/personal", response_model=APIResponse[Any])
+@router.get("/ca-nhan", response_model=APIResponse[Any])
 async def get_my_profile(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -27,7 +27,7 @@ async def get_my_profile(
     )
 
 
-@router.put("/personal", response_model=APIResponse[Any])
+@router.put("/ca-nhan", response_model=APIResponse[Any])
 async def update_my_profile(
     data: ProfileUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -42,7 +42,7 @@ async def update_my_profile(
     )
 
 
-@router.post("/application/author", response_model=APIResponse[Any])
+@router.post("/don-dang-ky/tac-gia", response_model=APIResponse[Any])
 async def apply_author(
     data: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -53,7 +53,7 @@ async def apply_author(
     )
 
 
-@router.post("/become-author", response_model=APIResponse[Any])
+@router.post("/tro-thanh-tac-gia", response_model=APIResponse[Any])
 async def become_author(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -77,7 +77,7 @@ async def upload_kyc(
     )
 
 
-@router.get("/settings", response_model=APIResponse[Any])
+@router.get("/cai-dat", response_model=APIResponse[Any])
 async def get_settings(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -88,7 +88,7 @@ async def get_settings(
     )
 
 
-@router.put("/settings", response_model=APIResponse[Any])
+@router.put("/cai-dat", response_model=APIResponse[Any])
 async def update_settings(
     data: SettingsUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -126,7 +126,7 @@ async def request_data_export(
     )
 
 
-@router.get("/streak", response_model=APIResponse[Any])
+@router.get("/chuoi-ngay", response_model=APIResponse[Any])
 async def get_reading_streaks(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -137,7 +137,7 @@ async def get_reading_streaks(
     )
 
 
-@router.get("/badge", response_model=APIResponse[Any])
+@router.get("/huy-hieu", response_model=APIResponse[Any])
 async def get_badges(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -148,7 +148,7 @@ async def get_badges(
     )
 
 
-@router.post("/block/{target_id}", response_model=APIResponse[Any])
+@router.post("/chan/{target_id}", response_model=APIResponse[Any])
 async def block_user(
     target_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -161,7 +161,7 @@ async def block_user(
     )
 
 
-@router.put("/brand-page", response_model=APIResponse[Any])
+@router.put("/trang-thuong-hieu", response_model=APIResponse[Any])
 async def update_brand_page(
     data: BrandPageUpdate,
     current_user: UserInDB = Depends(get_current_user),

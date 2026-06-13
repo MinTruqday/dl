@@ -13,10 +13,10 @@ from src.schemas.library_schema import (
 )
 from src.services.reading_service import ReadingService
 
-router = APIRouter(prefix="/reading")
+router = APIRouter(prefix="/doc-sach")
 
 
-@router.get("/history", response_model=APIResponse[Any])
+@router.get("/lich-su", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = None,
     limit: int = Query(20),
@@ -31,7 +31,7 @@ async def get_history(
     )
 
 
-@router.post("/progress", response_model=APIResponse[Any])
+@router.post("/tien-do", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -43,7 +43,7 @@ async def update_progress(
     )
 
 
-@router.post("/goal", response_model=APIResponse[Any])
+@router.post("/muc-tieu", response_model=APIResponse[Any])
 async def set_reading_goal(
     data: ReadingGoalCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -56,7 +56,7 @@ async def set_reading_goal(
     )
 
 
-@router.get("/goal", response_model=APIResponse[Any])
+@router.get("/muc-tieu", response_model=APIResponse[Any])
 async def get_reading_goal(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -66,7 +66,7 @@ async def get_reading_goal(
     )
 
 
-@router.put("/layout", response_model=APIResponse[Any])
+@router.put("/giao-dien", response_model=APIResponse[Any])
 async def update_typography(
     data: TypographyRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -78,7 +78,7 @@ async def update_typography(
     )
 
 
-@router.get("/document/{document_id}/tim-kiem", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
 async def search_in_document(
     document_id: str,
     q: str = Query(...),
@@ -93,7 +93,7 @@ async def search_in_document(
     )
 
 
-@router.delete("/history", response_model=APIResponse[Any])
+@router.delete("/lich-su", response_model=APIResponse[Any])
 async def clear_reading_history(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -103,7 +103,7 @@ async def clear_reading_history(
     )
 
 
-@router.delete("/history/{document_id}", response_model=APIResponse[Any])
+@router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
 async def delete_history_item(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

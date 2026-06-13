@@ -126,7 +126,7 @@ class PasskeyService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/user/email/{email}",
+                    f"{settings.PROVISION_URL}/nguoi-dung/email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:

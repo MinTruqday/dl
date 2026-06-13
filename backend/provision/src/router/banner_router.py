@@ -7,7 +7,7 @@ from src.services.banner_service import BannerService
 from core.schemas.banner import BannerRequest
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/banner")
+router = APIRouter(prefix="/quang-cao")
 
 
 @router.get("", response_model=APIResponse[Any])
@@ -19,7 +19,7 @@ async def get_active_banners(db=Depends(get_db)):
 
 
 @router.get(
-    "/all",
+    "/tat-ca",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )

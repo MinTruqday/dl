@@ -3,7 +3,7 @@ import { API_URL, getToken, getAuthHeaders } from "@/features/auth/services/auth
 export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user?limit=${limit}&offset=${offset}`, {
+  const res = await fetch(`${API_URL}/nguoi-dung?limit=${limit}&offset=${offset}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -15,7 +15,7 @@ export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
 export async function updateUserRoleAPI(userId: string, role: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user/${userId}/role`, {
+  const res = await fetch(`${API_URL}/nguoi-dung/${userId}/vai-tro`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -31,7 +31,7 @@ export async function updateUserRoleAPI(userId: string, role: string) {
 export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user/${userId}/status`, {
+  const res = await fetch(`${API_URL}/nguoi-dung/${userId}/status`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -47,7 +47,7 @@ export async function updateUserStatusAPI(userId: string, isActive: boolean) {
 
 export async function searchUsersAPI(query: string, limit: number = 10) {
   const res = await fetch(
-    `${API_URL}/user/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    `${API_URL}/nguoi-dung/tim-kiem?q=${encodeURIComponent(query)}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -60,7 +60,7 @@ export async function searchUsersAPI(query: string, limit: number = 10) {
 export async function deleteUserAPI(userId: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user/${userId}`, {
+  const res = await fetch(`${API_URL}/nguoi-dung/${userId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });

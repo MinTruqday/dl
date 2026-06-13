@@ -6,7 +6,7 @@ export async function updateTypographyAPI(data: {
   line_height?: number;
   letter_spacing?: number;
 }) {
-  const res = await fetch(`${API_URL}/reading/layout`, {
+  const res = await fetch(`${API_URL}/doc-sach/giao-dien`, {
     method: "PUT",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -21,7 +21,7 @@ export async function getReadingHistoryAPI(
   limit: number = 20,
 ) {
   const res = await fetch(
-    `${API_URL}/reading/history?skip=${skip}&limit=${limit}`,
+    `${API_URL}/doc-sach/lich-su?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -36,7 +36,7 @@ export async function updateReadingProgressAPI(data: {
   progress_percentage: number;
   current_chapter_slug?: string;
 }) {
-  const res = await fetch(`${API_URL}/reading/progress`, {
+  const res = await fetch(`${API_URL}/doc-sach/tien-do`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -51,7 +51,7 @@ export async function setReadingGoalAPI(data: {
   target_pages?: number;
   period?: string;
 }) {
-  const res = await fetch(`${API_URL}/reading/goal`, {
+  const res = await fetch(`${API_URL}/doc-sach/muc-tieu`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -62,7 +62,7 @@ export async function setReadingGoalAPI(data: {
 }
 
 export async function getReadingGoalAPI() {
-  const res = await fetch(`${API_URL}/reading/goal`, {
+  const res = await fetch(`${API_URL}/doc-sach/muc-tieu`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -72,7 +72,7 @@ export async function getReadingGoalAPI() {
 }
 
 export async function getPinnedDocumentsAPI() {
-  const res = await fetch(`${API_URL}/highlight`, {
+  const res = await fetch(`${API_URL}/to-dam`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -81,7 +81,7 @@ export async function getPinnedDocumentsAPI() {
 }
 
 export async function pinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/highlight/${documentId}`, {
+  const res = await fetch(`${API_URL}/to-dam/${documentId}`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -91,7 +91,7 @@ export async function pinDocumentAPI(documentId: string) {
 }
 
 export async function unpinDocumentAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/highlight/${documentId}`, {
+  const res = await fetch(`${API_URL}/to-dam/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -102,7 +102,7 @@ export async function unpinDocumentAPI(documentId: string) {
 
 export async function searchInDocumentAPI(documentId: string, query: string) {
   const res = await fetch(
-    `${API_URL}/reading/document/${documentId}/search?q=${encodeURIComponent(query)}`,
+    `${API_URL}/doc-sach/tai-lieu/${documentId}/tim-kiem?q=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },
@@ -114,7 +114,7 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
 }
 
 export async function clearReadingHistoryAPI() {
-  const res = await fetch(`${API_URL}/reading/history`, {
+  const res = await fetch(`${API_URL}/doc-sach/lich-su`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -124,7 +124,7 @@ export async function clearReadingHistoryAPI() {
 }
 
 export async function deleteReadingHistoryItemAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/reading/history/${documentId}`, {
+  const res = await fetch(`${API_URL}/doc-sach/lich-su/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -134,7 +134,7 @@ export async function deleteReadingHistoryItemAPI(documentId: string) {
 }
 
 export async function getMySeriesAPI() {
-  const res = await fetch(`${API_URL}/document/series/personal`, {
+  const res = await fetch(`${API_URL}/tai-lieu/series/ca-nhan`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -148,7 +148,7 @@ export async function createSeriesAPI(data: {
   description: string;
   document_ids: string[];
 }) {
-  const res = await fetch(`${API_URL}/document/series`, {
+  const res = await fetch(`${API_URL}/tai-lieu/series`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),

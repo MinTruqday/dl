@@ -11,10 +11,10 @@ from src.schemas.highlight_schema import (
 )
 from src.services.highlight_service import HighlightService
 
-router = APIRouter(prefix="/highlight")
+router = APIRouter(prefix="/to-dam")
 
 
-@router.post("/document/{document_id}", response_model=APIResponse[Any])
+@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,
@@ -30,7 +30,7 @@ async def create_highlight(
     )
 
 
-@router.get("/document/{document_id}", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -72,7 +72,7 @@ async def delete_highlight(
     )
 
 
-@router.get("/note", response_model=APIResponse[Any])
+@router.get("/ghi-chu", response_model=APIResponse[Any])
 async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),
@@ -89,7 +89,7 @@ async def get_all_notes(
     )
 
 
-@router.get("/document/{document_id}/export-tai-lieu", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/xuat-tai-lieu", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export const getTrendingDocumentsAPI = async (limit: number = 5) => {
-  const res = await fetch(`${API_URL}/discovery/trending?limit=${limit}`);
+  const res = await fetch(`${API_URL}/kham-pha/thinh-hanh?limit=${limit}`);
   const data = await res.json();
   if (!res.ok)
     throw new Error(
@@ -11,7 +11,7 @@ export const getTrendingDocumentsAPI = async (limit: number = 5) => {
 };
 
 export const getTagsCategoriesAPI = async () => {
-  const res = await fetch(`${API_URL}/discovery/classification`);
+  const res = await fetch(`${API_URL}/kham-pha/the-loai`);
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể tải danh sách thẻ và danh mục");
@@ -20,7 +20,7 @@ export const getTagsCategoriesAPI = async () => {
 
 export const smartSearchAPI = async (query: string, limit: number = 10) => {
   const res = await fetch(
-    `${API_URL}/discovery/smart-search?query=${encodeURIComponent(query)}&limit=${limit}`,
+    `${API_URL}/kham-pha/tim-kiem-thong-minh?query=${encodeURIComponent(query)}&limit=${limit}`,
   );
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Tìm kiếm thông minh thất bại");
@@ -28,7 +28,7 @@ export const smartSearchAPI = async (query: string, limit: number = 10) => {
 };
 
 export const getAIRecommendationsAPI = async (limit: number = 10) => {
-  const res = await fetch(`${API_URL}/discovery/suggestion/ai?limit=${limit}`, {
+  const res = await fetch(`${API_URL}/kham-pha/goi-y-ai?limit=${limit}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -39,7 +39,7 @@ export const getAIRecommendationsAPI = async (limit: number = 10) => {
 
 export const getTrendingTagsAPI = async (limit: number = 10) => {
   const res = await fetch(
-    `${API_URL}/discovery/trending-hashtags?limit=${limit}`,
+    `${API_URL}/kham-pha/trending-hashtags?limit=${limit}`,
   );
   const data = await res.json();
   if (!res.ok)
