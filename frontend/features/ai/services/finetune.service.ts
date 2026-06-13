@@ -14,7 +14,7 @@ export const createDatasetAPI = async (
   description: string,
   source: string = "manual",
 ) => {
-  const res = await fetch(`${API_URL}/finetune/tap-du-lieu`, {
+  const res = await fetch(`${API_URL}/finetune/dataset`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ name, description, source }),
@@ -25,7 +25,7 @@ export const createDatasetAPI = async (
 };
 
 export const listDatasetsAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/tap-du-lieu`, {
+  const res = await fetch(`${API_URL}/finetune/dataset`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -34,7 +34,7 @@ export const listDatasetsAPI = async () => {
 };
 
 export const getDatasetAPI = async (datasetId: string) => {
-  const res = await fetch(`${API_URL}/finetune/tap-du-lieu/${datasetId}`, {
+  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -43,7 +43,7 @@ export const getDatasetAPI = async (datasetId: string) => {
 };
 
 export const deleteDatasetAPI = async (datasetId: string) => {
-  const res = await fetch(`${API_URL}/finetune/tap-du-lieu/${datasetId}`, {
+  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -53,7 +53,7 @@ export const deleteDatasetAPI = async (datasetId: string) => {
 };
 
 export const addSamplesAPI = async (datasetId: string, samples: any[]) => {
-  const res = await fetch(`${API_URL}/finetune/tap-du-lieu/${datasetId}/mau`, {
+  const res = await fetch(`${API_URL}/finetune/dataset/${datasetId}/mau`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ samples }),
@@ -69,7 +69,7 @@ export const getSamplesAPI = async (
   limit: number = 50,
 ) => {
   const res = await fetch(
-    `${API_URL}/finetune/tap-du-lieu/${datasetId}/mau?skip=${skip}&limit=${limit}`,
+    `${API_URL}/finetune/dataset/${datasetId}/mau?skip=${skip}&limit=${limit}`,
     { headers: authHeaders() },
   );
   const data = await res.json();
@@ -79,7 +79,7 @@ export const getSamplesAPI = async (
 
 export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
   const res = await fetch(
-    `${API_URL}/finetune/tap-du-lieu/${datasetId}/mau/${sampleId}`,
+    `${API_URL}/finetune/dataset/${datasetId}/mau/${sampleId}`,
     { method: "DELETE", headers: authHeaders() },
   );
   const data = await res.json();
@@ -88,7 +88,7 @@ export const deleteSampleAPI = async (datasetId: string, sampleId: string) => {
 };
 
 export const importFromFeedbackAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/nhap-tu-phan-hoi`, {
+  const res = await fetch(`${API_URL}/finetune/input/feedback`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -98,7 +98,7 @@ export const importFromFeedbackAPI = async () => {
 };
 
 export const importFromDocumentsAPI = async (documentIds: string[]) => {
-  const res = await fetch(`${API_URL}/finetune/nhap-tu-tai-lieu`, {
+  const res = await fetch(`${API_URL}/finetune/input/document`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ document_ids: documentIds }),
@@ -109,7 +109,7 @@ export const importFromDocumentsAPI = async (documentIds: string[]) => {
 };
 
 export const createJobAPI = async (config: any) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec`, {
+  const res = await fetch(`${API_URL}/finetune/jobs`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify(config),
@@ -120,7 +120,7 @@ export const createJobAPI = async (config: any) => {
 };
 
 export const startTrainingAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec/${jobId}/bat-dau`, {
+  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/bat-dau`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -130,7 +130,7 @@ export const startTrainingAPI = async (jobId: string) => {
 };
 
 export const listJobsAPI = async () => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec`, {
+  const res = await fetch(`${API_URL}/finetune/jobs`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -139,7 +139,7 @@ export const listJobsAPI = async () => {
 };
 
 export const getJobAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec/${jobId}`, {
+  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}`, {
     headers: authHeaders(),
   });
   const data = await res.json();
@@ -148,7 +148,7 @@ export const getJobAPI = async (jobId: string) => {
 };
 
 export const cancelJobAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec/${jobId}/huy`, {
+  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/huy`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -158,7 +158,7 @@ export const cancelJobAPI = async (jobId: string) => {
 };
 
 export const deployModelAPI = async (jobId: string) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec/${jobId}/trien-khai`, {
+  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/trien-khai`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -168,7 +168,7 @@ export const deployModelAPI = async (jobId: string) => {
 };
 
 export const evaluateModelAPI = async (jobId: string, testSamples: any[]) => {
-  const res = await fetch(`${API_URL}/finetune/cong-viec/${jobId}/review`, {
+  const res = await fetch(`${API_URL}/finetune/jobs/${jobId}/review`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ test_samples: testSamples }),

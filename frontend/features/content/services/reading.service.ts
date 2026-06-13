@@ -21,7 +21,7 @@ export async function getReadingHistoryAPI(
   limit: number = 20,
 ) {
   const res = await fetch(
-    `${API_URL}/reading/lich-su?skip=${skip}&limit=${limit}`,
+    `${API_URL}/reading/history?skip=${skip}&limit=${limit}`,
     {
       headers: getAuthHeaders(),
     },
@@ -114,7 +114,7 @@ export async function searchInDocumentAPI(documentId: string, query: string) {
 }
 
 export async function clearReadingHistoryAPI() {
-  const res = await fetch(`${API_URL}/reading/lich-su`, {
+  const res = await fetch(`${API_URL}/reading/history`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -124,7 +124,7 @@ export async function clearReadingHistoryAPI() {
 }
 
 export async function deleteReadingHistoryItemAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/reading/lich-su/${documentId}`, {
+  const res = await fetch(`${API_URL}/reading/history/${documentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -134,7 +134,7 @@ export async function deleteReadingHistoryItemAPI(documentId: string) {
 }
 
 export async function getMySeriesAPI() {
-  const res = await fetch(`${API_URL}/document/series/ca-nhan`, {
+  const res = await fetch(`${API_URL}/document/series/personal`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

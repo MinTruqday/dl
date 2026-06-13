@@ -50,7 +50,7 @@ export async function approveCouponAPI(
 }
 
 export async function toggleCouponStatusAPI(couponId: string) {
-  const res = await fetch(`${API_URL}/coupon/${couponId}/trang-thai`, {
+  const res = await fetch(`${API_URL}/coupon/${couponId}/status`, {
     method: "PATCH",
     headers: getAuthHeaders(),
   });

@@ -28,7 +28,7 @@ export async function configPremiumAPI(
   documentId: string,
   premiumChapters: string[],
 ) {
-  const res = await fetch(`${API_URL}/publication/${documentId}/tinh-phi`, {
+  const res = await fetch(`${API_URL}/publication/${documentId}/pricing`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ premium_chapters: premiumChapters }),

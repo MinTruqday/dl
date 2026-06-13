@@ -18,8 +18,8 @@ export default function CreationLayout({
     { id: "step1", label: "Thông tin sơ bộ", href: "/provision" },
     { id: "step2", label: "Kho lưu trữ nháp", href: "/provision/ban-thao" },
     { id: "step3", label: "Số liệu", href: "/provision/so-lieu" },
-    { id: "step4", label: "Cấu hình", href: "/provision/cau-hinh" },
-    { id: "step5", label: "Lịch sử", href: "/provision/lich-su" },
+    { id: "step4", label: "Cấu hình", href: "/provision/config" },
+    { id: "step5", label: "Lịch sử", href: "/provision/history" },
     { id: "step6", label: "Bình luận", href: "/provision/comment" },
     { id: "step7", label: "Thùng rác", href: "/provision/thung-rac" },
     ...(isAdminOrMod

@@ -38,7 +38,7 @@ export async function rateChapterAPI(
   rating: number,
 ) {
   const res = await fetch(
-    `${API_URL}/feedback/document/${documentId}/chuong/review`,
+    `${API_URL}/feedback/document/${documentId}/chapter/review`,
     {
       method: "POST",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },

@@ -230,7 +230,7 @@ export const shareStorageItemAPI = async (
   role: string = "viewer",
 ) => {
   const token = getAuthToken();
-  const res = await fetch(`${API_URL}/storage/file/${id}/chia-se`, {
+  const res = await fetch(`${API_URL}/storage/file/${id}/share`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

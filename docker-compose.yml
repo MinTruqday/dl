@@ -134,7 +134,7 @@ services:
       - "8350:8350"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`) || PathPrefix(`/deposit`) || PathPrefix(`/withdrawal`) || PathPrefix(`/coupon`)"
+      - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`) || PathPrefix(`/deposit`) || PathPrefix(`/withdrawal`) || PathPrefix(`/coupon`) || PathPrefix(`/monetization`)"
       - "traefik.http.services.finance.loadbalancer.server.port=8350"
     env_file:
       - .env
@@ -357,7 +357,7 @@ services:
       - "8050:8050"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.provision.rule=PathPrefix(`/user`) || PathPrefix(`/audit`) || PathPrefix(`/telemetry`) || PathPrefix(`/operation`) || PathPrefix(`/quota`)"
+      - "traefik.http.routers.provision.rule=PathPrefix(`/user`) || PathPrefix(`/audit`) || PathPrefix(`/telemetry`) || PathPrefix(`/operation`) || PathPrefix(`/quota`) || PathPrefix(`/profile`) || PathPrefix(`/banner`)"
       - "traefik.http.services.provision.loadbalancer.server.port=8050"
     depends_on:
       - mongodb

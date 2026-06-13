@@ -12,7 +12,7 @@ export const getNotificationsAPI = async () => {
 };
 
 export const markNotificationReadAPI = async (id: string) => {
-  const res = await fetch(`${API_URL}/notification/${id}/da-doc`, {
+  const res = await fetch(`${API_URL}/notification/${id}/read`, {
     method: "PUT",
     headers: getAuthHeaders(),
   });

@@ -64,7 +64,7 @@ export async function updateGeneralSettingsAPI(settings: any) {
 
 export async function updateProfileAPI(data: any) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/profile/ca-nhan`, {
+  const res = await fetch(`${API_URL}/profile/personal`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

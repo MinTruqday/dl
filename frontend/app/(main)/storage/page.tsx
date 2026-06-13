@@ -392,7 +392,7 @@ export default function StoragePage() {
     try {
       if (useAISearch) {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(searchQuery.trim())}`,
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/ai/smart-search?q=${encodeURIComponent(searchQuery.trim())}`,
           {
             headers: { Authorization: `Bearer ${getAuthToken()}` },
           },

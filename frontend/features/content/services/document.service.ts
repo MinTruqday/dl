@@ -193,7 +193,7 @@ export async function getTrashAPI() {
 
 export async function restoreDocumentAPI(documentId: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${documentId}/khoi-phuc`, {
+  const res = await fetch(`${API_URL}/document/${documentId}/restore`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -325,7 +325,7 @@ export async function getAuditLogsAPI(id: string) {
 
 export async function shareToFeedAPI(id: string) {
   const token = getToken();
-  const res = await fetch(`${API_URL}/document/${id}/chia-se-bang-tin`, {
+  const res = await fetch(`${API_URL}/document/${id}/share-bang-tin`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -422,7 +422,7 @@ export async function updateChapterPaywallAPI(
 ) {
   const token = getToken();
   const res = await fetch(
-    `${API_URL}/document/${documentId}/chuong/${chapterIndex}/tra-phi`,
+    `${API_URL}/document/${documentId}/chapter/${chapterIndex}/tra-phi`,
     {
       method: "PUT",
       headers: {

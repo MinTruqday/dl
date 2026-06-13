@@ -9,7 +9,7 @@ export async function getActiveBannersAPI() {
 }
 
 export async function getAllBannersAPI() {
-  const res = await fetch(`${API_URL}/banner/tat-ca`, {
+  const res = await fetch(`${API_URL}/banner/all`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

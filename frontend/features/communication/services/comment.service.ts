@@ -17,7 +17,7 @@ export async function createCommentAPI(payload: {
 }
 
 export async function getCommentsByItemAPI(itemId: string) {
-  const res = await fetch(`${API_URL}/comment/doi-tuong/${itemId}`, {
+  const res = await fetch(`${API_URL}/comment/target/${itemId}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -38,7 +38,7 @@ export async function editCommentAPI(commentId: string, content: string) {
 }
 
 export async function deleteCommentAPI(commentId: string) {
-  const res = await fetch(`${API_URL}/comment/doi-tuong/${commentId}`, {
+  const res = await fetch(`${API_URL}/comment/target/${commentId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });

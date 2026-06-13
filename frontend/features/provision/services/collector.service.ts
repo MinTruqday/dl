@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function triggerCollectionAPI(source: string, pages: number) {
-  const res = await fetch(`${API_URL}/collect/noi-bo/kich-hoat`, {
+  const res = await fetch(`${API_URL}/collect/trigger`, {
     method: "POST",
     headers: {
       ...getAuthHeaders(),
@@ -16,7 +16,7 @@ export async function triggerCollectionAPI(source: string, pages: number) {
 }
 
 export async function stopCollectionAPI() {
-  const res = await fetch(`${API_URL}/collect/dung`, {
+  const res = await fetch(`${API_URL}/collect/pause`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -27,7 +27,7 @@ export async function stopCollectionAPI() {
 }
 
 export async function getCollectorStatsAPI() {
-  const res = await fetch(`${API_URL}/collect/thong-ke`, {
+  const res = await fetch(`${API_URL}/collect/statistics`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

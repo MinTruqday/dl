@@ -12,7 +12,7 @@ export async function requestWithdrawalAPI(amount: number, bankInfo: any) {
 }
 
 export async function getWithdrawalQueueAPI(status: string = "PENDING") {
-  const res = await fetch(`${API_URL}/withdrawal/hang-doi?status=${status}`, {
+  const res = await fetch(`${API_URL}/withdrawal/queue?status=${status}`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();
@@ -38,7 +38,7 @@ export async function verifyWithdrawalAPI(
 }
 
 export async function cancelWithdrawalAPI(withdrawalId: string) {
-  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/huy-bo`, {
+  const res = await fetch(`${API_URL}/withdrawal/${withdrawalId}/cancel`, {
     method: "POST",
     headers: getAuthHeaders(),
   });
@@ -48,7 +48,7 @@ export async function cancelWithdrawalAPI(withdrawalId: string) {
 }
 
 export async function getMyWithdrawalsAPI() {
-  const res = await fetch(`${API_URL}/withdrawal/ca-nhan`, {
+  const res = await fetch(`${API_URL}/withdrawal/personal`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

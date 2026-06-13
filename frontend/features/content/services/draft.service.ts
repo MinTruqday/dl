@@ -1,7 +1,7 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
 export async function getApprovalQueueAPI() {
-  const res = await fetch(`${API_URL}/draft/hang-doi`, {
+  const res = await fetch(`${API_URL}/draft/queue`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

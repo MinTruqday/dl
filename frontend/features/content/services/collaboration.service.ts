@@ -114,7 +114,7 @@ export async function updateCollaboratorRoleAPI(
   role: string,
 ) {
   const res = await fetch(
-    `${API_URL}/collaboration/${collaborationId}/vai-tro`,
+    `${API_URL}/collaboration/${collaborationId}/role`,
     {
       method: "PATCH",
       headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ export async function revokeInviteAPI(inviteId: string) {
 
 export async function getContributionStatsAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/thong-ke-dong-gop`,
+    `${API_URL}/collaboration/document/${documentId}/statistics-dong-gop`,
     {
       headers: getAuthHeaders(),
     },
@@ -269,7 +269,7 @@ export async function releaseLockAPI(documentId: string) {
 
 export async function getLockStatusAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/collaboration/document/${documentId}/trang-thai-khoa`,
+    `${API_URL}/collaboration/document/${documentId}/status-khoa`,
     {
       headers: getAuthHeaders(),
     },

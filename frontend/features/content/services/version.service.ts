@@ -24,7 +24,7 @@ export async function saveVersionAPI(documentId: string, versionNote: string) {
 }
 
 export async function restoreVersionAPI(versionId: string) {
-  const res = await fetch(`${API_URL}/version/${versionId}/khoi-phuc`, {
+  const res = await fetch(`${API_URL}/version/${versionId}/restore`, {
     method: "POST",
     headers: getAuthHeaders(),
   });

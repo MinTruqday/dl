@@ -19,7 +19,7 @@ export async function processTextAPI(
 
 export async function smartSearchAIAPI(query: string) {
   const res = await fetch(
-    `${API_URL}/ai/tim-kiem-thong-minh?q=${encodeURIComponent(query)}`,
+    `${API_URL}/ai/smart-search?q=${encodeURIComponent(query)}`,
     {
       headers: getAuthHeaders(),
     },

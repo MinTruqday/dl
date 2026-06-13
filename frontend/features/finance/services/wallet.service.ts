@@ -33,7 +33,7 @@ export async function getDetailedHistoryAPI(
 }
 
 export async function redeemVoucherAPI(code: string) {
-  const res = await fetch(`${API_URL}/wallet/ma-qua-tang/doi-ma`, {
+  const res = await fetch(`${API_URL}/wallet/coupon-code/redeem`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ code }),
@@ -48,7 +48,7 @@ export async function voteItemAPI(
   itemType: string,
   amount: number,
 ) {
-  const res = await fetch(`${API_URL}/wallet/binh-chon`, {
+  const res = await fetch(`${API_URL}/wallet/vote`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ item_id: itemId, item_type: itemType, amount }),
@@ -81,7 +81,7 @@ export async function getAuthorStatsAPI() {
 
 export async function purchaseDocumentAPI(documentId: string) {
   const res = await fetch(
-    `${API_URL}/wallet/giao-dich-mua/document/${documentId}`,
+    `${API_URL}/wallet/purchase/document/${documentId}`,
     {
       method: "POST",
       headers: getAuthHeaders(),
@@ -97,7 +97,7 @@ export async function purchaseChapterAPI(
   chapterId: string,
 ) {
   const res = await fetch(
-    `${API_URL}/wallet/giao-dich-mua/document/${documentId}/chuong/${chapterId}`,
+    `${API_URL}/wallet/purchase/document/${documentId}/chapter/${chapterId}`,
     {
       method: "POST",
       headers: getAuthHeaders(),

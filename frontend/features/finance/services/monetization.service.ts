@@ -6,7 +6,7 @@ export async function createSubscriptionPlanAPI(data: {
   price_dl: number;
   benefits: string[];
 }) {
-  const res = await fetch(`${API_URL}/monetization/goi-hoi-vien`, {
+  const res = await fetch(`${API_URL}/monetization/membership-plan`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -17,7 +17,7 @@ export async function createSubscriptionPlanAPI(data: {
 }
 
 export async function getAuthorPlansAPI(authorId: string) {
-  const res = await fetch(`${API_URL}/monetization/goi-hoi-vien/${authorId}`);
+  const res = await fetch(`${API_URL}/monetization/membership-plan/${authorId}`);
   const data = await res.json();
   if (!res.ok)
     throw new Error(data.message || "Không thể tải danh sách gói hội viên");
@@ -56,7 +56,7 @@ export async function setDocumentPricingAPI(
 }
 
 export async function getAuthorRevenueAPI() {
-  const res = await fetch(`${API_URL}/monetization/thong-ke/doanh-thu`, {
+  const res = await fetch(`${API_URL}/monetization/statistics/revenue`, {
     headers: getAuthHeaders(),
   });
   const data = await res.json();

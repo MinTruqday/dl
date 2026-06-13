@@ -4,7 +4,7 @@ export async function getAuthorApplicationsAPI(status: string = "PENDING") {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/operation/don-ung-tuyen/tac-gia?status=${status}`,
+    `${API_URL}/operation/application/author?status=${status}`,
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -23,7 +23,7 @@ export async function reviewAuthorApplicationAPI(
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
   const res = await fetch(
-    `${API_URL}/operation/don-ung-tuyen/tac-gia/${applicationId}/xet-duyet`,
+    `${API_URL}/operation/application/author/${applicationId}/xet-duyet`,
     {
       method: "PUT",
       headers: {
@@ -41,7 +41,7 @@ export async function reviewAuthorApplicationAPI(
 export async function getAdminConfigAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/cau-hinh`, {
+  const res = await fetch(`${API_URL}/operation/config`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -53,7 +53,7 @@ export async function getAdminConfigAPI() {
 export async function updateAdminConfigAPI(config: any) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/cau-hinh`, {
+  const res = await fetch(`${API_URL}/operation/config`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ export async function updateAdminConfigAPI(config: any) {
 export async function getSystemHealthAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/suc-khoe-he-thong`, {
+  const res = await fetch(`${API_URL}/operation/system-health`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -82,7 +82,7 @@ export async function getSystemHealthAPI() {
 export async function getMaintenanceModeAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/bao-tri`, {
+  const res = await fetch(`${API_URL}/operation/maintenance`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
@@ -94,7 +94,7 @@ export async function getMaintenanceModeAPI() {
 export async function toggleMaintenanceModeAPI(enabled: boolean) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/bao-tri?enabled=${enabled}`, {
+  const res = await fetch(`${API_URL}/operation/maintenance?enabled=${enabled}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -109,7 +109,7 @@ export async function toggleMaintenanceModeAPI(enabled: boolean) {
 export async function triggerBackupAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/sao-luu`, {
+  const res = await fetch(`${API_URL}/operation/backup`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -135,7 +135,7 @@ export async function getAdminReportsAPI() {
 export async function getMinioStatsAPI() {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/operation/minio/thong-ke`, {
+  const res = await fetch(`${API_URL}/operation/minio/statistics`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();

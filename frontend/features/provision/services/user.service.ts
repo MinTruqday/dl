@@ -15,7 +15,7 @@ export async function getAdminUsersAPI(limit: number = 50, offset: number = 0) {
 export async function updateUserRoleAPI(userId: string, role: string) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user/${userId}/vai-tro`, {
+  const res = await fetch(`${API_URL}/user/${userId}/role`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -31,7 +31,7 @@ export async function updateUserRoleAPI(userId: string, role: string) {
 export async function updateUserStatusAPI(userId: string, isActive: boolean) {
   const token = getToken();
   if (!token) throw new Error("Bạn cần đăng nhập để thao tác");
-  const res = await fetch(`${API_URL}/user/${userId}/trang-thai`, {
+  const res = await fetch(`${API_URL}/user/${userId}/status`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
