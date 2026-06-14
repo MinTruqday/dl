@@ -42,7 +42,7 @@ celery_app.conf.task_queues = (
     default_retry_delay=10,
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info(f"Đang xóa hoàn toàn tài liệu {document_id}")
+    logger.info(f"Processing permanent removal for document {document_id}")
     import httpx
 
     try:
@@ -54,9 +54,9 @@ def hard_delete_document_task(document_id: str, user_id: str):
                 f"{rag_url}/inference/vector/{document_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
-        logger.info(f"Đã xóa hoàn toàn tài liệu {document_id}")
+        logger.info(f"Document {document_id} has been permanently removed")
     except Exception as e:
-        logger.error("Lỗi xóa tài liệu {document_id}")
+        logger.error(f"Failed to process permanent removal for document {document_id}")
         raise hard_delete_document_task.retry(exc=e)
 
 
@@ -68,7 +68,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10,
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info(f"Bắt đầu xử lý tài liệu {document_id}")
+    logger.info(f"Initiating document processing for {document_id}")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -78,7 +78,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
 
         try:
-            logger.debug(f"Đang xử lý tài liệu {document_id}")
+            logger.debug(f"Processing document {document_id}")
             process = subprocess.run(
                 [
                     "tectonic",
@@ -96,19 +96,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
 
             if not os.path.exists(pdf_path):
-                logger.error(f"Lỗi biên dịch tài liệu {document_id}")
+                logger.error(f"Document compilation failed for {document_id}")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {
                     "status": "error",
-                    "error": "Lỗi biên dịch",
+                    "error": "The document could not be processed due to invalid formatting.",
                     "logs": log_content,
                     "document_id": document_id,
                 }
 
-            logger.info(f"Đã xử lý tài liệu {document_id}")
+            logger.info(f"Document {document_id} has been processed successfully")
 
             return {
                 "status": "success",
@@ -117,12 +117,16 @@ def compile_document_tectonic(document_id, tex_content):
                 "logs": process.stdout,
             }
         except subprocess.TimeoutExpired:
-            logger.error(f"Lỗi biên dịch quá thời gian tài liệu {document_id}")
+            logger.error(f"Document compilation timed out for {document_id}")
             return {
                 "status": "error",
-                "error": "Lỗi biên dịch quá thời gian có thể do vòng lặp vô hạn",
+                "error": "The compilation process took too long. Please verify the document structure.",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception("Lỗi biên dịch")
-            return {"status": "error", "error": str(e), "document_id": document_id}
+            logger.exception("An unexpected error occurred during document compilation")
+            return {
+                "status": "error",
+                "error": "An unexpected error occurred while processing the document. Please try again.",
+                "document_id": document_id
+            }
