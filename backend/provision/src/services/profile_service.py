@@ -1,3 +1,4 @@
+# src/services/profile_service.py
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
@@ -21,14 +22,14 @@ class ProfileService:
             update_fields["donation_link"] = data["donation_link"]
         if not update_fields:
             raise HTTPException(
-                status_code=400, detail="Không có thông tin nào để cập nhật"
+                status_code=400, detail="No information provided for update"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
         logger.info(f"Profile: User {current_user.id} updated their profile info")
-        return {"message": "Đã cập nhật hồ sơ cá nhân."}
+        return {"message": "Profile information updated successfully"}
 
     @staticmethod
     async def get_user_profile(current_user, db=None) -> dict:
@@ -38,7 +39,7 @@ class ProfileService:
             {"_id": str(current_user.id)}, {"password_hash": 0}
         )
         if not user:
-            raise HTTPException(status_code=404, detail="Không tìm thấy hồ sơ")
+            raise HTTPException(status_code=404, detail="Profile could not be found")
         user["_id"] = str(user["_id"])
         return user
 
@@ -59,7 +60,7 @@ class ProfileService:
             return {
                 "current_streak": 0,
                 "longest_streak": 0,
-                "message": "Chưa có thông tin chuỗi đọc.",
+                "message": "No reading streak information available",
             }
         reading_stats = user_record.get("reading_stats", {})
         current_s = reading_stats.get("current_streak", 0)
@@ -68,9 +69,9 @@ class ProfileService:
             "current_streak": current_s,
             "longest_streak": longest_s,
             "message": (
-                f"Tuyệt vời! Bạn đang có chuỗi {current_s} ngày đọc tài liệu."
+                f"Great job! You have a {current_s}-day reading streak"
                 if current_s > 0
-                else "Hãy bắt đầu đọc tài liệu ngay hôm nay để tích điểm chuỗi!"
+                else "Start reading documents today to build your streak!"
             ),
         }
 
@@ -89,14 +90,14 @@ class ProfileService:
             update_fields["author_profile.custom_theme"] = data["custom_theme"]
         if not update_fields:
             raise HTTPException(
-                status_code=400, detail="Không có thông tin nào để cập nhật"
+                status_code=400, detail="No information provided for update"
             )
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$set": update_fields}
         )
-        logger.info(f"Profile: Author {current_user.id} updated their brand page")
-        return {"message": "Đã cập nhật trang tác giả cá nhân"}
+        logger.info(f"Author {current_user.id} updated their brand page")
+        return {"message": "Author brand page updated successfully"}
 
     @staticmethod
     async def block_user(target_id: str, current_user, db=None) -> dict:
@@ -104,12 +105,12 @@ class ProfileService:
             db = db_client.mongodb.get_default_database()
         if str(current_user.id) == target_id:
             raise HTTPException(
-                status_code=400, detail="Bạn không thể tự chặn chính mình"
+                status_code=400, detail="You cannot block your own account"
             )
         target_user = await db["users"].find_one({"_id": target_id})
         if not target_user:
-            raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
+            raise HTTPException(status_code=404, detail="The requested user could not be found")
         await db["users"].update_one(
             {"_id": str(current_user.id)}, {"$addToSet": {"blocked_users": target_id}}
         )
-        return {"status": "ok", "message": "Đã chặn người dùng."}
+        return {"status": "ok", "message": "User blocked successfully"}

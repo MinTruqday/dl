@@ -99,7 +99,7 @@ class QuotaService:
         if current_reqs >= limits.daily_requests:
             raise HTTPException(
                 status_code=429,
-                detail="Tài khoản của bạn đã đạt giới hạn yêu cầu trong ngày",
+                detail="Daily request limit reached",
             )
 
         token_key = f"quota:{user_id}:{feature}:token"
@@ -109,7 +109,7 @@ class QuotaService:
         if current_tokens >= limits.daily_tokens:
             raise HTTPException(
                 status_code=429,
-                detail="Tài khoản của bạn đã sử dụng hết hạn mức token trong ngày",
+                detail="Daily token limit reached",
             )
         return limits
 

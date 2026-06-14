@@ -54,5 +54,5 @@ class AuditService:
             }
         )
         logger.info(
-            f"Audit: Action '{action}' by '{actor_id}' on '{target_id}' recorded."
+            f"Action '{action}' by '{actor_id}' on '{target_id}' recorded."
         )

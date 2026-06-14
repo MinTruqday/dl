@@ -9,7 +9,7 @@ from src.schemas.operation_schema import CampaignRequest
 from src.services.operation_service import OperationService
 from src.services.user_service import UserService
 
-router = APIRouter(prefix="/hoat-dong")
+router = APIRouter(prefix="/operations")
 
 
 @router.get(
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/hoat-dong")
 async def get_system_metrics(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_system_telemetry(db=db),
-        message="Đã tải dữ liệu hoạt động hệ thống",
+        message="System operational data retrieved successfully",
     )
 
 
@@ -32,7 +32,7 @@ async def get_system_metrics(db=Depends(get_db)):
 async def get_maintenance_status(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_maintenance_mode(db=db),
-        message="Đã cập nhật trạng thái bảo trì",
+        message="Maintenance status retrieved successfully",
     )
 
 
@@ -44,7 +44,7 @@ async def get_maintenance_status(db=Depends(get_db)):
 async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.toggle_maintenance_mode(enabled, db=db),
-        message="Đã cập nhật chế độ bảo trì",
+        message="Maintenance mode updated successfully",
     )
 
 
@@ -56,7 +56,7 @@ async def toggle_maintenance(enabled: bool, db=Depends(get_db)):
 async def trigger_backup(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.trigger_backup(db=db),
-        message="Đã kích hoạt sao lưu hệ thống",
+        message="System backup triggered successfully",
     )
 
 
@@ -68,7 +68,7 @@ async def trigger_backup(db=Depends(get_db)):
 async def create_api_key(name: str, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.create_api_key(name, db=db),
-        message="Đã tạo khóa truy cập mới",
+        message="New access key generated successfully",
     )
 
 
@@ -82,106 +82,106 @@ async def create_marketing_campaign(payload: CampaignRequest, db=Depends(get_db)
         data=await OperationService.create_marketing_campaign(
             payload.model_dump(), db=db
         ),
-        message="Đã tạo chiến dịch tiếp thị mới",
+        message="Marketing campaign created successfully",
         status=201,
     )
 
 
 @router.get(
-    "/cai-dat",
+    "/settings",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_system_config(db=Depends(get_db)):
-    return APIResponse(data={}, message="Đã tải cấu hình hệ thống")
+    return APIResponse(data={}, message="System configuration retrieved successfully")
 
 
 @router.get(
-    "/trang-thai",
+    "/health",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_system_health(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_system_health(db=db),
-        message="Đã tải báo cáo tình trạng hệ thống",
+        message="System health report retrieved successfully",
     )
 
 
 @router.get(
-    "/bao-cao",
+    "/reports",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_admin_reports(db=Depends(get_db)):
     return APIResponse(
         data=await UserService.get_report_queue(status_filter=None, db=db),
-        message="Đã tải danh sách báo cáo vi phạm",
+        message="Violation reports retrieved successfully",
     )
 
 
 @router.get(
-    "/thu-thap/thong-ke",
+    "/collectors/stats",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_collector_stats(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_collector_stats(db=db),
-        message="Đã tổng hợp dữ liệu thống kê",
+        message="Statistical data compiled successfully",
     )
 
 
 @router.post(
-    "/thu-thap/kich-hoat",
+    "/collectors/trigger",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def trigger_collection(req: CollectionRequest, db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.trigger_collection(req.source, req.pages, db=db),
-        message="Đã kích hoạt trình thu thập",
+        message="Collector triggered successfully",
     )
 
 
 @router.post(
-    "/thu-thap/tam-dung",
+    "/collectors/stop",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def stop_collection(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.stop_collection(db=db),
-        message="Đã gửi lệnh dừng trình thu thập",
+        message="Stop command sent to collector successfully",
     )
 
 
 @router.get(
-    "/thu-thap/nhat-ky",
+    "/collectors/logs",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_collector_logs(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_collector_logs(db=db),
-        message="Đã tải logs từ trình thu thập",
+        message="Collector logs retrieved successfully",
     )
 
 
 @router.get(
-    "/thu-thap/tien-trinh-dang-chay",
+    "/collectors/active-jobs",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_active_collector_jobs(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_active_collector_jobs(db=db),
-        message="Đã tải danh sách công việc đang chạy",
+        message="Active job list retrieved successfully",
     )
 
 
 @router.post(
-    "/nguoi-dung/{user_id}/shadowban",
+    "/users/{user_id}/shadowban",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -192,12 +192,12 @@ async def shadowban_user(
         data=await OperationService.bulk_update_shadowban(
             payload.user_ids, payload.status, current_user, db=db
         ),
-        message="Đã áp dụng trạng thái hạn chế",
+        message="Restriction status applied successfully",
     )
 
 
 @router.post(
-    "/nguoi-dung/{user_id}/kyc/{status}",
+    "/users/{user_id}/kyc/{status}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -208,17 +208,17 @@ async def verify_kyc(
         data=await OperationService.bulk_verify_kyc(
             payload.user_ids, payload.status, current_user, db=db
         ),
-        message="Đã xử lý hồ sơ định danh",
+        message="Identity profile processed successfully",
     )
 
 
 @router.get(
-    "/minio/thong-ke",
+    "/storage/stats",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_minio_stats(db=Depends(get_db)):
     return APIResponse(
         data=await OperationService.get_minio_stats(db=db),
-        message="Đã tải thống kê lưu trữ",
+        message="Storage statistics retrieved successfully",
     )

@@ -1,3 +1,4 @@
+# src/services/banner_service.py
 from core.database import db_client
 from datetime import datetime, timezone
 import uuid
@@ -28,7 +29,7 @@ class BannerService:
             "created_at": datetime.now(timezone.utc),
         }
         await db["banners"].insert_one(banner)
-        logger.info(f"Marketing: New banner '{banner.get('title')}' created.")
+        logger.info(f"New banner '{banner.get('title')}' created")
         return banner
 
     @staticmethod
@@ -36,5 +37,5 @@ class BannerService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await db["banners"].delete_one({"_id": banner_id})
-        logger.info(f"Marketing: Banner {banner_id} deleted.")
-        return {"message": "Xoá biểu ngữ thành công."}
+        logger.info(f"Banner {banner_id} deleted")
+        return {"message": "Banner removed successfully"}

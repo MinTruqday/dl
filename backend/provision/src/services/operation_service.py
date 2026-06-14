@@ -62,10 +62,10 @@ class OperationService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin người dùng này"
+                status_code=404, detail="The specified account could not be found"
             )
-        logger.info(f"Vai trò người dùng {user_id} đã cập nhật thành {role}")
-        return {"message": f"Đã cập nhật vai trò người dùng thành {role}"}
+        logger.info(f"Account {user_id} role updated to {role}")
+        return {"message": "Account privileges updated successfully"}
 
     @staticmethod
     async def update_user_status(user_id: str, is_active: bool, db=None) -> dict:
@@ -82,10 +82,10 @@ class OperationService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin người dùng này"
+                status_code=404, detail="The specified account could not be found"
             )
-        logger.info(f"Người dùng {user_id} trạng thái cập nhật thành {is_active}")
-        return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản"}
+        logger.info(f"Account {user_id} activity status updated to {is_active}")
+        return {"message": "Account activity status updated successfully"}
 
     @staticmethod
     async def toggle_maintenance_mode(
@@ -105,14 +105,14 @@ class OperationService:
             upsert=True,
         )
         logger.warning(
-            f"Chế độ bảo trì đã được {('bật' if enabled else 'tắt')} bởi quản trị viên"
+            f"Maintenance mode {'enabled' if enabled else 'disabled'} by administrator"
         )
-        return {"message": f"Đã {('bật' if enabled else 'tắt')} chế độ bảo trì"}
+        return {"message": "Maintenance mode updated successfully"}
 
     @staticmethod
     async def trigger_backup(action: str = "FULL", db=None) -> dict:
-        logger.info("Lệnh sao lưu '{action}' đã được kích hoạt")
-        return {"message": "Đã xếp lịch sao lưu dữ liệu"}
+        logger.info(f"Backup task '{action}' triggered")
+        return {"message": "Data backup scheduled successfully"}
 
     @staticmethod
     async def create_api_key(
@@ -133,8 +133,8 @@ class OperationService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"Đã khởi tạo khóa truy cập {name} cho hệ thống")
-        return {"message": "Vui lòng lưu trữ khóa truy cập an toàn", "key": key_value}
+        logger.info(f"API key {name} generated")
+        return {"message": "Please store your access key securely", "key": key_value}
 
     @staticmethod
     async def create_marketing_campaign(data: dict, db=None) -> dict:
@@ -149,8 +149,8 @@ class OperationService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("marketing_campaigns").insert_one(campaign)
-        logger.info("Chiến dịch '{campaign['title']}' đã được khởi tạo")
-        return {"message": "Đã tạo chiến dịch tiếp thị"}
+        logger.info(f"Marketing campaign '{campaign['title']}' initiated")
+        return {"message": "Marketing campaign created successfully"}
 
     @staticmethod
     async def get_system_health(db=None) -> dict:
@@ -180,7 +180,7 @@ class OperationService:
         if rag_url:
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:
-                    resp = await client.get(f"{rag_url}/trang-thai")
+                    resp = await client.get(f"{rag_url}/health")
                     rag_status = "healthy" if resp.status_code == 200 else "degraded"
             except Exception:
                 rag_status = "unreachable"
@@ -306,7 +306,7 @@ class OperationService:
                     "categories": formatted_categories,
                 }
         except Exception as e:
-            logger.error("Lỗi lấy thông số từ hệ thống lưu trữ")
+            logger.error("Failed to retrieve storage statistics")
             return {
                 "status": "unreachable",
                 "total_buckets": 0,
@@ -325,13 +325,13 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/thong-ke",
+                    f"{settings.COLLECTOR_URL}/stats",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error("Lỗi lấy dữ liệu thống kê")
+            logger.error("Failed to retrieve collector statistics")
         return {
             "total_documents": 0,
             "total_assets": 0,
@@ -349,7 +349,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/kich-hoat",
+                    f"{settings.COLLECTOR_URL}/trigger",
                     json={"source": source, "pages": pages},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -358,10 +358,10 @@ class OperationService:
                 else:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
-            logger.error("Lỗi kích hoạt thu thập")
+            logger.error("Failed to trigger collection")
         return {
             "status": "error",
-            "message": "Không thể kết nối đến hệ thống thu thập dữ liệu",
+            "message": "Unable to connect to the data collection service",
         }
 
     @staticmethod
@@ -373,7 +373,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.COLLECTOR_URL}/tam-dung",
+                    f"{settings.COLLECTOR_URL}/stop",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -381,10 +381,10 @@ class OperationService:
                 else:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
-            logger.error("Lỗi dừng thu thập")
+            logger.error("Failed to stop collection")
         return {
             "status": "error",
-            "message": "Không thể kết nối đến hệ thống thu thập dữ liệu",
+            "message": "Unable to connect to the data collection service",
         }
 
     @staticmethod
@@ -396,13 +396,13 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/nhat-ky",
+                    f"{settings.COLLECTOR_URL}/logs",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error("Lỗi lấy logs thu thập")
+            logger.error("Failed to retrieve collection logs")
         return []
 
     @staticmethod
@@ -414,13 +414,13 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.COLLECTOR_URL}/tien-trinh-dang-chay",
+                    f"{settings.COLLECTOR_URL}/active-jobs",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error("Lỗi lấy danh sách công việc thu thập đang chạy")
+            logger.error("Failed to retrieve active collection jobs")
         return []
 
     @staticmethod
@@ -438,8 +438,8 @@ class OperationService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"Lỗi {report_id} đã được giải quyết bởi {current_moderator.id}")
-        return {"message": "Đã ghi nhận báo cáo sự cố"}
+        logger.info(f"Issue report {report_id} resolved by moderator {current_moderator.id}")
+        return {"message": "Issue report recorded successfully"}
 
     @staticmethod
     async def assign_task(data: dict, current_moderator, db=None) -> dict:
@@ -454,9 +454,9 @@ class OperationService:
         }
         await RepositoryFactory.get("moderator_tasks").insert_one(task)
         logger.info(
-            f"Đã giao việc cho {data['moderator_id']} bởi {current_moderator.id}"
+            f"Task assigned to moderator {data['moderator_id']} by {current_moderator.id}"
         )
-        return {"message": "Đã phân công nhiệm vụ"}
+        return {"message": "Task assigned successfully"}
 
     @staticmethod
     async def submit_policy_proposal(data: dict, current_moderator, db=None) -> dict:
@@ -474,7 +474,7 @@ class OperationService:
             }
         )
         logger.info(
-            f"Đề xuất mới {proposal_id} vừa được gửi bởi {current_moderator.id}"
+            f"New policy proposal {proposal_id} submitted by {current_moderator.id}"
         )
 
     @staticmethod
@@ -492,13 +492,13 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.FINANCE_URL}/rut-tien/hang-doi?status={status}&limit={limit}",
+                    f"{settings.FINANCE_URL}/withdrawals/queue?status={status}&limit={limit}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     return resp.json().get("data", [])
         except Exception as e:
-            logger.error("Lỗi lấy danh sách rút tiền từ hệ thống tài chính")
+            logger.error("Failed to retrieve withdrawal queue from finance service")
         return []
 
     @staticmethod
@@ -510,7 +510,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
+                    f"{settings.FINANCE_URL}/withdrawals/{withdrawal_id}/verify",
                     params={"action": "approve"},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -519,10 +519,10 @@ class OperationService:
                 else:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
-            logger.error(f"Lỗi duyệt rút tiền {withdrawal_id}")
+            logger.error(f"Failed to approve withdrawal {withdrawal_id}")
         return {
             "status": "error",
-            "message": "Không thể kết nối đến hệ thống tài chính",
+            "message": "Unable to connect to the finance service",
         }
 
     @staticmethod
@@ -536,7 +536,7 @@ class OperationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.post(
-                    f"{settings.FINANCE_URL}/rut-tien/{withdrawal_id}/xac-thuc",
+                    f"{settings.FINANCE_URL}/withdrawals/{withdrawal_id}/verify",
                     params={"action": "reject", "reason": reason},
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
@@ -545,8 +545,8 @@ class OperationService:
                 else:
                     return {"status": "error", "message": resp.text}
         except Exception as e:
-            logger.error(f"Lỗi từ chối rút tiền {withdrawal_id}")
+            logger.error(f"Failed to reject withdrawal {withdrawal_id}")
         return {
             "status": "error",
-            "message": "Không thể kết nối đến hệ thống tài chính",
+            "message": "Unable to connect to the finance service",
         }

@@ -7,26 +7,26 @@ from src.services.banner_service import BannerService
 from core.schemas.banner import BannerRequest
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/quang-cao")
+router = APIRouter(prefix="/banners")
 
 
 @router.get("", response_model=APIResponse[Any])
 async def get_active_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=True, db=db),
-        message="Lấy danh sách biểu ngữ thành công",
+        message="Active banners retrieved successfully",
     )
 
 
 @router.get(
-    "/tat-ca",
+    "/all",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_all_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=False, db=db),
-        message="Lấy toàn bộ danh sách biểu ngữ thành công",
+        message="All banners retrieved successfully",
     )
 
 
@@ -38,7 +38,7 @@ async def get_all_banners(db=Depends(get_db)):
 async def create_banner(data: BannerRequest, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump(), db=db),
-        message="Tạo biểu ngữ thành công",
+        message="Banner created successfully",
         status=201,
     )
 
@@ -51,5 +51,5 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
 async def delete_banner(banner_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.delete_banner(banner_id, db=db),
-        message="Xoá biểu ngữ thành công",
+        message="Banner removed successfully",
     )

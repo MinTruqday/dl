@@ -46,4 +46,4 @@ class SettingService:
             },
         )
         logger.info(f"Settings: User {user_id} updated their system settings")
-        return {"message": "Đã lưu cài đặt"}
+        return {"message": "Settings saved successfully"}

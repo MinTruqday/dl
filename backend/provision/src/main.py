@@ -1,6 +1,6 @@
-from loguru import logger
 import uvicorn
 from core.config import settings
+from loguru import logger
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,7 +37,7 @@ app.include_router(banner_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống quản lý DocLib")
+    logger.info("DocLib Provision initialized successfully")
     await init_db()
 
 
@@ -46,7 +46,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "provision"}
 

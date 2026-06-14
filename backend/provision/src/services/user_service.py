@@ -64,10 +64,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin người dùng này"
+                status_code=404, detail="The specified account could not be found"
             )
-        logger.info(f"Phân quyền của người dùng {user_id} đã đổi thành {role}")
-        return {"message": f"Đã cập nhật vai trò người dùng thành {role}"}
+        logger.info(f"Account {user_id} privileges changed to {role}")
+        return {"message": "Account privileges updated successfully"}
 
     @staticmethod
     async def update_user_status(
@@ -86,10 +86,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin người dùng này"
+                status_code=404, detail="The specified account could not be found"
             )
-        logger.info(f"Trạng thái tài khoản {user_id} đã đổi thành {is_active}")
-        return {"message": "Đã cập nhật trạng thái hoạt động của tài khoản"}
+        logger.info(f"Account {user_id} activity status updated to {is_active}")
+        return {"message": "Account activity status updated successfully"}
 
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_moderator, db=None) -> dict:
@@ -98,7 +98,7 @@ class UserService:
         user = await RepositoryFactory.get("users").find_one({"_id": user_id})
         if not user:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin người dùng này"
+                status_code=404, detail="The specified account could not be found"
             )
         warning = {
             "_id": str(uuid7()),
@@ -124,19 +124,19 @@ class UserService:
             if settings.SIGNAL_URL:
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        f"{settings.SIGNAL_URL}/notifications/trigger",
                         json={
                             "target_user_id": user_id,
-                            "title": "Bạn có một thông báo nhắc nhở từ hệ thống",
-                            "body": f"Hệ thống ghi nhận vi phạm từ tài khoản của bạn. Lý do: {reason}",
+                            "title": "You have a system warning notification",
+                            "body": f"A violation has been recorded for your account. Reason: {reason}",
                             "type": "WARNING",
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
         except Exception as e:
-            logger.warning("Lỗi khi gửi thông báo")
-        logger.info(f"Thành viên {user_id} vừa bị nhắc nhở bởi {current_moderator.id}")
-        return {"message": "Đã gửi cảnh báo đến người dùng"}
+            logger.warning("Failed to send notification")
+        logger.info(f"User {user_id} warned by moderator {current_moderator.id}")
+        return {"message": "Warning sent successfully"}
 
     @staticmethod
     async def lock_user(
@@ -167,9 +167,9 @@ class UserService:
             }
         )
         logger.info(
-            f"Người dùng {user_id} đã bị cấm {duration_hours} tiếng bởi {current_moderator.id}"
+            f"User {user_id} temporarily locked for {duration_hours} hours by {current_moderator.id}"
         )
-        return {"message": f"Đã tạm khóa tài khoản trong {duration_hours} giờ"}
+        return {"message": "Account temporarily locked"}
 
     @staticmethod
     async def shadowban_user(
@@ -196,9 +196,9 @@ class UserService:
             }
         )
         logger.info(
-            f"Người dùng {user_id} đã được {action.lower()} bởi {current_moderator.id}"
+            f"User {user_id} {action.lower()} by {current_moderator.id}"
         )
-        return {"message": "Đã cập nhật trạng thái hạn chế"}
+        return {"message": "Restriction status updated successfully"}
 
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
@@ -223,9 +223,9 @@ class UserService:
             }
         )
         logger.info(
-            f"Thông tin KYC của {user_id} đã cập nhật thành {status} bởi {current_moderator.id}"
+            f"KYC status of {user_id} updated to {status} by {current_moderator.id}"
         )
-        return {"message": "Đã cập nhật thông tin định danh KYC"}
+        return {"message": "Identity verification status updated successfully"}
 
     @staticmethod
     async def get_moderator_notes(user_id: str, db=None) -> list:
@@ -267,9 +267,9 @@ class UserService:
             }
         )
         logger.info(
-            f"Vừa thêm ghi chú cho người dùng {user_id} bởi {current_moderator.id}"
+            f"Moderation note added to user {user_id} by {current_moderator.id}"
         )
-        return {"message": "Đã lưu ghi chú điều hành"}
+        return {"message": "Moderation note saved successfully"}
 
     @staticmethod
     async def get_report_queue(
@@ -291,7 +291,7 @@ class UserService:
                 }
             except ValueError as e:
                 logger.warning(
-                    "Thời gian của con trỏ phân trang không hợp lệ: {cursor}, lỗi"
+                    f"Invalid pagination cursor: {cursor}"
                 )
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
@@ -356,9 +356,9 @@ class UserService:
             },
         )
         logger.info(
-            f"Báo cáo {report_id} đã xử lý xong với hình thức '{action}' bởi {current_moderator.id}"
+            f"Report {report_id} resolved with action '{action}' by {current_moderator.id}"
         )
-        return {"message": "Đã xử lý báo cáo vi phạm"}
+        return {"message": "Violation report resolved successfully"}
 
     @staticmethod
     async def get_moderator_activity_log(moderator_id: str, db=None) -> list:
@@ -456,7 +456,7 @@ class UserService:
             },
         )
         if res.modified_count > 0:
-            logger.info(f"Đã tự động mở khóa {res.modified_count} tài khoản")
+            logger.info(f"Automatically unlocked {res.modified_count} accounts")
         return res.modified_count
 
     @staticmethod

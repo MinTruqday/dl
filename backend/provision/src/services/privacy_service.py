@@ -41,7 +41,7 @@ class PrivacyService:
             {"user_id": user_id},
             {
                 "$set": {
-                    "content": "[Nội dung đã bị xóa theo yêu cầu của Quyền lãng quên GDPR]",
+                    "content": "[Content removed in compliance with GDPR Right to be Forgotten]",
                     "is_shadowbanned_content": True,
                 }
             },
@@ -54,14 +54,14 @@ class PrivacyService:
         logger.info(f"User {user_id} requested to be forgotten (GDPR)")
         return {
             "status": "success",
-            "message": "Tài khoản của bạn đã được xóa hoàn toàn khỏi hệ thống theo yêu cầu.",
+            "message": "Your account has been permanently removed from the system as requested",
         }
 
     @staticmethod
     async def request_data_export(current_user, db=None):
         logger.info(f"Data export request recorded for user {current_user.id}")
         return {
-            "message": "Đã ghi nhận yêu cầu trích xuất dữ liệu. Sẽ gửi qua email trong vòng 24 giờ."
+            "message": "Data export request received. A download link will be sent to your email within 24 hours"
         }
 
     @staticmethod

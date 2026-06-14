@@ -9,7 +9,7 @@ router = APIRouter(prefix="/audit")
 
 
 @router.get(
-    "/log",
+    "/logs",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -18,5 +18,5 @@ async def get_moderator_activity(
 ):
     return APIResponse(
         data=await UserService.get_moderator_activity_log(str(current_user.id), db=db),
-        message="Đã tải nhật ký hoạt động",
+        message="Activity logs retrieved successfully",
     )

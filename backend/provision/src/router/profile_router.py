@@ -1,3 +1,4 @@
+# src/router/profile_router.py
 from typing import Any, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
@@ -13,21 +14,21 @@ from pydantic import BaseModel
 import json
 import io
 
-router = APIRouter(prefix="/ho-so")
+router = APIRouter(prefix="/profiles")
 
 
-@router.get("/ca-nhan", response_model=APIResponse[Any])
+@router.get("/me", response_model=APIResponse[Any])
 async def get_my_profile(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ProfileService.get_user_profile(current_user, db=db),
-        message="Đã tải thông tin hồ sơ",
+        message="Profile information retrieved successfully",
         status=200,
     )
 
 
-@router.put("/ca-nhan", response_model=APIResponse[Any])
+@router.put("/me", response_model=APIResponse[Any])
 async def update_my_profile(
     data: ProfileUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -37,29 +38,29 @@ async def update_my_profile(
         data=await ProfileService.update_profile(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Đã cập nhật thông tin hồ sơ",
+        message="Profile information updated successfully",
         status=200,
     )
 
 
-@router.post("/don-dang-ky/tac-gia", response_model=APIResponse[Any])
+@router.post("/applications/author", response_model=APIResponse[Any])
 async def apply_author(
     data: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await IdentityService.apply_author(data, current_user, db=db),
-        message="Đã gửi đơn ứng tuyển",
+        message="Application submitted successfully",
         status=201,
     )
 
 
-@router.post("/tro-thanh-tac-gia", response_model=APIResponse[Any])
+@router.post("/upgrade-to-author", response_model=APIResponse[Any])
 async def become_author(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await IdentityService.become_author(current_user, db=db),
-        message="Đã nâng cấp tài khoản",
+        message="Account upgraded to author successfully",
         status=200,
     )
 
@@ -72,23 +73,23 @@ async def upload_kyc(
 ):
     return APIResponse(
         data=await IdentityService.upload_kyc(file, current_user, db=db),
-        message="Đã tải lên tài liệu KYC",
+        message="KYC documents uploaded successfully",
         status=status.HTTP_200_OK,
     )
 
 
-@router.get("/cai-dat", response_model=APIResponse[Any])
+@router.get("/settings", response_model=APIResponse[Any])
 async def get_settings(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await SettingService.get_settings(current_user, db=db),
-        message="Đã tải cài đặt hệ thống",
+        message="System settings retrieved successfully",
         status=200,
     )
 
 
-@router.put("/cai-dat", response_model=APIResponse[Any])
+@router.put("/settings", response_model=APIResponse[Any])
 async def update_settings(
     data: SettingsUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -98,7 +99,7 @@ async def update_settings(
         data=await SettingService.update_settings(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Đã lưu cấu hình cài đặt",
+        message="Settings configuration saved successfully",
         status=200,
     )
 
@@ -126,29 +127,29 @@ async def request_data_export(
     )
 
 
-@router.get("/chuoi-ngay", response_model=APIResponse[Any])
+@router.get("/reading-streaks", response_model=APIResponse[Any])
 async def get_reading_streaks(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ProfileService.get_reading_streaks(current_user, db=db),
-        message="Đã tải thống kê chuỗi ngày đọc",
+        message="Reading streak statistics retrieved successfully",
         status=200,
     )
 
 
-@router.get("/huy-hieu", response_model=APIResponse[Any])
+@router.get("/badges", response_model=APIResponse[Any])
 async def get_badges(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ProfileService.get_badges(current_user, db=db),
-        message="Đã tải danh sách huy hiệu",
+        message="Badge list retrieved successfully",
         status=200,
     )
 
 
-@router.post("/chan/{target_id}", response_model=APIResponse[Any])
+@router.post("/block/{target_id}", response_model=APIResponse[Any])
 async def block_user(
     target_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -156,12 +157,12 @@ async def block_user(
 ):
     return APIResponse(
         data=await ProfileService.block_user(target_id, current_user, db=db),
-        message="Đã chặn người dùng",
+        message="User blocked successfully",
         status=200,
     )
 
 
-@router.put("/trang-thuong-hieu", response_model=APIResponse[Any])
+@router.put("/brand-page", response_model=APIResponse[Any])
 async def update_brand_page(
     data: BrandPageUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -171,13 +172,13 @@ async def update_brand_page(
         data=await ProfileService.update_brand_page(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Đã cập nhật thông tin trang tác giả",
+        message="Author brand page updated successfully",
     )
 
 
-@router.get("/member/{slug}", response_model=APIResponse[Any])
+@router.get("/{slug}", response_model=APIResponse[Any])
 async def get_public_profile(slug: str, db=Depends(get_db)):
     return APIResponse(
         data=await IdentityService.get_public_profile(slug, db=db),
-        message="Đã tải thông tin trang thành viên",
+        message="Public profile information retrieved successfully",
     )

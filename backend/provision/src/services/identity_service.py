@@ -18,7 +18,7 @@ class IdentityService:
         if current_user.role != RoleEnum.READER:
             raise HTTPException(
                 status_code=400,
-                detail="Chỉ có độc giả mới có thể nâng cấp trực tiếp lên tác giả",
+                detail="Only readers are eligible to upgrade to author status",
             )
         await db["users"].update_one(
             {"_id": user_id},
@@ -29,8 +29,8 @@ class IdentityService:
                 }
             },
         )
-        logger.info(f"Identity: User {user_id} upgraded to AUTHOR role directly")
-        return {"status": "success", "message": "Đã nâng cấp thành tác giả"}
+        logger.info(f"User {user_id} upgraded to AUTHOR role directly")
+        return {"status": "success", "message": "Account upgraded to author successfully"}
 
     @staticmethod
     async def apply_author(application, current_user, db=None):
@@ -38,20 +38,20 @@ class IdentityService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         if current_user.role == RoleEnum.AUTHOR:
-            raise HTTPException(status_code=400, detail="Bạn đã là tác giả")
+            raise HTTPException(status_code=400, detail="Your account already has author privileges")
         if current_user.role != RoleEnum.READER:
             raise HTTPException(
-                status_code=403, detail="Chỉ độc giả mới có thể đăng ký làm tác giả"
+                status_code=403, detail="Only readers are eligible to apply for author status"
             )
         if current_user.author_status == AuthorStatusEnum.PENDING:
             raise HTTPException(
                 status_code=400,
-                detail="Yêu cầu đăng ký làm tác giả của bạn đang được xét duyệt",
+                detail="Your application for author status is currently under review",
             )
         if current_user.author_status == AuthorStatusEnum.SUSPENDED:
             raise HTTPException(
                 status_code=403,
-                detail="Tài khoản của bạn đã bị khóa quyền đăng ký làm tác giả",
+                detail="Your account is restricted from applying for author status",
             )
         application_data = {
             "_id": str(uuid7()),
@@ -79,8 +79,8 @@ class IdentityService:
                 }
             },
         )
-        logger.info(f"Identity: Reader {user_id} requested author status")
-        return {"status": "success", "message": "Đã gửi yêu cầu đăng ký tác giả"}
+        logger.info(f"Reader {user_id} requested author status")
+        return {"status": "success", "message": "Author application submitted successfully"}
 
     @staticmethod
     async def upload_kyc(file, current_user, db=None):
@@ -89,11 +89,11 @@ class IdentityService:
         user_id = str(current_user.id)
         if current_user.kyc_status == KYCStatusEnum.PENDING:
             raise HTTPException(
-                status_code=400, detail="Tài liệu KYC đang được xem xét"
+                status_code=400, detail="Your KYC documents are currently under review"
             )
         if current_user.kyc_status == KYCStatusEnum.VERIFIED:
             raise HTTPException(
-                status_code=400, detail="Tài khoản đã được xác minh KYC"
+                status_code=400, detail="Your account has already been verified"
             )
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
@@ -110,8 +110,8 @@ class IdentityService:
         await db["users"].update_one(
             {"_id": user_id}, {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
-        logger.info(f"Identity: User {user_id} uploaded KYC documents")
-        return {"status": "success", "message": "Đã tải lên tài liệu KYC"}
+        logger.info(f"User {user_id} uploaded KYC documents")
+        return {"status": "success", "message": "KYC documents uploaded successfully"}
 
     @staticmethod
     async def get_public_profile(slug: str, db=None) -> dict:
@@ -125,7 +125,7 @@ class IdentityService:
         )
         if not author:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy trang thành viên"
+                status_code=404, detail="The requested member profile could not be found"
             )
         author_id = str(author["_id"])
         docs = (
