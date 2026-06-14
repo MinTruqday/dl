@@ -7,31 +7,31 @@ from fastapi import APIRouter, Depends, Query, status
 from src.router.dependency_router import get_current_user_optional, get_db
 from src.services.document_service import DocumentService
 
-router = APIRouter(prefix="/kham-pha")
+router = APIRouter(prefix="/discovery")
 
 
-@router.get("/thinh-hanh", response_model=APIResponse[Any])
+@router.get("/trending", response_model=APIResponse[Any])
 async def get_trending_documents(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     db=Depends(get_db),
 ):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
-        message="Đã tải danh sách tài liệu xu hướng",
+        message="Trending documents retrieved successfully",
         status=status.HTTP_200_OK,
     )
 
 
-@router.get("/the-loai", response_model=APIResponse[Any])
+@router.get("/genres", response_model=APIResponse[Any])
 async def get_tags_categories(db=Depends(get_db)):
     return APIResponse(
         data=await DocumentService.get_tags_categories(),
-        message="Đã tải danh sách thẻ và danh mục",
+        message="Tags and categories retrieved successfully",
         status=status.HTTP_200_OK,
     )
 
 
-@router.get("/tim-kiem-thong-minh", response_model=APIResponse[Any])
+@router.get("/smart-search", response_model=APIResponse[Any])
 async def smart_search(
     query: str,
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -41,7 +41,7 @@ async def smart_search(
     if not current_user:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Tìm kiếm văn bản cơ bản",
+            message="Basic text search",
         )
 
     import httpx
@@ -53,15 +53,15 @@ async def smart_search(
     if not rag_url:
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Hệ thống AI chưa được cấu hình, dùng tìm kiếm cơ bản",
+            message="AI system is not configured, falling back to basic search",
         )
 
     try:
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{rag_url}/tro-chuyen",
+                f"{rag_url}/chat",
                 json={
-                    "query": f"Tìm kiếm tài liệu liên quan đến: {query}",
+                    "query": f"Searching for documents related to: {query}",
                     "user_id": str(current_user.id),
                     "useSmart": True,
                 },
@@ -69,25 +69,25 @@ async def smart_search(
             if resp.status_code == 200:
                 result = resp.json()
                 return APIResponse(
-                    data=result, message="Đã tìm kiếm thông minh bằng AI"
+                    data=result, message="Smart AI search completed successfully"
                 )
             else:
                 logger.error(
-                    "Tìm kiếm thông minh thất bại với truy vấn '{query}': {resp.status_code}"
+                    "Smart search failed for query '{query}': {resp.status_code}"
                 )
                 return APIResponse(
                     data=await DocumentService.get_text_search(query, limit),
-                    message="Đã chuyển sang tìm kiếm tiêu chuẩn",
+                    message="Switched to standard search successfully",
                 )
     except Exception as e:
-        logger.error("Tìm kiếm thông minh gặp ngoại lệ với truy vấn '{query}'")
+        logger.error("Smart search encountered an exception with query '{query}'")
         return APIResponse(
             data=await DocumentService.get_text_search(query, limit),
-            message="Đã chuyển sang tìm kiếm tiêu chuẩn",
+            message="Switched to standard search successfully",
         )
 
 
-@router.get("/goi-y-ai", response_model=APIResponse[Any])
+@router.get("/ai-suggestions", response_model=APIResponse[Any])
 async def get_ai_recommendations(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     current_user: UserInDB = Depends(get_current_user_optional),
@@ -95,17 +95,17 @@ async def get_ai_recommendations(
 ):
     return APIResponse(
         data=await DocumentService.get_trending_documents(limit),
-        message="Đã tải gợi ý tài liệu từ AI",
+        message="AI document suggestions retrieved successfully",
     )
 
 
-@router.get("/hashtag-xu-huong", response_model=APIResponse[Any])
+@router.get("/trending-hashtags", response_model=APIResponse[Any])
 async def get_trending_tags(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     db=Depends(get_db),
 ):
     return APIResponse(
         data=await DocumentService.get_trending_tags(limit),
-        message="Đã tải danh sách hashtag xu hướng",
+        message="Trending hashtags retrieved successfully",
         status=status.HTTP_200_OK,
     )

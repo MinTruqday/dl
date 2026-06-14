@@ -40,7 +40,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         import httpx
 
@@ -48,7 +48,7 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/email/{invitee_email}",
+                    f"{settings.PROVISION_URL}/users/by-email/{invitee_email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -57,27 +57,27 @@ class CollaborationService:
             pass
         if not invitee:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy người dùng với email này"
+                status_code=404, detail="The specified user could not be found"
             )
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
             raise HTTPException(
-                status_code=400, detail="Không thể tự mời bản thân làm cộng tác viên"
+                status_code=400, detail="Action restricted. You cannot invite yourself as a collaborator"
             )
         existing_invite = await RepositoryFactory.get("collaboration_invites").find_one(
             {"document_id": document_id, "invitee_id": invitee_id, "status": "PENDING"}
         )
         if existing_invite:
             raise HTTPException(
-                status_code=400, detail="Có lời mời đang chờ người này xác nhận"
+                status_code=400, detail="A pending invitation is awaiting confirmation from this user"
             )
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail="Người này đã là cộng tác viên")
+            raise HTTPException(status_code=400, detail="This user is already a collaborator")
         invite = {
             "_id": str(uuid7()),
             "document_id": document_id,
-            "document_title": doc.get("title", "Tài liệu không tên"),
+            "document_title": doc.get("title", "Untitled Document"),
             "inviter_id": str(current_user.id),
             "inviter_name": current_user.full_name,
             "invitee_id": invitee_id,
@@ -89,13 +89,13 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Gửi lời mời",
-            f"Đã gửi lời mời cộng tác tới {invitee_email} với vai trò {role}",
+            "Send invitation",
+            f"Collaboration invitation sent to {invitee_email} with role {role}",
         )
         logger.info(
-            f"Người dùng {current_user.id} mời {invitee_id} chỉnh sửa tài liệu {document_id}"
+            f"User {current_user.id} invited {invitee_id} to edit document {document_id}"
         )
-        return {"message": "Đã gửi lời mời cộng tác", "invite_id": invite["_id"]}
+        return {"message": "Collaboration invitation sent successfully", "invite_id": invite["_id"]}
 
     @staticmethod
     async def get_my_collaboration_invites(current_user, db=None) -> list:
@@ -120,11 +120,11 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Lời mời không tồn tại hoặc đã xử lý"
+                status_code=404, detail="The invitation could not be found or has already been processed"
             )
         if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(
-                status_code=400, detail="Trạng thái phản hồi không hợp lệ"
+                status_code=400, detail="Invalid response status"
             )
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": invite_id},
@@ -141,18 +141,18 @@ class CollaborationService:
         await CollaborationService.log_activity(
             invite["document_id"],
             current_user.full_name,
-            "Chấp nhận" if status == "ACCEPTED" else "Từ chối",
+            "Accepted" if status == "ACCEPTED" else "Declined",
             (
-                "Đã chấp nhận lời mời cộng tác"
+                "Collaboration invitation accepted successfully"
                 if status == "ACCEPTED"
-                else "Đã từ chối lời mời cộng tác"
+                else "Collaboration invitation declined successfully"
             ),
         )
         logger.info(
-            f"Người dùng {current_user.id} {status} lời mời cộng tác {invite_id}"
+            f"User {current_user.id} {status} collaboration invitation {invite_id}"
         )
         return {
-            "message": f"Đã {('chấp nhận' if status == 'ACCEPTED' else 'từ chối')} lời mời cộng tác"
+            "message": f"Collaboration invitation {('accepted' if status == 'ACCEPTED' else 'declined')} successfully"
         }
 
     @staticmethod
@@ -171,7 +171,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -186,7 +186,7 @@ class CollaborationService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.get(
-                        f"{settings.PROVISION_URL}/nguoi-dung/{inv['invitee_id']}",
+                        f"{settings.PROVISION_URL}/users/{inv['invitee_id']}",
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if resp.status_code == 200:
@@ -199,7 +199,7 @@ class CollaborationService:
                         "collaboration_id": inv["_id"],
                         "user_id": inv["invitee_id"],
                         "email": user_info.get("email", ""),
-                        "full_name": user_info.get("full_name", "Người dùng"),
+                        "full_name": user_info.get("full_name", "User"),
                         "role": inv.get("role", "editor"),
                     }
                 )
@@ -214,7 +214,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin cộng tác"
+                status_code=404, detail="Collaboration details could not be found"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
@@ -222,7 +222,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Không có quyền quản lý cộng tác viên tài liệu này",
+                detail="Action restricted. Permission denied to manage collaborators for this document",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": invite["document_id"]},
@@ -234,13 +234,13 @@ class CollaborationService:
         await CollaborationService.log_activity(
             invite["document_id"],
             current_user.full_name,
-            "Xóa cộng tác viên",
-            f"Đã xóa cộng tác viên có ID {invite['invitee_id']}",
+            "Collaborator removed",
+            f"Collaborator {invite['invitee_id']} removed successfully",
         )
         logger.info(
-            f"Chủ sở hữu {current_user.id} xóa cộng tác viên {invite['invitee_id']} khỏi tài liệu {invite['document_id']}"
+            f"Owner {current_user.id} removed collaborator {invite['invitee_id']} from document {invite['document_id']}"
         )
-        return {"message": "Đã xóa người dùng khỏi danh sách cộng tác"}
+        return {"message": "User removed from collaboration list successfully"}
 
     @staticmethod
     async def get_activities(document_id: str, current_user, db=None) -> list:
@@ -258,7 +258,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         activities = (
             await RepositoryFactory.get("collaboration_activities")
@@ -294,7 +294,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền chuyển sở hữu",
+                detail="Document could not be found or ownership transfer access denied",
             )
         import httpx
 
@@ -302,7 +302,7 @@ class CollaborationService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/{target_user_id}",
+                    f"{settings.PROVISION_URL}/users/{target_user_id}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -312,12 +312,12 @@ class CollaborationService:
         if not target_user:
             raise HTTPException(
                 status_code=404,
-                detail="Không tìm thấy thông tin người nhận chuyển nhượng",
+                detail="Transferee information could not be found",
             )
         if target_user_id not in doc.get("coauthors", []):
             raise HTTPException(
                 status_code=400,
-                detail="Chỉ cộng tác viên mới được nhận chuyển nhượng tài liệu",
+                detail="Only collaborators are eligible to receive document ownership transfer",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -335,13 +335,13 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Chuyển sở hữu",
-            f"Đã chuyển quyền sở hữu tài liệu cho {target_user.get('full_name')}",
+            "Transfer ownership",
+            f"Ownership transferred successfully document cho {target_user.get('full_name')}",
         )
         logger.info(
-            f"Đã chuyển quyền sở hữu tài liệu {document_id} từ {current_user.id} sang {target_user_id}"
+            f"Transferred ownership of document {document_id} from {current_user.id} to {target_user_id}"
         )
-        return {"message": "Đã chuyển giao quyền sở hữu tài liệu"}
+        return {"message": "Document ownership transferred successfully"}
 
     @staticmethod
     async def update_status(document_id: str, current_user, db=None) -> dict:
@@ -357,7 +357,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        return {"message": "Đã cập nhật trạng thái trực tuyến"}
+        return {"message": "Online status updated successfully"}
 
     @staticmethod
     async def get_online_collaborators(document_id: str, db=None) -> list:
@@ -379,7 +379,7 @@ class CollaborationService:
             result.append(
                 {
                     "user_id": u["user_id"],
-                    "full_name": u.get("full_name", "Cộng tác viên"),
+                    "full_name": u.get("full_name", "Collaborator"),
                     "status": "online" if is_online else "offline",
                 }
             )
@@ -396,7 +396,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy thông tin cộng tác"
+                status_code=404, detail="Collaboration details could not be found"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
@@ -404,20 +404,20 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Không có quyền quản lý cộng tác viên tài liệu này",
+                detail="Action restricted. Permission denied to manage collaborators for this document",
             )
         if role not in ["editor", "viewer"]:
-            raise HTTPException(status_code=400, detail="Vai trò cộng tác không hợp lệ")
+            raise HTTPException(status_code=400, detail="Invalid collaboration role specified")
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
         await CollaborationService.log_activity(
             invite["document_id"],
             current_user.full_name,
-            "Cập nhật vai trò",
-            f"Đã thay đổi vai trò của cộng tác viên có ID {invite['invitee_id']} sang {role}",
+            "Update role",
+            f"Changed role of collaborator {invite['invitee_id']} to {role}",
         )
-        return {"message": "Đã cập nhật vai trò cộng tác viên"}
+        return {"message": "Collaborator role updated successfully"}
 
     @staticmethod
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
@@ -435,7 +435,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         memo = {
             "_id": str(uuid7()),
@@ -446,7 +446,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_memos").insert_one(memo)
-        return {"message": "Đã gửi tin nhắn trao đổi", "memo": memo}
+        return {"message": "Message exchanged successfully", "memo": memo}
 
     @staticmethod
     async def get_memos(document_id: str, current_user, db=None) -> list:
@@ -464,7 +464,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         memos = (
             await RepositoryFactory.get("collaboration_memos")
@@ -500,11 +500,11 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền cập nhật cài đặt",
+                detail="Document could not be found or access denied to update settings",
             )
         if access_level not in ["invite_only", "anyone_with_link"]:
             raise HTTPException(
-                status_code=400, detail="Mức quyền truy cập không hợp lệ"
+                status_code=400, detail="Invalid access level specified"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
@@ -512,11 +512,11 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Cài đặt quyền",
-            f"Đã cập nhật mức độ tiếp cận tài liệu thành: {access_level}",
+            "Permission settings",
+            f"Document access level updated to: {access_level}",
         )
         return {
-            "message": "Đã cập nhật quyền truy cập mặc định",
+            "message": "Default access permissions updated successfully",
             "collab_access_level": access_level,
         }
 
@@ -530,7 +530,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -549,14 +549,14 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Lời mời không tồn tại hoặc đã được chấp nhận"
+                status_code=404, detail="The invitation could not be found or has already been accepted"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền thu hồi lời mời này"
+                status_code=403, detail="Action restricted. Permission denied to revoke this invitation"
             )
         await RepositoryFactory.get("collaboration_invites").delete_one(
             {"_id": invite_id}
@@ -564,10 +564,10 @@ class CollaborationService:
         await CollaborationService.log_activity(
             invite["document_id"],
             current_user.full_name,
-            "Thu hồi lời mời",
-            "Đã thu hồi lời mời cộng tác chưa duyệt",
+            "Invitation revoked",
+            "Pending collaboration invitation revoked successfully",
         )
-        return {"message": "Đã thu hồi lời mời cộng tác"}
+        return {"message": "Collaboration invitation revoked successfully"}
 
     @staticmethod
     async def get_contribution_stats(document_id: str, current_user, db=None) -> list:
@@ -585,7 +585,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền xem thống kê",
+                detail="Document could not be found or access to statistics denied",
             )
         pipeline = [
             {"$match": {"document_id": document_id}},
@@ -617,7 +617,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         snapshot = {
             "_id": str(uuid7()),
@@ -631,10 +631,10 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Tạo nháp",
-            f"Đã lưu trữ phiên bản nháp cộng tác: {version_name}",
+            "Create draft",
+            f"Collaboration draft version stored: {version_name}",
         )
-        return {"message": "Bản nháp cộng tác đã được tạo", "snapshot": snapshot}
+        return {"message": "Collaboration draft created successfully", "snapshot": snapshot}
 
     @staticmethod
     async def get_snapshots(document_id: str, current_user, db=None) -> list:
@@ -652,7 +652,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         drafts = (
             await RepositoryFactory.get("collaboration_drafts")
@@ -690,7 +690,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         existing = await RepositoryFactory.get("collaboration_locks").find_one(
@@ -706,7 +706,7 @@ class CollaborationService:
             ):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Tài liệu hiện đang được khóa độc quyền bởi {existing.get('user_name')}",
+                    detail=f"Document is currently exclusively locked by {existing.get('user_name')}",
                 )
         await RepositoryFactory.get("collaboration_locks").update_one(
             {"document_id": document_id},
@@ -722,10 +722,10 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Khóa tài liệu",
-            "Đã kích hoạt chế độ khóa biên tập độc quyền",
+            "Document locked",
+            "Exclusive edit lock enabled successfully",
         )
-        return {"message": "Đã khóa tài liệu để biên tập"}
+        return {"message": "Document locked for editing successfully"}
 
     @staticmethod
     async def release_lock(document_id: str, current_user, db=None) -> dict:
@@ -741,10 +741,10 @@ class CollaborationService:
             await CollaborationService.log_activity(
                 document_id,
                 current_user.full_name,
-                "Mở khóa tài liệu",
-                "Đã tắt chế độ khóa biên tập độc quyền",
+                "Unlock document",
+                "Exclusive edit lock disabled successfully",
             )
-        return {"message": "Đã kết thúc biên tập và mở khóa tài liệu"}
+        return {"message": "Editing session ended and document unlocked successfully"}
 
     @staticmethod
     async def get_lock_status(document_id: str, db=None) -> dict:
@@ -782,7 +782,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền sở hữu",
+                detail="Document could not be found or ownership access denied",
             )
         invite_code = str(uuid7())[:8].upper()
         await RepositoryFactory.get("collaboration_invite_codes").update_one(
@@ -798,8 +798,8 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Tạo mã cộng tác",
-            f"Đã kích hoạt mã mời nhanh: {invite_code}",
+            "Generate collaboration code",
+            f"Activated quick invite code: {invite_code}",
         )
         return {"invite_code": invite_code}
 
@@ -812,17 +812,17 @@ class CollaborationService:
         )
         if not code_entry:
             raise HTTPException(
-                status_code=404, detail="Mã cộng tác không tồn tại hoặc đã hết hạn"
+                status_code=404, detail="Collaboration code could not be found or has expired"
             )
         document_id = code_entry["document_id"]
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         if doc.get("author_id") == str(current_user.id):
-            raise HTTPException(status_code=400, detail="Đã là chủ sở hữu tài liệu này")
+            raise HTTPException(status_code=400, detail="User is already the owner of this document")
         if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(
-                status_code=400, detail="Đã là cộng tác viên tài liệu này"
+                status_code=400, detail="User is already a collaborator on this document"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -835,9 +835,9 @@ class CollaborationService:
             {
                 "_id": str(uuid7()),
                 "document_id": document_id,
-                "document_title": doc.get("title", "Tài liệu không tên"),
+                "document_title": doc.get("title", "Untitled Document"),
                 "inviter_id": doc["author_id"],
-                "inviter_name": "Chủ sở hữu",
+                "inviter_name": "Owner",
                 "invitee_id": str(current_user.id),
                 "role": "editor",
                 "status": "ACCEPTED",
@@ -848,11 +848,11 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Tham gia qua mã",
-            "Đã gia nhập nhóm cộng tác viên biên tập thông qua mã mời nhanh",
+            "Join via code",
+            "Joined editorial collaboration group via quick invite code successfully",
         )
         return {
-            "message": "Đã tham gia nhóm cộng tác biên tập",
+            "message": "Joined editorial collaboration group successfully",
             "document_id": document_id,
         }
 
@@ -874,14 +874,14 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         task = {
             "_id": str(uuid7()),
             "document_id": document_id,
             "task_desc": task_desc,
             "is_done": False,
-            "assigned_to": assigned_to or "Chưa giao",
+            "assigned_to": assigned_to or "Unassigned",
             "created_by": current_user.full_name,
             "created_at": datetime.now(timezone.utc),
         }
@@ -889,8 +889,8 @@ class CollaborationService:
         await CollaborationService.log_activity(
             document_id,
             current_user.full_name,
-            "Tạo nhiệm vụ",
-            f"Đã thêm nhiệm vụ cộng tác mới: {task_desc} (Giao cho: {assigned_to or 'Chưa giao'})",
+            "Create task",
+            f"New collaboration task added: {task_desc} (Assigned to: {assigned_to or 'Unassigned'})",
         )
         return {"task": task}
 
@@ -910,7 +910,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         tasks = (
             await RepositoryFactory.get("collaboration_tasks")
@@ -942,7 +942,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Nhiệm vụ không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified task could not be found")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -954,7 +954,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền chỉnh sửa nhiệm vụ này"
+                status_code=403, detail="Action restricted. Permission denied to edit this task"
             )
         await RepositoryFactory.get("collaboration_tasks").update_one(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
@@ -962,10 +962,10 @@ class CollaborationService:
         await CollaborationService.log_activity(
             task["document_id"],
             current_user.full_name,
-            "Cập nhật nhiệm vụ",
-            "Đã đánh dấu nhiệm vụ '{task['task_desc']}' thành {('Hoàn thành' if is_done else 'Chưa xong')}",
+            "Update task",
+            "Marked task '{task['task_desc']}' as {('Completed' if is_done else 'Pending')}",
         )
-        return {"message": "Đã cập nhật nhiệm vụ"}
+        return {"message": "Task updated successfully"}
 
     @staticmethod
     async def add_task_comment(
@@ -977,7 +977,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Nhiệm vụ không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified task could not be found")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -989,7 +989,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền thảo luận trong nhiệm vụ này"
+                status_code=403, detail="Action restricted. Access to task discussion denied"
             )
         comment = {
             "_id": str(uuid7()),
@@ -1009,7 +1009,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="Nhiệm vụ không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified task could not be found")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -1021,7 +1021,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Không có quyền truy cập thảo luận nhiệm vụ này"
+                status_code=403, detail="Action restricted. Access to task discussion denied"
             )
         comments = (
             await RepositoryFactory.get("collaboration_task_comments")

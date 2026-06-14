@@ -24,7 +24,7 @@ class LibraryService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reading_lists").insert_one(new_list)
-        logger.info(f"Người dùng {current_user.id} tạo danh sách đọc '{data.name}'")
+        logger.info(f"User {current_user.id} created reading list '{data.name}'")
         return new_list
 
     @staticmethod
@@ -45,7 +45,7 @@ class LibraryService:
             {"_id": list_id, "user_id": str(current_user.id)}
         )
         if not reading_list:
-            raise HTTPException(status_code=404, detail="Danh sách đọc không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified reading list could not be found")
         doc_ids = reading_list.get("documents", [])
         if doc_ids:
             docs = (
@@ -72,8 +72,8 @@ class LibraryService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Danh sách đọc không tồn tại")
-        return {"status": "success", "message": "Đã thêm vào danh sách đọc"}
+            raise HTTPException(status_code=404, detail="The specified reading list could not be found")
+        return {"status": "success", "message": "Added to reading list successfully"}
 
     @staticmethod
     async def remove_document_from_list(
@@ -89,5 +89,5 @@ class LibraryService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Danh sách đọc không tồn tại")
-        return {"status": "success", "message": "Đã xóa khỏi danh sách đọc"}
+            raise HTTPException(status_code=404, detail="The specified reading list could not be found")
+        return {"status": "success", "message": "Removed from reading list successfully"}

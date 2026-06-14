@@ -13,10 +13,10 @@ from src.schemas.library_schema import (
 )
 from src.services.reading_service import ReadingService
 
-router = APIRouter(prefix="/doc-hieu")
+router = APIRouter(prefix="/reading")
 
 
-@router.get("/lich-su", response_model=APIResponse[Any])
+@router.get("/history", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = None,
     limit: int = Query(20),
@@ -27,11 +27,11 @@ async def get_history(
         data=await ReadingService.get_reading_history(
             current_user, cursor, limit, db=db
         ),
-        message="Đã tải lịch sử đọc",
+        message="Reading history retrieved successfully",
     )
 
 
-@router.post("/tien-do", response_model=APIResponse[Any])
+@router.post("/progress", response_model=APIResponse[Any])
 async def update_progress(
     data: ProgressUpdate,
     current_user: UserInDB = Depends(get_current_user),
@@ -39,11 +39,11 @@ async def update_progress(
 ):
     return APIResponse(
         data=await ReadingService.update_progress(data, current_user, db=db),
-        message="Đã cập nhật tiến độ",
+        message="Progress updated successfully",
     )
 
 
-@router.post("/muc-tieu", response_model=APIResponse[Any])
+@router.post("/goals", response_model=APIResponse[Any])
 async def set_reading_goal(
     data: ReadingGoalCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -51,22 +51,22 @@ async def set_reading_goal(
 ):
     return APIResponse(
         data=await ReadingService.set_reading_goal(data, current_user, db=db),
-        message="Đã thiết lập mục tiêu",
+        message="Goal set successfully",
         status=201,
     )
 
 
-@router.get("/muc-tieu", response_model=APIResponse[Any])
+@router.get("/goals", response_model=APIResponse[Any])
 async def get_reading_goal(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ReadingService.get_reading_goal(current_user, db=db),
-        message="Đã tải thông tin mục tiêu",
+        message="Goal information retrieved successfully",
     )
 
 
-@router.put("/giao-dien", response_model=APIResponse[Any])
+@router.put("/interface", response_model=APIResponse[Any])
 async def update_typography(
     data: TypographyRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -74,11 +74,11 @@ async def update_typography(
 ):
     return APIResponse(
         data=await ReadingService.update_typography(data, current_user, db=db),
-        message="Đã cập nhật hiển thị",
+        message="Display updated successfully",
     )
 
 
-@router.get("/tai-lieu/{document_id}/tim-kiem", response_model=APIResponse[Any])
+@router.get("/documents/{document_id}/search", response_model=APIResponse[Any])
 async def search_in_document(
     document_id: str,
     q: str = Query(...),
@@ -89,21 +89,21 @@ async def search_in_document(
         data=await ReadingService.search_in_document(
             document_id, q, current_user, db=db
         ),
-        message="Đã tìm kiếm trong tài liệu",
+        message="Searched within document successfully",
     )
 
 
-@router.delete("/lich-su", response_model=APIResponse[Any])
+@router.delete("/history", response_model=APIResponse[Any])
 async def clear_reading_history(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await ReadingService.clear_reading_history(current_user, db=db),
-        message="Đã xóa toàn bộ lịch sử đọc",
+        message="Entire reading history deleted successfully",
     )
 
 
-@router.delete("/lich-su/{document_id}", response_model=APIResponse[Any])
+@router.delete("/history/{document_id}", response_model=APIResponse[Any])
 async def delete_history_item(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -111,7 +111,7 @@ async def delete_history_item(
 ):
     return APIResponse(
         data=await ReadingService.delete_history_item(document_id, current_user, db=db),
-        message="Đã xóa mục lịch sử đọc",
+        message="Reading history item deleted successfully",
     )
 
 
@@ -128,17 +128,17 @@ from fastapi import HTTPException
 def validate_url_ssrf(url: str):
     parsed = urlparse(url)
     if not parsed.hostname:
-        raise HTTPException(status_code=400, detail="Đường dẫn không hợp lệ")
+        raise HTTPException(status_code=400, detail="Invalid file path provided")
     try:
         ip = socket.gethostbyname(parsed.hostname)
         ip_obj = ipaddress.ip_address(ip)
         if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
             raise HTTPException(
                 status_code=403,
-                detail="Tên miền phân giải ra địa chỉ mạng nội bộ bị cấm để đảm bảo an toàn",
+                detail="Domain resolves to an internal network address, which is restricted for security",
             )
     except socket.gailỗi:
-        raise HTTPException(status_code=400, detail="Không thể phân giải tên miền")
+        raise HTTPException(status_code=400, detail="Failed to resolve domain name")
 
 
 def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
@@ -149,7 +149,7 @@ def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     return True
 
 
-@router.get("/cay-zip", response_model=APIResponse[Any])
+@router.get("/archive/tree", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
     try:
         validate_url_ssrf(file_url)
@@ -173,10 +173,10 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
                                         "size": info.file_size,
                                     }
                                 )
-                        return APIResponse(data=tree, message="Đã tải cây thư mục")
+                        return APIResponse(data=tree, message="Directory tree retrieved successfully")
                 else:
                     return APIResponse(
-                        data=None, message="Tệp hiện không khả dụng", status=400
+                        data=None, message="File is currently unavailable", status=400
                     )
     except HTTPException as he:
         raise he
@@ -184,7 +184,7 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
         return APIResponse(data=None, message=str(e), status=500)
 
 
-@router.get("/noi-dung-zip", response_model=APIResponse[Any])
+@router.get("/archive/content", response_model=APIResponse[Any])
 async def get_zip_content(
     file_url: str = Query(...), path: str = Query(...), db=Depends(get_db)
 ):
@@ -200,7 +200,7 @@ async def get_zip_content(
                             if not is_safe_zip_info(info):
                                 return APIResponse(
                                     data=None,
-                                    message="Tệp tin không an toàn",
+                                    message="Unsafe file detected",
                                     status=403,
                                 )
                             file_bytes = z.read(path)
@@ -208,18 +208,18 @@ async def get_zip_content(
                                 text = file_bytes.decode("utf-8")
                                 return APIResponse(
                                     data={"content": text, "type": "text"},
-                                    message="Đã tải nội dung tệp",
+                                    message="File content retrieved successfully",
                                 )
                             except UnicodeDecodeError:
                                 return APIResponse(
                                     data={
-                                        "content": "Tệp nhị phân không hỗ trợ xem trực tiếp",
+                                        "content": "Binary files do not support direct viewing",
                                         "type": "binary",
                                     },
-                                    message="Tệp nhị phân không hỗ trợ xem trực tiếp",
+                                    message="Binary files do not support direct viewing",
                                 )
                         return APIResponse(
-                            data=None, message="Không tìm thấy tệp", status=404
+                            data=None, message="File could not be found", status=404
                         )
     except HTTPException as he:
         raise he

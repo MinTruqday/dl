@@ -8,11 +8,11 @@ from src.schemas.document_schema import ModerateDocumentRequest
 from src.services.document_service import DocumentService
 from core.config import settings
 
-router = APIRouter(prefix="/ban-nhap")
+router = APIRouter(prefix="/drafts")
 
 
 @router.get(
-    "/hang-doi",
+    "/queue",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -23,12 +23,12 @@ async def get_approval_queue(
 ):
     return APIResponse(
         data=await DocumentService.get_approval_queue(cursor, limit, db=db),
-        message="Đã tải danh sách chờ phê duyệt",
+        message="Pending approval list retrieved successfully",
     )
 
 
 @router.post(
-    "/{document_id}/kiem-duyet",
+    "/{document_id}/moderate",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -42,5 +42,5 @@ async def moderate_document(
         data=await DocumentService.moderate_document(
             document_id, req.action, req.reason, current_user, db=db
         ),
-        message="Đã xử lý tài liệu",
+        message="Document processed successfully",
     )

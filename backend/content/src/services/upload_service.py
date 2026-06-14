@@ -11,10 +11,10 @@ class UploadService:
     @staticmethod
     async def upload_image(file, db=None):
         if "svg" in file.content_type.lower() or file.filename.lower().endswith(".svg"):
-            raise HTTPException(status_code=400, detail="Không hỗ trợ định dạng SVG")
+            raise HTTPException(status_code=400, detail="SVG format is not supported")
         if not file.content_type.startswith("image/"):
             raise HTTPException(
-                status_code=400, detail="Chỉ chấp nhận tệp tin hình ảnh"
+                status_code=400, detail="Only image files are supported"
             )
         ext = file.filename.split("")[-1]
         filename = f"images/{uuid7().hex}.{ext}"
@@ -22,12 +22,12 @@ class UploadService:
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("Lỗi tải hình ảnh lên hệ thống")
-            raise HTTPException(status_code=500, detail="Lỗi tải hình ảnh lên hệ thống")
+            logger.error("Failed to upload image")
+            raise HTTPException(status_code=500, detail="Failed to upload image")
         return {
             "url": filename,
             "filename": filename,
-            "message": "Đã tải hình ảnh lên hệ thống",
+            "message": "Image uploaded successfully",
         }
 
     @staticmethod
@@ -61,33 +61,33 @@ class UploadService:
         ext = file.filename.split(".")[-1].lower()
         if ext == "svg" or "svg" in file.content_type.lower():
             raise HTTPException(
-                status_code=400, detail="Không cho phép tải lên tệp SVG"
+                status_code=400, detail="SVG file upload is not allowed"
             )
         if ext not in allowed_extensions:
-            raise HTTPException(status_code=400, detail=f"Chưa hỗ trợ định dạng .{ext}")
-        filename = f"tài liệu/{uuid7().hex}.{ext}"
+            raise HTTPException(status_code=400, detail=f"Format .{ext} is not supported")
+        filename = f"documents/{uuid7().hex}.{ext}"
         content = await file.read()
         try:
             await upload_file(content, filename, file.content_type)
         except Exception as e:
-            logger.error("Lỗi tải tài liệu lên hệ thống")
-            raise HTTPException(status_code=500, detail="Lỗi tải tài liệu lên hệ thống")
+            logger.error("Failed to upload document")
+            raise HTTPException(status_code=500, detail="Failed to upload document")
         return {
             "url": filename,
             "filename": filename,
             "extension": ext,
-            "message": "Đã tải tài liệu lên hệ thống",
+            "message": "Document uploaded successfully",
         }
 
     @staticmethod
     async def get_presigned_url(file_path: str, db=None):
         if ".." in file_path or file_path.startswith("/"):
-            raise HTTPException(status_code=400, detail="Đường dẫn không hợp lệ")
+            raise HTTPException(status_code=400, detail="Invalid file path provided")
         try:
             url = await generate_presigned_url(file_path, 3600)
             return {"download_url": url}
         except Exception as e:
-            logger.error("Lỗi tạo liên kết tải xuống")
+            logger.error("Failed to generate download link")
             raise HTTPException(
-                status_code=500, detail="Thất bại khi tạo liên kết tải về"
+                status_code=500, detail="Failed to generate download link"
             )

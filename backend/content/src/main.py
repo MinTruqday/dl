@@ -53,7 +53,7 @@ app.include_router(pin_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống nội dung DocLib")
+    logger.info("DocLib Content initialized successfully")
     await init_db()
 
 

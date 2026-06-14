@@ -21,7 +21,7 @@ class PublicationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Tài liệu không tồn tại hoặc không có quyền truy cập",
+                detail="Document could not be found or access denied",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": str(document_id)},
@@ -36,9 +36,9 @@ class PublicationService:
             },
         )
         logger.info(
-            f"Người dùng {user_id} đã cập nhật thông tin SEO cho tài liệu {document_id}"
+            f"User {user_id} updated SEO details for document {document_id}"
         )
-        return {"message": "Đã cập nhật thông tin tài liệu"}
+        return {"message": "Document information updated successfully"}
 
     @staticmethod
     async def get_readability_score(document_id: str, current_user, db=None):
@@ -48,10 +48,10 @@ class PublicationService:
             {"_id": str(document_id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         content = doc.get("content")
         if not content:
-            return {"score": 0, "level": "Chưa có nội dung", "words": 0}
+            return {"score": 0, "level": "No content available", "words": 0}
         try:
             import textstat
 
@@ -59,23 +59,23 @@ class PublicationService:
             grade = textstat.flesch_kincaid_grade(content)
             words = textstat.lexicon_count(content, removepunct=True)
             target = (
-                "Đại học / Chuyên gia"
+                "University / Expert"
                 if grade > 12
-                else "Trung học phổ thông" if grade > 8 else "Phổ thông đại chúng"
+                else "High School" if grade > 8 else "General Public"
             )
             return {
                 "ease_score": score,
                 "complexity_grade": grade,
                 "target_audience": target,
                 "total_words": words,
-                "analysis": "Cấu trúc dễ đọc" if score > 60 else "Cấu trúc phức tạp",
+                "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError:
-            logger.error("Thư viện đánh giá độ đọc chưa cài đặt")
-            return {"error": "Tính năng phân tích độ đọc chưa khả dụng"}
+            logger.error("Readability evaluation library is not installed")
+            return {"error": "Readability analysis feature is currently unavailable"}
         except Exception as e:
-            logger.error("Lỗi khi phân tích mức độ dễ đọc")
-            return {"error": "Lỗi phân tích nội dung"}
+            logger.error("Failed to analyze readability level")
+            return {"error": "Failed to analyze content"}
 
     @staticmethod
     async def schedule_publish(
@@ -89,9 +89,9 @@ class PublicationService:
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
         logger.info(
-            f"Tài liệu {document_id} được đặt lịch xuất bản lúc {publish_at} bởi {user_id}"
+            f"Document {document_id} scheduled for publication at {publish_at} by {user_id}"
         )
-        return {"message": "Tài liệu đã được lên lịch xuất bản"}
+        return {"message": "Document scheduled for publication successfully"}
 
     @staticmethod
     async def publish_document(document_id: str, current_user, db=None):
@@ -103,7 +103,7 @@ class PublicationService:
             {"_id": document_id, "author_id": user_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         from src.core.publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)
@@ -116,5 +116,5 @@ class PublicationService:
                 }
             },
         )
-        logger.info(f"Đang xuất bản tài liệu {document_id}")
+        logger.info(f"Publishing document {document_id}")
         return await docs_collection.find_one({"_id": document_id})

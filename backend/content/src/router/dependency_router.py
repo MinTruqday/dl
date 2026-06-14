@@ -19,7 +19,7 @@ async def check_quota(current_user: UserInDB = Depends(get_current_user)):
     try:
         async with httpx.AsyncClient(timeout=settings.DEFAULT_HTTP_TIMEOUT) as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/han-muc/kiem-tra",
+                f"{settings.PROVISION_URL}/quota/verify",
                 params={
                     "user_id": str(current_user.id),
                     "role": current_user.role.value,
@@ -28,12 +28,12 @@ async def check_quota(current_user: UserInDB = Depends(get_current_user)):
             if resp.status_code == 429:
                 raise HTTPException(
                     status_code=429,
-                    detail=resp.json().get("detail", "Vượt quá hạn mức"),
+                    detail=resp.json().get("detail", "Storage quota exceeded"),
                 )
             elif resp.status_code != 200:
                 logger.warning(
-                    f"Không thể kiểm tra hạn mức từ hệ thống vận hành: {resp.status_code}"
+                    f"Failed to verify storage quota from provision subsystem: {resp.status_code}"
                 )
     except Exception as e:
-        logger.error("Lỗi kết nối tới hệ thống vận hành")
+        logger.error("Failed to connect to provision subsystem")
     return current_user

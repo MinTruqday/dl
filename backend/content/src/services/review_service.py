@@ -25,7 +25,7 @@ class ReviewService:
             },
             upsert=True,
         )
-        logger.info(f"Người dùng {current_user.id} đánh giá tài liệu {document_id}")
+        logger.info(f"User {current_user.id} reviewed document {document_id}")
         return {"status": "success"}
 
     @staticmethod
@@ -53,9 +53,9 @@ class ReviewService:
         }
         await RepositoryFactory.get("typo_reports").insert_one(report)
         logger.info(
-            f"Người dùng {current_user.id} báo lỗi chính tả tài liệu {document_id}"
+            f"User {current_user.id} reported a spelling error in document {document_id}"
         )
-        return {"message": "Cảm ơn bạn đóng góp chỉnh sửa"}
+        return {"message": "Thank you for contributing edits"}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -95,7 +95,7 @@ class ReviewService:
             "_id": str(uuid7()),
             "document_id": document_id,
             "user_id": str(current_user.id),
-            "full_name": current_user.full_name or "Cộng tác viên ẩn danh",
+            "full_name": current_user.full_name or "Anonymous collaborator",
             "avatar_url": getattr(current_user, "avatar_url", None),
             "rating": review_in.rating,
             "content": content_text,
@@ -108,7 +108,7 @@ class ReviewService:
             upsert=True,
         )
         logger.info(
-            f"Người dùng {current_user.id} đánh giá {review_in.rating} sao tài liệu {document_id}"
+            f"User {current_user.id} rated document {document_id} {review_in.rating} stars"
         )
         return review_item
 
@@ -153,5 +153,5 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reports").insert_one(report)
-        logger.info(f"Người dùng {current_user.id} báo cáo {item_type} mã {item_id}")
-        return {"message": "Cảm ơn bạn báo cáo nội dung"}
+        logger.info(f"User {current_user.id} reported {item_type} with ID {item_id}")
+        return {"message": "Thank you for reporting the content"}

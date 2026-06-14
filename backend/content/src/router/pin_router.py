@@ -7,7 +7,7 @@ from src.router.dependency_router import get_current_user, get_db
 from src.schemas.library_schema import PinnedDocumentRequest
 from src.services.pin_service import PinService
 
-router = APIRouter(prefix="/ghim")
+router = APIRouter(prefix="/pins")
 
 
 @router.get("", response_model=APIResponse[Any])
@@ -16,7 +16,7 @@ async def get_pinned_documents(
 ):
     return APIResponse(
         data=await PinService.get_pinned_documents(current_user, db=db),
-        message="Đã tải danh sách ghim",
+        message="Pinned list retrieved successfully",
     )
 
 
@@ -28,7 +28,7 @@ async def pin_document(
 ):
     return APIResponse(
         data=await PinService.pin_document(document_id, current_user, db=db),
-        message="Đã ghim tài liệu",
+        message="Document pinned successfully",
     )
 
 
@@ -40,7 +40,7 @@ async def unpin_document(
 ):
     return APIResponse(
         data=await PinService.unpin_document(document_id, current_user, db=db),
-        message="Đã bỏ ghim tài liệu",
+        message="Document unpinned successfully",
     )
 
 
@@ -54,5 +54,5 @@ async def set_pinned_documents(
         data=await PinService.set_pinned_documents(
             data.document_ids, current_user, db=db
         ),
-        message="Đã cập nhật danh sách ghim",
+        message="Pinned list updated successfully",
     )

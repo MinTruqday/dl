@@ -7,7 +7,7 @@ from src.router.dependency_router import get_current_user, get_db
 from src.services.document_service import DocumentService
 from src.services.export_service import ExportService
 
-router = APIRouter(prefix="/ket-xuat")
+router = APIRouter(prefix="/export")
 
 
 @router.get("/{document_id}/pdf", response_model=APIResponse[Any])
@@ -26,6 +26,6 @@ async def export_document_pdf(
         data=Response(
             content=pdf_content, media_type="application/pdf", headers=headers
         ),
-        message="Đã xuất bản sao PDF đính kèm dấu bản quyền",
+        message="Exported PDF copy with copyright watermark successfully",
         status=200,
     )

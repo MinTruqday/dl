@@ -11,10 +11,10 @@ from src.schemas.highlight_schema import (
 )
 from src.services.highlight_service import HighlightService
 
-router = APIRouter(prefix="/danh-dau")
+router = APIRouter(prefix="/bookmarks")
 
 
-@router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/documents/{document_id}", response_model=APIResponse[Any])
 async def create_highlight(
     document_id: str,
     data: HighlightCreateRequest,
@@ -25,12 +25,12 @@ async def create_highlight(
         data=await HighlightService.create_highlight(
             document_id, data.model_dump(), current_user, db=db
         ),
-        message="Đã tạo đánh dấu đoạn văn",
+        message="Highlighted segment created successfully",
         status=201,
     )
 
 
-@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.get("/documents/{document_id}", response_model=APIResponse[Any])
 async def get_highlights(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -38,12 +38,12 @@ async def get_highlights(
 ):
     return APIResponse(
         data=await HighlightService.get_highlights(document_id, current_user, db=db),
-        message="Đã tải danh sách các đoạn được đánh dấu",
+        message="Highlighted segments retrieved successfully",
         status=200,
     )
 
 
-@router.put("/{highlight_id}/ghi-chu", response_model=APIResponse[Any])
+@router.put("/{highlight_id}/notes", response_model=APIResponse[Any])
 async def update_highlight_note(
     highlight_id: str,
     data: HighlightNoteUpdateRequest,
@@ -54,7 +54,7 @@ async def update_highlight_note(
         data=await HighlightService.update_highlight_note(
             highlight_id, data.note, current_user, db=db
         ),
-        message="Đã cập nhật ghi chú cho đoạn đánh dấu",
+        message="Note for highlighted segment updated successfully",
         status=200,
     )
 
@@ -67,12 +67,12 @@ async def delete_highlight(
 ):
     return APIResponse(
         data=await HighlightService.delete_highlight(highlight_id, current_user, db=db),
-        message="Đã xóa đánh dấu đoạn văn",
+        message="Highlighted segment removed successfully",
         status=200,
     )
 
 
-@router.get("/ghi-chu", response_model=APIResponse[Any])
+@router.get("/notes", response_model=APIResponse[Any])
 async def get_all_notes(
     cursor: str = Query(None),
     limit: int = Query(50, ge=1, le=200),
@@ -84,12 +84,12 @@ async def get_all_notes(
         data=await HighlightService.get_all_notes(
             current_user, cursor, limit, skip, db=db
         ),
-        message="Đã tải danh sách ghi chú",
+        message="Notes list retrieved successfully",
         status=200,
     )
 
 
-@router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
+@router.get("/documents/{document_id}/export", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -99,6 +99,6 @@ async def export_highlights_markdown(
         data=await HighlightService.export_highlights_markdown(
             document_id, current_user, db=db
         ),
-        message="Đã xuất danh sách các đoạn đánh dấu",
+        message="Exported list of highlighted segments successfully",
         status=200,
     )

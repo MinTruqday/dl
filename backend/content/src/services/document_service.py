@@ -102,7 +102,7 @@ class DocumentService:
         docs_collection = RepositoryFactory.get("documents")
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
-            raise HTTPException(status_code=400, detail="Đường dẫn này đã được sử dụng")
+            raise HTTPException(status_code=400, detail="The specified path is already in use")
 
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"):
@@ -110,7 +110,7 @@ class DocumentService:
 
         doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info(f"Người dùng {current_user.id} tạo tài liệu {doc_doc.id}")
+        logger.info(f"User {current_user.id} created document {doc_doc.id}")
         return doc_doc
 
     @staticmethod
@@ -168,7 +168,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -179,7 +179,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="Phiên bản tài liệu đã bị thay đổi bởi người dùng khác",
+                    detail="The document version has been modified by another user",
                 )
 
         if document.get("content"):
@@ -210,21 +210,21 @@ class DocumentService:
 
                 async with httpx.AsyncClient() as client:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        f"{settings.SIGNAL_URL}/notifications/trigger",
                         json={
                             "target_user_id": str(current_user.id),
-                            "title": "Tài liệu được cập nhật",
-                            "body": "Tài liệu '{document.get('title', 'Tài liệu')}' đã được cập nhật",
+                            "title": "Document updated",
+                            "body": "Document '{document.get('title', 'Document')}' updated successfully",
                             "type": "DOCUMENT_UPDATE",
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
                 logger.error(
-                    "Không thể gửi thông báo cập nhật cho tài liệu {document_id}"
+                    "Failed to send update notification for document {document_id}"
                 )
 
-        logger.info(f"Người dùng {current_user.id} cập nhật tài liệu {document_id}")
+        logger.info(f"User {current_user.id} updated document {document_id}")
 
         if hasattr(db_client, "redis") and db_client.redis:
             await db_client.redis.delete(f"document:{document_id}")
@@ -239,13 +239,13 @@ class DocumentService:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         if (
             doc.get("author_id") != str(current_user.id)
             and current_user.role != "ADMIN"
         ):
             raise HTTPException(
-                status_code=403, detail="Không có quyền chỉnh sửa tài liệu này"
+                status_code=403, detail="Action restricted. Permission denied to edit this document"
             )
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
@@ -257,7 +257,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="Phiên bản tài liệu đã bị thay đổi bởi người dùng khác",
+                    detail="The document version has been modified by another user",
                 )
 
         update_data = {
@@ -267,7 +267,7 @@ class DocumentService:
             existing = await docs_col.find_one({"slug": update_data["slug"]})
             if existing:
                 raise HTTPException(
-                    status_code=400, detail="Đường dẫn này đã được sử dụng"
+                    status_code=400, detail="The specified path is already in use"
                 )
 
         if update_data:
@@ -338,14 +338,14 @@ class DocumentService:
 
         document = await docs_collection.find_one({"_id": document_id})
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         if (
             document.get("author_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
             if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="Tài liệu đang là bản nháp")
+                raise HTTPException(status_code=403, detail="Document is currently a draft")
 
         if (
             document.get("is_password_protected")
@@ -365,7 +365,7 @@ class DocumentService:
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
-                        detail="Nhập sai mật khẩu quá nhiều lần vui lòng thử lại sau 15 phút",
+                        detail="Too many incorrect password attempts. Please try again after 15 minutes",
                     )
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -373,7 +373,7 @@ class DocumentService:
                 if rl_key and hasattr(db_client, "redis") and db_client.redis:
                     await db_client.redis.incr(rl_key)
                     await db_client.redis.expire(rl_key, 900)
-                raise HTTPException(status_code=403, detail="Mật khẩu không chính xác")
+                raise HTTPException(status_code=403, detail="Incorrect password provided")
 
             if rl_key and hasattr(db_client, "redis") and db_client.redis:
                 await db_client.redis.delete(rl_key)
@@ -394,12 +394,12 @@ class DocumentService:
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         logger.info(
-            f"Người dùng {current_user.id} chuyển tài liệu {document_id} vào thùng rác"
+            f"User {current_user.id} moved document {document_id} to trash"
         )
-        return {"message": "Đã chuyển tài liệu vào thùng rác"}
+        return {"message": "Document moved to trash successfully"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
@@ -410,11 +410,11 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(
-                status_code=404, detail="Tài liệu không có trong thùng rác"
+                status_code=404, detail="Document is not in the trash"
             )
 
-        logger.info(f"Người dùng {current_user.id} khôi phục tài liệu {document_id}")
-        return {"message": "Đã khôi phục tài liệu từ thùng rác"}
+        logger.info(f"User {current_user.id} restored document {document_id}")
+        return {"message": "Document restored from trash successfully"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -447,7 +447,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await RepositoryFactory.get("documents").update_one(
@@ -460,8 +460,8 @@ class DocumentService:
                 }
             },
         )
-        logger.info(f"Đã bật bảo vệ mật khẩu cho tài liệu {document_id}")
-        return {"message": "Đã thiết lập mật khẩu tài liệu"}
+        logger.info(f"Password protection enabled for document {document_id}")
+        return {"message": "Document password set successfully"}
 
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
@@ -470,7 +470,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         import httpx
 
@@ -478,27 +478,27 @@ class DocumentService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/email/{email}",
+                    f"{settings.PROVISION_URL}/users/by-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.warning("Lỗi tra cứu thông tin qua email")
+            logger.warning("Failed to lookup information via email")
 
         if not target_user:
-            raise HTTPException(status_code=404, detail="Email không tồn tại")
+            raise HTTPException(status_code=404, detail="Email does not exist")
 
         if str(target_user["_id"]) in document.get("coauthors", []):
-            return {"message": "Người dùng này đã là đồng tác giả"}
+            return {"message": "This user is already a co-author"}
 
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
         logger.info(
-            f"Đã mời {target_user['_id']} làm đồng tác giả tài liệu {document_id}"
+            f"Invited {target_user['_id']} to co-author document {document_id}"
         )
-        return {"message": f"Đã thêm {target_user['full_name']} làm đồng tác giả"}
+        return {"message": f"Added {target_user['full_name']} as co-author successfully"}
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
@@ -512,7 +512,7 @@ class DocumentService:
             }
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
@@ -566,13 +566,13 @@ class DocumentService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/{document['author_id']}",
+                    f"{settings.PROVISION_URL}/users/{document['author_id']}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.warning("Không thể tải thông tin tác giả")
+            logger.warning("Failed to load author information")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -590,7 +590,7 @@ class DocumentService:
             {"_id": document_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         mem_zip = io.BytesIO()
         with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -607,7 +607,7 @@ class DocumentService:
                 f.write(b"</body></html>")
 
         mem_zip.seek(0)
-        logger.info(f"Đã xuất tài liệu {document_id} ra EPUB")
+        logger.info(f"Exported document {document_id} to EPUB")
         return mem_zip.read()
 
     @staticmethod
@@ -621,7 +621,7 @@ class DocumentService:
             }
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
@@ -654,7 +654,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}, {"_id": 1}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
 
         logs = (
             await RepositoryFactory.get("audit_logs")
@@ -729,7 +729,7 @@ class DocumentService:
                 "title": b.get("title", ""),
                 "description": b.get("description", ""),
                 "author_id": b.get("author_id"),
-                "author_name": b.get("author", {}).get("full_name", "Ẩn danh"),
+                "author_name": b.get("author", {}).get("full_name", "Anonymous"),
                 "created_at": format_date(b.get("created_at") or b.get("updated_at")),
                 "updated_at": format_date(b.get("updated_at")),
                 "submitted_at": format_date(b.get("updated_at")),
@@ -762,7 +762,7 @@ class DocumentService:
             )
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("author_id"))
-                logger.info(f"Đang xuất bản tài liệu {document_id}")
+                logger.info(f"Publishing document {document_id}")
 
         await RepositoryFactory.get("audit_logs").insert_one(
             {
@@ -774,9 +774,9 @@ class DocumentService:
             }
         )
         logger.info(
-            f"Điều phối viên {current_moderator.id} đổi trạng thái tài liệu {document_id} thành {status_val.lower()}"
+            f"Moderator {current_moderator.id} changed document {document_id} status to {status_val.lower()}"
         )
-        return {"message": f"Đã {status_val.lower()} tài liệu"}
+        return {"message": f"Document {status_val.lower()} successfully"}
 
     @staticmethod
     async def resolve_copyright_dispute(
@@ -795,9 +795,9 @@ class DocumentService:
             },
         )
         logger.info(
-            f"Điều phối viên {current_moderator.id} giải quyết tranh chấp {dispute_id}"
+            f"Moderator {current_moderator.id} resolved dispute {dispute_id}"
         )
-        return {"message": "Đã giải quyết tranh chấp bản quyền"}
+        return {"message": "Copyright dispute resolved successfully"}
 
     @staticmethod
     async def get_trending_tags(

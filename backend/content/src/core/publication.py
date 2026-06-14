@@ -7,7 +7,7 @@ from loguru import logger
 
 async def publish_compile_task(document_id: str, author_id: str, content_raw: str):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi thêm tác vụ biên dịch thất bại")
+        logger.error("Failed to connect to background task queue. Compilation task rejected.")
         return False
 
     try:
@@ -28,13 +28,13 @@ async def publish_compile_task(document_id: str, author_id: str, content_raw: st
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Lỗi khởi tạo tiến trình biên dịch")
+        logger.error("Failed to initialize compilation process")
         return False
 
 
 async def trigger_document_publish_job(document_id: str, author_id: str):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi thêm tác vụ xuất bản thất bại")
+        logger.error("Failed to connect to background task queue. Publication task rejected.")
         return False
 
     try:
@@ -51,13 +51,13 @@ async def trigger_document_publish_job(document_id: str, author_id: str):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error("Lỗi khởi tạo tiến trình xuất bản")
+        logger.error("Failed to initialize publication process")
         return False
 
 
 async def publish_event(queue_name: str, payload: dict):
     if not db_client.rabbitmq:
-        logger.error("Lỗi kết nối hệ thống hàng đợi thêm sự kiện thất bại")
+        logger.error("Failed to connect to background task queue. Event creation rejected")
         return False
 
     try:
@@ -70,5 +70,5 @@ async def publish_event(queue_name: str, payload: dict):
             await channel.default_exchange.publish(message, routing_key=queue.name)
             return True
     except Exception as e:
-        logger.error(f"Lỗi phát hành sự kiện {queue_name}")
+        logger.error(f"Failed to publish event to {queue_name}")
         return False

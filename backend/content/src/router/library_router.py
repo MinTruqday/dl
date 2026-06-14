@@ -12,10 +12,10 @@ from src.schemas.library_schema import (
 )
 from src.services.library_service import LibraryService
 
-router = APIRouter(prefix="/thu-vien")
+router = APIRouter(prefix="/library")
 
 
-@router.post("/danh-sach", response_model=APIResponse[Any])
+@router.post("/lists", response_model=APIResponse[Any])
 async def create_reading_list(
     data: ReadingListCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -23,32 +23,32 @@ async def create_reading_list(
 ):
     return APIResponse(
         data=await LibraryService.create_reading_list(data, current_user, db=db),
-        message="Đã tạo danh sách đọc",
+        message="Reading list created successfully",
         status=201,
     )
 
 
-@router.get("/danh-sach", response_model=APIResponse[Any])
+@router.get("/lists", response_model=APIResponse[Any])
 async def get_my_lists(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await LibraryService.get_my_reading_lists(current_user, db=db),
-        message="Đã tải danh sách đọc",
+        message="Reading list retrieved successfully",
     )
 
 
-@router.get("/danh-sach/{list_id}", response_model=APIResponse[Any])
+@router.get("/lists/{list_id}", response_model=APIResponse[Any])
 async def get_list_by_id(
     list_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db),
-        message="Đã tải chi tiết danh sách",
+        message="List details retrieved successfully",
     )
 
 
-@router.post("/danh-sach/{list_id}/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any])
 async def add_to_list(
     list_id: str,
     document_id: str,
@@ -59,12 +59,12 @@ async def add_to_list(
         data=await LibraryService.add_document_to_list(
             list_id, document_id, current_user, db=db
         ),
-        message="Đã thêm vào danh sách đọc",
+        message="Added to reading list successfully",
     )
 
 
 @router.delete(
-    "/danh-sach/{list_id}/tai-lieu/{document_id}", response_model=APIResponse[Any]
+    "/lists/{list_id}/documents/{document_id}", response_model=APIResponse[Any]
 )
 async def remove_from_list(
     list_id: str,
@@ -76,5 +76,5 @@ async def remove_from_list(
         data=await LibraryService.remove_document_from_list(
             list_id, document_id, current_user, db=db
         ),
-        message="Đã xóa khỏi danh sách đọc",
+        message="Removed from reading list successfully",
     )

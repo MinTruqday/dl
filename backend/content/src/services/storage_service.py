@@ -49,7 +49,7 @@ class StorageService:
         if not target:
             return None
         shortcut = StorageItemInDB(
-            name=f"Lối tắt của {target.name}",
+            name=f"Shortcut to {target.name}",
             parent_id=parent_id,
             owner_id=owner_id,
             is_folder=False,
@@ -191,7 +191,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error("Lỗi xóa tệp vật lý")
+                logger.error("Failed to delete physical file")
 
         return True
 
@@ -222,7 +222,7 @@ class StorageService:
         if not item:
             return None
         new_item_dict = item.dict()
-        new_item_dict["name"] = f"{item.name} (Bản sao)"
+        new_item_dict["name"] = f"{item.name} (Copy)"
         if target_parent_id is not None:
             new_item_dict["parent_id"] = target_parent_id
         new_item_dict.pop("id", None)
@@ -288,14 +288,14 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy tài khoản với email này"
+                status_code=404, detail="The account associated with this email could not be found"
             )
         target_user_id = str(target_user["_id"])
         if target_user_id == owner_id:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=400, detail="Không thể tự chia sẻ tệp cho bản thân"
+                status_code=400, detail="Action restricted. You cannot share a file with yourself"
             )
         item = await db_client.mongodb.get_default_database().storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id}
@@ -304,7 +304,7 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="Tệp không tồn tại hoặc không có quyền chia sẻ"
+                status_code=404, detail="File could not be found or sharing access denied"
             )
         result = (
             await db_client.mongodb.get_default_database().storage_items.update_one(
@@ -317,8 +317,8 @@ class StorageService:
             )
         )
         if result.modified_count == 0:
-            return {"message": "Đã chia sẻ tệp cho người dùng này từ trước"}
-        return {"message": f"Đã chia sẻ tệp cho {email} với quyền {role}"}
+            return {"message": "File has already been shared with this user"}
+        return {"message": f"Shared file with {email} and role {role} successfully"}
 
     @staticmethod
     async def get_recent_items(

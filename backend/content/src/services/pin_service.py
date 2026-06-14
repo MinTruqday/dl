@@ -67,8 +67,8 @@ class PinService:
             },
             upsert=True,
         )
-        logger.info(f"Người dùng {current_user.id} ghim tài liệu {document_id}")
-        return {"status": "success", "message": "Đã ghim tài liệu"}
+        logger.info(f"User {current_user.id} ghim document {document_id}")
+        return {"status": "success", "message": "Document pinned successfully"}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
@@ -79,7 +79,7 @@ class PinService:
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
         )
-        return {"status": "success", "message": "Đã bỏ ghim tài liệu"}
+        return {"status": "success", "message": "Document unpinned successfully"}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
@@ -90,4 +90,4 @@ class PinService:
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,
         )
-        return {"status": "success", "message": "Đã cập nhật danh sách ghim"}
+        return {"status": "success", "message": "Pinned list updated successfully"}

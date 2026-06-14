@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends
 from src.router.dependency_router import get_current_user, get_db
 from src.services.version_service import VersionsService
 
-router = APIRouter(prefix="/phien-ban")
+router = APIRouter(prefix="/versions")
 
 
-@router.post("/luu/{document_id}", response_model=APIResponse[Any])
+@router.post("/save/{document_id}", response_model=APIResponse[Any])
 async def save_version(
     document_id: str,
     version_note: str,
@@ -20,12 +20,12 @@ async def save_version(
         data=await VersionsService.save_version(
             document_id, version_note, current_user, db=db
         ),
-        message="Đã lưu phiên bản tài liệu",
+        message="Document version saved successfully",
         status=201,
     )
 
 
-@router.get("/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.get("/documents/{document_id}", response_model=APIResponse[Any])
 async def get_document_versions(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -33,11 +33,11 @@ async def get_document_versions(
 ):
     return APIResponse(
         data=await VersionsService.get_versions(document_id, current_user, db=db),
-        message="Đã tải danh sách phiên bản",
+        message="Version list retrieved successfully",
     )
 
 
-@router.post("/{version_id}/khoi-phuc", response_model=APIResponse[Any])
+@router.post("/{version_id}/restore", response_model=APIResponse[Any])
 async def restore_version(
     version_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -45,5 +45,5 @@ async def restore_version(
 ):
     return APIResponse(
         data=await VersionsService.restore_version(version_id, current_user, db=db),
-        message="Đã khôi phục phiên bản",
+        message="Version restored successfully",
     )

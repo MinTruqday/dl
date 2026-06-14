@@ -20,7 +20,7 @@ class VersionsService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,
@@ -37,8 +37,8 @@ class VersionsService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"Người dùng {current_user.id} lưu bản nháp tài liệu {document_id}")
-        return {"message": "Đã lưu bản nháp tài liệu"}
+        logger.info(f"User {current_user.id} saved draft for document {document_id}")
+        return {"message": "Document draft saved successfully"}
 
     @staticmethod
     async def get_versions(document_id, current_user, db=None):
@@ -63,7 +63,7 @@ class VersionsService:
             {"_id": ObjectId(version_id), "author_id": str(current_user.id)}
         )
         if not version:
-            raise HTTPException(status_code=404, detail="Phiên bản không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified version could not be found")
         snapshot = version.get("snapshot")
         if not snapshot:
             update_data = {
@@ -76,6 +76,6 @@ class VersionsService:
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info(
-            f"Người dùng {current_user.id} khôi phục tài liệu {version['document_id']} về phiên bản {version_id}"
+            f"User {current_user.id} restored document {version['document_id']} to version {version_id}"
         )
-        return {"message": "Đã khôi phục phiên bản tài liệu"}
+        return {"message": "Document version restored successfully"}

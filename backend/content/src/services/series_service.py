@@ -42,8 +42,8 @@ class SeriesService:
                 },
                 {"$set": {"series_id": series_id}},
             )
-        logger.info(f"Người dùng {current_user.id} tạo bộ tài liệu {series_id}")
-        return {"message": "Đã tạo chuỗi tài liệu mới", "series_id": series_id}
+        logger.info(f"User {current_user.id} created document series {series_id}")
+        return {"message": "New document series created successfully", "series_id": series_id}
 
     @staticmethod
     async def get_my_series(current_user, db=None) -> list:
@@ -63,7 +63,7 @@ class SeriesService:
             db = db_client.mongodb.get_default_database()
         series = await RepositoryFactory.get("series").find_one({"_id": series_id})
         if not series:
-            raise HTTPException(status_code=404, detail="Chuỗi tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document series could not be found")
         series = serialize_document(series)
         if series.get("document_ids"):
             docs = (
@@ -84,7 +84,7 @@ class SeriesService:
         if not series:
             raise HTTPException(
                 status_code=404,
-                detail="Chuỗi tài liệu không tồn tại hoặc không có quyền",
+                detail="Document series could not be found or access denied",
             )
         update_fields = {}
         if "title" in data and data["title"]:
@@ -92,13 +92,13 @@ class SeriesService:
         if "description" in data:
             update_fields["description"] = data["description"]
         if not update_fields:
-            raise HTTPException(status_code=400, detail="Không có trường cập nhật")
+            raise HTTPException(status_code=400, detail="No fields specified for update")
         update_fields["updated_at"] = datetime.now(timezone.utc)
         await RepositoryFactory.get("series").update_one(
             {"_id": series_id}, {"$set": update_fields}
         )
-        logger.info(f"Người dùng {current_user.id} cập nhật bộ tài liệu {series_id}")
-        return {"message": "Đã cập nhật chuỗi tài liệu", "series_id": series_id}
+        logger.info(f"User {current_user.id} updated document series {series_id}")
+        return {"message": "Document series updated successfully", "series_id": series_id}
 
     @staticmethod
     async def delete_series(series_id: str, current_user, db=None) -> dict:
@@ -110,7 +110,7 @@ class SeriesService:
         if not series:
             raise HTTPException(
                 status_code=404,
-                detail="Chuỗi tài liệu không tồn tại hoặc không có quyền",
+                detail="Document series could not be found or access denied",
             )
         session = await db_client.mongodb.start_session()
         try:
@@ -125,13 +125,13 @@ class SeriesService:
                         session=session,
                     )
                 await session.commit_transaction()
-                logger.info(f"Người dùng {current_user.id} xóa bộ tài liệu {series_id}")
-                return {"message": "Đã xóa chuỗi tài liệu"}
+                logger.info(f"User {current_user.id} deleted document series {series_id}")
+                return {"message": "Document series deleted successfully"}
         except Exception as e:
             await session.abort_transaction()
-            logger.error("Lỗi xóa bộ tài liệu {series_id}")
+            logger.error("Failed to delete document series {series_id}")
             raise HTTPException(
-                status_code=500, detail="Hệ thống bảo trì vui lòng thử lại sau"
+                status_code=500, detail="System is currently undergoing maintenance, please try again later"
             )
         finally:
             await session.end_session()
@@ -148,7 +148,7 @@ class SeriesService:
         if not series:
             raise HTTPException(
                 status_code=404,
-                detail="Chuỗi tài liệu không tồn tại hoặc không có quyền",
+                detail="Document series could not be found or access denied",
             )
         docs = (
             await RepositoryFactory.get("documents")
@@ -158,7 +158,7 @@ class SeriesService:
         if len(docs) != len(document_ids):
             raise HTTPException(
                 status_code=400,
-                detail="Tài liệu không tồn tại hoặc không thuộc quyền sở hữu",
+                detail="Document could not be found or ownership denied",
             )
         await RepositoryFactory.get("series").update_one(
             {"_id": series_id},
@@ -170,9 +170,9 @@ class SeriesService:
             },
         )
         logger.info(
-            f"Người dùng {current_user.id} sắp xếp lại tài liệu trong bộ {series_id}"
+            f"User {current_user.id} reordered documents in series {series_id}"
         )
-        return {"message": "Đã sắp xếp lại thứ tự tài liệu"}
+        return {"message": "Document order rearranged successfully"}
 
     @staticmethod
     async def link_series(
@@ -184,12 +184,12 @@ class SeriesService:
             {"_id": series_id, "author_id": str(current_user.id)}
         )
         if not series:
-            raise HTTPException(status_code=404, detail="Chuỗi tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document series could not be found")
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         await RepositoryFactory.get("series").update_one(
             {"_id": series_id}, {"$addToSet": {"document_ids": document_id}}
         )
@@ -197,6 +197,6 @@ class SeriesService:
             {"_id": document_id}, {"$set": {"series_id": series_id}}
         )
         logger.info(
-            f"Người dùng {current_user.id} đưa tài liệu {document_id} vào bộ {series_id}"
+            f"User {current_user.id} added document {document_id} to series {series_id}"
         )
-        return {"message": "Đã thêm tài liệu vào chuỗi"}
+        return {"message": "Document added to series successfully"}

@@ -35,7 +35,7 @@ class HighlightService:
         }
         await RepositoryFactory.get("highlights").insert_one(highlight)
         logger.info(
-            f"Người dùng {current_user.id} đánh dấu nội dung tài liệu {document_id}"
+            f"User {current_user.id} highlighted content in document {document_id}"
         )
         return highlight
 
@@ -77,8 +77,8 @@ class HighlightService:
             {"$set": {"note": note, "updated_at": datetime.now(timezone.utc)}},
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Ghi chú không tồn tại")
-        return {"message": "Đã cập nhật ghi chú"}
+            raise HTTPException(status_code=404, detail="The specified note could not be found")
+        return {"message": "Note updated successfully"}
 
     @staticmethod
     async def delete_highlight(highlight_id: str, current_user, db=None) -> dict:
@@ -88,9 +88,9 @@ class HighlightService:
             {"_id": highlight_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Ghi chú không tồn tại")
-        logger.info(f"Người dùng {current_user.id} xóa đánh dấu {highlight_id}")
-        return {"message": "Đã xóa ghi chú"}
+            raise HTTPException(status_code=404, detail="The specified note could not be found")
+        logger.info(f"User {current_user.id} deleted highlight {highlight_id}")
+        return {"message": "Note deleted successfully"}
 
     @staticmethod
     async def get_all_notes(
@@ -111,7 +111,7 @@ class HighlightService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except ValueError as e:
-                logger.warning("Thời gian {cursor} sai chuẩn ISO")
+                logger.warning("Time format {cursor} does not comply with ISO standards")
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
             pipeline.append({"$skip": skip})
@@ -120,7 +120,7 @@ class HighlightService:
             [
                 {
                     "$lookup": {
-                        "from": "tài liệu",
+                        "from": "document",
                         "localField": "document_id",
                         "foreignField": "_id",
                         "as": "doc",

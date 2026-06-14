@@ -33,7 +33,7 @@ class ReadingService:
             {"$limit": limit},
             {
                 "$lookup": {
-                    "from": "tài liệu",
+                    "from": "document",
                     "localField": "document_id",
                     "foreignField": "_id",
                     "as": "doc",
@@ -64,7 +64,7 @@ class ReadingService:
                     "document_id": h["document_id"],
                     "document_title": doc.get("title", ""),
                     "document_slug": doc.get("slug", ""),
-                    "author_name": author.get("full_name") or "Hệ thống DocLib",
+                    "author_name": author.get("full_name") or "DocLib System",
                     "cover_url": doc.get("cover_url"),
                     "progress_percentage": h.get("progress_percentage", 0),
                     "last_read_at": (
@@ -124,7 +124,7 @@ class ReadingService:
         if data.progress_percentage >= 100:
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
-                {"$addToSet": {"badges": {"name": "Mọt Sách", "awarded_at": now}}},
+                {"$addToSet": {"badges": {"name": "Bookworm", "awarded_at": now}}},
                 upsert=True,
             )
         return {"status": "success", "current_streak": current_streak}
@@ -149,7 +149,7 @@ class ReadingService:
             },
             upsert=True,
         )
-        return {"message": "Đã thiết lập mục tiêu đọc"}
+        return {"message": "Reading goal set successfully"}
 
     @staticmethod
     async def get_reading_goal(current_user, db=None) -> dict:
@@ -185,7 +185,7 @@ class ReadingService:
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document could not be found")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()
@@ -227,7 +227,7 @@ class ReadingService:
         await RepositoryFactory.get("reading_history").delete_many(
             {"user_id": str(current_user.id)}
         )
-        return {"status": "success", "message": "Đã xóa toàn bộ lịch sử đọc"}
+        return {"status": "success", "message": "Entire reading history deleted successfully"}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
@@ -236,4 +236,4 @@ class ReadingService:
         await RepositoryFactory.get("reading_history").delete_one(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
-        return {"status": "success", "message": "Đã xóa lịch sử đọc"}
+        return {"status": "success", "message": "Reading history deleted successfully"}

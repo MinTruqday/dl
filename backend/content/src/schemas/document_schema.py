@@ -41,7 +41,7 @@ class DocumentBase(BaseModel):
     price_dl: int = 0
     visibility: str = "public"
     password: Optional[str] = None
-    category: Optional[str] = "Chưa phân loại"
+    category: Optional[str] = "Uncategorized"
     pages_count: Optional[int] = 0
     preview_pages: int = 5
     scheduled_publish_at: Optional[datetime] = None

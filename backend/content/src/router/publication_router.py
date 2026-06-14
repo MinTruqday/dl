@@ -9,7 +9,7 @@ from src.schemas.document_schema import SchedulePublishRequest, SeoMetadataReque
 from src.services.document_service import DocumentService
 from src.services.publication_service import PublicationService
 
-router = APIRouter(prefix="/xuat-ban")
+router = APIRouter(prefix="/publications")
 
 
 @router.post(
@@ -26,7 +26,7 @@ async def publish_document(
         data=await PublicationService.publish_document(
             document_id, current_user, db=db
         ),
-        message="Đã xuất bản tài liệu",
+        message="Document published successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -46,7 +46,7 @@ async def schedule_publish(
         data=await PublicationService.schedule_publish(
             document_id, req.publish_at, current_user, db=db
         ),
-        message="Đã lên lịch xuất bản",
+        message="Scheduled for publication successfully",
         status=200,
     )
 
@@ -66,12 +66,12 @@ async def update_seo_metadata(
         data=await PublicationService.update_seo_metadata(
             document_id, req.model_dump(), current_user, db=db
         ),
-        message="Đã cập nhật thông tin SEO",
+        message="SEO information updated successfully",
         status=200,
     )
 
 
-@router.get("/{document_id}/doc-hieu", response_model=APIResponse[Any])
+@router.get("/{document_id}/readability", response_model=APIResponse[Any])
 async def get_readability_score(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -81,6 +81,6 @@ async def get_readability_score(
         data=await PublicationService.get_readability_score(
             document_id, current_user, db=db
         ),
-        message="Đã tính điểm đọc hiểu",
+        message="Readability score calculated successfully",
         status=200,
     )

@@ -22,7 +22,7 @@ class BookmarkService:
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message = "Đã gỡ bỏ tài liệu khỏi danh sách lưu trữ"
+            message = "Document removed from archive list successfully"
             is_bookmarked = False
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -34,7 +34,7 @@ class BookmarkService:
             )
         else:
             bookmarks.append(document_id)
-            message = "Đã thêm tài liệu vào danh sách lưu trữ"
+            message = "Document added to archive list successfully"
             is_bookmarked = True
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -74,7 +74,7 @@ class BookmarkService:
                 "title": d.get("title", ""),
                 "slug": d.get("slug", ""),
                 "cover_url": d.get("cover_url"),
-                "author_name": d.get("author_name", "Tác giả DocLib"),
+                "author_name": d.get("author_name", "DocLib Author"),
                 "views": d.get("views", 0),
                 "created_at": (
                     d["created_at"].isoformat()
@@ -97,7 +97,7 @@ class BookmarkService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("bookmark_folders").insert_one(folder)
-        logger.info(f"Đã tạo thư mục {folder['_id']} cho người dùng {current_user.id}")
+        logger.info(f"Folder {folder['_id']} created successfully for user {current_user.id}")
         return folder
 
     @staticmethod
@@ -140,8 +140,8 @@ class BookmarkService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Thư mục không tồn tại")
-        return {"message": "Đã cập nhật thư mục đánh dấu"}
+            raise HTTPException(status_code=404, detail="Folder could not be found")
+        return {"message": "Bookmark folder updated successfully"}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
@@ -151,5 +151,5 @@ class BookmarkService:
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Thư mục không tồn tại")
-        return {"message": "Đã xóa thư mục đánh dấu"}
+            raise HTTPException(status_code=404, detail="Folder could not be found")
+        return {"message": "Bookmark folder deleted successfully"}

@@ -36,7 +36,7 @@ from src.schemas.series_schema import SeriesCreateRequest, SeriesResponse
 from src.services.document_service import DocumentService
 from src.services.series_service import SeriesService
 
-router = APIRouter(prefix="/tai-lieu")
+router = APIRouter(prefix="/documents")
 
 
 @router.post("", response_model=APIResponse[DocumentResponse])
@@ -46,12 +46,12 @@ async def create_document(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
-        message="Đã tạo tài liệu mới",
+        message="New document created successfully",
         status=status.HTTP_201_CREATED,
     )
 
 
-@router.put("/{document_id}/noi-dung", response_model=APIResponse[DocumentResponse])
+@router.put("/{document_id}/content", response_model=APIResponse[DocumentResponse])
 async def update_document_content(
     document_id: str,
     content_in: DocumentContentUpdate,
@@ -61,7 +61,7 @@ async def update_document_content(
         data=await DocumentService.update_document_content(
             document_id, content_in, current_user
         ),
-        message="Đã cập nhật nội dung tài liệu",
+        message="Document content updated successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -76,7 +76,7 @@ async def update_document(
         data=await DocumentService.update_document(
             document_id, doc_update, current_user
         ),
-        message="Đã cập nhật thông tin tài liệu",
+        message="Document information updated successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -94,7 +94,7 @@ async def list_documents(
         data=await DocumentService.list_documents(
             limit, cursor, q, sort_by, category, tag
         ),
-        message="Đã tải danh sách tài liệu",
+        message="Document list retrieved successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -105,7 +105,7 @@ class FolderCreate(BaseModel):
 
 
 @router.get(
-    "/thu-muc",
+    "/folders",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -120,11 +120,11 @@ async def get_folders(
     folders = await cursor.to_list(length=100)
     for f in folders:
         f["_id"] = str(f["_id"])
-    return APIResponse(data=folders, message="Đã tải danh sách thư mục")
+    return APIResponse(data=folders, message="Folder list retrieved successfully")
 
 
 @router.post(
-    "/thu-muc",
+    "/folders",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -141,11 +141,11 @@ async def create_folder(
     }
     res = await db["workspace_folders"].insert_one(folder_doc)
     folder_doc["_id"] = str(res.inserted_id)
-    return APIResponse(data=folder_doc, message="Đã tạo thư mục")
+    return APIResponse(data=folder_doc, message="Folder created successfully")
 
 
 @router.delete(
-    "/thu-muc/{folder_id}",
+    "/folders/{folder_id}",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -157,12 +157,12 @@ async def delete_folder(
         {"_id": ObjectId(folder_id), "author_id": str(current_user.id)}
     )
     if not folder:
-        raise HTTPException(status_code=404, detail="Không tìm thấy thư mục")
+        raise HTTPException(status_code=404, detail="Folder could not be found")
     await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
     await db["documents"].update_many(
         {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
     )
-    return APIResponse(data={"deleted": True}, message="Đã xóa thư mục")
+    return APIResponse(data={"deleted": True}, message="Folder deleted successfully")
 
 
 @router.get(
@@ -179,7 +179,7 @@ async def get_my_documents(
 ):
     return APIResponse(
         data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
-        message="Đã tải danh sách tài liệu cá nhân",
+        message="Personal document list retrieved successfully",
     )
 
 
@@ -191,7 +191,7 @@ async def get_my_documents(
 async def get_trash(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_trash(current_user),
-        message="Đã tải danh sách thùng rác",
+        message="Trash list retrieved successfully",
     )
 
 
@@ -205,7 +205,7 @@ async def get_document_by_id(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Đã tải thông tin tài liệu",
+        message="Document information retrieved successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -216,16 +216,16 @@ async def get_document_by_slug(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.get_document_by_slug(slug, current_user),
-        message="Đã tải tài liệu theo đường dẫn",
+        message="Document retrieved by path successfully",
         status=status.HTTP_200_OK,
     )
 
 
-@router.get("/xem-truoc/{slug}", response_model=APIResponse[Any])
+@router.get("/preview/{slug}", response_model=APIResponse[Any])
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
-        message="Đã tải bản xem trước tài liệu",
+        message="Document preview retrieved successfully",
     )
 
 
@@ -237,7 +237,7 @@ async def get_document_preview(slug: str):
 async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await SeriesService.get_my_series(current_user),
-        message="Đã tải danh sách chuỗi tài liệu",
+        message="Document series list retrieved successfully",
     )
 
 
@@ -245,7 +245,7 @@ async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
 async def get_series_by_id(series_id: str):
     return APIResponse(
         data=await SeriesService.get_series_by_id(series_id),
-        message="Đã tải chi tiết chuỗi tài liệu",
+        message="Document series details retrieved successfully",
     )
 
 
@@ -260,7 +260,7 @@ async def create_series(
 ):
     return APIResponse(
         data=await SeriesService.create_series(req.model_dump(), current_user),
-        message="Đã tạo chuỗi tài liệu mới",
+        message="New document series created successfully",
         status=status.HTTP_201_CREATED,
     )
 
@@ -279,7 +279,7 @@ async def update_series(
         data=await SeriesService.update_series(
             series_id, req.model_dump(), current_user
         ),
-        message="Đã cập nhật chuỗi tài liệu",
+        message="Document series updated successfully",
     )
 
 
@@ -293,12 +293,12 @@ async def delete_series(
 ):
     return APIResponse(
         data=await SeriesService.delete_series(series_id, current_user),
-        message="Đã xóa chuỗi tài liệu",
+        message="Document series deleted successfully",
     )
 
 
 @router.patch(
-    "/document-series/{series_id}/tai-lieu",
+    "/series/{series_id}/documents",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -311,7 +311,7 @@ async def reorder_series_documents(
         data=await SeriesService.reorder_series_documents(
             series_id, document_ids, current_user
         ),
-        message="Đã sắp xếp lại thứ tự tài liệu",
+        message="Document order rearranged successfully",
     )
 
 
@@ -325,7 +325,7 @@ async def link_series(
 ):
     return APIResponse(
         data=await SeriesService.link_series(document_id, series_id, current_user),
-        message="Đã thêm tài liệu vào chuỗi",
+        message="Document added to series successfully",
         status=200,
     )
 
@@ -340,7 +340,7 @@ async def soft_delete_document(
 ):
     return APIResponse(
         data=await DocumentService.soft_delete_document(document_id, current_user),
-        message="Đã chuyển tài liệu vào thùng rác",
+        message="Document moved to trash successfully",
     )
 
 
@@ -354,7 +354,7 @@ async def restore_document(
 ):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
-        message="Đã khôi phục tài liệu",
+        message="Document restored successfully",
     )
 
 
@@ -372,7 +372,7 @@ async def set_document_password(
         data=await DocumentService.set_document_password(
             document_id, req.password, current_user
         ),
-        message="Đã thiết lập mật khẩu bảo vệ tài liệu",
+        message="Document protection password configured successfully",
     )
 
 
@@ -386,7 +386,7 @@ async def get_document_audit_logs(
 ):
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),
-        message="Đã tải nhật ký hoạt động tài liệu",
+        message="Document activity log retrieved successfully",
     )
 
 
@@ -403,13 +403,13 @@ async def toggle_star_document(
         {"_id": document_id, "author_id": str(current_user.id)}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Document could not be found")
     current_starred = doc.get("is_starred", False)
     await db["documents"].update_one(
         {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
     )
     return APIResponse(
-        data={"starred": not current_starred}, message="Đã đánh dấu sao tài liệu"
+        data={"starred": not current_starred}, message="Document starred successfully"
     )
 
 
@@ -430,7 +430,7 @@ async def transfer_document(
     if not doc:
         raise HTTPException(
             status_code=404,
-            detail="Không tìm thấy tài liệu hoặc bạn không hiện có quyền",
+            detail="Document could not be found or access denied",
         )
     import httpx
 
@@ -438,7 +438,7 @@ async def transfer_document(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/nguoi-dung/{new_owner_id}",
+                f"{settings.PROVISION_URL}/users/{new_owner_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -447,7 +447,7 @@ async def transfer_document(
         pass
     if not target:
         raise HTTPException(
-            status_code=404, detail="Không tìm thấy người để chuyển nhượng"
+            status_code=404, detail="The specified user for transfer could not be found"
         )
     await db["documents"].update_one(
         {"_id": document_id},
@@ -455,18 +455,18 @@ async def transfer_document(
     )
     return APIResponse(
         data={"status": "transferred", "new_owner_id": new_owner_id},
-        message="Đã chuyển nhượng tài liệu",
+        message="Document transferred successfully",
     )
 
 
-@router.get("/{document_id}/phan-tich", response_model=APIResponse[Any])
+@router.get("/{document_id}/analytics", response_model=APIResponse[Any])
 async def get_document_analytics(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Document could not be found")
     views = doc.get("views", 0)
     content = doc.get("content", "")
     total_words = len(content.split()) if content else 0
@@ -494,7 +494,7 @@ async def get_document_analytics(
     return APIResponse(
         data={
             "views": views,
-            "avg_read_time": f"{avg_read_time_min} phút",
+            "avg_read_time": f"{avg_read_time_min} minutes",
             "avg_read_time_min": avg_read_time_min,
             "total_words": total_words,
             "saves": bookmark_count,
@@ -503,18 +503,18 @@ async def get_document_analytics(
             "avg_rating": round(avg_rating, 1) if avg_rating else 0,
             "purchases": purchase_count,
         },
-        message="Đã tải phân tích độc giả",
+        message="Reader analytics retrieved successfully",
     )
 
 
-@router.get("/{document_id}/chi-so-hoc-thuat", response_model=APIResponse[Any])
+@router.get("/{document_id}/academic-index", response_model=APIResponse[Any])
 async def get_document_academic(
     document_id: str, current_user: UserInDB = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Document could not be found")
     content = doc.get("content", "")
     word_count = len(content.split()) if content else 0
     sentences = (
@@ -530,7 +530,7 @@ async def get_document_academic(
             "readability_score": round(readability_score, 1),
             "content_format": doc.get("content_format", "html"),
         },
-        message="Đã tải chỉ số học thuật",
+        message="Academic index retrieved successfully",
     )
 
 
@@ -559,7 +559,7 @@ async def update_drm_settings(
         ),
         current_user,
     )
-    return APIResponse(data=result, message="Đã cập nhật cài đặt bảo vệ bản quyền")
+    return APIResponse(data=result, message="Copyright protection settings updated successfully")
 
 
 class TagsUpdate(BaseModel):
@@ -579,7 +579,7 @@ async def update_tags(
     result = await DocumentService.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
-    return APIResponse(data=result, message="Đã cập nhật thẻ tài liệu")
+    return APIResponse(data=result, message="Document tags updated successfully")
 
 
 class ScheduleUpdate(BaseModel):
@@ -587,7 +587,7 @@ class ScheduleUpdate(BaseModel):
 
 
 @router.put(
-    "/{document_id}/len-lich",
+    "/{document_id}/schedule",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -601,7 +601,7 @@ async def schedule_publish(
         DocumentUpdate(publish_at=req.publish_at, scheduled_publish_at=req.publish_at),
         current_user,
     )
-    return APIResponse(data=result, message="Đã lên lịch xuất bản")
+    return APIResponse(data=result, message="Scheduled for publication successfully")
 
 
 class NSFWUpdate(BaseModel):
@@ -621,7 +621,7 @@ async def update_nsfw(
     result = await DocumentService.update_document(
         document_id, DocumentUpdate(is_nsfw=req.is_nsfw), current_user
     )
-    return APIResponse(data=result, message="Đã cập nhật giới hạn độ tuổi")
+    return APIResponse(data=result, message="Age limit updated successfully")
 
 
 class BroadcastRequest(BaseModel):
@@ -629,7 +629,7 @@ class BroadcastRequest(BaseModel):
 
 
 @router.post(
-    "/{document_id}/thong-bao",
+    "/{document_id}/broadcast",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -643,7 +643,7 @@ async def broadcast_notification(
         {"_id": document_id, "author_id": str(current_user.id)}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+        raise HTTPException(status_code=404, detail="Document could not be found")
 
     libraries = (
         await db["libraries"].find({"document_id": document_id}).to_list(length=1000)
@@ -657,10 +657,10 @@ async def broadcast_notification(
             for lib in libraries:
                 try:
                     await client.post(
-                        f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
+                        f"{settings.SIGNAL_URL}/broadcast/trigger",
                         json={
                             "target_user_id": lib["user_id"],
-                            "title": "Thông báo từ tác giả của '{doc.get('title', 'Tài liệu')}'",
+                            "title": "Notification from the author of '{doc.get('title', 'Document')}'",
                             "body": req.message,
                             "type": "SYSTEM",
                         },
@@ -670,11 +670,11 @@ async def broadcast_notification(
                     pass
     return APIResponse(
         data={"sent": True, "message": req.message},
-        message="Đã gửi thông báo đến độc giả",
+        message="Notification sent to readers successfully",
     )
 
 
-@router.post("/{document_id}/mo-khoa", response_model=APIResponse[Any])
+@router.post("/{document_id}/unlock", response_model=APIResponse[Any])
 async def unlock_document(
     document_id: str,
     password: str = Body(..., embed=True),
@@ -685,6 +685,6 @@ async def unlock_document(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Đã mở khóa tài liệu",
+        message="Document unlocked successfully",
         status=status.HTTP_200_OK,
     )

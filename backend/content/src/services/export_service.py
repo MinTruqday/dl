@@ -13,7 +13,7 @@ try:
     from reportlab.lib.utils import simpleSplit
     from reportlab.pdfgen import canvas
 except ImportError as e:
-    logger.error("Hệ thống đang thiếu thư viện xuất PDF")
+    logger.error("PDF export module is currently unavailable")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -26,7 +26,7 @@ class ExportService:
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
-                detail="Dịch vụ xuất bản PDF đang bảo trì do thiếu thư viện hệ thống",
+                detail="PDF export service is undergoing maintenance due to missing system libraries",
             )
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -35,7 +35,7 @@ class ExportService:
         )
         if not document:
             raise HTTPException(
-                status_code=404, detail="Tài liệu không tồn tại trên hệ thống"
+                status_code=404, detail="Document does not exist in the system"
             )
         user_email = (
             current_user.email
@@ -57,10 +57,10 @@ class ExportService:
             )
             if not purchase:
                 raise HTTPException(
-                    status_code=403, detail="Bạn chưa mua quyền truy cập tài liệu này"
+                    status_code=403, detail="Action restricted. You have not purchased access to this document"
                 )
         watermark_text = (
-            f"Bản quyền thuộc DocLib - Cấp riêng cho: {user_email} (ID: {user_id})"
+            f"Copyright DocLib - Licensed exclusively to: {user_email} (ID: {user_id})"
         )
 
         def generate_pdf_sync(db=None):
@@ -68,11 +68,11 @@ class ExportService:
                 raw_pdf_buffer = io.BytesIO()
                 c = canvas.Canvas(raw_pdf_buffer, pagesize=A4)
                 c.setFont("Helvetica-Bold", 16)
-                c.drawString(50, 800, document.get("title", "Tác phẩm vô danh"))
+                c.drawString(50, 800, document.get("title", "Anonymous work"))
                 c.setFont("Helvetica", 12)
                 y_pos = 750
                 content = str(
-                    document.get("content", "Nội dung sáng tác đang chờ xử lý")
+                    document.get("content", "Creative content pending review")
                 )
                 lines = content.split("\n")
                 for para in lines:
@@ -110,15 +110,15 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error("Thất bại khi tạo tập tin PDF đồng bộ")
+                logger.error("Failed to generate synchronized PDF file")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
             raise HTTPException(
-                status_code=500, detail="Lỗi trong quá trình tạo tệp PDF có dấu mờ"
+                status_code=500, detail="Failed to generate watermarked PDF"
             )
         logger.info(
-            f"Đã xuất tài liệu {document_id} thành PDF có đóng dấu bản quyền cho {user_id}"
+            f"Exported document {document_id} to copyrighted PDF for {user_id}"
         )
         return pdf_data

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from src.router.dependency_router import get_db, require_role
 from src.services.upload_service import UploadService
 
-router = APIRouter(prefix="/dang-tai")
+router = APIRouter(prefix="/upload")
 import re
 
 from fastapi import HTTPException
@@ -20,12 +20,12 @@ async def validate_svg(file: UploadFile):
             "<!DOCTYPE", text, re.IGNORECASE
         ):
             raise HTTPException(
-                status_code=400, detail="Tệp SVG chứa định dạng không an toàn"
+                status_code=400, detail="SVG file contains unsafe formatting"
             )
         await file.seek(0)
 
 
-@router.post("/hinh-anh", response_model=APIResponse[Any])
+@router.post("/images", response_model=APIResponse[Any])
 async def upload_image(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
@@ -34,12 +34,12 @@ async def upload_image(
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, db=db),
-        message="Đã tải hình ảnh lên hệ thống",
+        message="Image uploaded successfully",
         status=201,
     )
 
 
-@router.post("/tai-lieu", response_model=APIResponse[Any])
+@router.post("/documents", response_model=APIResponse[Any])
 async def upload_document(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN])),
@@ -47,12 +47,12 @@ async def upload_document(
 ) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="Đã tải tài liệu lên hệ thống",
+        message="Document uploaded successfully",
         status=201,
     )
 
 
-@router.post("/tep-tin", response_model=APIResponse[Any])
+@router.post("/files", response_model=APIResponse[Any])
 async def upload_asset(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(
@@ -67,16 +67,16 @@ async def upload_asset(
     if quota["used"] >= quota["limit"]:
         raise HTTPException(
             status_code=400,
-            detail="Đã vượt quá hạn mức lưu trữ 1GB vui lòng dọn dẹp bớt tệp tin",
+            detail="Storage limit of 1GB exceeded. Please remove some files",
         )
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="Đã tải tập tin lên hệ thống",
+        message="File uploaded successfully",
         status=201,
     )
 
 
-@router.get("/luu-tru/{file_path:path}", response_model=APIResponse[Any])
+@router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(
     file_path: str,
     current_user: UserInDB = Depends(
@@ -86,12 +86,12 @@ async def get_presigned_download_url(
 ):
     return APIResponse(
         data=await UploadService.get_presigned_url(file_path, db=db),
-        message="Đã tạo liên kết tải tập tin",
+        message="File download link generated successfully",
         status=200,
     )
 
 
-@router.post("/phan-doan", response_model=APIResponse[Any])
+@router.post("/segments", response_model=APIResponse[Any])
 async def upload_chunk(
     file: UploadFile = File(...),
     upload_id: str = Form(...),
@@ -137,8 +137,8 @@ async def upload_chunk(
         shutil.rmtree(chunk_dir)
         os.remove(final_path)
         return APIResponse(
-            data=result, message="Đã tải tập tin lên hệ thống", status=201
+            data=result, message="File uploaded successfully", status=201
         )
     return APIResponse(
-        data={"uploaded": chunk_index}, message="Đã tải phân đoạn", status=200
+        data={"uploaded": chunk_index}, message="Segment retrieved successfully", status=200
     )
