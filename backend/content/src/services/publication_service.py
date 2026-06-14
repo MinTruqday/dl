@@ -21,7 +21,7 @@ class PublicationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": str(document_id)},
@@ -36,9 +36,9 @@ class PublicationService:
             },
         )
         logger.info(
-            f"User {user_id} updated SEO details for document {document_id}"
+            "The search engine optimization metadata for the specified document has been successfully modified"
         )
-        return {"message": "Document information updated successfully"}
+        return {"message": "The descriptive metadata and optimization tags have been successfully updated and applied"}
 
     @staticmethod
     async def get_readability_score(document_id: str, current_user, db=None):
@@ -48,7 +48,7 @@ class PublicationService:
             {"_id": str(document_id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         content = doc.get("content")
         if not content:
             return {"score": 0, "level": "No content available", "words": 0}
@@ -71,11 +71,11 @@ class PublicationService:
                 "analysis": "Readable structure" if score > 60 else "Complex structure",
             }
         except ImportError:
-            logger.error("Readability evaluation library is not installed")
-            return {"error": "Readability analysis feature is currently unavailable"}
+            logger.error("The linguistic analysis module is currently unavailable due to a missing internal software dependency")
+            return {"error": "The automated readability evaluation system is currently undergoing maintenance and is inaccessible"}
         except Exception as e:
-            logger.error("Failed to analyze readability level")
-            return {"error": "Failed to analyze content"}
+            logger.error("The linguistic analysis engine encountered an unexpected error while processing the document structure")
+            return {"error": "The system was unable to complete the linguistic analysis due to an unrecognizable content format"}
 
     @staticmethod
     async def schedule_publish(
@@ -89,9 +89,9 @@ class PublicationService:
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
         logger.info(
-            f"Document {document_id} scheduled for publication at {publish_at} by {user_id}"
+            "An automated publication schedule has been successfully configured for the digital document"
         )
-        return {"message": "Document scheduled for publication successfully"}
+        return {"message": "The designated publication schedule has been successfully recorded and queued in the system"}
 
     @staticmethod
     async def publish_document(document_id: str, current_user, db=None):
@@ -103,7 +103,7 @@ class PublicationService:
             {"_id": document_id, "author_id": user_id}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         from src.core.publication import trigger_document_publish_job
 
         await trigger_document_publish_job(document_id, user_id)
@@ -116,5 +116,5 @@ class PublicationService:
                 }
             },
         )
-        logger.info(f"Publishing document {document_id}")
+        logger.info("The automated publication sequence has been initiated for the specified digital document")
         return await docs_collection.find_one({"_id": document_id})

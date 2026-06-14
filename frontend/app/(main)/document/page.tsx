@@ -499,7 +499,7 @@ export default function DocumentsPage() {
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 className="hidden"
-                accept=".pdf,.epub,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip,.csv,.json,.md"
+                accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.ppt,.txt,.zip,.csv,.json,.md"
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -514,7 +514,7 @@ export default function DocumentsPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-xs font-semibold text-black mb-1 truncate max-w-[200px]">
-                    {file ? file.name : "Chọn tệp tin (PDF, EPUB, Office...)"}
+                    {file ? file.name : "Chọn tệp tin (PDF, Office...)"}
                   </p>
                   <p className="text-[10px] font-medium text-zinc-500 uppercase tracking-widest">
                     {file
@@ -828,7 +828,6 @@ export default function DocumentsPage() {
                   >
                     <option value="all">Mọi định dạng</option>
                     <option value="pdf">Tài liệu PDF</option>
-                    <option value="epub">Sách EPUB</option>
                     <option value="docx">Văn bản Word</option>
                     <option value="xlsx">Bảng tính Excel</option>
                     <option value="pptx">Thuyết trình PPT</option>

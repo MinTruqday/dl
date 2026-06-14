@@ -13,7 +13,6 @@ import {
 import {
   getPrivacySettingsAPI,
   updatePrivacySettingsAPI,
-  updateTypographyAPI,
   updateGeneralSettingsAPI,
   applyAuthorAPI,
   updateProfileAPI,
@@ -45,7 +44,6 @@ import {
 } from "lucide-react";
 
 type TabKey =
-  | "appearance"
   | "privacy"
   | "notifications"
   | "account"
@@ -58,16 +56,13 @@ export default function SettingsPage() {
   const { showToast } = useToast();
   const { user, isLoading: authLoading, refreshUser } = useAuth() as any;
   const [visible, setVisible] = useState(false);
-  const [activeSection, setActiveSection] = useState<TabKey>("appearance");
+  const [activeSection, setActiveSection] = useState<TabKey>("privacy");
   const [loading, setLoading] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     type: "maintenance" | "registration";
     value: boolean;
   } | null>(null);
 
-  const [fontFamily, setFontFamily] = useState("Inter");
-  const [fontSize, setFontSize] = useState(16);
-  const [lineHeight, setLineHeight] = useState(1.8);
 
   const [hideActivity, setHideActivity] = useState(false);
   const [hideLibrary, setHideLibrary] = useState(false);
@@ -128,22 +123,6 @@ export default function SettingsPage() {
     } catch (err: any) {
       showToast("Không thể cập nhật cấu hình cá nhân", "error");
       return false;
-    }
-  };
-
-  const handleSaveTypography = async () => {
-    setLoading(true);
-    try {
-      await updateTypographyAPI({
-        font_family: fontFamily,
-        font_size: fontSize,
-        line_height: lineHeight,
-      });
-      showToast("Đã lưu tùy chỉnh hiển thị", "success");
-    } catch (err: any) {
-      showToast(err.message || "Lỗi cập nhật hiển thị", "error");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -247,12 +226,6 @@ export default function SettingsPage() {
   }
 
   const sections = [
-    {
-      id: "appearance",
-      label: "Hiển thị & Kiểu chữ",
-      icon: Type,
-      roles: ["reader", "potential_author", "author", "moderator", "admin"],
-    },
     {
       id: "privacy",
       label: "Quyền riêng tư",
@@ -359,113 +332,6 @@ export default function SettingsPage() {
           className="lg:col-span-9 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300"
           style={{ animationDelay: "150ms", animationFillMode: "both" }}
         >
-          {activeSection === "appearance" && (
-            <div className="space-y-8">
-              <div className="border border-zinc-200 bg-white p-8">
-                <div className="border-b border-zinc-200 pb-4 mb-6">
-                  <h3 className="text-sm font-semibold text-black">
-                    Hiển thị & Kiểu chữ
-                  </h3>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Tùy biến không gian hiển thị
-                  </p>
-                </div>
-
-                <div className="mb-8 p-6 border border-zinc-200 bg-zinc-50">
-                  <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-4">
-                    Bản xem trước
-                  </div>
-                  <div
-                    className="bg-white border border-zinc-200 p-6 text-black"
-                    style={{
-                      fontFamily,
-                      fontSize: `${fontSize}px`,
-                      lineHeight,
-                    }}
-                  >
-                    Kiến trúc thông tin (Information Architecture) là nền tảng
-                    cốt lõi của mọi hệ thống tương tác số. Việc cấu trúc dữ liệu
-                    minh bạch giúp giảm thiểu tải lượng nhận thức cho người
-                    dùng.
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                      Hệ phông chữ ưu tiên
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-                      {[
-                        "Inter",
-                        "Roboto",
-                        "Outfit",
-                        "Noto Sans",
-                        "Source Sans Pro",
-                      ].map((font) => (
-                        <button
-                          key={font}
-                          onClick={() => setFontFamily(font)}
-                          className={`py-3 px-2 border text-[10px] font-semibold uppercase tracking-widest text-center rounded-none truncate ${
-                            fontFamily === font
-                              ? "bg-black text-white border-black"
-                              : "bg-white text-zinc-500 border-zinc-200"
-                          }`}
-                          style={{ fontFamily: font }}
-                        >
-                          {font}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                        Cỡ chữ (px)
-                      </label>
-                      <input
-                        type="number"
-                        value={fontSize}
-                        onChange={(e) => setFontSize(parseInt(e.target.value))}
-                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-semibold text-black uppercase tracking-widest">
-                        Độ giãn dòng
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={lineHeight}
-                        onChange={(e) =>
-                          setLineHeight(parseFloat(e.target.value))
-                        }
-                        className="w-full h-10 px-3 border border-zinc-200 focus:border-black bg-zinc-50 text-xs font-semibold outline-none rounded-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-zinc-200 flex justify-end">
-                  <button
-                    onClick={handleSaveTypography}
-                    disabled={loading}
-                    className="h-10 px-6 bg-black text-white text-xs font-medium rounded-none flex items-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}{" "}
-                    Lưu tùy chỉnh
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeSection === "privacy" && (
             <div className="space-y-8">
               <div className="border border-zinc-200 bg-white p-8">

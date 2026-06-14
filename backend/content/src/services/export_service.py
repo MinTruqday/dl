@@ -13,7 +13,7 @@ try:
     from reportlab.lib.utils import simpleSplit
     from reportlab.pdfgen import canvas
 except ImportError as e:
-    logger.error("PDF export module is currently unavailable")
+    logger.error("The document rendering engine is currently unavailable due to missing internal dependencies")
     REPORTLAB_AVAILABLE = False
 else:
     REPORTLAB_AVAILABLE = True
@@ -26,7 +26,7 @@ class ExportService:
         if not REPORTLAB_AVAILABLE:
             raise HTTPException(
                 status_code=500,
-                detail="PDF export service is undergoing maintenance due to missing system libraries",
+                detail="The portable document generation service is currently undergoing routine maintenance and cannot process the request",
             )
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -35,7 +35,7 @@ class ExportService:
         )
         if not document:
             raise HTTPException(
-                status_code=404, detail="Document does not exist in the system"
+                status_code=404, detail="The requested digital document could not be located within the primary storage repository"
             )
         user_email = (
             current_user.email
@@ -57,11 +57,9 @@ class ExportService:
             )
             if not purchase:
                 raise HTTPException(
-                    status_code=403, detail="Action restricted. You have not purchased access to this document"
+                    status_code=403, detail="The requested operation requires an active commercial license or purchase verification which could not be found"
                 )
-        watermark_text = (
-            f"Copyright DocLib - Licensed exclusively to: {user_email} (ID: {user_id})"
-        )
+        watermark_text = "Copyright Protected Material - Licensed exclusively for personal usage"
 
         def generate_pdf_sync(db=None):
             try:
@@ -110,15 +108,15 @@ class ExportService:
                 final_buffer.seek(0)
                 return final_buffer.read()
             except Exception as e:
-                logger.error("Failed to generate synchronized PDF file")
+                logger.error("The rendering engine encountered an unexpected disruption while generating the final portable document format")
                 return None
 
         pdf_data = await asyncio.to_thread(generate_pdf_sync)
         if pdf_data is None:
             raise HTTPException(
-                status_code=500, detail="Failed to generate watermarked PDF"
+                status_code=500, detail="The system was unable to successfully compile the requested document with the appropriate copyright protection"
             )
         logger.info(
-            f"Exported document {document_id} to copyrighted PDF for {user_id}"
+            "The specified document has been successfully exported to the electronic publication format"
         )
         return pdf_data

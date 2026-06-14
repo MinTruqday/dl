@@ -5,7 +5,6 @@ import {
   getMyDocumentsAPI,
   updateDRMSettingsAPI,
   updateTagsAPI,
-  updateNSFWAPI,
   updateDocumentAPI,
   getFoldersAPI,
   transferDocumentAPI,
@@ -61,7 +60,7 @@ export default function ConfigPage() {
   const [newTagInput, setNewTagInput] = useState("");
   const [folders, setFolders] = useState<any[]>([]);
   const [isIngesting, setIsIngesting] = useState(false);
-  const [isNsfw, setIsNsfw] = useState(false);
+
   const [drmCopy, setDrmCopy] = useState(false);
   const [drmSearch, setDrmSearch] = useState(false);
   const [savingDrm, setSavingDrm] = useState(false);
@@ -111,7 +110,7 @@ export default function ConfigPage() {
       setDrmCopy(selectedDocument.drm_settings?.disable_copy || false);
       setDrmSearch(selectedDocument.drm_settings?.hide_from_search || false);
       setDocTags(selectedDocument.tags || []);
-      setIsNsfw(selectedDocument.is_nsfw || false);
+
       fetchCollaborators();
       fetchCoupons();
     }
@@ -168,17 +167,7 @@ export default function ConfigPage() {
     }
   };
 
-  const handleToggleNSFW = async () => {
-    if (!selectedDocumentId) return;
-    try {
-      await updateNSFWAPI(selectedDocumentId, !isNsfw);
-      setIsNsfw(!isNsfw);
-      fetchInitData();
-      showToast("Đã cập nhật cảnh báo nội dung", "success");
-    } catch (err: any) {
-      showToast(err.message || "Cập nhật thất bại", "error");
-    }
-  };
+
 
   const handleSaveDRM = async () => {
     if (!selectedDocumentId) return;
@@ -465,40 +454,7 @@ export default function ConfigPage() {
             </div>
           </div>
 
-          <div className="h-px bg-zinc-200" />
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h2 className="text-xl font-medium text-black flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-500" /> Cảnh báo nội
-                dung (NSFW)
-              </h2>
-              <p className="text-sm font-medium text-zinc-500 leading-relaxed max-w-md">
-                Đánh dấu nếu tác phẩm có chứa nội dung nhạy cảm, bạo lực hoặc
-                giới hạn độ tuổi (18+).
-              </p>
-            </div>
-            <div className="space-y-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <div
-                  className={`w-10 h-5 border rounded-full flex items-center p-0.5 transition-colors ${isNsfw ? "bg-red-500 border-red-500" : "bg-zinc-200 border-zinc-300"}`}
-                >
-                  <div
-                    className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${isNsfw ? "translate-x-5" : "translate-x-0"}`}
-                  />
-                </div>
-                <input
-                  type="checkbox"
-                  className="hidden"
-                  checked={isNsfw}
-                  onChange={handleToggleNSFW}
-                />
-                <span className="text-sm font-medium text-black">
-                  Yêu cầu xác nhận độ tuổi trước khi đọc
-                </span>
-              </label>
-            </div>
-          </div>
 
           <div className="h-px bg-zinc-200" />
 

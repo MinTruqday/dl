@@ -25,7 +25,7 @@ async def create_highlight(
         data=await HighlightService.create_highlight(
             document_id, data.model_dump(), current_user, db=db
         ),
-        message="Highlighted segment created successfully",
+        message="The new highlighted segment has been successfully created and attached to the document",
         status=201,
     )
 
@@ -38,7 +38,7 @@ async def get_highlights(
 ):
     return APIResponse(
         data=await HighlightService.get_highlights(document_id, current_user, db=db),
-        message="Highlighted segments retrieved successfully",
+        message="The requested highlighted segments have been successfully retrieved from the document",
         status=200,
     )
 
@@ -54,7 +54,7 @@ async def update_highlight_note(
         data=await HighlightService.update_highlight_note(
             highlight_id, data.note, current_user, db=db
         ),
-        message="Note for highlighted segment updated successfully",
+        message="The personal note attached to the highlighted segment has been successfully updated",
         status=200,
     )
 
@@ -67,7 +67,7 @@ async def delete_highlight(
 ):
     return APIResponse(
         data=await HighlightService.delete_highlight(highlight_id, current_user, db=db),
-        message="Highlighted segment removed successfully",
+        message="The specified highlighted segment has been permanently removed from the document",
         status=200,
     )
 
@@ -84,7 +84,7 @@ async def get_all_notes(
         data=await HighlightService.get_all_notes(
             current_user, cursor, limit, skip, db=db
         ),
-        message="Notes list retrieved successfully",
+        message="The list of personal notes has been successfully retrieved from the system records",
         status=200,
     )
 
@@ -99,6 +99,6 @@ async def export_highlights_markdown(
         data=await HighlightService.export_highlights_markdown(
             document_id, current_user, db=db
         ),
-        message="Exported list of highlighted segments successfully",
+        message="The list of highlighted segments has been successfully compiled and exported",
         status=200,
     )

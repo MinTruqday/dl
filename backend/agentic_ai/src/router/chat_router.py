@@ -250,7 +250,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                                 duration_ms=0,
                                 success=True,
                             )
-                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Hoan thanh')})}\n\n"
+                            yield f"event: tool\ndata: {json.dumps({'agent': event['agent'], 'result': event.get('content', 'Completed')})}\n\n"
                         elif event_type == "message":
                             final_answer += event["chunk"]
                             yield f"event: message\ndata: {json.dumps({'chunk': event['chunk']})}\n\n"

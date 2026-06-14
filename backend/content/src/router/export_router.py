@@ -20,12 +20,12 @@ async def export_document_pdf(
         document_id, current_user, db=db
     )
     headers = {
-        "Content-Disposition": 'attachment; filename="DocLib_Export_{document_id}_Watermarked.pdf"'
+        "Content-Disposition": 'attachment; filename="Document_Export_Watermarked.pdf"'
     }
     return APIResponse(
         data=Response(
             content=pdf_content, media_type="application/pdf", headers=headers
         ),
-        message="Exported PDF copy with copyright watermark successfully",
+        message="The portable document format copy has been successfully generated with the appropriate copyright watermark",
         status=200,
     )

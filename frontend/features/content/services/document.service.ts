@@ -428,36 +428,3 @@ export async function updateChapterPaywallAPI(
   return data;
 }
 
-export async function updateNSFWAPI(documentId: string, isNsfw: boolean) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/nsfw`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ is_nsfw: isNsfw }),
-  });
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.detail || "Cập nhật giới hạn độ tuổi thất bại");
-  return data;
-}
-
-export async function broadcastNotificationAPI(
-  documentId: string,
-  message: string,
-) {
-  const token = getToken();
-  const res = await fetch(`${API_URL}/tai-lieu/${documentId}/thong-bao`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ message }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || "Gửi thông báo thất bại");
-  return data;
-}

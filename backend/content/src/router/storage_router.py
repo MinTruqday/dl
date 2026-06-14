@@ -11,6 +11,7 @@ from src.schemas.storage_schema import (
     StorageItemUpdate,
 )
 from src.services.storage_service import StorageService
+from loguru import logger
 
 router = APIRouter(prefix="/storage")
 
@@ -27,7 +28,7 @@ async def create_folder(
     item = await StorageService.create_item(data, current_user.id, db=db)
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="New folder created successfully",
+        message="The new structural storage folder has been successfully created within your workspace",
         status=201,
     )
 
@@ -50,7 +51,7 @@ async def create_file(
     )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="New file created successfully",
+        message="The new file has been successfully uploaded and registered in your personal storage workspace",
         status=201,
     )
 
@@ -70,7 +71,7 @@ async def list_items(
     )
     response_items = [StorageItemResponse(**item.dict()) for item in items]
     return APIResponse(
-        data=response_items, message="Folder list retrieved successfully", status=200
+        data=response_items, message="The requested directory contents have been successfully retrieved from your storage workspace", status=200
     )
 
 
@@ -86,7 +87,7 @@ async def search_items(
     items = await StorageService.search_items(q, current_user.id, type, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Search completed successfully",
+        message="The search operation has been successfully completed and the matching files are returned",
         status=200,
     )
 
@@ -102,7 +103,7 @@ async def get_recent_items(
     items = await StorageService.get_recent_items(current_user.id, limit, db=db)
     return APIResponse(
         data=[StorageItemResponse(**item.dict()) for item in items],
-        message="Access list retrieved successfully",
+        message="The list of recently accessed storage items has been successfully compiled and retrieved",
         status=200,
     )
 
@@ -115,7 +116,7 @@ async def get_storage_quota(
     db=Depends(get_db),
 ):
     data = await StorageService.get_storage_quota(current_user.id, db=db)
-    return APIResponse(data=data, message="Storage quota verified successfully", status=200)
+    return APIResponse(data=data, message="Your personal storage quota and utilization metrics have been successfully calculated", status=200)
 
 
 @router.post(
@@ -129,15 +130,13 @@ async def create_shortcut(
     ),
     db=Depends(get_db),
 ):
-    from fastapi import HTTPException
-
     item = await StorageService.create_shortcut(
         item_id, target_parent_id, current_user.id, db=db
     )
     if not item:
-        raise HTTPException(status_code=404, detail="The original file could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the specified original file to create a shortcut")
     return APIResponse(
-        data=StorageItemResponse(**item.dict()), message="Shortcut created successfully", status=201
+        data=StorageItemResponse(**item.dict()), message="A navigational shortcut to the specified file has been successfully created", status=201
     )
 
 
@@ -154,12 +153,11 @@ async def download_zip(
 
     from core.config import settings
     from core.storage import get_storage_client
-    from fastapi import HTTPException
     from fastapi.responses import StreamingResponse
 
     item_ids = [i.strip() for i in ids.split(",") if i.strip()]
     if not item_ids:
-        raise HTTPException(status_code=400, detail="No file selected")
+        raise HTTPException(status_code=400, detail="The archive generation request was rejected because no files were specified for download")
     zip_buffer = io.BytesIO()
     async with await get_storage_client() as storage_client:
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
@@ -172,8 +170,8 @@ async def download_zip(
                         )
                         file_data = await resp["Body"].read()
                         zip_file.writestr(item.name, file_data)
-                    except Exception as e:
-                        print(f"Error downloading {item.name}: {e}")
+                    except Exception:
+                        logger.warning("The system encountered an unexpected disruption while attempting to retrieve a file for the archive package")
     zip_buffer.seek(0)
     return StreamingResponse(
         zip_buffer,
@@ -191,8 +189,6 @@ async def update_item(
     ),
     db=Depends(get_db),
 ):
-    import uuid
-
     from uuid6 import uuid7
 
     if data.is_public and data.is_public is True:
@@ -211,11 +207,11 @@ async def update_item(
         item = await StorageService.update_item(item_id, current_user.id, data, db=db)
     if not item:
         raise HTTPException(
-            status_code=404, detail="The specified file or folder could not be found"
+            status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
         )
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="Information updated successfully",
+        message="The metadata associated with the specified storage item has been successfully updated",
         status=200,
     )
 
@@ -233,18 +229,18 @@ async def delete_item(
         success = await StorageService.delete_item(item_id, current_user.id, db=db)
         if not success:
             raise HTTPException(
-                status_code=404, detail="The specified file or folder could not be found"
+                status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
             )
-        return APIResponse(data=None, message="File permanently deleted successfully", status=200)
+        return APIResponse(data=None, message="The specified storage item has been permanently and irreversibly removed from the system", status=200)
     else:
         item = await StorageService.update_item(
             item_id, current_user.id, StorageItemUpdate(is_trashed=True), db=db
         )
         if not item:
             raise HTTPException(
-                status_code=404, detail="The specified file or folder could not be found"
+                status_code=404, detail="The system was unable to locate the specified file or folder within your storage workspace"
             )
-        return APIResponse(data=None, message="Moved to trash successfully", status=200)
+        return APIResponse(data=None, message="The specified storage item has been successfully moved to the temporary trash bin", status=200)
 
 
 @router.post(
@@ -263,10 +259,10 @@ async def copy_item(
     )
     if not item:
         raise HTTPException(
-            status_code=404, detail="The specified file or folder could not be found"
+            status_code=404, detail="The system was unable to locate the specified file within your storage workspace"
         )
     return APIResponse(
-        data=StorageItemResponse(**item.dict()), message="File copied successfully", status=201
+        data=StorageItemResponse(**item.dict()), message="The specified storage item has been successfully duplicated to the requested destination", status=201
     )
 
 
@@ -284,10 +280,10 @@ async def add_version(
 ):
     item = await StorageService.add_version(item_id, current_user.id, url, size, db=db)
     if not item:
-        raise HTTPException(status_code=404, detail="The specified file could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the specified file within your storage workspace")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="New version updated successfully",
+        message="The new version of the specified file has been successfully uploaded and recorded",
         status=200,
     )
 
@@ -302,8 +298,6 @@ async def share_archive(
     ),
     db=Depends(get_db),
 ):
-    from fastapi import HTTPException
-
     res = await StorageService.share_item(item_id, email, role, current_user.id, db=db)
     return APIResponse(data=None, message=res["message"], status=200)
 
@@ -312,11 +306,9 @@ async def share_archive(
 async def get_public_item(share_token: str, db=Depends(get_db)):
     item = await StorageService.get_public_item(share_token, db=db)
     if not item:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=404, detail="Invalid sharing link")
+        raise HTTPException(status_code=404, detail="The provided public sharing link is either structurally invalid or has expired")
     return APIResponse(
         data=StorageItemResponse(**item.dict()),
-        message="File information retrieved successfully",
+        message="The details of the publicly shared file have been successfully retrieved",
         status=200,
     )

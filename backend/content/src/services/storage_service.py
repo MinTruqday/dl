@@ -2,6 +2,7 @@ from core.config import settings
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import Query
+from loguru import logger
 
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
@@ -191,7 +192,7 @@ class StorageService:
                     except Exception:
                         pass
             except Exception as e:
-                logger.error("Failed to delete physical file")
+                logger.error("The automated cleanup routine encountered a permission or access issue while removing physical files from storage")
 
         return True
 
@@ -288,14 +289,14 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="The account associated with this email could not be found"
+                status_code=404, detail="The system was unable to locate an active user profile corresponding to the provided email address"
             )
         target_user_id = str(target_user["_id"])
         if target_user_id == owner_id:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=400, detail="Action restricted. You cannot share a file with yourself"
+                status_code=400, detail="The structural sharing policies prevent users from initiating a sharing protocol with their own account"
             )
         item = await db_client.mongodb.get_default_database().storage_items.find_one(
             {"_id": item_id, "owner_id": owner_id}
@@ -304,7 +305,7 @@ class StorageService:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=404, detail="File could not be found or sharing access denied"
+                status_code=404, detail="The specified storage item could not be located or the account lacks the required distribution privileges"
             )
         result = (
             await db_client.mongodb.get_default_database().storage_items.update_one(
@@ -317,8 +318,8 @@ class StorageService:
             )
         )
         if result.modified_count == 0:
-            return {"message": "File has already been shared with this user"}
-        return {"message": f"Shared file with {email} and role {role} successfully"}
+            return {"message": "The specified file has already been successfully distributed to the designated user account"}
+        return {"message": "The file sharing protocol has been successfully executed with the designated access privileges"}
 
     @staticmethod
     async def get_recent_items(

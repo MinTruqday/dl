@@ -8,14 +8,12 @@ from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
 from fastapi import (
     APIRouter,
-    Body,
     Depends,
     Header,
     HTTPException,
     Query,
-    Request,
-    Response,
     status,
+    Body
 )
 from pydantic import BaseModel
 from src.router.dependency_router import (
@@ -25,16 +23,13 @@ from src.router.dependency_router import (
     require_role,
 )
 from src.schemas.document_schema import (
-    CoauthorInviteRequest,
     DocumentContentUpdate,
     DocumentCreate,
     DocumentPasswordRequest,
     DocumentResponse,
     DocumentUpdate,
 )
-from src.schemas.series_schema import SeriesCreateRequest, SeriesResponse
 from src.services.document_service import DocumentService
-from src.services.series_service import SeriesService
 
 router = APIRouter(prefix="/documents")
 
@@ -46,7 +41,7 @@ async def create_document(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.create_document(doc_in, current_user),
-        message="New document created successfully",
+        message="The new digital document has been successfully created and added to the central repository",
         status=status.HTTP_201_CREATED,
     )
 
@@ -61,7 +56,7 @@ async def update_document_content(
         data=await DocumentService.update_document_content(
             document_id, content_in, current_user
         ),
-        message="Document content updated successfully",
+        message="The primary content of the specified digital document has been successfully modified and saved",
         status=status.HTTP_200_OK,
     )
 
@@ -76,7 +71,7 @@ async def update_document(
         data=await DocumentService.update_document(
             document_id, doc_update, current_user
         ),
-        message="Document information updated successfully",
+        message="The descriptive metadata of the specified digital document has been successfully updated",
         status=status.HTTP_200_OK,
     )
 
@@ -94,7 +89,7 @@ async def list_documents(
         data=await DocumentService.list_documents(
             limit, cursor, q, sort_by, category, tag
         ),
-        message="Document list retrieved successfully",
+        message="The requested catalog of digital documents has been successfully retrieved from the system",
         status=status.HTTP_200_OK,
     )
 
@@ -120,7 +115,7 @@ async def get_folders(
     folders = await cursor.to_list(length=100)
     for f in folders:
         f["_id"] = str(f["_id"])
-    return APIResponse(data=folders, message="Folder list retrieved successfully")
+    return APIResponse(data=folders, message="The hierarchical folder structure has been successfully retrieved from your workspace")
 
 
 @router.post(
@@ -141,7 +136,7 @@ async def create_folder(
     }
     res = await db["workspace_folders"].insert_one(folder_doc)
     folder_doc["_id"] = str(res.inserted_id)
-    return APIResponse(data=folder_doc, message="Folder created successfully")
+    return APIResponse(data=folder_doc, message="The new organizational folder has been successfully provisioned within your workspace")
 
 
 @router.delete(
@@ -157,12 +152,12 @@ async def delete_folder(
         {"_id": ObjectId(folder_id), "author_id": str(current_user.id)}
     )
     if not folder:
-        raise HTTPException(status_code=404, detail="Folder could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the specified organizational folder within the current workspace")
     await db["workspace_folders"].delete_one({"_id": ObjectId(folder_id)})
     await db["documents"].update_many(
         {"folder_id": folder_id}, {"$unset": {"folder_id": ""}}
     )
-    return APIResponse(data={"deleted": True}, message="Folder deleted successfully")
+    return APIResponse(data={"deleted": True}, message="The specified organizational folder has been permanently removed from the system workspace")
 
 
 @router.get(
@@ -179,7 +174,7 @@ async def get_my_documents(
 ):
     return APIResponse(
         data=await DocumentService.get_my_documents(current_user, q, cursor, limit),
-        message="Personal document list retrieved successfully",
+        message="The collection of your personally authored digital documents has been successfully retrieved",
     )
 
 
@@ -191,7 +186,7 @@ async def get_my_documents(
 async def get_trash(current_user: UserInDB = Depends(get_current_user)):
     return APIResponse(
         data=await DocumentService.get_trash(current_user),
-        message="Trash list retrieved successfully",
+        message="The contents of the temporary deletion bin have been successfully retrieved",
     )
 
 
@@ -205,7 +200,7 @@ async def get_document_by_id(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Document information retrieved successfully",
+        message="The detailed information for the specified digital document has been successfully retrieved",
         status=status.HTTP_200_OK,
     )
 
@@ -216,7 +211,7 @@ async def get_document_by_slug(
 ) -> Any:
     return APIResponse(
         data=await DocumentService.get_document_by_slug(slug, current_user),
-        message="Document retrieved by path successfully",
+        message="The digital document corresponding to the specified navigational path has been successfully retrieved",
         status=status.HTTP_200_OK,
     )
 
@@ -225,108 +220,7 @@ async def get_document_by_slug(
 async def get_document_preview(slug: str):
     return APIResponse(
         data=await DocumentService.get_document_preview(slug),
-        message="Document preview retrieved successfully",
-    )
-
-
-@router.get(
-    "/document-series/ca-nhan",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def get_my_series(current_user: UserInDB = Depends(get_current_user)):
-    return APIResponse(
-        data=await SeriesService.get_my_series(current_user),
-        message="Document series list retrieved successfully",
-    )
-
-
-@router.get("/document-series/{series_id}", response_model=APIResponse[Any])
-async def get_series_by_id(series_id: str):
-    return APIResponse(
-        data=await SeriesService.get_series_by_id(series_id),
-        message="Document series details retrieved successfully",
-    )
-
-
-@router.post(
-    "/document-series",
-    response_model=APIResponse[Any],
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def create_series(
-    req: SeriesCreateRequest, current_user: UserInDB = Depends(get_current_user)
-):
-    return APIResponse(
-        data=await SeriesService.create_series(req.model_dump(), current_user),
-        message="New document series created successfully",
-        status=status.HTTP_201_CREATED,
-    )
-
-
-@router.put(
-    "/document-series/{series_id}",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def update_series(
-    series_id: str,
-    req: SeriesCreateRequest,
-    current_user: UserInDB = Depends(get_current_user),
-):
-    return APIResponse(
-        data=await SeriesService.update_series(
-            series_id, req.model_dump(), current_user
-        ),
-        message="Document series updated successfully",
-    )
-
-
-@router.delete(
-    "/document-series/{series_id}",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def delete_series(
-    series_id: str, current_user: UserInDB = Depends(get_current_user)
-):
-    return APIResponse(
-        data=await SeriesService.delete_series(series_id, current_user),
-        message="Document series deleted successfully",
-    )
-
-
-@router.patch(
-    "/series/{series_id}/documents",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def reorder_series_documents(
-    series_id: str,
-    document_ids: List[str],
-    current_user: UserInDB = Depends(get_current_user),
-):
-    return APIResponse(
-        data=await SeriesService.reorder_series_documents(
-            series_id, document_ids, current_user
-        ),
-        message="Document order rearranged successfully",
-    )
-
-
-@router.post(
-    "/{document_id}/document-series/{series_id}",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def link_series(
-    document_id: str, series_id: str, current_user: UserInDB = Depends(get_current_user)
-):
-    return APIResponse(
-        data=await SeriesService.link_series(document_id, series_id, current_user),
-        message="Document added to series successfully",
-        status=200,
+        message="The publicly accessible preview of the specified digital document has been successfully retrieved",
     )
 
 
@@ -340,7 +234,7 @@ async def soft_delete_document(
 ):
     return APIResponse(
         data=await DocumentService.soft_delete_document(document_id, current_user),
-        message="Document moved to trash successfully",
+        message="The specified digital document has been successfully moved to the temporary deletion bin",
     )
 
 
@@ -354,7 +248,7 @@ async def restore_document(
 ):
     return APIResponse(
         data=await DocumentService.restore_document(document_id, current_user),
-        message="Document restored successfully",
+        message="The specified digital document has been successfully recovered from the temporary deletion bin",
     )
 
 
@@ -372,7 +266,7 @@ async def set_document_password(
         data=await DocumentService.set_document_password(
             document_id, req.password, current_user
         ),
-        message="Document protection password configured successfully",
+        message="The cryptographic access protection password for the specified document has been successfully configured",
     )
 
 
@@ -386,7 +280,7 @@ async def get_document_audit_logs(
 ):
     return APIResponse(
         data=await DocumentService.get_document_audit_logs(document_id, current_user),
-        message="Document activity log retrieved successfully",
+        message="The comprehensive administrative activity log for the specified document has been successfully retrieved",
     )
 
 
@@ -403,13 +297,13 @@ async def toggle_star_document(
         {"_id": document_id, "author_id": str(current_user.id)}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Document could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
     current_starred = doc.get("is_starred", False)
     await db["documents"].update_one(
         {"_id": document_id}, {"$set": {"is_starred": not current_starred}}
     )
     return APIResponse(
-        data={"starred": not current_starred}, message="Document starred successfully"
+        data={"starred": not current_starred}, message="The prioritization status of the specified digital document has been successfully toggled"
     )
 
 
@@ -430,7 +324,7 @@ async def transfer_document(
     if not doc:
         raise HTTPException(
             status_code=404,
-            detail="Document could not be found or access denied",
+            detail="The system was unable to locate the requested document or the current account lacks sufficient access privileges",
         )
     import httpx
 
@@ -447,7 +341,7 @@ async def transfer_document(
         pass
     if not target:
         raise HTTPException(
-            status_code=404, detail="The specified user for transfer could not be found"
+            status_code=404, detail="The target user account specified for the ownership transfer operation could not be located"
         )
     await db["documents"].update_one(
         {"_id": document_id},
@@ -455,7 +349,7 @@ async def transfer_document(
     )
     return APIResponse(
         data={"status": "transferred", "new_owner_id": new_owner_id},
-        message="Document transferred successfully",
+        message="The administrative ownership rights of the specified document have been successfully transferred to the designated account",
     )
 
 
@@ -466,7 +360,7 @@ async def get_document_analytics(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Document could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
     views = doc.get("views", 0)
     content = doc.get("content", "")
     total_words = len(content.split()) if content else 0
@@ -503,7 +397,7 @@ async def get_document_analytics(
             "avg_rating": round(avg_rating, 1) if avg_rating else 0,
             "purchases": purchase_count,
         },
-        message="Reader analytics retrieved successfully",
+        message="The comprehensive reader engagement analytics for the specified document have been successfully calculated and retrieved",
     )
 
 
@@ -514,7 +408,7 @@ async def get_document_academic(
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one({"_id": document_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Document could not be found")
+        raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
     content = doc.get("content", "")
     word_count = len(content.split()) if content else 0
     sentences = (
@@ -530,7 +424,7 @@ async def get_document_academic(
             "readability_score": round(readability_score, 1),
             "content_format": doc.get("content_format", "html"),
         },
-        message="Academic index retrieved successfully",
+        message="The academic complexity and readability metrics for the specified document have been successfully analyzed and retrieved",
     )
 
 
@@ -559,7 +453,7 @@ async def update_drm_settings(
         ),
         current_user,
     )
-    return APIResponse(data=result, message="Copyright protection settings updated successfully")
+    return APIResponse(data=result, message="The digital rights management and copyright protection configurations have been successfully updated")
 
 
 class TagsUpdate(BaseModel):
@@ -579,7 +473,7 @@ async def update_tags(
     result = await DocumentService.update_document(
         document_id, DocumentUpdate(tags=req.tags), current_user
     )
-    return APIResponse(data=result, message="Document tags updated successfully")
+    return APIResponse(data=result, message="The thematic categorization tags for the specified digital document have been successfully updated")
 
 
 class ScheduleUpdate(BaseModel):
@@ -601,77 +495,7 @@ async def schedule_publish(
         DocumentUpdate(publish_at=req.publish_at, scheduled_publish_at=req.publish_at),
         current_user,
     )
-    return APIResponse(data=result, message="Scheduled for publication successfully")
-
-
-class NSFWUpdate(BaseModel):
-    is_nsfw: bool
-
-
-@router.put(
-    "/{document_id}/nsfw",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def update_nsfw(
-    document_id: str,
-    req: NSFWUpdate,
-    current_user: UserInDB = Depends(get_current_user),
-):
-    result = await DocumentService.update_document(
-        document_id, DocumentUpdate(is_nsfw=req.is_nsfw), current_user
-    )
-    return APIResponse(data=result, message="Age limit updated successfully")
-
-
-class BroadcastRequest(BaseModel):
-    message: str
-
-
-@router.post(
-    "/{document_id}/broadcast",
-    response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
-)
-async def broadcast_notification(
-    document_id: str,
-    req: BroadcastRequest,
-    current_user: UserInDB = Depends(get_current_user),
-):
-    db = db_client.mongodb.get_default_database()
-    doc = await db["documents"].find_one(
-        {"_id": document_id, "author_id": str(current_user.id)}
-    )
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document could not be found")
-
-    libraries = (
-        await db["libraries"].find({"document_id": document_id}).to_list(length=1000)
-    )
-
-    import httpx
-    from core.config import settings
-
-    if settings.SIGNAL_URL:
-        async with httpx.AsyncClient() as client:
-            for lib in libraries:
-                try:
-                    await client.post(
-                        f"{settings.SIGNAL_URL}/broadcast/trigger",
-                        json={
-                            "target_user_id": lib["user_id"],
-                            "title": "Notification from the author of '{doc.get('title', 'Document')}'",
-                            "body": req.message,
-                            "type": "SYSTEM",
-                        },
-                        timeout=settings.DEFAULT_HTTP_TIMEOUT,
-                    )
-                except Exception as e:
-                    pass
-    return APIResponse(
-        data={"sent": True, "message": req.message},
-        message="Notification sent to readers successfully",
-    )
+    return APIResponse(data=result, message="The automated publication schedule for the specified digital document has been successfully configured")
 
 
 @router.post("/{document_id}/unlock", response_model=APIResponse[Any])
@@ -685,6 +509,6 @@ async def unlock_document(
         data=await DocumentService.get_document_by_id(
             document_id, current_user, password
         ),
-        message="Document unlocked successfully",
+        message="The cryptographic access protection for the specified document has been successfully bypassed using the provided credentials",
         status=status.HTTP_200_OK,
     )

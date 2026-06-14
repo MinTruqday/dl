@@ -1,15 +1,12 @@
 from typing import Any
-
+import re
 from core.response import APIResponse
 from core.schemas.user import RoleEnum, UserInDB
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
 from src.router.dependency_router import get_db, require_role
 from src.services.upload_service import UploadService
 
 router = APIRouter(prefix="/upload")
-import re
-
-from fastapi import HTTPException
 
 
 async def validate_svg(file: UploadFile):
@@ -20,7 +17,7 @@ async def validate_svg(file: UploadFile):
             "<!DOCTYPE", text, re.IGNORECASE
         ):
             raise HTTPException(
-                status_code=400, detail="SVG file contains unsafe formatting"
+                status_code=400, detail="The uploaded vector graphic file contains potentially unsafe structural formatting and has been rejected by the security filter"
             )
         await file.seek(0)
 
@@ -34,7 +31,7 @@ async def upload_image(
     await validate_svg(file)
     return APIResponse(
         data=await UploadService.upload_image(file, db=db),
-        message="Image uploaded successfully",
+        message="The image file has been successfully uploaded and securely stored in the system",
         status=201,
     )
 
@@ -47,7 +44,7 @@ async def upload_document(
 ) -> Any:
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="Document uploaded successfully",
+        message="The document file has been successfully uploaded and securely stored in the system",
         status=201,
     )
 
@@ -60,18 +57,17 @@ async def upload_asset(
     ),
     db=Depends(get_db),
 ) -> Any:
-    from fastapi import HTTPException
     from src.services.storage_service import StorageService
 
     quota = await StorageService.get_storage_quota(current_user.id, db=db)
     if quota["used"] >= quota["limit"]:
         raise HTTPException(
             status_code=400,
-            detail="Storage limit of 1GB exceeded. Please remove some files",
+            detail="The file upload cannot proceed because your account has exceeded the maximum allocated storage capacity",
         )
     return APIResponse(
         data=await UploadService.upload_document(file, db=db),
-        message="File uploaded successfully",
+        message="The requested file has been successfully uploaded and securely stored in the system",
         status=201,
     )
 
@@ -86,7 +82,7 @@ async def get_presigned_download_url(
 ):
     return APIResponse(
         data=await UploadService.get_presigned_url(file_path, db=db),
-        message="File download link generated successfully",
+        message="The secure download link for the requested file has been successfully generated",
         status=200,
     )
 
@@ -137,8 +133,8 @@ async def upload_chunk(
         shutil.rmtree(chunk_dir)
         os.remove(final_path)
         return APIResponse(
-            data=result, message="File uploaded successfully", status=201
+            data=result, message="The requested file has been successfully uploaded and securely stored in the system", status=201
         )
     return APIResponse(
-        data={"uploaded": chunk_index}, message="Segment retrieved successfully", status=200
+        data={"uploaded": chunk_index}, message="The designated file segment has been successfully received and securely temporarily stored", status=200
     )

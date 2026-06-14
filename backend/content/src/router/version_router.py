@@ -20,7 +20,7 @@ async def save_version(
         data=await VersionsService.save_version(
             document_id, version_note, current_user, db=db
         ),
-        message="Document version saved successfully",
+        message="A new historical version snapshot of the specified document has been successfully captured and preserved",
         status=201,
     )
 
@@ -33,7 +33,7 @@ async def get_document_versions(
 ):
     return APIResponse(
         data=await VersionsService.get_versions(document_id, current_user, db=db),
-        message="Version list retrieved successfully",
+        message="The chronological list of historical version snapshots has been successfully retrieved from the system",
     )
 
 
@@ -45,5 +45,5 @@ async def restore_version(
 ):
     return APIResponse(
         data=await VersionsService.restore_version(version_id, current_user, db=db),
-        message="Version restored successfully",
+        message="The specified document has been successfully restored to the selected historical version snapshot",
     )

@@ -102,7 +102,7 @@ class DocumentService:
         docs_collection = RepositoryFactory.get("documents")
         existing_slug = await docs_collection.find_one({"slug": doc_in.slug})
         if existing_slug:
-            raise HTTPException(status_code=400, detail="The specified path is already in use")
+            raise HTTPException(status_code=400, detail="The specified routing path is currently occupied by another resource within the system")
 
         doc_dict = doc_in.model_dump()
         if not doc_dict.get("publisher_name"):
@@ -110,7 +110,7 @@ class DocumentService:
 
         doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
-        logger.info(f"User {current_user.id} created document {doc_doc.id}")
+        logger.info("A new digital document has been successfully provisioned and registered in the system repository")
         return doc_doc
 
     @staticmethod
@@ -168,7 +168,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         if content_in.expected_version:
             db_updated = document.get("updated_at")
@@ -179,7 +179,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="The document version has been modified by another user",
+                    detail="The requested modification cannot proceed because a newer version of the document currently exists in the database",
                 )
 
         if document.get("content"):
@@ -213,18 +213,18 @@ class DocumentService:
                         f"{settings.SIGNAL_URL}/notifications/trigger",
                         json={
                             "target_user_id": str(current_user.id),
-                            "title": "Document updated",
-                            "body": "Document '{document.get('title', 'Document')}' updated successfully",
+                            "title": "Document successfully updated",
+                            "body": "The specified document content has been successfully synchronized and updated",
                             "type": "DOCUMENT_UPDATE",
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
             except Exception as e:
                 logger.error(
-                    "Failed to send update notification for document {document_id}"
+                    "The system encountered an unexpected disruption while attempting to dispatch the document update notification sequence"
                 )
 
-        logger.info(f"User {current_user.id} updated document {document_id}")
+        logger.info("The primary content payload of the specified digital document has been successfully updated by the author")
 
         if hasattr(db_client, "redis") and db_client.redis:
             await db_client.redis.delete(f"document:{document_id}")
@@ -239,13 +239,13 @@ class DocumentService:
         docs_col = RepositoryFactory.get("documents")
         doc = await docs_col.find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         if (
             doc.get("author_id") != str(current_user.id)
             and current_user.role != "ADMIN"
         ):
             raise HTTPException(
-                status_code=403, detail="Action restricted. Permission denied to edit this document"
+                status_code=403, detail="The current account lacks the necessary authorization privileges to modify the specified document properties"
             )
 
         if hasattr(doc_update, "expected_version") and doc_update.expected_version:
@@ -257,7 +257,7 @@ class DocumentService:
             ):
                 raise HTTPException(
                     status_code=409,
-                    detail="The document version has been modified by another user",
+                    detail="The requested modification cannot proceed because a newer version of the document currently exists in the database",
                 )
 
         update_data = {
@@ -267,7 +267,7 @@ class DocumentService:
             existing = await docs_col.find_one({"slug": update_data["slug"]})
             if existing:
                 raise HTTPException(
-                    status_code=400, detail="The specified path is already in use"
+                    status_code=400, detail="The specified routing path is currently occupied by another resource within the system"
                 )
 
         if update_data:
@@ -338,14 +338,14 @@ class DocumentService:
 
         document = await docs_collection.find_one({"_id": document_id})
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         if (
             document.get("author_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
             if not current_user or current_user.role != "ADMIN":
-                raise HTTPException(status_code=403, detail="Document is currently a draft")
+                raise HTTPException(status_code=403, detail="The requested document is currently in draft status and is not yet available for public access")
 
         if (
             document.get("is_password_protected")
@@ -365,7 +365,7 @@ class DocumentService:
                 if attempts and int(attempts) >= 5:
                     raise HTTPException(
                         status_code=429,
-                        detail="Too many incorrect password attempts. Please try again after 15 minutes",
+                        detail="Account access has been temporarily restricted due to excessive authentication failures so please attempt your request again later",
                     )
 
             pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -373,7 +373,7 @@ class DocumentService:
                 if rl_key and hasattr(db_client, "redis") and db_client.redis:
                     await db_client.redis.incr(rl_key)
                     await db_client.redis.expire(rl_key, 900)
-                raise HTTPException(status_code=403, detail="Incorrect password provided")
+                raise HTTPException(status_code=403, detail="The provided cryptographic credentials do not match the required security profile for this document")
 
             if rl_key and hasattr(db_client, "redis") and db_client.redis:
                 await db_client.redis.delete(rl_key)
@@ -394,12 +394,12 @@ class DocumentService:
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         logger.info(
-            f"User {current_user.id} moved document {document_id} to trash"
+            "The designated document has been successfully flagged for removal and moved to the temporary deletion bin"
         )
-        return {"message": "Document moved to trash successfully"}
+        return {"message": "The specified document has been successfully transferred to the temporary deletion bin"}
 
     @staticmethod
     async def restore_document(document_id: str, current_user) -> dict:
@@ -410,11 +410,11 @@ class DocumentService:
         )
         if res.modified_count == 0:
             raise HTTPException(
-                status_code=404, detail="Document is not in the trash"
+                status_code=404, detail="The specified document could not be located within the temporary deletion bin"
             )
 
-        logger.info(f"User {current_user.id} restored document {document_id}")
-        return {"message": "Document restored from trash successfully"}
+        logger.info("The previously deleted document has been successfully recovered and restored to active status")
+        return {"message": "The specified document has been successfully recovered from the temporary deletion bin"}
 
     @staticmethod
     async def get_trash(current_user) -> list:
@@ -447,7 +447,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         hashed = pwd_context.hash(password)
         await RepositoryFactory.get("documents").update_one(
@@ -460,8 +460,8 @@ class DocumentService:
                 }
             },
         )
-        logger.info(f"Password protection enabled for document {document_id}")
-        return {"message": "Document password set successfully"}
+        logger.info("Cryptographic access protection has been successfully enabled for the designated document")
+        return {"message": "The security access password has been successfully configured for the document"}
 
     @staticmethod
     async def invite_coauthor(document_id: str, email: str, current_user):
@@ -470,7 +470,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         import httpx
 
@@ -484,21 +484,21 @@ class DocumentService:
                 if resp.status_code == 200:
                     target_user = resp.json().get("data")
         except Exception as e:
-            logger.warning("Failed to lookup information via email")
+            logger.warning("The system encountered a minor disruption while attempting to synchronize the author profile information via email")
 
         if not target_user:
-            raise HTTPException(status_code=404, detail="Email does not exist")
+            raise HTTPException(status_code=404, detail="The system was unable to locate an active account associated with the provided email address")
 
         if str(target_user["_id"]) in document.get("coauthors", []):
-            return {"message": "This user is already a co-author"}
+            return {"message": "The specified user account is already registered as an active collaborator on this document"}
 
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$addToSet": {"coauthors": str(target_user["_id"])}}
         )
         logger.info(
-            f"Invited {target_user['_id']} to co-author document {document_id}"
+            "An editorial collaboration invitation has been successfully registered and applied to the targeted user account"
         )
-        return {"message": f"Added {target_user['full_name']} as co-author successfully"}
+        return {"message": "The specified user has been successfully designated as an editorial collaborator"}
 
     @staticmethod
     async def get_document_by_slug(slug: str, current_user=None):
@@ -512,7 +512,7 @@ class DocumentService:
             }
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
@@ -572,7 +572,7 @@ class DocumentService:
                 if resp.status_code == 200:
                     author = resp.json().get("data")
         except Exception as e:
-            logger.warning("Failed to load author information")
+            logger.warning("The system encountered a minor disruption while attempting to synchronize the author profile information")
         if author:
             document["author"] = {
                 "full_name": author.get("full_name") or author.get("username"),
@@ -583,32 +583,6 @@ class DocumentService:
         document["has_purchased"] = has_purchased
         return document
 
-    @staticmethod
-    async def export_epub(document_id: str, current_user):
-        db = db_client.mongodb.get_default_database()
-        document = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id}
-        )
-        if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
-
-        mem_zip = io.BytesIO()
-        with zipfile.ZipFile(mem_zip, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("mimetype", "application/epub+zip")
-            with zf.open("OEBPS/content.xhtml", "w") as f:
-                f.write(
-                    '<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{document.get("title")}</title></head><body><h1>{document.get("title")}</h1>'.encode(
-                        "utf-8"
-                    )
-                )
-                for p in (document.get("content") or "").split("\n"):
-                    if p.strip():
-                        f.write(f"<p>{p.strip()}</p>".encode("utf-8"))
-                f.write(b"</body></html>")
-
-        mem_zip.seek(0)
-        logger.info(f"Exported document {document_id} to EPUB")
-        return mem_zip.read()
 
     @staticmethod
     async def get_document_preview(slug: str) -> dict:
@@ -621,7 +595,7 @@ class DocumentService:
             }
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         limit = doc.get("preview_pages", 5)
         raw_content = doc.get("content", "")
@@ -654,7 +628,7 @@ class DocumentService:
             {"_id": document_id, "author_id": str(current_user.id)}, {"_id": 1}
         )
         if not document:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         logs = (
             await RepositoryFactory.get("audit_logs")
@@ -762,7 +736,7 @@ class DocumentService:
             )
             if doc:
                 await trigger_document_publish_job(document_id, doc.get("author_id"))
-                logger.info(f"Publishing document {document_id}")
+                logger.info("The automated publication sequence has been initiated for the specified digital document")
 
         await RepositoryFactory.get("audit_logs").insert_one(
             {
@@ -774,9 +748,9 @@ class DocumentService:
             }
         )
         logger.info(
-            f"Moderator {current_moderator.id} changed document {document_id} status to {status_val.lower()}"
+            "The administrative moderation decision has been successfully recorded and applied to the document"
         )
-        return {"message": f"Document {status_val.lower()} successfully"}
+        return {"message": "The administrative moderation status has been successfully applied to the specified document"}
 
     @staticmethod
     async def resolve_copyright_dispute(
@@ -795,9 +769,9 @@ class DocumentService:
             },
         )
         logger.info(
-            f"Moderator {current_moderator.id} resolved dispute {dispute_id}"
+            "An intellectual property dispute has been successfully processed and marked as resolved by the administration"
         )
-        return {"message": "Copyright dispute resolved successfully"}
+        return {"message": "The specified intellectual property dispute has been successfully processed and marked as resolved"}
 
     @staticmethod
     async def get_trending_tags(

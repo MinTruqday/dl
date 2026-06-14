@@ -22,7 +22,7 @@ class BookmarkService:
         bookmarks = profile.get("bookmarks", []) if profile else []
         if document_id in bookmarks:
             bookmarks.remove(document_id)
-            message = "Document removed from archive list successfully"
+            message = "The specified document has been successfully removed from your personal archive collection"
             is_bookmarked = False
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -34,7 +34,7 @@ class BookmarkService:
             )
         else:
             bookmarks.append(document_id)
-            message = "Document added to archive list successfully"
+            message = "The specified document has been successfully added to your personal archive collection"
             is_bookmarked = True
             await RepositoryFactory.get("user_content_profiles").update_one(
                 {"_id": user_id},
@@ -97,7 +97,7 @@ class BookmarkService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("bookmark_folders").insert_one(folder)
-        logger.info(f"Folder {folder['_id']} created successfully for user {current_user.id}")
+        logger.info("A new structural bookmark folder has been successfully provisioned within the user workspace")
         return folder
 
     @staticmethod
@@ -140,8 +140,8 @@ class BookmarkService:
             },
         )
         if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Folder could not be found")
-        return {"message": "Bookmark folder updated successfully"}
+            raise HTTPException(status_code=404, detail="The specified bookmark folder could not be located within the active collection records")
+        return {"message": "The contents of the specified bookmark folder have been successfully modified and saved"}
 
     @staticmethod
     async def delete_bookmark_folder(folder_id: str, current_user, db=None) -> dict:
@@ -151,5 +151,5 @@ class BookmarkService:
             {"_id": folder_id, "user_id": str(current_user.id)}
         )
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Folder could not be found")
-        return {"message": "Bookmark folder deleted successfully"}
+            raise HTTPException(status_code=404, detail="The specified bookmark folder could not be located within the active collection records")
+        return {"message": "The specified bookmark folder has been permanently removed from your personal collection"}

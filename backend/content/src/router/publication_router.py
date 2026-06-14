@@ -26,7 +26,7 @@ async def publish_document(
         data=await PublicationService.publish_document(
             document_id, current_user, db=db
         ),
-        message="Document published successfully",
+        message="The specified digital document has been successfully published and is now accessible to the designated audience",
         status=status.HTTP_200_OK,
     )
 
@@ -46,7 +46,7 @@ async def schedule_publish(
         data=await PublicationService.schedule_publish(
             document_id, req.publish_at, current_user, db=db
         ),
-        message="Scheduled for publication successfully",
+        message="The automated publication schedule for the specified digital document has been successfully established",
         status=200,
     )
 
@@ -66,7 +66,7 @@ async def update_seo_metadata(
         data=await PublicationService.update_seo_metadata(
             document_id, req.model_dump(), current_user, db=db
         ),
-        message="SEO information updated successfully",
+        message="The search engine optimization metadata for the specified document has been successfully updated",
         status=200,
     )
 
@@ -81,6 +81,6 @@ async def get_readability_score(
         data=await PublicationService.get_readability_score(
             document_id, current_user, db=db
         ),
-        message="Readability score calculated successfully",
+        message="The automated linguistic readability analysis has been successfully completed for the specified document",
         status=200,
     )

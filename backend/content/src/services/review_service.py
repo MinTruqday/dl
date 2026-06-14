@@ -25,7 +25,7 @@ class ReviewService:
             },
             upsert=True,
         )
-        logger.info(f"User {current_user.id} reviewed document {document_id}")
+        logger.info("The authenticated user has successfully submitted a formal rating for the specified digital document")
         return {"status": "success"}
 
     @staticmethod
@@ -53,9 +53,9 @@ class ReviewService:
         }
         await RepositoryFactory.get("typo_reports").insert_one(report)
         logger.info(
-            f"User {current_user.id} reported a spelling error in document {document_id}"
+            "An editorial typo report has been successfully registered by the user for administrative correction"
         )
-        return {"message": "Thank you for contributing edits"}
+        return {"message": "Your editorial contribution has been successfully submitted and recorded"}
 
     @staticmethod
     async def get_typo_reports(document_id: str, current_user, db=None) -> list:
@@ -108,7 +108,7 @@ class ReviewService:
             upsert=True,
         )
         logger.info(
-            f"User {current_user.id} rated document {document_id} {review_in.rating} stars"
+            "A comprehensive review and rating assessment has been successfully attached to the targeted document"
         )
         return review_item
 
@@ -153,5 +153,5 @@ class ReviewService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("reports").insert_one(report)
-        logger.info(f"User {current_user.id} reported {item_type} with ID {item_id}")
-        return {"message": "Thank you for reporting the content"}
+        logger.info("A content violation report has been successfully registered by the system for immediate review")
+        return {"message": "The content violation report has been successfully submitted for administrative moderation"}

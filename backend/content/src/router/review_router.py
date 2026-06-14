@@ -21,7 +21,7 @@ async def create_document_review(
         data=await ReviewService.create_review(
             document_id, review_in, current_user, db=db
         ),
-        message="Document review submitted successfully",
+        message="Your personal review for the document has been successfully submitted and recorded",
         status=201,
     )
 
@@ -30,6 +30,6 @@ async def create_document_review(
 async def get_document_reviews(document_id: str, db=Depends(get_db)) -> Any:
     return APIResponse(
         data=await ReviewService.get_reviews(document_id, db=db),
-        message="Document reviews retrieved successfully",
+        message="The public reviews associated with the specified document have been successfully retrieved",
         status=200,
     )

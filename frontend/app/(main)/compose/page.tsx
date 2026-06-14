@@ -26,13 +26,10 @@ import {
   updateTagsAPI,
   schedulePublishAPI,
   updateChapterPaywallAPI,
-  updateNSFWAPI,
-  broadcastNotificationAPI,
 } from "@/features/content/services/document.service";
 import { compileDocumentAPI } from "@/features/editor/services/compilation.service";
 import {
   exportDocumentPdfAPI,
-  exportDocumentEpubAPI,
   exportDocumentDocxAPI,
 } from "@/features/provision/services/export.service";
 import {
@@ -191,7 +188,6 @@ type StudioDocument = {
   tags?: string[];
   publish_at?: string;
   scheduled_publish_at?: string;
-  is_nsfw?: boolean;
 };
 
 type ViewMode = "edit" | "stats" | "config" | "versions" | "trash" | "comments";
@@ -361,9 +357,6 @@ function StudioContent() {
   const [docTags, setDocTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
   const [scheduleDate, setScheduleDate] = useState("");
-  const [isNsfw, setIsNsfw] = useState(false);
-  const [broadcastMsg, setBroadcastMsg] = useState("");
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
   const [isPreviewCompiling, setIsPreviewCompiling] = useState(false);
@@ -569,7 +562,7 @@ function StudioContent() {
             selectedDocument.drm_settings?.hide_from_search || false,
           );
           setDocTags(selectedDocument.tags || []);
-          setIsNsfw(selectedDocument.is_nsfw || false);
+
         }
       }
       if (viewMode === "edit" && selectedDocument) {
@@ -734,29 +727,6 @@ function StudioContent() {
       const a = document.createElement("a");
       a.href = url;
       a.download = `${selectedDocument?.title || "ban-thao"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-      showToast("Đã tải xuống thành công", "success");
-    } catch (e: any) {
-      showToast(e.message || "Xuất bản sao thất bại", "error");
-    } finally {
-      setIsExporting(false);
-      setStatusMsg("Sẵn sàng");
-    }
-  };
-
-  const handleExportEPUB = async () => {
-    if (!selectedDocumentId) return;
-    setIsExporting(true);
-    setStatusMsg("Đang tạo tệp EPUB");
-    try {
-      const blob = await exportDocumentEpubAPI(selectedDocumentId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${selectedDocument?.title || "ban-thao"}.epub`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1043,18 +1013,6 @@ function StudioContent() {
     }
   };
 
-  const handleToggleNSFW = async () => {
-    if (!selectedDocumentId) return;
-    try {
-      await updateNSFWAPI(selectedDocumentId, !isNsfw);
-      setIsNsfw(!isNsfw);
-      fetchDocuments();
-      showToast("Đã cập nhật cảnh báo nội dung", "success");
-    } catch (err: any) {
-      showToast(err.message || "Cập nhật thất bại", "error");
-    }
-  };
-
   const handleSchedulePublish = async () => {
     if (!selectedDocumentId || !scheduleDate) return;
     try {
@@ -1079,20 +1037,6 @@ function StudioContent() {
       showToast("Đã cập nhật khóa chương", "success");
     } catch (err: any) {
       showToast(err.message || "Cập nhật khóa thất bại", "error");
-    }
-  };
-
-  const handleBroadcast = async () => {
-    if (!selectedDocumentId || !broadcastMsg.trim()) return;
-    setIsBroadcasting(true);
-    try {
-      await broadcastNotificationAPI(selectedDocumentId, broadcastMsg.trim());
-      setBroadcastMsg("");
-      showToast("Đã gửi thông báo đến độc giả", "success");
-    } catch (err: any) {
-      showToast(err.message || "Gửi thông báo thất bại", "error");
-    } finally {
-      setIsBroadcasting(false);
     }
   };
 
@@ -1773,12 +1717,6 @@ function StudioContent() {
                   className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
                 >
                   Định dạng PDF
-                </button>
-                <button
-                  onClick={handleExportEPUB}
-                  className="w-full text-left px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 border-t border-zinc-100"
-                >
-                  Định dạng EPUB
                 </button>
                 <button
                   onClick={handleExportDOCX}

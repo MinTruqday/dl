@@ -26,7 +26,7 @@ async def toggle_bookmark(
 ):
     return APIResponse(
         data=await BookmarkService.toggle_bookmark(document_id, current_user, db=db),
-        message="Bookmark operation completed successfully",
+        message="The requested bookmark operation has been successfully processed and applied to your account",
         status=200,
     )
 
@@ -39,7 +39,7 @@ async def get_bookmarks(
 ):
     return APIResponse(
         data=await BookmarkService.get_bookmarks(current_user, limit, db=db),
-        message="Bookmark list retrieved successfully",
+        message="Your personal list of saved bookmarks has been successfully retrieved",
     )
 
 
@@ -53,7 +53,7 @@ async def create_bookmark_folder(
         data=await BookmarkService.create_bookmark_folder(
             data.name, current_user, db=db
         ),
-        message="Bookmark folder created successfully",
+        message="The new structural bookmark folder has been successfully created and added to your collection",
         status=201,
     )
 
@@ -64,7 +64,7 @@ async def get_bookmark_folders(
 ):
     return APIResponse(
         data=await BookmarkService.get_bookmark_folders(current_user, db=db),
-        message="Bookmark folders list retrieved successfully",
+        message="The hierarchical list of bookmark folders has been successfully retrieved",
     )
 
 
@@ -79,7 +79,7 @@ async def assign_bookmarks(
         data=await BookmarkService.assign_bookmarks_to_folder(
             folder_id, data.bookmark_ids, current_user, db=db
         ),
-        message="Bookmark folder updated successfully",
+        message="The contents of the specified bookmark folder have been successfully updated",
     )
 
 
@@ -93,5 +93,5 @@ async def delete_bookmark_folder(
         data=await BookmarkService.delete_bookmark_folder(
             folder_id, current_user, db=db
         ),
-        message="Bookmark folder deleted successfully",
+        message="The designated bookmark folder has been permanently removed from your collection",
     )

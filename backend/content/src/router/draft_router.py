@@ -23,7 +23,7 @@ async def get_approval_queue(
 ):
     return APIResponse(
         data=await DocumentService.get_approval_queue(cursor, limit, db=db),
-        message="Pending approval list retrieved successfully",
+        message="The list of documents currently awaiting administrative approval has been successfully retrieved",
     )
 
 
@@ -42,5 +42,5 @@ async def moderate_document(
         data=await DocumentService.moderate_document(
             document_id, req.action, req.reason, current_user, db=db
         ),
-        message="Document processed successfully",
+        message="The administrative moderation action has been successfully applied to the specified document",
     )

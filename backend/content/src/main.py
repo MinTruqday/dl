@@ -53,7 +53,7 @@ app.include_router(pin_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Content initialized successfully")
+    logger.info("The primary content management service has been initialized successfully and is now ready to process incoming requests")
     await init_db()
 
 
@@ -64,5 +64,4 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "content"}
-
+    return {"status": "The content management service is currently operating normally and functioning as expected without any internal issues"}

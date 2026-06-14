@@ -15,7 +15,6 @@ import {
   getVersionDiffAPI,
   summarizeDocumentAPI,
   extractSmartTagsAPI,
-  exportToEpubAPI,
   checkDeepPlagiarismAPI,
 } from "@/features/editor/services/editor.service";
 import {
@@ -95,7 +94,6 @@ export default function Editor({
   };
 
   const [isExportingWord, setIsExportingWord] = useState(false);
-  const [isExportingEpub, setIsExportingEpub] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isExtractingTags, setIsExtractingTags] = useState(false);
   const [isScanningPlagiarism, setIsScanningPlagiarism] = useState(false);
@@ -283,25 +281,6 @@ ${latexCode}
       showToast(err.message || "Không thể lấy gợi ý lúc này", "error");
     } finally {
       setIsSuggesting(false);
-    }
-  };
-
-  const handleExportEpub = async () => {
-    if (!documentId) return;
-    setIsExportingEpub(true);
-    showToast("Đang xuất file EPUB", "info");
-    try {
-      const blob = await exportToEpubAPI(documentId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "tai-lieu.epub";
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      showToast(err.message || "Lỗi khi xuất file EPUB", "error");
-    } finally {
-      setIsExportingEpub(false);
     }
   };
 

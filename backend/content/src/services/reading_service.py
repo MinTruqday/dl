@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from core.database import db_client
 from core.repositories.base_repository import RepositoryFactory
@@ -94,86 +94,7 @@ class ReadingService:
             },
             upsert=True,
         )
-        profile = await RepositoryFactory.get("user_content_profiles").find_one(
-            {"_id": user_id}, {"reading_stats": 1}
-        )
-        stats = profile.get("reading_stats", {}) if profile else {}
-        last_date = stats.get("last_read_date")
-        current_streak = stats.get("current_streak", 0)
-        longest_streak = stats.get("longest_streak", 0)
-        today_date = now.date().isoformat()
-        if last_date != today_date:
-            yesterday = (now - timedelta(days=1)).date().isoformat()
-            if last_date == yesterday:
-                current_streak += 1
-            else:
-                current_streak = 1
-            if current_streak > longest_streak:
-                longest_streak = current_streak
-            await RepositoryFactory.get("user_content_profiles").update_one(
-                {"_id": user_id},
-                {
-                    "$set": {
-                        "reading_stats.last_read_date": today_date,
-                        "reading_stats.current_streak": current_streak,
-                        "reading_stats.longest_streak": longest_streak,
-                    }
-                },
-                upsert=True,
-            )
-        if data.progress_percentage >= 100:
-            await RepositoryFactory.get("user_content_profiles").update_one(
-                {"_id": user_id},
-                {"$addToSet": {"badges": {"name": "Bookworm", "awarded_at": now}}},
-                upsert=True,
-            )
-        return {"status": "success", "current_streak": current_streak}
-
-    @staticmethod
-    async def set_reading_goal(data, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        await RepositoryFactory.get("reading_goals").update_one(
-            {"user_id": str(current_user.id)},
-            {
-                "$set": {
-                    "target_documents": max(0, data.target_documents),
-                    "target_pages": max(0, data.target_pages),
-                    "period": (
-                        data.period
-                        if data.period in ["weekly", "monthly", "yearly"]
-                        else "monthly"
-                    ),
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
-            upsert=True,
-        )
-        return {"message": "Reading goal set successfully"}
-
-    @staticmethod
-    async def get_reading_goal(current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        goal = await RepositoryFactory.get("reading_goals").find_one(
-            {"user_id": str(current_user.id)}
-        )
-        if not goal:
-            return {
-                "target_documents": 0,
-                "target_pages": 0,
-                "period": "monthly",
-                "progress_documents": 0,
-            }
-        history_count = await RepositoryFactory.get("reading_history").count_documents(
-            {"user_id": str(current_user.id), "progress_percentage": 100}
-        )
-        return {
-            "target_documents": goal.get("target_documents", 0),
-            "target_pages": goal.get("target_pages", 0),
-            "period": goal.get("period", "monthly"),
-            "progress_documents": history_count,
-        }
+        return {"status": "success"}
 
     @staticmethod
     async def search_in_document(
@@ -185,7 +106,7 @@ class ReadingService:
             {"_id": document_id}, {"content": 1, "title": 1}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         content = doc.get("content", "")
         query_lower = query.lower()
         content_lower = content.lower()
@@ -203,31 +124,13 @@ class ReadingService:
         return {"total": len(results), "results": results, "query": query}
 
     @staticmethod
-    async def update_typography(data, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        update_data = {"font_family": data.font_family}
-        if data.font_size is not None:
-            update_data["font_size"] = data.font_size
-        if data.line_height is not None:
-            update_data["line_height"] = data.line_height
-        if data.letter_spacing is not None:
-            update_data["letter_spacing"] = data.letter_spacing
-        await RepositoryFactory.get("user_content_profiles").update_one(
-            {"_id": str(current_user.id)},
-            {"$set": {"typography": update_data}},
-            upsert=True,
-        )
-        return {"status": "success", "typography": update_data}
-
-    @staticmethod
     async def clear_reading_history(current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await RepositoryFactory.get("reading_history").delete_many(
             {"user_id": str(current_user.id)}
         )
-        return {"status": "success", "message": "Entire reading history deleted successfully"}
+        return {"status": "success", "message": "The comprehensive reading activity history has been successfully purged from the system records"}
 
     @staticmethod
     async def delete_history_item(document_id: str, current_user, db=None) -> dict:
@@ -236,4 +139,4 @@ class ReadingService:
         await RepositoryFactory.get("reading_history").delete_one(
             {"user_id": str(current_user.id), "document_id": document_id}
         )
-        return {"status": "success", "message": "Reading history deleted successfully"}
+        return {"status": "success", "message": "The specific reading activity entry has been successfully expunged from your historical timeline"}

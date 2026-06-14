@@ -11,17 +11,6 @@ export async function exportDocumentPdfAPI(documentId: string) {
   return res.blob();
 }
 
-export async function exportDocumentEpubAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat/${documentId}/epub`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.message || "Xuất bản sao EPUB thất bại");
-  }
-  return res.blob();
-}
-
 export async function exportDocumentDocxAPI(documentId: string) {
   const res = await fetch(`${API_URL}/xuat/${documentId}/docx`, {
     headers: getAuthHeaders(),

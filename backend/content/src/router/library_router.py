@@ -23,7 +23,7 @@ async def create_reading_list(
 ):
     return APIResponse(
         data=await LibraryService.create_reading_list(data, current_user, db=db),
-        message="Reading list created successfully",
+        message="The new personalized reading list has been successfully created and saved",
         status=201,
     )
 
@@ -34,7 +34,7 @@ async def get_my_lists(
 ):
     return APIResponse(
         data=await LibraryService.get_my_reading_lists(current_user, db=db),
-        message="Reading list retrieved successfully",
+        message="Your collection of personalized reading lists has been successfully retrieved",
     )
 
 
@@ -44,7 +44,7 @@ async def get_list_by_id(
 ):
     return APIResponse(
         data=await LibraryService.get_reading_list_by_id(list_id, current_user, db=db),
-        message="List details retrieved successfully",
+        message="The detailed contents of the specified reading list have been successfully retrieved",
     )
 
 
@@ -59,7 +59,7 @@ async def add_to_list(
         data=await LibraryService.add_document_to_list(
             list_id, document_id, current_user, db=db
         ),
-        message="Added to reading list successfully",
+        message="The specified document has been successfully added to your selected reading list",
     )
 
 
@@ -76,5 +76,5 @@ async def remove_from_list(
         data=await LibraryService.remove_document_from_list(
             list_id, document_id, current_user, db=db
         ),
-        message="Removed from reading list successfully",
+        message="The specified document has been successfully removed from your selected reading list",
     )

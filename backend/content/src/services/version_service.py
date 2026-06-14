@@ -20,7 +20,7 @@ class VersionsService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,
@@ -37,8 +37,8 @@ class VersionsService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"User {current_user.id} saved draft for document {document_id}")
-        return {"message": "Document draft saved successfully"}
+        logger.info("A new historical version snapshot of the document has been successfully captured and preserved")
+        return {"message": "The historical document draft version has been successfully saved to the repository"}
 
     @staticmethod
     async def get_versions(document_id, current_user, db=None):
@@ -63,7 +63,7 @@ class VersionsService:
             {"_id": ObjectId(version_id), "author_id": str(current_user.id)}
         )
         if not version:
-            raise HTTPException(status_code=404, detail="The specified version could not be found")
+            raise HTTPException(status_code=404, detail="The requested historical version snapshot could not be located within the archival system")
         snapshot = version.get("snapshot")
         if not snapshot:
             update_data = {
@@ -76,6 +76,6 @@ class VersionsService:
             {"_id": version["document_id"]}, {"$set": update_data}
         )
         logger.info(
-            f"User {current_user.id} restored document {version['document_id']} to version {version_id}"
+            "The specified document has been successfully restored to a previous historical version state"
         )
-        return {"message": "Document version restored successfully"}
+        return {"message": "The digital document has been successfully restored to the selected historical version snapshot"}

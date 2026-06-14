@@ -67,8 +67,8 @@ class PinService:
             },
             upsert=True,
         )
-        logger.info(f"User {current_user.id} ghim document {document_id}")
-        return {"status": "success", "message": "Document pinned successfully"}
+        logger.info("The specified document has been successfully prioritized and pinned within the user workspace")
+        return {"status": "success", "message": "The specified document has been successfully prioritized and added to your pinned collection"}
 
     @staticmethod
     async def unpin_document(document_id: str, current_user, db=None) -> dict:
@@ -79,7 +79,7 @@ class PinService:
             {"$pull": {"pinned_documents": document_id}},
             upsert=True,
         )
-        return {"status": "success", "message": "Document unpinned successfully"}
+        return {"status": "success", "message": "The specified document has been successfully removed from your prioritized pinned collection"}
 
     @staticmethod
     async def set_pinned_documents(document_ids: list, current_user, db=None) -> dict:
@@ -90,4 +90,4 @@ class PinService:
             {"$set": {"pinned_documents": document_ids}},
             upsert=True,
         )
-        return {"status": "success", "message": "Pinned list updated successfully"}
+        return {"status": "success", "message": "The arrangement of your prioritized pinned documents has been successfully synchronized and updated"}

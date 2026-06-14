@@ -31,7 +31,7 @@ async def invite_collaborator(
         data=await CollaborationService.send_collaboration_invite(
             data.document_id, data.email, data.role, current_user, db=db
         ),
-        message="Collaboration invitation sent successfully",
+        message="The editorial collaboration invitation has been successfully dispatched to the designated user",
         status=201,
     )
 
@@ -45,7 +45,7 @@ async def get_my_collaboration_invites(
         data=await CollaborationService.get_my_collaboration_invites(
             current_user, db=db
         ),
-        message="Invitation list retrieved successfully",
+        message="The list of active editorial collaboration invitations has been successfully retrieved",
     )
 
 
@@ -60,7 +60,7 @@ async def respond_to_collaboration_invite(
         data=await CollaborationService.respond_to_collaboration_invite(
             invite_id, data.status, current_user, db=db
         ),
-        message="Responded to collaboration invitation",
+        message="Your response to the editorial collaboration invitation has been successfully recorded",
     )
 
 
@@ -74,7 +74,7 @@ async def get_collaborators(
         data=await CollaborationService.get_collaborators(
             document_id, current_user, db=db
         ),
-        message="Collaborator list retrieved successfully",
+        message="The list of actively assigned editorial collaborators has been successfully retrieved",
     )
 
 
@@ -88,7 +88,7 @@ async def remove_collaborator(
         data=await CollaborationService.remove_collaborator(
             collaboration_id, current_user, db=db
         ),
-        message="Collaborator removed successfully",
+        message="The specified editorial collaborator has been successfully removed from the designated document",
     )
 
 
@@ -102,7 +102,7 @@ async def get_activities(
         data=await CollaborationService.get_activities(
             document_id, current_user, db=db
         ),
-        message="Activity history retrieved successfully",
+        message="The comprehensive editorial activity history for the specified document has been successfully retrieved",
     )
 
 
@@ -119,7 +119,7 @@ async def transfer_ownership(
         data=await CollaborationService.transfer_ownership(
             document_id, data.user_id, current_user, db=db
         ),
-        message="Ownership transferred successfully",
+        message="The primary administrative ownership of the collaborative document has been successfully transferred",
     )
 
 
@@ -131,7 +131,7 @@ async def ping_status(
 ):
     return APIResponse(
         data=await CollaborationService.update_status(document_id, current_user, db=db),
-        message="Status updated successfully",
+        message="Your active presence status within the collaborative editorial environment has been successfully synchronized",
     )
 
 
@@ -143,7 +143,7 @@ async def get_online_collaborators(
 ):
     return APIResponse(
         data=await CollaborationService.get_online_collaborators(document_id, db=db),
-        message="Online collaborators retrieved successfully",
+        message="The list of currently active online editorial collaborators has been successfully retrieved",
     )
 
 
@@ -158,7 +158,7 @@ async def update_collaborator_role(
         data=await CollaborationService.update_collaborator_role(
             collaboration_id, data.role, current_user, db=db
         ),
-        message="Collaborator role updated successfully",
+        message="The specific access and modification privileges for the designated collaborator have been successfully updated",
     )
 
 
@@ -173,7 +173,7 @@ async def send_memo(
         data=await CollaborationService.send_memo(
             document_id, data.message, current_user, db=db
         ),
-        message="Message sent successfully",
+        message="The internal collaborative communication message has been successfully transmitted to the editorial team",
     )
 
 
@@ -185,7 +185,7 @@ async def get_memos(
 ):
     return APIResponse(
         data=await CollaborationService.get_memos(document_id, current_user, db=db),
-        message="Message list retrieved successfully",
+        message="The internal collaborative communication history has been successfully retrieved from the system",
     )
 
 
@@ -200,7 +200,7 @@ async def update_collab_access(
         data=await CollaborationService.update_collab_access(
             document_id, data.access_level, current_user, db=db
         ),
-        message="Default access permissions updated successfully",
+        message="The global collaborative access permission configurations have been successfully updated",
     )
 
 
@@ -214,7 +214,7 @@ async def get_sent_pending_invites(
         data=await CollaborationService.get_sent_pending_invites(
             document_id, current_user, db=db
         ),
-        message="Sent invitation list retrieved successfully",
+        message="The list of pending outgoing collaboration invitations has been successfully compiled and retrieved",
     )
 
 
@@ -226,7 +226,7 @@ async def revoke_invite(
 ):
     return APIResponse(
         data=await CollaborationService.revoke_invite(invite_id, current_user, db=db),
-        message="Invitation revoked successfully",
+        message="The previously dispatched collaborative invitation has been successfully revoked and invalidated",
     )
 
 
@@ -242,7 +242,7 @@ async def get_contribution_stats(
         data=await CollaborationService.get_contribution_stats(
             document_id, current_user, db=db
         ),
-        message="Contribution statistics retrieved successfully",
+        message="The detailed collaborative contribution metrics and statistics have been successfully calculated and retrieved",
     )
 
 
@@ -257,7 +257,7 @@ async def create_snapshot(
         data=await CollaborationService.create_snapshot(
             document_id, data.version_name, current_user, db=db
         ),
-        message="Collaboration draft created successfully",
+        message="A new historical snapshot of the collaborative document has been successfully preserved",
         status=201,
     )
 
@@ -270,7 +270,7 @@ async def get_snapshots(
 ):
     return APIResponse(
         data=await CollaborationService.get_snapshots(document_id, current_user, db=db),
-        message="Draft versions list retrieved successfully",
+        message="The chronological list of historical document snapshots has been successfully retrieved",
     )
 
 
@@ -282,7 +282,7 @@ async def acquire_lock(
 ):
     return APIResponse(
         data=await CollaborationService.acquire_lock(document_id, current_user, db=db),
-        message="Exclusive document lock acquired successfully",
+        message="The exclusive editorial modification lock has been successfully acquired for the current session",
     )
 
 
@@ -294,7 +294,7 @@ async def release_lock(
 ):
     return APIResponse(
         data=await CollaborationService.release_lock(document_id, current_user, db=db),
-        message="Editing session ended and document unlocked successfully",
+        message="The exclusive editorial modification lock has been successfully released and the session has ended",
     )
 
 
@@ -306,7 +306,7 @@ async def get_lock_status(
 ):
     return APIResponse(
         data=await CollaborationService.get_lock_status(document_id, db=db),
-        message="Edit lock status verified successfully",
+        message="The current editorial modification lock status has been successfully verified",
     )
 
 
@@ -320,7 +320,7 @@ async def generate_invite_code(
         data=await CollaborationService.generate_invite_code(
             document_id, current_user, db=db
         ),
-        message="Collaboration invite code generated successfully",
+        message="A secure access token for joining the collaborative environment has been successfully generated",
     )
 
 
@@ -334,7 +334,7 @@ async def join_via_invite_code(
         data=await CollaborationService.join_via_invite_code(
             invite_code, current_user, db=db
         ),
-        message="Joined editorial collaboration group successfully",
+        message="You have successfully joined the collaborative editorial group using the provided access token",
     )
 
 
@@ -349,7 +349,7 @@ async def create_task(
         data=await CollaborationService.create_task(
             document_id, data.task_desc, data.assigned_to, current_user, db=db
         ),
-        message="Collaboration task created successfully",
+        message="The new editorial collaborative task has been successfully created and assigned",
         status=201,
     )
 
@@ -362,7 +362,7 @@ async def get_tasks(
 ):
     return APIResponse(
         data=await CollaborationService.get_tasks(document_id, current_user, db=db),
-        message="Task list retrieved successfully",
+        message="The list of active editorial collaborative tasks has been successfully retrieved",
     )
 
 
@@ -377,7 +377,7 @@ async def update_task(
         data=await CollaborationService.update_task(
             task_id, data.is_done, current_user, db=db
         ),
-        message="Task status updated successfully",
+        message="The operational status of the specified editorial collaborative task has been successfully updated",
     )
 
 
@@ -392,7 +392,7 @@ async def add_task_comment(
         data=await CollaborationService.add_task_comment(
             task_id, data.comment_text, current_user, db=db
         ),
-        message="Task comment posted successfully",
+        message="Your communicative comment has been successfully attached to the specified editorial task",
         status=201,
     )
 
@@ -405,5 +405,5 @@ async def get_task_comments(
 ):
     return APIResponse(
         data=await CollaborationService.get_task_comments(task_id, current_user, db=db),
-        message="Task comments retrieved successfully",
+        message="The communicative comments associated with the specified editorial task have been successfully retrieved",
     )

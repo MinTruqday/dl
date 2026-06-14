@@ -38,22 +38,6 @@ export async function exportToWordAPI(documentId: string) {
   return await res.blob();
 }
 
-export async function exportToEpubAPI(documentId: string) {
-  const res = await fetch(`${API_URL}/xuat/${documentId}/epub`, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) {
-    let errMsg = "Xuất file EPUB thất bại";
-    try {
-      const data = await res.json();
-      errMsg = data.detail || data.message || errMsg;
-    } catch (err: any) {}
-    throw new Error(errMsg);
-  }
-  return await res.blob();
-}
-
 export async function analyzeInternalPlagiarismAPI(
   documentId: string,
   content: any,

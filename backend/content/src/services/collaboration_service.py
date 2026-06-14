@@ -40,7 +40,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         import httpx
 
@@ -57,23 +57,23 @@ class CollaborationService:
             pass
         if not invitee:
             raise HTTPException(
-                status_code=404, detail="The specified user could not be found"
+                status_code=404, detail="The target user account specified for the collaboration invitation could not be located"
             )
         invitee_id = str(invitee["_id"])
         if invitee_id == str(current_user.id):
             raise HTTPException(
-                status_code=400, detail="Action restricted. You cannot invite yourself as a collaborator"
+                status_code=400, detail="The system architecture restricts accounts from dispatching collaboration invitations to themselves"
             )
         existing_invite = await RepositoryFactory.get("collaboration_invites").find_one(
             {"document_id": document_id, "invitee_id": invitee_id, "status": "PENDING"}
         )
         if existing_invite:
             raise HTTPException(
-                status_code=400, detail="A pending invitation is awaiting confirmation from this user"
+                status_code=400, detail="An active collaboration invitation has already been dispatched to this account and is currently pending review"
             )
         coauthors = doc.get("coauthors", [])
         if invitee_id in coauthors:
-            raise HTTPException(status_code=400, detail="This user is already a collaborator")
+            raise HTTPException(status_code=400, detail="The specified account is already registered as an active participant in this collaborative workspace")
         invite = {
             "_id": str(uuid7()),
             "document_id": document_id,
@@ -90,12 +90,12 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Send invitation",
-            f"Collaboration invitation sent to {invitee_email} with role {role}",
+            "A new editorial collaboration invitation has been processed and dispatched via the internal notification system",
         )
         logger.info(
-            f"User {current_user.id} invited {invitee_id} to edit document {document_id}"
+            "A new editorial collaboration invitation has been successfully dispatched to the designated participant"
         )
-        return {"message": "Collaboration invitation sent successfully", "invite_id": invite["_id"]}
+        return {"message": "The editorial collaboration invitation has been successfully processed and dispatched", "invite_id": invite["_id"]}
 
     @staticmethod
     async def get_my_collaboration_invites(current_user, db=None) -> list:
@@ -120,11 +120,11 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The invitation could not be found or has already been processed"
+                status_code=404, detail="The specified collaboration invitation is either invalid or has already been fully processed by the system"
             )
         if status not in ["ACCEPTED", "REJECTED"]:
             raise HTTPException(
-                status_code=400, detail="Invalid response status"
+                status_code=400, detail="The provided invitation response status is not recognized by the validation system"
             )
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": invite_id},
@@ -142,17 +142,13 @@ class CollaborationService:
             invite["document_id"],
             current_user.full_name,
             "Accepted" if status == "ACCEPTED" else "Declined",
-            (
-                "Collaboration invitation accepted successfully"
-                if status == "ACCEPTED"
-                else "Collaboration invitation declined successfully"
-            ),
+            "The recipient has officially registered their response to the pending editorial collaboration invitation",
         )
         logger.info(
-            f"User {current_user.id} {status} collaboration invitation {invite_id}"
+            "The pending collaboration invitation has been successfully processed according to the user response"
         )
         return {
-            "message": f"Collaboration invitation {('accepted' if status == 'ACCEPTED' else 'declined')} successfully"
+            "message": "Your response to the collaboration invitation has been successfully recorded and applied"
         }
 
     @staticmethod
@@ -171,7 +167,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -214,7 +210,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Collaboration details could not be found"
+                status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
@@ -222,7 +218,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Action restricted. Permission denied to manage collaborators for this document",
+                detail="The current account lacks the administrative privileges required to manage participants for this document",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": invite["document_id"]},
@@ -235,12 +231,12 @@ class CollaborationService:
             invite["document_id"],
             current_user.full_name,
             "Collaborator removed",
-            f"Collaborator {invite['invitee_id']} removed successfully",
+            "The specified collaborator has been effectively removed from the authorized modification list",
         )
         logger.info(
-            f"Owner {current_user.id} removed collaborator {invite['invitee_id']} from document {invite['document_id']}"
+            "The specified collaborator has been successfully removed from the active editorial environment"
         )
-        return {"message": "User removed from collaboration list successfully"}
+        return {"message": "The specified participant has been successfully removed from the active collaborative workspace"}
 
     @staticmethod
     async def get_activities(document_id: str, current_user, db=None) -> list:
@@ -258,7 +254,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         activities = (
             await RepositoryFactory.get("collaboration_activities")
@@ -294,7 +290,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or ownership transfer access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         import httpx
 
@@ -312,12 +308,12 @@ class CollaborationService:
         if not target_user:
             raise HTTPException(
                 status_code=404,
-                detail="Transferee information could not be found",
+                detail="The target user account designated for the ownership transfer could not be located",
             )
         if target_user_id not in doc.get("coauthors", []):
             raise HTTPException(
                 status_code=400,
-                detail="Only collaborators are eligible to receive document ownership transfer",
+                detail="The administrative ownership transfer is restricted exclusively to existing active collaborators",
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -336,12 +332,12 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Transfer ownership",
-            f"Ownership transferred successfully document cho {target_user.get('full_name')}",
+            "The primary administrative ownership rights of the document have been securely reassigned",
         )
         logger.info(
-            f"Transferred ownership of document {document_id} from {current_user.id} to {target_user_id}"
+            "The primary administrative ownership of the collaborative document has been successfully transferred"
         )
-        return {"message": "Document ownership transferred successfully"}
+        return {"message": "The administrative ownership rights of the specified document have been successfully transferred"}
 
     @staticmethod
     async def update_status(document_id: str, current_user, db=None) -> dict:
@@ -357,7 +353,7 @@ class CollaborationService:
             },
             upsert=True,
         )
-        return {"message": "Online status updated successfully"}
+        return {"message": "Your active presence status within the collaborative environment has been successfully synchronized"}
 
     @staticmethod
     async def get_online_collaborators(document_id: str, db=None) -> list:
@@ -396,7 +392,7 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="Collaboration details could not be found"
+                status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
@@ -404,10 +400,10 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=403,
-                detail="Action restricted. Permission denied to manage collaborators for this document",
+                detail="The current account lacks the administrative privileges required to manage participants for this document",
             )
         if role not in ["editor", "viewer"]:
-            raise HTTPException(status_code=400, detail="Invalid collaboration role specified")
+            raise HTTPException(status_code=400, detail="The requested access role is not recognized by the collaboration permission architecture")
         await RepositoryFactory.get("collaboration_invites").update_one(
             {"_id": collaboration_id}, {"$set": {"role": role}}
         )
@@ -415,9 +411,9 @@ class CollaborationService:
             invite["document_id"],
             current_user.full_name,
             "Update role",
-            f"Changed role of collaborator {invite['invitee_id']} to {role}",
+            "The specific access privileges and system roles for the collaborator have been modified",
         )
-        return {"message": "Collaborator role updated successfully"}
+        return {"message": "The specific access privileges for the designated collaborator have been successfully updated"}
 
     @staticmethod
     async def send_memo(document_id: str, message: str, current_user, db=None) -> dict:
@@ -435,7 +431,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         memo = {
             "_id": str(uuid7()),
@@ -446,7 +442,7 @@ class CollaborationService:
             "timestamp": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("collaboration_memos").insert_one(memo)
-        return {"message": "Message exchanged successfully", "memo": memo}
+        return {"message": "The internal collaborative communication message has been successfully transmitted", "memo": memo}
 
     @staticmethod
     async def get_memos(document_id: str, current_user, db=None) -> list:
@@ -464,7 +460,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         memos = (
             await RepositoryFactory.get("collaboration_memos")
@@ -500,11 +496,11 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied to update settings",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         if access_level not in ["invite_only", "anyone_with_link"]:
             raise HTTPException(
-                status_code=400, detail="Invalid access level specified"
+                status_code=400, detail="The provided document access level configuration is structurally invalid or unsupported"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id}, {"$set": {"collab_access_level": access_level}}
@@ -513,10 +509,10 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Permission settings",
-            f"Document access level updated to: {access_level}",
+            "The core collaborative access permissions for the environment have been successfully adjusted",
         )
         return {
-            "message": "Default access permissions updated successfully",
+            "message": "The global collaborative access permission configurations have been successfully updated",
             "collab_access_level": access_level,
         }
 
@@ -530,7 +526,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         invites = (
             await RepositoryFactory.get("collaboration_invites")
@@ -549,14 +545,14 @@ class CollaborationService:
         )
         if not invite:
             raise HTTPException(
-                status_code=404, detail="The invitation could not be found or has already been accepted"
+                status_code=404, detail="The specified collaboration invitation could not be located or has already been processed by the recipient"
             )
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": invite["document_id"], "author_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Action restricted. Permission denied to revoke this invitation"
+                status_code=403, detail="The current account lacks the necessary authorization privileges to revoke this specific invitation"
             )
         await RepositoryFactory.get("collaboration_invites").delete_one(
             {"_id": invite_id}
@@ -565,9 +561,9 @@ class CollaborationService:
             invite["document_id"],
             current_user.full_name,
             "Invitation revoked",
-            "Pending collaboration invitation revoked successfully",
+            "The active collaboration invitation token has been securely invalidated by the document owner",
         )
-        return {"message": "Collaboration invitation revoked successfully"}
+        return {"message": "The previously dispatched collaborative invitation has been successfully revoked and invalidated"}
 
     @staticmethod
     async def get_contribution_stats(document_id: str, current_user, db=None) -> list:
@@ -585,7 +581,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access to statistics denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         pipeline = [
             {"$match": {"document_id": document_id}},
@@ -617,7 +613,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         snapshot = {
             "_id": str(uuid7()),
@@ -632,9 +628,9 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Create draft",
-            f"Collaboration draft version stored: {version_name}",
+            "A structural milestone snapshot has been permanently recorded in the version control history",
         )
-        return {"message": "Collaboration draft created successfully", "snapshot": snapshot}
+        return {"message": "A new historical snapshot of the collaborative document has been successfully preserved", "snapshot": snapshot}
 
     @staticmethod
     async def get_snapshots(document_id: str, current_user, db=None) -> list:
@@ -652,7 +648,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         drafts = (
             await RepositoryFactory.get("collaboration_drafts")
@@ -690,7 +686,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         cutoff = datetime.now(timezone.utc).timestamp() - 60
         existing = await RepositoryFactory.get("collaboration_locks").find_one(
@@ -706,7 +702,7 @@ class CollaborationService:
             ):
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Document is currently exclusively locked by {existing.get('user_name')}",
+                    detail="The specified document is currently locked for exclusive editorial modification by another active session",
                 )
         await RepositoryFactory.get("collaboration_locks").update_one(
             {"document_id": document_id},
@@ -723,9 +719,9 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Document locked",
-            "Exclusive edit lock enabled successfully",
+            "An exclusive access token has been acquired to prevent overlapping editorial modifications",
         )
-        return {"message": "Document locked for editing successfully"}
+        return {"message": "The exclusive editorial modification lock has been successfully acquired for the current session"}
 
     @staticmethod
     async def release_lock(document_id: str, current_user, db=None) -> dict:
@@ -742,9 +738,9 @@ class CollaborationService:
                 document_id,
                 current_user.full_name,
                 "Unlock document",
-                "Exclusive edit lock disabled successfully",
+                "The previously acquired exclusive editorial lock has been safely released back into the available pool",
             )
-        return {"message": "Editing session ended and document unlocked successfully"}
+        return {"message": "The exclusive editorial modification lock has been successfully released and the session has ended"}
 
     @staticmethod
     async def get_lock_status(document_id: str, db=None) -> dict:
@@ -782,7 +778,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or ownership access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         invite_code = str(uuid7())[:8].upper()
         await RepositoryFactory.get("collaboration_invite_codes").update_one(
@@ -799,7 +795,7 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Generate collaboration code",
-            f"Activated quick invite code: {invite_code}",
+            "A secure time-limited invitation token has been successfully generated for immediate collaborative access",
         )
         return {"invite_code": invite_code}
 
@@ -812,17 +808,17 @@ class CollaborationService:
         )
         if not code_entry:
             raise HTTPException(
-                status_code=404, detail="Collaboration code could not be found or has expired"
+                status_code=404, detail="The specified collaboration code could not be verified or has exceeded its expiration window"
             )
         document_id = code_entry["document_id"]
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         if doc.get("author_id") == str(current_user.id):
-            raise HTTPException(status_code=400, detail="User is already the owner of this document")
+            raise HTTPException(status_code=400, detail="The authentication process has determined that you are already the primary administrative owner of this document")
         if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(
-                status_code=400, detail="User is already a collaborator on this document"
+                status_code=400, detail="The authentication process has determined that you are already an active participant in this collaborative workspace"
             )
         await RepositoryFactory.get("documents").update_one(
             {"_id": document_id},
@@ -849,10 +845,10 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Join via code",
-            "Joined editorial collaboration group via quick invite code successfully",
+            "The authenticated user has successfully claimed the invitation token and entered the editorial workspace",
         )
         return {
-            "message": "Joined editorial collaboration group successfully",
+            "message": "You have successfully joined the collaborative editorial group using the provided access token",
             "document_id": document_id,
         }
 
@@ -874,7 +870,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         task = {
             "_id": str(uuid7()),
@@ -890,7 +886,7 @@ class CollaborationService:
             document_id,
             current_user.full_name,
             "Create task",
-            f"New collaboration task added: {task_desc} (Assigned to: {assigned_to or 'Unassigned'})",
+            "A structured operational assignment has been successfully integrated into the active workflow queue",
         )
         return {"task": task}
 
@@ -910,7 +906,7 @@ class CollaborationService:
         if not doc:
             raise HTTPException(
                 status_code=404,
-                detail="Document could not be found or access denied",
+                detail="The specified document could not be located or the current account lacks the required access permissions",
             )
         tasks = (
             await RepositoryFactory.get("collaboration_tasks")
@@ -942,7 +938,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The specified task could not be found")
+            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -954,7 +950,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Action restricted. Permission denied to edit this task"
+                status_code=403, detail="The current account lacks the required administrative privileges to modify the specified editorial task"
             )
         await RepositoryFactory.get("collaboration_tasks").update_one(
             {"_id": task_id}, {"$set": {"is_done": is_done}}
@@ -963,9 +959,9 @@ class CollaborationService:
             task["document_id"],
             current_user.full_name,
             "Update task",
-            "Marked task '{task['task_desc']}' as {('Completed' if is_done else 'Pending')}",
+            "The execution status of the designated collaborative task has been formally modified",
         )
-        return {"message": "Task updated successfully"}
+        return {"message": "The operational status of the specified editorial collaborative task has been successfully updated"}
 
     @staticmethod
     async def add_task_comment(
@@ -977,7 +973,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The specified task could not be found")
+            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -989,7 +985,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Action restricted. Access to task discussion denied"
+                status_code=403, detail="The current account lacks the necessary authorization privileges to participate in this task discussion thread"
             )
         comment = {
             "_id": str(uuid7()),
@@ -1009,7 +1005,7 @@ class CollaborationService:
             {"_id": task_id}
         )
         if not task:
-            raise HTTPException(status_code=404, detail="The specified task could not be found")
+            raise HTTPException(status_code=404, detail="The requested collaborative editorial task could not be located within the active tracking system")
         doc = await RepositoryFactory.get("documents").find_one(
             {
                 "_id": task["document_id"],
@@ -1021,7 +1017,7 @@ class CollaborationService:
         )
         if not doc:
             raise HTTPException(
-                status_code=403, detail="Action restricted. Access to task discussion denied"
+                status_code=403, detail="The current account lacks the necessary authorization privileges to participate in this task discussion thread"
             )
         comments = (
             await RepositoryFactory.get("collaboration_task_comments")

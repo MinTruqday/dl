@@ -15,8 +15,6 @@ import {
   getReadingHistoryAPI,
   clearReadingHistoryAPI,
   deleteReadingHistoryItemAPI,
-  getMySeriesAPI,
-  createSeriesAPI,
 } from "@/features/content/services/reading.service";
 import { API_URL } from "@/features/auth/services/authentication.service";
 import {
@@ -82,17 +80,16 @@ export default function LibraryPage() {
   const [folders, setFolders] = useState<BookmarkFolder[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [readingLists, setReadingLists] = useState<any[]>([]);
-  const [series, setSeries] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState<
-    "history" | "folders" | "lists" | "series"
+    "history" | "folders" | "lists"
   >("history");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [createType, setCreateType] = useState<"folder" | "list" | "series">(
+  const [createType, setCreateType] = useState<"folder" | "list">(
     "folder",
   );
   const [newFolderName, setNewFolderName] = useState("");
@@ -110,24 +107,18 @@ export default function LibraryPage() {
   );
   const [isSynthesisOpen, setIsSynthesisOpen] = useState(false);
 
-  const canManageSeries = useMemo(() => {
-    const role = user?.role?.toLowerCase() || "";
-    return ["author", "moderator", "admin"].includes(role);
-  }, [user]);
+
 
   const fetchLibraryData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [pinnedRes, foldersRes, historyRes, listsRes, seriesRes] =
+      const [pinnedRes, foldersRes, historyRes, listsRes] =
         await Promise.all([
           getPinnedDocumentsAPI().catch(() => ({ data: [] })),
           getBookmarkFoldersAPI().catch(() => ({ data: [] })),
           getReadingHistoryAPI().catch(() => ({ data: [] })),
           getReadingListsAPI().catch(() => ({ data: [] })),
-          canManageSeries
-            ? getMySeriesAPI().catch(() => ({ data: [] }))
-            : Promise.resolve({ data: [] }),
         ]);
 
       const historyData = historyRes?.data || historyRes || [];
@@ -143,14 +134,13 @@ export default function LibraryPage() {
           .slice(0, 4),
       );
       setReadingLists(listsRes?.data || listsRes || []);
-      setSeries(seriesRes?.data || seriesRes || []);
     } catch (error) {
       showToast("Không thể kết nối tới kho lưu trữ", "error");
     } finally {
       setLoading(false);
       setVisible(true);
     }
-  }, [user, canManageSeries, showToast]);
+  }, [user, showToast]);
 
   useEffect(() => {
     if (user) fetchLibraryData();
@@ -168,12 +158,6 @@ export default function LibraryPage() {
           name: createListForm.name.trim(),
           description: createListForm.description.trim(),
           is_public: createListForm.is_public,
-        });
-      } else if (createType === "series") {
-        if (!createListForm.name.trim()) return;
-        await createSeriesAPI({
-          title: createListForm.name.trim(),
-          description: createListForm.description.trim(),
         });
       }
       await fetchLibraryData();
@@ -232,7 +216,6 @@ export default function LibraryPage() {
     { id: "history", label: "Lịch sử đọc" },
     { id: "folders", label: "Thư mục dấu trang" },
     { id: "lists", label: "Danh sách đọc" },
-    ...(canManageSeries ? [{ id: "series", label: "Chuỗi nội dung" }] : []),
   ];
 
   return (
@@ -711,76 +694,7 @@ export default function LibraryPage() {
             </section>
           )}
 
-          {activeTab === "series" && (
-            <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-5 space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-300">
-              <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-lg font-semibold text-black">
-                  Chuỗi nội dung
-                </h2>
-                <div className="flex items-center gap-3">
-                  <button
-                    title="Khởi tạo chuỗi"
-                    onClick={() => {
-                      setCreateType("series");
-                      setIsCreateModalOpen(true);
-                    }}
-                    className="p-1.5 border border-transparent rounded-xl text-zinc-500 hover:text-black hover:bg-zinc-100 transition-all"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
 
-              <div
-                className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-8 duration-300"
-                style={{ animationDelay: "150ms", animationFillMode: "both" }}
-              >
-                {series.length > 0 ? (
-                  series.map((s) => (
-                    <Link
-                      key={s._id}
-                      href={`/series/${s._id}`}
-                      className="group flex flex-col border border-zinc-200 bg-white rounded-2xl hover:border-black transition-colors overflow-hidden"
-                    >
-                      <div className="aspect-[2/3] w-full border-b border-zinc-200 bg-zinc-50 relative overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-                        {s.description ? (
-                          <p className="text-xs font-medium text-zinc-400 italic line-clamp-6 group-hover:text-black transition-colors duration-500">
-                            "{s.description}"
-                          </p>
-                        ) : (
-                          <Layers className="w-12 h-12 text-zinc-300 stroke-[1] group-hover:scale-110 transition-transform duration-500" />
-                        )}
-                      </div>
-                      <div className="p-3 flex flex-col flex-1 gap-2">
-                        <h3 className="text-sm font-semibold text-black line-clamp-2 leading-snug">
-                          {s.title}
-                        </h3>
-                        <div className="text-xs text-zinc-500 flex items-center gap-1.5">
-                          <span className="truncate text-black font-medium">
-                            Chuỗi tác phẩm
-                          </span>
-                        </div>
-                        <div className="mt-auto pt-3 flex items-center justify-between border-t border-zinc-100">
-                          <span className="text-xs font-semibold text-black">
-                            {s.documents?.length || 0} tập
-                          </span>
-                          <div className="text-[10px] font-semibold text-black bg-zinc-100 hover:bg-zinc-200 transition-colors px-3 py-1.5 rounded-lg uppercase tracking-wider">
-                            Mở
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="col-span-full py-24 flex flex-col items-center justify-center border border-zinc-200 bg-white rounded-2xl">
-                    <p className="text-sm font-medium text-zinc-500">
-                      Chưa có dữ liệu
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
         </main>
       </div>
 
@@ -828,9 +742,7 @@ export default function LibraryPage() {
           <ModalTitle>
             {createType === "folder"
               ? "Tạo thư mục lưu trữ"
-              : createType === "list"
-                ? "Tạo danh sách đọc"
-                : "Tạo chuỗi nội dung"}
+              : "Tạo danh sách đọc"}
           </ModalTitle>
         </ModalHeader>
         <ModalContent>

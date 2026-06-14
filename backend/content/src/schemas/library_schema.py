@@ -1,5 +1,3 @@
-import uuid
-from datetime import datetime, timezone
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -29,22 +27,9 @@ class BookmarkFolderAssign(BaseModel):
     document_ids: List[str]
 
 
-class TypographyRequest(BaseModel):
-    font_family: Optional[str] = "Inter"
-    font_size: Optional[int] = 16
-    line_height: Optional[float] = 1.8
-    letter_spacing: Optional[float] = 0.0
-
-
 class ProgressUpdate(BaseModel):
     document_id: str
     progress_percentage: float
-
-
-class ReadingGoalCreate(BaseModel):
-    target_documents: int
-    target_pages: int
-    period: str = "monthly"
 
 
 class PinnedDocumentRequest(BaseModel):

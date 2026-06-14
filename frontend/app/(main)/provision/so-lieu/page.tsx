@@ -8,8 +8,6 @@ import {
   getDocumentAnalyticsAPI,
   getAcademicMetricsAPI,
 } from "@/features/content/services/document.service";
-import {
-  broadcastNotificationAPI,
   createDocumentAPI,
 } from "@/features/content/services/document.service";
 import { ingestDocumentAPI } from "@/features/ai/services/rag.service";
@@ -48,10 +46,7 @@ export default function StatsPage() {
   const [selectedAcademic, setSelectedAcademic] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
 
-  // Broadcast
-  const [broadcastMsg, setBroadcastMsg] = useState("");
-  const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [selectedDocumentId, setSelectedDocumentId] = useState(""); // Default to first doc for broadcast/AI if needed, but in so-lieu it's global
+
 
   // Withdrawal
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
@@ -74,9 +69,6 @@ export default function StatsPage() {
       const data = sRes.data || sRes;
       setStats(data);
       setRevenue(data);
-      if (data?.documents?.length > 0) {
-        setSelectedDocumentId(data.documents[0].id || data.documents[0]._id);
-      }
     } catch (err: any) {
       showToast("Không thể tải số liệu thống kê", "error");
     } finally {
@@ -105,19 +97,7 @@ export default function StatsPage() {
     }
   };
 
-  const handleBroadcast = async () => {
-    if (!selectedDocumentId || !broadcastMsg.trim()) return;
-    setIsBroadcasting(true);
-    try {
-      await broadcastNotificationAPI(selectedDocumentId, broadcastMsg.trim());
-      setBroadcastMsg("");
-      showToast("Đã gửi thông báo đến độc giả", "success");
-    } catch (err: any) {
-      showToast(err.message || "Gửi thông báo thất bại", "error");
-    } finally {
-      setIsBroadcasting(false);
-    }
-  };
+
 
   const handleWithdrawal = async () => {
     if (withdrawalAmount <= 0) {
@@ -188,54 +168,6 @@ export default function StatsPage() {
             </h4>
           </div>
         ))}
-      </div>
-
-      <div
-        className="bg-white border border-zinc-200 p-6 flex flex-col md:flex-row items-center gap-4 rounded-2xl shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-300"
-        style={{ animationDelay: "150ms", animationFillMode: "both" }}
-      >
-        <div className="flex-1 space-y-1 w-full">
-          <h3 className="text-base font-medium text-black flex items-center gap-2">
-            <RadioTower className="w-4 h-4 text-black" /> Thông báo tới độc giả
-            (Broadcast)
-          </h3>
-          <p className="text-xs text-zinc-500">
-            Gửi thông báo đẩy đến tất cả những người theo dõi tác phẩm này.
-          </p>
-        </div>
-        <div className="flex w-full md:w-auto gap-2">
-          <select
-            value={selectedDocumentId}
-            onChange={(e) => setSelectedDocumentId(e.target.value)}
-            className="w-32 h-10 border border-zinc-200 px-2 text-xs outline-none bg-white rounded-xl focus:border-black"
-          >
-            {stats?.documents?.map((d: any) => (
-              <option key={d.id} value={d.id}>
-                {d.title}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={broadcastMsg}
-            onChange={(e) => setBroadcastMsg(e.target.value)}
-            placeholder="Nội dung thông báo..."
-            className="flex-1 md:w-64 h-10 px-3 text-xs border border-zinc-200 outline-none focus:border-black rounded-xl"
-          />
-          <button
-            onClick={handleBroadcast}
-            disabled={
-              isBroadcasting || !selectedDocumentId || !broadcastMsg.trim()
-            }
-            className="h-10 px-4 bg-black text-white text-xs font-medium flex items-center gap-2 disabled:opacity-50 whitespace-nowrap rounded-xl"
-          >
-            {isBroadcasting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              "Gửi thông báo"
-            )}
-          </button>
-        </div>
       </div>
 
       <div
