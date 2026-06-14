@@ -6,7 +6,7 @@ from core.config import settings
 from loguru import logger
 
 
-class RabbitMQConnection:
+class MessageQueueConnection:
     def __init__(self):
         self.url = settings.RABBITMQ_URI
         self.connection = None
@@ -59,10 +59,10 @@ class RabbitMQConnection:
                     "ctan_queue", durable=True, arguments=queue_args
                 )
 
-                logger.info("Successfully connected to RabbitMQ broker")
+                logger.info("Successfully connected to the background processing queue")
                 return
             except Exception as e:
-                logger.error(f"RabbitMQ connection attempt {attempt + 1}/{max_retries} failed")
+                logger.error(f"Background task queue connection attempt {attempt + 1}/{max_retries} failed")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -83,4 +83,4 @@ class RabbitMQConnection:
             logger.error(f"Message distribution failed for queue {queue_name}")
 
 
-mq_client = RabbitMQConnection()
+mq_client = MessageQueueConnection()

@@ -1,3 +1,4 @@
+# src/main.py
 import contextvars
 import sys
 import uuid
@@ -40,7 +41,7 @@ app.include_router(editor.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống biên dịch DocLib")
+    logger.info("DocLib Compiler initialized successfully")
 
 
 @app.get("/health")

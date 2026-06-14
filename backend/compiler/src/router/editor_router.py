@@ -1,3 +1,4 @@
+# src/router/editor_router.py
 from typing import Any, List, Optional
 
 from core.config import settings
@@ -24,13 +25,13 @@ from src.services.editor_service import EditorService
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
     if current_user.ai_tier.value not in ["PREMIUM"] and current_user.role.value != "admin":
-        raise HTTPException(status_code=403, detail="Tính năng AI này chỉ dành cho gói Cao cấp")
+        raise HTTPException(status_code=403, detail="Premium AI features require a premium subscription")
     return current_user
 
-router = APIRouter(prefix="/soan-thao")
+router = APIRouter(prefix="/editor")
 
 
-@router.post("/{document_id}/kiem-tra-dao-van")
+@router.post("/{document_id}/plagiarism-check")
 async def check_plagiarism(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -40,12 +41,12 @@ async def check_plagiarism(
         "data": await EditorService.check_deep_plagiarism(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Đã hoàn tất kiểm tra đạo văn",
+        "message": "Plagiarism check completed successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/dong-bo")
+@router.post("/{document_id}/sync")
 async def sync_keystroke_buffer(
     document_id: str,
     payload: KeystrokeSyncRequest,
@@ -55,12 +56,12 @@ async def sync_keystroke_buffer(
         "data": await EditorService.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Đã đồng bộ thao tác gõ phím",
+        "message": "Keystroke buffer synchronized",
         "status": 200,
     }
 
 
-@router.post("/tai-lieu/{document_id}/goi-y")
+@router.post("/{document_id}/suggestions")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -70,12 +71,12 @@ async def add_inline_suggestion(
         "data": await EditorService.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Đã thêm đề xuất chỉnh sửa",
+        "message": "Inline suggestion added successfully",
         "status": 201,
     }
 
 
-@router.put("/goi-y/{suggestion_id}/giai-quyet")
+@router.put("/suggestions/{suggestion_id}/resolve")
 async def resolve_suggestion(
     suggestion_id: str,
     payload: ResolveSuggestionRequest,
@@ -85,7 +86,7 @@ async def resolve_suggestion(
         "data": await EditorService.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
-        "message": "Đã xử lý xong đề xuất chỉnh sửa",
+        "message": "Inline suggestion resolved",
         "status": 200,
     }
 
@@ -98,12 +99,12 @@ async def sync_pomodoro_session(
         "data": await EditorService.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
-        "message": "Đã lưu phiên làm việc Pomodoro",
+        "message": "Pomodoro session synced successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/tu-dong-luu")
+@router.post("/{document_id}/auto-save")
 async def auto_save_draft(
     document_id: str, payload: AutoSaveRequest, current_user=Depends(get_current_user)
 ):
@@ -111,21 +112,21 @@ async def auto_save_draft(
         "data": await EditorService.auto_save_draft(
             document_id, payload.content, current_user
         ),
-        "message": "Đã tự động lưu bản nháp",
+        "message": "Draft saved automatically",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/gui-kiem-duyet")
+@router.post("/{document_id}/submit-review")
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.submit_for_review(document_id, current_user),
-        "message": "Đã gửi tài liệu để chờ xét duyệt",
+        "message": "Document submitted for review",
         "status": 201,
     }
 
 
-@router.post("/{document_id}/tim-kiem-va-thay-the")
+@router.post("/{document_id}/find-replace")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -139,12 +140,12 @@ async def global_find_replace(
             payload.match_case,
             current_user,
         ),
-        "message": "Đã thay thế từ khóa trên toàn bộ tài liệu",
+        "message": "Global find and replace completed",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/goi-y-ai")
+@router.post("/{document_id}/ai-suggestions")
 async def get_ai_suggestions(
     document_id: str,
     payload: AISuggestionRequest,
@@ -155,12 +156,12 @@ async def get_ai_suggestions(
         "data": await EditorService.get_ai_suggestions(
             document_id, payload.context, current_user, agentic_ai_url
         ),
-        "message": "Đã tải gợi ý từ AI",
+        "message": "AI suggestions retrieved successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/tom-tat")
+@router.post("/{document_id}/summarize")
 async def summarize_document(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -170,12 +171,12 @@ async def summarize_document(
         "data": await EditorService.summarize_document(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Đã tóm tắt xong tài liệu",
+        "message": "Document summarized successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/phan-tich-the")
+@router.post("/{document_id}/extract-tags")
 async def extract_smart_tags(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -185,12 +186,12 @@ async def extract_smart_tags(
         "data": await EditorService.extract_smart_tags(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Đã phân tích và gắn thẻ tự động",
+        "message": "Smart tags extracted successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/kiem-tra-logic")
+@router.post("/{document_id}/check-logic")
 async def check_logic(
     document_id: str,
     payload: dict,
@@ -201,12 +202,12 @@ async def check_logic(
         "data": await EditorService.check_logic(
             document_id, payload.get("content", ""), current_user, agentic_ai_url
         ),
-        "message": "Đã kiểm tra tính nhất quán",
+        "message": "Logic check completed successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/kiem-tra-ngu-phap")
+@router.post("/{document_id}/check-grammar")
 async def check_grammar(
     document_id: str,
     current_user=Depends(require_premium_ai),
@@ -216,12 +217,12 @@ async def check_grammar(
         "data": await EditorService.check_grammar(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Đã kiểm tra ngữ pháp",
+        "message": "Grammar check completed successfully",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/binh-luan")
+@router.post("/{document_id}/comments")
 async def add_inline_comment(
     document_id: str,
     payload: InlineCommentRequest,
@@ -231,30 +232,30 @@ async def add_inline_comment(
         "data": await EditorService.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Đã thêm nhận xét",
+        "message": "Inline comment added successfully",
         "status": 200,
     }
 
 
-@router.get("/{document_id}/binh-luan")
+@router.get("/{document_id}/comments")
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.get_inline_comments(document_id, current_user),
-        "message": "Đã tải danh sách nhận xét",
+        "message": "Inline comments retrieved successfully",
         "status": 200,
     }
 
 
-@router.put("/binh-luan/{comment_id}/giai-quyet")
+@router.put("/comments/{comment_id}/resolve")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),
-        "message": "Đã xử lý nhận xét",
+        "message": "Inline comment resolved",
         "status": 200,
     }
 
 
-@router.post("/{document_id}/so-sanh-phien-ban")
+@router.post("/{document_id}/compare-versions")
 async def get_version_diff(
     document_id: str,
     payload: VersionDiffRequest,
@@ -264,6 +265,6 @@ async def get_version_diff(
         "data": await EditorService.get_version_diff(
             document_id, payload.version_id_a, payload.version_id_b, current_user
         ),
-        "message": "Đã tải dữ liệu so sánh phiên bản",
+        "message": "Version comparison retrieved successfully",
         "status": 200,
     }

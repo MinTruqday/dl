@@ -42,7 +42,7 @@ app.include_router(monetization_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống tài chính DocLib")
+    logger.info("Finance subsystem initialized successfully")
 
 
 @app.get("/trang-thai")

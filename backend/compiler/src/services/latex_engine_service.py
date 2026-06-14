@@ -30,7 +30,7 @@ class LatexEngine:
             if re.search(pattern, content):
                 raise Exception(
                     {
-                        "error": "Bảo mật: Mã LaTeX chứa các tập lệnh đọc file hoặc ghi file không được phép"
+                        "error": "LaTeX code contains unauthorized commands"
                     }
                 )
 
@@ -92,7 +92,7 @@ class LatexEngine:
 
                 raise Exception(
                     {
-                        "error": "Lỗi biên dịch LaTeX",
+                        "error": "LaTeX compilation failed",
                         "logs": log_content[-2048:],
                         "parsed_errors": parsed_errors,
                     }
@@ -106,15 +106,15 @@ class LatexEngine:
                 try:
                     process.kill()
                 except Exception as e:
-                    logger.warning("Lỗi dừng tiến trình biên dịch")
-            raise Exception("Lỗi biên dịch LaTeX quá thời gian")
+                    logger.warning("Failed to terminate compilation process")
+            raise Exception("LaTeX compilation timed out")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning("Lỗi dọn dẹp tệp tạm {filepath}")
+                    logger.warning(f"Failed to clean up temporary file: {filepath}")
 
     @staticmethod
     async def export_to_format(content: str, target_format: str) -> bytes:
@@ -140,7 +140,7 @@ class LatexEngine:
             )
 
             if not os.path.exists(out_path):
-                raise Exception("Lỗi chuyển đổi định dạng tài liệu")
+                raise Exception("Failed to convert document format")
 
             with open(out_path, "rb") as f:
                 return f.read()
@@ -149,7 +149,7 @@ class LatexEngine:
                 try:
                     os.remove(filepath)
                 except Exception as e:
-                    logger.warning("Lỗi dọn dẹp tệp tạm {filepath}")
+                    logger.warning(f"Failed to clean up temporary file: {filepath}")
 
     @staticmethod
     def format_latex(content: str) -> dict:

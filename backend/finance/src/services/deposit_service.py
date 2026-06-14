@@ -28,7 +28,7 @@ class DepositService:
     async def create_deposit_link(req, current_user, db=None):
         if req.amount < 1000:
             raise HTTPException(
-                status_code=400, detail="Số tiền nạp tối thiểu là 1,000 VNĐ"
+                status_code=400, detail="The minimum deposit amount is 1,000 VND"
             )
 
         if db is None:
@@ -62,7 +62,7 @@ class DepositService:
             "description": description,
             "items": [
                 {
-                    "name": f"Nạp {req.amount} VNĐ vào ví DocLib",
+                    "name": f"Deposit {req.amount} VND into wallet",
                     "quantity": 1,
                     "price": req.amount,
                 }
@@ -111,13 +111,13 @@ class DepositService:
                 )
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
-                logger.error("Lỗi tạo liên kết từ cổng thanh toán")
+                logger.error("Failed to generate payment link")
                 await db["orders"].update_one(
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )
                 raise HTTPException(
                     status_code=400,
-                    detail=res_data.get("desc", "Lỗi khởi tạo từ cổng thanh toán"),
+                    detail=res_data.get("desc", "Failed to initialize payment gateway"),
                 )
         except HTTPException:
             raise
@@ -125,15 +125,15 @@ class DepositService:
             await db["orders"].update_one(
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
-            logger.exception("Lỗi kết nối cổng thanh toán")
+            logger.exception("Failed to connect to the payment gateway")
             raise HTTPException(
-                status_code=500, detail="Lỗi kết nối hệ thống thanh toán"
+                status_code=500, detail="Payment gateway connection failed"
             )
 
     @staticmethod
     async def deposit_webhook(request, db=None):
         data = await request.json()
-        logger.info("Nhận thông báo từ cổng thanh toán")
+        logger.info("Received notification from payment gateway")
         if data.get("code") == "00" and data.get("data"):
             webhook_data = data["data"]
             order_code = webhook_data.get("orderCode")
@@ -147,18 +147,18 @@ class DepositService:
             try:
                 received_signature = data.get("signature", "")
                 if not received_signature:
-                    logger.warning("Thông báo thiếu chữ ký xác thực")
+                    logger.warning("Missing authentication signature in notification")
                     raise HTTPException(
-                        status_code=400, detail="Thiếu chữ ký số xác thực"
+                        status_code=400, detail="Missing digital signature for authentication"
                     )
 
                 expected_signature = DepositService._generate_payos_signature(
                     signature_data
                 )
                 if received_signature != expected_signature:
-                    logger.warning("Chữ ký xác thực không khớp")
+                    logger.warning("Authentication signature mismatch")
                     raise HTTPException(
-                        status_code=400, detail="Chữ ký số không hợp lệ"
+                        status_code=400, detail="Invalid digital signature"
                     )
 
                 paid_amount = webhook_data.get("amount", 0)
@@ -166,7 +166,7 @@ class DepositService:
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception("Lỗi xử lý thông báo từ cổng thanh toán")
+                logger.exception("Failed to process payment gateway notification")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -180,10 +180,10 @@ class DepositService:
 
         order = await db["orders"].find_one({"order_code": order_code})
         if not order:
-            raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified transaction could not be found")
         if order.get("user_id") != str(current_user.id):
             raise HTTPException(
-                status_code=403, detail="Không có quyền truy cập đơn hàng này"
+                status_code=403, detail="You do not have permission to view this transaction"
             )
 
         if getattr(db_client, "redis", None):
@@ -195,12 +195,12 @@ class DepositService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Tra cứu quá thường xuyên thử lại sau 1 phút",
+                        detail="Too many requests. Please try again in 1 minute",
                     )
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception("Lỗi giới hạn truy cập bộ đệm")
+                logger.exception("Rate limit exceeded. Please try again later")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -228,14 +228,14 @@ class DepositService:
                 }
             else:
                 raise HTTPException(
-                    status_code=400, detail="Lỗi kiểm tra trạng thái thanh toán"
+                    status_code=400, detail="Failed to verify payment status"
                 )
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception("Lỗi xác minh giao dịch")
+            logger.exception("Failed to verify transaction")
             raise HTTPException(
-                status_code=500, detail="Lỗi kiểm tra trạng thái thanh toán"
+                status_code=500, detail="Failed to verify payment status"
             )
 
     @staticmethod
@@ -259,7 +259,7 @@ class DepositService:
             {"order_code": order_code, "status": {"$in": ["INIT", "pending"]}}
         )
         if not order:
-            logger.warning(f"Đơn hàng {order_code} không tồn tại hoặc đã xử lý")
+            logger.warning(f"Order {order_code} could not be found or has already been processed")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -267,7 +267,7 @@ class DepositService:
 
         if paid_amount is not None and paid_amount < order.get("amount", 0):
             logger.warning(
-                f"Số tiền thanh toán cho đơn hàng {order_code} là {paid_amount} chưa đủ yêu cầu"
+                f"Payment amount {paid_amount} for order {order_code} is insufficient"
             )
             if should_close_session:
                 await session.abort_transaction()
@@ -291,7 +291,7 @@ class DepositService:
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.warning(f"Không thể cập nhật trạng thái đơn hàng {order_code}")
+                logger.warning(f"Failed to update the status of order {order_code}")
                 return
             await wallets.update_one(
                 {"_id": user_id},
@@ -303,7 +303,7 @@ class DepositService:
                 user_id=user_id,
                 type=TransactionType.TOPUP,
                 amount=dl_to_add,
-                note=f"Nạp tiền qua payOS: {order['amount']} VNĐ",
+                note=f"Deposit via payOS: {order['amount']} VND",
             )
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
 
@@ -320,22 +320,22 @@ class DepositService:
                             f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                             json={
                                 "target_user_id": user_id,
-                                "title": "Nạp tiền thành công",
-                                "body": f"Tài khoản vừa được cộng thêm {dl_to_add} dl",
+                                "title": "Deposit processed successfully",
+                                "body": f"Account credited with {dl_to_add} dl",
                                 "type": "topup",
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
-                logger.warning("Lỗi gửi thông báo")
+                logger.warning("Failed to dispatch notification")
             logger.info(
-                f"Cộng thêm {dl_to_add} dl cho người dùng {user_id} từ đơn hàng {order_code}"
+                f"Credited {dl_to_add} dl to user {user_id} for order {order_code}"
             )
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f"Lỗi xử lý đơn hàng {order_code}")
-            raise HTTPException(status_code=500, detail="Lỗi hệ thống tạm thời")
+            logger.exception(f"Failed to process order {order_code}")
+            raise HTTPException(status_code=500, detail="Service temporarily unavailable")
         finally:
             if should_close_session:
                 await session.end_session()

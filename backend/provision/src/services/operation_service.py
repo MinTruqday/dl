@@ -498,7 +498,7 @@ class OperationService:
                 if resp.status_code == 200:
                     return resp.json().get("data", [])
         except Exception as e:
-            logger.error("Failed to retrieve withdrawal queue from finance service")
+            logger.error("Failed to retrieve withdrawal queue from billing subsystem")
         return []
 
     @staticmethod
@@ -522,7 +522,7 @@ class OperationService:
             logger.error(f"Failed to approve withdrawal {withdrawal_id}")
         return {
             "status": "error",
-            "message": "Unable to connect to the finance service",
+            "message": "The transaction cannot be processed at this time. Please try again later.",
         }
 
     @staticmethod
@@ -548,5 +548,5 @@ class OperationService:
             logger.error(f"Failed to reject withdrawal {withdrawal_id}")
         return {
             "status": "error",
-            "message": "Unable to connect to the finance service",
+            "message": "The transaction cannot be processed at this time. Please try again later.",
         }

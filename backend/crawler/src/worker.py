@@ -96,10 +96,6 @@ async def run_worker():
     )
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
-    logger.info(
-        "DocLib collection system successfully started listening for RabbitMQ signals"
-    )
-
     stop_event = asyncio.Event()
 
     def signal_handler():

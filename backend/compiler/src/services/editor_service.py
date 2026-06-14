@@ -20,9 +20,9 @@ class EditorService:
         content: str, format_type: str, compiler_url: str = settings.COMPILER_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
+            raise HTTPException(status_code=400, detail="Document content is empty")
         try:
-            url = f"{compiler_url}/xuat/{format_type}"
+            url = f"{compiler_url}/export/{format_type}"
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
@@ -31,43 +31,43 @@ class EditorService:
                 )
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail=f"Lỗi xuất tệp {format_type}"
+                        status_code=422, detail=f"Failed to export file format: {format_type}"
                     )
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(
-                status_code=408, detail=f"Lỗi quá thời gian xuất tệp {format_type}"
+                status_code=408, detail=f"Export process timed out for format: {format_type}"
             )
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Lỗi xuất tệp {format_type}")
-            raise HTTPException(status_code=500, detail="Lỗi xuất tài liệu")
+            logger.error(f"Document export failed for format: {format_type}")
+            raise HTTPException(status_code=500, detail="Document export failed")
 
     @staticmethod
     async def compile_editorjs_to_pdf(
         content: str, compiler_url: str = settings.COMPILER_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Nội dung tài liệu đang trống")
+            raise HTTPException(status_code=400, detail="Document content is empty")
         try:
-            url = f"{compiler_url}/bien-dich/editorjs/bien-dich"
+            url = f"{compiler_url}/compile"
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail="Lỗi biên dịch tài liệu"
+                        status_code=422, detail="Document compilation failed"
                     )
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail="Lỗi quá thời gian biên dịch")
+            raise HTTPException(status_code=408, detail="Compilation timed out")
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Lỗi biên dịch tài liệu")
-            raise HTTPException(status_code=500, detail="Lỗi biên dịch tài liệu")
+            logger.error("Document compilation failed")
+            raise HTTPException(status_code=500, detail="Document compilation failed")
 
     @staticmethod
     async def sync_keystroke_buffer(
@@ -84,7 +84,7 @@ class EditorService:
                 )
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
         except Exception as e:
-            logger.error("Lỗi đồng bộ thao tác")
+            logger.error("Failed to synchronize keystrokes")
             return {"status": "sync_failed", "error": str(e)}
 
     @staticmethod
@@ -104,9 +104,9 @@ class EditorService:
             }
         )
         logger.info(
-            f"Người dùng {user_id} vừa thêm gợi ý chỉnh sửa cho tài liệu {document_id}"
+            f"User {user_id} added an inline suggestion to document {document_id}"
         )
-        return {"message": "Đã thêm gợi ý chỉnh sửa"}
+        return {"message": "Inline suggestion added successfully"}
 
     @staticmethod
     async def resolve_suggestion(
@@ -117,7 +117,7 @@ class EditorService:
             {"_id": ObjectId(suggestion_id)}
         )
         if not sug:
-            raise HTTPException(status_code=404, detail="Không tìm thấy gợi ý")
+            raise HTTPException(status_code=404, detail="Suggestion not found")
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": sug["document_id"]}
         )
@@ -127,24 +127,23 @@ class EditorService:
             and sug.get("reviewer_id") != user_id
         ):
             raise HTTPException(
-                status_code=403, detail="Bạn không có quyền xử lý gợi ý này"
+                status_code=403, detail="You do not have permission to resolve this suggestion"
             )
 
+        action = payload.get("action", "rejected")
         await RepositoryFactory.get("editor_suggestions").update_one(
             {"_id": ObjectId(suggestion_id)},
             {
                 "$set": {
-                    "status": payload.get("action", "rejected"),
+                    "status": action,
                     "resolved_at": datetime.now(timezone.utc),
                 }
             },
         )
         logger.info(
-            f"Người dùng {user_id} đã giải quyết xong gợi ý chỉnh sửa {suggestion_id}"
+            f"User {user_id} resolved suggestion {suggestion_id}"
         )
-        action_map = {"accepted": "chấp nhận", "rejected": "từ chối"}
-        action_vn = action_map.get(payload.get("action"), payload.get("action"))
-        return {"message": f"Đã {action_vn} gợi ý"}
+        return {"message": f"Suggestion {action} successfully"}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
@@ -158,7 +157,7 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"Đã ghi nhận một phiên học Pomodoro cho người dùng {user_id}")
+        logger.info(f"Pomodoro session recorded for user {user_id}")
         return {"status": "recorded"}
 
     @staticmethod
@@ -205,7 +204,7 @@ class EditorService:
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
         except Exception as e:
-            logger.error("Lỗi phân tích bản nháp tài liệu {document_id}")
+            logger.error(f"Failed to parse document draft: {document_id}")
 
         reading_time_minutes = max(1, words // 200)
         await RepositoryFactory.get("documents").update_one(
@@ -223,7 +222,7 @@ class EditorService:
             },
         )
         return {
-            "message": "Đã tự động lưu bản nháp",
+            "message": "Draft saved automatically",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
@@ -235,9 +234,9 @@ class EditorService:
             {"$set": {"editor_review_status": "pending_review"}},
         )
         logger.info(
-            f"Tài liệu {document_id} đã được gửi để chờ phê duyệt bởi {user_id}"
+            f"Document {document_id} submitted for review by user {user_id}"
         )
-        return {"message": "Đã gửi tài liệu để kiểm duyệt"}
+        return {"message": "Document submitted for review"}
 
     @staticmethod
     async def global_find_replace(
@@ -257,7 +256,7 @@ class EditorService:
         if not document:
             raise HTTPException(
                 status_code=403,
-                detail="Không có quyền thao tác hoặc tài liệu không tồn tại",
+                detail="Permission denied or document not found",
             )
 
         flags = 0 if match_case else re.IGNORECASE
@@ -299,15 +298,15 @@ class EditorService:
                 "document_id": str(document_id),
                 "author_id": user_id,
                 "action": "GLOBAL_REPLACE",
-                "details": "Replaced '{search_term}' with '{replace_term}'",
+                "details": f"Replaced '{search_term}' with '{replace_term}'",
                 "created_at": datetime.now(timezone.utc),
             }
         )
         logger.info(
-            f"Người dùng {user_id} vừa thực hiện tìm kiếm và thay thế trên toàn bộ tài liệu {document_id}"
+            f"User {user_id} performed global find and replace on document {document_id}"
         )
         return {
-            "message": "Đã thay thế nội dung toàn cục",
+            "message": "Global replacement completed successfully",
             "affected_fields": ["title", "description", "content"],
         }
 
@@ -327,7 +326,7 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {"suggestions": resp.json().get("result", "")}
-        return {"suggestions": "Lỗi gợi ý AI"}
+        return {"suggestions": "AI suggestion failed"}
 
     @staticmethod
     async def summarize_document(
@@ -335,7 +334,7 @@ class EditorService:
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document not found")
         content = doc.get("draft_content") or doc.get("content", "")
         text = ""
         try:
@@ -350,7 +349,7 @@ class EditorService:
         except:
             text = str(content)
         if len(text.split()) < 20:
-            raise HTTPException(status_code=400, detail="Văn bản quá ngắn để tóm tắt")
+            raise HTTPException(status_code=400, detail="Document is too short to summarize")
         try:
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
@@ -364,15 +363,15 @@ class EditorService:
                     },
                 )
                 if resp.status_code == 200:
-                    summary = resp.json().get("result", "Đã tóm tắt tài liệu")
+                    summary = resp.json().get("result", "Document summarized")
                     await RepositoryFactory.get("documents").update_one(
                         {"_id": document_id}, {"$set": {"description": summary}}
                     )
                     return {"summary": summary}
         except Exception as e:
-            logger.error("Lỗi tóm tắt tài liệu")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối AI")
-        raise HTTPException(status_code=500, detail="Lỗi tóm tắt tài liệu")
+            logger.error("Document summarization failed")
+            raise HTTPException(status_code=500, detail="AI service connection failed")
+        raise HTTPException(status_code=500, detail="Document summarization failed")
 
     @staticmethod
     async def extract_smart_tags(
@@ -380,7 +379,7 @@ class EditorService:
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document not found")
         content = doc.get("draft_content") or doc.get("content", "")
         text = ""
         try:
@@ -402,7 +401,7 @@ class EditorService:
                     json={
                         "action": "extract_tags",
                         "text": text[:3000],
-                        "context": "Tra ve 5 the (tags) cho van ban nay duoi dang mang JSON",
+                        "context": "Return 5 tags for this text as a JSON array",
                     },
                 )
                 if resp.status_code == 200:
@@ -422,9 +421,9 @@ class EditorService:
                     )
                     return {"tags": tags}
         except Exception as e:
-            logger.error("Lỗi phân tích thẻ")
-            raise HTTPException(status_code=500, detail="Lỗi kết nối AI")
-        raise HTTPException(status_code=500, detail="Lỗi phân tích thẻ")
+            logger.error("Tag extraction failed")
+            raise HTTPException(status_code=500, detail="AI service connection failed")
+        raise HTTPException(status_code=500, detail="Tag extraction failed")
 
     @staticmethod
     async def add_inline_comment(
@@ -443,7 +442,7 @@ class EditorService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("editor_comments").insert_one(comment)
-        return {"_id": comment_id, "message": "Đã thêm nhận xét"}
+        return {"_id": comment_id, "message": "Comment added successfully"}
 
     @staticmethod
     async def get_inline_comments(
@@ -469,7 +468,7 @@ class EditorService:
             {"_id": comment_id}
         )
         if not comment:
-            raise HTTPException(status_code=404, detail="Không tìm thấy bình luận")
+            raise HTTPException(status_code=404, detail="Comment not found")
 
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": comment["document_id"]}
@@ -480,7 +479,7 @@ class EditorService:
             and comment.get("user_id") != str(current_user.id)
         ):
             raise HTTPException(
-                status_code=403, detail="Bạn không có quyền xử lý bình luận này"
+                status_code=403, detail="You do not have permission to resolve this comment"
             )
 
         await RepositoryFactory.get("editor_comments").update_one(
@@ -493,7 +492,7 @@ class EditorService:
                 }
             },
         )
-        return {"message": "Đã xử lý nhận xét"}
+        return {"message": "Comment resolved successfully"}
 
     @staticmethod
     async def get_version_diff(
@@ -507,7 +506,7 @@ class EditorService:
         )
         if not v_a or not v_b:
             raise HTTPException(
-                status_code=404, detail="Không tìm thấy phiên bản để so sánh"
+                status_code=404, detail="Version not found for comparison"
             )
         return {
             "version_a": v_a.get("content"),
@@ -524,24 +523,24 @@ class EditorService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document not found")
         content = str(doc.get("content", ""))
         try:
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
             ) as client:
                 resp = await client.post(
-                    f"{agentic_ai_url}/inference/kiem-tra-dao-van",
+                    f"{agentic_ai_url}/inference/plagiarism-check",
                     json={"text": content[:5000]},
                 )
                 if resp.status_code == 200:
                     return resp.json()
         except Exception as e:
-            logger.error("Lỗi kiểm tra đạo văn")
+            logger.error("Plagiarism check failed")
         return {
             "plagiarism_score": None,
             "status": "error",
-            "message": "Lỗi dịch vụ đạo văn",
+            "message": "Plagiarism service error",
         }
 
     @staticmethod
@@ -572,13 +571,13 @@ class EditorService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="Document not found")
         content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
-                f"{agentic_ai_url}/inference/kiem-tra-ngu-phap",
+                f"{agentic_ai_url}/inference/grammar-check",
                 json={"text": content[:5000]},
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {"corrected_text": "", "score": 0, "message": "Lỗi dịch vụ ngữ pháp"}
+        return {"corrected_text": "", "score": 0, "message": "Grammar service error"}

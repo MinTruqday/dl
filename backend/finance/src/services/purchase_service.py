@@ -18,19 +18,19 @@ class PurchaseService:
 
         tier = tier.upper()
         if tier not in ["PRO", "PREMIUM"]:
-            raise HTTPException(status_code=400, detail="Gói AI không hợp lệ")
+            raise HTTPException(status_code=400, detail="Invalid AI subscription package selected")
 
         price = 750 if tier == "PRO" else 2500
 
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             raise HTTPException(
-                status_code=400, detail=f"Số dư không đủ cần {price} dl"
+                status_code=400, detail=f"Insufficient balance. Required: {price} dl"
             )
 
         if current_user.ai_tier.value == tier:
             raise HTTPException(
-                status_code=400, detail=f"Bạn đang sử dụng gói {tier} rồi"
+                status_code=400, detail=f"You are already subscribed to the {tier} plan"
             )
 
         session = await db_client.mongodb.start_session()
@@ -44,7 +44,7 @@ class PurchaseService:
             if deduct_result.modified_count == 0:
                 await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail=f"Số dư không đủ cần {price} dl"
+                    status_code=400, detail=f"Insufficient balance. Required: {price} dl"
                 )
 
             await db["users"].update_one(
@@ -57,7 +57,7 @@ class PurchaseService:
                 user_id=str(current_user.id),
                 type=TransactionType.WITHDRAW,
                 amount=-price,
-                note=f"Nâng cấp gói AI: {tier}",
+                note=f"AI plan upgrade: {tier}",
             )
             await db["transactions"].insert_one(
                 tx.model_dump(by_alias=True), session=session
@@ -66,7 +66,7 @@ class PurchaseService:
             await session.commit_transaction()
 
             return {
-                "message": f"Đã nâng cấp lên gói {tier} thành công",
+                "message": f"Successfully upgraded to the {tier} plan",
                 "status": "success",
                 "tier": tier,
             }
@@ -74,8 +74,8 @@ class PurchaseService:
             raise
         except Exception:
             await session.abort_transaction()
-            logger.error("Lỗi nâng cấp gói AI")
-            raise HTTPException(status_code=500, detail="Giao dịch thất bại")
+            logger.error("Failed to upgrade AI plan")
+            raise HTTPException(status_code=500, detail="The transaction failed to process")
         finally:
             await session.end_session()
 
@@ -97,20 +97,20 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="The requested document could not be found")
         price = doc.get("price_dl", doc.get("price_dls", 0))
         if price <= 0:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            return {"message": "Tài liệu được cung cấp miễn phí", "status": "free"}
+            return {"message": "This document is available for free", "status": "free"}
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail=f"Số dư không đủ cần {price} dl"
+                status_code=400, detail=f"Insufficient balance. Required: {price} dl"
             )
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
@@ -130,7 +130,7 @@ class PurchaseService:
             if existing:
                 if should_close_session:
                     await session.abort_transaction()
-                return {"message": "Tài liệu đã được sở hữu", "status": "owned"}
+                return {"message": "You already own this document", "status": "owned"}
             author_id = doc.get("author_id")
 
             try:
@@ -143,7 +143,7 @@ class PurchaseService:
                     if should_close_session:
                         await session.abort_transaction()
                     raise HTTPException(
-                        status_code=400, detail=f"Số dư không đủ cần {price} dl"
+                        status_code=400, detail=f"Insufficient balance. Required: {price} dl"
                     )
                 if author_id:
                     await db["wallets"].update_one(
@@ -167,13 +167,13 @@ class PurchaseService:
                     user_id=str(current_user.id),
                     type=TransactionType.WITHDRAW,
                     amount=-price,
-                    note=f"Mua tài liệu: {doc.get('title', document_id)}",
+                    note=f"Document purchase: {doc.get('title', document_id)}",
                 )
                 tx_seller = Transaction(
                     user_id=author_id,
                     type=TransactionType.RECEIVE,
                     amount=price,
-                    note=f"Bán tài liệu: {doc.get('title', document_id)}",
+                    note=f"Document sale: {doc.get('title', document_id)}",
                 )
                 await db["transactions"].insert_many(
                     [
@@ -188,13 +188,13 @@ class PurchaseService:
 
                 if author_id:
                     notif_id = str(uuid7())
-                    buyer_name = current_user.full_name or "Độc giả"
+                    buyer_name = current_user.full_name or "Reader"
                     doc_title = doc.get("title", document_id)
                     notification = {
                         "_id": notif_id,
                         "target_user_id": author_id,
-                        "title": "Giao dịch mới",
-                        "body": f"{buyer_name} vừa mua tài liệu '{doc_title}'",
+                        "title": "New transaction recorded",
+                        "body": f"User {buyer_name} purchased document '{doc_title}'",
                         "is_read": False,
                         "type": "purchase",
                         "created_at": datetime.now(timezone.utc),
@@ -218,12 +218,12 @@ class PurchaseService:
                                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
                         except Exception as e:
-                            logger.error("Lỗi gửi thông báo")
+                            logger.error("Failed to dispatch notification")
                 logger.info(
-                    f"Người dùng {current_user.id} mua tài liệu {document_id} với giá {price} dl"
+                    f"User {current_user.id} purchased document {document_id} for {price} dl"
                 )
                 return {
-                    "message": "Thanh toán mua tài liệu thành công",
+                    "message": "Document purchase completed successfully",
                     "status": "purchased",
                 }
             except HTTPException:
@@ -231,8 +231,8 @@ class PurchaseService:
             except Exception as e:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error(f"Giao dịch mua tài liệu của {current_user.id} thất bại")
-                raise HTTPException(status_code=500, detail="Giao dịch thất bại")
+                logger.error(f"Document purchase failed for user {current_user.id}")
+                raise HTTPException(status_code=500, detail="The transaction failed to process")
             finally:
                 if should_close_session:
                     await session.end_session()
@@ -268,7 +268,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="Giao dịch mua không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified purchase record could not be found")
         purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
             purchased_at = datetime.fromisoformat(purchased_at)
@@ -277,7 +277,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Chỉ được hoàn tiền trong vòng 48 giờ"
+                status_code=400, detail="Refunds are only available within 48 hours of purchase"
             )
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
@@ -302,7 +302,7 @@ class PurchaseService:
                         await session.abort_transaction()
                     raise HTTPException(
                         status_code=400,
-                        detail="Không thể hoàn tiền do tác giả đã rút tiền hoặc số dư không đủ",
+                        detail="Refund cannot be processed due to insufficient funds or prior withdrawal",
                     )
 
             await db["purchases"].update_one(
@@ -319,13 +319,13 @@ class PurchaseService:
                 user_id=str(current_user.id),
                 type=TransactionType.REFUND,
                 amount=price,
-                note=f"Hoàn tiền giao dịch: {purchase_id}",
+                note=f"Transaction refund: {purchase_id}",
             )
             tx_refund_seller = Transaction(
                 user_id=author_id,
                 type=TransactionType.REFUND,
                 amount=-price,
-                note=f"Hoàn tiền giao dịch: {purchase_id}",
+                note=f"Transaction refund: {purchase_id}",
             )
             await db["transactions"].insert_many(
                 [
@@ -337,14 +337,14 @@ class PurchaseService:
 
             if should_close_session:
                 await session.commit_transaction()
-            return {"message": "Hoàn tiền thành công", "refunded_amount": price}
+            return {"message": "Refund processed successfully", "refunded_amount": price}
         except HTTPException:
             raise
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Lỗi hoàn tiền")
-            raise HTTPException(status_code=500, detail="Hoàn tiền thất bại")
+            logger.error("Refund processing error")
+            raise HTTPException(status_code=500, detail="Failed to process the refund request")
         finally:
             if should_close_session:
                 await session.end_session()
