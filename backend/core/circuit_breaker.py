@@ -15,7 +15,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Hệ thống bảo vệ bị ngắt do lỗi liên tục")
+            logger.error("Circuit breaker tripped due to consecutive failures")
 
     def record_success(self):
         self._failures = 0

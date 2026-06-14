@@ -24,7 +24,7 @@ async def init_db():
     rabbitmq_uri = settings.RABBITMQ_URI
 
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
-        logger.error("Thiếu cấu hình kết nối MONGODB_URI, REDIS_URI hoặc RABBITMQ_URI")
+        logger.error("Missing required connection configurations")
         import sys
 
         sys.exit(1)
@@ -43,15 +43,15 @@ async def init_db():
                 if "@" in parsed_uri.netloc
                 else parsed_uri.netloc
             )
-            logger.info("Đang khởi tạo cụm máy chủ cơ sở dữ liệu")
+            logger.info("Initializing database cluster")
             await db_client.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
-            logger.info("Khởi tạo cụm máy chủ cơ sở dữ liệu thành công")
+            logger.info("Database cluster initialized successfully")
             await asyncio.sleep(3)
         except Exception as e:
-            logger.warning("Khởi tạo cụm máy chủ thất bại")
+            logger.warning("Failed to initialize database cluster")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -59,13 +59,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Kết nối hệ thống hàng đợi thành công")
+            logger.info("Message queue connection established successfully")
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error(f"Lỗi kết nối hệ thống hàng đợi sau {max_retries} lần")
+                logger.error(f"Failed to connect to message queue after {max_retries} attempts")
                 raise e
-            logger.warning(f"Lỗi kết nối hệ thống hàng đợi lần {i+1}")
+            logger.warning(f"Message queue connection attempt {i+1} failed")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -155,9 +155,9 @@ async def setup_indexes():
             [("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True
         )
 
-        logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
+        logger.info("Database indexes initialized successfully")
     except Exception as e:
-        logger.error("Lỗi tạo chỉ mục cơ sở dữ liệu")
+        logger.error("Failed to initialize database indexes")
 
 
 async def close_db():
