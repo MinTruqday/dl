@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from src.schemas.notification_schema import NotificationCreate
 from src.services.notification_service import NotificationService
 
-router = APIRouter(prefix="/thong-bao")
+router = APIRouter(prefix="/notifications")
 
 
 @router.get("", response_model=APIResponse[Any])
@@ -21,7 +21,7 @@ async def get_notifications(
         data=await NotificationService.get_notifications(
             str(current_user.id), skip, limit, db
         ),
-        message="Đã tải danh sách thông báo",
+        message="Notifications retrieved successfully",
     )
 
 
@@ -33,17 +33,17 @@ async def mark_as_read(
 ):
     return APIResponse(
         data=await NotificationService.mark_as_read(notif_id, str(current_user.id), db),
-        message="Đã đánh dấu đã xem",
+        message="Notification marked as read",
     )
 
 
-@router.patch("/doc-tat-ca", response_model=APIResponse[Any])
+@router.patch("/read-all", response_model=APIResponse[Any])
 async def mark_all_as_read(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await NotificationService.mark_all_as_read(str(current_user.id), db),
-        message="Đã đánh dấu xem tất cả",
+        message="All notifications marked as read",
     )
 
 
@@ -57,14 +57,14 @@ async def delete_notification(
         data=await NotificationService.delete_notification(
             notif_id, str(current_user.id), db
         ),
-        message="Đã xóa thông báo",
+        message="Notification removed successfully",
     )
 
 
-@router.post("/kich-hoat", response_model=APIResponse[Any], include_in_schema=False)
+@router.post("/dispatch", response_model=APIResponse[Any], include_in_schema=False)
 async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(
         data=await NotificationService.create_notification(data, db),
-        message="Đã tạo thông báo",
+        message="Notification dispatched successfully",
         status=201,
     )

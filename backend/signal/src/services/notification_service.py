@@ -38,7 +38,7 @@ class NotificationService:
         )
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Thông báo không tồn tại"
+                status_code=status.HTTP_404_NOT_FOUND, detail="The requested notification could not be found"
             )
         return {"id": notif_id}
 
@@ -56,7 +56,7 @@ class NotificationService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Thông báo không tồn tại"
+                status_code=status.HTTP_404_NOT_FOUND, detail="The requested notification could not be found"
             )
         return {"id": notif_id}
 
@@ -82,5 +82,5 @@ class NotificationService:
                     json.dumps({"title": data.title, "body": data.body}),
                 )
             except Exception as e:
-                logger.error("Lỗi gửi thông báo")
+                logger.error("Failed to broadcast notification to the user")
         return {"id": notif_id}

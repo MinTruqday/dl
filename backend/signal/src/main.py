@@ -34,9 +34,9 @@ app.include_router(notification_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống thông báo DocLib")
+    logger.info("DocLib Signal initialized successfully")
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "signal"}
