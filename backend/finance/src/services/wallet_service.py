@@ -34,12 +34,12 @@ class WalletService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Too many attempts. Please try again after 5 minutes",
+                        detail="The system has temporarily restricted your access due to excessive attempts so please wait for five minutes before trying again"
                     )
             except HTTPException:
                 raise
-            except Exception as e:
-                logger.exception("Cache rate limit access error")
+            except Exception:
+                logger.error("The system encountered a cache access error while attempting to verify rate limits")
 
         if db_client.redis:
             try:
@@ -49,13 +49,13 @@ class WalletService:
                 if not is_locked:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Coupon redemption is currently in progress",
+                        detail="The coupon redemption process is currently actively being handled by another transaction"
                     )
             except HTTPException:
                 raise
-            except Exception as e:
-                logger.exception("Cache session locking error")
-                raise HTTPException(status_code=500, detail="Cache connection error")
+            except Exception:
+                logger.error("The system failed to acquire a secure session lock in the caching layer")
+                raise HTTPException(status_code=500, detail="The system encountered an internal caching connectivity issue and could not proceed")
 
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -75,12 +75,12 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=404, detail="Invalid or non-existent coupon code"
+                    status_code=404, detail="The provided promotional code is either invalid or does not exist within the current campaign records"
                 )
             if coupon.get("is_used"):
                 if should_close_session:
                     await session.abort_transaction()
-                raise HTTPException(status_code=400, detail="Coupon code has already been redeemed")
+                raise HTTPException(status_code=400, detail="The submitted promotional code has already been successfully redeemed and cannot be used again")
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
             result = await WalletRepository.mark_coupon_as_used(
@@ -90,7 +90,7 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Coupon code has already been redeemed by another user"
+                    status_code=400, detail="The submitted promotional code has reached its maximum redemption capacity or was claimed by another account"
                 )
 
             await WalletRepository.increment_balance(
@@ -100,7 +100,7 @@ class WalletService:
                 user_id=str(current_user.id),
                 type=TransactionType.TOPUP,
                 amount=bonus_dl,
-                note=f"Coupon redeemed: {req.code}",
+                note="Promotional coupon successfully redeemed and credited",
             )
             await WalletRepository.insert_transaction(
                 tx.model_dump(by_alias=True), db=db, session=session
@@ -119,37 +119,37 @@ class WalletService:
                             f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                             json={
                                 "target_user_id": str(current_user.id),
-                                "title": "Deposit Successful",
-                                "body": f"Your account has been credited with {bonus_dl} dl",
+                                "title": "Deposit transaction completed",
+                                "body": "Your digital wallet has been successfully credited with the requested bonus balance",
                                 "type": "topup",
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
-            except Exception as e:
-                logger.warning("Failed to send notification")
+            except Exception:
+                logger.warning("The system encountered a minor disruption while attempting to dispatch the success notification")
             logger.info(
-                f"User {current_user.id} redeemed coupon {req.code} for {bonus_dl} dl"
+                "The authenticated user has successfully redeemed the promotional code for the allocated digital balance"
             )
             return {
-                "message": "Coupon redeemed successfully",
+                "message": "The promotional coupon has been successfully redeemed and the bonus balance has been credited",
                 "bonus_dl": bonus_dl,
                 "status": "success",
             }
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Coupon redemption error")
-            raise HTTPException(status_code=500, detail="System under maintenance. Please try again later")
+            logger.error("The system encountered an unexpected structural error during the coupon redemption sequence")
+            raise HTTPException(status_code=500, detail="The financial service is currently undergoing routine maintenance so please attempt your transaction again later")
         finally:
             if should_close_session:
                 await session.end_session()
             if db_client.redis and is_locked:
                 try:
                     await db_client.redis.delete(lock_key)
-                except Exception as e:
-                    logger.error("Cache session unlock error")
+                except Exception:
+                    logger.error("The system encountered a minor issue while releasing the secure session lock")
 
     @staticmethod
     async def get_history(
@@ -172,8 +172,8 @@ class WalletService:
                 query["created_at"] = {
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
-            except Exception as e:
-                logger.warning("Invalid pagination cursor format")
+            except Exception:
+                logger.warning("The pagination process was interrupted because the provided cursor value was incorrectly formatted")
         txs = await WalletRepository.get_transactions(
             query, skip=skip, limit=limit, db=db
         )
@@ -183,7 +183,6 @@ class WalletService:
             "receive": "Funds Received",
             "withdraw": "Withdrawal",
             "tip": "Author Tip",
-            "subscription": "Plan Subscription",
             "refund": "Refund",
         }
         for tx in txs:

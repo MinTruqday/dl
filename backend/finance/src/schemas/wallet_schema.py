@@ -13,14 +13,12 @@ class TransactionType(str, Enum):
     RECEIVE = "receive"
     WITHDRAW = "withdraw"
     TIP = "tip"
-    SUBSCRIPTION = "subscription"
     REFUND = "refund"
 
 
 class CouponTargetType(str, Enum):
     ALL = "all"
     NEW_USER = "new_user"
-    SUBSCRIBER = "subscriber"
 
 
 class CouponStatus(str, Enum):
@@ -65,21 +63,9 @@ class RedeemCouponRequest(BaseModel):
     code: str
 
 
-class PlanCreate(BaseModel):
-    name: str
-    description: str
-    price_dl: int
-    benefits: List[str]
-
-
 class DocumentPricingRequest(BaseModel):
     price_dl: int = 0
     is_drm_protected: bool = True
-
-
-class FlashSaleRequest(BaseModel):
-    price: int
-    expires_at: str
 
 
 class TopupRequest(BaseModel):

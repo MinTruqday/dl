@@ -1,29 +1,18 @@
-import contextvars
-import sys
-import uuid
-
-from core.middleware import add_trace_id_header, trace_id_ctx_var, trace_id_filter
-from fastapi import FastAPI, Request
+import uvicorn
+from core.config import settings
+from core.database import close_db, init_db
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-
-logger.remove()
-logger.add(
-    sys.stdout,
-    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | [{extra[trace_id]}] {message}",
-    filter=trace_id_filter,
-    level="INFO",
+from src.router import (
+    coupon_router,
+    deposit_router,
+    monetization_router,
+    wallet_router,
+    withdrawal_router,
 )
 
-from src.router.coupon_router import router as coupon_router
-from src.router.deposit_router import router as deposit_router
-from src.router.wallet_router import router as wallet_router
-from src.router.withdrawal_router import router as withdrawal_router
-from src.router.monetization_router import router as monetization_router
-from core.config import settings
-
 app = FastAPI(title="DocLib Finance", version=settings.VERSION)
-app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,18 +22,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(wallet_router)
-app.include_router(deposit_router)
-app.include_router(withdrawal_router)
-app.include_router(coupon_router)
-app.include_router(monetization_router)
+app.include_router(wallet_router.router)
+app.include_router(deposit_router.router)
+app.include_router(withdrawal_router.router)
+app.include_router(monetization_router.router)
+app.include_router(coupon_router.router)
 
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Finance subsystem initialized successfully")
+    logger.info("The financial processing service has been successfully initialized and is now ready to handle transactions")
+    await init_db()
 
 
-@app.get("/trang-thai")
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_db()
+
+
+@app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "finance"}
+    return {"status": "The financial management service is currently operating normally and functioning as expected without any internal issues"}

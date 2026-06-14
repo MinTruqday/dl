@@ -66,7 +66,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The minimum withdrawal amount is 100,000 dl"
+                status_code=400, detail="The requested withdrawal amount falls below the minimum required processing threshold"
             )
 
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
@@ -74,7 +74,7 @@ class WithdrawalService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=400, detail="Insufficient balance to process the withdrawal")
+            raise HTTPException(status_code=400, detail="The requested withdrawal cannot proceed due to insufficient available funds in the account balance")
 
         now = datetime.now(timezone.utc)
 
@@ -89,8 +89,8 @@ class WithdrawalService:
                 )
                 if resp.status_code == 200:
                     user_info = resp.json().get("data") or {}
-        except Exception as e:
-            logger.warning("Failed to synchronize user account information")
+        except Exception:
+            logger.warning("The system encountered a minor disruption while synchronizing external account profile information")
 
         if user_info.get("last_password_change"):
             last_pw_str = user_info["last_password_change"]
@@ -103,7 +103,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Withdrawals are restricted for 24 hours following a password change",
+                    detail="Financial withdrawals are temporarily restricted for security purposes following a recent password modification",
                 )
 
         if wallet.get("last_bank_update"):
@@ -118,7 +118,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=403,
-                    detail="Withdrawals are restricted for 24 hours following a bank account update",
+                    detail="Financial withdrawals are temporarily restricted for security purposes following a recent update to the linked banking information",
                 )
 
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -152,7 +152,7 @@ class WithdrawalService:
                     await session.abort_transaction()
                     await session.end_session()
                 raise HTTPException(
-                    status_code=429, detail="Maximum daily limit of 3 withdrawal requests exceeded"
+                    status_code=429, detail="The account has exceeded the maximum permissible number of daily withdrawal requests"
                 )
             if stats["total_amount"] + amount > 20000000:
                 if should_close_session:
@@ -160,7 +160,7 @@ class WithdrawalService:
                     await session.end_session()
                 raise HTTPException(
                     status_code=429,
-                    detail="Maximum daily withdrawal limit of 20,000,000 dl exceeded",
+                    detail="The requested amount exceeds the maximum permissible daily withdrawal limit",
                 )
 
         withdrawal_id = str(uuid7())
@@ -174,7 +174,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Insufficient balance to process the withdrawal"
+                    status_code=400, detail="The requested withdrawal cannot proceed due to insufficient available funds in the account balance"
                 )
 
             withdrawal_request = {
@@ -192,7 +192,7 @@ class WithdrawalService:
                 user_id=str(current_user.id),
                 amount=-amount,
                 type=TransactionType.WITHDRAW,
-                note=f"Withdrawal request {withdrawal_id}",
+                note="Funds temporarily reserved for pending withdrawal processing",
                 reference_id=withdrawal_id,
             )
             await db["transactions"].insert_one(
@@ -202,23 +202,20 @@ class WithdrawalService:
             if should_close_session:
                 await session.commit_transaction()
 
-            masked_bank_info = (
-                bank_info[:4] + "***" + bank_info[-3:] if len(bank_info) > 8 else "***"
-            )
             logger.info(
-                f"User {current_user.id} requested withdrawal of {amount} dl to {masked_bank_info}"
+                "The withdrawal request has been successfully registered and the corresponding funds have been securely reserved"
             )
             return {
-                "message": "Withdrawal request received successfully",
+                "message": "The withdrawal request has been successfully submitted and is currently pending processing",
                 "withdrawal_id": withdrawal_id,
             }
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f"Withdrawal request for {current_user.id} failed")
-            raise HTTPException(status_code=500, detail="The service is currently undergoing maintenance")
+            logger.error("An unexpected structural or network failure occurred while attempting to initiate the withdrawal transaction")
+            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the withdrawal request")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -230,7 +227,7 @@ class WithdrawalService:
         normalized_status = status.upper()
         if normalized_status not in ALLOWED_WITHDRAWAL_QUEUE_STATUSES:
             raise HTTPException(
-                status_code=400, detail="Invalid status for the withdrawal request"
+                status_code=400, detail="The requested withdrawal status filter is not recognized by the system"
             )
         pipeline = [
             {"$match": {"status": normalized_status}},
@@ -288,7 +285,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Invalid operation on withdrawal request"
+                status_code=400, detail="The provided administrative action code is not recognized by the transaction verification system"
             )
 
         withdrawal = await db["withdrawal_requests"].find_one({"_id": withdrawal_id})
@@ -297,7 +294,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="The specified withdrawal request could not be found"
+                status_code=404, detail="The system was unable to locate a withdrawal request matching the provided transaction identifier"
             )
 
         if str(current_moderator.id) == withdrawal.get("user_id"):
@@ -305,7 +302,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=403, detail="Self-approval of withdrawal requests is not permitted"
+                status_code=403, detail="Administrative policies restrict accounts from verifying their own withdrawal requests"
             )
 
         current_status = withdrawal.get("status")
@@ -314,7 +311,7 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="The withdrawal request has already been processed"
+                status_code=400, detail="The specified withdrawal request has already been processed by the administrative team and cannot be modified"
             )
 
         status = "APPROVED" if normalized_action == "approve" else "REJECTED"
@@ -335,7 +332,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Failed to update request status"
+                    status_code=400, detail="The database engine encountered an issue while attempting to update the status of the withdrawal request"
                 )
 
             if status == "REJECTED":
@@ -349,7 +346,7 @@ class WithdrawalService:
                     user_id=withdrawal.get("user_id"),
                     amount=withdrawal.get("amount", 0),
                     type=TransactionType.REFUND,
-                    note=f"Refund withdrawal request {withdrawal_id}",
+                    note="Reserved funds refunded due to rejected withdrawal application following administrative review",
                     reference_id=withdrawal_id,
                 )
                 await db["transactions"].insert_one(
@@ -375,16 +372,16 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info(
-                f"Moderator {current_moderator.id} updated withdrawal request {withdrawal_id} status to {status}"
+                "The withdrawal request has been officially verified and its status has been successfully updated"
             )
-            return {"message": f"Withdrawal request status updated to {status.lower()}"}
+            return {"message": "The administrative verification process for the specified withdrawal request has been completed successfully"}
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f"Failed to verify withdrawal request {withdrawal_id}")
-            raise HTTPException(status_code=500, detail="The service is currently undergoing maintenance")
+            logger.error("An unexpected error occurred while attempting to process the verification of the withdrawal request")
+            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the request")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -410,14 +407,14 @@ class WithdrawalService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=404, detail="The specified withdrawal request could not be found"
+                status_code=404, detail="The system was unable to locate a withdrawal request matching the provided transaction identifier"
             )
         if withdrawal.get("status") != "PENDING":
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Only pending requests can be cancelled"
+                status_code=400, detail="The system restricts cancellation operations to withdrawal requests that are currently in a pending state"
             )
 
         try:
@@ -439,7 +436,7 @@ class WithdrawalService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Failed to update request status"
+                    status_code=400, detail="The database engine encountered an issue while attempting to update the status of the withdrawal request"
                 )
 
             await db["wallets"].update_one(
@@ -452,7 +449,7 @@ class WithdrawalService:
                 user_id=str(current_user.id),
                 amount=withdrawal.get("amount", 0),
                 type=TransactionType.TOPUP,
-                note=f"Cancel withdrawal request {withdrawal_id}",
+                note="Reserved funds successfully restored following cancellation of withdrawal request",
                 reference_id=withdrawal_id,
             )
             await db["transactions"].insert_one(
@@ -463,28 +460,16 @@ class WithdrawalService:
                 await session.commit_transaction()
 
             logger.info(
-                f"User {current_user.id} self-cancelled withdrawal request {withdrawal_id}"
+                "The pending withdrawal request has been successfully cancelled by the account owner and funds have been restored"
             )
-            return {"message": "Withdrawal request cancelled successfully"}
+            return {"message": "The pending withdrawal request has been successfully cancelled and the reserved funds have been refunded"}
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f"Failed to cancel withdrawal request {withdrawal_id}")
-            raise HTTPException(status_code=500, detail="The service is currently undergoing maintenance")
+            logger.error("An unexpected system error occurred while attempting to cancel the active withdrawal request")
+            raise HTTPException(status_code=500, detail="The financial service is currently experiencing technical difficulties and cannot process the request")
         finally:
             if should_close_session:
                 await session.end_session()
-
-    @staticmethod
-    async def get_my_withdrawals(current_user, db=None) -> list:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        withdrawals = (
-            await db["withdrawal_requests"]
-            .find({"user_id": str(current_user.id)})
-            .sort("created_at", -1)
-            .to_list(length=100)
-        )
-        return withdrawals

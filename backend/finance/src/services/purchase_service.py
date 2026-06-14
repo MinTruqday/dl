@@ -18,19 +18,24 @@ class PurchaseService:
 
         tier = tier.upper()
         if tier not in ["PRO", "PREMIUM"]:
-            raise HTTPException(status_code=400, detail="Invalid AI subscription package selected")
+            raise HTTPException(
+                status_code=400,
+                detail="The selected membership plan is not recognized. Please choose a valid tier.",
+            )
 
         price = 750 if tier == "PRO" else 2500
+
+        if current_user.ai_tier and current_user.ai_tier.value == tier:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Your account already has an active {tier} membership plan.",
+            )
 
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             raise HTTPException(
-                status_code=400, detail=f"Insufficient balance. Required: {price} dl"
-            )
-
-        if current_user.ai_tier.value == tier:
-            raise HTTPException(
-                status_code=400, detail=f"You are already subscribed to the {tier} plan"
+                status_code=400,
+                detail=f"Insufficient balance. This membership plan requires {price} dl.",
             )
 
         session = await db_client.mongodb.start_session()
@@ -44,7 +49,8 @@ class PurchaseService:
             if deduct_result.modified_count == 0:
                 await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail=f"Insufficient balance. Required: {price} dl"
+                    status_code=400,
+                    detail=f"Insufficient balance. This membership plan requires {price} dl.",
                 )
 
             await db["users"].update_one(
@@ -55,27 +61,29 @@ class PurchaseService:
 
             tx = Transaction(
                 user_id=str(current_user.id),
-                type=TransactionType.WITHDRAW,
+                type=TransactionType.PURCHASE,
                 amount=-price,
-                note=f"AI plan upgrade: {tier}",
+                note=f"Membership upgrade to {tier} plan",
             )
             await db["transactions"].insert_one(
                 tx.model_dump(by_alias=True), session=session
             )
 
             await session.commit_transaction()
-
+            logger.info(f"User {current_user.id} upgraded membership to {tier} tier")
             return {
-                "message": f"Successfully upgraded to the {tier} plan",
-                "status": "success",
                 "tier": tier,
+                "status": "active",
             }
         except HTTPException:
             raise
         except Exception:
             await session.abort_transaction()
-            logger.error("Failed to upgrade AI plan")
-            raise HTTPException(status_code=500, detail="The transaction failed to process")
+            logger.error(f"Membership upgrade failed for user {current_user.id}")
+            raise HTTPException(
+                status_code=500,
+                detail="The membership upgrade could not be completed. Please try again later.",
+            )
         finally:
             await session.end_session()
 
@@ -97,20 +105,20 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="The requested document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located in the primary storage repository")
         price = doc.get("price_dl", doc.get("price_dls", 0))
         if price <= 0:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            return {"message": "This document is available for free", "status": "free"}
+            return {"message": "The specified digital document is currently freely accessible and does not require a financial purchase", "status": "free"}
         wallet = await db["wallets"].find_one({"_id": str(current_user.id)})
         if not wallet or wallet.get("balance", 0) < price:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail=f"Insufficient balance. Required: {price} dl"
+                status_code=400, detail="The transaction cannot proceed due to insufficient funds available in the digital wallet"
             )
         lock = None
         if hasattr(db_client, "redis") and db_client.redis:
@@ -130,7 +138,7 @@ class PurchaseService:
             if existing:
                 if should_close_session:
                     await session.abort_transaction()
-                return {"message": "You already own this document", "status": "owned"}
+                return {"message": "The specified digital document has already been purchased and is accessible in your library", "status": "owned"}
             author_id = doc.get("author_id")
 
             try:
@@ -143,7 +151,7 @@ class PurchaseService:
                     if should_close_session:
                         await session.abort_transaction()
                     raise HTTPException(
-                        status_code=400, detail=f"Insufficient balance. Required: {price} dl"
+                        status_code=400, detail="The transaction cannot proceed due to insufficient funds available in the digital wallet"
                     )
                 if author_id:
                     await db["wallets"].update_one(
@@ -167,20 +175,19 @@ class PurchaseService:
                     user_id=str(current_user.id),
                     type=TransactionType.WITHDRAW,
                     amount=-price,
-                    note=f"Document purchase: {doc.get('title', document_id)}",
+                    note="Payment processed for digital document acquisition",
                 )
                 tx_seller = Transaction(
                     user_id=author_id,
                     type=TransactionType.RECEIVE,
                     amount=price,
-                    note=f"Document sale: {doc.get('title', document_id)}",
+                    note="Revenue earned from the sale of a published digital document",
                 )
-                await db["transactions"].insert_many(
-                    [
-                        tx_buyer.model_dump(by_alias=True),
-                        tx_seller.model_dump(by_alias=True),
-                    ],
-                    session=session,
+                await db["transactions"].insert_one(
+                    tx_buyer.model_dump(by_alias=True), session=session
+                )
+                await db["transactions"].insert_one(
+                    tx_seller.model_dump(by_alias=True), session=session
                 )
 
                 if should_close_session:
@@ -188,13 +195,11 @@ class PurchaseService:
 
                 if author_id:
                     notif_id = str(uuid7())
-                    buyer_name = current_user.full_name or "Reader"
-                    doc_title = doc.get("title", document_id)
                     notification = {
                         "_id": notif_id,
                         "target_user_id": author_id,
                         "title": "New transaction recorded",
-                        "body": f"User {buyer_name} purchased document '{doc_title}'",
+                        "body": "A user has successfully purchased your published document",
                         "is_read": False,
                         "type": "purchase",
                         "created_at": datetime.now(timezone.utc),
@@ -217,22 +222,22 @@ class PurchaseService:
                                         },
                                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                                     )
-                        except Exception as e:
-                            logger.error("Failed to dispatch notification")
+                        except Exception:
+                            logger.error("The system encountered a minor disruption while attempting to dispatch the transaction success notification")
                 logger.info(
-                    f"User {current_user.id} purchased document {document_id} for {price} dl"
+                    "The digital document purchase transaction has been successfully processed and recorded"
                 )
                 return {
-                    "message": "Document purchase completed successfully",
+                    "message": "The digital document purchase transaction has been completed successfully and access has been granted",
                     "status": "purchased",
                 }
             except HTTPException:
                 raise
-            except Exception as e:
+            except Exception:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.error(f"Document purchase failed for user {current_user.id}")
-                raise HTTPException(status_code=500, detail="The transaction failed to process")
+                logger.error("An unexpected disruption occurred while attempting to process the financial transactions for the document purchase")
+                raise HTTPException(status_code=500, detail="The requested financial transaction encountered an internal failure and could not be processed")
             finally:
                 if should_close_session:
                     await session.end_session()
@@ -268,7 +273,7 @@ class PurchaseService:
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
-            raise HTTPException(status_code=404, detail="The specified purchase record could not be found")
+            raise HTTPException(status_code=404, detail="The specified purchase transaction record could not be located within the system")
         purchased_at = purchase.get("purchased_at", datetime.now(timezone.utc))
         if isinstance(purchased_at, str):
             purchased_at = datetime.fromisoformat(purchased_at)
@@ -277,7 +282,7 @@ class PurchaseService:
                 await session.abort_transaction()
                 await session.end_session()
             raise HTTPException(
-                status_code=400, detail="Refunds are only available within 48 hours of purchase"
+                status_code=400, detail="The refund request was rejected because it falls outside the permissible forty eight hour window"
             )
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
@@ -302,7 +307,7 @@ class PurchaseService:
                         await session.abort_transaction()
                     raise HTTPException(
                         status_code=400,
-                        detail="Refund cannot be processed due to insufficient funds or prior withdrawal",
+                        detail="The refund cannot be processed because the author account currently has insufficient funds to reverse the transaction",
                     )
 
             await db["purchases"].update_one(
@@ -319,32 +324,31 @@ class PurchaseService:
                 user_id=str(current_user.id),
                 type=TransactionType.REFUND,
                 amount=price,
-                note=f"Transaction refund: {purchase_id}",
+                note="Refund issued for previously cancelled purchase transaction",
             )
             tx_refund_seller = Transaction(
                 user_id=author_id,
                 type=TransactionType.REFUND,
                 amount=-price,
-                note=f"Transaction refund: {purchase_id}",
+                note="Funds deducted for previously cancelled purchase transaction refund",
             )
-            await db["transactions"].insert_many(
-                [
-                    tx_refund_buyer.model_dump(by_alias=True),
-                    tx_refund_seller.model_dump(by_alias=True),
-                ],
-                session=session,
+            await db["transactions"].insert_one(
+                tx_refund_buyer.model_dump(by_alias=True), session=session
+            )
+            await db["transactions"].insert_one(
+                tx_refund_seller.model_dump(by_alias=True), session=session
             )
 
             if should_close_session:
                 await session.commit_transaction()
-            return {"message": "Refund processed successfully", "refunded_amount": price}
+            return {"message": "The refund request has been successfully processed and the funds have been restored", "refunded_amount": price}
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.error("Refund processing error")
-            raise HTTPException(status_code=500, detail="Failed to process the refund request")
+            logger.error("An unexpected error occurred while attempting to process the refund request and adjust the associated balances")
+            raise HTTPException(status_code=500, detail="The system encountered an internal failure while attempting to process the refund transaction")
         finally:
             if should_close_session:
                 await session.end_session()

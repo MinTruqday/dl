@@ -28,7 +28,7 @@ class DepositService:
     async def create_deposit_link(req, current_user, db=None):
         if req.amount < 1000:
             raise HTTPException(
-                status_code=400, detail="The minimum deposit amount is 1,000 VND"
+                status_code=400, detail="The requested deposit amount falls below the minimum required threshold for processing"
             )
 
         if db is None:
@@ -62,7 +62,7 @@ class DepositService:
             "description": description,
             "items": [
                 {
-                    "name": f"Deposit {req.amount} VND into wallet",
+                    "name": "Deposit transaction into digital wallet",
                     "quantity": 1,
                     "price": req.amount,
                 }
@@ -111,29 +111,29 @@ class DepositService:
                 )
                 return {"checkout_url": checkout_url, "order_code": order_code}
             else:
-                logger.error("Failed to generate payment link")
+                logger.error("The external payment gateway rejected the request to generate a secure transaction link")
                 await db["orders"].update_one(
                     {"order_code": order_code}, {"$set": {"status": "FAILED"}}
                 )
                 raise HTTPException(
                     status_code=400,
-                    detail=res_data.get("desc", "Failed to initialize payment gateway"),
+                    detail="The electronic payment gateway failed to initialize the transaction session",
                 )
         except HTTPException:
             raise
-        except Exception as e:
+        except Exception:
             await db["orders"].update_one(
                 {"order_code": order_code}, {"$set": {"status": "FAILED"}}
             )
-            logger.exception("Failed to connect to the payment gateway")
+            logger.error("The system encountered a network failure while attempting to communicate with the electronic payment gateway")
             raise HTTPException(
-                status_code=500, detail="Payment gateway connection failed"
+                status_code=500, detail="The system was unable to establish a secure connection with the external payment processing provider"
             )
 
     @staticmethod
     async def deposit_webhook(request, db=None):
         data = await request.json()
-        logger.info("Received notification from payment gateway")
+        logger.info("The system has successfully received a status update notification from the payment gateway")
         if data.get("code") == "00" and data.get("data"):
             webhook_data = data["data"]
             order_code = webhook_data.get("orderCode")
@@ -147,26 +147,26 @@ class DepositService:
             try:
                 received_signature = data.get("signature", "")
                 if not received_signature:
-                    logger.warning("Missing authentication signature in notification")
+                    logger.warning("The incoming gateway notification was rejected due to a missing cryptographic authentication signature")
                     raise HTTPException(
-                        status_code=400, detail="Missing digital signature for authentication"
+                        status_code=400, detail="The transaction verification failed because the cryptographic signature is missing"
                     )
 
                 expected_signature = DepositService._generate_payos_signature(
                     signature_data
                 )
                 if received_signature != expected_signature:
-                    logger.warning("Authentication signature mismatch")
+                    logger.warning("The incoming gateway notification was rejected because the cryptographic signature did not match the expected value")
                     raise HTTPException(
-                        status_code=400, detail="Invalid digital signature"
+                        status_code=400, detail="The transaction verification failed because the provided cryptographic signature is invalid"
                     )
 
                 paid_amount = webhook_data.get("amount", 0)
                 await DepositService.process_success_order(order_code, paid_amount)
             except HTTPException:
                 raise
-            except Exception as e:
-                logger.exception("Failed to process payment gateway notification")
+            except Exception:
+                logger.error("The system encountered an unexpected structural failure while processing the payment gateway callback")
         return Response(
             content=json.dumps({"code": "00", "desc": "success"}),
             media_type="application/json",
@@ -180,10 +180,10 @@ class DepositService:
 
         order = await db["orders"].find_one({"order_code": order_code})
         if not order:
-            raise HTTPException(status_code=404, detail="The specified transaction could not be found")
+            raise HTTPException(status_code=404, detail="The system was unable to locate a deposit transaction matching the provided gateway reference identifier")
         if order.get("user_id") != str(current_user.id):
             raise HTTPException(
-                status_code=403, detail="You do not have permission to view this transaction"
+                status_code=403, detail="The current account lacks the required authorization to view the details of this specific transaction"
             )
 
         if getattr(db_client, "redis", None):
@@ -195,12 +195,12 @@ class DepositService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Too many requests. Please try again in 1 minute",
+                        detail="The system has temporarily throttled your requests so please wait a moment before trying again",
                     )
             except HTTPException:
                 raise
-            except Exception as e:
-                logger.exception("Rate limit exceeded. Please try again later")
+            except Exception:
+                logger.warning("The transaction verification request was throttled due to excessive recent inquiries")
 
         try:
             async with httpx.AsyncClient() as client:
@@ -228,14 +228,14 @@ class DepositService:
                 }
             else:
                 raise HTTPException(
-                    status_code=400, detail="Failed to verify payment status"
+                    status_code=400, detail="The system was unable to successfully verify the current status of the payment transaction"
                 )
         except HTTPException:
             raise
-        except Exception as e:
-            logger.exception("Failed to verify transaction")
+        except Exception:
+            logger.error("An unexpected disruption occurred while attempting to verify the transaction status with the provider")
             raise HTTPException(
-                status_code=500, detail="Failed to verify payment status"
+                status_code=500, detail="The system was unable to successfully verify the current status of the payment transaction"
             )
 
     @staticmethod
@@ -259,7 +259,7 @@ class DepositService:
             {"order_code": order_code, "status": {"$in": ["INIT", "pending"]}}
         )
         if not order:
-            logger.warning(f"Order {order_code} could not be found or has already been processed")
+            logger.warning("The designated deposit order could not be located or has already been fully processed")
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -267,7 +267,7 @@ class DepositService:
 
         if paid_amount is not None and paid_amount < order.get("amount", 0):
             logger.warning(
-                f"Payment amount {paid_amount} for order {order_code} is insufficient"
+                "The verified payment amount is insufficient to fulfill the requested deposit order"
             )
             if should_close_session:
                 await session.abort_transaction()
@@ -291,7 +291,7 @@ class DepositService:
             if result.modified_count != 1:
                 if should_close_session:
                     await session.abort_transaction()
-                logger.warning(f"Failed to update the status of order {order_code}")
+                logger.warning("The database engine encountered an issue while attempting to update the status of the deposit order")
                 return
             await wallets.update_one(
                 {"_id": user_id},
@@ -303,7 +303,7 @@ class DepositService:
                 user_id=user_id,
                 type=TransactionType.TOPUP,
                 amount=dl_to_add,
-                note=f"Deposit via payOS: {order['amount']} VND",
+                note="Deposit successfully processed via electronic payment gateway",
             )
             await transactions.insert_one(tx.model_dump(by_alias=True), session=session)
 
@@ -321,21 +321,21 @@ class DepositService:
                             json={
                                 "target_user_id": user_id,
                                 "title": "Deposit processed successfully",
-                                "body": f"Account credited with {dl_to_add} dl",
+                                "body": "The requested deposit funds have been successfully credited to the digital wallet",
                                 "type": "topup",
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
-            except Exception as e:
-                logger.warning("Failed to dispatch notification")
+            except Exception:
+                logger.warning("The system encountered a minor disruption while attempting to dispatch the deposit success notification")
             logger.info(
-                f"Credited {dl_to_add} dl to user {user_id} for order {order_code}"
+                "The deposited funds have been successfully verified and credited to the designated account wallet"
             )
-        except Exception as e:
+        except Exception:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception(f"Failed to process order {order_code}")
-            raise HTTPException(status_code=500, detail="Service temporarily unavailable")
+            logger.error("An unexpected error occurred while attempting to finalize the deposit transaction and update the balance")
+            raise HTTPException(status_code=500, detail="The financial service is currently undergoing routine maintenance and cannot process the request")
         finally:
             if should_close_session:
                 await session.end_session()

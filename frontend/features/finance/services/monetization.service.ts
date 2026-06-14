@@ -1,39 +1,5 @@
 import { API_URL, getAuthHeaders } from "@/features/auth/services/authentication.service";
 
-export async function createSubscriptionPlanAPI(data: {
-  name: string;
-  description: string;
-  price_dl: number;
-  benefits: string[];
-}) {
-  const res = await fetch(`${API_URL}/kiem-tien/goi-thanh-vien`, {
-    method: "POST",
-    headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  const result = await res.json();
-  if (!res.ok) throw new Error(result.message || "Tạo gói hội viên thất bại");
-  return result;
-}
-
-export async function getAuthorPlansAPI(authorId: string) {
-  const res = await fetch(`${API_URL}/kiem-tien/goi-thanh-vien/${authorId}`);
-  const data = await res.json();
-  if (!res.ok)
-    throw new Error(data.message || "Không thể tải danh sách gói hội viên");
-  return data;
-}
-
-export async function subscribeToAuthorAPI(planId: string) {
-  const res = await fetch(`${API_URL}/kiem-tien/register/${planId}`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Đăng ký hội viên thất bại");
-  return data;
-}
-
 export async function setDocumentPricingAPI(
   documentId: string,
   priceDl: number,
@@ -65,15 +31,15 @@ export async function getAuthorRevenueAPI() {
   return data;
 }
 
-export async function buyAITierAPI(tier: "PRO" | "PREMIUM") {
-  const res = await fetch(`${API_URL}/finance/kiem-tien/ai-tier`, {
+export async function buyMembershipAPI(tier: "PRO" | "PREMIUM") {
+  const res = await fetch(`${API_URL}/finance/monetization/membership`, {
     method: "POST",
     headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
     body: JSON.stringify({ tier }),
   });
+  const data = await res.json();
   if (!res.ok) {
-    const errorData = await res.json().catch(() => null);
-    throw new Error(errorData?.detail || errorData?.message || "Nâng cấp gói AI thất bại");
+    throw new Error(data.detail || data.message || "Failed to upgrade membership plan");
   }
-  return await res.json();
+  return data;
 }

@@ -1,6 +1,7 @@
 from core.database import db_client
 from fastapi import HTTPException
 from datetime import datetime, timezone
+from core.repositories.base_repository import RepositoryFactory
 from loguru import logger
 
 
@@ -16,48 +17,51 @@ class PricingService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="The requested document could not be found")
+            raise HTTPException(status_code=404, detail="The requested digital document could not be located in the primary storage repository")
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),
             "updated_at": datetime.now(timezone.utc),
         }
         await db["documents"].update_one({"_id": document_id}, {"$set": update})
-        logger.info(f"Pricing: Updated for {document_id} by {current_user.id}")
-        return {"message": "Document pricing updated successfully"}
+        logger.info("The pricing configuration for the specified digital document has been successfully updated by the author")
+        return {"message": "The document pricing configuration has been successfully updated and applied"}
 
     @staticmethod
-    async def set_flash_sale(
-        document_id: str, data: dict, current_user, db=None
-    ) -> dict:
+    async def get_pricing_config(db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
-        doc = await db["documents"].find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+
+        config = await RepositoryFactory.get("system_config").find_one(
+            {"_id": "pricing_tiers"}
         )
-        if not doc:
-            raise HTTPException(status_code=404, detail="The requested document could not be found")
-        try:
-            flash_sale_price = int(data.get("price", 0))
-            expires_at = datetime.fromisoformat(
-                data["expires_at"].replace("Z", "+00:00")
-            )
-        except (ValueError, KeyError, AttributeError):
-            raise HTTPException(
-                status_code=400, detail="Invalid time format or pricing value provided"
-            )
-        await db["documents"].update_one(
-            {"_id": document_id},
-            {
-                "$set": {
-                    "flash_sale": {
-                        "price_dl": flash_sale_price,
-                        "expires_at": expires_at,
-                        "is_active": True,
-                    },
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
+        if config:
+            return config
+
+        default_config = {
+            "tiers": {
+                "BASIC": {
+                    "monthly_price": 0.0,
+                    "features": ["Standard reading access", "Basic collection tools"],
+                },
+                "PRO": {
+                    "monthly_price": 99000.0,
+                    "features": [
+                        "Advanced artificial intelligence suggestions",
+                        "Priority administrative support",
+                    ],
+                },
+                "PREMIUM": {
+                    "monthly_price": 199000.0,
+                    "features": [
+                        "Unlimited resource access",
+                        "Advanced logical verification tools",
+                    ],
+                },
+            }
+        }
+
+        await RepositoryFactory.get("system_config").update_one(
+            {"_id": "pricing_tiers"}, {"$set": default_config}, upsert=True
         )
-        logger.info(f"Pricing: Flash sale set for {document_id}")
-        return {"message": "Flash sale configured successfully"}
+        return default_config

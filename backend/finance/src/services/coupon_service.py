@@ -41,13 +41,13 @@ class CouponService:
         }
         existing = await db["coupons"].find_one({"code": coupon["code"]})
         if existing:
-            raise HTTPException(status_code=400, detail="Coupon code already exists")
+            raise HTTPException(status_code=400, detail="The provided promotional code is already registered within the active campaigns")
         await db["coupons"].insert_one(coupon)
         logger.info(
-            f"User {current_user.id} created coupon {coupon['code']} with status {status}"
+            "A new promotional coupon has been successfully configured and activated within the system"
         )
         return {
-            "message": f"Coupon created successfully. Current status: {status}",
+            "message": "The promotional coupon has been successfully generated and recorded",
             "coupon_id": coupon["_id"],
         }
 
@@ -89,19 +89,19 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         if current_user.role != RoleEnum.ADMIN:
             raise HTTPException(
-                status_code=403, detail="Administrator privileges required for this action"
+                status_code=403, detail="The current account lacks the necessary administrative privileges to perform this restricted action"
             )
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
         res = await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"status": status}}
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
+            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
         logger.info(
-            f"Admin {current_user.id} performed {action} on coupon {coupon_id}"
+            "The designated promotional coupon has been successfully updated following administrative review"
         )
         return {
-            "message": f"Coupon {action}d successfully"
+            "message": "The administrative action has been successfully applied to the specified promotional coupon"
         }
 
     @staticmethod
@@ -115,19 +115,19 @@ class CouponService:
         )
         if not coupon:
             raise HTTPException(
-                status_code=404, detail="The coupon is either invalid or pending approval"
+                status_code=404, detail="The submitted promotional code is either invalid or currently awaiting administrative approval"
             )
         if coupon.get("expires_at") and coupon["expires_at"].replace(
             tzinfo=timezone.utc
         ) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="The coupon has expired")
+            raise HTTPException(status_code=400, detail="The submitted promotional code has exceeded its designated expiration period and is no longer valid")
         if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
             raise HTTPException(
-                status_code=400, detail="The coupon has reached its maximum usage limit"
+                status_code=400, detail="The submitted promotional code has reached its maximum allowed redemption limit"
             )
         if coupon.get("document_id") and coupon["document_id"] != document_id:
             raise HTTPException(
-                status_code=400, detail="The coupon is not applicable to this document"
+                status_code=400, detail="The submitted promotional code is not applicable to the currently selected digital document"
             )
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
@@ -136,12 +136,7 @@ class CouponService:
             )
             if purchase_count > 0:
                 raise HTTPException(
-                    status_code=400, detail="This coupon is valid for first-time buyers only"
-                )
-        elif target == CouponTargetType.SUBSCRIBER:
-            if not getattr(user, "is_premium", False):
-                raise HTTPException(
-                    status_code=400, detail="This coupon is valid for premium members only"
+                    status_code=400, detail="The specified promotional code is exclusively reserved for first time purchasers"
                 )
         return {
             "code": coupon["code"],
@@ -158,14 +153,14 @@ class CouponService:
             query["author_id"] = str(current_user.id)
         coupon = await db["coupons"].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
+            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
         new_status = not coupon.get("is_active", True)
         await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"is_active": new_status}}
         )
-        logger.info(f"Coupon {coupon_id} status updated to {new_status}")
+        logger.info("The operational status of the designated promotional coupon has been successfully toggled")
         return {
-            "message": "Coupon status updated successfully",
+            "message": "The operational status of the specified promotional coupon has been successfully updated",
             "is_active": new_status,
         }
 
@@ -178,6 +173,6 @@ class CouponService:
             query["author_id"] = str(current_user.id)
         res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
-        logger.info(f"User {current_user.id} deleted coupon {coupon_id}")
-        return {"message": "Coupon deleted successfully"}
+            raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
+        logger.info("The designated promotional coupon has been successfully and permanently removed from the system")
+        return {"message": "The specified promotional coupon has been permanently removed from the active system records"}
