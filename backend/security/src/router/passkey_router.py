@@ -13,7 +13,7 @@ router = APIRouter(prefix="/auth/passkey")
 async def passkey_login_begin(payload: PasskeyRequest, db=Depends(get_db)):
     return APIResponse(
         data=await PasskeyService.login_begin(payload.email, db=db),
-        message="Bắt đầu quá trình đăng nhập Passkey",
+        message="Passkey login process initiated",
         status=200,
     )
 
@@ -24,6 +24,6 @@ async def passkey_login_finish(payload: PasskeyFinishRequest, db=Depends(get_db)
         data=await PasskeyService.login_finish(
             payload.email, payload.credential, db=db
         ),
-        message="Đã đăng nhập bằng Passkey",
+        message="Logged in with Passkey successfully",
         status=200,
     )

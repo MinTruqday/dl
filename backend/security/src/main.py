@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.router.auth_router import router as auth_router
 from src.router.passkey_router import router as passkey_router
 
-app = FastAPI(title="DocLib Authentication", version=settings.VERSION)
+app = FastAPI(title="DocLib Security", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,7 +27,7 @@ app.include_router(passkey_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống bảo mật DocLib")
+    logger.info("DocLib Security initialized successfully")
     await init_db()
 
 
@@ -36,7 +36,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "authentication"}
 

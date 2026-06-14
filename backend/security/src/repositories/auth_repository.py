@@ -117,7 +117,6 @@ class AuthRepository:
             {"$set": {"passkeys.$.sign_count": sign_count}},
         )
 
-    # Redis operations
     @staticmethod
     async def register_session(user_id: str, session_id: str, client_ip: str):
         if db_client.redis:

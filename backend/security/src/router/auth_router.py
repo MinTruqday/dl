@@ -15,10 +15,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from src.services.auth_service import AuthService
 
-router = APIRouter(prefix="/xac-thuc")
+router = APIRouter(prefix="/auth")
 
 
-@router.get("/ca-nhan", response_model=APIResponse[UserResponse])
+@router.get("/me", response_model=APIResponse[UserResponse])
 async def read_users_me(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -27,12 +27,12 @@ async def read_users_me(
         len(current_user.passkeys) > 0 if current_user.passkeys else False
     )
     return APIResponse(
-        data=user_data, message="Đã tải thông tin cá nhân", status=status.HTTP_200_OK
+        data=user_data, message="Personal information retrieved successfully", status=status.HTTP_200_OK
     )
 
 
 @router.post(
-    "/dang-ky",
+    "/register",
     response_model=APIResponse[UserResponse],
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(RateLimiter(calls=3, period=60))],
@@ -43,7 +43,7 @@ async def register_user(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.register_user(user_in, client_ip, db=db),
-        message="Đã đăng ký tài khoản thành công, vui lòng đăng nhập",
+        message="Account registered successfully. Please proceed to login",
         status=status.HTTP_201_CREATED,
     )
 
@@ -63,7 +63,7 @@ async def login(
         data=await AuthService.login_user(
             form_data.username, form_data.password, client_ip, db=db
         ),
-        message="Đã đăng nhập",
+        message="Login successful",
         status=status.HTTP_200_OK,
     )
 
@@ -75,7 +75,7 @@ async def forgot_password(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.forgot_password(payload.email, client_ip, db=db),
-        message="Yêu cầu khôi phục mật khẩu đã được gửi",
+        message="Password reset request has been sent",
         status=status.HTTP_200_OK,
     )
 
@@ -89,7 +89,7 @@ async def reset_password(
         data=await AuthService.reset_password(
             payload.token, payload.new_password, client_ip, db=db
         ),
-        message="Đã đặt lại mật khẩu",
+        message="Password reset successfully",
         status=status.HTTP_200_OK,
     )
 
@@ -101,7 +101,7 @@ async def verify_code(
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.verify_reset_code(payload.token, client_ip, db=db),
-        message="Mã xác thực hợp lệ",
+        message="Verification code is valid",
         status=status.HTTP_200_OK,
     )
 
@@ -110,15 +110,15 @@ async def verify_code(
 async def google_login(db=Depends(get_db)):
     auth_url = await AuthService.get_google_auth_url(db=db)
     return APIResponse(
-        data={"url": auth_url}, message="Đã tạo liên kết đăng nhập Google", status=200
+        data={"url": auth_url}, message="Google login link generated", status=200
     )
 
 
-@router.get("/google/callback, response_model=APIResponse[Any])
+@router.get("/google/callback", response_model=APIResponse[Any])
 async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.handle_google_callback(code, client_ip, db=db),
-        message="Đã đăng nhập bằng Google",
+        message="Logged in with Google successfully",
         status=200,
     )

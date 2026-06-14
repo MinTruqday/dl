@@ -42,11 +42,11 @@ class PasskeyService:
     async def login_begin(email: str, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
+            raise HTTPException(status_code=404, detail="The requested user could not be found")
         passkeys = user.get("passkeys", [])
         if not passkeys:
             raise HTTPException(
-                status_code=400, detail="Tài khoản chưa đăng ký Passkey"
+                status_code=400, detail="The account is not registered for Passkey"
             )
         options = generate_authentication_options(
             rp_id=RP_ID,
@@ -63,7 +63,7 @@ class PasskeyService:
         try:
             await AuthRepository.set_redis_passkey_challenge(email, options.challenge)
         except Exception as e:
-            logger.warning("Lỗi lưu thử thách xác thực vào bộ nhớ đệm")
+            logger.warning("Failed to save authentication challenge to cache")
         await AuthRepository.upsert_passkey_challenge(email, options.challenge, db=db)
         return json.loads(options_to_json(options))
 
@@ -71,12 +71,12 @@ class PasskeyService:
     async def login_finish(email: str, credential_data: dict, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="Người dùng không tồn tại")
+            raise HTTPException(status_code=404, detail="The requested user could not be found")
         challenge = None
         try:
             challenge = await AuthRepository.get_redis_passkey_challenge(email)
         except Exception as e:
-            logger.warning("Lỗi lấy thử thách xác thực từ bộ nhớ đệm")
+            logger.warning("Failed to retrieve authentication challenge from cache")
         if not challenge:
             chal_doc = await AuthRepository.get_passkey_challenge(email, db=db)
             if chal_doc:
@@ -88,7 +88,7 @@ class PasskeyService:
                     challenge = chal_doc["challenge"]
         if not challenge:
             raise HTTPException(
-                status_code=400, detail="Thử thách không hợp lệ hoặc hết hạn"
+                status_code=400, detail="The authentication challenge is invalid or has expired"
             )
         credential_id_b64 = credential_data.get("id")
         passkey = next(
@@ -100,7 +100,7 @@ class PasskeyService:
             None,
         )
         if not passkey:
-            raise HTTPException(status_code=400, detail="Passkey không hợp lệ")
+            raise HTTPException(status_code=400, detail="The provided Passkey is invalid")
         try:
             verification = verify_authentication_response(
                 credential=credential_data,
@@ -111,7 +111,7 @@ class PasskeyService:
                 credential_current_sign_count=passkey["sign_count"],
             )
         except Exception as e:
-            raise HTTPException(status_code=400, detail="Xác thực đăng nhập thất bại")
+            raise HTTPException(status_code=400, detail="Authentication failed")
         await AuthRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count, db=db
         )
@@ -119,14 +119,14 @@ class PasskeyService:
         try:
             await AuthRepository.delete_redis_passkey_challenge(email)
         except Exception as e:
-            logger.error(f"Lỗi xóa thử thách xác thực của {email}")
+            logger.error(f"Failed to delete authentication challenge for {email}")
         import httpx
 
         user_doc = None
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/nguoi-dung/email/{email}",
+                    f"{settings.PROVISION_URL}/users/by-email/{email}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -135,7 +135,7 @@ class PasskeyService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail="Tài khoản không tồn tại")
+            raise HTTPException(status_code=401, detail="The account could not be found")
 
         from src.services.auth_service import AuthService
 
