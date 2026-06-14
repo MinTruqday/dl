@@ -30,7 +30,7 @@ class TelemetryService:
         }
         await RepositoryFactory.get("telemetry").insert_one(telemetry_event)
         logger.debug(
-            f"Đã ghi nhận sự kiện hệ thống: {event_name} bởi người dùng {telemetry_event['user_id']}"
+            "A new system telemetry event has been successfully captured and recorded"
         )
         return {"status": "success"}
 

@@ -18,5 +18,5 @@ async def get_moderator_activity(
 ):
     return APIResponse(
         data=await UserService.get_moderator_activity_log(str(current_user.id), db=db),
-        message="Activity logs retrieved successfully",
+        message="The requested administrative activity logs have been successfully retrieved from the system database",
     )

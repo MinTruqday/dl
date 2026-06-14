@@ -14,7 +14,7 @@ router = APIRouter(prefix="/banners")
 async def get_active_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=True, db=db),
-        message="Active banners retrieved successfully",
+        message="The active promotional banners have been successfully retrieved and are ready for display",
     )
 
 
@@ -26,7 +26,7 @@ async def get_active_banners(db=Depends(get_db)):
 async def get_all_banners(db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.get_banners(active_only=False, db=db),
-        message="All banners retrieved successfully",
+        message="The comprehensive list of all promotional banners has been successfully retrieved from the system",
     )
 
 
@@ -38,7 +38,7 @@ async def get_all_banners(db=Depends(get_db)):
 async def create_banner(data: BannerRequest, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.create_banner(data.model_dump(), db=db),
-        message="Banner created successfully",
+        message="The new promotional banner has been successfully created and added to the active rotation",
         status=201,
     )
 
@@ -51,5 +51,5 @@ async def create_banner(data: BannerRequest, db=Depends(get_db)):
 async def delete_banner(banner_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await BannerService.delete_banner(banner_id, db=db),
-        message="Banner removed successfully",
+        message="The specified promotional banner has been permanently removed from the system",
     )

@@ -14,7 +14,7 @@ class ConnectionManager:
             self.active_connections[room_id] = []
         self.active_connections[room_id].append(websocket)
         logger.info(
-            f"A device connected to room {room_id}. Total connections: {len(self.active_connections[room_id])}"
+            f"A new device has successfully established a connection to the collaboration space with identifier {room_id} bringing the total active sessions to {len(self.active_connections[room_id])}"
         )
 
     def disconnect(self, websocket: WebSocket, room_id: str):
@@ -25,7 +25,7 @@ class ConnectionManager:
             self.active_connections[room_id].remove(websocket)
             if not self.active_connections[room_id]:
                 del self.active_connections[room_id]
-            logger.info(f"A device disconnected from room {room_id}")
+            logger.info(f"A device has cleanly disconnected from the collaboration space with identifier {room_id}")
 
     async def broadcast(self, message: bytes, room_id: str, sender: WebSocket):
         if room_id in self.active_connections:
@@ -34,8 +34,8 @@ class ConnectionManager:
                 if connection != sender:
                     try:
                         await connection.send_bytes(message)
-                    except Exception as e:
-                        logger.error(f"Failed to broadcast signal to room {room_id}")
+                    except Exception:
+                        logger.error(f"The system encountered an unexpected network failure while attempting to broadcast synchronization signals to the collaboration space with identifier {room_id}")
                         dead_connections.append(connection)
             for dead in dead_connections:
                 self.disconnect(dead, room_id)

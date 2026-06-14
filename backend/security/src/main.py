@@ -27,7 +27,7 @@ app.include_router(passkey_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Security initialized successfully")
+    logger.info("The security and authentication service has been initialized successfully and is ready to accept incoming connections")
     await init_db()
 
 
@@ -38,8 +38,4 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "authentication"}
-
-
-if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8500, reload=True)
+    return {"status": "The authentication service is currently operating normally and functioning as expected without any internal issues"}

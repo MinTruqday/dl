@@ -30,7 +30,7 @@ async def get_all_users(
 ):
     return APIResponse(
         data=await UserService.get_all_users(limit, offset, db=db),
-        message="User list retrieved successfully",
+        message="The requested list of user accounts has been successfully retrieved from the system",
     )
 
 
@@ -42,7 +42,7 @@ async def get_all_users(
 async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_db)):
     return APIResponse(
         data=await UserService.update_user_role(user_id, req.role, db=db),
-        message="User access privileges updated successfully",
+        message="The access privileges for the specified user account have been successfully modified",
     )
 
 
@@ -56,7 +56,7 @@ async def update_user_status(
 ):
     return APIResponse(
         data=await UserService.update_user_status(user_id, req.is_active, db=db),
-        message="Account activity status updated successfully",
+        message="The operational activity status for the specified user account has been updated successfully",
     )
 
 
@@ -73,7 +73,7 @@ async def warn_user(
 ):
     return APIResponse(
         data=await UserService.warn_user(user_id, req.reason, current_user, db=db),
-        message="Warning sent successfully",
+        message="The official administrative warning has been successfully dispatched to the targeted user",
     )
 
 
@@ -92,7 +92,7 @@ async def lock_user(
         data=await UserService.lock_user(
             user_id, req.reason, req.duration_hours, current_user, db=db
         ),
-        message="Account locked successfully",
+        message="The specified user account has been successfully locked and temporarily restricted",
     )
 
 
@@ -109,7 +109,7 @@ async def shadowban_user(
 ):
     return APIResponse(
         data=await UserService.shadowban_user(user_id, is_banned, current_user, db=db),
-        message="Restriction status applied successfully",
+        message="The visibility restriction protocol has been successfully updated for the specified account",
     )
 
 
@@ -121,7 +121,7 @@ async def shadowban_user(
 async def get_moderator_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
         data=await UserService.get_moderator_notes(user_id, db=db),
-        message="Moderation notes retrieved successfully",
+        message="The internal administrative moderation notes have been successfully retrieved",
     )
 
 
@@ -140,7 +140,7 @@ async def add_moderator_note(
         data=await UserService.add_moderator_note(
             user_id, req.note, current_user, db=db
         ),
-        message="Note added successfully",
+        message="The internal administrative moderation note has been successfully saved to the user profile",
         status=201,
     )
 
@@ -153,14 +153,14 @@ async def search_users(
 ):
     return APIResponse(
         data=await UserService.search_users(q, limit, db=db),
-        message="User search completed successfully",
+        message="The user search query has been successfully executed and the matching results are returned",
     )
 
 
 @router.get("/{user_id}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user(user_id: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_id(user_id, db)
-    return APIResponse(data=user, message="User profile retrieved successfully")
+    return APIResponse(data=user, message="The detailed profile information for the specified user has been successfully retrieved")
 
 
 @router.post(
@@ -168,19 +168,19 @@ async def internal_get_user(user_id: str, db=Depends(get_db)):
 )
 async def internal_get_users(user_ids: list[str], db=Depends(get_db)):
     users = await UserService.internal_get_users_by_ids(user_ids, db)
-    return APIResponse(data=users, message="User list retrieved successfully")
+    return APIResponse(data=users, message="The requested list of user accounts matching the provided identifiers has been successfully retrieved")
 
 
 @router.get("/email/{email}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_email(email: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_email(email, db)
-    return APIResponse(data=user, message="User profile retrieved successfully")
+    return APIResponse(data=user, message="The detailed profile information for the specified user has been successfully retrieved")
 
 
 @router.get("/slug/{slug}", response_model=APIResponse[Any], include_in_schema=False)
 async def internal_get_user_by_slug(slug: str, db=Depends(get_db)):
     user = await UserService.internal_get_user_by_slug(slug, db)
-    return APIResponse(data=user, message="User profile retrieved successfully")
+    return APIResponse(data=user, message="The detailed profile information for the specified user has been successfully retrieved")
 
 
 class InternalCreateUserRequest(BaseModel):
@@ -195,5 +195,5 @@ class InternalCreateUserRequest(BaseModel):
 async def internal_create_user(req: InternalCreateUserRequest, db=Depends(get_db)):
     user_id = await UserService.internal_create_user(req.dict(), db)
     return APIResponse(
-        data={"user_id": user_id}, message="Account created successfully", status=201
+        data={"user_id": user_id}, message="The new user account has been successfully provisioned and registered in the system", status=201
     )

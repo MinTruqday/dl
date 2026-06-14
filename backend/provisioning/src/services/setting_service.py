@@ -45,5 +45,5 @@ class SettingService:
                 }
             },
         )
-        logger.info(f"Settings: User {user_id} updated their system settings")
-        return {"message": "Settings saved successfully"}
+        logger.info("The system configuration settings have been successfully updated by the authenticated user")
+        return {"message": "Your personal system configuration settings have been successfully updated and saved"}

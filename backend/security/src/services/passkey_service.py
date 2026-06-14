@@ -42,11 +42,11 @@ class PasskeyService:
     async def login_begin(email: str, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="The requested user could not be found")
+            raise HTTPException(status_code=404, detail="The system was unable to locate a user profile matching the provided information")
         passkeys = user.get("passkeys", [])
         if not passkeys:
             raise HTTPException(
-                status_code=400, detail="The account is not registered for Passkey"
+                status_code=400, detail="The specified account has not been configured to support secure passkey authentication"
             )
         options = generate_authentication_options(
             rp_id=RP_ID,
@@ -62,8 +62,8 @@ class PasskeyService:
         )
         try:
             await AuthRepository.set_redis_passkey_challenge(email, options.challenge)
-        except Exception as e:
-            logger.warning("Failed to save authentication challenge to cache")
+        except Exception:
+            logger.warning("The system encountered an issue while attempting to persist the authentication challenge to the temporary cache storage")
         await AuthRepository.upsert_passkey_challenge(email, options.challenge, db=db)
         return json.loads(options_to_json(options))
 
@@ -71,12 +71,12 @@ class PasskeyService:
     async def login_finish(email: str, credential_data: dict, db=None):
         user = await AuthRepository.get_auth_credential_by_email(email, db=db)
         if not user:
-            raise HTTPException(status_code=404, detail="The requested user could not be found")
+            raise HTTPException(status_code=404, detail="The system was unable to locate a user profile matching the provided information")
         challenge = None
         try:
             challenge = await AuthRepository.get_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.warning("Failed to retrieve authentication challenge from cache")
+        except Exception:
+            logger.warning("The system could not retrieve the active authentication challenge from the temporary cache storage")
         if not challenge:
             chal_doc = await AuthRepository.get_passkey_challenge(email, db=db)
             if chal_doc:
@@ -88,7 +88,7 @@ class PasskeyService:
                     challenge = chal_doc["challenge"]
         if not challenge:
             raise HTTPException(
-                status_code=400, detail="The authentication challenge is invalid or has expired"
+                status_code=400, detail="The cryptographic challenge required for authentication is either invalid or has exceeded its permissible time window"
             )
         credential_id_b64 = credential_data.get("id")
         passkey = next(
@@ -100,7 +100,7 @@ class PasskeyService:
             None,
         )
         if not passkey:
-            raise HTTPException(status_code=400, detail="The provided Passkey is invalid")
+            raise HTTPException(status_code=400, detail="The submitted security credential does not match the registered hardware or software token for this account")
         try:
             verification = verify_authentication_response(
                 credential=credential_data,
@@ -110,16 +110,16 @@ class PasskeyService:
                 credential_public_key=base64.b64decode(passkey["public_key"]),
                 credential_current_sign_count=passkey["sign_count"],
             )
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="Authentication failed")
+        except Exception:
+            raise HTTPException(status_code=400, detail="The cryptographic signature verification process failed to validate the provided security token")
         await AuthRepository.update_passkey_sign_count(
             user["_id"], credential_id_b64, verification.new_sign_count, db=db
         )
         await AuthRepository.delete_passkey_challenge(email, db=db)
         try:
             await AuthRepository.delete_redis_passkey_challenge(email)
-        except Exception as e:
-            logger.error(f"Failed to delete authentication challenge for {email}")
+        except Exception:
+            logger.error(f"The system was unable to clear the consumed authentication challenge for the account {email} from the cache")
         import httpx
 
         user_doc = None
@@ -135,7 +135,7 @@ class PasskeyService:
             pass
 
         if not user_doc:
-            raise HTTPException(status_code=401, detail="The account could not be found")
+            raise HTTPException(status_code=401, detail="The system could not verify the existence of the account associated with the authentication request")
 
         from src.services.auth_service import AuthService
 

@@ -12,7 +12,7 @@ from src.router.user_router import router as user_router
 from src.router.profile_router import router as profile_router
 from src.router.banner_router import router as banner_router
 
-app = FastAPI(title="DocLib Provision", version=settings.VERSION)
+app = FastAPI(title="DocLib Provisioning", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +37,7 @@ app.include_router(banner_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Provision initialized successfully")
+    logger.info("The provisioning service has been successfully initialized and is now ready to process incoming requests")
     await init_db()
 
 
@@ -48,7 +48,7 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "provision"}
+    return {"status": "The provisioning service is currently operating normally and functioning as expected without any internal issues"}
 
 
 if __name__ == "__main__":

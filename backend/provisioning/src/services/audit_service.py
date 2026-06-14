@@ -54,5 +54,5 @@ class AuditService:
             }
         )
         logger.info(
-            f"Action '{action}' by '{actor_id}' on '{target_id}' recorded."
+            "The administrative system action has been successfully captured and recorded in the audit logs"
         )

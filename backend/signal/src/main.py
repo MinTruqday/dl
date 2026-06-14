@@ -34,9 +34,9 @@ app.include_router(notification_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Signal initialized successfully")
+    logger.info("The notification and signaling service has been successfully initialized and is now ready to process incoming requests")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "signal"}
+    return {"status": "The signaling service is currently operating normally and functioning as expected without any internal issues"}

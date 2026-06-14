@@ -1,4 +1,3 @@
-# src/router/profile_router.py
 from typing import Any, Optional
 from core.response import APIResponse
 from fastapi import APIRouter, Depends, UploadFile, File, status
@@ -23,7 +22,7 @@ async def get_my_profile(
 ):
     return APIResponse(
         data=await ProfileService.get_user_profile(current_user, db=db),
-        message="Profile information retrieved successfully",
+        message="The requested user profile information has been successfully retrieved from the database",
         status=200,
     )
 
@@ -38,7 +37,7 @@ async def update_my_profile(
         data=await ProfileService.update_profile(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Profile information updated successfully",
+        message="The user profile information has been successfully updated and saved",
         status=200,
     )
 
@@ -49,7 +48,7 @@ async def apply_author(
 ):
     return APIResponse(
         data=await IdentityService.apply_author(data, current_user, db=db),
-        message="Application submitted successfully",
+        message="The author application has been successfully submitted and is pending administrative review",
         status=201,
     )
 
@@ -60,7 +59,7 @@ async def become_author(
 ):
     return APIResponse(
         data=await IdentityService.become_author(current_user, db=db),
-        message="Account upgraded to author successfully",
+        message="The user account privileges have been successfully elevated to author status",
         status=200,
     )
 
@@ -73,7 +72,7 @@ async def upload_kyc(
 ):
     return APIResponse(
         data=await IdentityService.upload_kyc(file, current_user, db=db),
-        message="KYC documents uploaded successfully",
+        message="The identity verification documents have been securely uploaded and are awaiting review",
         status=status.HTTP_200_OK,
     )
 
@@ -84,7 +83,7 @@ async def get_settings(
 ):
     return APIResponse(
         data=await SettingService.get_settings(current_user, db=db),
-        message="System settings retrieved successfully",
+        message="The system configuration settings have been successfully retrieved",
         status=200,
     )
 
@@ -99,7 +98,7 @@ async def update_settings(
         data=await SettingService.update_settings(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Settings configuration saved successfully",
+        message="The system configuration settings have been successfully updated and applied",
         status=200,
     )
 
@@ -122,7 +121,7 @@ async def request_data_export(
         stream,
         media_type="application/json",
         headers={
-            "Content-Disposition": f"attachment; filename=doclib_takeout_{current_user.slug}.json"
+            "Content-Disposition": f"attachment; filename=user_data_export_{current_user.slug}.json"
         },
     )
 
@@ -133,7 +132,7 @@ async def get_reading_streaks(
 ):
     return APIResponse(
         data=await ProfileService.get_reading_streaks(current_user, db=db),
-        message="Reading streak statistics retrieved successfully",
+        message="The reading streak statistics for the current user have been successfully retrieved",
         status=200,
     )
 
@@ -144,7 +143,7 @@ async def get_badges(
 ):
     return APIResponse(
         data=await ProfileService.get_badges(current_user, db=db),
-        message="Badge list retrieved successfully",
+        message="The list of earned badges has been successfully retrieved from the system",
         status=200,
     )
 
@@ -157,7 +156,7 @@ async def block_user(
 ):
     return APIResponse(
         data=await ProfileService.block_user(target_id, current_user, db=db),
-        message="User blocked successfully",
+        message="The specified user has been successfully restricted from interacting with your account",
         status=200,
     )
 
@@ -172,7 +171,7 @@ async def update_brand_page(
         data=await ProfileService.update_brand_page(
             data.model_dump(exclude_unset=True), current_user, db=db
         ),
-        message="Author brand page updated successfully",
+        message="The public author brand page has been successfully updated with the provided information",
     )
 
 
@@ -180,5 +179,5 @@ async def update_brand_page(
 async def get_public_profile(slug: str, db=Depends(get_db)):
     return APIResponse(
         data=await IdentityService.get_public_profile(slug, db=db),
-        message="Public profile information retrieved successfully",
+        message="The public profile information for the specified user has been successfully retrieved",
     )

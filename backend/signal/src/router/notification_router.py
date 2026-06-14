@@ -21,7 +21,7 @@ async def get_notifications(
         data=await NotificationService.get_notifications(
             str(current_user.id), skip, limit, db
         ),
-        message="Notifications retrieved successfully",
+        message="The requested notifications have been successfully retrieved from the system records",
     )
 
 
@@ -33,7 +33,7 @@ async def mark_as_read(
 ):
     return APIResponse(
         data=await NotificationService.mark_as_read(notif_id, str(current_user.id), db),
-        message="Notification marked as read",
+        message="The specified notification has been successfully updated and marked as read by the system",
     )
 
 
@@ -43,7 +43,7 @@ async def mark_all_as_read(
 ):
     return APIResponse(
         data=await NotificationService.mark_all_as_read(str(current_user.id), db),
-        message="All notifications marked as read",
+        message="All pending notifications for the current user have been successfully marked as read",
     )
 
 
@@ -57,7 +57,7 @@ async def delete_notification(
         data=await NotificationService.delete_notification(
             notif_id, str(current_user.id), db
         ),
-        message="Notification removed successfully",
+        message="The specified notification has been permanently removed from the system",
     )
 
 
@@ -65,6 +65,6 @@ async def delete_notification(
 async def create_notification(data: NotificationCreate, db=Depends(get_db)):
     return APIResponse(
         data=await NotificationService.create_notification(data, db),
-        message="Notification dispatched successfully",
+        message="The new notification has been successfully generated and dispatched to the intended recipient",
         status=201,
     )

@@ -99,7 +99,7 @@ class QuotaService:
         if current_reqs >= limits.daily_requests:
             raise HTTPException(
                 status_code=429,
-                detail="Daily request limit reached",
+                detail="The requested operation cannot proceed because the account has exceeded its allocated daily request allowance"
             )
 
         token_key = f"quota:{user_id}:{feature}:token"
@@ -109,7 +109,7 @@ class QuotaService:
         if current_tokens >= limits.daily_tokens:
             raise HTTPException(
                 status_code=429,
-                detail="Daily token limit reached",
+                detail="The requested operation cannot proceed because the account has consumed its entire allocated daily computation token allowance"
             )
         return limits
 

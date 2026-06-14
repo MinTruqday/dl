@@ -38,7 +38,7 @@ class NotificationService:
         )
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="The requested notification could not be found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="The system was unable to locate the specified notification because it does not exist or you do not have the required permissions to access it"
             )
         return {"id": notif_id}
 
@@ -56,7 +56,7 @@ class NotificationService:
         )
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="The requested notification could not be found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="The system could not proceed with the deletion because the requested notification could not be found within the current user records"
             )
         return {"id": notif_id}
 
@@ -81,6 +81,6 @@ class NotificationService:
                     f"user_notifications:{data.target_user_id}",
                     json.dumps({"title": data.title, "body": data.body}),
                 )
-            except Exception as e:
-                logger.error("Failed to broadcast notification to the user")
+            except Exception:
+                logger.error("The system encountered an unexpected network disruption while attempting to broadcast the real-time notification payload to the message broker")
         return {"id": notif_id}

@@ -64,10 +64,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="The specified account could not be found"
+                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
             )
-        logger.info(f"Account {user_id} privileges changed to {role}")
-        return {"message": "Account privileges updated successfully"}
+        logger.info("The access privileges for the specified user account have been successfully modified to the requested permission level")
+        return {"message": "The access privileges for the specified account have been successfully updated and applied"}
 
     @staticmethod
     async def update_user_status(
@@ -86,10 +86,10 @@ class UserService:
         )
         if res.matched_count == 0:
             raise HTTPException(
-                status_code=404, detail="The specified account could not be found"
+                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
             )
-        logger.info(f"Account {user_id} activity status updated to {is_active}")
-        return {"message": "Account activity status updated successfully"}
+        logger.info("The operational activity status for the specified user account has been successfully updated to reflect the new state")
+        return {"message": "The operational activity status for the specified account has been successfully updated"}
 
     @staticmethod
     async def warn_user(user_id: str, reason: str, current_moderator, db=None) -> dict:
@@ -98,7 +98,7 @@ class UserService:
         user = await RepositoryFactory.get("users").find_one({"_id": user_id})
         if not user:
             raise HTTPException(
-                status_code=404, detail="The specified account could not be found"
+                status_code=404, detail="The system was unable to locate a user profile matching the provided account identifier"
             )
         warning = {
             "_id": str(uuid7()),
@@ -127,16 +127,16 @@ class UserService:
                         f"{settings.SIGNAL_URL}/notifications/trigger",
                         json={
                             "target_user_id": user_id,
-                            "title": "You have a system warning notification",
-                            "body": f"A violation has been recorded for your account. Reason: {reason}",
+                            "title": "You have a new system administrative warning notification",
+                            "body": f"An official violation warning has been recorded for your account due to the following reason provided by the administration {reason}",
                             "type": "WARNING",
                         },
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
-        except Exception as e:
-            logger.warning("Failed to send notification")
-        logger.info(f"User {user_id} warned by moderator {current_moderator.id}")
-        return {"message": "Warning sent successfully"}
+        except Exception:
+            logger.warning("The system encountered an unexpected disruption while attempting to dispatch the notification payload to the external signaling service")
+        logger.info("An official administrative warning has been successfully issued to the specified user account by the moderation staff")
+        return {"message": "The administrative warning has been successfully generated and dispatched to the targeted user account"}
 
     @staticmethod
     async def lock_user(
@@ -167,9 +167,9 @@ class UserService:
             }
         )
         logger.info(
-            f"User {user_id} temporarily locked for {duration_hours} hours by {current_moderator.id}"
+            "The specified user account has been temporarily suspended and restricted from accessing the platform resources by the moderation staff"
         )
-        return {"message": "Account temporarily locked"}
+        return {"message": "The specified user account has been successfully locked and temporarily restricted from accessing the system"}
 
     @staticmethod
     async def shadowban_user(
@@ -196,9 +196,9 @@ class UserService:
             }
         )
         logger.info(
-            f"User {user_id} {action.lower()} by {current_moderator.id}"
+            "The visibility restriction protocol for the specified user account has been successfully applied or lifted by the administrative staff"
         )
-        return {"message": "Restriction status updated successfully"}
+        return {"message": "The system visibility restriction status for the specified account has been updated successfully"}
 
     @staticmethod
     async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
@@ -223,9 +223,9 @@ class UserService:
             }
         )
         logger.info(
-            f"KYC status of {user_id} updated to {status} by {current_moderator.id}"
+            "The identity verification status for the specified user account has been officially verified and updated by the administration"
         )
-        return {"message": "Identity verification status updated successfully"}
+        return {"message": "The submitted identity verification documents have been successfully processed and the account status has been updated"}
 
     @staticmethod
     async def get_moderator_notes(user_id: str, db=None) -> list:
@@ -267,9 +267,9 @@ class UserService:
             }
         )
         logger.info(
-            f"Moderation note added to user {user_id} by {current_moderator.id}"
+            "An internal administrative note has been successfully attached to the specified user profile by the moderation staff"
         )
-        return {"message": "Moderation note saved successfully"}
+        return {"message": "The internal administrative moderation note has been successfully saved and attached to the user profile"}
 
     @staticmethod
     async def get_report_queue(
@@ -289,9 +289,9 @@ class UserService:
                 match_query["created_at"] = {
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
-            except ValueError as e:
+            except ValueError:
                 logger.warning(
-                    f"Invalid pagination cursor: {cursor}"
+                    "The requested pagination process was interrupted because the provided cursor value was incorrectly formatted"
                 )
         pipeline = [{"$match": match_query}, {"$sort": {"created_at": -1}}]
         if skip > 0:
@@ -327,7 +327,7 @@ class UserService:
                     "description": r.get("description", ""),
                     "status": r.get("status", "pending"),
                     "reporter_name": (
-                        reporter.get("full_name", "Ẩn danh") if reporter else "Ẩn danh"
+                        reporter.get("full_name", "Anonymous User") if reporter else "Anonymous User"
                     ),
                     "created_at": (
                         r["created_at"].isoformat()
@@ -356,9 +356,9 @@ class UserService:
             },
         )
         logger.info(
-            f"Report {report_id} resolved with action '{action}' by {current_moderator.id}"
+            "The designated violation report ticket has been successfully marked as resolved by the administrative moderation staff"
         )
-        return {"message": "Violation report resolved successfully"}
+        return {"message": "The system violation report has been successfully processed and marked as resolved"}
 
     @staticmethod
     async def get_moderator_activity_log(moderator_id: str, db=None) -> list:
@@ -381,12 +381,12 @@ class UserService:
                 or "N/A"
             )
             target_type = (
-                "Tài liệu"
+                "Document File"
                 if "document_id" in l
                 else (
-                    "Người dùng"
+                    "User Account"
                     if "target_user_id" in l
-                    else "Thanh toán" if "withdrawal_id" in l else "Đối tượng"
+                    else "Financial Transaction" if "withdrawal_id" in l else "General Object"
                 )
             )
             result.append(
@@ -434,7 +434,7 @@ class UserService:
         return [
             {
                 "_id": str(u["_id"]),
-                "full_name": u.get("full_name") or u.get("username") or "Người dùng",
+                "full_name": u.get("full_name") or u.get("username") or "Anonymous User",
                 "username": u.get("username", ""),
                 "slug": u.get("slug", ""),
                 "avatar_url": u.get("avatar_url"),
@@ -456,7 +456,7 @@ class UserService:
             },
         )
         if res.modified_count > 0:
-            logger.info(f"Automatically unlocked {res.modified_count} accounts")
+            logger.info("The automated background task has successfully restored access for the accounts that have completed their suspension period")
         return res.modified_count
 
     @staticmethod

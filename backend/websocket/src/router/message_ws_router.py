@@ -23,11 +23,11 @@ async def websocket_endpoint(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning("Connection rejected due to authentication mismatch")
+            logger.warning("The connection request was rejected because the provided authentication credentials did not match the expected records")
             await websocket.close(code=1008)
             return
-    except Exception as e:
-        logger.error(f"Connection token authentication failed for {user_id}")
+    except Exception:
+        logger.error(f"The system failed to authenticate the connection token for the user with identifier {user_id} due to an invalid or expired payload")
         await websocket.close(code=1008)
         return
 
@@ -69,6 +69,6 @@ async def websocket_endpoint(
             pass
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
-    except Exception as e:
-        logger.error(f"Direct message processing failed for {user_id}")
+    except Exception:
+        logger.error(f"The system encountered an unexpected error while processing direct messages for the user with identifier {user_id}")
         message_manager.disconnect(user_id, websocket)

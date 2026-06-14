@@ -18,7 +18,7 @@ class IdentityService:
         if current_user.role != RoleEnum.READER:
             raise HTTPException(
                 status_code=400,
-                detail="Only readers are eligible to upgrade to author status",
+                detail="This action is restricted because only accounts with standard reader privileges are permitted to initiate an upgrade to author status",
             )
         await db["users"].update_one(
             {"_id": user_id},
@@ -29,8 +29,8 @@ class IdentityService:
                 }
             },
         )
-        logger.info(f"User {user_id} upgraded to AUTHOR role directly")
-        return {"status": "success", "message": "Account upgraded to author successfully"}
+        logger.info("The access privileges for the specified user account have been successfully elevated to the author role level")
+        return {"status": "success", "message": "Your account has been successfully upgraded and granted full author publishing privileges"}
 
     @staticmethod
     async def apply_author(application, current_user, db=None):
@@ -38,20 +38,20 @@ class IdentityService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         if current_user.role == RoleEnum.AUTHOR:
-            raise HTTPException(status_code=400, detail="Your account already has author privileges")
+            raise HTTPException(status_code=400, detail="The specified account is already configured with full author privileges and capabilities")
         if current_user.role != RoleEnum.READER:
             raise HTTPException(
-                status_code=403, detail="Only readers are eligible to apply for author status"
+                status_code=403, detail="This action is restricted because only accounts with standard reader privileges are permitted to submit an author application"
             )
         if current_user.author_status == AuthorStatusEnum.PENDING:
             raise HTTPException(
                 status_code=400,
-                detail="Your application for author status is currently under review",
+                detail="Your previous application for author status is currently under active administrative review",
             )
         if current_user.author_status == AuthorStatusEnum.SUSPENDED:
             raise HTTPException(
                 status_code=403,
-                detail="Your account is restricted from applying for author status",
+                detail="Your account is currently restricted by the administration and cannot apply for elevated author privileges",
             )
         application_data = {
             "_id": str(uuid7()),
@@ -79,8 +79,8 @@ class IdentityService:
                 }
             },
         )
-        logger.info(f"Reader {user_id} requested author status")
-        return {"status": "success", "message": "Author application submitted successfully"}
+        logger.info("A new application for author privileges has been successfully submitted and recorded in the system pending review queue")
+        return {"status": "success", "message": "Your author application has been submitted successfully and is awaiting administrative review"}
 
     @staticmethod
     async def upload_kyc(file, current_user, db=None):
@@ -89,11 +89,11 @@ class IdentityService:
         user_id = str(current_user.id)
         if current_user.kyc_status == KYCStatusEnum.PENDING:
             raise HTTPException(
-                status_code=400, detail="Your KYC documents are currently under review"
+                status_code=400, detail="Your submitted identity verification documents are currently under active administrative review"
             )
         if current_user.kyc_status == KYCStatusEnum.VERIFIED:
             raise HTTPException(
-                status_code=400, detail="Your account has already been verified"
+                status_code=400, detail="Your account identity has already been successfully verified by the system administration"
             )
         file_bytes = await file.read()
         file_ext = file.filename.split(".")[-1]
@@ -110,8 +110,8 @@ class IdentityService:
         await db["users"].update_one(
             {"_id": user_id}, {"$set": {"kyc_status": KYCStatusEnum.PENDING}}
         )
-        logger.info(f"User {user_id} uploaded KYC documents")
-        return {"status": "success", "message": "KYC documents uploaded successfully"}
+        logger.info("The user has successfully uploaded their identity verification documents to the secure storage system")
+        return {"status": "success", "message": "Your identity verification documents have been securely uploaded and are pending review"}
 
     @staticmethod
     async def get_public_profile(slug: str, db=None) -> dict:
@@ -125,7 +125,7 @@ class IdentityService:
         )
         if not author:
             raise HTTPException(
-                status_code=404, detail="The requested member profile could not be found"
+                status_code=404, detail="The requested public member profile could not be located within the system records"
             )
         author_id = str(author["_id"])
         docs = (
@@ -137,7 +137,7 @@ class IdentityService:
         )
         return {
             "_id": author_id,
-            "full_name": author.get("full_name", "Ẩn danh"),
+            "full_name": author.get("full_name", "Anonymous Member"),
             "slug": author.get("slug", ""),
             "role": author.get("role", "READER"),
             "avatar_url": author.get("avatar_url"),

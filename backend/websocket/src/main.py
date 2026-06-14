@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from src.router import editor_ws, message_ws
 
-app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
+app = FastAPI(title="WebSocket Service", version=settings.VERSION)
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +26,7 @@ app.include_router(message_ws.router, prefix="/messages")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib WebSocket initialized successfully")
+    logger.info("The real-time communication service has been initialized successfully and is ready to accept incoming connections")
     from core.database import init_db
 
     await init_db()
@@ -41,8 +41,4 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "websocket"}
-
-
-if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8200, reload=True)
+    return {"status": "The real-time communication service is operating normally and functioning as expected"}

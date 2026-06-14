@@ -52,8 +52,8 @@ class MessageConnectionManager:
                 await asyncio.sleep(0.01)
         except asyncio.CancelledError:
             pass
-        except Exception as e:
-            logger.error("System failed to listen to buffer signals")
+        except Exception:
+            logger.error("The background task failed to listen to incoming broadcast signals due to an unexpected connection interruption with the message broker")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):

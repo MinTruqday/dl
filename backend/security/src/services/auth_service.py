@@ -21,10 +21,10 @@ class AuthService:
         google_client_id = settings.GOOGLE_CLIENT_ID
         redirect_uri = settings.GOOGLE_REDIRECT_URI
         if not google_client_id or not redirect_uri:
-            logger.error("Google application key or redirect path is not configured")
+            logger.error("The external authentication provider configuration is missing essential environment variables causing the process to halt")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Google login service is not configured",
+                detail="The external authentication service is currently unavailable due to incomplete system configuration",
             )
         auth_url = f"{settings.GOOGLE_AUTH_URL}/?response_type=code&client_id={settings.GOOGLE_CLIENT_ID}&redirect_uri={settings.GOOGLE_REDIRECT_URI}&scope=openid email profile"
         return auth_url
@@ -35,7 +35,7 @@ class AuthService:
         if config and (not config.get("registration_enabled", True)):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Registration is temporarily disabled",
+                detail="The account creation functionality is temporarily disabled by the system administrators",
             )
         import httpx
 
@@ -54,15 +54,15 @@ class AuthService:
                 if resp.status_code == 400:
 
                     detail = (
-                        resp.json().get("detail") if resp.json() else "System error occurred"
+                        resp.json().get("detail").replace(".", "") if resp.json() else "An unexpected system error occurred while attempting to process the registration request"
                     )
                     raise HTTPException(status_code=400, detail=detail)
                 elif resp.status_code != 201:
-                    raise HTTPException(status_code=500, detail="System error occurred")
+                    raise HTTPException(status_code=500, detail="An unexpected system error occurred while attempting to communicate with the user provisioning service")
                 user_id = resp.json().get("data", {}).get("user_id")
         except httpx.RequestError:
             raise HTTPException(
-                status_code=500, detail="Unable to connect to the user management service"
+                status_code=500, detail="The system was unable to establish a connection with the internal user management service"
             )
 
         auth_cred = {
@@ -82,7 +82,7 @@ class AuthService:
             },
             db=db,
         )
-        logger.info(f"User {user_in.email} registered from {client_ip}")
+        logger.info(f"A new user account with the email address {user_in.email} was successfully registered from the network address {client_ip}")
         return {
             "email": user_in.email,
             "full_name": user_in.full_name,
@@ -116,7 +116,7 @@ class AuthService:
 
         if not user_doc:
             raise HTTPException(
-                status_code=401, detail="Account or email could not be found"
+                status_code=401, detail="The system could not locate an account associated with the provided credentials"
             )
 
         auth_cred = await AuthRepository.get_auth_credential_by_id(
@@ -135,18 +135,18 @@ class AuthService:
                 db=db,
             )
             logger.warning(
-                f"Account {username} attempted login with incorrect password from {client_ip}"
+                f"An authentication attempt for the account {username} failed due to incorrect credentials from the network address {client_ip}"
             )
-            raise HTTPException(status_code=401, detail="The provided password is incorrect")
+            raise HTTPException(status_code=401, detail="The provided authentication credentials do not match our records")
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="The account is currently locked")
+            raise HTTPException(status_code=403, detail="Access to this account is currently restricted due to an inactive or locked status")
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         await AuthRepository.register_session(user_id_str, session_id, client_ip)
         access_token = create_access_token(
             data={"sub": user_doc["email"], "sid": session_id}
         )
-        logger.info(f"Account {username} logged in from {client_ip}")
+        logger.info(f"The account associated with {username} has successfully authenticated from the network address {client_ip}")
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -160,8 +160,8 @@ class AuthService:
     async def revoke_all_sessions(current_user: UserInDB, db=None):
         user_id_str = str(current_user.id)
         await AuthRepository.revoke_all_sessions(user_id_str)
-        logger.info(f"Revoked all sessions for user {user_id_str}")
-        return {"message": "Logged out from all devices successfully"}
+        logger.info(f"All active authentication sessions for the account associated with the identifier {user_id_str} have been successfully revoked")
+        return {"message": "You have been successfully signed out from all active devices and sessions"}
 
     @staticmethod
     async def forgot_password(email: str, client_ip: str, db=None):
@@ -200,16 +200,16 @@ class AuthService:
             )
             try:
                 await EmailService.send_reset_password_email(email, otp_code)
-            except Exception as e:
-                logger.error("Failed to send password reset email")
-        return {"status": "ok", "message": "Password reset request is being processed"}
+            except Exception:
+                logger.error("The system encountered an unexpected error while attempting to dispatch the password recovery email")
+        return {"status": "ok", "message": "The password recovery request has been received and is currently being processed by the system"}
 
     @staticmethod
     async def reset_password(token: str, new_password: str, client_ip: str, db=None):
         token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
-                status_code=400, detail="The verification code is invalid or has expired"
+                status_code=400, detail="The provided verification token is either invalid or has exceeded its allowed expiration time"
             )
         auth_cred = await AuthRepository.get_auth_credential_by_email(
             token_doc["email"], db=db
@@ -228,22 +228,22 @@ class AuthService:
             },
             db=db,
         )
-        logger.info(f"Account {token_doc['email']} changed password from {client_ip}")
-        return {"status": "ok", "message": "Password changed successfully"}
+        logger.info(f"The password for the account associated with {token_doc['email']} was successfully modified from the network address {client_ip}")
+        return {"status": "ok", "message": "Your account password has been successfully updated and saved to the system"}
 
     @staticmethod
     async def verify_reset_code(token: str, client_ip: str, db=None):
         token_doc = await AuthRepository.get_valid_password_reset_token(token, db=db)
         if not token_doc or token_doc.get("expires_at") < datetime.now(timezone.utc):
             raise HTTPException(
-                status_code=400, detail="The verification code is invalid or has expired"
+                status_code=400, detail="The provided verification token is either invalid or has exceeded its allowed expiration time"
             )
-        return {"status": "ok", "message": "Verification code is valid"}
+        return {"status": "ok", "message": "The submitted verification token has been verified and confirmed as valid"}
 
     @staticmethod
     async def issue_token_for_user(user_doc: dict, client_ip: str, db=None):
         if not user_doc.get("is_active", True):
-            raise HTTPException(status_code=403, detail="The account is currently locked")
+            raise HTTPException(status_code=403, detail="Access to this account is currently restricted due to an inactive or locked status")
         session_id = str(uuid7())
         user_id_str = str(user_doc["_id"])
         await AuthRepository.register_session(user_id_str, session_id, client_ip)
@@ -280,8 +280,8 @@ class AuthService:
             )
             token_data = token_resp.json()
             if "access_token" not in token_data:
-                logger.error("Google authentication failed")
-                raise HTTPException(status_code=400, detail="Google authentication failed")
+                logger.error("The external authentication provider rejected the authorization request due to an invalid or expired token exchange")
+                raise HTTPException(status_code=400, detail="The system was unable to complete the authentication process with the external identity provider")
             user_resp = await client.get(
                 settings.GOOGLE_USERINFO_URL,
                 headers={"Authorization": f"Bearer {token_data['access_token']}"},
@@ -302,7 +302,7 @@ class AuthService:
             if config and (not config.get("registration_enabled", True)):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Registration is temporarily disabled",
+                    detail="The account creation functionality is temporarily disabled by the system administrators",
                 )
             import httpx
 
@@ -322,7 +322,7 @@ class AuthService:
                     )
                     if resp.status_code != 201:
                         raise HTTPException(
-                            status_code=500, detail="System error occurred"
+                            status_code=500, detail="An unexpected system error occurred while attempting to communicate with the user provisioning service"
                         )
                     user_id = resp.json().get("data", {}).get("user_id")
 
@@ -336,7 +336,7 @@ class AuthService:
                     user_doc = {"_id": user_id, "email": email, "is_active": True}
             except httpx.RequestError:
                 raise HTTPException(
-                    status_code=500, detail="Unable to connect to the user management service"
+                    status_code=500, detail="The system was unable to establish a connection with the internal user management service"
                 )
-            logger.info(f"Created Google account for {email}")
+            logger.info(f"A new integrated account was automatically provisioned for the email address {email} following a successful external authentication")
         return await AuthService.issue_token_for_user(user_doc, client_ip)

@@ -42,7 +42,7 @@ celery_app.conf.task_queues = (
     default_retry_delay=10,
 )
 def hard_delete_document_task(document_id: str, user_id: str):
-    logger.info(f"Processing permanent removal for document {document_id}")
+    logger.info(f"Initiating the permanent removal process for the document with identifier {document_id}")
     import httpx
 
     try:
@@ -54,9 +54,9 @@ def hard_delete_document_task(document_id: str, user_id: str):
                 f"{rag_url}/inference/vector/{document_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
-        logger.info(f"Document {document_id} has been permanently removed")
+        logger.info(f"The document with identifier {document_id} has been permanently removed from the storage system")
     except Exception as e:
-        logger.error(f"Failed to process permanent removal for document {document_id}")
+        logger.error(f"Failed to complete the permanent removal process for the document with identifier {document_id} due to an unexpected network or system failure")
         raise hard_delete_document_task.retry(exc=e)
 
 
@@ -68,7 +68,7 @@ def hard_delete_document_task(document_id: str, user_id: str):
     default_retry_delay=10,
 )
 def compile_document_tectonic(document_id, tex_content):
-    logger.info(f"Initiating document processing for {document_id}")
+    logger.info(f"Initiating the compilation process for the document with identifier {document_id}")
     with tempfile.TemporaryDirectory() as temp_dir:
         tex_path = os.path.join(temp_dir, f"{document_id}.tex")
         pdf_path = os.path.join(temp_dir, f"{document_id}.pdf")
@@ -78,7 +78,7 @@ def compile_document_tectonic(document_id, tex_content):
             f.write(tex_content)
 
         try:
-            logger.debug(f"Processing document {document_id}")
+            logger.debug(f"Executing the underlying compilation steps for the document with identifier {document_id}")
             process = subprocess.run(
                 [
                     "tectonic",
@@ -96,19 +96,19 @@ def compile_document_tectonic(document_id, tex_content):
             )
 
             if not os.path.exists(pdf_path):
-                logger.error(f"Document compilation failed for {document_id}")
+                logger.error(f"The compilation process failed to generate the final output for the document with identifier {document_id}")
                 log_content = process.stdout + process.stderr
                 if os.path.exists(log_path):
                     with open(log_path, "r", encoding="utf-8") as lf:
                         log_content += "\n" + lf.read()
                 return {
                     "status": "error",
-                    "error": "The document could not be processed due to invalid formatting.",
+                    "error": "The document could not be processed completely due to invalid structural formatting or syntax issues",
                     "logs": log_content,
                     "document_id": document_id,
                 }
 
-            logger.info(f"Document {document_id} has been processed successfully")
+            logger.info(f"The document with identifier {document_id} has been successfully compiled and processed")
 
             return {
                 "status": "success",
@@ -117,16 +117,16 @@ def compile_document_tectonic(document_id, tex_content):
                 "logs": process.stdout,
             }
         except subprocess.TimeoutExpired:
-            logger.error(f"Document compilation timed out for {document_id}")
+            logger.error(f"The background compilation process exceeded the maximum allowed execution time for the document with identifier {document_id}")
             return {
                 "status": "error",
-                "error": "The compilation process took too long. Please verify the document structure.",
+                "error": "The compilation process exceeded the maximum allowed time limit so please verify the document structure and try again",
                 "document_id": document_id,
             }
         except Exception as e:
-            logger.exception("An unexpected error occurred during document compilation")
+            logger.exception(f"An unexpected system failure occurred while attempting to compile the document with identifier {document_id}")
             return {
                 "status": "error",
-                "error": "An unexpected error occurred while processing the document. Please try again.",
+                "error": "An unexpected system failure occurred during document processing so please attempt your request again later",
                 "document_id": document_id
             }
