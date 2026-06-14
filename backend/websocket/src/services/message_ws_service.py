@@ -53,7 +53,7 @@ class MessageConnectionManager:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.error("Lỗi hệ thống lắng nghe tín hiệu bộ đệm")
+            logger.error("System failed to listen to buffer signals")
             self._listener_task = None
 
     async def connect(self, user_id: str, websocket: WebSocket):
@@ -151,7 +151,7 @@ class MessageConnectionManager:
         try:
             async with httpx.AsyncClient() as client:
                 res = await client.get(
-                    f"{settings.COLLECTOR_URL}/tien-trinh-dang-chay",
+                    f"{settings.COLLECTOR_URL}/active-processes",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 active_collectors = res.json() if res.status_code == 200 else []

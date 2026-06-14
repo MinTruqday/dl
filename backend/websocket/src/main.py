@@ -3,6 +3,7 @@ from core.config import settings
 from core.database import db_client
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from src.router import editor_ws, message_ws
 
 app = FastAPI(title="DocLib WebSocket", version=settings.VERSION)
@@ -19,13 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(editor_ws.router, prefix="/soan-thao")
-app.include_router(message_ws.router, prefix="/tin-nhan")
+app.include_router(editor_ws.router, prefix="/editor")
+app.include_router(message_ws.router, prefix="/messages")
 
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống WebSocket DocLib")
+    logger.info("DocLib WebSocket initialized successfully")
     from core.database import init_db
 
     await init_db()
@@ -38,7 +39,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "websocket"}
 

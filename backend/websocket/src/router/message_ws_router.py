@@ -12,7 +12,7 @@ from src.services.message_ws_service import message_manager
 router = APIRouter()
 
 
-@router.websocket("/ws/{user_id}")
+@router.websocket("/{user_id}")
 async def websocket_endpoint(
     websocket: WebSocket, user_id: str, token: str = Query(None)
 ):
@@ -23,11 +23,11 @@ async def websocket_endpoint(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning("Từ chối kết nối do thông tin xác thực không trùng khớp")
+            logger.warning("Connection rejected due to authentication mismatch")
             await websocket.close(code=1008)
             return
     except Exception as e:
-        logger.error(f"Xác thực token kết nối cho {user_id} thất bại")
+        logger.error(f"Connection token authentication failed for {user_id}")
         await websocket.close(code=1008)
         return
 
@@ -70,5 +70,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception as e:
-        logger.error(f"Lỗi xử lý tin nhắn trực tiếp của {user_id}")
+        logger.error(f"Direct message processing failed for {user_id}")
         message_manager.disconnect(user_id, websocket)
