@@ -20,12 +20,25 @@ from src.router.finetune_router import router as finetune_router
 from src.router.history_router import router as history_router
 from src.router.inference_router import router as inference_router
 from src.router.ingest_router import router as ingest_router
+from fastapi.middleware.cors import CORSMiddleware
 from src.harness.agentops_harness import agentops_harness
 from src.harness.evaluation_harness import evaluation_harness
 from src.harness.orchestration_harness import orchestration_harness
 
 app = FastAPI(title="DocLib Agentic AI", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=(
+        settings.CORS_ALLOWED_ORIGINS.split(",")
+        if settings.CORS_ALLOWED_ORIGINS
+        else ["*"]
+    ),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(inference_router)
 app.include_router(chat_router)

@@ -45,7 +45,7 @@ async def check_plagiarism(
     }
 
 
-@router.post("/{document_id}/sync-action")
+@router.post("/{document_id}/dong-bo")
 async def sync_keystroke_buffer(
     document_id: str,
     payload: KeystrokeSyncRequest,
@@ -60,7 +60,7 @@ async def sync_keystroke_buffer(
     }
 
 
-@router.post("/tai-lieu/{document_id}/suggestion")
+@router.post("/tai-lieu/{document_id}/goi-y")
 async def add_inline_suggestion(
     document_id: str,
     payload: InlineSuggestionRequest,
@@ -75,7 +75,7 @@ async def add_inline_suggestion(
     }
 
 
-@router.put("/suggestion/{suggestion_id}/resolve")
+@router.put("/goi-y/{suggestion_id}/giai-quyet")
 async def resolve_suggestion(
     suggestion_id: str,
     payload: ResolveSuggestionRequest,
@@ -125,7 +125,7 @@ async def submit_for_review(document_id: str, current_user=Depends(get_current_u
     }
 
 
-@router.post("/{document_id}/thay-the-tat-ca")
+@router.post("/{document_id}/tim-kiem-va-thay-the")
 async def global_find_replace(
     document_id: str,
     payload: FindReplaceRequest,
@@ -190,7 +190,7 @@ async def extract_smart_tags(
     }
 
 
-@router.post("/{document_id}/check-logic")
+@router.post("/{document_id}/kiem-tra-logic")
 async def check_logic(
     document_id: str,
     payload: dict,
@@ -245,7 +245,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
     }
 
 
-@router.put("/binh-luan/{comment_id}/resolve")
+@router.put("/binh-luan/{comment_id}/giai-quyet")
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),

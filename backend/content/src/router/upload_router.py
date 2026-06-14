@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 from src.router.dependency_router import get_db, require_role
 from src.services.upload_service import UploadService
 
-router = APIRouter(prefix="/tai-len")
+router = APIRouter(prefix="/dang-tai")
 import re
 
 from fastapi import HTTPException
@@ -52,7 +52,7 @@ async def upload_document(
     )
 
 
-@router.post("/file", response_model=APIResponse[Any])
+@router.post("/tep-tin", response_model=APIResponse[Any])
 async def upload_asset(
     file: UploadFile = File(...),
     current_user: UserInDB = Depends(
@@ -76,7 +76,7 @@ async def upload_asset(
     )
 
 
-@router.get("/storage/{file_path:path}", response_model=APIResponse[Any])
+@router.get("/luu-tru/{file_path:path}", response_model=APIResponse[Any])
 async def get_presigned_download_url(
     file_path: str,
     current_user: UserInDB = Depends(
@@ -103,7 +103,7 @@ async def upload_chunk(
     ),
     db=Depends(get_db),
 ) -> Any:
-    """Resumable Chunked Upload for flaky networks"""
+
     import os
 
     import aiofiles

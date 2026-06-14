@@ -145,7 +145,7 @@ async def search_messages(
     )
 
 
-@router.post("/tin-nhan/{message_id}/tha-cam-xuc", response_model=APIResponse[Any])
+@router.post("/tin-nhan/{message_id}/bay-to-cam-xuc", response_model=APIResponse[Any])
 async def add_reaction(
     message_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -269,7 +269,7 @@ async def create_group(req: dict, current_user=Depends(get_current_user)):
     return APIResponse(data=result, message="Đã tạo nhóm thảo luận", status=201)
 
 
-@router.post("/dang-go/{other_user_id}", response_model=APIResponse[Any])
+@router.post("/tin-nhan-nhap/{other_user_id}", response_model=APIResponse[Any])
 async def save_draft(
     other_user_id: str, req: dict, current_user=Depends(get_current_user)
 ):
@@ -278,13 +278,13 @@ async def save_draft(
     return APIResponse(data=result, message="Đã lưu tin nhắn nháp")
 
 
-@router.get("/dang-go/{other_user_id}", response_model=APIResponse[Any])
+@router.get("/tin-nhan-nhap/{other_user_id}", response_model=APIResponse[Any])
 async def get_draft(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.get_draft(other_user_id, current_user)
     return APIResponse(data=result, message="Đã tải tin nhắn nháp")
 
 
-@router.post("/tu-huy/{other_user_id}", response_model=APIResponse[Any])
+@router.post("/huy-tu-dong/{other_user_id}", response_model=APIResponse[Any])
 async def toggle_self_destruct(
     other_user_id: str, req: dict, current_user=Depends(get_current_user)
 ):

@@ -62,10 +62,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "content"}
 
-
-if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8450, reload=True)

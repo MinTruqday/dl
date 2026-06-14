@@ -43,6 +43,6 @@ async def startup_event():
     logger.info("Đã khởi tạo hệ thống biên dịch DocLib")
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "compiler"}

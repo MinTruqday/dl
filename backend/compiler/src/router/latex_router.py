@@ -20,7 +20,7 @@ async def compile_latex(req: CompileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/xuat/{format}")
+@router.post("/ket-xuat/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
         raise HTTPException(status_code=400, detail="Định dạng không hỗ trợ")
@@ -45,7 +45,7 @@ async def format_latex(req: CompileRequest):
     return LatexEngine.format_latex(req.content)
 
 
-@router.post("/export-zip")
+@router.post("/ket-xuat-zip")
 async def export_project_zip(req: CompileRequest):
     zip_bytes = LatexEngine.export_project_zip(req.content)
     return Response(content=zip_bytes, media_type="application/x-zip-compressed")

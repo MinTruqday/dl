@@ -11,7 +11,7 @@ from src.schemas.highlight_schema import (
 )
 from src.services.highlight_service import HighlightService
 
-router = APIRouter(prefix="/to-dam")
+router = APIRouter(prefix="/danh-dau")
 
 
 @router.post("/tai-lieu/{document_id}", response_model=APIResponse[Any])
@@ -89,7 +89,7 @@ async def get_all_notes(
     )
 
 
-@router.get("/tai-lieu/{document_id}/xuat-tai-lieu", response_model=APIResponse[Any])
+@router.get("/tai-lieu/{document_id}/ket-xuat", response_model=APIResponse[Any])
 async def export_highlights_markdown(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),

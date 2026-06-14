@@ -12,7 +12,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-router = APIRouter(prefix="/finetune")
+router = APIRouter(prefix="/huan-luyen")
 active_jobs = {}
 
 
@@ -114,7 +114,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
         active_jobs.pop(job_id, None)
 
 
-@router.post("/dataset")
+@router.post("/tap-du-lieu")
 async def create_dataset(req: dict):
     db = get_db()
     doc = {
@@ -131,7 +131,7 @@ async def create_dataset(req: dict):
     return doc
 
 
-@router.get("/dataset")
+@router.get("/tap-du-lieu")
 async def list_datasets(user_id: str):
     return (
         await get_db()["finetune_datasets"]
@@ -141,7 +141,7 @@ async def list_datasets(user_id: str):
     )
 
 
-@router.get("/dataset/{dataset_id}")
+@router.get("/tap-du-lieu/{dataset_id}")
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await get_db()["finetune_datasets"].find_one(
         {"_id": dataset_id, "user_id": user_id}
@@ -151,7 +151,7 @@ async def get_dataset(dataset_id: str, user_id: str):
     return doc
 
 
-@router.delete("/dataset/{dataset_id}")
+@router.delete("/tap-du-lieu/{dataset_id}")
 async def delete_dataset(dataset_id: str, user_id: str):
     db = get_db()
     result = await RepositoryFactory.get("finetune_datasets").delete_one(
@@ -165,7 +165,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
     raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
 
 
-@router.post("/dataset/{dataset_id}/sample")
+@router.post("/tap-du-lieu/{dataset_id}/mau-thu")
 async def add_samples(dataset_id: str, req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -197,7 +197,7 @@ async def add_samples(dataset_id: str, req: dict):
     return {"added": len(documents), "total": total}
 
 
-@router.get("/dataset/{dataset_id}/sample")
+@router.get("/tap-du-lieu/{dataset_id}/mau-thu")
 async def get_samples(
     dataset_id: str,
     user_id: str,
@@ -219,7 +219,7 @@ async def get_samples(
     )
 
 
-@router.delete("/dataset/{dataset_id}/sample/{sample_id}")
+@router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     db = get_db()
     if not await RepositoryFactory.get("finetune_datasets").find_one(
@@ -242,7 +242,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
 
 
-@router.post("/input/phan-hoi")
+@router.post("/dau-vao/phan-hoi")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -300,7 +300,7 @@ async def import_feedback(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/input/tai-lieu")
+@router.post("/dau-vao/tai-lieu")
 async def import_documents(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
@@ -380,7 +380,7 @@ async def import_documents(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/jobs")
+@router.post("/tao-huan-luyen")
 async def create_job(req: dict):
     db = get_db()
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
@@ -418,7 +418,7 @@ async def create_job(req: dict):
     return job
 
 
-@router.post("/jobs/{job_id}/start")
+@router.post("/tao-huan-luyen/{job_id}/bat-dau")
 async def start_job(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -462,7 +462,7 @@ async def start_job(job_id: str, req: dict):
     return {"status": "started", "job_id": job_id}
 
 
-@router.get("/jobs")
+@router.get("/tao-huan-luyen")
 async def list_jobs(user_id: str):
     return (
         await get_db()["finetune_jobs"]
@@ -472,7 +472,7 @@ async def list_jobs(user_id: str):
     )
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/tao-huan-luyen/{job_id}")
 async def get_job(job_id: str, user_id: str):
     job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
     if not job:
@@ -480,7 +480,7 @@ async def get_job(job_id: str, user_id: str):
     return job
 
 
-@router.post("/jobs/{job_id}/huy")
+@router.post("/tao-huan-luyen/{job_id}/huy-bo")
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
     result = await RepositoryFactory.get("finetune_jobs").update_one(
@@ -497,7 +497,7 @@ async def cancel_job(job_id: str, req: dict):
     raise HTTPException(status_code=400, detail="Không thể hủy công việc này")
 
 
-@router.post("/jobs/{job_id}/deploy")
+@router.post("/tao-huan-luyen/{job_id}/trien-khai")
 async def deploy_model(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -566,7 +566,7 @@ async def deploy_model(job_id: str, req: dict):
     return {"status": "deployed", "model_name": model_name}
 
 
-@router.post("/jobs/{job_id}/evaluate")
+@router.post("/tao-huan-luyen/{job_id}/danh-gia")
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation_harness import evaluation_harness
 

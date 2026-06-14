@@ -99,7 +99,7 @@ async def get_ai_recommendations(
     )
 
 
-@router.get("/trending-hashtags", response_model=APIResponse[Any])
+@router.get("/hashtag-xu-huong", response_model=APIResponse[Any])
 async def get_trending_tags(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
     db=Depends(get_db),

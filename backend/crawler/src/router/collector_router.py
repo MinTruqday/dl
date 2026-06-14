@@ -123,7 +123,7 @@ async def get_collector_stats():
     }
 
 
-@router.get("/nhat-ky-he-thong")
+@router.get("/logs")
 async def get_collector_logs():
     log_file = "logs/backend.log"
     logs = []

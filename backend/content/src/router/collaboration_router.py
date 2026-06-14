@@ -107,7 +107,7 @@ async def get_activities(
 
 
 @router.post(
-    "/tai-lieu/{document_id}/transfer-ownership", response_model=APIResponse[Any]
+    "/tai-lieu/{document_id}/chuyen-quyen-so-huu", response_model=APIResponse[Any]
 )
 async def transfer_ownership(
     document_id: str,
@@ -231,7 +231,7 @@ async def revoke_invite(
 
 
 @router.get(
-    "/tai-lieu/{document_id}/contribution-stats", response_model=APIResponse[Any]
+    "/tai-lieu/{document_id}/thong-ke-dong-gop", response_model=APIResponse[Any]
 )
 async def get_contribution_stats(
     document_id: str,

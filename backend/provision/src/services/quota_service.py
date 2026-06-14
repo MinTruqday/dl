@@ -30,7 +30,7 @@ class QuotaService:
                 "daily_tokens": 7500,
                 "req_reset_hours": 5,
                 "max_docs": 5,
-                "model": settings.QWEN_MODEL,
+                "model": settings.LLAMA_MODEL,
                 "thinking": False,
             },
             "PREMIUM": {

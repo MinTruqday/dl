@@ -134,7 +134,7 @@ services:
       - "8350:8350"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`) || PathPrefix(`/deposit`) || PathPrefix(`/withdrawal`) || PathPrefix(`/coupon`) || PathPrefix(`/monetization`)"
+      - "traefik.http.routers.finance.rule=PathPrefix(`/rut-tien`) || PathPrefix(`/nap-tien`) || PathPrefix(`/kiem-tien`) || PathPrefix(`/ma-giam-gia`) || PathPrefix(`/vi-tien`)"
       - "traefik.http.services.finance.loadbalancer.server.port=8350"
     env_file:
       - .env
@@ -158,7 +158,7 @@ services:
       - "8150:8150"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.signal.rule=PathPrefix(`/notification`)"
+      - "traefik.http.routers.signal.rule=PathPrefix(`/thong-bao`)"
       - "traefik.http.services.signal.loadbalancer.server.port=8150"
     env_file:
       - .env
@@ -182,7 +182,7 @@ services:
       - "8400:8400"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/inference`) || PathPrefix(`/chat`) || PathPrefix(`/ingest`) || PathPrefix(`/feedback`) || PathPrefix(`/finetune`) || PathPrefix(`/history`) || PathPrefix(`/quota`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/finetune`) || PathPrefix(`/phan-hoi`) || PathPrefix(`/ingest`) || PathPrefix(`/tro-chuyen`) || PathPrefix(`/lich-su`) || PathPrefix(`/inference`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8400"
     env_file:
       - .env
@@ -257,7 +257,7 @@ services:
       - "8250:8250"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.collector.rule=PathPrefix(`/collect`)"
+      - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
       - "traefik.http.services.collector.loadbalancer.server.port=8250"
     depends_on:
       - rabbitmq
@@ -284,7 +284,7 @@ services:
       - "8300:8300"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.compiler.rule=PathPrefix(`/compile`)"
+      - "traefik.http.routers.compiler.rule=PathPrefix(`/soan-thao`)"
       - "traefik.http.services.compiler.loadbalancer.server.port=8300"
     depends_on:
       - rabbitmq
@@ -332,7 +332,7 @@ services:
       - "8500:8500"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) "
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
       - "traefik.http.services.auth.loadbalancer.server.port=8500"
     depends_on:
       - mongodb
@@ -357,7 +357,7 @@ services:
       - "8050:8050"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.provision.rule=PathPrefix(`/user`) || PathPrefix(`/audit`) || PathPrefix(`/telemetry`) || PathPrefix(`/operation`) || PathPrefix(`/quota`) || PathPrefix(`/profile`) || PathPrefix(`/banner`)"
+      - "traefik.http.routers.provision.rule=PathPrefix(`/ho-so`) || PathPrefix(`/audit`) || PathPrefix(`/quang-cao`) || PathPrefix(`/hoat-dong`) || PathPrefix(`/telemetry`) || PathPrefix(`/nguoi-dung`) || PathPrefix(`/han-muc`)"
       - "traefik.http.services.provision.loadbalancer.server.port=8050"
     depends_on:
       - mongodb
@@ -431,7 +431,7 @@ services:
       - "8200:8200"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ws.rule=PathPrefix(`/message`) || PathPrefix(`/editor`)"
+      - "traefik.http.routers.ws.rule=PathPrefix(`/tin-nhan`) || PathPrefix(`/soan-thao`)"
       - "traefik.http.services.ws.loadbalancer.server.port=8200"
     depends_on:
       - redis
@@ -487,7 +487,7 @@ services:
       - doclib_network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.content.rule=PathPrefix(`/document`) || PathPrefix(`/review`) || PathPrefix(`/version`) || PathPrefix(`/reading`) || PathPrefix(`/bookmark`) || PathPrefix(`/library`) || PathPrefix(`/upload`) || PathPrefix(`/discovery`) || PathPrefix(`/export`) || PathPrefix(`/collaboration`) || PathPrefix(`/publication`) || PathPrefix(`/storage`) || PathPrefix(`/highlight`) || PathPrefix(`/editor`) || PathPrefix(`/draft`) || PathPrefix(`/highlight`) || PathPrefix(`/quota`)"
+      - "traefik.http.routers.content.rule=PathPrefix(`/to-dam`) || PathPrefix(`/doc-sach`) || PathPrefix(`/dau-trang`) || PathPrefix(`/danh-gia`) || PathPrefix(`/tai-len`) || PathPrefix(`/xuat`) || PathPrefix(`/ban-nhap`) || PathPrefix(`/storage`) || PathPrefix(`/thu-vien`) || PathPrefix(`/ghim`) || PathPrefix(`/kham-pha`) || PathPrefix(`/tai-lieu`) || PathPrefix(`/cong-tac`) || PathPrefix(`/xuat-ban`) || PathPrefix(`/phien-ban`)"
       - "traefik.http.services.content.loadbalancer.server.port=8450"
 
 networks:

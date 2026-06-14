@@ -13,7 +13,7 @@ from src.schemas.library_schema import (
 )
 from src.services.reading_service import ReadingService
 
-router = APIRouter(prefix="/doc-sach")
+router = APIRouter(prefix="/doc-hieu")
 
 
 @router.get("/lich-su", response_model=APIResponse[Any])
@@ -149,7 +149,7 @@ def is_safe_zip_info(info: zipfile.ZipInfo) -> bool:
     return True
 
 
-@router.get("/tree-zip", response_model=APIResponse[Any])
+@router.get("/cay-zip", response_model=APIResponse[Any])
 async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
     try:
         validate_url_ssrf(file_url)
@@ -184,7 +184,7 @@ async def get_zip_tree(file_url: str = Query(...), db=Depends(get_db)):
         return APIResponse(data=None, message=str(e), status=500)
 
 
-@router.get("/content-zip", response_model=APIResponse[Any])
+@router.get("/noi-dung-zip", response_model=APIResponse[Any])
 async def get_zip_content(
     file_url: str = Query(...), path: str = Query(...), db=Depends(get_db)
 ):

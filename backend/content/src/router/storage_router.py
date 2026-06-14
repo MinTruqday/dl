@@ -12,7 +12,7 @@ from src.schemas.storage_schema import (
 )
 from src.services.storage_service import StorageService
 
-router = APIRouter(prefix="/storage")
+router = APIRouter(prefix="/luu-tru")
 
 
 @router.post("/thu-muc", response_model=APIResponse[StorageItemResponse])
@@ -32,7 +32,7 @@ async def create_folder(
     )
 
 
-@router.post("/file", response_model=APIResponse[StorageItemResponse])
+@router.post("/tep-tin", response_model=APIResponse[StorageItemResponse])
 async def create_file(
     background_tasks: BackgroundTasks,
     data: StorageItemCreate = Body(...),
@@ -182,7 +182,7 @@ async def download_zip(
     )
 
 
-@router.put("/file/{item_id}", response_model=APIResponse[StorageItemResponse])
+@router.put("/tep-tin/{item_id}", response_model=APIResponse[StorageItemResponse])
 async def update_item(
     item_id: str,
     data: StorageItemUpdate = Body(...),
@@ -220,7 +220,7 @@ async def update_item(
     )
 
 
-@router.delete("/file/{item_id}", response_model=APIResponse[Any])
+@router.delete("/tep-tin/{item_id}", response_model=APIResponse[Any])
 async def delete_item(
     item_id: str,
     hard_delete: bool = False,
@@ -292,7 +292,7 @@ async def add_version(
     )
 
 
-@router.post("/file/{item_id}/chia-se", response_model=APIResponse[Any])
+@router.post("/tap-tin/{item_id}/chia-se", response_model=APIResponse[Any])
 async def share_archive(
     item_id: str,
     email: str = Body(..., embed=True),

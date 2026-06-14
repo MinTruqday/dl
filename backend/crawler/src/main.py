@@ -41,6 +41,6 @@ async def startup_event():
     asyncio.create_task(run_worker())
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "collector"}

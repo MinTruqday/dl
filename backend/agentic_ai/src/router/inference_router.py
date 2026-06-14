@@ -25,7 +25,7 @@ from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 
-router = APIRouter()
+router = APIRouter(prefix="/suy-luan")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
@@ -238,7 +238,7 @@ async def analyze_sentiment(
         )
 
 
-@router.post("/tao-ma")
+@router.post("/tao-ma-nguon")
 async def generate_code(
     req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -296,7 +296,7 @@ async def grammar_check(
         )
 
 
-@router.post("/tom-tat")
+@router.post("/tom-tat-noi-dung")
 async def summarize_text(
     req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -389,7 +389,7 @@ async def check_plagiarism(
         )
 
 
-@router.post("/actions")
+@router.post("/hanh-dong")
 async def unified_action(
     req: ActionRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -532,7 +532,7 @@ async def transform_tone(
         )
 
 
-@router.post("/content-moderation")
+@router.post("/kiem-duyet-noi-dung")
 async def peer_review(
     req: ReviewRequest, current_user: UserInDB = Depends(get_current_user)
 ):
