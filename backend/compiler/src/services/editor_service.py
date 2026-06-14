@@ -20,7 +20,7 @@ class EditorService:
         content: str, format_type: str, compiler_url: str = settings.COMPILER_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Document content is empty")
+            raise HTTPException(status_code=400, detail="The requested operation cannot proceed because the provided document content is completely empty")
         try:
             url = f"{compiler_url}/export/{format_type}"
             async with httpx.AsyncClient(
@@ -31,25 +31,25 @@ class EditorService:
                 )
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail=f"Failed to export file format: {format_type}"
+                        status_code=422, detail="The system was unable to successfully export the document to the requested file format"
                     )
                 return response.content
         except httpx.TimeoutException:
             raise HTTPException(
-                status_code=408, detail=f"Export process timed out for format: {format_type}"
+                status_code=408, detail="The document export process exceeded the maximum allowed execution time and was terminated"
             )
         except HTTPException:
             raise
-        except Exception as e:
-            logger.error(f"Document export failed for format: {format_type}")
-            raise HTTPException(status_code=500, detail="Document export failed")
+        except Exception:
+            logger.error("The document export operation failed unexpectedly while processing the conversion request")
+            raise HTTPException(status_code=500, detail="The document export process encountered a critical failure and could not be completed")
 
     @staticmethod
     async def compile_editorjs_to_pdf(
         content: str, compiler_url: str = settings.COMPILER_URL
     ):
         if not content:
-            raise HTTPException(status_code=400, detail="Document content is empty")
+            raise HTTPException(status_code=400, detail="The requested operation cannot proceed because the provided document content is completely empty")
         try:
             url = f"{compiler_url}/compile"
             async with httpx.AsyncClient(
@@ -58,16 +58,16 @@ class EditorService:
                 response = await client.post(url, json={"content": content})
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=422, detail="Document compilation failed"
+                        status_code=422, detail="The document compilation process encountered a critical failure and could not be completed"
                     )
                 return response.content
         except httpx.TimeoutException:
-            raise HTTPException(status_code=408, detail="Compilation timed out")
+            raise HTTPException(status_code=408, detail="The document compilation process exceeded the maximum allowed execution time and was safely terminated")
         except HTTPException:
             raise
-        except Exception as e:
-            logger.error("Document compilation failed")
-            raise HTTPException(status_code=500, detail="Document compilation failed")
+        except Exception:
+            logger.error("The background document compilation task failed to complete successfully")
+            raise HTTPException(status_code=500, detail="The document compilation process encountered a critical failure and could not be completed")
 
     @staticmethod
     async def sync_keystroke_buffer(
@@ -83,9 +83,9 @@ class EditorService:
                     f"editor_snapshot:{document_id}", user_id, str(payload)
                 )
             return {"status": "synced_cache", "timestamp": payload.get("timestamp")}
-        except Exception as e:
-            logger.error("Failed to synchronize keystrokes")
-            return {"status": "sync_failed", "error": str(e)}
+        except Exception:
+            logger.error("The background task failed to synchronize the editor keystroke buffer with the remote cache")
+            return {"status": "sync_failed", "error": "The synchronization process encountered an unexpected system failure"}
 
     @staticmethod
     async def add_inline_suggestion(
@@ -103,10 +103,8 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            f"User {user_id} added an inline suggestion to document {document_id}"
-        )
-        return {"message": "Inline suggestion added successfully"}
+        logger.info("A new inline editorial suggestion has been successfully recorded for the specified document")
+        return {"message": "The inline editorial suggestion has been successfully submitted and saved"}
 
     @staticmethod
     async def resolve_suggestion(
@@ -117,7 +115,7 @@ class EditorService:
             {"_id": ObjectId(suggestion_id)}
         )
         if not sug:
-            raise HTTPException(status_code=404, detail="Suggestion not found")
+            raise HTTPException(status_code=404, detail="The requested editorial suggestion could not be located within the system records")
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": sug["document_id"]}
         )
@@ -127,7 +125,7 @@ class EditorService:
             and sug.get("reviewer_id") != user_id
         ):
             raise HTTPException(
-                status_code=403, detail="You do not have permission to resolve this suggestion"
+                status_code=403, detail="The current account lacks the necessary permissions to resolve this specific editorial suggestion"
             )
 
         action = payload.get("action", "rejected")
@@ -140,10 +138,8 @@ class EditorService:
                 }
             },
         )
-        logger.info(
-            f"User {user_id} resolved suggestion {suggestion_id}"
-        )
-        return {"message": f"Suggestion {action} successfully"}
+        logger.info("An inline editorial suggestion has been marked as resolved by the authorized account")
+        return {"message": "The specified editorial suggestion has been successfully processed and updated according to the requested action"}
 
     @staticmethod
     async def sync_pomodoro_session(payload: dict, current_user, db=None):
@@ -157,8 +153,8 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(f"Pomodoro session recorded for user {user_id}")
-        return {"status": "recorded"}
+        logger.info("A new focus session has been successfully recorded for the authenticated account")
+        return {"status": "The session metrics have been successfully recorded"}
 
     @staticmethod
     async def auto_save_draft(document_id: str, content: dict, current_user, db=None):
@@ -203,8 +199,8 @@ class EditorService:
                     )
                 if "data" in block and "text" in block["data"]:
                     words += len(str(block["data"]["text"]).split())
-        except Exception as e:
-            logger.error(f"Failed to parse document draft: {document_id}")
+        except Exception:
+            logger.error("The system encountered a structural error while attempting to parse the document draft content")
 
         reading_time_minutes = max(1, words // 200)
         await RepositoryFactory.get("documents").update_one(
@@ -222,7 +218,7 @@ class EditorService:
             },
         )
         return {
-            "message": "Draft saved automatically",
+            "message": "The current document draft has been successfully preserved in the background storage",
             "timestamp": str(datetime.now(timezone.utc)),
         }
 
@@ -233,10 +229,8 @@ class EditorService:
             {"_id": document_id, "author_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
         )
-        logger.info(
-            f"Document {document_id} submitted for review by user {user_id}"
-        )
-        return {"message": "Document submitted for review"}
+        logger.info("A document has been successfully placed into the editorial review queue by the author")
+        return {"message": "The specified document has been successfully queued for editorial review"}
 
     @staticmethod
     async def global_find_replace(
@@ -256,7 +250,7 @@ class EditorService:
         if not document:
             raise HTTPException(
                 status_code=403,
-                detail="Permission denied or document not found",
+                detail="The system could not locate the specified document or the current account lacks the required access permissions",
             )
 
         flags = 0 if match_case else re.IGNORECASE
@@ -302,11 +296,9 @@ class EditorService:
                 "created_at": datetime.now(timezone.utc),
             }
         )
-        logger.info(
-            f"User {user_id} performed global find and replace on document {document_id}"
-        )
+        logger.info("A global search and replacement operation has been successfully executed on the specified document")
         return {
-            "message": "Global replacement completed successfully",
+            "message": "The global search and replacement operation has been successfully executed across the document content",
             "affected_fields": ["title", "description", "content"],
         }
 
@@ -326,7 +318,7 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return {"suggestions": resp.json().get("result", "")}
-        return {"suggestions": "AI suggestion failed"}
+        return {"suggestions": "The artificial intelligence service is currently unable to generate suggestions for this content"}
 
     @staticmethod
     async def summarize_document(
@@ -334,7 +326,7 @@ class EditorService:
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")
         content = doc.get("draft_content") or doc.get("content", "")
         text = ""
         try:
@@ -346,10 +338,10 @@ class EditorService:
             for block in blocks:
                 if "data" in block and "text" in block["data"]:
                     text += str(block["data"]["text"]) + " "
-        except:
+        except Exception:
             text = str(content)
         if len(text.split()) < 20:
-            raise HTTPException(status_code=400, detail="Document is too short to summarize")
+            raise HTTPException(status_code=400, detail="The provided document does not contain enough text content to generate a meaningful summary")
         try:
             async with httpx.AsyncClient(
                 timeout=settings.LONG_PROCESS_TIMEOUT
@@ -363,15 +355,15 @@ class EditorService:
                     },
                 )
                 if resp.status_code == 200:
-                    summary = resp.json().get("result", "Document summarized")
+                    summary = resp.json().get("result", "The automated content summarization process has been completed successfully")
                     await RepositoryFactory.get("documents").update_one(
                         {"_id": document_id}, {"$set": {"description": summary}}
                     )
                     return {"summary": summary}
-        except Exception as e:
-            logger.error("Document summarization failed")
-            raise HTTPException(status_code=500, detail="AI service connection failed")
-        raise HTTPException(status_code=500, detail="Document summarization failed")
+        except Exception:
+            logger.error("The automated document summarization task encountered an unexpected internal failure")
+            raise HTTPException(status_code=500, detail="The system was unable to establish a secure connection with the artificial intelligence processing service")
+        raise HTTPException(status_code=500, detail="The automated document summarization process could not be completed successfully")
 
     @staticmethod
     async def extract_smart_tags(
@@ -379,7 +371,7 @@ class EditorService:
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")
         content = doc.get("draft_content") or doc.get("content", "")
         text = ""
         try:
@@ -390,7 +382,7 @@ class EditorService:
             for block in parsed.get("blocks", []):
                 if "data" in block and "text" in block["data"]:
                     text += str(block["data"]["text"]) + " "
-        except:
+        except Exception:
             pass
         try:
             async with httpx.AsyncClient(
@@ -420,10 +412,10 @@ class EditorService:
                         {"_id": document_id}, {"$addToSet": {"tags": {"$each": tags}}}
                     )
                     return {"tags": tags}
-        except Exception as e:
-            logger.error("Tag extraction failed")
-            raise HTTPException(status_code=500, detail="AI service connection failed")
-        raise HTTPException(status_code=500, detail="Tag extraction failed")
+        except Exception:
+            logger.error("The intelligent tag extraction process encountered an unexpected internal failure")
+            raise HTTPException(status_code=500, detail="The system was unable to establish a secure connection with the artificial intelligence processing service")
+        raise HTTPException(status_code=500, detail="The intelligent contextual tags could not be successfully extracted from the provided document")
 
     @staticmethod
     async def add_inline_comment(
@@ -442,7 +434,7 @@ class EditorService:
             "created_at": datetime.now(timezone.utc),
         }
         await RepositoryFactory.get("editor_comments").insert_one(comment)
-        return {"_id": comment_id, "message": "Comment added successfully"}
+        return {"_id": comment_id, "message": "The inline contextual comment has been successfully recorded and attached"}
 
     @staticmethod
     async def get_inline_comments(
@@ -468,7 +460,7 @@ class EditorService:
             {"_id": comment_id}
         )
         if not comment:
-            raise HTTPException(status_code=404, detail="Comment not found")
+            raise HTTPException(status_code=404, detail="The requested inline comment could not be located within the system records")
 
         doc = await RepositoryFactory.get("documents").find_one(
             {"_id": comment["document_id"]}
@@ -479,7 +471,7 @@ class EditorService:
             and comment.get("user_id") != str(current_user.id)
         ):
             raise HTTPException(
-                status_code=403, detail="You do not have permission to resolve this comment"
+                status_code=403, detail="The current account lacks the necessary authorization to mark this specific comment as resolved"
             )
 
         await RepositoryFactory.get("editor_comments").update_one(
@@ -492,7 +484,7 @@ class EditorService:
                 }
             },
         )
-        return {"message": "Comment resolved successfully"}
+        return {"message": "The selected inline comment has been successfully marked as resolved"}
 
     @staticmethod
     async def get_version_diff(
@@ -506,7 +498,7 @@ class EditorService:
         )
         if not v_a or not v_b:
             raise HTTPException(
-                status_code=404, detail="Version not found for comparison"
+                status_code=404, detail="The system was unable to locate one or both of the specified document versions required for the comparative analysis"
             )
         return {
             "version_a": v_a.get("content"),
@@ -523,7 +515,7 @@ class EditorService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")
         content = str(doc.get("content", ""))
         try:
             async with httpx.AsyncClient(
@@ -535,12 +527,12 @@ class EditorService:
                 )
                 if resp.status_code == 200:
                     return resp.json()
-        except Exception as e:
-            logger.error("Plagiarism check failed")
+        except Exception:
+            logger.error("The comprehensive originality analysis process encountered an unexpected internal failure")
         return {
             "plagiarism_score": None,
             "status": "error",
-            "message": "Plagiarism service error",
+            "message": "The originality verification service is currently experiencing technical difficulties and cannot process the request",
         }
 
     @staticmethod
@@ -571,7 +563,7 @@ class EditorService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")
         content = doc.get("content", "")
         async with httpx.AsyncClient(timeout=settings.LONG_PROCESS_TIMEOUT) as client:
             resp = await client.post(
@@ -580,4 +572,4 @@ class EditorService:
             )
             if resp.status_code == 200:
                 return resp.json()
-        return {"corrected_text": "", "score": 0, "message": "Grammar service error"}
+        return {"corrected_text": "", "score": 0, "message": "The grammatical analysis service is currently experiencing technical difficulties and cannot process the request"}

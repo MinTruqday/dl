@@ -1,4 +1,3 @@
-# src/main.py
 import contextvars
 import sys
 import uuid
@@ -41,9 +40,9 @@ app.include_router(editor.router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Compiler initialized successfully")
+    logger.info("The document compilation service has been successfully initialized and is now ready to accept incoming requests")
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "compiler"}
+    return {"status": "The document compilation service is currently operating normally and functioning as expected without any internal issues", "service": "document_compiler"}

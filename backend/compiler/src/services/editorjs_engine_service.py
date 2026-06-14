@@ -362,7 +362,7 @@ class EditorJSEngine:
         ):
             return ""
 
-        logger.warning(f"Ignored invalid block of type: {t}")
+        logger.warning("The system safely ignored an invalid or unsupported content block during the rendering process")
         return ""
 
     @staticmethod
@@ -407,11 +407,11 @@ class EditorJSEngine:
             )
         except json.JSONDecodeError:
             raise Exception(
-                {"error": "The provided document content format is invalid"}
+                "The provided document content format is structurally invalid and cannot be processed"
             )
 
         if not blocks:
-            raise Exception({"error": "The document contains no processable content"})
+            raise Exception("The submitted document does not contain any processable content blocks")
 
         html_content = EditorJSEngine._convert_blocks_to_html(blocks)
 
@@ -439,19 +439,13 @@ class EditorJSEngine:
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024 * 2,
             )
-            stdout, stderr = await asyncio.wait_for(
+            await asyncio.wait_for(
                 process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
             )
 
             if not os.path.exists(pdf_path):
-                error_msg = stderr.decode("utf-8") if stderr else "Unknown error"
-                logger.error("PDF export failed")
-                raise Exception(
-                    {
-                        "error": "Failed to generate the PDF document",
-                        "logs": error_msg[-2048:],
-                    }
-                )
+                logger.error("The system encountered a critical failure while attempting to generate the final portable document format")
+                raise Exception("The system failed to generate the final document output due to an internal rendering error")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -460,13 +454,13 @@ class EditorJSEngine:
             if process:
                 try:
                     process.kill()
-                except Exception as e:
-                    logger.warning("Failed to terminate compilation process")
-            raise Exception("Compilation timed out")
+                except Exception:
+                    logger.warning("The system was unable to cleanly terminate the background compilation process")
+            raise Exception("The document compilation process exceeded the maximum allowed execution time and was forcibly terminated")
 
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
-                except Exception as e:
-                    logger.warning(f"Failed to clean up temporary file: {filepath}")
+                except Exception:
+                    logger.warning("The system was unable to automatically clean up the temporary processing files")

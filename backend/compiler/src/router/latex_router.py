@@ -13,17 +13,15 @@ async def compile_latex(req: CompileRequest):
     try:
         pdf_bytes = await LatexEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
-    except Exception as e:
-        logger.error("Compilation failed")
-        if isinstance(e.args[0], dict):
-            raise HTTPException(status_code=400, detail=e.args[0])
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error("The system encountered an unexpected error while attempting to compile the formatted typesetting document")
+        raise HTTPException(status_code=500, detail="The typesetting compilation process encountered structural errors and could not generate the final document due to invalid syntax or unrecognized commands")
 
 
 @router.post("/export/{format}")
 async def export_document(format: str, req: CompileRequest):
     if format not in ["docx", "html"]:
-        raise HTTPException(status_code=400, detail="Unsupported format")
+        raise HTTPException(status_code=400, detail="The requested export format is not currently supported by the conversion system")
 
     try:
         file_bytes = await LatexEngine.export_to_format(req.content, format)
@@ -35,9 +33,9 @@ async def export_document(format: str, req: CompileRequest):
             media_type = "text/html"
 
         return Response(content=file_bytes, media_type=media_type)
-    except Exception as e:
-        logger.error("Document export failed")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error("The system encountered an unexpected error while attempting to export the document to the requested format")
+        raise HTTPException(status_code=500, detail="The document export process could not be completed due to an internal processing interruption")
 
 
 @router.post("/format")

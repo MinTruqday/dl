@@ -1,4 +1,3 @@
-# src/router/editor_router.py
 from typing import Any, List, Optional
 
 from core.config import settings
@@ -25,7 +24,7 @@ from src.services.editor_service import EditorService
 
 def require_premium_ai(current_user: AuthenticatedUser = Depends(get_current_user)):
     if current_user.ai_tier.value not in ["PREMIUM"] and current_user.role.value != "admin":
-        raise HTTPException(status_code=403, detail="Premium AI features require a premium subscription")
+        raise HTTPException(status_code=403, detail="Access to advanced artificial intelligence capabilities requires an active premium subscription plan")
     return current_user
 
 router = APIRouter(prefix="/editor")
@@ -41,7 +40,7 @@ async def check_plagiarism(
         "data": await EditorService.check_deep_plagiarism(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Plagiarism check completed successfully",
+        "message": "The comprehensive originality analysis has been successfully completed for the requested document",
         "status": 200,
     }
 
@@ -56,7 +55,7 @@ async def sync_keystroke_buffer(
         "data": await EditorService.sync_keystroke_buffer(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Keystroke buffer synchronized",
+        "message": "The editor keystroke buffer has been successfully synchronized with the remote server",
         "status": 200,
     }
 
@@ -71,7 +70,7 @@ async def add_inline_suggestion(
         "data": await EditorService.add_inline_suggestion(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Inline suggestion added successfully",
+        "message": "The inline editorial suggestion has been successfully recorded and attached to the document",
         "status": 201,
     }
 
@@ -86,7 +85,7 @@ async def resolve_suggestion(
         "data": await EditorService.resolve_suggestion(
             suggestion_id, payload.model_dump(), current_user
         ),
-        "message": "Inline suggestion resolved",
+        "message": "The specified editorial suggestion has been successfully processed and marked as resolved",
         "status": 200,
     }
 
@@ -99,7 +98,7 @@ async def sync_pomodoro_session(
         "data": await EditorService.sync_pomodoro_session(
             payload.model_dump(), current_user
         ),
-        "message": "Pomodoro session synced successfully",
+        "message": "The focus session metrics have been successfully synchronized with the central server",
         "status": 200,
     }
 
@@ -112,7 +111,7 @@ async def auto_save_draft(
         "data": await EditorService.auto_save_draft(
             document_id, payload.content, current_user
         ),
-        "message": "Draft saved automatically",
+        "message": "The current document draft has been successfully preserved in the background storage system",
         "status": 200,
     }
 
@@ -121,7 +120,7 @@ async def auto_save_draft(
 async def submit_for_review(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.submit_for_review(document_id, current_user),
-        "message": "Document submitted for review",
+        "message": "The specified document has been successfully queued for editorial review",
         "status": 201,
     }
 
@@ -140,7 +139,7 @@ async def global_find_replace(
             payload.match_case,
             current_user,
         ),
-        "message": "Global find and replace completed",
+        "message": "The global search and replacement operation has been successfully executed across the document content",
         "status": 200,
     }
 
@@ -156,7 +155,7 @@ async def get_ai_suggestions(
         "data": await EditorService.get_ai_suggestions(
             document_id, payload.context, current_user, agentic_ai_url
         ),
-        "message": "AI suggestions retrieved successfully",
+        "message": "The artificial intelligence generated suggestions have been successfully retrieved for the specified context",
         "status": 200,
     }
 
@@ -171,7 +170,7 @@ async def summarize_document(
         "data": await EditorService.summarize_document(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Document summarized successfully",
+        "message": "The automated content summarization process has been successfully completed",
         "status": 200,
     }
 
@@ -186,7 +185,7 @@ async def extract_smart_tags(
         "data": await EditorService.extract_smart_tags(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Smart tags extracted successfully",
+        "message": "The intelligent contextual tags have been successfully extracted from the document content",
         "status": 200,
     }
 
@@ -202,7 +201,7 @@ async def check_logic(
         "data": await EditorService.check_logic(
             document_id, payload.get("content", ""), current_user, agentic_ai_url
         ),
-        "message": "Logic check completed successfully",
+        "message": "The logical consistency analysis has been successfully completed for the provided text",
         "status": 200,
     }
 
@@ -217,7 +216,7 @@ async def check_grammar(
         "data": await EditorService.check_grammar(
             document_id, current_user, agentic_ai_url
         ),
-        "message": "Grammar check completed successfully",
+        "message": "The grammatical and structural analysis has been successfully completed",
         "status": 200,
     }
 
@@ -232,7 +231,7 @@ async def add_inline_comment(
         "data": await EditorService.add_inline_comment(
             document_id, payload.model_dump(), current_user
         ),
-        "message": "Inline comment added successfully",
+        "message": "The inline contextual comment has been successfully attached to the specified document section",
         "status": 200,
     }
 
@@ -241,7 +240,7 @@ async def add_inline_comment(
 async def get_inline_comments(document_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.get_inline_comments(document_id, current_user),
-        "message": "Inline comments retrieved successfully",
+        "message": "The associated inline comments have been successfully retrieved from the database",
         "status": 200,
     }
 
@@ -250,7 +249,7 @@ async def get_inline_comments(document_id: str, current_user=Depends(get_current
 async def resolve_comment(comment_id: str, current_user=Depends(get_current_user)):
     return {
         "data": await EditorService.resolve_comment(comment_id, current_user),
-        "message": "Inline comment resolved",
+        "message": "The selected inline comment has been successfully marked as resolved by the user",
         "status": 200,
     }
 
@@ -265,6 +264,6 @@ async def get_version_diff(
         "data": await EditorService.get_version_diff(
             document_id, payload.version_id_a, payload.version_id_b, current_user
         ),
-        "message": "Version comparison retrieved successfully",
+        "message": "The comparative analysis between the specified document versions has been successfully generated",
         "status": 200,
     }

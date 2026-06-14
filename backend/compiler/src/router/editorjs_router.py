@@ -1,4 +1,3 @@
-# src/router/editorjs_router.py
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from loguru import logger
@@ -17,6 +16,6 @@ async def compile_editorjs(req: CompileRequest):
     try:
         pdf_bytes = await EditorJSEngine.compile_to_pdf(req.content)
         return Response(content=pdf_bytes, media_type="application/pdf")
-    except Exception as e:
-        logger.error("Compilation failed")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.error("The system encountered an unexpected error while attempting to compile the visual document content")
+        raise HTTPException(status_code=500, detail="The document compilation process could not be completed due to an internal system processing interruption")
