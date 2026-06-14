@@ -44,7 +44,7 @@ class EmailService:
                 server.quit()
                 return True
             except Exception as e:
-                logger.error("Failed to send email via DocLib")
+                logger.error("Failed to send email via SMTP")
                 raise
 
         success = await asyncio.to_thread(send_sync)

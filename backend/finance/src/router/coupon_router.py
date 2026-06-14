@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.schemas.wallet_schema import CouponCreateRequest
 from src.services.coupon_service import CouponService
 
-router = APIRouter(prefix="/ma-giam-gia")
+router = APIRouter(prefix="/coupons")
 
 
-@router.get("/kiem-tra", response_model=APIResponse[Any])
+@router.get("/validate", response_model=APIResponse[Any])
 async def validate_coupon(
     code: str,
     document_id: Optional[str] = None,
@@ -19,7 +19,7 @@ async def validate_coupon(
 ):
     return APIResponse(
         data=await CouponService.validate_coupon(code, db=db),
-        message="Đã kiểm tra mã quà tặng",
+        message="Coupon validated successfully",
     )
 
 
@@ -30,7 +30,7 @@ async def get_coupons(
 ):
     return APIResponse(
         data=await CouponService.get_coupons(db=db),
-        message="Đã tải danh sách mã quà tặng",
+        message="Coupons retrieved successfully",
     )
 
 
@@ -42,12 +42,12 @@ async def create_coupon(
 ):
     return APIResponse(
         data=await CouponService.create_coupon(data.model_dump(), current_user, db=db),
-        message="Đã tạo mã quà tặng mới",
+        message="Coupon created successfully",
         status=201,
     )
 
 
-@router.post("/{coupon_id}/phe-duyet", response_model=APIResponse[Any])
+@router.post("/{coupon_id}/approve", response_model=APIResponse[Any])
 async def approve_coupon(
     coupon_id: str,
     action: str = "approve",
@@ -56,7 +56,7 @@ async def approve_coupon(
 ):
     return APIResponse(
         data=await CouponService.approve_coupon(coupon_id, action, current_user, db=db),
-        message="Đã phê duyệt mã quà tặng",
+        message="Coupon approved successfully",
     )
 
 
@@ -68,7 +68,7 @@ async def toggle_coupon_status(
 ):
     return APIResponse(
         data=await CouponService.update_status(coupon_id, current_user, db=db),
-        message="Đã cập nhật trạng thái",
+        message="Coupon status updated successfully",
     )
 
 
@@ -80,5 +80,5 @@ async def delete_coupon(
 ):
     return APIResponse(
         data=await CouponService.delete_coupon(coupon_id, current_user, db=db),
-        message="Đã xóa mã quà tặng",
+        message="Coupon deleted successfully",
     )

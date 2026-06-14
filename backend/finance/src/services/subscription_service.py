@@ -37,18 +37,18 @@ class SubscriptionService:
             db = db_client.mongodb.get_default_database()
         plan = await db["subscription_plans"].find_one({"_id": plan_id})
         if not plan:
-            raise HTTPException(status_code=404, detail="Gói đăng ký không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified subscription plan could not be found")
         author_id = plan["author_id"]
         if author_id == str(current_user.id):
             raise HTTPException(
                 status_code=400,
-                detail="Bạn không thể đăng ký gói hội viên của chính mình",
+                detail="You cannot subscribe to your own subscription plan",
             )
         price = plan.get("price_dl", 0)
         user = await db["users"].find_one({"_id": str(current_user.id)})
         if not user or user.get("wallet_balance", 0) < price:
             raise HTTPException(
-                status_code=400, detail=f"Số dư không đủ (Cần {price} dl)."
+                status_code=400, detail=f"Insufficient balance. {price} dl required"
             )
         existing = await db["subscriptions"].find_one(
             {
@@ -59,7 +59,7 @@ class SubscriptionService:
         )
         if existing:
             raise HTTPException(
-                status_code=400, detail="Bạn đã đăng ký gói hội viên này"
+                status_code=400, detail="You are already subscribed to this plan"
             )
         session = await db_client.mongodb.start_session()
         try:
@@ -71,7 +71,7 @@ class SubscriptionService:
                 )
                 if deduct_result.modified_count == 0:
                     await session.abort_transaction()
-                    raise HTTPException(status_code=400, detail="Số dư không đủ")
+                    raise HTTPException(status_code=400, detail="Insufficient balance")
                 await db["users"].update_one(
                     {"_id": author_id},
                     {"$inc": {"wallet_balance": price}},
@@ -91,13 +91,13 @@ class SubscriptionService:
                     user_id=str(current_user.id),
                     type=TransactionType.SUBSCRIPTION,
                     amount=-price,
-                    note=f"Đăng ký hội viên: {plan['name']}",
+                    note=f"Subscribed to plan: {plan['name']}",
                 )
                 tx_seller = Transaction(
                     user_id=author_id,
                     type=TransactionType.RECEIVE,
                     amount=price,
-                    note=f"Hội viên mới đăng ký: {plan['name']}",
+                    note=f"New subscriber for plan: {plan['name']}",
                 )
                 await db["transactions"].insert_many(
                     [
@@ -111,7 +111,7 @@ class SubscriptionService:
                     f"Subscription: User {current_user.id} subscribed to author {author_id}"
                 )
                 return {
-                    "message": "Đã đăng ký gói hội viên",
+                    "message": "Successfully subscribed to the plan",
                     "end_date": subscription["end_date"].isoformat(),
                 }
         except HTTPException:
@@ -119,7 +119,7 @@ class SubscriptionService:
         except Exception as e:
             await session.abort_transaction()
             logger.error(f"Subscription failed: {e}")
-            raise HTTPException(status_code=500, detail="Giao dịch thất bại")
+            raise HTTPException(status_code=500, detail="Transaction failed. Please try again later")
         finally:
             await session.end_session()
 
@@ -146,7 +146,7 @@ class SubscriptionService:
             result.append(
                 {
                     "_id": str(s["_id"]),
-                    "plan_name": plan.get("name", "Gói hội viên"),
+                    "plan_name": plan.get("name", "Subscription Plan"),
                     "status": s.get("status"),
                     "end_date": (
                         s.get("end_date").isoformat()
@@ -169,7 +169,7 @@ class SubscriptionService:
             },
             {"$set": {"status": "PAUSED", "updated_at": datetime.now(timezone.utc)}},
         )
-        return {"message": "Đã tạm dừng gói hội viên"}
+        return {"message": "Subscription plan paused successfully"}
 
     @staticmethod
     async def resume_subscription(
@@ -185,7 +185,7 @@ class SubscriptionService:
             },
             {"$set": {"status": "ACTIVE", "updated_at": datetime.now(timezone.utc)}},
         )
-        return {"message": "Đã tiếp tục gói hội viên"}
+        return {"message": "Subscription plan resumed successfully"}
 
     @staticmethod
     async def cancel_subscription(
@@ -197,7 +197,7 @@ class SubscriptionService:
             {"_id": subscription_id, "user_id": str(current_user.id)},
             {"$set": {"status": "CANCELLED", "updated_at": datetime.now(timezone.utc)}},
         )
-        return {"message": "Đã hủy gói hội viên"}
+        return {"message": "Subscription plan cancelled successfully"}
 
     @staticmethod
     async def check_and_expire_subscriptions(db=None):

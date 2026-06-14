@@ -14,10 +14,10 @@ from src.services.subscription_service import SubscriptionService
 from src.services.pricing_service import PricingService
 from src.services.withdrawal_service import WithdrawalService
 
-router = APIRouter(prefix="/kiem-tien")
+router = APIRouter(prefix="/monetization")
 
 
-@router.post("/goi-thanh-vien", response_model=APIResponse[Any])
+@router.post("/subscriptions/plans", response_model=APIResponse[Any])
 async def create_plan(
     plan: PlanCreate,
     current_user: UserInDB = Depends(get_current_user),
@@ -27,21 +27,21 @@ async def create_plan(
         data=await SubscriptionService.create_subscription_plan(
             plan.model_dump(), current_user, db=db
         ),
-        message="Đã tạo gói hội viên",
+        message="Subscription plan created successfully",
         status=201,
     )
 
 
-@router.get("/goi-thanh-vien/{author_id}", response_model=APIResponse[Any])
+@router.get("/subscriptions/plans/{author_id}", response_model=APIResponse[Any])
 async def get_plans(author_id: str, db=Depends(get_db)):
     from core.database import db_client
 
     db = db_client.mongodb.get_default_database()
     plans = await db["subscription_plans"].find({"author_id": author_id}).to_list(10)
-    return APIResponse(data=plans, message="Đã tải danh sách gói hội viên")
+    return APIResponse(data=plans, message="Subscription plans retrieved successfully")
 
 
-@router.post("/register/{plan_id}", response_model=APIResponse[Any])
+@router.post("/subscriptions/plans/{plan_id}/subscribe", response_model=APIResponse[Any])
 async def subscribe(
     plan_id: str, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -49,21 +49,21 @@ async def subscribe(
         data=await SubscriptionService.subscribe_to_author(
             plan_id, current_user, db=db
         ),
-        message="Đã đăng ký gói hội viên",
+        message="Successfully subscribed to plan",
     )
 
 
-@router.get("/dang-ky-theo-doi/ca-nhan", response_model=APIResponse[Any])
+@router.get("/subscriptions/me", response_model=APIResponse[Any])
 async def get_my_subscriptions(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await SubscriptionService.get_my_subscriptions(current_user, db=db),
-        message="Đã tải danh sách hội viên",
+        message="Subscriptions retrieved successfully",
     )
 
 
-@router.post("/dang-ky-theo-doi/{subscription_id}/tam-dung", response_model=APIResponse[Any])
+@router.post("/subscriptions/{subscription_id}/pause", response_model=APIResponse[Any])
 async def pause_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -73,11 +73,11 @@ async def pause_subscription(
         data=await SubscriptionService.pause_subscription(
             subscription_id, current_user, db=db
         ),
-        message="Đã tạm dừng gói hội viên",
+        message="Subscription paused successfully",
     )
 
 
-@router.post("/dang-ky-theo-doi/{subscription_id}/tiep-tuc", response_model=APIResponse[Any])
+@router.post("/subscriptions/{subscription_id}/resume", response_model=APIResponse[Any])
 async def resume_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -87,11 +87,11 @@ async def resume_subscription(
         data=await SubscriptionService.resume_subscription(
             subscription_id, current_user, db=db
         ),
-        message="Đã tiếp tục gói hội viên",
+        message="Subscription resumed successfully",
     )
 
 
-@router.post("/dang-ky-theo-doi/{subscription_id}/huy", response_model=APIResponse[Any])
+@router.post("/subscriptions/{subscription_id}/cancel", response_model=APIResponse[Any])
 async def cancel_subscription(
     subscription_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -101,11 +101,11 @@ async def cancel_subscription(
         data=await SubscriptionService.cancel_subscription(
             subscription_id, current_user, db=db
         ),
-        message="Đã hủy gói hội viên",
+        message="Subscription cancelled successfully",
     )
 
 
-@router.put("/tai-lieu/{document_id}/dinh-gia", response_model=APIResponse[Any])
+@router.put("/documents/{document_id}/pricing", response_model=APIResponse[Any])
 async def set_document_pricing(
     document_id: str,
     data: DocumentPricingRequest,
@@ -116,11 +116,11 @@ async def set_document_pricing(
         data=await PricingService.set_document_pricing(
             document_id, data.model_dump(), current_user, db=db
         ),
-        message="Đã cập nhật bảng giá",
+        message="Pricing updated successfully",
     )
 
 
-@router.post("/tai-lieu/{document_id}/flash-sale", response_model=APIResponse[Any])
+@router.post("/documents/{document_id}/flash-sale", response_model=APIResponse[Any])
 async def set_flash_sale(
     document_id: str,
     data: FlashSaleRequest,
@@ -131,12 +131,12 @@ async def set_flash_sale(
         data=await PricingService.set_flash_sale(
             document_id, data.model_dump(), current_user, db=db
         ),
-        message="Đã thiết lập Flash Sale",
+        message="Flash sale configured successfully",
     )
 
 
 @router.get(
-    "/thong-ke/doanh-thu",
+    "/revenue/statistics",
     response_model=APIResponse[Any],
     dependencies=[
         Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN, RoleEnum.MODERATOR]))
@@ -147,7 +147,7 @@ async def get_author_revenue(
 ):
     return APIResponse(
         data=await WithdrawalService.get_revenue(current_user, db=db),
-        message="Đã tải thống kê doanh thu",
+        message="Revenue statistics retrieved successfully",
     )
 
 
@@ -155,7 +155,7 @@ class UpgradeTierRequest(BaseModel):
     tier: str
 
 
-@router.post("/ai-tier/nang-cap", response_model=APIResponse[Any])
+@router.post("/ai-tiers/upgrade", response_model=APIResponse[Any])
 async def upgrade_ai_tier(
     req: UpgradeTierRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -165,5 +165,5 @@ async def upgrade_ai_tier(
 
     return APIResponse(
         data=await PurchaseService.buy_ai_tier(req.tier, current_user, db=db),
-        message=f"Giao dịch nâng cấp gói AI thành công",
+        message=f"AI tier upgraded successfully",
     )

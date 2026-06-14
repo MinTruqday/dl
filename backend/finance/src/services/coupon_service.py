@@ -41,13 +41,13 @@ class CouponService:
         }
         existing = await db["coupons"].find_one({"code": coupon["code"]})
         if existing:
-            raise HTTPException(status_code=400, detail="Mã quà tặng đã tồn tại")
+            raise HTTPException(status_code=400, detail="Coupon code already exists")
         await db["coupons"].insert_one(coupon)
         logger.info(
-            f"Người dùng {current_user.id} vừa tạo mã quà tặng {coupon['code']} với trạng thái {status}"
+            f"User {current_user.id} created coupon {coupon['code']} with status {status}"
         )
         return {
-            "message": f"Đã tạo mã quà tặng, trạng thái hiện tại: {status}",
+            "message": f"Coupon created successfully. Current status: {status}",
             "coupon_id": coupon["_id"],
         }
 
@@ -89,19 +89,19 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         if current_user.role != RoleEnum.ADMIN:
             raise HTTPException(
-                status_code=403, detail="Tính năng chỉ dành cho quản trị viên"
+                status_code=403, detail="Administrator privileges required for this action"
             )
         status = CouponStatus.APPROVED if action == "approve" else CouponStatus.REJECTED
         res = await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"status": status}}
         )
         if res.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Mã quà tặng không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
         logger.info(
-            f"Quản trị viên {current_user.id} thực hiện {action} mã quà tặng {coupon_id}"
+            f"Admin {current_user.id} performed {action} on coupon {coupon_id}"
         )
         return {
-            "message": f"{'Duyệt' if action == 'approve' else 'Từ chối'} mã quà tặng thành công"
+            "message": f"Coupon {action}d successfully"
         }
 
     @staticmethod
@@ -115,19 +115,19 @@ class CouponService:
         )
         if not coupon:
             raise HTTPException(
-                status_code=404, detail="Mã quà tặng không tồn tại hoặc chưa duyệt"
+                status_code=404, detail="The coupon is either invalid or pending approval"
             )
         if coupon.get("expires_at") and coupon["expires_at"].replace(
             tzinfo=timezone.utc
         ) < datetime.now(timezone.utc):
-            raise HTTPException(status_code=400, detail="Mã quà tặng đã hết hạn")
+            raise HTTPException(status_code=400, detail="The coupon has expired")
         if coupon.get("used_count", 0) >= coupon.get("max_uses", 0):
             raise HTTPException(
-                status_code=400, detail="Mã quà tặng đã hết lượt sử dụng"
+                status_code=400, detail="The coupon has reached its maximum usage limit"
             )
         if coupon.get("document_id") and coupon["document_id"] != document_id:
             raise HTTPException(
-                status_code=400, detail="Mã quà tặng không áp dụng cho tài liệu này"
+                status_code=400, detail="The coupon is not applicable to this document"
             )
         target = coupon.get("target_type", CouponTargetType.ALL)
         if target == CouponTargetType.NEW_USER:
@@ -136,12 +136,12 @@ class CouponService:
             )
             if purchase_count > 0:
                 raise HTTPException(
-                    status_code=400, detail="Mã chỉ dành cho người mua lần đầu"
+                    status_code=400, detail="This coupon is valid for first-time buyers only"
                 )
         elif target == CouponTargetType.SUBSCRIBER:
             if not getattr(user, "is_premium", False):
                 raise HTTPException(
-                    status_code=400, detail="Mã chỉ dành cho thành viên Premium"
+                    status_code=400, detail="This coupon is valid for premium members only"
                 )
         return {
             "code": coupon["code"],
@@ -158,14 +158,14 @@ class CouponService:
             query["author_id"] = str(current_user.id)
         coupon = await db["coupons"].find_one(query)
         if not coupon:
-            raise HTTPException(status_code=404, detail="Mã quà tặng không tồn tại")
+            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
         new_status = not coupon.get("is_active", True)
         await db["coupons"].update_one(
             {"_id": coupon_id}, {"$set": {"is_active": new_status}}
         )
-        logger.info(f"Mã quà tặng {coupon_id} chuyển sang trạng thái {new_status}")
+        logger.info(f"Coupon {coupon_id} status updated to {new_status}")
         return {
-            "message": "Cập nhật trạng thái mã quà tặng thành công",
+            "message": "Coupon status updated successfully",
             "is_active": new_status,
         }
 
@@ -178,6 +178,6 @@ class CouponService:
             query["author_id"] = str(current_user.id)
         res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Mã quà tặng không tồn tại")
-        logger.info(f"Người dùng {current_user.id} xóa mã quà tặng {coupon_id}")
-        return {"message": "Xóa mã quà tặng thành công"}
+            raise HTTPException(status_code=404, detail="The specified coupon could not be found")
+        logger.info(f"User {current_user.id} deleted coupon {coupon_id}")
+        return {"message": "Coupon deleted successfully"}

@@ -10,20 +10,20 @@ from src.services.purchase_service import PurchaseService
 from src.services.wallet_service import WalletService
 from src.services.withdrawal_service import WithdrawalService
 
-router = APIRouter(prefix="/vi-tien")
+router = APIRouter(prefix="/wallets")
 
 
-@router.get("/so-du", response_model=APIResponse[Any])
+@router.get("/balance", response_model=APIResponse[Any])
 async def get_balance(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
         data=await WalletService.get_balance(current_user, db=db),
-        message="Đã tải thông tin số dư ví",
+        message="Wallet balance retrieved successfully",
     )
 
 
-@router.post("/coupon-code/redeem", response_model=APIResponse[Any])
+@router.post("/coupons/redeem", response_model=APIResponse[Any])
 async def redeem_coupon(
     payload: RedeemCouponRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -33,11 +33,11 @@ async def redeem_coupon(
         data=await WalletService.redeem_coupon(
             payload.model_dump(), current_user, db=db
         ),
-        message="Đã đổi mã quà tặng",
+        message="Coupon redeemed successfully",
     )
 
 
-@router.get("/lich-su", response_model=APIResponse[Any])
+@router.get("/history", response_model=APIResponse[Any])
 async def get_history(
     cursor: str = Query(None),
     limit: int = Query(30, ge=1, le=100),
@@ -50,11 +50,11 @@ async def get_history(
         data=await WalletService.get_history(
             current_user, skip=skip, limit=limit, db=db
         ),
-        message="Đã tải lịch sử giao dịch",
+        message="Transaction history retrieved successfully",
     )
 
 
-@router.get("/doanh-thu", response_model=APIResponse[Any])
+@router.get("/revenue", response_model=APIResponse[Any])
 async def get_revenue(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
@@ -95,7 +95,7 @@ async def get_revenue(
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"{settings.PROVISION_URL}/nguoi-dung/{author_id}",
+                f"{settings.PROVISION_URL}/users/{author_id}",
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
             if resp.status_code == 200:
@@ -110,10 +110,10 @@ async def get_revenue(
 
     wallet = await db["wallets"].find_one({"_id": author_id})
     revenue_data["available_balance"] = wallet.get("balance", 0) if wallet else 0
-    return APIResponse(data=revenue_data, message="Đã tải số liệu doanh thu")
+    return APIResponse(data=revenue_data, message="Revenue data retrieved successfully")
 
 
-@router.post("/mua-hang/tai-lieu/{document_id}", response_model=APIResponse[Any])
+@router.post("/documents/{document_id}/purchase", response_model=APIResponse[Any])
 async def purchase_document(
     document_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -121,12 +121,12 @@ async def purchase_document(
 ):
     return APIResponse(
         data=await PurchaseService.purchase_document(document_id, current_user, db=db),
-        message="Đã thanh toán mua tài liệu",
+        message="Document purchased successfully",
         status=201,
     )
 
 
-@router.post("/mua-hang/{purchase_id}/huy", response_model=APIResponse[Any])
+@router.post("/purchases/{purchase_id}/cancel", response_model=APIResponse[Any])
 async def cancel_purchase(
     purchase_id: str,
     current_user: UserInDB = Depends(get_current_user),
@@ -134,5 +134,5 @@ async def cancel_purchase(
 ):
     return APIResponse(
         data=await PurchaseService.cancel_purchase(purchase_id, current_user, db=db),
-        message="Đã hủy mua tài liẹu",
+        message="Purchase cancelled successfully",
     )

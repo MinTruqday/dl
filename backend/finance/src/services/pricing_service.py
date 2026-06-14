@@ -16,7 +16,7 @@ class PricingService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Tài liệu không tồn tại")
+            raise HTTPException(status_code=404, detail="The requested document could not be found")
         update = {
             "price_dl": max(0, data.get("price_dl", 0)),
             "is_drm_protected": data.get("is_drm_protected", True),
@@ -24,7 +24,7 @@ class PricingService:
         }
         await db["documents"].update_one({"_id": document_id}, {"$set": update})
         logger.info(f"Pricing: Updated for {document_id} by {current_user.id}")
-        return {"message": "Đã cập nhật giá bán"}
+        return {"message": "Document pricing updated successfully"}
 
     @staticmethod
     async def set_flash_sale(
@@ -36,7 +36,7 @@ class PricingService:
             {"_id": document_id, "author_id": str(current_user.id)}
         )
         if not doc:
-            raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu")
+            raise HTTPException(status_code=404, detail="The requested document could not be found")
         try:
             flash_sale_price = int(data.get("price", 0))
             expires_at = datetime.fromisoformat(
@@ -44,7 +44,7 @@ class PricingService:
             )
         except (ValueError, KeyError, AttributeError):
             raise HTTPException(
-                status_code=400, detail="Dữ liệu thời gian hoặc giá trị không hợp lệ"
+                status_code=400, detail="Invalid time format or pricing value provided"
             )
         await db["documents"].update_one(
             {"_id": document_id},
@@ -60,4 +60,4 @@ class PricingService:
             },
         )
         logger.info(f"Pricing: Flash sale set for {document_id}")
-        return {"message": "Đã thiết lập Flash Sale"}
+        return {"message": "Flash sale configured successfully"}

@@ -34,12 +34,12 @@ class WalletService:
                 if attempts > 10:
                     raise HTTPException(
                         status_code=429,
-                        detail="Thao tác quá nhiều lần vui lòng thử lại sau 5 phút",
+                        detail="Too many attempts. Please try again after 5 minutes",
                     )
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception("Lỗi giới hạn truy cập bộ đệm")
+                logger.exception("Cache rate limit access error")
 
         if db_client.redis:
             try:
@@ -49,13 +49,13 @@ class WalletService:
                 if not is_locked:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="Mã nạp đang được xử lý",
+                        detail="Coupon redemption is currently in progress",
                     )
             except HTTPException:
                 raise
             except Exception as e:
-                logger.exception("Lỗi khóa phiên làm việc trên bộ nhớ đệm")
-                raise HTTPException(status_code=500, detail="Lỗi kết nối bộ đệm")
+                logger.exception("Cache session locking error")
+                raise HTTPException(status_code=500, detail="Cache connection error")
 
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -75,12 +75,12 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=404, detail="Mã nạp không hợp lệ hoặc không tồn tại"
+                    status_code=404, detail="Invalid or non-existent coupon code"
                 )
             if coupon.get("is_used"):
                 if should_close_session:
                     await session.abort_transaction()
-                raise HTTPException(status_code=400, detail="Mã nạp đã được sử dụng")
+                raise HTTPException(status_code=400, detail="Coupon code has already been redeemed")
 
             bonus_dl = coupon.get("amount_dl", coupon.get("amount_dls", 0))
             result = await WalletRepository.mark_coupon_as_used(
@@ -90,7 +90,7 @@ class WalletService:
                 if should_close_session:
                     await session.abort_transaction()
                 raise HTTPException(
-                    status_code=400, detail="Mã nạp đã được sử dụng bởi người dùng khác"
+                    status_code=400, detail="Coupon code has already been redeemed by another user"
                 )
 
             await WalletRepository.increment_balance(
@@ -100,7 +100,7 @@ class WalletService:
                 user_id=str(current_user.id),
                 type=TransactionType.TOPUP,
                 amount=bonus_dl,
-                note=f"Đổi coupon: {req.code}",
+                note=f"Coupon redeemed: {req.code}",
             )
             await WalletRepository.insert_transaction(
                 tx.model_dump(by_alias=True), db=db, session=session
@@ -119,19 +119,19 @@ class WalletService:
                             f"{settings.SIGNAL_URL}/thong-bao/kich-hoat",
                             json={
                                 "target_user_id": str(current_user.id),
-                                "title": "Nạp dl thành công",
-                                "body": f"Tài khoản vừa được cộng thêm {bonus_dl} dl",
+                                "title": "Deposit Successful",
+                                "body": f"Your account has been credited with {bonus_dl} dl",
                                 "type": "topup",
                             },
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
             except Exception as e:
-                logger.warning("Lỗi gửi thông báo")
+                logger.warning("Failed to send notification")
             logger.info(
-                f"Người dùng {current_user.id} đổi mã quà tặng {req.code} nhận {bonus_dl} dl"
+                f"User {current_user.id} redeemed coupon {req.code} for {bonus_dl} dl"
             )
             return {
-                "message": "Đổi mã quà tặng thành công",
+                "message": "Coupon redeemed successfully",
                 "bonus_dl": bonus_dl,
                 "status": "success",
             }
@@ -140,8 +140,8 @@ class WalletService:
         except Exception as e:
             if should_close_session:
                 await session.abort_transaction()
-            logger.exception("Lỗi đổi mã quà tặng")
-            raise HTTPException(status_code=500, detail="Hệ thống bảo trì")
+            logger.exception("Coupon redemption error")
+            raise HTTPException(status_code=500, detail="System under maintenance. Please try again later")
         finally:
             if should_close_session:
                 await session.end_session()
@@ -149,7 +149,7 @@ class WalletService:
                 try:
                     await db_client.redis.delete(lock_key)
                 except Exception as e:
-                    logger.error("Lỗi mở khóa phiên làm việc trên bộ nhớ đệm")
+                    logger.error("Cache session unlock error")
 
     @staticmethod
     async def get_history(
@@ -173,18 +173,18 @@ class WalletService:
                     "$lt": datetime.fromisoformat(cursor.replace("Z", "+00:00"))
                 }
             except Exception as e:
-                logger.warning("Định dạng con trỏ phân trang không hợp lệ")
+                logger.warning("Invalid pagination cursor format")
         txs = await WalletRepository.get_transactions(
             query, skip=skip, limit=limit, db=db
         )
         type_translations = {
-            "topup": "Nạp tiền",
-            "purchase": "Mua tài liệu",
-            "receive": "Nhận tiền",
-            "withdraw": "Rút tiền",
-            "tip": "Ủng hộ tác giả",
-            "subscription": "Đăng ký thành viên",
-            "refund": "Hoàn tiền",
+            "topup": "Deposit",
+            "purchase": "Document Purchase",
+            "receive": "Funds Received",
+            "withdraw": "Withdrawal",
+            "tip": "Author Tip",
+            "subscription": "Plan Subscription",
+            "refund": "Refund",
         }
         for tx in txs:
             tx["_id"] = str(tx["_id"])
@@ -192,7 +192,7 @@ class WalletService:
                 tx["created_at"] = tx["created_at"].isoformat()
             raw_type = tx.get("type", "")
             tx["type"] = raw_type.upper()
-            tx["type_display"] = type_translations.get(raw_type, "Giao dịch")
+            tx["type_display"] = type_translations.get(raw_type, "Transaction")
             tx["description"] = tx.get("note", "")
             tx["status"] = "COMPLETED"
         return txs

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends
 from src.schemas.withdrawal_schema import WithdrawalRequest
 from src.services.withdrawal_service import WithdrawalService
 
-router = APIRouter(prefix="/rut-tien")
+router = APIRouter(prefix="/withdrawals")
 
 
 @router.post(
@@ -24,25 +24,25 @@ async def request_withdrawal(
         data=await WithdrawalService.create_withdrawal_request(
             data.model_dump(), current_user, db=db
         ),
-        message="Đã gửi yêu cầu rút tiền",
+        message="Withdrawal request submitted successfully",
         status=201,
     )
 
 
 @router.get(
-    "/hang-doi",
+    "/queue",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
 async def get_withdrawal_queue(status: str = "PENDING", db=Depends(get_db)):
     return APIResponse(
         data=await WithdrawalService.get_payout_queue(db=db),
-        message="Đã lấy danh sách hàng đợi thanh toán",
+        message="Payout queue retrieved successfully",
     )
 
 
 @router.post(
-    "/{withdrawal_id}/auth",
+    "/{withdrawal_id}/verify",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
 )
@@ -56,12 +56,12 @@ async def verify_withdrawal(
         data=await WithdrawalService.verify_withdrawal(
             withdrawal_id, action, current_user, db=db
         ),
-        message="Xử lý thanh toán thành công",
+        message="Payout processed successfully",
     )
 
 
 @router.post(
-    "/{withdrawal_id}/huy",
+    "/{withdrawal_id}/cancel",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )
@@ -74,12 +74,12 @@ async def cancel_withdrawal(
         data=await WithdrawalService.cancel_withdrawal(
             withdrawal_id, current_user, db=db
         ),
-        message="Đã hủy lệnh rút tiền",
+        message="Withdrawal request cancelled successfully",
     )
 
 
 @router.get(
-    "/ca-nhan",
+    "/me",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR]))],
 )
@@ -88,5 +88,5 @@ async def get_my_withdrawals(
 ):
     return APIResponse(
         data=await WithdrawalService.get_withdrawals(current_user, db=db),
-        message="Đã tải danh sách lệnh rút tiền",
+        message="Withdrawal history retrieved successfully",
     )

@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, Request
 from src.schemas.wallet_schema import TopupRequest
 from src.services.deposit_service import DepositService
 
-router = APIRouter(prefix="/nap-tien")
+router = APIRouter(prefix="/deposits")
 
 
-@router.post("/create-link", response_model=APIResponse[Any])
+@router.post("/links", response_model=APIResponse[Any])
 async def create_deposit_link(
     req: TopupRequest,
     current_user: UserInDB = Depends(get_current_user),
@@ -20,7 +20,7 @@ async def create_deposit_link(
         data=await DepositService.create_deposit_link(
             req.model_dump(), current_user, db=db
         ),
-        message="Đã tạo liên kết nạp tiền",
+        message="Deposit link generated successfully",
         status=201,
     )
 
@@ -30,7 +30,7 @@ async def payos_webhook(request: Request, db=Depends(get_db)):
     return await DepositService.deposit_webhook(request, db=db)
 
 
-@router.get("/kiem-tra/{order_code}", response_model=APIResponse[Any])
+@router.get("/verify/{order_code}", response_model=APIResponse[Any])
 async def verify_deposit(
     order_code: int,
     current_user: UserInDB = Depends(get_current_user),
@@ -38,6 +38,6 @@ async def verify_deposit(
 ):
     return APIResponse(
         data=await DepositService.verify_deposit(order_code, current_user, db=db),
-        message="Kiểm tra trạng thái nạp tiền",
+        message="Deposit status verified successfully",
         status=200,
     )
