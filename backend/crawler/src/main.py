@@ -35,7 +35,7 @@ app.include_router(router, prefix="/collectors")
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Crawler initialized successfully")
+    logger.info("The automated data collection service has been successfully initialized and is ready to process tasks")
     from src.worker import run_worker
 
     asyncio.create_task(run_worker())
@@ -43,4 +43,4 @@ async def startup_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "collector"}
+    return {"status": "The automated data collection service is currently operating normally and functioning as expected", "service": "crawler_service"}

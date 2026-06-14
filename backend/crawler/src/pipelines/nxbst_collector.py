@@ -1,4 +1,3 @@
-# src/pipelines/nxbst_collector.py
 import asyncio
 import hashlib
 import os
@@ -80,17 +79,17 @@ class NXBSTStreamState:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info(f"Successfully collected asset {filename}: {url[-50:]}")
+                        logger.info("The visual capture module has successfully collected a high resolution structural asset")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
-                except Exception as e:
-                    logger.error("Inner processing loop encountered an error")
-        except Exception as e:
-            logger.error("Outer processing loop encountered an error")
+                except Exception:
+                    logger.error("The internal asset processing loop encountered an unexpected failure while reading the network response body")
+        except Exception:
+            logger.error("The external network interception loop encountered an unexpected issue while analyzing the incoming response stream")
 
     async def process_viewer(self, page):
         try:
-            logger.info("Preparing to process document viewer page")
+            logger.info("The collection module is actively preparing the document viewer environment for automated reading")
             consecutive_fails = 0
             previous_count = self.page_counter
 
@@ -104,14 +103,14 @@ class NXBSTStreamState:
                     previous_count = self.page_counter
                 else:
                     consecutive_fails += 1
-                    logger.warning(f"No new pages captured. Retry attempt {consecutive_fails}/6")
+                    logger.warning("The visual capture module has not detected any new pages and is preparing to automatically retry the navigation sequence")
                     await asyncio.sleep(2)
 
                 if consecutive_fails > 6:
-                    logger.info("Document scan completed or network connection interrupted")
+                    logger.info("The automated document scanning sequence has concluded or the secure network connection was safely interrupted")
                     break
-        except Exception as e:
-            logger.error("Document reading process failed")
+        except Exception:
+            logger.error("The automated document reading sequence failed due to an unexpected interaction or synchronization issue")
 
     async def compile_and_upload(self, title: str, author: str):
         import tempfile
@@ -138,13 +137,13 @@ class NXBSTStreamState:
                     files_by_page["unknown"].append(os.path.join(self.temp_dir, f))
 
         if not files_by_page:
-            logger.warning(f"Skipping document compilation for '{title}' due to missing content")
+            logger.warning("The document compilation process has been automatically skipped because no readable content blocks were detected")
             return
 
         images = []
         try:
             sorted_pages = sorted([p for p in files_by_page.keys() if p != "unknown"])
-            logger.info(f"Compiling {len(sorted_pages)} pages via image matrix")
+            logger.info("The rendering engine is synthesizing the collected image fragments into a structured chronological matrix")
 
             for p in sorted_pages:
                 tiles_dict = files_by_page[p]
@@ -179,8 +178,8 @@ class NXBSTStreamState:
                             )
                             Image.open(t).convert("RGB").save(page_path, "JPEG")
                             images.append(page_path)
-                except Exception as e:
-                    logger.warning(f"Image stitching failed for page {p}")
+                except Exception:
+                    logger.warning("The image stitching algorithm encountered a spatial alignment error while processing a specific document page")
 
             if "unknown" in files_by_page:
                 for f in sorted(files_by_page["unknown"]):
@@ -190,16 +189,16 @@ class NXBSTStreamState:
                         )
                         Image.open(f).convert("RGB").save(page_path, "JPEG")
                         images.append(page_path)
-                    except Exception as e:
-                        logger.error("Failed to load irregular image block")
+                    except Exception:
+                        logger.error("The image processing engine failed to load an irregular visual block due to format corruption")
 
             if images:
-                logger.info("Compiling image sequence into PDF format")
+                logger.info("The rendering engine is actively compiling the sorted image sequence into a unified portable document format")
                 with open(pdf_path, "wb") as f:
                     f.write(img2pdf.convert(images))
-                logger.info(f"PDF compiled successfully: {pdf_path}")
+                logger.info("The unified document has been successfully compiled and verified by the rendering engine")
 
-            logger.info(f"Uploading file {final_pdf_name} to storage backend")
+            logger.info("The compiled document is being securely transferred to the permanent object storage backend")
             minio_url = await storage.upload_local_file(
                 f"tài liệu/nxbst/{final_pdf_name}", pdf_path
             )
@@ -226,8 +225,8 @@ class NXBSTStreamState:
             if os.path.exists(pdf_path):
                 os.remove(pdf_path)
 
-        except Exception as e:
-            logger.error("An unexpected system error occurred")
+        except Exception:
+            logger.error("An unexpected system failure occurred during the final document assembly and storage sequence")
         finally:
             if os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir)
@@ -239,7 +238,7 @@ class NXBSTCollector:
     @staticmethod
     async def run_list_collector(pages: int = 0):
         start_url = "https://stbook.vn/"
-        logger.info(f"Initiating list scan from source: {start_url}")
+        logger.info("The system is initializing a comprehensive categorical list scan from the designated primary data source")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -259,16 +258,16 @@ class NXBSTCollector:
                     if href and ("/category/" in href or "/chuyen-muc/" in href):
                         category_urls.add(urllib.parse.urljoin(start_url, href))
 
-                logger.info(f"Successfully retrieved {len(category_urls)} category links")
+                logger.info("The categorical indexing process has successfully identified all available subcategory navigational links")
 
                 for cat_url in category_urls:
-                    logger.info(f"Navigating to category: {cat_url}")
+                    logger.info("The automated collection bot is navigating into a specific subcategory view to begin the extraction phase")
                     await page.goto(cat_url, timeout=60000)
                     await asyncio.sleep(3)
 
                     current_page = 1
                     while True:
-                        logger.info(f"Scanning page {current_page} of the current category")
+                        logger.info("The collection bot is systematically scanning the current categorical page for nested document references")
 
                         document_nodes_css = (
                             '#main a[href*="store_detail"], #main a[href*="/sach/"]'
@@ -290,14 +289,14 @@ class NXBSTCollector:
                                     )
                                     await dedup.mark_collected("nxbst_url", full_url)
 
-                        logger.info(f"Queued {found_documents} documents from page {current_page} for processing")
+                        logger.info("The newly discovered structural document references have been securely added to the processing queue")
 
                         if current_page >= pages:
-                            logger.info(f"Target page count ({pages}) reached for this category")
+                            logger.info("The collection process has successfully reached the maximum designated page boundary for the active category")
                             break
 
                         next_page_idx = current_page + 1
-                        pagination_btn_xpath = 'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'
+                        pagination_btn_xpath = f'xpath=//*[@id="pagination"]/nav/ul/li/a[text()="{next_page_idx}" or contains(text(), "»")]'
 
                         try:
                             next_btn = await page.query_selector(pagination_btn_xpath)
@@ -309,13 +308,13 @@ class NXBSTCollector:
                                 break
                         except Exception:
                             break
-            except Exception as e:
-                logger.error("Failed to retrieve list details")
+            except Exception:
+                logger.error("The systematic list scanning process encountered a critical failure and could not retrieve the required navigational details")
                 raise
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"Processing document details: {document_url}")
+        logger.info("The collection bot is currently extracting the comprehensive metadata profile for the targeted document")
         state_manager = NXBSTStreamState()
 
         async with managed_browser() as browser:
@@ -340,7 +339,7 @@ class NXBSTCollector:
                 author_el = await page.query_selector("#detail .author a")
                 raw_author = await author_el.inner_text() if author_el else "Unknown"
 
-                logger.info(f"Downloading document: '{raw_title}' by {raw_author}")
+                logger.info("The extraction sequence has successfully identified the primary document metadata and is proceeding to the download phase")
 
                 read_btn_css = (
                     '#whatchNow, a:has-text("Đọc sách"), a:has-text("Xem ngay")'
@@ -348,7 +347,7 @@ class NXBSTCollector:
                 read_btn = await page.query_selector(read_btn_css)
 
                 if read_btn:
-                    logger.info("Document read access located. Preparing for content collection")
+                    logger.info("A valid reading mechanism has been detected so the system is preparing the environment for active content collection")
 
                     import tempfile
 
@@ -359,7 +358,7 @@ class NXBSTCollector:
                     state_manager.captured_hashes = set()
                     state_manager.page_counter = 0
 
-                    logger.info("Initializing network interception stream")
+                    logger.info("The network interception module has been successfully initialized and is actively monitoring the incoming data stream")
                     state_manager.is_capturing = True
 
                     await read_btn.click()
@@ -371,8 +370,7 @@ class NXBSTCollector:
 
                     await state_manager.compile_and_upload(raw_title, raw_author)
                 else:
-                    logger.warning("Document read access button could not be located")
-            except Exception as e:
-                logger.error("An unexpected system error occurred")
+                    logger.warning("The required reading access mechanism could not be identified within the active document viewer structure")
+            except Exception:
+                logger.error("An unexpected structural or synchronization error occurred while attempting to intercept the document viewing stream")
                 raise
-

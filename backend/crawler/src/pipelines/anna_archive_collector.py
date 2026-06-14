@@ -26,9 +26,9 @@ class AnnaArchiveCollector:
     @staticmethod
     async def run_list_collector(search_query: str = "", pages: int = 0):
         if search_query:
-            logger.info(f"Initiating paginated search on data source: {search_query}")
+            logger.info("The system is initiating a paginated search operation on the specified external data source")
         else:
-            logger.info("Initiating bulk collection process")
+            logger.info("The system is initiating a comprehensive bulk data collection process")
         encoded = urllib.parse.quote(search_query)
 
         async with managed_browser() as browser:
@@ -41,7 +41,7 @@ class AnnaArchiveCollector:
 
                 while True:
                     search_url = f"https://annas-archive.gl/search?index=journals&sort=&lang=en&lang=anti__zh&lang=la&lang=vi&display=&q={encoded}&page={page_num}"
-                    logger.info(f"Navigating to page {page_num}: {search_url}")
+                    logger.info("The collection bot is currently navigating to the next paginated section of the search results")
 
                     await page.goto(
                         search_url, timeout=60000, wait_until="domcontentloaded"
@@ -49,7 +49,7 @@ class AnnaArchiveCollector:
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Firewall detected on search page. Engaging evasion mechanisms.")
+                        logger.info("An active firewall protection layer was detected so the system is engaging its automated evasion mechanisms")
                         flaresolverr_url = settings.FLARESOLVERR_URL
                         async with aiohttp.ClientSession() as session:
                             async with session.post(
@@ -71,12 +71,12 @@ class AnnaArchiveCollector:
                     list_selector = 'a[href*="/md5/"]'
                     try:
                         await page.wait_for_selector(list_selector, timeout=15000)
-                    except Exception as e:
-                        logger.error(f"Failed to extract document links on page {page_num}")
+                    except Exception:
+                        logger.error("The collection bot failed to extract document reference links from the current page due to an unexpected layout change")
 
                     document_nodes = await page.query_selector_all(list_selector)
                     if not document_nodes:
-                        logger.warning(f"No document links found on page {page_num}. Halting list scan.")
+                        logger.warning("No valid document reference links were found on the current page so the list scanning process is halting")
                         break
 
                     document_urls = set()
@@ -90,7 +90,7 @@ class AnnaArchiveCollector:
                             )
                             document_urls.add(full_url)
 
-                    logger.info(f"Extracted {len(document_urls)} document links on page {page_num}")
+                    logger.info("The collection bot has successfully extracted the available document reference links from the current page")
                     new_urls_found = 0
 
                     for url in document_urls:
@@ -101,17 +101,17 @@ class AnnaArchiveCollector:
                             await dedup.mark_collected("anna_url", url)
                             new_urls_found += 1
 
-                    logger.info(f"Queued {new_urls_found} new documents from page {page_num} for processing")
+                    logger.info("The newly discovered document links have been successfully placed into the processing queue")
                     if page_num >= pages:
-                        logger.info(f"Target page count ({pages}) reached. Halting process.")
+                        logger.info("The maximum allowed page count has been reached so the list scanning process is successfully halting")
                         break
                     page_num += 1
-            except Exception as e:
-                logger.error("Failed to retrieve document list from source")
+            except Exception:
+                logger.error("The system failed to retrieve the document list from the external source due to a network or parsing failure")
 
     @staticmethod
     async def get_flare_cleared_context(browser, url: str, logger):
-        logger.info("Requesting valid session tokens and User-Agent from evasion service")
+        logger.info("The collection bot is actively requesting valid session tokens and secure agent profiles from the evasion service")
         try:
             flare_url = settings.FLARESOLVERR_URL
             async with aiohttp.ClientSession() as session:
@@ -143,13 +143,13 @@ class AnnaArchiveCollector:
                         if formatted_cookies:
                             await context.add_cookies(formatted_cookies)
                         return context
-        except Exception as e:
-            logger.error("Evasion service request failed")
+        except Exception:
+            logger.error("The automated request to the evasion service failed to return a valid clearance token")
         return await get_stealth_context(browser)
 
     @staticmethod
     async def run_detail_collector(document_url: str):
-        logger.info(f"Processing document details: {document_url}")
+        logger.info("The collection bot is currently processing the detailed metadata for the specified document")
 
         async with managed_browser() as browser:
             context = await get_stealth_context(browser)
@@ -161,7 +161,7 @@ class AnnaArchiveCollector:
                 content = await page.content()
 
                 if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                    logger.info("Details page blocked. Engaging evasion mechanisms.")
+                    logger.info("The detailed document page is protected by a firewall so the system is engaging evasion mechanisms")
                     await page.close()
                     await context.close()
 
@@ -192,7 +192,7 @@ class AnnaArchiveCollector:
                     await author_el.inner_text() if author_el else "Unknown"
                 )
 
-                logger.info(f"Extracted metadata - Title: {payload['title']}, Author: {payload['author']}")
+                logger.info("The essential document metadata has been successfully extracted from the external source page")
 
                 cover_el = (
                     await page.query_selector('img[src*="covers/"]')
@@ -216,13 +216,13 @@ class AnnaArchiveCollector:
                         if slow_href.startswith("/")
                         else slow_href
                     )
-                    logger.info(f"Navigating to download page: {slow_url}")
+                    logger.info("The collection bot is navigating to the secure download gateway for the current document")
 
                     await page.goto(slow_url, timeout=60000)
                     content = await page.content()
 
                     if "DDoS-Guard" in content or "cloudflare" in content.lower():
-                        logger.info("Download page blocked. Engaging evasion mechanisms.")
+                        logger.info("The secure download gateway is protected by a firewall so the system is engaging evasion mechanisms")
                         await page.close()
                         await context.close()
 
@@ -237,7 +237,7 @@ class AnnaArchiveCollector:
                         download_link = None
                         js_link_css = 'main p a[href*="http"]'
 
-                        logger.info("Waiting for javascript timer completion")
+                        logger.info("The collection bot is waiting for the external security timer to complete its validation cycle")
                         for _ in range(60):
                             try:
                                 link_els = await page.query_selector_all(js_link_css)
@@ -252,14 +252,14 @@ class AnnaArchiveCollector:
                                         break
                                 if download_link:
                                     break
-                            except Exception as parse_err:
-                                logger.warning("Failed to extract download link")
+                            except Exception:
+                                logger.warning("The collection bot encountered difficulties while attempting to extract the secure download link")
 
                             await page.wait_for_timeout(5000)
 
                         if download_link:
                             payload["download_link"] = download_link
-                            logger.info(f"Successfully obtained download link: {download_link}")
+                            logger.info("The secure download link has been successfully extracted and validated")
 
                             ext = (
                                 payload["download_link"].split("")[-1][:4]
@@ -276,22 +276,22 @@ class AnnaArchiveCollector:
 
                             await mq_client.publish("download_processor_queue", payload)
                         else:
-                            logger.warning(f"Javascript timer execution timed out: {slow_url}")
-                    except Exception as e:
-                        logger.error("Error occurred while waiting for download link")
+                            logger.warning("The security timer execution exceeded the maximum allowed waiting period and timed out")
+                    except Exception:
+                        logger.error("An unexpected error occurred while the system was monitoring the download link generation process")
                 if not slow_link_el:
-                    logger.warning(f"Download button not found on page: {document_url}")
+                    logger.warning("The required download action button could not be located on the current document page")
                     await page.screenshot(
                         path="/app/logs/anna_error.png", full_page=True
                     )
                     links = await page.evaluate(
                         "Array.from(document.querySelectorAll('a, button')).map(el => el.innerText.trim()).filter(t => t.length > 0)"
                     )
-                    logger.warning(f"Available actionable elements on page: {links}")
+                    logger.warning("The collection bot is logging the available actionable elements on the page for debugging purposes")
                     await page.close()
-                    raise Exception("Download button could not be located")
-            except Exception as e:
-                logger.error("An unexpected system error occurred")
+                    raise Exception("The automated collection process could not locate a valid download button on the provided page")
+            except Exception:
+                logger.error("An unexpected system error occurred during the detailed document extraction process")
                 raise
 
     @staticmethod
@@ -300,10 +300,10 @@ class AnnaArchiveCollector:
         title = payload.get("title", "document")
 
         if not url:
-            logger.error(f"Invalid download URL for document: {title}")
+            logger.error("The provided download link is structurally invalid and cannot be processed by the downloader")
             return
 
-        logger.info(f"Downloading document file: {title}")
+        logger.info("The system is currently downloading the requested document file into temporary storage")
 
         slug = urllib.parse.quote(title.lower().replace(" ", "-"))[:50]
         ext = payload.get("content_format", "pdf")
@@ -317,19 +317,19 @@ class AnnaArchiveCollector:
 
             success = await download_file_with_retry(url, target_local)
             if success:
-                logger.info(f"Successfully downloaded temporary file: {target_local}")
+                logger.info("The remote document has been successfully downloaded and securely saved to the temporary storage path")
                 minio_url = await storage.upload_local_file(
                     f"tài liệu/anna_archive/{filename}", target_local
                 )
 
             if os.path.exists(target_local):
                 os.unlink(target_local)
-        except Exception as e:
-            logger.error("An unexpected system error occurred")
+        except Exception:
+            logger.error("An unexpected system error occurred while attempting to download and save the document file")
             raise
 
         if minio_url:
-            logger.info(f"Successfully saved document to storage: {minio_url}")
+            logger.info("The downloaded document has been successfully transferred to the permanent object storage system")
 
             document_metadata = {
                 "title": title,
@@ -349,4 +349,3 @@ class AnnaArchiveCollector:
             }
 
             doc_id = await db_client.insert_document(document_metadata)
-

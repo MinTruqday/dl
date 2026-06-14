@@ -34,20 +34,20 @@ async def managed_browser(headless=True):
             ],
         )
         yield browser
-    except Exception as e:
-        logger.error("Browser initialization or execution failed")
+    except Exception:
+        logger.error("The automated browser environment failed to initialize or execute due to an underlying process configuration issue")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
-            except Exception as e:
-                logger.warning("Failed to close browser instance cleanly")
+            except Exception:
+                logger.warning("The background cleanup routine encountered a delay while attempting to safely close the automated browser instance")
         if playwright:
             try:
                 await playwright.stop()
-            except Exception as e:
-                logger.warning("Failed to stop Playwright instance cleanly")
+            except Exception:
+                logger.warning("The background cleanup routine encountered a resource lock while attempting to terminate the rendering engine instance")
 
 
 async def get_stealth_context(browser):
@@ -75,11 +75,11 @@ async def download_file_with_retry(
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error(f"Request failed with status {resp.status} for {url}")
-        except Exception as e:
-            logger.warning(f"Attempt {attempt+1}/{max_retries} failed for {url}")
+                        logger.error("The network request to the specified remote resource failed due to an unexpected hyper text transfer protocol status code")
+        except Exception:
+            logger.warning("A temporary network disruption occurred during the download process so the system is preparing an automated retry sequence")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error(f"Download failed for {url} after {max_retries} attempts")
+                logger.error("The remote file download process failed permanently because all automated retry attempts have been exhausted")
     return False

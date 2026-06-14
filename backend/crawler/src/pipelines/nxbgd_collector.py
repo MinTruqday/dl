@@ -65,13 +65,13 @@ class NXBGDCollector:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info(f"Successfully captured page #{self.page_counter}: {filename}")
+                        logger.info("The visual capture module has successfully intercepted and saved a high resolution document page")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
-                except Exception as e:
-                    logger.warning("Failed to retrieve response data from the source")
-        except Exception as e:
-            logger.warning("Error processing response from the source")
+                except Exception:
+                    logger.warning("The visual capture module encountered an interruption while attempting to retrieve the page image data")
+        except Exception:
+            logger.warning("An unexpected error occurred while parsing the intercepted network response from the document viewer")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -102,16 +102,16 @@ class NXBGDCollector:
         )
 
         if not image_files:
-            logger.warning(f"Skipping document compilation for '{title}' due to missing content")
+            logger.warning("The document compilation process is being skipped because no valid image pages were successfully captured")
             return
 
         try:
-            logger.info(f"Compiling {len(image_files)} pages into '{final_pdf_name}'")
+            logger.info("The rendering engine is actively compiling the captured image sequence into a unified portable document format")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info(f"Document compilation completed successfully: {pdf_path}")
+            logger.info("The unified document has been successfully compiled and saved to the local temporary workspace")
 
-            logger.info(f"Uploading file {final_pdf_name} to storage backend")
+            logger.info("The compiled document is being securely transferred to the permanent object storage backend")
             minio_url = await storage.upload_local_file(
                 f"tài liệu/nxbgd/{final_pdf_name}", pdf_path
             )
@@ -137,23 +137,23 @@ class NXBGDCollector:
                 if doc_id:
                     pass
 
-        except Exception as e:
-            logger.error("An unexpected system error occurred")
+        except Exception:
+            logger.error("An unexpected system error occurred during the final document compilation and upload sequence")
             raise
         finally:
 
-            logger.info(f"Cleaning up temporary directory: {self.temp_dir}")
+            logger.info("The automated cleanup routine is securely removing the temporary processing directories")
             try:
                 shutil.rmtree(self.temp_dir)
-            except Exception as e:
-                logger.warning(f"Failed to clean up temporary directory: {self.temp_dir}")
+            except Exception:
+                logger.warning("The automated cleanup routine encountered a permission or access issue while removing temporary files")
 
     async def execute(self):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
-            logger.info(f"Navigating to origin URL: {url}")
+            logger.info("The collection bot is navigating to the origin domain to begin the category scanning process")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
 
@@ -169,7 +169,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info(f"Discovered {len(document_urls)} documents on the current page")
+                logger.info("The scanning module has successfully discovered a batch of available documents on the active page")
 
                 for doc_url in document_urls:
                     full_doc_url = (
@@ -177,7 +177,7 @@ class NXBGDCollector:
                         if doc_url.startswith("/")
                         else doc_url
                     )
-                    logger.info(f"Retrieving details for document: {full_doc_url}")
+                    logger.info("The system is transitioning to the details view to extract specific metadata for the selected document")
 
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -195,7 +195,7 @@ class NXBGDCollector:
                             full_title = res_name
 
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f"Skipping document '{full_title}' as it is already processed")
+                                logger.info("The collection bot is skipping the current document because it has already been successfully processed")
                                 continue
 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -204,7 +204,7 @@ class NXBGDCollector:
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
 
-                            logger.info(f"Processing resource '{full_title}' at {viewer_url}")
+                            logger.info("The active collection module is preparing to process the detailed contents of the target resource")
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             import tempfile
@@ -235,8 +235,8 @@ class NXBGDCollector:
                                     else:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
-                                except Exception as e:
-                                    logger.warning("Document viewer navigation encountered an error")
+                                except Exception:
+                                    logger.warning("The automated navigation script encountered an unexpected issue while interacting with the document viewer")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
@@ -246,7 +246,7 @@ class NXBGDCollector:
                                 ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(f"Successfully collected {current_pages} pages")
+                                        logger.info("The visual capture module has successfully collected a stable sequence of document pages")
                                         break
                                 else:
                                     stable_count = 0
@@ -255,8 +255,8 @@ class NXBGDCollector:
                             self.is_capturing = False
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
-                    except Exception as e:
-                        logger.error("Failed to inspect document details")
+                    except Exception:
+                        logger.error("The system failed to properly inspect the document details due to an unexpected page structure or network timeout")
 
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -268,26 +268,26 @@ class NXBGDCollector:
                         and "p-disabled"
                         not in (await next_btn.get_attribute("class") or "")
                     ):
-                        logger.info("Navigating to the next page")
+                        logger.info("The collection bot is executing a pagination command to access the next batch of document listings")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Reached the final page or pagination is unavailable")
-                except Exception as e:
-                    logger.error("Pagination navigation failed")
+                        logger.info("The scanning sequence has reached the final page or the pagination controls are no longer available")
+                except Exception:
+                    logger.error("The automated pagination script failed to navigate to the next page due to an unexpected layout change")
                     has_next = False
 
                 break
 
-        except Exception as e:
-            logger.error("Data source encountered a critical error")
+        except Exception:
+            logger.error("The primary collection sequence encountered a critical failure while navigating the target data source")
             raise
         finally:
             await self.close()
 
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info("Initiating data collection process for all target groups")
+    logger.info("The system is initializing a comprehensive data collection sequence across all designated target groups")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

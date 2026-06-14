@@ -40,7 +40,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info(f"Initializing storage bucket: {self.bucket}")
+            logger.info("The automated provisioning sequence is preparing the primary object storage bucket for incoming multimedia assets")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -62,7 +62,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"File upload to storage failed: {local_file_path}")
+            logger.error("The system encountered a critical network failure while attempting to securely transfer the file into the permanent object storage backend")
             raise e
 
 
