@@ -25,7 +25,7 @@ from huggingface_hub import AsyncInferenceClient
 from loguru import logger
 from src.core.prompt_registry import PromptType, prompt_registry
 
-router = APIRouter(prefix="/suy-luan")
+router = APIRouter(prefix="/inference")
 
 client = AsyncInferenceClient(token=settings.HF_TOKEN)
 
@@ -34,7 +34,7 @@ async def _check_quota(current_user: UserInDB):
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
-                f"{settings.PROVISION_URL}/han-muc/kiem-tra",
+                f"{settings.PROVISION_URL}/quota/verify",
                 params={
                     "user_id": str(current_user.id),
                     "role": current_user.role.value,
@@ -46,13 +46,13 @@ async def _check_quota(current_user: UserInDB):
             if resp.status_code != 200:
                 raise HTTPException(
                     status_code=429,
-                    detail="Bạn đã vượt quá hạn mức AI hoặc lỗi hệ thống",
+                    detail="You have exceeded your AI quota or a system error occurred",
                 )
             return resp.json().get("data", {})
     except HTTPException:
         raise
     except Exception:
-        logger.error("Lỗi kiểm tra hạn mức")
+        logger.error("Failed to verify quota")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 
@@ -62,7 +62,7 @@ async def _consume_quota(
     try:
         async with httpx.AsyncClient() as c:
             await c.post(
-                f"{settings.PROVISION_URL}/han-muc/su-dung",
+                f"{settings.PROVISION_URL}/quota/consume",
                 json={
                     "user_id": str(current_user.id),
                     "feature": "chat",
@@ -72,7 +72,7 @@ async def _consume_quota(
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
     except Exception:
-        logger.error("Lỗi trừ hạn mức")
+        logger.error("Failed to deduct quota")
 
 
 async def _chat_direct(
@@ -90,7 +90,7 @@ async def _chat_direct(
         )
         return response.choices[0].message.content
     except Exception as e:
-        logger.error("Hệ thống AI gặp sự cố")
+        logger.error("AI system encountered an issue")
         raise e
 
 
@@ -112,7 +112,7 @@ async def _run_ai_with_quota(
     return result
 
 
-@router.post("/tao-noi-dung")
+@router.post("/generate-content")
 async def generate_text(
     req: GenerationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -126,11 +126,11 @@ async def generate_text(
         return {"result": result}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/dich-thuat")
+@router.post("/translate")
 async def translate_text(
     req: TranslationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -147,11 +147,11 @@ async def translate_text(
         return {"translation": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/phan-tich-cam-xuc")
+@router.post("/sentiment-analysis")
 async def analyze_sentiment(
     req: SentimentRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -178,7 +178,7 @@ async def analyze_sentiment(
             return {
                 "sentiment_score": 0.0,
                 "mood": "unknown",
-                "summary": "Không có dữ liệu văn bản để phân tích",
+                "summary": "No text data available to analyze",
                 "top_emotions": [],
             }
 
@@ -195,8 +195,8 @@ async def analyze_sentiment(
             )
             results.append(sentiment.strip())
 
-        pos = sum(1 for r in results if r.lower() in ["positive", "tích cực"])
-        neg = sum(1 for r in results if r.lower() in ["negative", "tiêu cực"])
+        pos = sum(1 for r in results if r.lower() in ["positive", "positive"])
+        neg = sum(1 for r in results if r.lower() in ["negative", "negative"])
         total = len(results)
         score = (pos - neg) / total if total > 0 else 0
 
@@ -232,13 +232,13 @@ async def analyze_sentiment(
             ],
         }
     except Exception as e:
-        logger.error("Lỗi phân tích cảm xúc")
+        logger.error("Sentiment analysis error")
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/tao-ma-nguon")
+@router.post("/generate-code")
 async def generate_code(
     req: CodeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -255,11 +255,11 @@ async def generate_code(
         return {"code": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/kiem-tra-ngu-phap")
+@router.post("/check-grammar")
 async def grammar_check(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -270,7 +270,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp",
+                detail="This feature is only available for Premium plans",
             )
 
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -288,15 +288,15 @@ async def grammar_check(
         return {
             "corrected_text": result.strip(),
             "score": grammar_score,
-            "message": "Thành công kiểm tra ngữ pháp và tính toán độ chính xác",
+            "message": "Successfully checked grammar and calculated accuracy",
         }
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/tom-tat-noi-dung")
+@router.post("/summarize")
 async def summarize_text(
     req: SummarizeRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -313,11 +313,11 @@ async def summarize_text(
         return {"summary": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/kiem-tra-dao-van")
+@router.post("/check-plagiarism")
 async def check_plagiarism(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -328,7 +328,7 @@ async def check_plagiarism(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="This feature is only available for Premium plans (Premium)",
             )
 
         from src.rag.embedder import embedding_service
@@ -343,7 +343,7 @@ async def check_plagiarism(
             return {
                 "plagiarism_score": 0.0,
                 "status": "clean",
-                "message": "Không tìm thấy nội dung tương tự trong hệ thống dữ liệu hiện có. Nội dung có tính nguyên bản cao",
+                "message": "No similar content found in the current data system. Content is highly original",
                 "matches": [],
             }
 
@@ -371,7 +371,7 @@ async def check_plagiarism(
             if json_match:
                 return json_mod.loads(json_match.group())
         except Exception as err:
-            logger.warning("Lỗi phân tích dữ liệu JSON kiểm tra đạo văn")
+            logger.warning("Error parsing plagiarism check JSON data")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -379,17 +379,17 @@ async def check_plagiarism(
             "status": (
                 "warning" if max_score > 60 else "danger" if max_score > 85 else "clean"
             ),
-            "message": "Tìm thấy nội dung có sự tương đồng đáng kể",
+            "message": "Found significantly similar content",
             "matches": significant_matches[:3],
         }
     except Exception as e:
-        logger.error("Lỗi kiểm tra đạo văn")
+        logger.error("Plagiarism check error")
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/hanh-dong")
+@router.post("/actions")
 async def unified_action(
     req: ActionRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -414,7 +414,7 @@ async def unified_action(
 
         prompt = prompts.get(req.action)
         if not prompt:
-            raise HTTPException(status_code=400, detail="Hành động không hợp lệ")
+            raise HTTPException(status_code=400, detail="Invalid action")
 
         result = await _run_ai_with_quota(
             current_user,
@@ -424,13 +424,13 @@ async def unified_action(
         )
         return {"result": result.strip()}
     except Exception as e:
-        logger.error("Lỗi thực thi hành động AI")
+        logger.error("AI action execution error")
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/tu-dong-nghia")
+@router.post("/synonyms")
 async def get_synonyms(
     req: GrammarRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -441,7 +441,7 @@ async def get_synonyms(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="This feature is only available for Premium plans (Premium)",
             )
 
         prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -454,11 +454,11 @@ async def get_synonyms(
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/trich-dan-thong-minh")
+@router.post("/smart-citations")
 async def suggest_citations(
     req: CitationRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -469,7 +469,7 @@ async def suggest_citations(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="This feature is only available for Premium plans (Premium)",
             )
 
         from src.rag.embedder import embedding_service
@@ -497,11 +497,11 @@ async def suggest_citations(
         return {"citations": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/bien-doi-van-ban")
+@router.post("/text-transform")
 async def transform_tone(
     req: ToneRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -512,7 +512,7 @@ async def transform_tone(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="This feature is only available for Premium plans (Premium)",
             )
 
         action = "expand and transform" if req.expansion else "transform"
@@ -528,11 +528,11 @@ async def transform_tone(
         return {"transformed_text": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/kiem-duyet-noi-dung")
+@router.post("/moderate-content")
 async def peer_review(
     req: ReviewRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -543,7 +543,7 @@ async def peer_review(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="Chức năng này chỉ dành cho gói Cao cấp (Premium)",
+                detail="This feature is only available for Premium plans (Premium)",
             )
 
         criteria_str = (
@@ -563,11 +563,11 @@ async def peer_review(
         return {"review_report": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/tong-hop-nhieu-tai-lieu")
+@router.post("/synthesize-documents")
 async def multi_doc_synthesis(
     req: SynthesisRequest, current_user: UserInDB = Depends(get_current_user)
 ):
@@ -583,7 +583,7 @@ async def multi_doc_synthesis(
                 query_vector=query_vector, document_id=doc_id, limit=3
             )
             for m in matches:
-                all_context.append(f"[Từ tài liệu {doc_id}]: {m['text']}")
+                all_context.append(f"[From document {doc_id}]: {m['text']}")
 
         prompt = prompt_registry.get(PromptType.MULTI_DOC_SYNTHESIS).format(
             query=req.query, context="\\n".join(all_context[:10])
@@ -597,16 +597,16 @@ async def multi_doc_synthesis(
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang gặp sự cố vui lòng thử lại sau"
+            status_code=500, detail="System error, please try again later"
         )
 
 
-@router.post("/trich-xuat-van-ban")
+@router.post("/extract-text")
 async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_user)):
     try:
         file_url = req.get("file_url")
         if not file_url:
-            raise HTTPException(status_code=400, detail="Thiếu file_url")
+            raise HTTPException(status_code=400, detail="Missing file_url")
 
         from src.rag.ingestion_pipeline import ingestion_pipeline
 
@@ -614,20 +614,20 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
 
         return {"extracted_text": extracted_text}
     except Exception as e:
-        logger.error("Lỗi trích xuất dữ liệu AI")
+        logger.error("AI data extraction error")
         raise HTTPException(
-            status_code=500, detail="Không thể trích xuất văn bản lúc này"
+            status_code=500, detail="Unable to extract text at this time"
         )
 
 
-@router.post("/phan-tich-tai-lieu")
+@router.post("/analyze-document")
 async def analyze_document(
     req: dict, current_user: UserInDB = Depends(get_current_user)
 ):
     try:
         context = req.get("context", "")
         ext = req.get("ext", "txt")
-        folder_str = req.get("folder_str", "Không có")
+        folder_str = req.get("folder_str", "None")
 
         prompt = prompt_registry.get(PromptType.STORAGE_FILE_ANALYSIS).format(
             ext=ext, folder_str=folder_str, context=context[:3000]
@@ -647,19 +647,19 @@ async def analyze_document(
         if json_match:
             return json_mod.loads(json_match.group())
         else:
-            raise ValueError("Mô hình ngôn ngữ không trả về định dạng JSON")
+            raise ValueError("Language model did not return JSON format")
     except Exception as e:
-        logger.error("Lỗi phân tích tài liệu AI")
-        raise HTTPException(status_code=500, detail="Lỗi phân tích tài liệu")
+        logger.error("Document analysis error AI")
+        raise HTTPException(status_code=500, detail="Document analysis error")
 
 
-@router.delete("/vector/{document_id}")
+@router.delete("/vectors/{document_id}")
 async def delete_vector_document(document_id: str):
     try:
         from src.store.vector_store import vector_store
 
         await vector_store.delete_by_document(document_id)
-        return {"status": "success", "message": "Đã xóa vector dữ liệu tài liệu"}
+        return {"status": "success", "message": "Document index data deleted"}
     except Exception as e:
-        logger.error("Lỗi xóa vector tài liệu")
+        logger.error("Failed to delete document index")
         raise HTTPException(status_code=500, detail=str(e))

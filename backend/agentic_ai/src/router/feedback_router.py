@@ -6,10 +6,10 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from src.schemas.feedback_schema import FeedbackRequest
 
-router = APIRouter(prefix="/phan-hoi")
+router = APIRouter(prefix="/feedback")
 
 
-@router.post("/phan-hoi")
+@router.post("/feedback")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)
@@ -26,11 +26,11 @@ async def submit_feedback(req: FeedbackRequest):
 
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
-        logger.info(f"Đã lưu đánh giá cho tin nhắn {req.message_id}")
+        logger.info(f"Feedback saved for message {req.message_id}")
         return {
             "status": "success",
-            "message": "Cảm ơn bạn đã đóng góp ý kiến để cải thiện AI",
+            "message": "Thank you for your feedback to help improve our AI",
         }
     except Exception as e:
-        logger.error("Lỗi lưu đánh giá")
-        return {"status": "error", "message": "Không thể lưu ý kiến lúc này"}
+        logger.error("Failed to save feedback")
+        return {"status": "error", "message": "Unable to save feedback at this time"}

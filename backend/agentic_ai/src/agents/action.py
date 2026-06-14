@@ -26,7 +26,7 @@ class Action:
         self, action: str, params: dict, user_id: str, token: str = None
     ) -> str:
         if not token and action != "public_query":
-            return "Vui lòng đăng nhập để thực hiện thao tác với hệ thống"
+            return "Please log in to perform this action"
 
         system_prompt = prompt_registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -42,14 +42,14 @@ class Action:
                 res = await llm_with_tools.ainvoke(messages)
 
                 if not res.tool_calls:
-                    return "Không tìm thấy công cụ phù hợp để xử lý yêu cầu này"
+                    return "No suitable tool found to process this request"
 
                 tool_call = res.tool_calls[0]
                 tool_name = tool_call["name"]
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "Không tìm thấy công cụ '{tool_name}' không tồn tại"
+                    return "Tool '{tool_name}' not found or does not exist"
 
                 selected_tool = self.tool_map[tool_name]
 
@@ -61,9 +61,9 @@ class Action:
                     "redeem_coupon",
                 ]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
-                    return f"Tác vụ {tool_name} cần bạn phê duyệt để tiếp tục"
+                    return f"Task {tool_name} requires your approval to continue"
 
-                logger.info("Đang gọi công cụ '{tool_name}' với tham số {tool_params}")
+                logger.info("Calling tool '{tool_name}' with parameters {tool_params}")
 
                 try:
                     tool_result = await selected_tool.ainvoke(
@@ -76,17 +76,17 @@ class Action:
                     messages.append(res)
                     messages.append(
                         ToolMessage(
-                            content=f"Lỗi khi thực thi công cụ {str(e)}, vui lòng kiểm tra lại dữ liệu gửi tool",
+                            content=f"Error executing tool {str(e)}, please check the data sent to the tool",
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("Công cụ gặp sự cố, đang thử lại lần {attempt+1}/3")
+                    logger.warning("Tool encountered an issue, retrying attempt {attempt+1}/3")
                     if attempt == 2:
-                        return f"Đã xảy ra lỗi khi thực thi thao tác sau 3 lần thử: {str(e)}"
+                        return f"Error executing operation after 3 attempts: {str(e)}"
 
         except Exception as e:
-            logger.error("Thực thi tác vụ gặp sự cố do lỗi")
-            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            logger.error("Task execution encountered an issue due to error")
+            return "The system encountered an issue, please try again later"
 
 
 action = Action()

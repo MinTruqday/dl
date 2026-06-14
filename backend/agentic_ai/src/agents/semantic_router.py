@@ -10,7 +10,7 @@ class SemanticRouter:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("Chưa cấu hình biến LLAMA_MODEL")
+            raise ValueError("Primary model variable is not configured")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -59,11 +59,11 @@ class SemanticRouter:
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
 
-            logger.info("Đã phân loại yêu cầu vào luồng '{route}'")
+            logger.info("Categorized request into route '{route}'")
             return {"route": route, "answer": answer}
 
         except Exception as e:
-            logger.error("Điều hướng yêu cầu thất bại do lỗi")
+            logger.error("Request routing failed due to error")
             return {"route": "knowledge", "answer": ""}
 
 

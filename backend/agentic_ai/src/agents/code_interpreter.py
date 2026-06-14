@@ -13,7 +13,7 @@ class CodeInterpreter:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info(f"Đang xử lý tác vụ thông qua môi trường Sandbox: {task_desc}")
+        logger.info(f"Processing task via secure execution environment: {task_desc}")
 
         try:
             from src.agents.planning import llm
@@ -99,7 +99,7 @@ class CodeInterpreter:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "Security lỗi: Code execution exceeded the allowed time limit (Hết thời gian chờ 15s)"
+                    return "Code execution exceeded the allowed time limit"
 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
@@ -109,7 +109,7 @@ class CodeInterpreter:
                         final_res += "[Output truncated at 512KB]"
                 else:
                     err = stderr[:MAX_OUTPUT]
-                    final_res = f"Execution lỗi:\n{err.decode(errors='replace')}\n"
+                    final_res = f"Execution error:\n{err.decode(errors='replace')}\n"
 
             finally:
 
@@ -127,8 +127,8 @@ class CodeInterpreter:
 
             return final_res
         except Exception as e:
-            logger.error("Thực thi thất bại do lỗi")
-            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            logger.error("Execution failed due to error")
+            return "The system encountered an issue, please try again later"
 
 
 code_interpreter = CodeInterpreter()

@@ -43,7 +43,7 @@ class VectorStore:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error("Lỗi thêm dữ liệu vào hàng đợi VectorStore do")
+                logger.error("Failed to queue data to search index due to")
 
     async def ensure_collection(self):
         try:
@@ -61,7 +61,7 @@ class VectorStore:
                     ),
                 )
         except Exception as e:
-            logger.error("Lỗi khởi tạo bộ sưu tập VectorStore do")
+            logger.error("Failed to initialize search index collection due to")
             raise
 
     async def upsert(
@@ -121,7 +121,7 @@ class VectorStore:
                 for hit in results
             ]
         except Exception as e:
-            logger.error("Lỗi truy vấn VectorStore do")
+            logger.error("Search index query error due to")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -137,7 +137,7 @@ class VectorStore:
                 ),
             )
         except Exception as e:
-            logger.error("Lỗi xóa dữ liệu trên VectorStore do")
+            logger.error("Failed to delete data from search index due to")
             raise
 
 

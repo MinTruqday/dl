@@ -22,11 +22,11 @@ class ResponseGenerator:
         pass
 
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
-        logger.info(f"Đang tổng hợp kết quả cho truy vấn: {query[:50]}")
+        logger.info(f"Synthesizing results for query: {query[:50]}")
 
         if _contains_injection(query):
-            logger.warning("Phát hiện dấu hiệu chèn mã độc vào câu truy vấn")
-            yield "Yêu cầu này vi phạm chính sách sử dụng. Vui lòng đặt câu hỏi khác"
+            logger.warning("Detected potential prompt injection in query")
+            yield "This request violates our usage policy. Please ask another question"
             return
 
         try:
@@ -46,8 +46,8 @@ class ResponseGenerator:
                     yield chunk.content
 
         except Exception as e:
-            logger.error(f"Lỗi tạo phản hồi: {str(e)}")
-            yield "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            logger.error(f"Failed to generate response: {str(e)}")
+            yield "The system encountered an issue, please try again later"
 
 
 response_generator = ResponseGenerator()

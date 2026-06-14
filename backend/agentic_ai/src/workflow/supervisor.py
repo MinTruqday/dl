@@ -22,10 +22,10 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.error("Thời gian thực thi đã vượt quá giới hạn 45 giây")
+        logger.error("Execution time exceeded the 45-second limit")
         return {
             "next_node": "trimmer",
-            "error": "Yêu cầu quá phức tạp, đã vượt quá ngân sách thời gian xử lý (45s)",
+            "error": "The request is too complex and has exceeded the processing time budget (45s)",
         }
 
     steps = state.get("steps", [])
@@ -45,7 +45,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
 
     if state.get("error"):
-        logger.warning("Bỏ qua các công cụ tiếp theo do gặp lỗi")
+        logger.warning("Skipping subsequent tools due to error")
         return {
             "steps": steps,
             "current_step_index": len(steps),
@@ -106,10 +106,10 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
                 logger.warning(
-                    f"Tự đánh giá thất bại cho {agent_name}, đang lập kế hoạch lại lần {replan_count}/3"
+                    f"Self-evaluation failed for {agent_name}, replanning attempt {replan_count}/3"
                 )
                 replan_prompt = (
-                    f"The following task thất bại:\n{current_task}\n\n"
+                    f"The following task failed:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
                     "Rewrite the task description to fix the issue. Output only the revised task"
                 )
@@ -122,7 +122,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
         if replan_count >= 3:
             final_res = (
-                f"Không thể thực thi tác vụ này sau 3 lần thử. Trả về lỗi:\n{final_res}"
+                f"Unable to execute this task after 3 attempts. Returned error:\n{final_res}"
             )
 
         return {
@@ -133,7 +133,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception as e:
-        logger.error("Thực thi node thất bại")
+        logger.error("Node execution failed")
         return {
             "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
             "error": str(e),
@@ -168,7 +168,7 @@ async def trimmer_node(state: ActingState):
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
         logger.info(
-            f"Đang tóm tắt các kết quả đã được tổng hợp với số lượng: {total_length}"
+            f"Summarizing synthesized results (count: {total_length})"
         )
         try:
             from src.workflow.brain import llm
@@ -184,7 +184,7 @@ async def trimmer_node(state: ActingState):
             trimmed = summary_res.content.strip()
         except Exception as e:
             logger.warning(
-                "Quá trình tóm tắt thất bại, đang chuyển sang chế độ cắt bớt do lỗi"
+                "Summarization failed, switching to truncation due to error"
             )
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
@@ -259,8 +259,8 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req):
-        logger.info("Đang bắt đầu luồng thực thi LangGraph")
-        yield {"type": "status", "node": "Phân tích yêu cầu"}
+        logger.info("Starting automated execution flow")
+        yield {"type": "status", "node": "Analyzing request"}
 
         initial_state = {
             "req": req,
@@ -297,22 +297,22 @@ class Supervisor:
                     if state_update.get("error"):
                         yield {
                             "type": "error",
-                            "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
+                            "message": "The system encountered an issue, please try again later",
                         }
                     else:
                         yield {
                             "type": "tool_result",
                             "agent": node_name,
                             "content": state_update.get(
-                                "last_agent_result", "Hoàn thành"
+                                "last_agent_result", "Completed"
                             ),
                         }
 
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Tổng hợp thông tin"}
+                    yield {"type": "status", "node": "Information synthesis"}
 
         if not final_results:
-            final_results = ["Không tìm thấy dữ liệu phù hợp trong hệ thống"]
+            final_results = ["No suitable data found in the system"]
 
         async for chunk in response_generator.aggregate_stream(
             req.query, final_results

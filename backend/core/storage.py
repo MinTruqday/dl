@@ -33,9 +33,9 @@ async def initialize_bucket():
     try:
         await storage_client.head_bucket(Bucket=MINIO_BUCKET_NAME)
     except ClientError:
-        logger.info(f"Initializing storage bucket {MINIO_BUCKET_NAME}")
+        logger.info(f"Initializing storage bucket")
         await storage_client.create_bucket(Bucket=MINIO_BUCKET_NAME)
-        logger.info(f"Storage bucket {MINIO_BUCKET_NAME} created successfully")
+        logger.info(f"Storage bucket created successfully")
 
 
 async def upload_file(

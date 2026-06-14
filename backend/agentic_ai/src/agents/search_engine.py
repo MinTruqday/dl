@@ -38,7 +38,7 @@ class SearchEngine:
             return ""
         formatted = ""
         for res in results:
-            formatted += f"- {res.get('title')}: {res.get('content')}\n  (Nguồn: {res.get('url')})\n"
+            formatted += f"- {res.get('title')}: {res.get('content')}\n  (Source: {res.get('url')})\n"
         return formatted
 
     async def _duckduckgo_search(self, query: str) -> str:
@@ -52,18 +52,18 @@ class SearchEngine:
                 return ""
             formatted = ""
             for res in results:
-                formatted += f"- {res.get('title')}: {res.get('body')}\n  (Nguồn: {res.get('href')})\n"
+                formatted += f"- {res.get('title')}: {res.get('body')}\n  (Source: {res.get('href')})\n"
             return formatted
         except Exception as e:
-            logger.error("Tìm kiếm dự phòng bằng DuckDuckGo thất bại do lỗi")
+            logger.error("Alternative web search failed due to error")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info("Đang tìm kiếm thông tin cho '{query}'")
+        logger.info("Searching for information for '{query}'")
 
         if _is_ssrf_attempt(query):
-            logger.warning(f"Đã chặn nỗ lực tấn công SSRF từ truy vấn: {query}")
-            return "Truy vấn này không được phép"
+            logger.warning(f"Blocked SSRF attack attempt from query: {query}")
+            return "This query is not allowed"
 
         if self.api_key_valid:
             try:
@@ -71,18 +71,18 @@ class SearchEngine:
                 if result:
                     return result
                 logger.warning(
-                    "Không tìm thấy kết quả trên Tavily, hệ thống tự động chuyển sang DuckDuckGo"
+                    "No results found from primary search engine, switching to alternative"
                 )
             except Exception as e:
                 logger.warning(
-                    f"Tìm kiếm qua Tavily thất bại do lỗi: {e}, hệ thống tự động chuyển sang DuckDuckGo"
+                    f"Primary web search failed: {e}. Automatically switching to alternative search engine"
                 )
 
         result = await self._duckduckgo_search(query)
         if result:
             return result
 
-        return "Không tìm thấy thông tin liên quan từ các nguồn tìm kiếm hiện có"
+        return "No relevant information found from available search sources"
 
 
 search_engine = SearchEngine()

@@ -58,7 +58,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Đang tải mô hình nền tảng trên Apple Silicon {base_model_name}")
+    logger.info(f"Loading foundational model on optimized hardware {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
     model, tokenizer = load(base_model_name)
@@ -125,7 +125,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
                 self.last_epoch = current_epoch
             self.cb(update_data)
 
-    logger.info(f"Bắt đầu huấn luyện LoRA mức {lora_rank})")
+    logger.info(f"Started training (level {lora_rank})")
     update_callback({"progress": 25})
 
     train(
@@ -170,7 +170,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Đang tải mô hình nền tảng trên vi xử lý đồ họa {base_model_name}")
+    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
     bnb_config = None
@@ -281,7 +281,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info("Đang gộp bộ chuyển đổi vào mô hình nền tảng")
+    logger.info("Merging adapters into foundational model")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name, device_map="cpu", torch_dtype=torch.float16, token=hf_token
     )
@@ -304,22 +304,22 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
     base_model_name = config.get("base_model", "").lower()
 
     if "flux" in base_model_name or "diffusion" in base_model_name:
-        logger.info("Detected Diffusion model. Dispatching lên Diffusion Engine")
+        logger.info("Detected image generation model. Dispatching to visual engine")
         result = run_diffusion_training(job_id, config, update_callback)
     elif (
         "nllb" in base_model_name
         or "t5" in base_model_name
         or "bart" in base_model_name
     ):
-        logger.info("Detected Seq2Seq model. Dispatching lên Seq2Seq Engine")
+        logger.info("Detected sequence-to-sequence model. Dispatching to corresponding engine")
         result = run_seq2seq_training(job_id, config, update_callback)
     else:
         if sys.platform == "darwin":
-            logger.info("Detected macOS environment. Dispatching lên MLX Engine")
+            logger.info("Detected optimized environment. Dispatching to optimized engine")
             result = run_mlx_training(job_id, config, update_callback)
         else:
             logger.info(
-                "Detected Linux/Windows environment. Dispatching lên PyTorch Engine"
+                "Detected standard environment. Dispatching to standard engine"
             )
             result = run_hf_training(job_id, config, update_callback)
 
@@ -348,14 +348,14 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
                 check=True,
                 timeout=1800,
             )
-            logger.info(f"GGUF export Thành côngful: {gguf_path}")
+            logger.info(f"Model export successful: {gguf_path}")
             result["gguf_path"] = gguf_path
         else:
             logger.warning(
-                "Không tìm thấy công cụ chuyển đổi định dạng, hệ thống chỉ lưu mô hình gốc"
+                "Format conversion tool not found, system will only save the original model"
             )
     except Exception as e:
-        logger.error("GGUF conversion thất bại")
+        logger.error("Model conversion failed")
 
     return result
 
@@ -379,7 +379,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Đang tải mô hình nền tảng trên vi xử lý đồ họa {base_model_name}")
+    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
     model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -482,7 +482,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info("Đang gộp bộ chuyển đổi vào mô hình nền tảng")
+    logger.info("Merging adapters into foundational model")
     base_model = AutoModelForSeq2SeqLM.from_pretrained(
         base_model_name, device_map="cpu", torch_dtype=torch.float32, token=hf_token
     )
@@ -520,7 +520,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Đang tải mô hình nền tảng trên vi xử lý đồ họa {base_model_name}")
+    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
     update_callback({"progress": 10, "status": "running"})
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -538,7 +538,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
         r=lora_rank,
         lora_alpha=lora_rank * 2,
         lora_dropout=0.05,
-        target_modules=["lên_q", "lên_k", "lên_v", "lên_out.0"],
+        target_modules=["up_q", "up_k", "up_v", "up_out.0"],
         bias="none",
     )
     transformer = get_peft_model(transformer, lora_config)
@@ -564,7 +564,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                     Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
                 )
             except Exception as e:
-                logger.error("Tải hình ảnh cho quá trình huấn luyện diffusion thất bại")
+                logger.error("Failed to load image for visual model training")
                 continue
 
             optimizer.zero_grad()
@@ -610,7 +610,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 optimizer.step()
                 final_loss = float(loss)
             except Exception as e:
-                logger.error("Bước huấn luyện diffusion thất bại")
+                logger.error("Diffusion training step failed")
                 final_loss = 0.0
 
             current_step += 1

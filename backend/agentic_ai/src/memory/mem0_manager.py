@@ -40,9 +40,9 @@ class Mem0Manager:
                     },
                 }
                 self.memory = Memory.from_config(config_dict=config)
-                logger.info("Đã khởi tạo bộ nhớ dài hạn")
+                logger.info("Long-term memory initialized")
             except Exception as e:
-                logger.error("Không thể khởi tạo hệ thống quản lý bộ nhớ")
+                logger.error("Unable to initialize memory management system")
 
     async def add_memory(self, messages: List[Dict], user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -51,9 +51,9 @@ class Mem0Manager:
             import asyncio
 
             await asyncio.to_thread(self.memory.add, messages, user_id=user_id)
-            logger.info(f"Đã thêm bộ nhớ cho người dùng {user_id}")
+            logger.info(f"Memory added for user {user_id}")
         except Exception as e:
-            logger.error("Lỗi thêm bộ nhớ")
+            logger.error("Failed to add memory")
 
     async def update_memory(self, memory_id: str, new_content: str):
         if not self.memory:
@@ -64,9 +64,9 @@ class Mem0Manager:
             await asyncio.to_thread(
                 self.memory.update, memory_id=memory_id, data=new_content
             )
-            logger.info(f"Đã cập nhật bộ nhớ {memory_id}")
+            logger.info(f"Memory updated: {memory_id}")
         except Exception as e:
-            logger.error("Lỗi cập nhật bộ nhớ")
+            logger.error("Failed to update memory")
 
     async def delete_memory(self, memory_id: str):
         if not self.memory:
@@ -75,9 +75,9 @@ class Mem0Manager:
             import asyncio
 
             await asyncio.to_thread(self.memory.delete, memory_id=memory_id)
-            logger.info(f"Đã xóa bộ nhớ {memory_id}")
+            logger.info(f"Memory removed: {memory_id}")
         except Exception as e:
-            logger.error("Lỗi xóa bộ nhớ")
+            logger.error("Failed to remove memory")
 
     async def search_and_resolve_conflicts(self, new_content: str, user_id: str):
         if not self.memory or not user_id or user_id == "guess_user":
@@ -94,10 +94,10 @@ class Mem0Manager:
                 if r.get("score", 0) > 0.85 and r.get("memory", "") != new_content:
                     await self.delete_memory(r["id"])
                     logger.info(
-                        f"Đã giải quyết xung đột bằng cách xóa bộ nhớ cũ {r['id']}"
+                        f"Resolved conflict by deleting old memory {r['id']}"
                     )
         except Exception as e:
-            logger.error("Lỗi giải quyết xung đột bộ nhớ")
+            logger.error("Failed to resolve memory conflict")
 
     async def get_context(self, query: str, user_id: str) -> str:
         if not self.memory or not user_id or user_id == "guess_user":
@@ -115,12 +115,12 @@ class Mem0Manager:
             if not memories:
                 return ""
 
-            context = "Thông tin cá nhân hoá của người dùng:\n"
+            context = "User's personalized information:\n"
             for i, m in enumerate(memories):
                 context += f"- {m}\n"
             return context
         except Exception as e:
-            logger.error("Lỗi lấy ngữ cảnh bộ nhớ")
+            logger.error("Failed to retrieve memory context")
             return ""
 
 

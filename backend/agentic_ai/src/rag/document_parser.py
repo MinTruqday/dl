@@ -18,14 +18,14 @@ class DocumentParser:
         self._marker_models = None
         self._ocr_engine = None
         self._pp_structure = None
-        logger.info("Đã khởi tạo tích hợp Marker và PaddleOCR")
+        logger.info("Advanced document analysis engines initialized successfully")
 
     def _get_marker_models(self):
         if self._marker_models is None:
             from marker.models import create_model_dict
 
             self._marker_models = create_model_dict()
-            logger.info("Đã tải từ điển cấu hình Marker")
+            logger.info("Loaded document analysis configuration")
         return self._marker_models
 
     def _get_ocr_engine(self, lang: str = "en"):
@@ -38,7 +38,7 @@ class DocumentParser:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info(f"Đã tải công cụ PaddleOCR với ngôn ngữ: {lang}")
+            logger.info(f"Loaded text extraction tool with language: {lang}")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -55,7 +55,7 @@ class DocumentParser:
             )
             self._pp_lang = lang
             logger.info(
-                f"Đã tải công cụ PPStructure hỗ trợ bố cục, bảng, OCR với ngôn ngữ: {lang}"
+                f"Loaded advanced layout extraction tool with language: {lang}"
             )
         return self._pp_structure
 
@@ -74,7 +74,7 @@ class DocumentParser:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
         except Exception as e:
-            logger.error("Phân tích tài liệu thất bại")
+            logger.error("Failed to analyze document")
             return {"error": str(e)}
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -124,7 +124,7 @@ class DocumentParser:
             )
 
         logger.info(
-            f"Marker đã phân tích {len(chunks)} đoạn, {page_count} trang từ tệp {file_path.suffix}"
+            f"Document analysis engine extracted {len(chunks)} segments, {page_count} pages from file {file_path.suffix}"
         )
         return {
             "markdown": markdown,
@@ -186,11 +186,11 @@ class DocumentParser:
                         )
 
             logger.info(
-                f"Đã trích xuất {len(tables)} bảng dữ liệu bằng Marker TableConverter"
+                f"Extracted {len(tables)} data tables from document"
             )
             return tables
         except Exception as e:
-            logger.error("Trích xuất bảng dữ liệu thất bại")
+            logger.error("Failed to extract data table")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -247,7 +247,7 @@ class DocumentParser:
             return await self._parse_with_raw_ocr(file_path)
 
         full_markdown = "\n\n".join(markdown_parts)
-        logger.info(f"PPStructure đã phân tích {len(chunks)} khối từ hình ảnh")
+        logger.info(f"Layout engine extracted {len(chunks)} blocks from image")
         return {
             "markdown": full_markdown,
             "chunks": chunks,
@@ -274,7 +274,7 @@ class DocumentParser:
         full_text = "\n".join(lines)
         chunks = self._group_lines_to_chunks(lines)
 
-        logger.info(f"Đã trích xuất thô {len(chunks)} đoạn từ hình ảnh bằng PaddleOCR")
+        logger.info(f"Text extraction engine extracted {len(chunks)} segments from image")
         return {
             "markdown": full_text,
             "chunks": chunks,
@@ -371,7 +371,7 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning("Phân tích tài liệu thất bại trong quá trình nạp dữ liệu")
+            logger.warning("Failed to analyze document during data ingestion")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -399,7 +399,7 @@ class DocumentParser:
                 }
             )
 
-        logger.info(f"Đã tạo {len(ingestion_chunks)} đoạn văn bản để nạp dữ liệu")
+        logger.info(f"Created {len(ingestion_chunks)} text segments for data ingestion")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -423,7 +423,7 @@ class DocumentParser:
 
             if "" in object_key:
                 logger.error(
-                    f"Phát hiện nỗ lực duyệt qua đường dẫn trong khóa đối tượng: {object_key}"
+                    f"Path traversal attempt detected in object key: {object_key}"
                 )
                 return None, ""
 
@@ -456,11 +456,11 @@ class DocumentParser:
                     ext = mapped_ext
                     break
 
-            logger.info(f"Đã tải xuống {len(data)} byte từ MinIO định dạng: {ext}")
+            logger.info(f"Downloaded {len(data)} bytes from storage format: {ext}")
             return data, ext
 
         except Exception as e:
-            logger.error("Tải xuống từ MinIO thất bại")
+            logger.error("Failed to download from storage")
             return None, ""
 
 

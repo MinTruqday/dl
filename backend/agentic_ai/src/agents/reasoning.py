@@ -11,10 +11,10 @@ class Reasoning:
     def __init__(self):
         self._model = settings.LLAMA_MODEL
         self._hf_token = settings.HF_TOKEN
-        logger.info(f"Đã khởi tạo với mô hình{self._model}")
+        logger.info(f"Initialized with model {self._model}")
 
     async def execute(self, task: str) -> str:
-        logger.info(f"Đang thực thi tác vụ suy luận: {task[:50]}")
+        logger.info(f"Executing inference task: {task[:50]}")
         prompt = prompt_registry.get(PromptType.ANALYTICAL_ENGINE).format(task=task)
         try:
             from huggingface_hub import AsyncInferenceClient
@@ -27,8 +27,8 @@ class Reasoning:
             result = await llm.ainvoke([HumanMessage(content=prompt)])
             return result.content.strip()
         except Exception as e:
-            logger.error("Thực thi thất bại do lỗi")
-            return f"Lỗi suy luận: {str(e)}"
+            logger.error("Execution failed due to error")
+            return f"Inference error: {str(e)}"
 
     async def evaluate_quality(
         self, query: str, answer: str, context_documents: List[Dict]
@@ -63,16 +63,16 @@ class Reasoning:
 
             return json.loads(result_text)
         except Exception as e:
-            logger.error("Đánh giá chất lượng thất bại do lỗi")
+            logger.error("Quality evaluation failed due to error")
             return {
                 "overall": 0.5,
                 "should_retry": False,
-                "feedback": f"Evaluation lỗi: {str(e)}",
+                "feedback": f"Evaluation error: {str(e)}",
             }
 
     def _build_context(self, documents: List[Dict]) -> str:
         if not documents:
-            return "Không tìm thấy tài liệu phù hợp"
+            return "No matching document found"
 
         parts = []
         for i, doc in enumerate(documents[:5], 1):

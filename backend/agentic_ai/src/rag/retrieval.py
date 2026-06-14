@@ -24,15 +24,15 @@ class RetrievalService:
             from sentence_transformers import CrossEncoder
 
             self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info(f"Loaded Reranker model {settings.RERANKER_MODEL} thành công")
+            logger.info(f"Loaded AI ranking model successfully")
         except Exception as e:
             self.reranker = None
-            logger.error("Tải mô hình reranker thất bại")
+            logger.error("Failed to load AI ranking model")
 
     async def multi_query_retrieve(
         self, question: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        logger.info(f"Đang truy xuất thông tin đa chiều cho {question}")
+        logger.info(f"Retrieving multidimensional information for: {question}")
 
         prompt = PromptTemplate(
             template=prompt_registry.get(PromptType.MULTI_QUERY),
@@ -65,7 +65,7 @@ class RetrievalService:
             queries = [q for q in queries if q]
             queries.append(question)
         except Exception as e:
-            logger.error("Lỗi tạo truy vấn đa chiều do")
+            logger.error("Failed to generate multidimensional query due to")
             queries = [question]
 
         all_documents = []
@@ -86,7 +86,7 @@ class RetrievalService:
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
         logger.info(
-            "Đang truy xuất thông tin cho '{query}' với danh sách tài liệu: {document_ids}"
+            "Retrieving information for '{query}' with document list: {document_ids}"
         )
 
         from src.rag.embedder import embedding_service
@@ -110,7 +110,7 @@ class RetrievalService:
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
         except Exception as e:
-            logger.error("Lỗi sắp xếp lại kết quả do")
+            logger.error("Error re-ranking results due to")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -119,11 +119,11 @@ class RetrievalService:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(question, document_ids, k)
 
-        logger.info(f"Đang truy xuất chéo cho {len(document_ids)} tài liệu")
+        logger.info(f"Performing cross-retrieval for {len(document_ids)} documents")
 
         decompose_prompt = (
             f"Given the question: {question}\n"
-            f"There are {len(document_ids)} tài liệu with IDs: {document_ids}\n"
+            f"There are {len(document_ids)} documents with IDs: {document_ids}\n"
             "For each document, generate one specific sub-query to retrieve the most relevant passage. "
             "Output as a JSON array of strings, one per document, in the same order"
         )
@@ -139,7 +139,7 @@ class RetrievalService:
                 if isinstance(parsed, list) and len(parsed) == len(document_ids):
                     sub_queries = parsed
         except Exception as e:
-            logger.warning("Cross-doc decomposition thất bại")
+            logger.warning("Cross-document decomposition failed")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

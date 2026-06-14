@@ -83,7 +83,7 @@ class GovernanceHarness:
             role=role,
         )
         logger.info(
-            f"Đã mở phiên làm việc mới (phiên: {session_id} user={user_id} role={role}"
+            f"Opened new session (session: {session_id} user={user_id} role={role}"
         )
 
     def close_session(self, session_id: str):
@@ -94,19 +94,19 @@ class GovernanceHarness:
         if not state:
             return PolicyDecision(
                 allowed=False,
-                reason="Session Chưa được đăng ký with governance harness",
+                reason="Session not registered with governance harness",
             )
 
         policy = self._get_policy(state.role)
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
             logger.warning(
-                f"Đã chặn công cụ do vi phạm quyền (phiên: {session_id} user={state.user_id} "
+                f"Blocked tool due to permission violation (session: {session_id} user={state.user_id} "
                 f"role={state.role} tool={tool_name} reason=blocked_for_role"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Tool {tool_name!r} không được phép với vai trò {state.role}",
+                reason=f"Tool {tool_name!r} is not allowed for role {state.role}",
                 blocked_tool=tool_name,
             )
 
@@ -115,24 +115,24 @@ class GovernanceHarness:
             and tool_name not in policy["allowed_tools"]
         ):
             logger.warning(
-                f"Đã chặn công cụ do vi phạm quyền (phiên: {session_id} user={state.user_id} "
+                f"Blocked tool due to permission violation (session: {session_id} user={state.user_id} "
                 f"role={state.role} tool={tool_name} reason=not_in_allowlist"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Tool {tool_name!r} không nằm trong danh sách cho phép",
+                reason=f"Tool {tool_name!r} is not in the allowed list",
                 blocked_tool=tool_name,
             )
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
             logger.warning(
-                f"Đã chặn do vượt hạn mức sử dụng công cụ (phiên: {session_id} user={state.user_id} "
+                f"Blocked due to exceeding tool usage limit (session: {session_id} user={state.user_id} "
                 f"role={state.role} used={state.tool_calls_used} max={max_calls}"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Đã sử dụng hết {max_calls} lượt công cụ cho phiên này",
+                reason=f"Exceeded maximum of {max_calls} tool uses for this session",
             )
 
         return PolicyDecision(allowed=True)
@@ -151,12 +151,12 @@ class GovernanceHarness:
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
             logger.warning(
-                f"Đã chặn do vượt giới hạn số bước lập kế hoạch (phiên: {session_id} role={state.role} "
+                f"Blocked due to exceeding planning step limit (session: {session_id} role={state.role} "
                 f"requested={num_steps} max={max_steps}"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Kế hoạch {num_steps} bước vượt giới hạn {max_steps} bước cho vai trò {state.role}",
+                reason=f"Plan with {num_steps} steps exceeds limit of {max_steps} steps for role {state.role}",
             )
         return PolicyDecision(allowed=True)
 
@@ -173,11 +173,11 @@ class GovernanceHarness:
             and (state.estimated_tokens_used + additional_tokens) > max_tokens
         ):
             logger.warning(
-                f"Đã chặn do vượt hạn mức token (phiên: {session_id} role={state.role} "
+                f"Blocked due to exceeding token limit (session: {session_id} role={state.role} "
                 f"used={state.estimated_tokens_used} additional={additional_tokens} max={max_tokens}"
             )
             return PolicyDecision(
-                allowed=False, reason="Vượt quá giới hạn token cho phiên này"
+                allowed=False, reason="Exceeded token limit for this session"
             )
         return PolicyDecision(allowed=True)
 

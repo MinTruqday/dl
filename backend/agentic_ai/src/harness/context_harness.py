@@ -54,7 +54,7 @@ class ContextHarness:
                     settings.REDIS_URI, decode_responses=True
                 )
             except Exception as e:
-                logger.error("Lỗi kết nối bộ nhớ đệm")
+                logger.error("Cache connection error")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -75,7 +75,7 @@ class ContextHarness:
                     pass
             return history
         except Exception as e:
-            logger.warning("Lỗi tải lịch sử phiên làm việc")
+            logger.warning("Failed to load session history")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -87,7 +87,7 @@ class ContextHarness:
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception as e:
-            logger.warning("Lỗi tải cài đặt người dùng")
+            logger.warning("Failed to load user settings")
             return ""
 
     async def build_context(
@@ -126,7 +126,7 @@ class ContextHarness:
             estimated_tokens=estimated,
         )
 
-        logger.info("Xây dựng ngữ cảnh hoàn tất")
+        logger.info("Context building completed")
         return ctx
 
     async def save_turn(
@@ -146,7 +146,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception as e:
-            logger.warning("Lỗi lưu tương tác phiên làm việc")
+            logger.warning("Failed to save session interaction")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -154,9 +154,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("Đã xóa phiên làm việc")
+            logger.info("Session deleted")
         except Exception as e:
-            logger.warning("Lỗi xóa phiên làm việc")
+            logger.warning("Failed to delete session")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

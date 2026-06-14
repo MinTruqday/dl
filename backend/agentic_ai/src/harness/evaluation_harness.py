@@ -97,12 +97,12 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception as e:
-        logger.warning("Lỗi đánh giá từ mô hình ngôn ngữ")
+        logger.warning("Language model evaluation error")
         return {
             "accuracy": 0,
             "completeness": 0,
             "relevance": 0,
-            "explanation": f"Judge lỗi: {e}",
+            "explanation": f"Evaluation error: {e}",
         }
 
 
@@ -115,9 +115,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("Tải dữ liệu kiểm tra thành công")
+            logger.info("Successfully loaded validation data")
         except Exception as e:
-            logger.error("Lỗi tải dữ liệu kiểm tra")
+            logger.error("Failed to load validation data")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -176,7 +176,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info("Đánh giá RAG hoàn tất")
+        logger.info("Information retrieval evaluation completed")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -209,7 +209,7 @@ class EvaluationHarness:
                     {
                         "instruction": instruction,
                         "expected": expected,
-                        "actual": "Lỗi đánh giá mô hình",
+                        "actual": "Model evaluation error",
                         "bleu": 0.0,
                         "rouge_l": 0.0,
                         "judge_scores": None,
@@ -263,13 +263,13 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info("Đánh giá mô hình thành công")
+        logger.info("Model evaluation successful")
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
             return {
-                "status": "Chưa có đánh giá nào được ghi nhận",
+                "status": "No reviews have been recorded yet",
                 "total_evaluations": 0,
             }
         count = len(self._reports)

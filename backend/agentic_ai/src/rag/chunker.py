@@ -2,7 +2,7 @@ import re
 
 
 def _sanitize_text(text: str) -> bool:
-    pattern = r"(?i)(ignore all previous instructions|bỏ qua mọi lệnh|bypass|jailbreak|bạn đã bị hack|print out|forget the previous)"
+    pattern = r"(?i)(ignore all previous instructions|bypass|jailbreak|you have been hacked|print out|forget the previous)"
     if re.search(pattern, text):
         return False
     return True
@@ -15,7 +15,7 @@ from uuid6 import uuid7
 
 
 def _sanitize_text(text: str) -> bool:
-    pattern = r"(?i)(ignore all previous instructions|bỏ qua mọi lệnh|bypass|jailbreak|bạn đã bị hack|print out|forget the previous)"
+    pattern = r"(?i)(ignore all previous instructions|bypass|jailbreak|you have been hacked|print out|forget the previous)"
     if re.search(pattern, text):
         return False
     return True
@@ -36,7 +36,7 @@ except ImportError:
 
 class AdvancedSemanticChunker:
     def __init__(self):
-        logger.info("Initializing Chonkie Chunkers")
+        logger.info("Initializing text segmentation engines")
         self.chunker = None
         self.type = "fallback"
 
@@ -49,10 +49,10 @@ class AdvancedSemanticChunker:
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
-                logger.info(f"Loaded Chonkie SemanticChunker with {model_name}")
+                logger.info(f"Loaded advanced text segmentation engine with {model_name}")
             except Exception as e:
                 logger.warning(
-                    f"Tải Chonkie SemanticChunker thất bại: {e}. Đang chuyển sang dự phòng TokenChunker"
+                    f"Failed to load advanced text segmentation: {e}. Falling back to standard method"
                 )
                 try:
                     self.chunker = TokenChunker(
@@ -60,16 +60,16 @@ class AdvancedSemanticChunker:
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.info("Loaded Chonkie TokenChunker")
+                    logger.info("Loaded standard text segmentation engine")
                 except Exception as e2:
-                    logger.error(f"Chonkie TokenChunker thất bại: {e2}")
+                    logger.error(f"Text segmentation engine failed: {e2}")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
         logger.info(f"Chunking text of length {len(text)}")
 
         if not self.chunker:
             logger.warning(
-                "Đang sử dụng dự phòng Langchain CharSplit do lỗi khởi tạo Chonkie"
+                "Using alternative text splitting method due to engine initialization error"
             )
             return self._fallback_chunking(text, metadata)
 
@@ -101,12 +101,12 @@ class AdvancedSemanticChunker:
                 )
 
             logger.info(
-                f"Hoàn thành phân nhỏ bằng Chonkie với số lượng: {len(chunks)}, loại: {self.type}"
+                f"Completed text chunking. Count: {len(chunks)}, type: {self.type}"
             )
             return chunks
 
         except Exception as e:
-            logger.error(f"Chạy Chonkie gặp lỗi: {e}. Đang sử dụng dự phòng")
+            logger.error(f"Primary text segmentation encountered an error: {e}. Using fallback method")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

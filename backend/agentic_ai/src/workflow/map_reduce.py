@@ -44,7 +44,7 @@ async def summarize_node(state: SummarizeState):
     from src.agents.planning import llm
 
     prompt = (
-        f"Tóm tắt chi tiết đoạn tài liệu sau đây bằng tiếng Việt:\n\n{state['chunk']}"
+        f"Summarize the following document segment in detail:\n\n{state['chunk']}"
     )
     res = await llm.ainvoke([HumanMessage(content=prompt)])
     return {"summaries": [res.content]}
@@ -62,7 +62,7 @@ async def hierarchical_reduce_node(state: MapReduceState):
     mid_summaries = []
     for batch in batches:
         combined = "\n\n---\n\n".join(batch)
-        prompt = f"Tóm tắt ngắn gọn các đoạn dưới đây thành một đoạn chứ không quá 300 từ:\n\n{combined}"
+        prompt = f"Briefly summarize the following passages into a single paragraph of no more than 300 words:\n\n{combined}"
         try:
             res = await llm.ainvoke([HumanMessage(content=prompt)])
             mid_summaries.append(res.content)
@@ -71,8 +71,8 @@ async def hierarchical_reduce_node(state: MapReduceState):
 
     final_combined = "\n\n---\n\n".join(mid_summaries)
     final_prompt = (
-        "Dựa vào các bản tóm tắt thành phần dưới đây, hãy tổng hợp thành một bản tóm tắt hoàn chỉnh, "
-        f"mạch lạc và đầy đủ thông tin nhất:\n\n{final_combined}"
+        "Based on the component summaries below, synthesize them into a complete summary, "
+        f"coherent and comprehensive summary:\n\n{final_combined}"
     )
     res = await llm.ainvoke([HumanMessage(content=final_prompt)])
     return {"final_summary": res.content}
@@ -93,17 +93,17 @@ map_reduce_app = mr_graph.compile()
 
 @tool
 async def agent_summarize_long_document(document_id: str, config: dict) -> str:
-    """Sử dụng công cụ này để đọc và tóm tắt toàn bộ một tài liệu khổng lồ (Map-Reduce)"""
+    """Use this tool to read and summarize an entire large document (Map-Reduce)"""
     from src.tools.api_tools import _get_doc_text
 
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Lỗi xác thực: Không tìm thấy token"
+        return "Authentication error: Token not found"
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Không tìm thấy nội dung tài liệu"
+        return "Document content not found"
 
     res = await map_reduce_app.ainvoke(
         {"document_text": text, "chunks": [], "summaries": [], "final_summary": ""}
     )
-    return f"Bản tóm tắt toàn bộ tài liệu:\n\n{res['final_summary']}"
+    return f"Full document summary:\n\n{res['final_summary']}"

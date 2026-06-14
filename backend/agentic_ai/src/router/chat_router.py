@@ -13,10 +13,10 @@ from src.harness.security_harness import security_harness
 from src.schemas.chat_schema import ChatRequest
 from src.workflow.supervisor import supervisor
 
-router = APIRouter(prefix="/tro-chuyen")
+router = APIRouter(prefix="/chat")
 
 
-@router.post("/tro-chuyen")
+@router.post("/chat")
 async def chat_endpoint(req: ChatRequest, request: Request):
     token = request.headers.get("Authorization")
     if token:
@@ -25,7 +25,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     scan = security_harness.scan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
         return {
-            "answer": "Yêu cầu của bạn chứa nội dung không được phép",
+            "answer": "Your request contains prohibited content",
             "route": "blocked",
         }
 
@@ -39,19 +39,19 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                 try:
                     doc_res = await _make_api_request(
                         "GET",
-                        f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
+                        f"{INTERNAL_API_URL}/documents/{doc_id}",
                         headers={"Authorization": f"Bearer {req.token}"},
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
                     if doc_res.status_code not in [200, 201]:
                         return {
-                            "answer": "Bạn không có quyền truy cập hoặc tài liệu không tồn tại",
+                            "answer": "You do not have access or the document does not exist",
                             "route": "error",
                         }
                 except Exception as e:
-                    logger.error("Lỗi kiểm tra quyền truy cập tài liệu")
+                    logger.error("Document access check error")
                     return {
-                        "answer": "Không thể xác thực quyền truy cập tài liệu",
+                        "answer": "Unable to verify document access permissions",
                         "route": "error",
                     }
 
@@ -94,13 +94,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "Hệ thống đang gặp sự cố vui lòng thử lại sau",
+            "answer": final_answer or "System error, please try again later",
             "route": "agentic_ai",
         }
     except Exception as e:
-        logger.error("Lỗi thực thi AI")
+        logger.error("AI execution error")
         return {
-            "answer": "Hệ thống đang gặp sự cố vui lòng thử lại sau",
+            "answer": "System error, please try again later",
             "route": "error",
         }
 
@@ -124,7 +124,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Yêu cầu của bạn chứa nội dung không được phép'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'Your request contains prohibited content'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
             return
 
@@ -145,17 +145,17 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                     try:
                         doc_res = await _make_api_request(
                             "GET",
-                            f"{INTERNAL_API_URL}/tai-lieu/{doc_id}",
+                            f"{INTERNAL_API_URL}/documents/{doc_id}",
                             headers={"Authorization": f"Bearer {req.token}"},
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
                         if doc_res.status_code not in [200, 201]:
-                            yield f"event: message\ndata: {json.dumps({'chunk': 'Bạn không có quyền truy cập hoặc tài liệu không tồn tại'})}\n\n"
+                            yield f"event: message\ndata: {json.dumps({'chunk': 'You do not have access or the document does not exist'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
                             return
                     except Exception as e:
-                        logger.error("Lỗi kiểm tra quyền truy cập tài liệu")
-                        yield f"event: message\ndata: {json.dumps({'chunk': 'Không thể xác thực quyền truy cập tài liệu'})}\n\n"
+                        logger.error("Document access check error")
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'Unable to verify document access permissions'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
 
@@ -172,7 +172,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             final_answer = ""
 
             if route == "chat":
-                yield f"event: status\ndata: {json.dumps({'node': 'Đang phản hồi trực tiếp'})}\n\n"
+                yield f"event: status\ndata: {json.dumps({'node': 'Responding directly'})}\n\n"
 
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
@@ -272,9 +272,9 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_session_end(session_id, "done")
 
         except Exception as e:
-            logger.exception("Lỗi thực thi luồng AI")
+            logger.exception("AI workflow execution error")
             agentops_harness.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Hệ thống đang gặp sự cố, vui lòng thử lại sau'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an issue, please try again later'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 

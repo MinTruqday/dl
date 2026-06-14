@@ -7,7 +7,7 @@ class Knowledge:
         pass
 
     async def execute(self, req) -> str:
-        logger.info(f"Đang truy xuất hệ thống tri thức cho truy vấn: {req.query}")
+        logger.info(f"Retrieving from knowledge base for query: {req.query}")
         try:
             result = await knowledge_app.ainvoke(
                 {
@@ -22,11 +22,11 @@ class Knowledge:
                 }
             )
             return result.get(
-                "generation", "Không tìm thấy thông tin phù hợp trong tài liệu"
+                "generation", "No relevant information found in the document"
             )
         except Exception as e:
-            logger.error("Lỗi truy xuất hệ thống tri thức")
-            return "Hệ thống đang gặp sự cố, vui lòng thử lại sau"
+            logger.error("Failed to retrieve from knowledge base")
+            return "The system encountered an issue, please try again later"
 
 
 knowledge = Knowledge()

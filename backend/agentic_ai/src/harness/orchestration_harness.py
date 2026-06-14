@@ -30,7 +30,7 @@ class CircuitBreaker:
         self._failures += 1
         if self._failures >= self._threshold and not self._tripped_at:
             self._tripped_at = time.monotonic()
-            logger.error("Hệ thống bảo vệ bị ngắt do lỗi liên tục")
+            logger.error("Circuit breaker tripped due to consecutive failures")
 
     def record_success(self):
         self._failures = 0
@@ -41,7 +41,7 @@ class CircuitBreaker:
             return False
         elapsed = time.monotonic() - self._tripped_at
         if elapsed >= self._reset_seconds:
-            logger.info("Khởi động lại hệ thống bảo vệ")
+            logger.info("Restarting circuit breaker")
             self._tripped_at = None
             self._failures = 0
             return False
@@ -83,61 +83,61 @@ class OrchestrationHarness:
     ) -> AsyncGenerator[dict, None]:
         if self._circuit_breaker.is_open():
             remaining = int(self._circuit_breaker.remaining_seconds())
-            logger.error("Hệ thống bảo vệ chặn yêu cầu")
+            logger.error("Security system blocked the request")
             yield {
                 "type": "error",
-                "message": f"Hệ thống đang tạm ngưng do quá tải, vui lòng thử lại sau {remaining} giây",
+                "message": f"The system is temporarily paused due to heavy load, please try again in {remaining} seconds",
             }
             return
 
         self._open_session(session_id)
-        logger.info("Bắt đầu phiên làm việc")
+        logger.info("Session started")
 
         try:
             async with asyncio.timeout(SESSION_HARD_TIMEOUT_SECONDS):
                 async for event in supervisor_execute_plan(req):
                     state = self._sessions.get(session_id)
                     if state and state.status == "cancelled":
-                        logger.info("Phiên làm việc bị hủy")
-                        yield {"type": "error", "message": "Phiên làm việc đã bị huỷ"}
+                        logger.info("Session terminated")
+                        yield {"type": "error", "message": "Session has been cancelled"}
                         return
                     yield event
 
             self._close_session(session_id, "done")
             self._circuit_breaker.record_success()
-            logger.info("Phiên làm việc thành công")
+            logger.info("Session completed successfully")
 
         except asyncio.TimeoutError:
             self._close_session(session_id, "timeout")
             self._circuit_breaker.record_failure()
-            logger.error("Phiên làm việc quá hạn")
+            logger.error("Session expired")
             yield {
                 "type": "error",
-                "message": f"Yêu cầu vượt quá thời gian xử lý cho phép ({SESSION_HARD_TIMEOUT_SECONDS}s), vui lòng thử lại",
+                "message": f"Request exceeded allowed processing time ({SESSION_HARD_TIMEOUT_SECONDS}s), please try again",
             }
 
         except asyncio.CancelledError:
             self._close_session(session_id, "cancelled")
-            logger.warning("Đã hủy phiên làm việc")
+            logger.warning("Session cancelled")
             yield {
                 "type": "error",
-                "message": "Phiên làm việc bị huỷ do kết nối bị đứt",
+                "message": "Session terminated due to disconnected connection",
             }
 
         except Exception as e:
             self._close_session(session_id, "failed")
             self._circuit_breaker.record_failure()
-            logger.exception("Lỗi phiên làm việc")
+            logger.exception("Session error")
             yield {
                 "type": "error",
-                "message": "Hệ thống đang gặp sự cố, vui lòng thử lại sau",
+                "message": "The system encountered an issue, please try again later",
             }
 
     def cancel_session(self, session_id: str):
         state = self._sessions.get(session_id)
         if state:
             state.status = "cancelled"
-            logger.info("Nhận yêu cầu hủy phiên làm việc")
+            logger.info("Received request to cancel session")
 
     def get_active_sessions(self) -> list[str]:
         return list(self._sessions.keys())

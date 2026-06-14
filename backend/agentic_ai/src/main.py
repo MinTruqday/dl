@@ -48,7 +48,7 @@ app.include_router(finetune_router)
 app.include_router(history_router)
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
@@ -76,16 +76,16 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống DocLib AI")
+    logger.info("Initialized DocLib AI system")
     from core.config import settings
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.vector_store import vector_store
 
     try:
         await vector_store.ensure_collection()
-        logger.info("Khởi tạo cơ sở dữ liệu vector thành công")
+        logger.info("Vector database initialized successfully")
     except Exception as e:
-        logger.error("Lỗi khởi tạo cơ sở dữ liệu vector")
+        logger.error("Failed to initialize vector database")
 
     try:
         if settings.MONGODB_URI:
@@ -103,6 +103,6 @@ async def startup_event():
             await RepositoryFactory.get("finetune_jobs").create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
-            logger.info("Khởi tạo chỉ mục cơ sở dữ liệu thành công")
+            logger.info("Database indexes initialized successfully")
     except Exception as e:
-        logger.error("Lỗi khởi tạo chỉ mục cơ sở dữ liệu")
+        logger.error("Failed to initialize database index")

@@ -20,15 +20,15 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             tmp_path = tmp.name
 
         logger.info(
-            f"Đang trích xuất văn bản từ tệp tải lên: {filename}, định dạng: {ext}"
+            f"Extracting text from uploaded file: {filename}, format: {ext}"
         )
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content
 
         os.remove(tmp_path)
-        logger.info(f"Đã trích xuất {len(full_text)} ký tự từ tệp tải lên")
+        logger.info(f"Extracted {len(full_text)} characters from uploaded file")
         return full_text
     except Exception as e:
-        logger.error("Không thể trích xuất văn bản từ tệp tải lên")
+        logger.error("Unable to extract text from the uploaded file")
         return ""

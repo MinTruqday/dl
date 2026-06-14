@@ -12,7 +12,7 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from uuid6 import uuid7
 
-router = APIRouter(prefix="/huan-luyen")
+router = APIRouter(prefix="/finetuning")
 active_jobs = {}
 
 
@@ -108,13 +108,13 @@ def _run_training_sync(job_id: str, config: dict, loop):
         )
 
     except Exception as e:
-        logger.error("Lỗi huấn luyện tinh chỉnh")
+        logger.error("Fine-tuning training error")
         sync_update({"status": "failed", "error_message": str(e)})
     finally:
         active_jobs.pop(job_id, None)
 
 
-@router.post("/tap-du-lieu")
+@router.post("/datasets")
 async def create_dataset(req: dict):
     db = get_db()
     doc = {
@@ -131,7 +131,7 @@ async def create_dataset(req: dict):
     return doc
 
 
-@router.get("/tap-du-lieu")
+@router.get("/datasets")
 async def list_datasets(user_id: str):
     return (
         await get_db()["finetune_datasets"]
@@ -141,17 +141,17 @@ async def list_datasets(user_id: str):
     )
 
 
-@router.get("/tap-du-lieu/{dataset_id}")
+@router.get("/datasets/{dataset_id}")
 async def get_dataset(dataset_id: str, user_id: str):
     doc = await get_db()["finetune_datasets"].find_one(
         {"_id": dataset_id, "user_id": user_id}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+        raise HTTPException(status_code=404, detail="Dataset not found")
     return doc
 
 
-@router.delete("/tap-du-lieu/{dataset_id}")
+@router.delete("/datasets/{dataset_id}")
 async def delete_dataset(dataset_id: str, user_id: str):
     db = get_db()
     result = await RepositoryFactory.get("finetune_datasets").delete_one(
@@ -162,10 +162,10 @@ async def delete_dataset(dataset_id: str, user_id: str):
             {"dataset_id": dataset_id}
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+    raise HTTPException(status_code=404, detail="Dataset not found")
 
 
-@router.post("/tap-du-lieu/{dataset_id}/mau-thu")
+@router.post("/datasets/{dataset_id}/samples")
 async def add_samples(dataset_id: str, req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -173,7 +173,7 @@ async def add_samples(dataset_id: str, req: dict):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+        raise HTTPException(status_code=404, detail="Dataset not found")
     documents = [
         {
             "_id": str(uuid7()),
@@ -197,7 +197,7 @@ async def add_samples(dataset_id: str, req: dict):
     return {"added": len(documents), "total": total}
 
 
-@router.get("/tap-du-lieu/{dataset_id}/mau-thu")
+@router.get("/datasets/{dataset_id}/samples")
 async def get_samples(
     dataset_id: str,
     user_id: str,
@@ -208,7 +208,7 @@ async def get_samples(
     if not await RepositoryFactory.get("finetune_datasets").find_one(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+        raise HTTPException(status_code=404, detail="Dataset not found")
     return (
         await RepositoryFactory.get("finetune_samples")
         .find({"dataset_id": dataset_id})
@@ -219,13 +219,13 @@ async def get_samples(
     )
 
 
-@router.delete("/tap-du-lieu/{dataset_id}/mau-thu/{sample_id}")
+@router.delete("/datasets/{dataset_id}/samples/{sample_id}")
 async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     db = get_db()
     if not await RepositoryFactory.get("finetune_datasets").find_one(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+        raise HTTPException(status_code=404, detail="Dataset not found")
     if (
         await RepositoryFactory.get("finetune_samples").delete_one(
             {"_id": sample_id, "dataset_id": dataset_id}
@@ -239,10 +239,10 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Không tìm thấy mẫu")
+    raise HTTPException(status_code=404, detail="No template found")
 
 
-@router.post("/dau-vao/phan-hoi")
+@router.post("/inputs/feedback")
 async def import_feedback(req: dict):
     db = get_db()
     user_id = req.get("user_id")
@@ -259,7 +259,7 @@ async def import_feedback(req: dict):
             "_id": ds_id,
             "user_id": user_id,
             "name": f"Feedback Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}",
-            "description": "Nhập từ phản hồi tích cực",
+            "description": "Import from positive feedback",
             "source": "feedback",
             "sample_count": 0,
             "status": "draft",
@@ -300,7 +300,7 @@ async def import_feedback(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/dau-vao/tai-lieu")
+@router.post("/inputs/documents")
 async def import_documents(req: dict):
     db = get_db()
     user_id, doc_ids = req.get("user_id"), req.get("document_ids", [])
@@ -310,7 +310,7 @@ async def import_documents(req: dict):
             "_id": ds_id,
             "user_id": user_id,
             "name": f"Document Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}",
-            "description": f"Trích xuất từ {len(doc_ids)} tài liệu",
+            "description": f"Extracted from {len(doc_ids)} documents",
             "source": "documents",
             "sample_count": 0,
             "status": "draft",
@@ -348,7 +348,7 @@ async def import_documents(req: dict):
                 client = AsyncInferenceClient(
                     model=settings.LLAMA_MODEL, token=hf_token
                 )
-                prompt = "Tạo 3 cặp câu hỏi - câu trả lời từ văn bản sau. Trả về mảng JSON với khóa 'instruction', 'input' (rỗng), 'output'.\n\nVăn bản:\n{chunk}\n\nJSON:"
+                prompt = "Create 3 question-answer pairs from the following text. Return a JSON array with keys 'instruction', 'input' (empty), 'output'.\n\nText:\n{chunk}\n\nJSON:"
                 messages = [{"role": "user", "content": prompt}]
                 resp = await client.chat_completion(
                     messages=messages, max_tokens=1024, temperature=0.3
@@ -371,7 +371,7 @@ async def import_documents(req: dict):
                             }
                         )
             except Exception as e:
-                logger.warning("Lỗi trích xuất dữ liệu huấn luyện")
+                logger.warning("Failed to extract training data")
     if samples:
         await RepositoryFactory.get("finetune_samples").insert_many(samples)
         await RepositoryFactory.get("finetune_datasets").update_one(
@@ -380,7 +380,7 @@ async def import_documents(req: dict):
     return {"dataset_id": ds_id, "imported": len(samples)}
 
 
-@router.post("/tao-huan-luyen")
+@router.post("/jobs")
 async def create_job(req: dict):
     db = get_db()
     ds_id, user_id = req.get("dataset_id"), req.get("user_id")
@@ -388,7 +388,7 @@ async def create_job(req: dict):
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Không tìm thấy tập dữ liệu")
+        raise HTTPException(status_code=404, detail="Dataset not found")
     if dataset.get("sample_count", 0) < 10:
         return {"error": "insufficient_samples"}
     job_id = str(uuid7())
@@ -418,16 +418,16 @@ async def create_job(req: dict):
     return job
 
 
-@router.post("/tao-huan-luyen/{job_id}/bat-dau")
+@router.post("/jobs/{job_id}/start")
 async def start_job(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
+        raise HTTPException(status_code=404, detail="Job not found")
     if job_id in active_jobs:
-        return {"error": "Công việc đang chạy"}
+        return {"error": "Job is running"}
     samples = (
         await RepositoryFactory.get("finetune_samples")
         .find({"dataset_id": job["dataset_id"]})
@@ -462,7 +462,7 @@ async def start_job(job_id: str, req: dict):
     return {"status": "started", "job_id": job_id}
 
 
-@router.get("/tao-huan-luyen")
+@router.get("/jobs")
 async def list_jobs(user_id: str):
     return (
         await get_db()["finetune_jobs"]
@@ -472,15 +472,15 @@ async def list_jobs(user_id: str):
     )
 
 
-@router.get("/tao-huan-luyen/{job_id}")
+@router.get("/jobs/{job_id}")
 async def get_job(job_id: str, user_id: str):
     job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
+        raise HTTPException(status_code=404, detail="Job not found")
     return job
 
 
-@router.post("/tao-huan-luyen/{job_id}/huy-bo")
+@router.post("/jobs/{job_id}/cancel")
 async def cancel_job(job_id: str, req: dict):
     db = get_db()
     result = await RepositoryFactory.get("finetune_jobs").update_one(
@@ -494,10 +494,10 @@ async def cancel_job(job_id: str, req: dict):
     if result.modified_count > 0:
         active_jobs.pop(job_id, None)
         return {"status": "cancelled"}
-    raise HTTPException(status_code=400, detail="Không thể hủy công việc này")
+    raise HTTPException(status_code=400, detail="Cannot cancel this job")
 
 
-@router.post("/tao-huan-luyen/{job_id}/trien-khai")
+@router.post("/jobs/{job_id}/deploy")
 async def deploy_model(job_id: str, req: dict):
     db = get_db()
     job = await RepositoryFactory.get("finetune_jobs").find_one(
@@ -505,7 +505,7 @@ async def deploy_model(job_id: str, req: dict):
     )
     if not job:
         raise HTTPException(
-            status_code=404, detail="Không tìm thấy công việc hoàn thành"
+            status_code=404, detail="Completed job not found"
         )
     model_name = job.get("merged_model_name", job["job_name"])
     gguf_path = job.get("gguf_path")
@@ -514,7 +514,7 @@ async def deploy_model(job_id: str, req: dict):
     hf_token = settings.HF_TOKEN
     if not hf_token:
         raise HTTPException(
-            status_code=500, detail="Hệ thống đang thiếu mã xác thực HuggingFace"
+            status_code=500, detail="System is missing remote repository authentication"
         )
 
     try:
@@ -526,14 +526,14 @@ async def deploy_model(job_id: str, req: dict):
 
         repo_id = f"{hf_username}/{model_name}"
 
-        logger.info("Tạo kho lưu trữ HuggingFace thành công")
+        logger.info("Created remote model repository successfully")
         api.create_repo(repo_id=repo_id, exist_ok=True)
 
         if merged_path:
             import os
 
             if os.path.exists(merged_path):
-                logger.info("Đang tải mô hình lên HuggingFace")
+                logger.info("Uploading model to remote repository")
                 import asyncio
 
                 loop = asyncio.get_event_loop()
@@ -546,8 +546,8 @@ async def deploy_model(job_id: str, req: dict):
                     ),
                 )
             else:
-                logger.warning("Không tìm thấy thư mục mô hình đã gộp")
-                raise Exception("Không tìm thấy thư mục mô hình đã gộp")
+                logger.warning("Merged model directory not found")
+                raise Exception("Merged model directory not found")
 
         model_name = repo_id
         await RepositoryFactory.get("finetune_jobs").update_one(
@@ -555,9 +555,9 @@ async def deploy_model(job_id: str, req: dict):
         )
 
     except Exception as e:
-        logger.error("Lỗi triển khai lên HuggingFace")
+        logger.error("Failed to deploy model to remote repository")
         raise HTTPException(
-            status_code=500, detail="Lỗi triển khai mô hình lên HuggingFace"
+            status_code=500, detail="Failed to deploy model to remote repository"
         )
 
     await RepositoryFactory.get("finetune_jobs").update_one(
@@ -566,7 +566,7 @@ async def deploy_model(job_id: str, req: dict):
     return {"status": "deployed", "model_name": model_name}
 
 
-@router.post("/tao-huan-luyen/{job_id}/danh-gia")
+@router.post("/jobs/{job_id}/evaluate")
 async def evaluate_model(job_id: str, req: dict):
     from src.harness.evaluation_harness import evaluation_harness
 
@@ -575,7 +575,7 @@ async def evaluate_model(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Không tìm thấy công việc")
+        raise HTTPException(status_code=404, detail="Job not found")
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation_harness._dataset = req.get("test_samples", [])

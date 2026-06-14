@@ -49,7 +49,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info("Đã đăng ký công cụ AI")
+        logger.info("Registered AI tool")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -63,9 +63,9 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error("Công cụ AI chưa được đăng ký")
+            logger.error("AI tool is not registered")
             return ToolResult(
-                success=False, data=None, error=f"Tool {tool_name!r} chưa được đăng ký"
+                success=False, data=None, error=f"Tool {tool_name!r} is not registered"
             )
 
         start_ms = time.monotonic()
@@ -86,7 +86,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info("Công cụ AI thực thi thành công")
+                logger.info("AI tool executed successfully")
                 return ToolResult(
                     success=True,
                     data=result_data,
@@ -96,18 +96,18 @@ class ToolHarness:
 
             except asyncio.TimeoutError:
                 last_error = f"Timeout after {definition.timeout_seconds}s"
-                logger.warning("Công cụ AI hết thời gian chờ")
+                logger.warning("AI tool timed out")
 
             except Exception as e:
                 last_error = str(e)
-                logger.warning("Lỗi thực thi công cụ AI")
+                logger.warning("AI tool execution error")
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
         duration_ms = int((time.monotonic() - start_ms) * 1000)
-        logger.error("Thất bại thực thi công cụ AI")
+        logger.error("AI tool execution failure")
         return ToolResult(
             success=False,
             data=None,

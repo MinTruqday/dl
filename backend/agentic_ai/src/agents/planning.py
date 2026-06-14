@@ -34,11 +34,11 @@ class Planning:
             httpx.HTTPStatusError,
             Exception,
         ) as primary_err:
-            logger.warning(f"Mô hình ngôn ngữ chính thất bại do lỗi: {primary_err}")
+            logger.warning(f"Primary language model failed with error: {primary_err}")
             raise primary_err
 
     async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info(f"Đang tạo kế hoạch cấu trúc cho truy vấn: {req.query}")
+        logger.info(f"Creating structural plan for query: {req.query}")
 
         from src.core.prompt_registry import PromptType, prompt_registry
 
@@ -79,18 +79,18 @@ class Planning:
                 steps = [
                     {
                         "agent": "Knowledge",
-                        "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này",
+                        "task": "Inform the user that the system cannot process this complex request",
                     }
                 ]
 
             return steps
 
         except Exception as e:
-            logger.error("Tạo kế hoạch thất bại do lỗi")
+            logger.error("Failed to create plan due to error")
             return [
                 {
                     "agent": "Knowledge",
-                    "task": "Trả lời người dùng rằng hệ thống không thể xử lý yêu cầu phức tạp này do lỗi phân tích",
+                    "task": "Inform the user that the system cannot process this complex request due to an analysis error",
                 }
             ]
 

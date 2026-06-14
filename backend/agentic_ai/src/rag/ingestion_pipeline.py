@@ -40,7 +40,7 @@ class IngestionPipeline:
         if not file_url:
             raise ValueError(f"Document {document_id} has no file_url")
 
-        logger.info(f"Đang nạp dữ liệu: {title} của {author}")
+        logger.info(f"Ingesting data: {title} by {author}")
 
         metadata = {
             "document_id": document_id,
@@ -74,7 +74,7 @@ class IngestionPipeline:
                 )
                 llm_summary = ChatHuggingFace(llm=_hf)
                 prompt = PromptTemplate(
-                    template="Dựa vào phần trích xuất văn bản sau, hãy tóm tắt các thông tin cốt lõi của tài liệu này theo định dạng:\nTên tài liệu: (Tên)\nTác giả: (Tác giả)\nNăm xuất bản/Bối cảnh: (Năm/Bối cảnh)\nTóm tắt nội dung chính: (Nội dung)\n\nVăn bản:\n{text}\n\nTạo Tóm Tắt Định Danh (Global Summary):",
+                    template="Based on the following extracted text, summarize the core information of this document in the format:\nDocument Name: (Name)\nAuthor: (Author)\nPublication Year/Context: (Year/Context)\nMain Content Summary: (Content)\n\nText:\n{text}\n\nGenerate Identity Summary (Global Summary):",
                     input_variables=["text"],
                 )
                 response = await llm_summary.ainvoke(prompt.format(text=first_pages))
@@ -82,7 +82,7 @@ class IngestionPipeline:
 
                 return {
                     "id": f"{document_id}_global_summary",
-                    "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nTài liệu: {title}\nTác giả: {author}\n{global_summary_text}",
+                    "text": f"[GLOBAL METADATA - SUMMARY CHUNK]\nDocument: {title}\nAuthor: {author}\n{global_summary_text}",
                     "metadata": {
                         **metadata,
                         "chunk_id": "summary_001",
@@ -92,7 +92,7 @@ class IngestionPipeline:
                     },
                 }
             except Exception as e:
-                logger.error("Không thể tạo đoạn tóm tắt toàn cục")
+                logger.error("Unable to generate global summary segment")
                 return None
 
         if doc_chunks:
@@ -122,7 +122,7 @@ class IngestionPipeline:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
                 raise ValueError(
-                    f"Văn bản trích xuất quá ngắn đối với tài liệu {document_id}"
+                    f"Extracted text is too short for document {document_id}"
                 )
 
             first_few_pages = raw_text[:15000]
@@ -134,7 +134,7 @@ class IngestionPipeline:
             chunks.extend(extracted_chunks)
 
         if not chunks:
-            raise ValueError(f"Không thể phân mảnh nội dung cho tài liệu {document_id}")
+            raise ValueError(f"Unable to fragment content for document {document_id}")
 
         texts = [c["text"] for c in chunks]
         embeddings = await embedding_service.embed_batch(texts)
@@ -173,7 +173,7 @@ class IngestionPipeline:
         ext = os.path.splitext(file_url.split("?")[0])[1].lower()
 
         if ext == ".zip":
-            logger.info(f"Phát hiện tệp ZIP trong quá trình nạp dữ liệu: {file_url}")
+            logger.info(f"Detected ZIP file during ingestion: {file_url}")
             return await self._extract_from_zip(file_bytes)
 
         return self._extract_with_markitdown(file_bytes, file_url)
@@ -223,7 +223,7 @@ class IngestionPipeline:
                     f_ext = os.path.splitext(f)[1].lower()
                     if f_ext in supported_exts:
                         f_path = os.path.join(root, f)
-                        logger.info(f"Đang trích xuất nội dung từ tệp con: {f}")
+                        logger.info(f"Extracting content from sub-file: {f}")
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
@@ -233,7 +233,7 @@ class IngestionPipeline:
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
                         except Exception as e:
-                            logger.error("Lỗi nạp dữ liệu từ {f}")
+                            logger.error("Failed to load data from {f}")
 
         return "\n\n".join(all_text)
 
@@ -258,7 +258,7 @@ class IngestionPipeline:
                 object_key = url
 
             logger.info(
-                f"Đang tải xuống từ không gian lưu trữ {bucket}, key={object_key}"
+                f"Downloading from storage bucket {bucket}, key={object_key}"
             )
 
             import boto3
@@ -272,10 +272,10 @@ class IngestionPipeline:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info(f"Đã tải xuống {len(data)} byte từ MinIO")
+            logger.info(f"Downloaded {len(data)} bytes from storage")
             return data
         except Exception as e:
-            logger.error("Download lỗi")
+            logger.error("Download error")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -291,20 +291,20 @@ class IngestionPipeline:
                 tmp.write(data)
                 tmp_path = tmp.name
 
-            logger.info(f"Đang tiến hành phân tích dữ liệu cho tệp {ext}")
+            logger.info(f"Proceeding with data analysis for file {ext}")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
 
             os.remove(tmp_path)
 
-            logger.info(f"Đã phân tích thành công {len(full_text)} ký tự")
+            logger.info(f"Successfully analyzed {len(full_text)} characters")
             return full_text
         except ImportError:
-            logger.error("Hệ thống đang thiếu thư viện phân tích nội dung")
+            logger.error("System is missing content analysis libraries")
             return ""
         except Exception as e:
-            logger.error("Quá trình phân tích dữ liệu thất bại do lỗi")
+            logger.error("Data analysis process failed due to error")
             return ""
 
 
