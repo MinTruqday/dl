@@ -73,7 +73,7 @@ class MessageService:
             {"_id": receiver_id}
         )
         if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("Action restricted. You have been blocked by this user")
+            raise Exception("The communication attempt was restricted because the target account has disabled interactions from your profile")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -361,7 +361,7 @@ class MessageService:
         msg = await RepositoryFactory.get("messages").find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
-        recalled_content = "This message has been recalled"
+        recalled_content = "This message has been recalled by the sender"
         await RepositoryFactory.get("messages").update_one(
             {"_id": message_id},
             {
@@ -580,7 +580,7 @@ class MessageService:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
             return None
-        content = f"Shared document: [{doc.get('title')}]({document_id})"
+        content = f"Shared document preview and link to access {doc.get('title')} at internal reference {document_id}"
         message = MessageInDB(
             sender_id=str(current_user.id),
             receiver_id=receiver_id,
@@ -621,7 +621,7 @@ class MessageService:
         query["is_recalled"] = False
         query["$or"] = [
             {"image_url": {"$ne": None, "$ne": ""}},
-            {"content": {"$regex": "Shared document:"}},
+            {"content": {"$regex": "Shared document preview"}},
         ]
         messages = (
             await RepositoryFactory.get("messages")
@@ -746,7 +746,7 @@ class MessageService:
             if response.status_code == 200:
                 translated_content = response.json().get("data")
         except Exception:
-            translated_content = f"Translated: {msg['content']}"
+            translated_content = f"Translation fallback string for {msg['content']}"
         translations = msg.get("translations", {})
         translations[target_lang] = translated_content
         await RepositoryFactory.get("messages").update_one(

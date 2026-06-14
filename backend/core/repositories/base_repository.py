@@ -16,7 +16,6 @@ class BaseMongoRepository:
         return await self.collection.find_one(query, **kwargs)
 
     def find(self, *args, **kwargs):
-        # Motor's find returns a cursor synchronously
         return self.collection.find(*args, **kwargs)
 
     async def insert_one(self, document: Dict[str, Any], **kwargs):
@@ -45,7 +44,6 @@ class BaseMongoRepository:
         return await self.collection.count_documents(filter, **kwargs)
 
     def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
-        # Motor's aggregate returns a cursor synchronously
         return self.collection.aggregate(pipeline, **kwargs)
 
 

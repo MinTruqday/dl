@@ -3,6 +3,7 @@ from core.config import settings
 from core.database import close_db, init_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from src.router.message_router import router as message_router
 
 app = FastAPI(title="DocLib Contact", version=settings.VERSION)
@@ -24,7 +25,7 @@ app.include_router(message_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("DocLib Contact initialized successfully")
+    logger.info("The internal contact and messaging service has been successfully initialized and is now ready to process incoming requests")
     await init_db()
 
 
@@ -35,8 +36,4 @@ async def shutdown_event():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "contact"}
-
-
-if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8100, reload=True)
+    return {"status": "The communication service is currently operating normally and functioning as expected without any internal issues"}

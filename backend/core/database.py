@@ -24,7 +24,7 @@ async def init_db():
     rabbitmq_uri = settings.RABBITMQ_URI
 
     if not mongo_uri or not redis_uri or not rabbitmq_uri:
-        logger.error("Missing required connection configurations")
+        logger.error("The system initialization failed because the required database connection configurations are missing")
         import sys
 
         sys.exit(1)
@@ -43,15 +43,15 @@ async def init_db():
                 if "@" in parsed_uri.netloc
                 else parsed_uri.netloc
             )
-            logger.info("Initializing database cluster")
+            logger.info("The primary database cluster initialization sequence has started")
             await db_client.mongodb.admin.command(
                 "replSetInitiate",
                 {"_id": "rs0", "members": [{"_id": 0, "host": host_with_port}]},
             )
-            logger.info("Database cluster initialized successfully")
+            logger.info("The primary database cluster has been successfully initialized and is ready to accept connections")
             await asyncio.sleep(3)
-        except Exception as e:
-            logger.warning("Failed to initialize database cluster")
+        except Exception:
+            logger.warning("The system encountered an unexpected disruption while attempting to initialize the primary database cluster")
 
     db_client.redis = aioredis.from_url(redis_uri, decode_responses=True)
 
@@ -59,13 +59,13 @@ async def init_db():
     for i in range(max_retries):
         try:
             db_client.rabbitmq = await aio_pika.connect_robust(rabbitmq_uri)
-            logger.info("Message queue connection established successfully")
+            logger.info("The background message queue connection has been successfully established and is operating normally")
             break
         except Exception as e:
             if i == max_retries - 1:
-                logger.error(f"Failed to connect to message queue after {max_retries} attempts")
+                logger.error("The background message queue connection could not be established after multiple consecutive retry attempts")
                 raise e
-            logger.warning(f"Message queue connection attempt {i+1} failed")
+            logger.warning("The system experienced a temporary delay while attempting to connect to the background message queue and will automatically retry")
             await asyncio.sleep(5)
 
     await setup_indexes()
@@ -155,9 +155,9 @@ async def setup_indexes():
             [("owner_id", 1), ("is_trashed", 1), ("updated_at", -1)], background=True
         )
 
-        logger.info("Database indexes initialized successfully")
-    except Exception as e:
-        logger.error("Failed to initialize database indexes")
+        logger.info("The primary database indexing process has been successfully completed to optimize query performance")
+    except Exception:
+        logger.error("The system encountered an unexpected disruption while attempting to build the primary database indexes")
 
 
 async def close_db():

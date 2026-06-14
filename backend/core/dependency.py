@@ -20,7 +20,7 @@ async def get_db():
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired session",
+        detail="The current authentication session is either invalid or has expired so please log in again to continue",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -28,10 +28,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         email: str = payload.get("sub")
         session_id: str = payload.get("sid")
         if email is None or session_id is None:
-            logger.warning("Decoded token is missing 'sub' or 'sid' claims")
+            logger.warning("The authentication token verification failed because it is missing essential structural components")
             raise credentials_exception
-    except jwt.PyJWTError as e:
-        logger.warning(f"Failed to decode")
+    except jwt.PyJWTError:
+        logger.warning("The system was unable to decode the provided authentication token due to an invalid cryptographic signature or structural corruption")
         raise credentials_exception
     if db_client.redis:
         import httpx
@@ -52,7 +52,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
             f"user_sessions:{user_id_str}", session_id
         )
         if not is_valid_session:
-            logger.warning(f"Detected attempt to use a revoked legacy session for {email}")
+            logger.warning("The system detected and prevented an unauthorized attempt to access a revoked authentication session")
             raise credentials_exception
     else:
         import httpx
@@ -67,7 +67,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         except Exception:
             user_doc = None
     if user_doc is None:
-        logger.warning(f"No user found with email {email}")
+        logger.warning("The system could not locate an account associated with the provided authentication credentials")
         raise credentials_exception
     user_id_str = str(user_doc["_id"])
     user_doc["_id"] = user_id_str
@@ -100,11 +100,11 @@ def require_role(required_roles: List[RoleEnum]):
             return current_user
         if current_user.role not in required_roles:
             logger.warning(
-                f"Access denied for {current_user.email} with role {current_user.role}. Required roles: {required_roles}"
+                "An access attempt was automatically rejected by the system because the account lacks the required authorization tier"
             )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to perform this action",
+                detail="The current account does not possess the necessary administrative privileges to perform this restricted action",
             )
         return current_user
 
@@ -123,7 +123,7 @@ class RateLimiter:
         if not db_client.redis:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="This feature is currently under maintenance. Please try again later",
+                detail="This specific feature is currently undergoing scheduled maintenance so please attempt your request again at a later time",
             )
         client_ip = request.client.host if request.client else "unknown"
         path = request.url.path
@@ -132,7 +132,7 @@ class RateLimiter:
         if current is not None and int(current) >= self.calls:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Rate limit exceeded. Please try again later",
+                detail="The system has temporarily restricted your access because you have exceeded the maximum allowed number of requests within the current time window",
             )
         pipe = db_client.redis.pipeline()
         pipe.incr(key)
@@ -153,7 +153,7 @@ def require_permissions(required_permissions: List[str]):
         if missing:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied due to insufficient permissions: {', '.join(missing)}",
+                detail="The requested action was denied because the current account lacks the specific structural permissions required to proceed",
             )
         return current_user
 
@@ -174,6 +174,6 @@ def get_current_user_from_header(
 ):
     if not x_user_id:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing X-User-ID header"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="The incoming request was rejected because it is missing the mandatory user identification header required for internal service routing"
         )
     return AuthenticatedUser(x_user_id, x_user_name)
