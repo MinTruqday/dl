@@ -35,19 +35,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception as e:
-        logger.error("Lỗi trình duyệt")
+        logger.error("Browser initialization or execution failed")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception as e:
-                logger.warning("Lỗi tắt trình duyệt")
+                logger.warning("Failed to close browser instance cleanly")
         if playwright:
             try:
                 await playwright.stop()
             except Exception as e:
-                logger.warning("Lỗi dừng Playwright")
+                logger.warning("Failed to stop Playwright instance cleanly")
 
 
 async def get_stealth_context(browser):
@@ -75,11 +75,11 @@ async def download_file_with_retry(
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error(f"Mã lỗi {resp.status} {url}")
+                        logger.error(f"Request failed with status {resp.status} for {url}")
         except Exception as e:
-            logger.warning(f"Lần thử thứ {attempt+1}/{max_retries} thất bại với {url}")
+            logger.warning(f"Attempt {attempt+1}/{max_retries} failed for {url}")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error(f"Tải thất bại {url} sau {max_retries} lần thử")
+                logger.error(f"Download failed for {url} after {max_retries} attempts")
     return False

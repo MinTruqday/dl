@@ -17,7 +17,7 @@ class CollectorStorage:
         self.secret_key = settings.MINIO_SECRET_KEY
 
         if not self.access_key or not self.secret_key:
-            raise ValueError("Thiếu cấu hình MINIO_ACCESS_KEY hoặc MINIO_SECRET_KEY")
+            raise ValueError("Missing access or secret keys")
 
         self.bucket = settings.MINIO_BUCKET_NAME
         self.public_url = settings.MINIO_PUBLIC_URL
@@ -40,7 +40,7 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info(f"Khởi tạo không gian lưu trữ {self.bucket}")
+            logger.info(f"Initializing storage bucket: {self.bucket}")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
@@ -62,7 +62,7 @@ class CollectorStorage:
             url = f"{self.public_url}/{self.bucket}/{object_name}"
             return url
         except Exception as e:
-            logger.error(f"Lỗi đẩy file {local_file_path} lên MinIO")
+            logger.error(f"File upload to storage failed: {local_file_path}")
             raise e
 
 

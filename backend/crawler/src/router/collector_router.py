@@ -13,7 +13,7 @@ from uuid6 import uuid7
 router = APIRouter()
 
 
-@router.post("/kich-hoat")
+@router.post("/triggers")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
     pages = req.pages
@@ -37,42 +37,42 @@ async def trigger_collection(req: CollectionRequest):
         payload["pages"] = pages
     else:
         raise HTTPException(
-            status_code=400, detail="Nguồn dữ liệu '{source}' chưa được hỗ trợ"
+            status_code=400, detail=f"The specified data source '{source}' is not supported"
         )
 
     try:
         await mq_client.publish(queue_name, payload)
-        logger.info(f"Bật tiến trình thu thập {payload['job_id']} cho nguồn {source}")
+        logger.info(f"Collection process {payload['job_id']} initiated for source {source}")
         return {
             "status": "success",
             "job_id": payload["job_id"],
-            "message": f"Khởi chạy tiến trình thu thập cho nguồn {source}",
+            "message": f"Collection process initiated successfully for source {source}",
         }
     except Exception as e:
-        logger.error("Lỗi bật tiến trình thu thập")
+        logger.error("Failed to initiate collection process")
         raise HTTPException(
-            status_code=500, detail="Lỗi chuyển lệnh thu thập vào hàng đợi"
+            status_code=500, detail="Unable to queue the collection process"
         )
 
 
-@router.post("/tam-dung")
+@router.post("/pause")
 async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info("Tạm dừng thu thập thành công")
+        logger.info("Collection process paused successfully")
         return {
             "status": "success",
-            "message": "Tiếp nhận tín hiệu dừng thu thập thành công",
+            "message": "Stop signal acknowledged and process paused",
         }
     except Exception as e:
-        logger.error("Lỗi tạm dừng thu thập")
+        logger.error("Failed to pause collection process")
         raise HTTPException(
-            status_code=500, detail="Truyền tín hiệu dừng thu thập thất bại"
+            status_code=500, detail="Unable to transmit stop signal to the collection process"
         )
 
 
-@router.get("/tien-trinh-dang-chay")
+@router.get("/active-jobs")
 async def get_active_jobs():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)
@@ -89,7 +89,7 @@ async def get_active_jobs():
     return jobs
 
 
-@router.get("/thong-ke")
+@router.get("/stats")
 async def get_collector_stats():
     mongo_uri = settings.MONGODB_URI
     client = AsyncIOMotorClient(mongo_uri)

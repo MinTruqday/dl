@@ -19,7 +19,7 @@ logger.add(
 from core.config import settings
 from src.router.collector_router import router
 
-app = FastAPI(title="DocLib Collector", version=settings.VERSION)
+app = FastAPI(title="DocLib Crawler", version=settings.VERSION)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(
@@ -30,12 +30,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router, prefix="/thu-thap")
+app.include_router(router, prefix="/collectors")
 
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống thu thập DocLib")
+    logger.info("DocLib Crawler initialized successfully")
     from src.worker import run_worker
 
     asyncio.create_task(run_worker())

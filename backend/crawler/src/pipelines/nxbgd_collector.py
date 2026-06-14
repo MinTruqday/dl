@@ -65,13 +65,13 @@ class NXBGDCollector:
                         with open(save_path, "wb") as f:
                             f.write(body)
 
-                        logger.info(f"Chụp xong trang #{self.page_counter}: {filename}")
+                        logger.info(f"Successfully captured page #{self.page_counter}: {filename}")
                         self.captured_hashes.add(content_hash)
                         self.page_counter += 1
                 except Exception as e:
-                    logger.warning("Không lấy được dữ liệu trả về từ NXBGD")
+                    logger.warning("Failed to retrieve response data from the source")
         except Exception as e:
-            logger.warning("Lỗi xử lý phản hồi từ NXBGD")
+            logger.warning("Error processing response from the source")
 
     async def init_browser(self):
         self._browser_cm = managed_browser()
@@ -102,18 +102,16 @@ class NXBGDCollector:
         )
 
         if not image_files:
-            logger.warning(f"Bỏ qua PDF {title} vì không có nội dung")
+            logger.warning(f"Skipping document compilation for '{title}' due to missing content")
             return
 
         try:
-            logger.info(
-                f"Đang gom {len(image_files)} trang thành '{final_pdf_name}' bằng thư viện img2pdf"
-            )
+            logger.info(f"Compiling {len(image_files)} pages into '{final_pdf_name}'")
             with open(pdf_path, "wb") as f:
                 f.write(img2pdf.convert(image_files))
-            logger.info(f"Tạo PDF {pdf_path} thành công")
+            logger.info(f"Document compilation completed successfully: {pdf_path}")
 
-            logger.info(f"Đẩy file {final_pdf_name} lên lưu trữ")
+            logger.info(f"Uploading file {final_pdf_name} to storage backend")
             minio_url = await storage.upload_local_file(
                 f"tài liệu/nxbgd/{final_pdf_name}", pdf_path
             )
@@ -122,7 +120,7 @@ class NXBGDCollector:
                 document_metadata = {
                     "title": title,
                     "slug": slug,
-                    "description": "Trích xuất qua NXBGD collector",
+                    "description": "Extracted via automated collection process",
                     "file_url": minio_url,
                     "tags": ["Nhà Xuất bản Giáo dục Việt Nam", "Unknown"],
                     "content": None,
@@ -140,22 +138,22 @@ class NXBGDCollector:
                     pass
 
         except Exception as e:
-            logger.error("Lỗi hệ thống")
+            logger.error("An unexpected system error occurred")
             raise
         finally:
 
-            logger.info(f"Đang xóa thư mục tạm: {self.temp_dir}")
+            logger.info(f"Cleaning up temporary directory: {self.temp_dir}")
             try:
                 shutil.rmtree(self.temp_dir)
             except Exception as e:
-                logger.warning(f"Lỗi xóa thư mục tạm {self.temp_dir}")
+                logger.warning(f"Failed to clean up temporary directory: {self.temp_dir}")
 
     async def execute(self):
         await self.init_browser()
 
         url = f"https://taphuan.nxbgd.vn/tap-huan?grade={self.target_class}"
         try:
-            logger.info(f"Đang truy cập URL gốc OLM: {url}")
+            logger.info(f"Navigating to origin URL: {url}")
             await self.page.goto(url, timeout=60000)
             await asyncio.sleep(5)
 
@@ -171,7 +169,7 @@ class NXBGDCollector:
                     if href and href not in document_urls:
                         document_urls.append(href)
 
-                logger.info(f"Tìm thấy {len(document_urls)} tài liệu trên trang")
+                logger.info(f"Discovered {len(document_urls)} documents on the current page")
 
                 for doc_url in document_urls:
                     full_doc_url = (
@@ -179,7 +177,7 @@ class NXBGDCollector:
                         if doc_url.startswith("/")
                         else doc_url
                     )
-                    logger.info(f"Xem thông tin tài liệu {full_doc_url}")
+                    logger.info(f"Retrieving details for document: {full_doc_url}")
 
                     try:
                         await self.page.goto(full_doc_url, timeout=60000)
@@ -197,7 +195,7 @@ class NXBGDCollector:
                             full_title = res_name
 
                             if await dedup.is_collected("taphuan_book", full_title):
-                                logger.info(f"Bỏ qua {full_title} do đã có trong Redis")
+                                logger.info(f"Skipping document '{full_title}' as it is already processed")
                                 continue
 
                             await dedup.mark_collected("taphuan_book", full_title)
@@ -206,9 +204,7 @@ class NXBGDCollector:
                             if viewer_url.startswith("/"):
                                 viewer_url = f"https://taphuan.nxbgd.vn{viewer_url}"
 
-                            logger.info(
-                                f"Xử lý tài nguyên {full_title} tại {viewer_url}"
-                            )
+                            logger.info(f"Processing resource '{full_title}' at {viewer_url}")
 
                             safe_title = re.sub(r'[\\/*?:"<>|]', "", full_title).strip()
                             import tempfile
@@ -240,7 +236,7 @@ class NXBGDCollector:
                                         await viewer_page.keyboard.press("PageDown")
                                         await viewer_page.keyboard.press("Space")
                                 except Exception as e:
-                                    logger.warning("Lỗi điều hướng trình xem tài liệu")
+                                    logger.warning("Document viewer navigation encountered an error")
                                 await asyncio.sleep(2)
 
                                 current_pages = len(self.captured_hashes)
@@ -250,9 +246,7 @@ class NXBGDCollector:
                                 ):
                                     stable_count += 1
                                     if stable_count >= 4:
-                                        logger.info(
-                                            f"Thu thập {current_pages} trang thành công"
-                                        )
+                                        logger.info(f"Successfully collected {current_pages} pages")
                                         break
                                 else:
                                     stable_count = 0
@@ -262,7 +256,7 @@ class NXBGDCollector:
                             await self.compile_and_upload(full_title)
                             await viewer_page.close()
                     except Exception as e:
-                        logger.error("Lỗi kiểm tra chi tiết tài liệu")
+                        logger.error("Failed to inspect document details")
 
                 try:
                     await self.page.goto(url, timeout=60000)
@@ -274,26 +268,26 @@ class NXBGDCollector:
                         and "p-disabled"
                         not in (await next_btn.get_attribute("class") or "")
                     ):
-                        logger.info("Đang chuyển sang trang tiếp theo")
+                        logger.info("Navigating to the next page")
                         await next_btn.click()
                         await asyncio.sleep(4)
                     else:
                         has_next = False
-                        logger.info("Đến trang cuối hoặc không có nút chuyển trang")
+                        logger.info("Reached the final page or pagination is unavailable")
                 except Exception as e:
-                    logger.error("Lỗi chuyển trang")
+                    logger.error("Pagination navigation failed")
                     has_next = False
 
                 break
 
         except Exception as e:
-            logger.error("Lỗi nguồn NXBGD")
+            logger.error("Data source encountered a critical error")
             raise
         finally:
             await self.close()
 
 
 async def run_nxbgd_collector(target_class: str):
-    logger.info("Bắt đầu kéo dữ liệu từ NXBGD cho toàn bộ các lớp")
+    logger.info("Initiating data collection process for all target groups")
     collector = NXBGDCollector(target_class=target_class)
     await collector.execute()

@@ -59,10 +59,10 @@ class RabbitMQConnection:
                     "ctan_queue", durable=True, arguments=queue_args
                 )
 
-                logger.info("Kết nối RabbitMQ thành công")
+                logger.info("Successfully connected to RabbitMQ broker")
                 return
             except Exception as e:
-                logger.error(f"Lỗi kết nối RabbitMQ lần {attempt + 1}/{max_retries}")
+                logger.error(f"RabbitMQ connection attempt {attempt + 1}/{max_retries} failed")
                 if attempt == max_retries - 1:
                     raise e
                 await asyncio.sleep(3)
@@ -77,10 +77,10 @@ class RabbitMQConnection:
             )
             await self.channel.default_exchange.publish(message, routing_key=queue_name)
             logger.debug(
-                f"Điều phối tới {queue_name} {payload.get('url', payload.get('title', 'ping'))} thành công"
+                f"Successfully dispatched message to {queue_name}: {payload.get('url', payload.get('title', 'ping'))}"
             )
         except Exception as e:
-            logger.error(f"Lỗi phân phối sự kiện tới {queue_name}")
+            logger.error(f"Message distribution failed for queue {queue_name}")
 
 
 mq_client = RabbitMQConnection()

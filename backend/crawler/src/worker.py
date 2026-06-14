@@ -18,7 +18,7 @@ async def run_worker():
                 payload = json.loads(message.body.decode())
                 await handler_func(payload)
         except Exception as e:
-            logger.error("Lỗi xử lý lệnh")
+            logger.error("Failed to process incoming message")
             raise
 
     await mq_client.channel.set_qos(prefetch_count=2)
@@ -97,17 +97,17 @@ async def run_worker():
     await queue_nxbst.consume(lambda m: process_msg_with_sem(m, route_nxbst_collector))
 
     logger.info(
-        "Hệ thống thu thập DocLib khởi động lắng nghe tín hiệu RabbitMQ thành công"
+        "DocLib collection system successfully started listening for RabbitMQ signals"
     )
 
     stop_event = asyncio.Event()
 
     def signal_handler():
-        logger.info("Nhận lệnh tắt đang dừng tiến trình")
+        logger.info("Stop signal received, halting process gracefully")
         stop_event.set()
 
     await stop_event.wait()
 
-    logger.info("Đóng kết nối MQ")
+    logger.info("Closing message queue connection")
     await mq_client.connection.close()
-    logger.info("Tắt hệ thống an toàn thành công")
+    logger.info("System successfully shut down safely")
