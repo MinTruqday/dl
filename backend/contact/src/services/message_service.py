@@ -73,7 +73,7 @@ class MessageService:
             {"_id": receiver_id}
         )
         if user_doc and sender_id in user_doc.get("blocked_users", []):
-            raise Exception("Bạn đã bị người dùng này chặn")
+            raise Exception("Action restricted. You have been blocked by this user")
         self_destruct_at = None
         settings_id = (
             f"settings_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
@@ -213,7 +213,7 @@ class MessageService:
             try:
                 async with httpx.AsyncClient() as client:
                     resp = await client.post(
-                        "{settings.PROVISION_URL}/nguoi-dung/multiple-users",
+                        f"{settings.PROVISION_URL}/users/batch",
                         json=other_user_ids,
                         timeout=settings.DEFAULT_HTTP_TIMEOUT,
                     )
@@ -361,7 +361,7 @@ class MessageService:
         msg = await RepositoryFactory.get("messages").find_one({"_id": message_id})
         if not msg or msg["sender_id"] != str(current_user.id):
             return None
-        recalled_content = "Tin nhắn đã bị thu hồi"
+        recalled_content = "This message has been recalled"
         await RepositoryFactory.get("messages").update_one(
             {"_id": message_id},
             {
@@ -580,7 +580,7 @@ class MessageService:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
             return None
-        content = f"Đã chia sẻ tài liệu: [{doc.get('title')}]({document_id})"
+        content = f"Shared document: [{doc.get('title')}]({document_id})"
         message = MessageInDB(
             sender_id=str(current_user.id),
             receiver_id=receiver_id,
@@ -621,7 +621,7 @@ class MessageService:
         query["is_recalled"] = False
         query["$or"] = [
             {"image_url": {"$ne": None, "$ne": ""}},
-            {"content": {"$regex": "Đã chia sẻ tài liệu:"}},
+            {"content": {"$regex": "Shared document:"}},
         ]
         messages = (
             await RepositoryFactory.get("messages")
@@ -740,7 +740,7 @@ class MessageService:
         translated_content = ""
         try:
             response = await http_client.post(
-                f"{settings.AGENTIC_AI_URL}/dich-thuat",
+                f"{settings.AGENTIC_AI_URL}/translate",
                 json={"text": msg["content"], "target_lang": target_lang},
             )
             if response.status_code == 200:

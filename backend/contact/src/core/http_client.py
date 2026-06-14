@@ -18,7 +18,7 @@ class CircuitBreaker:
             if time.time() - self.last_failure_time > self.reset_timeout:
                 self.state = "HALF_OPEN"
             else:
-                raise HTTPException(status_code=503, detail="AI đang bảo trì")
+                raise HTTPException(status_code=503, detail="Service is currently undergoing maintenance")
 
     def on_success(self):
         self.failure_count = 0
@@ -29,7 +29,7 @@ class CircuitBreaker:
         self.last_failure_time = time.time()
         if self.failure_count >= self.max_failures:
             self.state = "OPEN"
-            logger.warning("Ngắt kết nối dịch vụ AI")
+            logger.warning("Service disconnected due to consecutive failures")
 
 
 ai_circuit_breaker = CircuitBreaker()

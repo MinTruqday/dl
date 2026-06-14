@@ -24,7 +24,7 @@ app.include_router(message_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Đã khởi tạo hệ thống liên hệ DocLib")
+    logger.info("DocLib Contact initialized successfully")
     await init_db()
 
 
@@ -33,7 +33,7 @@ async def shutdown_event():
     await close_db()
 
 
-@app.get("/trang-thai")
+@app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "contact"}
 
