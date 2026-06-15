@@ -8,6 +8,9 @@ from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from src.schemas.plan_schema import ExecutionPlan, PlanStep
+from src.utils.resilience import with_retry
+
 _hf_endpoint = HuggingFaceEndpoint(
     task="conversational",
     repo_id=settings.LLAMA_MODEL,
@@ -16,58 +19,40 @@ _hf_endpoint = HuggingFaceEndpoint(
 )
 llm = ChatHuggingFace(llm=_hf_endpoint)
 
-from src.schemas.plan_schema import ExecutionPlan, PlanStep
-
-
 class Planning:
     def __init__(self):
         self.llm = llm
         self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
 
+    @with_retry(max_retries=3, base_wait=2, max_wait=10)
     async def _invoke_llm(self, messages):
         import httpx
+        return await self.llm.ainvoke(messages)
 
-        try:
-            return await self.llm.ainvoke(messages)
-        except (
-            httpx.TimeoutException,
-            httpx.HTTPStatusError,
-            Exception,
-        ) as primary_err:
-            logger.warning("The primary language model encountered an unexpected failure during processing")
-            raise primary_err
-
-    async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info("The system is generating a structural execution plan for the current request")
+    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
+        logger.info("Generating execution plan")
 
         from src.core.prompt_registry import PromptType, prompt_registry
-
         system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
 
-        history_str = ""
-        if hasattr(req, "conversation_history") and req.conversation_history:
-            history_str = "\n".join(
-                [
-                    f"{msg.get('role', 'user')} said {msg.get('content', '')}"
-                    for msg in req.conversation_history[-5:]
-                ]
-            )
+        history = req_data.get("conversation_history", [])
+        history_str = "\n".join(
+            [f"{msg.get('role', 'user')} said {msg.get('content', '')}" for msg in history[-5:]]
+        )
+        
+        query = req_data.get("query", "")
+        context = req_data.get("context", "None")
 
-        prompt = f"Recent conversation history\n{history_str}\n\nLatest request {req.query}\nCurrent context {req.context if hasattr(req, 'context') else 'None'}"
+        prompt = f"Recent conversation history\n{history_str}\n\nLatest request {query}\nCurrent context {context}"
 
         try:
             format_instructions = self.parser.get_format_instructions()
             messages = [
-                SystemMessage(
-                    content=system_prompt.format(
-                        format_instructions=format_instructions
-                    )
-                ),
+                SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
                 HumanMessage(content=prompt),
             ]
 
             response = await self._invoke_llm(messages)
-
             parsed_result = self.parser.invoke(response)
 
             steps = [
@@ -76,23 +61,12 @@ class Planning:
             ]
 
             if not steps:
-                steps = [
-                    {
-                        "agent": "Knowledge",
-                        "task": "Please inform the user that the request exceeds current processing capabilities",
-                    }
-                ]
+                steps = [{"agent": "Knowledge", "task": "Inform user request exceeds capabilities"}]
 
             return steps
 
         except Exception:
-            logger.error("The system failed to generate the execution plan due to an internal processing exception")
-            return [
-                {
-                    "agent": "Knowledge",
-                    "task": "Please inform the user that the system encountered an analysis failure and cannot process the request",
-                }
-            ]
-
+            logger.exception("Plan generation failed")
+            return [{"agent": "Knowledge", "task": "Inform user of analysis failure"}]
 
 planning = Planning()

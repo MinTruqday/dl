@@ -1,7 +1,6 @@
 import asyncio
-import operator
 import os
-from typing import Annotated, List, Optional, Sequence, TypedDict
+from typing import Annotated, List, Literal, Optional, Sequence, TypedDict
 
 import langchain
 from core.config import settings
@@ -13,16 +12,17 @@ from langgraph.graph import END, StateGraph
 from loguru import logger
 from pydantic import BaseModel, Field
 from redis import Redis
+
 from src.memory.manager import memory_manager
 from src.memory.mem0_manager import mem0_manager
 from src.rag.embedder import embedding_service
 from src.rag.retrieval import retrieval_service
 from src.store.vector_store import vector_store
 from src.utils.file_processor import extract_text_from_base64
+from src.workflow.state import AgentState
 
 try:
     from sentence_transformers import CrossEncoder
-
     nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
 except Exception:
@@ -32,7 +32,6 @@ except Exception:
 try:
     redis_url = settings.REDIS_URI
     from langchain_community.cache import RedisSemanticCache
-
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedding_service
     )
@@ -42,13 +41,11 @@ except Exception:
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
-from src.workflow.state import AgentState
 
 llama_client = AsyncInferenceClient(
     model=settings.LLAMA_MODEL,
     token=settings.HF_TOKEN,
 )
-
 llm = HFInferenceChat(client=llama_client, model=settings.LLAMA_MODEL)
 
 try:
@@ -66,6 +63,22 @@ except Exception:
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
+class ContextQuery(BaseModel):
+    question: str = Field(description="The standalone reformulated question")
+
+class GraphRoute(BaseModel):
+    route: Literal["rag", "direct"] = Field(description="The route to take: 'rag' or 'direct'")
+
+class RetrievalStrategy(BaseModel):
+    is_simple: bool = Field(description="True if the question is simple, False if it needs sub-queries")
+    queries: List[str] = Field(description="List of optimized search queries, empty if simple")
+
+class QueryOptimization(BaseModel):
+    question: str = Field(description="The optimized search query")
+
+class DocumentGrade(BaseModel):
+    is_relevant: bool = Field(description="True if the document is relevant to the question, False otherwise")
+
 
 async def contextualize_question(state: AgentState):
     question = state["question"]
@@ -73,9 +86,7 @@ async def contextualize_question(state: AgentState):
     if not history:
         return {"question": question}
 
-    history_str = "\n".join(
-        [f"{msg['role']} {msg['content']}" for msg in history[-5:]]
-    )
+    history_str = "\n".join([f"{msg['role']} {msg['content']}" for msg in history[-5:]])
     from src.core.prompt_registry import PromptType, prompt_registry
 
     prompt = PromptTemplate(
@@ -83,19 +94,9 @@ async def contextualize_question(state: AgentState):
         input_variables=["history", "question"],
     )
     try:
-        response = await llm.ainvoke(
-            prompt.format(history=history_str, question=question)
-        )
-        content = response.content.strip()
-        import re
-
-        q_match = re.search(r"<query>(.*?)</query>", content, re.DOTALL)
-        final_q = (
-            q_match.group(1).strip()
-            if q_match
-            else content.replace("<query>", "").replace("</query>", "").strip()
-        )
-        return {"question": final_q}
+        structured_llm = llm.with_structured_output(ContextQuery)
+        response = await structured_llm.ainvoke(prompt.format(history=history_str, question=question))
+        return {"question": response.question}
     except Exception:
         logger.error("The system encountered an unexpected error during the context processing phase")
         return {"question": question}
@@ -109,17 +110,9 @@ async def route_question(state: AgentState):
         template=prompt_registry.get(PromptType.ROUTE), input_variables=["question"]
     )
     try:
-        response = await llm.ainvoke(prompt.format(question=question))
-        res = response.content.strip().lower()
-        import re
-
-        route_match = re.search(r"<route>(.*?)</route>", res)
-        route_val = (
-            route_match.group(1).strip()
-            if route_match
-            else ("direct" if "direct" in res else "rag")
-        )
-        return {"current_source": "db", "route": route_val}
+        structured_llm = llm.with_structured_output(GraphRoute)
+        response = await structured_llm.ainvoke(prompt.format(question=question))
+        return {"current_source": "db", "route": response.route}
     except Exception:
         logger.error("The system encountered a routing failure while determining the appropriate execution path")
         return {"current_source": "db", "route": "rag"}
@@ -140,11 +133,8 @@ def preprocess_file(state: AgentState):
 
 def _mask_pii(text: str) -> str:
     import re
-
     text = re.sub(r"\b(0[3|5|7|8|9])+([0-9]{8})\b", "[REDACTED PHONE]", text)
-    text = re.sub(
-        r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text
-    )
+    text = re.sub(r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", "[REDACTED EMAIL]", text)
     text = re.sub(r"\b(?:\d[ -]*?){13,16}\b", "[REDACTED CC]", text)
     return text
 
@@ -163,7 +153,6 @@ async def retrieve_db(state: AgentState):
             for doc in raw_documents:
                 meta = doc.get("metadata", {})
                 title = meta.get("title", "Document")
-                file_url = meta.get("file_url", "")
                 extracted_documents.append(
                     f"Source document {title}\n{_mask_pii(doc.get('text', ''))}"
                 )
@@ -179,34 +168,17 @@ async def retrieve_db(state: AgentState):
     )
     queries = [question]
     try:
-        response = await llm.ainvoke(prompt.format(question=question))
-        decision = response.content.strip()
-
-        import re
-
-        result_match = re.search(r"<result>(.*?)</result>", decision, re.DOTALL)
-        if result_match:
-            decision = result_match.group(1).strip()
-        else:
-            decision = (
-                decision.split("</think>")[-1].strip()
-                if "</think>" in decision
-                else decision
-            )
-
-        if "SIMPLE" not in decision.upper():
-            for q in decision.split("\n"):
-                q_clean = q.strip("- 123. \r")
-                if q_clean:
-                    queries.append(q_clean)
+        structured_llm = llm.with_structured_output(RetrievalStrategy)
+        response = await structured_llm.ainvoke(prompt.format(question=question))
+        if not response.is_simple and response.queries:
+            queries.extend(response.queries)
     except Exception:
         logger.error("The system encountered a failure while generating the optimal retrieval strategy")
 
     extracted_documents = []
-
+    
     try:
         from sentence_transformers import CrossEncoder
-
         reranker = CrossEncoder(settings.RERANKER_MODEL)
     except Exception:
         reranker = None
@@ -228,9 +200,7 @@ async def retrieve_db(state: AgentState):
     if all_raw_documents:
         if reranker:
             try:
-                pairs = [
-                    [doc["_query"], doc.get("text", "")] for doc in all_raw_documents
-                ]
+                pairs = [[doc["_query"], doc.get("text", "")] for doc in all_raw_documents]
                 scores = await asyncio.to_thread(reranker.predict, pairs)
                 scored_documents = list(zip(all_raw_documents, scores))
                 scored_documents.sort(key=lambda x: x[1], reverse=True)
@@ -278,10 +248,13 @@ async def grade_documents(state: AgentState):
         input_variables=["context", "question"],
     )
     filtered_documents = []
+    
+    structured_llm = llm.with_structured_output(DocumentGrade)
+    
     for d in documents:
         try:
-            response = await llm.ainvoke(prompt.format(context=d, question=question))
-            if "yes" in response.content.strip().lower():
+            response = await structured_llm.ainvoke(prompt.format(context=d, question=question))
+            if response.is_relevant:
                 filtered_documents.append(d)
         except Exception:
             logger.error("The document evaluation module encountered an error while assessing relevance")
@@ -306,9 +279,10 @@ async def transform_query(state: AgentState):
         input_variables=["question"],
     )
     try:
-        res = await llm.ainvoke(prompt.format(question=question))
+        structured_llm = llm.with_structured_output(QueryOptimization)
+        res = await structured_llm.ainvoke(prompt.format(question=question))
         return {
-            "question": res.content.strip(),
+            "question": res.question,
             "retry_count": state.get("retry_count", 0) + 1,
             "current_source": "db",
         }
@@ -396,6 +370,7 @@ async def grade_generation(state: AgentState):
         return {"hallucination_pass": "yes"}
 
     try:
+        import asyncio
         from src.agents.reasoning import reasoning
 
         documents_list = [
@@ -405,9 +380,7 @@ async def grade_generation(state: AgentState):
             state["question"], generation, documents_list
         )
 
-        is_hallucination = False
-        if eval_res.get("should_retry") or eval_res.get("grounding", 1.0) < 0.6:
-            is_hallucination = True
+        is_hallucination = eval_res.get("should_retry", False)
 
         if not is_hallucination and nli_model:
             documents_str = "".join(documents)[:1500]
@@ -419,7 +392,7 @@ async def grade_generation(state: AgentState):
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
     except Exception:
-        logger.error("The evaluation module encountered an error while grading the generated content")
+        logger.exception("The evaluation module encountered an error while grading the generated content")
         return {"hallucination_pass": "yes"}
 
 
@@ -452,7 +425,9 @@ workflow.add_node("generate", generate)
 workflow.add_node("generate_direct", generate_direct)
 workflow.add_node("grade_generation", grade_generation)
 workflow.add_node("contextualize_question", contextualize_question)
+
 workflow.set_entry_point("contextualize_question")
+
 workflow.add_edge("contextualize_question", "route_question")
 workflow.add_conditional_edges(
     "route_question",
@@ -487,4 +462,5 @@ workflow.add_conditional_edges(
     check_hallucination,
     {"transform_query": "transform_query", END: END},
 )
+
 knowledge_app = workflow.compile()

@@ -1,6 +1,7 @@
 import asyncio
+import json
+import re
 from typing import Dict, List, Optional
-
 from core.config import settings
 from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
@@ -16,56 +17,54 @@ _hf = HuggingFaceEndpoint(
 )
 _llm = ChatHuggingFace(llm=_hf)
 
-
 class RetrievalService:
     def __init__(self):
         self.llm = _llm
-        try:
-            from sentence_transformers import CrossEncoder
+        self._reranker = None
 
-            self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info("The artificial intelligence ranking model was loaded successfully")
-        except Exception:
-            self.reranker = None
-            logger.error("The system failed to load the artificial intelligence ranking model")
+    @property
+    def reranker(self):
+        if self._reranker is None:
+            try:
+                from sentence_transformers import CrossEncoder
+                self._reranker = CrossEncoder(settings.RERANKER_MODEL)
+            except Exception:
+                logger.exception("The system failed to load the artificial intelligence ranking model")
+                self._reranker = False
+        return self._reranker
+
+    def _extract_json_array(self, text: str) -> list:
+        text = text.strip()
+        text = re.sub(r"^```(?:json)?\n", "", text, flags=re.IGNORECASE | re.MULTILINE)
+        text = re.sub(r"\n```$", "", text, flags=re.MULTILINE)
+        match = re.search(r"\[[\s\S]*\]", text)
+        if match:
+            return json.loads(match.group(0))
+        return []
 
     async def multi_query_retrieve(
         self, question: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        logger.info("The system is executing a multidimensional information retrieval sequence")
-
         prompt = PromptTemplate(
             template=prompt_registry.get(PromptType.MULTI_QUERY),
             input_variables=["question"],
         )
-
         try:
             try:
                 from pydantic import BaseModel, Field
-
                 class MultiQueryOutput(BaseModel):
-                    queries: List[str] = Field(
-                        description="List of 3 reformulated queries"
-                    )
-
+                    queries: List[str] = Field(description="List of 3 reformulated queries")
                 structured_llm = self.llm.with_structured_output(MultiQueryOutput)
                 response = structured_llm.invoke(prompt.format(question=question))
                 queries = [q.strip() for q in response.queries if q.strip()]
             except Exception:
-                import json
-                import re
-
                 response = self.llm.invoke(prompt.format(question=question))
-                match = re.search(r'\[\s*".*"\s*\]', response.content, re.DOTALL)
-                if match:
-                    queries = json.loads(match.group(0))
-                else:
-                    queries = []
+                queries = self._extract_json_array(response.content)
 
             queries = [q for q in queries if q]
             queries.append(question)
         except Exception:
-            logger.error("The system encountered an error while attempting to generate multidimensional queries")
+            logger.exception("The system encountered an error while attempting to generate multidimensional queries")
             queries = [question]
 
         all_documents = []
@@ -85,30 +84,28 @@ class RetrievalService:
     async def retrieve(
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        logger.info("The system is retrieving information based on the provided search parameters")
-
         from src.rag.embedder import embedding_service
-
         query_vector = embedding_service.embed_query(query)
-
-        fetch_limit = k * 3 if self.reranker else k
-
+        
+        current_reranker = self.reranker
+        fetch_limit = k * 3 if current_reranker else k
+        
         documents = await vector_store.query(
             query_vector=query_vector, document_ids=document_ids, limit=fetch_limit
         )
 
-        if not documents or not self.reranker:
+        if not documents or not current_reranker:
             return documents[:k]
 
         try:
             pairs = [[query, doc.get("text", "")] for doc in documents]
-            scores = await asyncio.to_thread(self.reranker.predict, pairs)
+            scores = await asyncio.to_thread(current_reranker.predict, pairs)
             scored_documents = list(zip(documents, scores))
             scored_documents.sort(key=lambda x: x[1], reverse=True)
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
         except Exception:
-            logger.error("The system encountered an exception while attempting to reorder the retrieval results")
+            logger.exception("The system encountered an exception while attempting to reorder the retrieval results")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -117,27 +114,21 @@ class RetrievalService:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(question, document_ids, k)
 
-        logger.info("The system is initiating a cross document retrieval process")
-
         decompose_prompt = (
             f"Given the question: {question}\n"
             f"There are {len(document_ids)} documents with IDs: {document_ids}\n"
             "For each document, generate one specific sub-query to retrieve the most relevant passage. "
             "Output as a JSON array of strings, one per document, in the same order"
         )
+
         sub_queries = [question] * len(document_ids)
         try:
             res = await asyncio.to_thread(self.llm.invoke, decompose_prompt)
-            import json
-            import re
-
-            match = re.search(r"\[.*?\]", res.content, re.DOTALL)
-            if match:
-                parsed = json.loads(match.group(0))
-                if isinstance(parsed, list) and len(parsed) == len(document_ids):
-                    sub_queries = parsed
+            parsed = self._extract_json_array(res.content)
+            if isinstance(parsed, list) and len(parsed) == len(document_ids):
+                sub_queries = parsed
         except Exception:
-            logger.warning("The system encountered a failure during the cross document query decomposition phase")
+            logger.exception("The system encountered a failure during the cross document query decomposition phase")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)
@@ -173,6 +164,5 @@ class RetrievalService:
                 result[right] = doc
                 right -= 1
         return [d for d in result if d is not None]
-
 
 retrieval_service = RetrievalService()
