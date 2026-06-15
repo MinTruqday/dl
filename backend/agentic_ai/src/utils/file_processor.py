@@ -20,15 +20,15 @@ def extract_text_from_base64(base64_data: str, filename: str = "temp_file") -> s
             tmp_path = tmp.name
 
         logger.info(
-            f"Extracting text from uploaded file: {filename}, format: {ext}"
+            "The system is currently extracting textual content from the uploaded file"
         )
         md = MarkItDown()
         result = md.convert(tmp_path)
         full_text = result.text_content
 
         os.remove(tmp_path)
-        logger.info(f"Extracted {len(full_text)} characters from uploaded file")
+        logger.info("The text extraction process completed successfully and the content is ready for further processing")
         return full_text
-    except Exception as e:
-        logger.error("Unable to extract text from the uploaded file")
+    except Exception:
+        logger.error("The system encountered a failure while attempting to extract text from the provided file")
         return ""

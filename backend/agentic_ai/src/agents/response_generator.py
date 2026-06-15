@@ -22,11 +22,11 @@ class ResponseGenerator:
         pass
 
     async def aggregate_stream(self, query: str, consolidated_results: List[str]):
-        logger.info(f"Synthesizing results for query: {query[:50]}")
+        logger.info("The system is currently synthesizing the results for the requested query")
 
         if _contains_injection(query):
-            logger.warning("Detected potential prompt injection in query")
-            yield "This request violates our usage policy. Please ask another question"
+            logger.warning("The security system detected a potential unauthorized modification attempt in the request")
+            yield "The submitted request violates the security policies and cannot be processed further"
             return
 
         try:
@@ -45,9 +45,9 @@ class ResponseGenerator:
                 if chunk.content:
                     yield chunk.content
 
-        except Exception as e:
-            logger.error(f"Failed to generate response: {str(e)}")
-            yield "The system encountered an issue, please try again later"
+        except Exception:
+            logger.error("The system failed to generate the final response due to an unexpected internal exception")
+            yield "The system encountered an unexpected error during the response generation process and requires you to try again later"
 
 
 response_generator = ResponseGenerator()

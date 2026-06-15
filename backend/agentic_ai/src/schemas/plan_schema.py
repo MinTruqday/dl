@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class PlanStep(BaseModel):
     agent: str = Field(
-        description="Name of the execution agent: Action, Knowledge, CodeInterpreter, SearchEngine, ResponseGenerator, Reasoning"
+        description="Name of the execution agent such as Action Knowledge CodeInterpreter SearchEngine ResponseGenerator or Reasoning"
     )
     task: str = Field(description="Specific task description for the agent to execute")
 

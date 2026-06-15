@@ -89,7 +89,7 @@ def _run_training_sync(job_id: str, config: dict, loop):
 
         sync_update({"progress": 98, "current_loss": round(final_loss, 6)})
 
-        model_name = f"doclib-ft-{job_id[:8]}"
+        model_name = f"model-ft-{job_id[:8]}"
 
         merged_path = result.get("merged_path", "")
         gguf_path = result.get("gguf_path", "")
@@ -107,9 +107,9 @@ def _run_training_sync(job_id: str, config: dict, loop):
             }
         )
 
-    except Exception as e:
-        logger.error("Fine-tuning training error")
-        sync_update({"status": "failed", "error_message": str(e)})
+    except Exception:
+        logger.error("The fine tuning training process encountered an unexpected issue")
+        sync_update({"status": "failed", "error_message": "The fine tuning training process encountered an unexpected issue"})
     finally:
         active_jobs.pop(job_id, None)
 
@@ -147,7 +147,7 @@ async def get_dataset(dataset_id: str, user_id: str):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not doc:
-        raise HTTPException(status_code=404, detail="Dataset not found")
+        raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
     return doc
 
 
@@ -162,7 +162,7 @@ async def delete_dataset(dataset_id: str, user_id: str):
             {"dataset_id": dataset_id}
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="Dataset not found")
+    raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
 
 
 @router.post("/datasets/{dataset_id}/samples")
@@ -173,7 +173,7 @@ async def add_samples(dataset_id: str, req: dict):
         {"_id": dataset_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Dataset not found")
+        raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
     documents = [
         {
             "_id": str(uuid7()),
@@ -208,7 +208,7 @@ async def get_samples(
     if not await RepositoryFactory.get("finetune_datasets").find_one(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Dataset not found")
+        raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
     return (
         await RepositoryFactory.get("finetune_samples")
         .find({"dataset_id": dataset_id})
@@ -225,7 +225,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
     if not await RepositoryFactory.get("finetune_datasets").find_one(
         {"_id": dataset_id, "user_id": user_id}
     ):
-        raise HTTPException(status_code=404, detail="Dataset not found")
+        raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
     if (
         await RepositoryFactory.get("finetune_samples").delete_one(
             {"_id": sample_id, "dataset_id": dataset_id}
@@ -239,7 +239,7 @@ async def delete_sample(dataset_id: str, sample_id: str, user_id: str):
             {"$set": {"sample_count": total, "updated_at": datetime.now(timezone.utc)}},
         )
         return {"success": True}
-    raise HTTPException(status_code=404, detail="No template found")
+    raise HTTPException(status_code=404, detail="The requested template could not be located in the system")
 
 
 @router.post("/inputs/feedback")
@@ -258,8 +258,8 @@ async def import_feedback(req: dict):
         {
             "_id": ds_id,
             "user_id": user_id,
-            "name": f"Feedback Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}",
-            "description": "Import from positive feedback",
+            "name": f"Data Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H%M')}",
+            "description": "Imported data from positive user feedback",
             "source": "feedback",
             "sample_count": 0,
             "status": "draft",
@@ -309,8 +309,8 @@ async def import_documents(req: dict):
         {
             "_id": ds_id,
             "user_id": user_id,
-            "name": f"Document Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}",
-            "description": f"Extracted from {len(doc_ids)} documents",
+            "name": f"Data Import {datetime.now(timezone.utc).strftime('%Y-%m-%d %H%M')}",
+            "description": "Extracted training data from the provided source materials",
             "source": "documents",
             "sample_count": 0,
             "status": "draft",
@@ -370,8 +370,8 @@ async def import_documents(req: dict):
                                 "created_at": datetime.now(timezone.utc),
                             }
                         )
-            except Exception as e:
-                logger.warning("Failed to extract training data")
+            except Exception:
+                logger.warning("The system failed to extract training data from the provided text chunks")
     if samples:
         await RepositoryFactory.get("finetune_samples").insert_many(samples)
         await RepositoryFactory.get("finetune_datasets").update_one(
@@ -388,16 +388,16 @@ async def create_job(req: dict):
         {"_id": ds_id, "user_id": user_id}
     )
     if not dataset:
-        raise HTTPException(status_code=404, detail="Dataset not found")
+        raise HTTPException(status_code=404, detail="The requested dataset could not be located in the system")
     if dataset.get("sample_count", 0) < 10:
-        return {"error": "insufficient_samples"}
+        return {"error": "The dataset contains an insufficient number of samples to begin the training process"}
     job_id = str(uuid7())
     job = {
         "_id": job_id,
         "user_id": user_id,
         "dataset_id": ds_id,
         "job_name": req.get("job_name")
-        or f"FT-{req.get('base_model')}-{datetime.now(timezone.utc).strftime('%m%d%H%M')}",
+        or f"Model-Training-Task-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}",
         "base_model": req.get("base_model"),
         "method": req.get("method", "lora"),
         "epochs": req.get("epochs", 3),
@@ -425,9 +425,9 @@ async def start_job(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(status_code=404, detail="The requested training job could not be located in the system")
     if job_id in active_jobs:
-        return {"error": "Job is running"}
+        return {"error": "The requested training job is currently in progress and cannot be started again"}
     samples = (
         await RepositoryFactory.get("finetune_samples")
         .find({"dataset_id": job["dataset_id"]})
@@ -476,7 +476,7 @@ async def list_jobs(user_id: str):
 async def get_job(job_id: str, user_id: str):
     job = await get_db()["finetune_jobs"].find_one({"_id": job_id, "user_id": user_id})
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(status_code=404, detail="The requested training job could not be located in the system")
     return job
 
 
@@ -494,7 +494,7 @@ async def cancel_job(job_id: str, req: dict):
     if result.modified_count > 0:
         active_jobs.pop(job_id, None)
         return {"status": "cancelled"}
-    raise HTTPException(status_code=400, detail="Cannot cancel this job")
+    raise HTTPException(status_code=400, detail="The system is unable to cancel this specific training job at this current state")
 
 
 @router.post("/jobs/{job_id}/deploy")
@@ -505,7 +505,7 @@ async def deploy_model(job_id: str, req: dict):
     )
     if not job:
         raise HTTPException(
-            status_code=404, detail="Completed job not found"
+            status_code=404, detail="The completed training job could not be located in the system"
         )
     model_name = job.get("merged_model_name", job["job_name"])
     gguf_path = job.get("gguf_path")
@@ -514,7 +514,7 @@ async def deploy_model(job_id: str, req: dict):
     hf_token = settings.HF_TOKEN
     if not hf_token:
         raise HTTPException(
-            status_code=500, detail="System is missing remote repository authentication"
+            status_code=500, detail="The system is currently missing the required remote repository authentication credentials"
         )
 
     try:
@@ -526,14 +526,14 @@ async def deploy_model(job_id: str, req: dict):
 
         repo_id = f"{hf_username}/{model_name}"
 
-        logger.info("Created remote model repository successfully")
+        logger.info("The remote model repository was created successfully")
         api.create_repo(repo_id=repo_id, exist_ok=True)
 
         if merged_path:
             import os
 
             if os.path.exists(merged_path):
-                logger.info("Uploading model to remote repository")
+                logger.info("The model is currently being uploaded to the remote repository")
                 import asyncio
 
                 loop = asyncio.get_event_loop()
@@ -542,22 +542,22 @@ async def deploy_model(job_id: str, req: dict):
                     lambda: api.upload_folder(
                         folder_path=merged_path,
                         repo_id=repo_id,
-                        commit_message="Deploy fine-tuned model via DocLib",
+                        commit_message="Deploy fine tuned model via automated system",
                     ),
                 )
             else:
-                logger.warning("Merged model directory not found")
-                raise Exception("Merged model directory not found")
+                logger.warning("The directory containing the merged model could not be located on the system")
+                raise Exception("The directory containing the merged model could not be located on the system")
 
         model_name = repo_id
         await RepositoryFactory.get("finetune_jobs").update_one(
             {"_id": job_id}, {"$set": {"merged_model_name": repo_id}}
         )
 
-    except Exception as e:
-        logger.error("Failed to deploy model to remote repository")
+    except Exception:
+        logger.error("The system failed to deploy the model to the remote repository")
         raise HTTPException(
-            status_code=500, detail="Failed to deploy model to remote repository"
+            status_code=500, detail="The system failed to deploy the model to the remote repository"
         )
 
     await RepositoryFactory.get("finetune_jobs").update_one(
@@ -575,7 +575,7 @@ async def evaluate_model(job_id: str, req: dict):
         {"_id": job_id, "user_id": req.get("user_id")}
     )
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+        raise HTTPException(status_code=404, detail="The requested training job could not be located in the system")
     model_name = job.get("merged_model_name") or job.get("base_model")
     use_judge = req.get("use_judge", True)
     evaluation_harness._dataset = req.get("test_samples", [])

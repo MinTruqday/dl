@@ -98,12 +98,12 @@ async def agent_summarize_long_document(document_id: str, config: dict) -> str:
 
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Token not found"
+        return "Authentication is required to proceed with this operation please ensure you are logged in"
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content not found"
+        return "The specified document content could not be located in the system"
 
     res = await map_reduce_app.ainvoke(
         {"document_text": text, "chunks": [], "summaries": [], "final_summary": ""}
     )
-    return f"Full document summary:\n\n{res['final_summary']}"
+    return f"The complete document summary was successfully generated\n\n{res['final_summary']}"

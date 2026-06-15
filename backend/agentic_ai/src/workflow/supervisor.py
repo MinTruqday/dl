@@ -22,10 +22,10 @@ async def supervisor_node(state: ActingState):
         start_time = time.time()
 
     if time.time() - start_time > 45:
-        logger.error("Execution time exceeded the 45-second limit")
+        logger.error("The artificial intelligence workflow execution exceeded the predefined maximum time limit")
         return {
             "next_node": "trimmer",
-            "error": "The request is too complex and has exceeded the processing time budget (45s)",
+            "error": "The submitted request is highly complex and has exceeded the maximum processing time allowed by the system",
         }
 
     steps = state.get("steps", [])
@@ -37,7 +37,7 @@ async def supervisor_node(state: ActingState):
             "steps": steps,
             "current_step_index": len(steps),
             "next_node": "trimmer",
-            "error": "Tool budget exceeded",
+            "error": "The artificial intelligence agent has exceeded the maximum allowed number of tool execution steps",
         }
 
     if not steps:
@@ -45,7 +45,7 @@ async def supervisor_node(state: ActingState):
         idx = 0
 
     if state.get("error"):
-        logger.warning("Skipping subsequent tools due to error")
+        logger.warning("The system is skipping subsequent execution steps due to a previously encountered issue")
         return {
             "steps": steps,
             "current_step_index": len(steps),
@@ -105,9 +105,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
 
             if "FAIL" in eval_res.content.upper():
                 replan_count += 1
-                logger.warning(
-                    f"Self-evaluation failed for {agent_name}, replanning attempt {replan_count}/3"
-                )
+                logger.warning("The artificial intelligence agent self evaluation failed and the system is initiating a replanning attempt")
                 replan_prompt = (
                     f"The following task failed:\n{current_task}\n\n"
                     f"Error result:\n{res}\n\n"
@@ -121,9 +119,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
                 break
 
         if replan_count >= 3:
-            final_res = (
-                f"Unable to execute this task after 3 attempts. Returned error:\n{final_res}"
-            )
+            final_res = "The artificial intelligence agent was unable to complete the assigned task after multiple attempts"
 
         return {
             "current_step_index": idx + 1,
@@ -132,11 +128,11 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             ],
             "last_agent_result": final_res,
         }
-    except Exception as e:
-        logger.error("Node execution failed")
+    except Exception:
+        logger.error("The designated workflow execution node encountered an unexpected failure")
         return {
-            "consolidated_results": [f"Error at step {idx+1} ({agent_name}): {str(e)}"],
-            "error": str(e),
+            "consolidated_results": ["The execution step failed due to an internal system exception"],
+            "error": "The execution step failed due to an internal system exception",
         }
 
 
@@ -167,9 +163,7 @@ async def trimmer_node(state: ActingState):
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info(
-            f"Summarizing synthesized results (count: {total_length})"
-        )
+        logger.info("The system is currently summarizing the synthesized execution results to fit within context limits")
         try:
             from src.workflow.brain import llm
 
@@ -182,10 +176,8 @@ async def trimmer_node(state: ActingState):
             )
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
-        except Exception as e:
-            logger.warning(
-                "Summarization failed, switching to truncation due to error"
-            )
+        except Exception:
+            logger.warning("The system failed to summarize the results and will apply direct truncation as a fallback mechanism")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 
@@ -259,8 +251,8 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req):
-        logger.info("Starting automated execution flow")
-        yield {"type": "status", "node": "Analyzing request"}
+        logger.info("The system has successfully initialized the automated artificial intelligence execution flow")
+        yield {"type": "status", "node": "The system is analyzing your request"}
 
         initial_state = {
             "req": req,
@@ -309,10 +301,10 @@ class Supervisor:
                         }
 
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Information synthesis"}
+                    yield {"type": "status", "node": "The system is synthesizing the gathered information"}
 
         if not final_results:
-            final_results = ["No suitable data found in the system"]
+            final_results = ["The system was unable to locate any suitable data to process your request"]
 
         async for chunk in response_generator.aggregate_stream(
             req.query, final_results

@@ -34,11 +34,11 @@ class Planning:
             httpx.HTTPStatusError,
             Exception,
         ) as primary_err:
-            logger.warning(f"Primary language model failed with error: {primary_err}")
+            logger.warning("The primary language model encountered an unexpected failure during processing")
             raise primary_err
 
     async def create_plan(self, req) -> List[Dict[str, str]]:
-        logger.info(f"Creating structural plan for query: {req.query}")
+        logger.info("The system is generating a structural execution plan for the current request")
 
         from src.core.prompt_registry import PromptType, prompt_registry
 
@@ -48,12 +48,12 @@ class Planning:
         if hasattr(req, "conversation_history") and req.conversation_history:
             history_str = "\n".join(
                 [
-                    f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+                    f"{msg.get('role', 'user')} said {msg.get('content', '')}"
                     for msg in req.conversation_history[-5:]
                 ]
             )
 
-        prompt = f"Recent conversation history:\n{history_str}\n\nLatest request: {req.query}\nCurrent context: {req.context if hasattr(req, 'context') else 'None'}"
+        prompt = f"Recent conversation history\n{history_str}\n\nLatest request {req.query}\nCurrent context {req.context if hasattr(req, 'context') else 'None'}"
 
         try:
             format_instructions = self.parser.get_format_instructions()
@@ -79,18 +79,18 @@ class Planning:
                 steps = [
                     {
                         "agent": "Knowledge",
-                        "task": "Inform the user that the system cannot process this complex request",
+                        "task": "Please inform the user that the request exceeds current processing capabilities",
                     }
                 ]
 
             return steps
 
-        except Exception as e:
-            logger.error("Failed to create plan due to error")
+        except Exception:
+            logger.error("The system failed to generate the execution plan due to an internal processing exception")
             return [
                 {
                     "agent": "Knowledge",
-                    "task": "Inform the user that the system cannot process this complex request due to an analysis error",
+                    "task": "Please inform the user that the system encountered an analysis failure and cannot process the request",
                 }
             ]
 

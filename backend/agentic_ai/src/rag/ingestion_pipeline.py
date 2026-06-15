@@ -31,16 +31,16 @@ class IngestionPipeline:
             {"_id": __import__("bson").ObjectId(document_id)}
         )
         if not document:
-            raise ValueError(f"Document {document_id} not found in database")
+            raise ValueError("The requested document could not be found within the database system")
 
         file_url = document.get("file_url", "")
         title = document.get("title", "Untitled")
         author = document.get("author", "Unknown")
 
         if not file_url:
-            raise ValueError(f"Document {document_id} has no file_url")
+            raise ValueError("The requested document is missing the required file location parameter")
 
-        logger.info(f"Ingesting data: {title} by {author}")
+        logger.info("Initiating the data ingestion process for the provided document")
 
         metadata = {
             "document_id": document_id,
@@ -91,8 +91,8 @@ class IngestionPipeline:
                         "extraction_method": extract_method,
                     },
                 }
-            except Exception as e:
-                logger.error("Unable to generate global summary segment")
+            except Exception:
+                logger.error("The system was unable to generate the global summary segment for the document")
                 return None
 
         if doc_chunks:
@@ -121,9 +121,7 @@ class IngestionPipeline:
         else:
             raw_text = await self._extract_text(file_url)
             if not raw_text or len(raw_text.strip()) < 100:
-                raise ValueError(
-                    f"Extracted text is too short for document {document_id}"
-                )
+                raise ValueError("The extracted text from the document is insufficient to proceed with the processing")
 
             first_few_pages = raw_text[:15000]
             summary_chunk = await get_summary_chunk(first_few_pages, "local")
@@ -134,7 +132,7 @@ class IngestionPipeline:
             chunks.extend(extracted_chunks)
 
         if not chunks:
-            raise ValueError(f"Unable to fragment content for document {document_id}")
+            raise ValueError("The system encountered an error while attempting to fragment the document content")
 
         texts = [c["text"] for c in chunks]
         embeddings = await embedding_service.embed_batch(texts)
@@ -173,7 +171,7 @@ class IngestionPipeline:
         ext = os.path.splitext(file_url.split("?")[0])[1].lower()
 
         if ext == ".zip":
-            logger.info(f"Detected ZIP file during ingestion: {file_url}")
+            logger.info("The system detected a compressed archive file during the ingestion process")
             return await self._extract_from_zip(file_bytes)
 
         return self._extract_with_markitdown(file_bytes, file_url)
@@ -216,14 +214,14 @@ class IngestionPipeline:
                 os.path.join(extract_path, top_contents[0])
             ):
                 search_root = os.path.join(extract_path, top_contents[0])
-                logger.info(f"Navigating into nested folder: {top_contents[0]}")
+                logger.info("The system is navigating into a nested directory structure within the archive")
 
             for root, _, files in os.walk(search_root):
                 for f in files:
                     f_ext = os.path.splitext(f)[1].lower()
                     if f_ext in supported_exts:
                         f_path = os.path.join(root, f)
-                        logger.info(f"Extracting content from sub-file: {f}")
+                        logger.info("The system is currently extracting content from a file within the archive")
                         try:
                             with open(f_path, "rb") as f_handle:
                                 content_bytes = f_handle.read()
@@ -232,8 +230,8 @@ class IngestionPipeline:
                                 )
                                 if file_text:
                                     all_text.append(f"--- FILE: {f} ---\n{file_text}")
-                        except Exception as e:
-                            logger.error("Failed to load data from {f}")
+                        except Exception:
+                            logger.error("The system failed to load data from the specified archive file")
 
         return "\n\n".join(all_text)
 
@@ -257,9 +255,7 @@ class IngestionPipeline:
                 bucket = self._bucket
                 object_key = url
 
-            logger.info(
-                f"Downloading from storage bucket {bucket}, key={object_key}"
-            )
+            logger.info("The system is downloading the required file from the cloud storage bucket")
 
             import boto3
 
@@ -272,10 +268,10 @@ class IngestionPipeline:
             )
             obj = s3.get_object(Bucket=bucket, Key=object_key)
             data = obj["Body"].read()
-            logger.info(f"Downloaded {len(data)} bytes from storage")
+            logger.info("The system successfully downloaded the file data from the remote storage")
             return data
-        except Exception as e:
-            logger.error("Download error")
+        except Exception:
+            logger.error("The system encountered an unexpected issue while attempting to download the file")
             return None
 
     def _extract_with_markitdown(self, data: bytes, file_url: str) -> str:
@@ -291,20 +287,20 @@ class IngestionPipeline:
                 tmp.write(data)
                 tmp_path = tmp.name
 
-            logger.info(f"Proceeding with data analysis for file {ext}")
+            logger.info("The system is proceeding with the data analysis for the downloaded file")
             md = MarkItDown()
             result = md.convert(tmp_path)
             full_text = result.text_content
 
             os.remove(tmp_path)
 
-            logger.info(f"Successfully analyzed {len(full_text)} characters")
+            logger.info("The document content analysis process was completed successfully")
             return full_text
         except ImportError:
-            logger.error("System is missing content analysis libraries")
+            logger.error("The system is currently missing the required content analysis libraries to proceed")
             return ""
-        except Exception as e:
-            logger.error("Data analysis process failed due to error")
+        except Exception:
+            logger.error("The data analysis process failed due to an unexpected system issue")
             return ""
 
 

@@ -34,7 +34,7 @@ class SessionMetrics:
     llm_latencies_ms: list = field(default_factory=list)
 
 
-PROMETHEUS_PREFIX = "doclib_agent"
+PROMETHEUS_PREFIX = "system_agent"
 
 
 class AgentOpsHarness:
@@ -53,8 +53,8 @@ class AgentOpsHarness:
 
                 client = AsyncIOMotorClient(settings.MONGODB_URI)
                 self._db_client = client.get_default_database()
-            except Exception as e:
-                logger.error("Database connection error")
+            except Exception:
+                logger.error("The system encountered a failure while attempting to establish a connection to the database")
         return self._db_client
 
     def record_session_start(
@@ -66,7 +66,7 @@ class AgentOpsHarness:
             started_at=datetime.now(timezone.utc),
         )
         self._sessions[session_id] = metrics
-        logger.info("Started recording session")
+        logger.info("The system has successfully initiated the recording process for the current session")
 
     def record_session_end(
         self,
@@ -81,7 +81,7 @@ class AgentOpsHarness:
         metrics.total_duration_ms = int(
             (metrics.ended_at - metrics.started_at).total_seconds() * 1000
         )
-        logger.info("Finished recording session")
+        logger.info("The system has successfully concluded the recording process for the current session")
         asyncio.create_task(self._flush_session(session_id))
 
     def record_tool_call(
@@ -103,7 +103,7 @@ class AgentOpsHarness:
             if not success:
                 breakdown["errors"] += 1
         log_fn = logger.info if success else logger.warning
-        log_fn("Recorded AI tool call")
+        log_fn("The system successfully recorded the execution event for the invoked utility")
 
     def record_llm_call(
         self,
@@ -119,7 +119,7 @@ class AgentOpsHarness:
             metrics.total_tokens_in += prompt_tokens
             metrics.total_tokens_out += completion_tokens
             metrics.llm_latencies_ms.append(duration_ms)
-        logger.info("Recorded LLM call")
+        logger.info("The system successfully recorded the language model invocation event")
 
     def record_security_event(
         self,
@@ -131,7 +131,7 @@ class AgentOpsHarness:
         metrics = self._sessions.get(session_id)
         if metrics:
             metrics.security_violations += 1
-        logger.warning("Security violation detected")
+        logger.warning("The security system detected and recorded a potential policy violation")
 
     async def _flush_session(self, session_id: str):
         metrics = self._sessions.pop(session_id, None)
@@ -161,9 +161,9 @@ class AgentOpsHarness:
                 ),
             }
             await RepositoryFactory.get("agent_traces").insert_one(doc)
-            logger.info("Successfully recorded history to database")
-        except Exception as e:
-            logger.error("Failed to record history to database")
+            logger.info("The session history was successfully persisted into the system database")
+        except Exception:
+            logger.error("The system failed to save the session history into the database due to an internal error")
 
     def get_prometheus_metrics(self) -> str:
         active_count = len(self._sessions)

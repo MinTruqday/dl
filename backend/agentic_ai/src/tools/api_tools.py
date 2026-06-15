@@ -71,7 +71,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     """Get the current user's DocLib wallet balance in dl currency"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in again to perform this action"
+        return "Authentication is required to proceed with this specific operation please log in and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -83,15 +83,13 @@ async def get_user_balance(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", {})
             balance = data.get("balance", 0)
-            return f"Current account balance: {balance} credits"
+            return f"Your current account balance is {balance} credits"
         elif response.status_code == 401:
-            return "Authentication error: Session expired"
-        return (
-            f"System error: Unable to retrieve balance (Error code: {response.status_code})"
-        )
-    except Exception as e:
-        logger.error("Balance API call failed")
-        return "The system encountered an issue, please try again later"
+            return "The current user session has expired and authentication must be renewed"
+        return "The system encountered an unexpected error while retrieving the account balance"
+    except Exception:
+        logger.error("The system encountered an error while attempting to access the balance reporting API")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -99,7 +97,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     """View recent financial transaction history including deposits and payments"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in again to view history"
+        return "Authentication is required to view the transaction history please log in and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -111,18 +109,18 @@ async def get_transaction_history(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "You have not made any transactions in the system"
+                return "There are no recent transactions associated with this account"
             history_text = ""
             for i, tx in enumerate(data[:5]):
                 tx_type = "Deposit" if tx.get("type") == "TOPUP" else "Payment"
                 amount = tx.get("amount", 0)
                 note = tx.get("note", "No content")
-                history_text += f"{i+1}. {tx_type}: {amount} credits - Note: {note}\n"
-            return f"History of last 5 transactions:\n{history_text}"
-        return f"System error: Unable to load transaction history (Error code: {response.status_code})"
-    except Exception as e:
-        logger.error("History API call failed")
-        return "The system encountered an issue, please try again later"
+                history_text += f"{i+1} {tx_type} transaction of {amount} credits with note {note}\n"
+            return f"Below is the history of your recent transactions\n{history_text}"
+        return "The system encountered an error while attempting to load the transaction history"
+    except Exception:
+        logger.error("The system encountered an error while fetching the transaction history data")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -130,9 +128,9 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     """Redeem a gift voucher code to add funds to the account"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in to redeem gift code"
+        return "Authentication is required to redeem the gift code please log in and try again"
     if not code or not code.strip():
-        return "Error: Invalid gift code"
+        return "The provided gift code is invalid or has already been redeemed"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -145,13 +143,11 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
         if response.status_code == 200:
             res_data = response.json().get("data", {})
             bonus = res_data.get("bonus_dl", 0)
-            return f"Gift code redeemed successfully, your account has been credited with {bonus} credits"
-        data = response.json()
-        detail = data.get("detail", "Invalid or already used gift code")
-        return f"Gift code redemption error: {detail}"
-    except Exception as e:
-        logger.error("Reward redemption API call failed")
-        return "The system encountered an issue, please try again later"
+            return f"The gift code was redeemed successfully and your account has been credited with {bonus} credits"
+        return "The gift code redemption process failed due to an unexpected issue"
+    except Exception:
+        logger.error("The system encountered an error while attempting to process the reward redemption request")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -159,7 +155,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     """View revenue report from document sales, intended for authors"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in to view revenue"
+        return "Authentication is required to view the revenue report please log in and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -172,11 +168,11 @@ async def get_revenue_report(config: RunnableConfig) -> str:
             data = response.json().get("data", {})
             total = data.get("total_revenue", 0)
             pending = data.get("pending_withdrawal", 0)
-            return f"Financial report:\n- Total revenue: {total} dl\n- Pending withdrawal: {pending} dl"
-        return "Unable to retrieve revenue data"
-    except Exception as e:
-        logger.error("Revenue API call failed")
-        return "The system encountered an issue, please try again later"
+            return f"The financial report indicates a total revenue of {total} currency units with {pending} units pending withdrawal"
+        return "The system was unable to retrieve the revenue reporting data"
+    except Exception:
+        logger.error("The system encountered an error while attempting to fetch the revenue report data")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -184,7 +180,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     """List all personal documents owned or published by the current user"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in to view document"
+        return "Authentication is required to view the document library please log in and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -196,15 +192,15 @@ async def get_my_documents(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "You have no documents in your library"
-            res = "Your document list:\n"
+                return "There are no available documents within your personal library"
+            res = "Here is the list of your available documents\n"
             for doc in data:
-                res += f"- {doc.get('title')} (ID: {doc.get('id')}) - Status: {doc.get('status')}\n"
+                res += f"Document {doc.get('title')} is currently in {doc.get('status')} status\n"
             return res
-        return "Unable to retrieve document list"
-    except Exception as e:
-        logger.error("Failed to retrieve document list")
-        return "The system encountered an issue, please try again later"
+        return "The system encountered an error while fetching the document list"
+    except Exception:
+        logger.error("The system encountered an error while processing the request to retrieve the document list")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -212,9 +208,9 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     """View deleted documents currently in the trash bin"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error"
+        return "Authentication is required to perform this action"
     if not _check_admin(token):
-        return "You do not have permission to restore this document"
+        return "Your account does not possess the necessary authorization to access this specific area"
 
     headers = {"Authorization": token}
     try:
@@ -227,15 +223,15 @@ async def get_trash_documents(config: RunnableConfig) -> str:
         if response.status_code == 200:
             data = response.json().get("data", [])
             if not data:
-                return "Trash bin is empty"
-            res = "Documents in trash bin:\n"
+                return "The document trash bin is currently empty"
+            res = "The following documents are located within the trash bin\n"
             for doc in data:
-                res += f"- {doc.get('title')} (ID: {doc.get('id')}) - Deleted on: {doc.get('deleted_at')}\n"
+                res += f"Document {doc.get('title')} was deleted on {doc.get('deleted_at')}\n"
             return res
-        return "Unable to access trash bin"
-    except Exception as e:
-        logger.error("Failed to retrieve trash bin list")
-        return "The system encountered an issue, please try again later"
+        return "The system encountered an error while accessing the document trash bin"
+    except Exception:
+        logger.error("The system encountered an error while attempting to retrieve the list of deleted items")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -243,7 +239,7 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
     """Delete a document by ID, moving it to the trash bin"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in"
+        return "Authentication is required to delete the document please log in and try again"
 
     headers = {"Authorization": token}
     try:
@@ -258,14 +254,14 @@ async def delete_document(document_id: str, config: RunnableConfig) -> str:
                 from src.store.vector_store import vector_store
 
                 await vector_store.delete_by_document(document_id)
-                logger.info(f"Completed index cleanup for document {document_id}")
-            except Exception as ve:
-                logger.warning(f"Unable to cleanup index for {document_id}: {ve}")
-            return "Document deleted successfully"
-        return "Failed to delete document"
-    except Exception as e:
-        logger.error("Failed to delete document")
-        return "The system encountered an issue, please try again later"
+                logger.info("The system successfully completed the index cleanup for the specified document")
+            except Exception:
+                logger.warning("The system encountered an issue while attempting to clean up the document index")
+            return "The specified document was deleted successfully"
+        return "The system failed to delete the specified document"
+    except Exception:
+        logger.error("The system encountered a failure during the document deletion process")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -273,7 +269,7 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
     """Restore a document from the trash bin by its ID"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error"
+        return "Authentication is required to perform this action"
 
     headers = {"Authorization": token}
     try:
@@ -284,11 +280,11 @@ async def restore_document(document_id: str, config: RunnableConfig) -> str:
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
         if response.status_code == 200:
-            return "Document restored successfully"
-        return "Restoration failed"
-    except Exception as e:
-        logger.error("Failed to restore document")
-        return "The system encountered an issue, please try again later"
+            return "The specified document was restored successfully"
+        return "The document restoration process failed"
+    except Exception:
+        logger.error("The system encountered a failure during the document restoration process")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -296,9 +292,9 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     """View detailed analytics including read count and drop-off rate for a document"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error"
+        return "Authentication is required to perform this action"
     if not _check_admin(token):
-        return "You do not have permission to restore this document"
+        return "Your account does not possess the necessary authorization to perform this operation"
 
     headers = {"Authorization": token}
     try:
@@ -312,11 +308,11 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
             data = response.json().get("data", {})
             readers = data.get("readers_started", 0)
             rate = data.get("dropoff_rate", 0)
-            return f"Audience analysis for document {document_id}:\n- {readers} readers, bounce rate {rate}%"
-        return "Unable to retrieve statistical data"
-    except Exception as e:
-        logger.error("Failed to retrieve analysis data")
-        return "The system encountered an issue, please try again later"
+            return f"The audience analysis indicates {readers} readers with a bounce rate of {rate} percent"
+        return "The system was unable to retrieve the statistical analysis data"
+    except Exception:
+        logger.error("The system encountered a failure while attempting to fetch the analytical data")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 async def _get_doc_text(document_id: str, token: str) -> str:
@@ -329,8 +325,8 @@ async def _get_doc_text(document_id: str, token: str) -> str:
         )
         if res.status_code == 200:
             return res.json().get("data", {}).get("content", "")
-    except Exception as e:
-        logger.error("Failed to load document")
+    except Exception:
+        logger.error("The system encountered a failure while loading the document text")
     return ""
 
 
@@ -344,7 +340,7 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content not found"
+        return "The specified document content could not be located"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -354,10 +350,10 @@ async def agent_suggest_citations(document_id: str, config: RunnableConfig) -> s
     try:
         req = CitationRequest(text=safe_text, style="APA")
         data = await suggest_citations(req)
-        return f"Citation suggestions:\n\n{data.get('citations', '')}"
-    except Exception as e:
-        logger.error("Error encountered in citations")
-        return "The system encountered an issue, please try again later"
+        return f"Here are the suggested citations for the document\n\n{data.get('citations', '')}"
+    except Exception:
+        logger.error("The system encountered a failure while generating the citation suggestions")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -366,7 +362,7 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content not found"
+        return "The specified document content could not be located"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -376,10 +372,10 @@ async def agent_peer_review(document_id: str, config: RunnableConfig) -> str:
     try:
         req = ReviewRequest(text=safe_text, criteria=["logic", "clear"])
         data = await peer_review(req)
-        return f"Review report:\n\n{data.get('review_report', '')}"
-    except Exception as e:
-        logger.error("Error encountered during peer review")
-        return "The system encountered an issue, please try again later"
+        return f"Here is the peer review report for the document\n\n{data.get('review_report', '')}"
+    except Exception:
+        logger.error("The system encountered a failure during the peer review process")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -390,7 +386,7 @@ async def agent_transform_tone(
     token = config.get("configurable", {}).get("token")
     text = await _get_doc_text(document_id, token)
     if not text:
-        return "Document content not found"
+        return "The specified document content could not be located"
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     splitter = RecursiveCharacterTextSplitter(
@@ -400,10 +396,10 @@ async def agent_transform_tone(
     try:
         req = ToneRequest(text=safe_text, tone=tone, expansion=False)
         data = await transform_tone(req)
-        return f"Transformed text ({tone}):\n\n{data.get('transformed_text', '')}"
-    except Exception as e:
-        logger.error("Tone conversion failed")
-        return "The system encountered an issue, please try again later"
+        return f"Here is the transformed text matching the requested tone\n\n{data.get('transformed_text', '')}"
+    except Exception:
+        logger.error("The tone transformation process encountered an unexpected failure")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 @tool
@@ -411,7 +407,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     """Create a deposit link to top up the dl wallet. Amount is in VND. Returns a payment URL"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in to deposit funds"
+        return "Authentication is required to initiate the deposit process please log in and try again"
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
@@ -425,12 +421,12 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
             data = response.json().get("data", {})
             checkout_url = data.get("checkout_url") or data.get("payment_url")
             if checkout_url:
-                return f"Created deposit request for {amount} VND. Please visit the following link to pay: [Pay here]({checkout_url}/)"
-            return "Unable to retrieve payment link from the system"
-        return "Payment initialization error"
-    except Exception as e:
-        logger.error("Deposit API call failed")
-        return "The system encountered an issue, please try again later"
+                return f"A deposit request for {amount} currency units has been created please visit the following link to proceed with the payment [Pay here]({checkout_url}/)"
+            return "The system was unable to generate the required payment link"
+        return "The payment initialization process encountered an unexpected failure"
+    except Exception:
+        logger.error("The system encountered a failure while processing the deposit request")
+        return "The system encountered an unexpected error during the operation and requires you to try again later"
 
 
 from src.workflow.map_reduce import agent_summarize_long_document
@@ -450,7 +446,7 @@ async def create_document(
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in"
+        return "Authentication is required to perform this action"
 
     headers = {"Authorization": token}
 
@@ -479,8 +475,8 @@ async def create_document(
                 or profile_data.get("name")
                 or "User"
             )
-    except Exception as e:
-        logger.warning("Unable to load user profile to get author name")
+    except Exception:
+        logger.warning("The system was unable to load the user profile to fetch the author details")
 
     if format == "latex":
         if "\\documentclass" not in content:
@@ -532,11 +528,11 @@ async def create_document(
             new_doc = res_create.json().get("data", {})
             doc_id = new_doc.get("id") or new_doc.get("_id")
             if doc_id:
-                return f"Document created! [View document](/editor?document_id={doc_id})"
-            return "Document created successfully but failed to retrieve ID"
-        return f"Failed to create new document (Error code: {res_create.status_code})"
-    except Exception as e:
-        return f"System error: {e}"
+                return f"The new document was created successfully [View document](/editor?document_id={doc_id})"
+            return "The document was created successfully however the system could not retrieve the access identifier"
+        return "The system failed to create the new document due to an unexpected internal error"
+    except Exception:
+        return "The system encountered an unexpected error during the operation"
 
 
 @tool
@@ -544,7 +540,7 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
     """Read the content of a document by its ID. Use this before updating a document so you know its current content"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in"
+        return "Authentication is required to perform this action"
 
     headers = {"Authorization": token}
     try:
@@ -552,20 +548,20 @@ async def read_document(document_id: str, config: RunnableConfig) -> str:
             "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return f"Unable to retrieve document information. (Error code: {res.status_code})"
+            return "The system was unable to retrieve the requested document information"
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        return f"System error loading document: {e}"
+    except Exception:
+        return "The system encountered an unexpected error while loading the document"
 
     format = doc_data.get("content_format", "json")
     content = doc_data.get("content", "")
 
     if format == "json":
-        return f"Format: Standard Editor\nContent (JSON - Keep or edit this structure):\n{content}"
+        return f"The document utilizes the standard editor format with the following content\n{content}"
     elif format == "latex":
-        return f"Format: Mathematical Editor\nContent (Source Code):\n{content}"
+        return f"The document utilizes the mathematical editor format with the following content\n{content}"
     else:
-        return f"Format: Other ({format})\nContent:\n{content}"
+        return f"The document utilizes an alternative format with the following content\n{content}"
 
 
 @tool
@@ -582,7 +578,7 @@ async def update_document(
     """
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in"
+        return "Authentication is required to perform this action"
 
     headers = {"Authorization": token}
 
@@ -591,12 +587,10 @@ async def update_document(
             "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return (
-                f"Security error or document does not exist. (Error code: {res.status_code})"
-            )
+            return "The operation failed due to a security restriction or the document does not exist"
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        return f"System error loading document: {e}"
+    except Exception:
+        return "The system encountered an unexpected error while loading the document"
 
     payload = {}
     if title:
@@ -639,7 +633,7 @@ async def update_document(
         payload["content"] = final_content
 
     if not payload:
-        return "No information was updated"
+        return "No modifications were made to the document information"
 
     try:
         res_update = await _make_api_request(
@@ -649,10 +643,10 @@ async def update_document(
             json=payload,
         )
         if res_update.status_code in [200, 201]:
-            return f"Document updated! [View document](/editor?document_id={document_id})"
-        return f"Document update error (Error code: {res_update.status_code})"
-    except Exception as e:
-        return f"System error: {e}"
+            return f"The document was updated successfully [View document](/editor?document_id={document_id})"
+        return "The system encountered an unexpected error during the document update process"
+    except Exception:
+        return "The system encountered an unexpected error during the operation"
 
 
 @tool
@@ -662,7 +656,7 @@ async def translate_document(
     """Translate an existing document to a target language. If language is not specified, default to English. Creates a new translated document"""
     token = config.get("configurable", {}).get("token")
     if not token:
-        return "Authentication error: Please log in"
+        return "Authentication is required to perform this action"
 
     headers = {"Authorization": token}
 
@@ -671,17 +665,17 @@ async def translate_document(
             "GET", f"{INTERNAL_API_URL}/documents/{document_id}", headers=headers
         )
         if res.status_code != 200:
-            return f"Unable to retrieve document information. (Error code: {res.status_code})"
+            return "The system was unable to retrieve the requested document information"
         doc_data = res.json().get("data", {})
-    except Exception as e:
-        return f"System error loading document: {e}"
+    except Exception:
+        return "The system encountered an unexpected error while loading the document"
 
     original_content = doc_data.get("content", "")
     format = doc_data.get("content_format", "json")
     original_title = doc_data.get("title", "Document")
 
     if not original_content:
-        return "Document is empty, no content to translate"
+        return "The specified document contains no text to process for translation"
 
     import json
 
@@ -711,13 +705,13 @@ async def translate_document(
             timeout=60,
         )
         if trans_res.status_code != 200:
-            return "Translation failed from AI service"
+            return "The artificial intelligence translation service encountered an unexpected failure"
         translated_text = trans_res.json().get("translation", "")
-    except Exception as e:
-        return f"Error during translation process: {e}"
+    except Exception:
+        return "The system encountered an error during the translation process"
 
     if not translated_text:
-        return "No text was translated"
+        return "The system could not generate a translated version of the text"
 
     import datetime
 
@@ -771,7 +765,7 @@ async def translate_document(
         create_payload = {
             "title": new_title,
             "slug": f"{slug}-{int(datetime.datetime.now().timestamp())}",
-            "description": f"Translation to {target_language} of document: {original_title}",
+            "description": f"Translation to {target_language} of document {original_title}",
             "visibility": "private",
             "content_format": format,
             "content": new_content,
@@ -787,11 +781,11 @@ async def translate_document(
             new_doc = res_create.json().get("data", {})
             new_doc_id = new_doc.get("id") or new_doc.get("_id")
             if new_doc_id:
-                return f"Document translated and created! You can view the translation here: [View translation](/editor?document_id={new_doc_id})"
-            return "Translated and saved but failed to retrieve ID"
-        return f"Translation successful but failed to create new file (Error code: {res_create.status_code})"
-    except Exception as e:
-        return f"Failed to create new document: {e}"
+                return f"The translation was generated and saved successfully you can access it here [View translation](/editor?document_id={new_doc_id})"
+            return "The translation was generated successfully however the system could not retrieve the new file identifier"
+        return "The translation was generated successfully but the system failed to save the new file"
+    except Exception:
+        return "The system encountered an error while attempting to create the new translated document"
 
 
 tools = [

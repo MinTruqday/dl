@@ -58,7 +58,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Loading foundational model on optimized hardware {base_model_name}")
+    logger.info("The system is currently loading the foundational language model onto the optimized hardware environment")
     update_callback({"progress": 10, "status": "running"})
 
     model, tokenizer = load(base_model_name)
@@ -125,7 +125,7 @@ def run_mlx_training(job_id: str, config: dict, update_callback):
                 self.last_epoch = current_epoch
             self.cb(update_data)
 
-    logger.info(f"Started training (level {lora_rank})")
+    logger.info("The artificial intelligence model fine tuning process has been successfully initiated")
     update_callback({"progress": 25})
 
     train(
@@ -170,7 +170,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
+    logger.info("The system is currently loading the foundational language model onto the graphics processing unit")
     update_callback({"progress": 10, "status": "running"})
 
     bnb_config = None
@@ -281,7 +281,7 @@ def run_hf_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info("Merging adapters into foundational model")
+    logger.info("The system is currently merging the trained adapters into the foundational language model")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name, device_map="cpu", torch_dtype=torch.float16, token=hf_token
     )
@@ -304,27 +304,25 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
     base_model_name = config.get("base_model", "").lower()
 
     if "flux" in base_model_name or "diffusion" in base_model_name:
-        logger.info("Detected image generation model. Dispatching to visual engine")
+        logger.info("The system detected an image generation architecture and is dispatching tasks to the visual engine")
         result = run_diffusion_training(job_id, config, update_callback)
     elif (
         "nllb" in base_model_name
         or "t5" in base_model_name
         or "bart" in base_model_name
     ):
-        logger.info("Detected sequence-to-sequence model. Dispatching to corresponding engine")
+        logger.info("The system detected a sequence to sequence architecture and is dispatching tasks to the appropriate engine")
         result = run_seq2seq_training(job_id, config, update_callback)
     else:
         if sys.platform == "darwin":
-            logger.info("Detected optimized environment. Dispatching to optimized engine")
+            logger.info("The system detected an optimized hardware environment and is utilizing the appropriate training engine")
             result = run_mlx_training(job_id, config, update_callback)
         else:
-            logger.info(
-                "Detected standard environment. Dispatching to standard engine"
-            )
+            logger.info("The system detected a standard hardware environment and is utilizing the standard training engine")
             result = run_hf_training(job_id, config, update_callback)
 
     merged_path = result.get("merged_path")
-    gguf_path = str(GGUF_DIR / f"doclib-ft-{job_id[:8]}.gguf")
+    gguf_path = str(GGUF_DIR / f"model-ft-{job_id[:8]}.gguf")
     try:
         import shutil
         import subprocess
@@ -348,14 +346,12 @@ def run_finetune_job(job_id: str, config: dict, update_callback):
                 check=True,
                 timeout=1800,
             )
-            logger.info(f"Model export successful: {gguf_path}")
+            logger.info("The trained model was successfully converted and exported to the deployment format")
             result["gguf_path"] = gguf_path
         else:
-            logger.warning(
-                "Format conversion tool not found, system will only save the original model"
-            )
-    except Exception as e:
-        logger.error("Model conversion failed")
+            logger.warning("The format conversion tool is unavailable so the system will solely retain the original model format")
+    except Exception:
+        logger.error("The system encountered an unexpected issue while attempting to convert the model format")
 
     return result
 
@@ -379,7 +375,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
+    logger.info("The system is currently loading the foundational language model onto the graphics processing unit")
     update_callback({"progress": 10, "status": "running"})
 
     model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -482,7 +478,7 @@ def run_seq2seq_training(job_id: str, config: dict, update_callback):
     final_loss = train_result.metrics.get("train_loss", 0)
     update_callback({"progress": 92, "current_loss": round(final_loss, 6)})
 
-    logger.info("Merging adapters into foundational model")
+    logger.info("The system is currently merging the trained adapters into the foundational language model")
     base_model = AutoModelForSeq2SeqLM.from_pretrained(
         base_model_name, device_map="cpu", torch_dtype=torch.float32, token=hf_token
     )
@@ -520,7 +516,7 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
     lora_rank = config.get("lora_rank", 16)
     samples = config.get("training_data", [])
 
-    logger.info(f"Loading foundational model on graphics processing unit {base_model_name}")
+    logger.info("The system is currently loading the foundational language model onto the graphics processing unit")
     update_callback({"progress": 10, "status": "running"})
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -563,8 +559,8 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 img = (
                     Image.open(io.BytesIO(image_data)).convert("RGB").resize((512, 512))
                 )
-            except Exception as e:
-                logger.error("Failed to load image for visual model training")
+            except Exception:
+                logger.error("The system encountered an issue while attempting to process the image data for visual model training")
                 continue
 
             optimizer.zero_grad()
@@ -609,8 +605,8 @@ def run_diffusion_training(job_id: str, config: dict, update_callback):
                 loss.backward()
                 optimizer.step()
                 final_loss = float(loss)
-            except Exception as e:
-                logger.error("Diffusion training step failed")
+            except Exception:
+                logger.error("The diffusion model training step encountered an unexpected failure")
                 final_loss = 0.0
 
             current_step += 1

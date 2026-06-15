@@ -28,10 +28,10 @@ async def create_session(data: dict, db=Depends(get_db)):
     first_query = data.get("first_query", "")
     if not user_id:
         raise HTTPException(
-            status_code=400, detail="Data is missing user identification information"
+            status_code=400, detail="The submitted data is missing the required user identification information"
         )
 
-    title = first_query[:40] if first_query else "New conversation"
+    title = first_query[:40] if first_query else "New ongoing conversation"
     session = {
         "_id": str(uuid7()),
         "user_id": user_id,
@@ -66,7 +66,7 @@ async def get_session_detail(session_id: str, user_id: str, db=Depends(get_db)):
         {"_id": session_id, "user_id": user_id}
     )
     if not session:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="The requested conversation could not be located in the system")
     messages = (
         await RepositoryFactory.get("ai_messages")
         .find({"session_id": session_id})
@@ -89,7 +89,7 @@ async def update_title(session_id: str, data: dict, user_id: str, db=Depends(get
         },
     )
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="The requested conversation could not be located in the system")
     return {"status": "success"}
 
 
@@ -99,7 +99,7 @@ async def delete_session(session_id: str, user_id: str, db=Depends(get_db)):
         {"_id": session_id, "user_id": user_id}
     )
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="The requested conversation could not be located in the system")
     return {"status": "success"}
 
 
@@ -109,7 +109,7 @@ async def add_message(session_id: str, data: dict, db=Depends(get_db)):
     role = data.get("role")
     content = data.get("content")
     if not user_id or not role or not content:
-        raise HTTPException(status_code=400, detail="Data is missing required fields")
+        raise HTTPException(status_code=400, detail="The submitted data is missing several required fields for processing")
     message_id = str(uuid7())
     message = {
         "_id": message_id,

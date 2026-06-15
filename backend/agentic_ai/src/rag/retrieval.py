@@ -24,15 +24,15 @@ class RetrievalService:
             from sentence_transformers import CrossEncoder
 
             self.reranker = CrossEncoder(settings.RERANKER_MODEL)
-            logger.info(f"Loaded AI ranking model successfully")
-        except Exception as e:
+            logger.info("The artificial intelligence ranking model was loaded successfully")
+        except Exception:
             self.reranker = None
-            logger.error("Failed to load AI ranking model")
+            logger.error("The system failed to load the artificial intelligence ranking model")
 
     async def multi_query_retrieve(
         self, question: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        logger.info(f"Retrieving multidimensional information for: {question}")
+        logger.info("The system is executing a multidimensional information retrieval sequence")
 
         prompt = PromptTemplate(
             template=prompt_registry.get(PromptType.MULTI_QUERY),
@@ -64,8 +64,8 @@ class RetrievalService:
 
             queries = [q for q in queries if q]
             queries.append(question)
-        except Exception as e:
-            logger.error("Failed to generate multidimensional query due to")
+        except Exception:
+            logger.error("The system encountered an error while attempting to generate multidimensional queries")
             queries = [question]
 
         all_documents = []
@@ -85,9 +85,7 @@ class RetrievalService:
     async def retrieve(
         self, query: str, document_ids: Optional[List[str]] = None, k: int = 5
     ) -> List[Dict]:
-        logger.info(
-            "Retrieving information for '{query}' with document list: {document_ids}"
-        )
+        logger.info("The system is retrieving information based on the provided search parameters")
 
         from src.rag.embedder import embedding_service
 
@@ -109,8 +107,8 @@ class RetrievalService:
             scored_documents.sort(key=lambda x: x[1], reverse=True)
             reranked_documents = [doc for doc, score in scored_documents]
             return reranked_documents[:k]
-        except Exception as e:
-            logger.error("Error re-ranking results due to")
+        except Exception:
+            logger.error("The system encountered an exception while attempting to reorder the retrieval results")
             return documents[:k]
 
     async def cross_document_retrieve(
@@ -119,7 +117,7 @@ class RetrievalService:
         if not document_ids or len(document_ids) < 2:
             return await self.multi_query_retrieve(question, document_ids, k)
 
-        logger.info(f"Performing cross-retrieval for {len(document_ids)} documents")
+        logger.info("The system is initiating a cross document retrieval process")
 
         decompose_prompt = (
             f"Given the question: {question}\n"
@@ -138,8 +136,8 @@ class RetrievalService:
                 parsed = json.loads(match.group(0))
                 if isinstance(parsed, list) and len(parsed) == len(document_ids):
                     sub_queries = parsed
-        except Exception as e:
-            logger.warning("Cross-document decomposition failed")
+        except Exception:
+            logger.warning("The system encountered a failure during the cross document query decomposition phase")
 
         tasks = [
             self.retrieve(sub_queries[i], [document_ids[i]], k=k)

@@ -42,8 +42,8 @@ class VectorStore:
                 self._upsert_queue.task_done()
             except asyncio.CancelledError:
                 break
-            except Exception as e:
-                logger.error("Failed to queue data to search index due to")
+            except Exception:
+                logger.error("The system encountered an unexpected issue while attempting to queue data for the search index")
 
     async def ensure_collection(self):
         try:
@@ -60,8 +60,8 @@ class VectorStore:
                         size=embedding_service._dimensions, distance=Distance.COSINE
                     ),
                 )
-        except Exception as e:
-            logger.error("Failed to initialize search index collection due to")
+        except Exception:
+            logger.error("The system encountered an unexpected issue while attempting to initialize the search index collection")
             raise
 
     async def upsert(
@@ -120,8 +120,8 @@ class VectorStore:
                 }
                 for hit in results
             ]
-        except Exception as e:
-            logger.error("Search index query error due to")
+        except Exception:
+            logger.error("The search query process failed due to an unexpected system exception")
             return []
 
     async def delete_by_document(self, document_id: str):
@@ -136,8 +136,8 @@ class VectorStore:
                     ]
                 ),
             )
-        except Exception as e:
-            logger.error("Failed to delete data from search index due to")
+        except Exception:
+            logger.error("The system failed to remove the specified data from the search index database")
             raise
 
 

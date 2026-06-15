@@ -36,7 +36,7 @@ except ImportError:
 
 class AdvancedSemanticChunker:
     def __init__(self):
-        logger.info("Initializing text segmentation engines")
+        logger.info("The advanced text segmentation engines are currently initializing")
         self.chunker = None
         self.type = "fallback"
 
@@ -49,10 +49,10 @@ class AdvancedSemanticChunker:
                     similarity_threshold=0.5,
                 )
                 self.type = "chonkie_semantic"
-                logger.info(f"Loaded advanced text segmentation engine with {model_name}")
-            except Exception as e:
+                logger.info("The advanced semantic text segmentation engine was successfully loaded and is ready for processing")
+            except Exception:
                 logger.warning(
-                    f"Failed to load advanced text segmentation: {e}. Falling back to standard method"
+                    "The advanced segmentation engine failed to initialize and the system is falling back to the standard methodology"
                 )
                 try:
                     self.chunker = TokenChunker(
@@ -60,16 +60,16 @@ class AdvancedSemanticChunker:
                         chunk_overlap=settings.DEFAULT_CHUNK_OVERLAP,
                     )
                     self.type = "chonkie_token"
-                    logger.info("Loaded standard text segmentation engine")
-                except Exception as e2:
-                    logger.error(f"Text segmentation engine failed: {e2}")
+                    logger.info("The standard token based text segmentation engine was successfully loaded")
+                except Exception:
+                    logger.error("All text segmentation engines failed to initialize due to a critical system error")
 
     def chunk_document(self, text: str, metadata: Dict) -> List[Dict]:
-        logger.info(f"Chunking text of length {len(text)}")
+        logger.info("The segmentation engine is currently processing the submitted text document")
 
         if not self.chunker:
             logger.warning(
-                "Using alternative text splitting method due to engine initialization error"
+                "The system is utilizing the alternative segmentation method due to a previous initialization failure"
             )
             return self._fallback_chunking(text, metadata)
 
@@ -101,12 +101,12 @@ class AdvancedSemanticChunker:
                 )
 
             logger.info(
-                f"Completed text chunking. Count: {len(chunks)}, type: {self.type}"
+                "The text segmentation process was completed successfully and the document chunks are ready"
             )
             return chunks
 
-        except Exception as e:
-            logger.error(f"Primary text segmentation encountered an error: {e}. Using fallback method")
+        except Exception:
+            logger.error("The primary text segmentation process encountered an unexpected failure and is switching to the fallback method")
             return self._fallback_chunking(text, metadata)
 
     def _fallback_chunking(self, text: str, metadata: Dict) -> List[Dict]:

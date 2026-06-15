@@ -96,13 +96,13 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "relevance": min(max(int(scores.get("relevance", 0)), 0), 10),
             "explanation": scores.get("explanation", ""),
         }
-    except Exception as e:
-        logger.warning("Language model evaluation error")
+    except Exception:
+        logger.warning("The evaluation module encountered an error while assessing the language model output")
         return {
             "accuracy": 0,
             "completeness": 0,
             "relevance": 0,
-            "explanation": f"Evaluation error: {e}",
+            "explanation": "The evaluation process failed to complete successfully due to an internal system exception",
         }
 
 
@@ -115,9 +115,9 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("Successfully loaded validation data")
-        except Exception as e:
-            logger.error("Failed to load validation data")
+            logger.info("The system successfully loaded the validation dataset for the evaluation process")
+        except Exception:
+            logger.error("The system encountered a failure while attempting to load the validation dataset")
             self._dataset = []
 
     async def evaluate_rag_response(
@@ -176,7 +176,7 @@ class EvaluationHarness:
             overall_score=round(overall, 4),
         )
         self._reports.append(report)
-        logger.info("Information retrieval evaluation completed")
+        logger.info("The information retrieval evaluation process completed successfully")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
@@ -184,12 +184,12 @@ class EvaluationHarness:
         from huggingface_hub import AsyncInferenceClient
 
         if not self._dataset:
-            return {"error": "No dataset loaded. Call load_dataset() first"}
+            return {"error": "The evaluation process cannot proceed because no dataset has been loaded into the system"}
 
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
-        except Exception as e:
-            return {"error": f"Failed to init inference client: {e}"}
+        except Exception:
+            return {"error": "The system failed to initialize the inference client required for the evaluation process"}
 
         results = []
         for sample in self._dataset:
@@ -204,12 +204,12 @@ class EvaluationHarness:
                     temperature=0.1,
                 )
                 actual = resp.choices[0].message.content.strip()
-            except Exception as e:
+            except Exception:
                 results.append(
                     {
                         "instruction": instruction,
                         "expected": expected,
-                        "actual": "Model evaluation error",
+                        "actual": "The system encountered an unexpected error during the model evaluation execution",
                         "bleu": 0.0,
                         "rouge_l": 0.0,
                         "judge_scores": None,
@@ -263,13 +263,13 @@ class EvaluationHarness:
             "average_judge_scores": avg_judge,
             "results": results,
         }
-        logger.info("Model evaluation successful")
+        logger.info("The artificial intelligence model evaluation process completed successfully")
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
             return {
-                "status": "No reviews have been recorded yet",
+                "status": "The system currently has no recorded evaluations to generate the dashboard metrics",
                 "total_evaluations": 0,
             }
         count = len(self._reports)
@@ -291,7 +291,7 @@ class EvaluationHarness:
                     sum(r.overall_score for r in self._reports) / count, 4
                 ),
             },
-            "status": "ready",
+            "status": "The evaluation metrics dashboard is ready and available for viewing",
         }
 
 

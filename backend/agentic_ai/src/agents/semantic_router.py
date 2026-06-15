@@ -10,7 +10,7 @@ class SemanticRouter:
     def __init__(self):
         llama_model = settings.LLAMA_MODEL
         if not llama_model:
-            raise ValueError("Primary model variable is not configured")
+            raise ValueError("The primary language model configuration is currently missing from the system settings")
 
         self.llama_client = AsyncInferenceClient(
             model=settings.LLAMA_MODEL,
@@ -59,11 +59,11 @@ class SemanticRouter:
             if route not in ["chat", "action", "knowledge"]:
                 route = "knowledge"
 
-            logger.info("Categorized request into route '{route}'")
+            logger.info("The system has successfully categorized the user request and selected the appropriate execution route")
             return {"route": route, "answer": answer}
 
-        except Exception as e:
-            logger.error("Request routing failed due to error")
+        except Exception:
+            logger.error("The semantic routing process failed due to an unexpected system exception")
             return {"route": "knowledge", "answer": ""}
 
 

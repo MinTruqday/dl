@@ -25,7 +25,7 @@ class DocumentParser:
             from marker.models import create_model_dict
 
             self._marker_models = create_model_dict()
-            logger.info("Loaded document analysis configuration")
+            logger.info("The document analysis configuration was successfully loaded into the system")
         return self._marker_models
 
     def _get_ocr_engine(self, lang: str = "en"):
@@ -38,7 +38,7 @@ class DocumentParser:
                 show_log=False,
             )
             self._ocr_lang = lang
-            logger.info(f"Loaded text extraction tool with language: {lang}")
+            logger.info("The text extraction tool was initialized successfully with the specified language settings")
         return self._ocr_engine
 
     def _get_pp_structure(self, lang: str = "en"):
@@ -54,15 +54,13 @@ class DocumentParser:
                 lang=lang,
             )
             self._pp_lang = lang
-            logger.info(
-                f"Loaded advanced layout extraction tool with language: {lang}"
-            )
+            logger.info("The advanced layout extraction engine was initialized successfully")
         return self._pp_structure
 
     async def parse_document(self, file_url: str) -> Dict:
         file_bytes, file_ext = await self._download_from_minio(file_url)
         if not file_bytes:
-            return {"error": f"Cannot download file: {file_url}"}
+            return {"error": "The system is unable to download the specified file from the storage service"}
 
         with tempfile.NamedTemporaryFile(suffix=file_ext, delete=False) as tmp:
             tmp.write(file_bytes)
@@ -73,9 +71,9 @@ class DocumentParser:
             if file_ext in image_exts:
                 return await self._parse_image_with_structure(tmp_path)
             return await self._parse_with_marker(tmp_path)
-        except Exception as e:
-            logger.error("Failed to analyze document")
-            return {"error": str(e)}
+        except Exception:
+            logger.error("The system encountered an error while attempting to analyze the document content")
+            return {"error": "The system encountered an unexpected error during the document parsing process"}
         finally:
             tmp_path.unlink(missing_ok=True)
 
@@ -123,9 +121,7 @@ class DocumentParser:
                 else 0
             )
 
-        logger.info(
-            f"Document analysis engine extracted {len(chunks)} segments, {page_count} pages from file {file_path.suffix}"
-        )
+        logger.info("The document analysis engine successfully extracted all text segments and pages from the file")
         return {
             "markdown": markdown,
             "chunks": chunks,
@@ -185,12 +181,10 @@ class DocumentParser:
                             }
                         )
 
-            logger.info(
-                f"Extracted {len(tables)} data tables from document"
-            )
+            logger.info("The system successfully extracted all available data tables from the provided document")
             return tables
-        except Exception as e:
-            logger.error("Failed to extract data table")
+        except Exception:
+            logger.error("The system encountered an issue while attempting to extract data tables from the document")
             return []
         finally:
             tmp_path.unlink(missing_ok=True)
@@ -247,7 +241,7 @@ class DocumentParser:
             return await self._parse_with_raw_ocr(file_path)
 
         full_markdown = "\n\n".join(markdown_parts)
-        logger.info(f"Layout engine extracted {len(chunks)} blocks from image")
+        logger.info("The layout engine successfully extracted all structural blocks from the processed image")
         return {
             "markdown": full_markdown,
             "chunks": chunks,
@@ -274,7 +268,7 @@ class DocumentParser:
         full_text = "\n".join(lines)
         chunks = self._group_lines_to_chunks(lines)
 
-        logger.info(f"Text extraction engine extracted {len(chunks)} segments from image")
+        logger.info("The text extraction engine successfully processed all readable segments from the image")
         return {
             "markdown": full_text,
             "chunks": chunks,
@@ -371,7 +365,7 @@ class DocumentParser:
     async def get_doc_chunks_for_ingestion(self, file_url: str) -> List[Dict]:
         parse_result = await self.parse_document(file_url)
         if parse_result.get("error"):
-            logger.warning("Failed to analyze document during data ingestion")
+            logger.warning("The system failed to analyze the document during the data ingestion phase")
             return []
 
         chunks = parse_result.get("chunks", [])
@@ -399,7 +393,7 @@ class DocumentParser:
                 }
             )
 
-        logger.info(f"Created {len(ingestion_chunks)} text segments for data ingestion")
+        logger.info("The system successfully generated text segments to prepare for data ingestion")
         return ingestion_chunks
 
     async def get_markdown(self, file_url: str) -> str:
@@ -422,9 +416,7 @@ class DocumentParser:
                 object_key = file_url
 
             if "" in object_key:
-                logger.error(
-                    f"Path traversal attempt detected in object key: {object_key}"
-                )
+                logger.error("The system blocked a potential security risk related to unauthorized path traversal")
                 return None, ""
 
             s3 = boto3.client(
@@ -456,11 +448,11 @@ class DocumentParser:
                     ext = mapped_ext
                     break
 
-            logger.info(f"Downloaded {len(data)} bytes from storage format: {ext}")
+            logger.info("The system successfully retrieved the file content from the storage bucket")
             return data, ext
 
-        except Exception as e:
-            logger.error("Failed to download from storage")
+        except Exception:
+            logger.error("The system was unable to establish a connection to retrieve the file from storage")
             return None, ""
 
 

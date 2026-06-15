@@ -7,7 +7,7 @@ class Knowledge:
         pass
 
     async def execute(self, req) -> str:
-        logger.info(f"Retrieving from knowledge base for query: {req.query}")
+        logger.info("The system is querying the knowledge base to retrieve relevant information")
         try:
             result = await knowledge_app.ainvoke(
                 {
@@ -22,11 +22,11 @@ class Knowledge:
                 }
             )
             return result.get(
-                "generation", "No relevant information found in the document"
+                "generation", "The system could not extract any relevant information from the available documents"
             )
-        except Exception as e:
-            logger.error("Failed to retrieve from knowledge base")
-            return "The system encountered an issue, please try again later"
+        except Exception:
+            logger.error("The system encountered an error while attempting to access the knowledge base")
+            return "The system encountered an unexpected error during data retrieval and requires you to try again later"
 
 
 knowledge = Knowledge()

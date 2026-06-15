@@ -53,8 +53,8 @@ class ContextHarness:
                 self._redis_client = aioredis.from_url(
                     settings.REDIS_URI, decode_responses=True
                 )
-            except Exception as e:
-                logger.error("Cache connection error")
+            except Exception:
+                logger.error("The system encountered a failure while attempting to establish a connection with the high speed cache")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -74,8 +74,8 @@ class ContextHarness:
                 except Exception:
                     pass
             return history
-        except Exception as e:
-            logger.warning("Failed to load session history")
+        except Exception:
+            logger.warning("The system was unable to load the conversation history from the temporary storage")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
@@ -86,8 +86,8 @@ class ContextHarness:
 
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
-        except Exception as e:
-            logger.warning("Failed to load user settings")
+        except Exception:
+            logger.warning("The system failed to retrieve the personal preferences for the current user")
             return ""
 
     async def build_context(
@@ -126,7 +126,7 @@ class ContextHarness:
             estimated_tokens=estimated,
         )
 
-        logger.info("Context building completed")
+        logger.info("The system successfully compiled the necessary contextual information for the execution phase")
         return ctx
 
     async def save_turn(
@@ -145,8 +145,8 @@ class ContextHarness:
                 pipe.ltrim(key, -(HISTORY_MAX_TURNS * 2), -1)
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
-        except Exception as e:
-            logger.warning("Failed to save session interaction")
+        except Exception:
+            logger.warning("The system encountered an issue while attempting to save the latest session interaction")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -154,9 +154,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("Session deleted")
-        except Exception as e:
-            logger.warning("Failed to delete session")
+            logger.info("The specified session history was successfully purged from the storage system")
+        except Exception:
+            logger.warning("The system was unable to completely remove the specified session from the storage")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history

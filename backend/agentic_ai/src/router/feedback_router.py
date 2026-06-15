@@ -13,7 +13,7 @@ router = APIRouter(prefix="/feedback")
 async def submit_feedback(req: FeedbackRequest):
     try:
         client = AsyncIOMotorClient(settings.MONGODB_URI)
-        db = client.doclib
+        db = client.get_default_database()
 
         feedback_doc = {
             "session_id": req.session_id,
@@ -26,11 +26,11 @@ async def submit_feedback(req: FeedbackRequest):
 
         await db.rag_feedback.insert_one(feedback_doc)
         client.close()
-        logger.info(f"Feedback saved for message {req.message_id}")
+        logger.info("The user feedback was saved successfully into the system database")
         return {
             "status": "success",
-            "message": "Thank you for your feedback to help improve our AI",
+            "message": "We appreciate your feedback which helps improve our artificial intelligence system",
         }
-    except Exception as e:
-        logger.error("Failed to save feedback")
-        return {"status": "error", "message": "Unable to save feedback at this time"}
+    except Exception:
+        logger.error("The system failed to save the submitted user feedback")
+        return {"status": "error", "message": "The system is currently unable to save your feedback please try again later"}

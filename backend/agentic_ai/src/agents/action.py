@@ -18,15 +18,15 @@ class Action:
             if hasattr(t, "args_schema") and t.args_schema:
                 schema = t.args_schema.schema()
                 props = schema.get("properties", {})
-                args = ", ".join([f"{k}: {v.get('type')}" for k, v in props.items()])
-            tool_descriptions.append(f"- {t.name}({args}): {t.description}")
+                args = ", ".join([f"{k} type {v.get('type')}" for k, v in props.items()])
+            tool_descriptions.append(f"- {t.name}({args}) {t.description}")
         self.tools_prompt = "\n".join(tool_descriptions)
 
     async def execute(
         self, action: str, params: dict, user_id: str, token: str = None
     ) -> str:
         if not token and action != "public_query":
-            return "Please log in to perform this action"
+            return "Authentication is required to proceed with this specific operation"
 
         system_prompt = prompt_registry.get(PromptType.TOOL_DISPATCHER)
 
@@ -42,14 +42,14 @@ class Action:
                 res = await llm_with_tools.ainvoke(messages)
 
                 if not res.tool_calls:
-                    return "No suitable tool found to process this request"
+                    return "The system could not identify a suitable utility to process the given request"
 
                 tool_call = res.tool_calls[0]
                 tool_name = tool_call["name"]
                 tool_params = tool_call["args"]
 
                 if tool_name not in self.tool_map:
-                    return "Tool '{tool_name}' not found or does not exist"
+                    return "The requested utility could not be found within the available system resources"
 
                 selected_tool = self.tool_map[tool_name]
 
@@ -61,32 +61,32 @@ class Action:
                     "redeem_coupon",
                 ]
                 if tool_name in REQUIRES_APPROVAL_TOOLS:
-                    return f"Task {tool_name} requires your approval to continue"
+                    return "The requested operation requires explicit user authorization before proceeding"
 
-                logger.info("Calling tool '{tool_name}' with parameters {tool_params}")
+                logger.info("The system is currently invoking the designated utility with the provided parameters")
 
                 try:
                     tool_result = await selected_tool.ainvoke(
                         tool_params, config={"configurable": {"token": token}}
                     )
                     return str(tool_result)
-                except Exception as e:
+                except Exception:
                     from langchain_core.messages import ToolMessage
 
                     messages.append(res)
                     messages.append(
                         ToolMessage(
-                            content=f"Error executing tool {str(e)}, please check the data sent to the tool",
+                            content="The system encountered an error while executing the utility and requests a verification of the input data",
                             tool_call_id=tool_call["id"],
                         )
                     )
-                    logger.warning("Tool encountered an issue, retrying attempt {attempt+1}/3")
+                    logger.warning("The utility encountered an operational issue and the system is initiating a retry attempt")
                     if attempt == 2:
-                        return f"Error executing operation after 3 attempts: {str(e)}"
+                        return "The operation failed to complete successfully after exhausting all available retry attempts"
 
-        except Exception as e:
-            logger.error("Task execution encountered an issue due to error")
-            return "The system encountered an issue, please try again later"
+        except Exception:
+            logger.error("The task execution process was interrupted by an unexpected system exception")
+            return "The system encountered an unexpected error during the execution phase and requires you to try again later"
 
 
 action = Action()

@@ -13,9 +13,9 @@ class MemoryManager:
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
             self._redis.ping()
-            logger.info("Memory management system successfully connected to high-speed cache")
-        except Exception as e:
-            logger.warning("Cannot use high-speed cache for memory")
+            logger.info("The memory management module successfully established a connection to the high speed caching infrastructure")
+        except Exception:
+            logger.warning("The system was unable to establish a connection to the cache and will operate with limited memory capabilities")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -30,8 +30,8 @@ class MemoryManager:
             data = self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception as e:
-            logger.debug("Failed to read short-term memory due to")
+        except Exception:
+            logger.error("The system encountered an error while attempting to read data from the short term memory storage")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -50,8 +50,8 @@ class MemoryManager:
             self._redis.setex(
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception as e:
-            logger.debug("Failed to save short-term memory due to")
+        except Exception:
+            logger.debug("The system encountered an issue while attempting to persist data into the short term memory module")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -69,8 +69,8 @@ class MemoryManager:
             self._redis.setex(
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
-        except Exception as e:
-            logger.debug("Failed to save long-term memory due to")
+        except Exception:
+            logger.debug("The system encountered an issue while attempting to save information into the long term memory module")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -81,8 +81,8 @@ class MemoryManager:
             data = self._redis.get(key)
             if data:
                 return json.loads(data)
-        except Exception as e:
-            logger.debug("Failed to read long-term memory due to")
+        except Exception:
+            logger.debug("The system encountered an issue while retrieving information from the long term memory module")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:

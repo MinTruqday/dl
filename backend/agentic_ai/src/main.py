@@ -76,16 +76,16 @@ async def harness_status():
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Initialized DocLib AI system")
+    logger.info("The artificial intelligence system was initialized successfully")
     from core.config import settings
     from motor.motor_asyncio import AsyncIOMotorClient
     from src.store.vector_store import vector_store
 
     try:
         await vector_store.ensure_collection()
-        logger.info("Vector database initialized successfully")
-    except Exception as e:
-        logger.error("Failed to initialize vector database")
+        logger.info("The vector database component was initialized successfully")
+    except Exception:
+        logger.error("The system failed to initialize the vector database component")
 
     try:
         if settings.MONGODB_URI:
@@ -103,6 +103,6 @@ async def startup_event():
             await RepositoryFactory.get("finetune_jobs").create_index(
                 [("dataset_id", 1), ("status", 1)], background=True
             )
-            logger.info("Database indexes initialized successfully")
-    except Exception as e:
-        logger.error("Failed to initialize database index")
+            logger.info("The database indexes were initialized successfully")
+    except Exception:
+        logger.error("The system failed to initialize the database indexes")

@@ -46,13 +46,13 @@ async def _check_quota(current_user: UserInDB):
             if resp.status_code != 200:
                 raise HTTPException(
                     status_code=429,
-                    detail="You have exceeded your AI quota or a system error occurred",
+                    detail="Your account has exceeded the allocated artificial intelligence quota or a system error occurred",
                 )
             return resp.json().get("data", {})
     except HTTPException:
         raise
     except Exception:
-        logger.error("Failed to verify quota")
+        logger.error("The system failed to verify the current user quota allocation")
         return {"model": settings.QWEN_MODEL, "req_reset_hours": 24}
 
 
@@ -72,7 +72,7 @@ async def _consume_quota(
                 timeout=settings.DEFAULT_HTTP_TIMEOUT,
             )
     except Exception:
-        logger.error("Failed to deduct quota")
+        logger.error("The system failed to deduct the consumed quota from the user account")
 
 
 async def _chat_direct(
@@ -89,9 +89,9 @@ async def _chat_direct(
             temperature=temperature,
         )
         return response.choices[0].message.content
-    except Exception as e:
-        logger.error("AI system encountered an issue")
-        raise e
+    except Exception:
+        logger.error("The artificial intelligence system encountered an unexpected issue during the text generation process")
+        raise Exception("The system encountered an unexpected error and requires you to try again later")
 
 
 async def _run_ai_with_quota(
@@ -126,7 +126,7 @@ async def generate_text(
         return {"result": result}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -147,7 +147,7 @@ async def translate_text(
         return {"translation": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -178,7 +178,7 @@ async def analyze_sentiment(
             return {
                 "sentiment_score": 0.0,
                 "mood": "unknown",
-                "summary": "No text data available to analyze",
+                "summary": "There is no text data available to perform the sentiment analysis",
                 "top_emotions": [],
             }
 
@@ -231,10 +231,10 @@ async def analyze_sentiment(
                 {"text": t, "sentiment": s} for t, s in zip(texts_to_analyze, results)
             ],
         }
-    except Exception as e:
-        logger.error("Sentiment analysis error")
+    except Exception:
+        logger.error("The sentiment analysis process encountered an unexpected issue")
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -255,7 +255,7 @@ async def generate_code(
         return {"code": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -270,7 +270,7 @@ async def grammar_check(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         prompt = prompt_registry.get(PromptType.GRAMMAR_CHECK).format(text=req.text)
@@ -288,11 +288,11 @@ async def grammar_check(
         return {
             "corrected_text": result.strip(),
             "score": grammar_score,
-            "message": "Successfully checked grammar and calculated accuracy",
+            "message": "The grammar check and accuracy calculation completed successfully",
         }
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -313,7 +313,7 @@ async def summarize_text(
         return {"summary": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -328,7 +328,7 @@ async def check_plagiarism(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans (Premium)",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         from src.rag.embedder import embedding_service
@@ -343,7 +343,7 @@ async def check_plagiarism(
             return {
                 "plagiarism_score": 0.0,
                 "status": "clean",
-                "message": "No similar content found in the current data system. Content is highly original",
+                "message": "No similar content was found in the current data system indicating highly original content",
                 "matches": [],
             }
 
@@ -370,8 +370,8 @@ async def check_plagiarism(
             json_match = re.search(r"\{.*\}", result, re.DOTALL)
             if json_match:
                 return json_mod.loads(json_match.group())
-        except Exception as err:
-            logger.warning("Error parsing plagiarism check JSON data")
+        except Exception:
+            logger.warning("The system encountered an error while parsing the plagiarism check data format")
 
         max_score = max([m["score"] for m in significant_matches]) * 100
         return {
@@ -379,13 +379,13 @@ async def check_plagiarism(
             "status": (
                 "warning" if max_score > 60 else "danger" if max_score > 85 else "clean"
             ),
-            "message": "Found significantly similar content",
+            "message": "The system has detected significantly similar content within the database",
             "matches": significant_matches[:3],
         }
-    except Exception as e:
-        logger.error("Plagiarism check error")
+    except Exception:
+        logger.error("The plagiarism check process encountered an unexpected issue")
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -414,7 +414,7 @@ async def unified_action(
 
         prompt = prompts.get(req.action)
         if not prompt:
-            raise HTTPException(status_code=400, detail="Invalid action")
+            raise HTTPException(status_code=400, detail="The requested action is not recognized by the system")
 
         result = await _run_ai_with_quota(
             current_user,
@@ -423,10 +423,10 @@ async def unified_action(
             temperature=0.3,
         )
         return {"result": result.strip()}
-    except Exception as e:
-        logger.error("AI action execution error")
+    except Exception:
+        logger.error("The artificial intelligence action execution encountered an unexpected issue")
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -441,7 +441,7 @@ async def get_synonyms(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans (Premium)",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         prompt = prompt_registry.get(PromptType.SYNONYMS).format(text=req.text)
@@ -454,7 +454,7 @@ async def get_synonyms(
         return {"synonyms": [s.strip() for s in result.split(",")]}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -469,7 +469,7 @@ async def suggest_citations(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans (Premium)",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         from src.rag.embedder import embedding_service
@@ -497,7 +497,7 @@ async def suggest_citations(
         return {"citations": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -512,7 +512,7 @@ async def transform_tone(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans (Premium)",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         action = "expand and transform" if req.expansion else "transform"
@@ -528,7 +528,7 @@ async def transform_tone(
         return {"transformed_text": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -543,7 +543,7 @@ async def peer_review(
         ):
             raise HTTPException(
                 status_code=403,
-                detail="This feature is only available for Premium plans (Premium)",
+                detail="This specific feature is restricted to premium subscription plans only",
             )
 
         criteria_str = (
@@ -563,7 +563,7 @@ async def peer_review(
         return {"review_report": result.strip()}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -597,7 +597,7 @@ async def multi_doc_synthesis(
         return {"synthesis": result.strip(), "sources_count": len(req.document_ids)}
     except Exception:
         raise HTTPException(
-            status_code=500, detail="System error, please try again later"
+            status_code=500, detail="The system encountered an unexpected error and requires you to try again later"
         )
 
 
@@ -606,17 +606,17 @@ async def extract_text(req: dict, current_user: UserInDB = Depends(get_current_u
     try:
         file_url = req.get("file_url")
         if not file_url:
-            raise HTTPException(status_code=400, detail="Missing file_url")
+            raise HTTPException(status_code=400, detail="The submitted request is missing the required file location information")
 
         from src.rag.ingestion_pipeline import ingestion_pipeline
 
         extracted_text = await ingestion_pipeline._extract_text(file_url)
 
         return {"extracted_text": extracted_text}
-    except Exception as e:
-        logger.error("AI data extraction error")
+    except Exception:
+        logger.error("The data extraction process encountered an unexpected issue")
         raise HTTPException(
-            status_code=500, detail="Unable to extract text at this time"
+            status_code=500, detail="The system is currently unable to extract text from the provided source"
         )
 
 
@@ -647,10 +647,10 @@ async def analyze_document(
         if json_match:
             return json_mod.loads(json_match.group())
         else:
-            raise ValueError("Language model did not return JSON format")
-    except Exception as e:
-        logger.error("Document analysis error AI")
-        raise HTTPException(status_code=500, detail="Document analysis error")
+            raise ValueError("The language model failed to return the expected data format")
+    except Exception:
+        logger.error("The document analysis process encountered an unexpected issue")
+        raise HTTPException(status_code=500, detail="The document analysis process encountered an unexpected issue")
 
 
 @router.delete("/vectors/{document_id}")
@@ -659,7 +659,7 @@ async def delete_vector_document(document_id: str):
         from src.store.vector_store import vector_store
 
         await vector_store.delete_by_document(document_id)
-        return {"status": "success", "message": "Document index data deleted"}
-    except Exception as e:
-        logger.error("Failed to delete document index")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "success", "message": "The document index data was deleted successfully"}
+    except Exception:
+        logger.error("The system failed to delete the document index data")
+        raise HTTPException(status_code=500, detail="The system encountered an issue while attempting to delete the document index data")

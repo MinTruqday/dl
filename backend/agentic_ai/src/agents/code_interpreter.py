@@ -13,7 +13,7 @@ class CodeInterpreter:
         pass
 
     async def execute(self, task_desc: str) -> str:
-        logger.info(f"Processing task via secure execution environment: {task_desc}")
+        logger.info("Processing the requested task via the secure execution environment")
 
         try:
             from src.agents.planning import llm
@@ -99,17 +99,17 @@ class CodeInterpreter:
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.communicate()
-                    return "Code execution exceeded the allowed time limit"
+                    return "The execution process exceeded the maximum allowed time limit and was terminated"
 
                 MAX_OUTPUT = 512 * 1024
                 if proc.returncode == 0:
                     out = stdout[:MAX_OUTPUT]
-                    final_res = f"Execution output:\n{out.decode(errors='replace')}\n"
+                    final_res = f"The execution completed with the following output\n{out.decode(errors='replace')}\n"
                     if len(stdout) > MAX_OUTPUT:
-                        final_res += "[Output truncated at 512KB]"
+                        final_res += "\nThe output was truncated due to exceeding the maximum allowed size limit"
                 else:
                     err = stderr[:MAX_OUTPUT]
-                    final_res = f"Execution error:\n{err.decode(errors='replace')}\n"
+                    final_res = f"The execution encountered the following issues\n{err.decode(errors='replace')}\n"
 
             finally:
 
@@ -123,12 +123,12 @@ class CodeInterpreter:
                 await asyncio.to_thread(remove_if_exists, script_path)
 
             if not final_res.strip():
-                final_res = "Code executed successfully (no output)"
+                final_res = "The execution process completed successfully without producing any output"
 
             return final_res
-        except Exception as e:
-            logger.error("Execution failed due to error")
-            return "The system encountered an issue, please try again later"
+        except Exception:
+            logger.error("The execution process failed due to an unexpected internal system error")
+            return "The system encountered an unexpected error during execution and requires you to try again later"
 
 
 code_interpreter = CodeInterpreter()

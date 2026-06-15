@@ -25,9 +25,9 @@ try:
 
     nli_model_name = settings.NLI_MODEL_NAME
     nli_model = CrossEncoder(nli_model_name)
-except Exception as e:
+except Exception:
     nli_model = None
-    logger.error("Unable to load natural language model due to error")
+    logger.error("The system was unable to load the natural language processing model during initialization")
 
 try:
     redis_url = settings.REDIS_URI
@@ -36,9 +36,9 @@ try:
     langchain.llm_cache = RedisSemanticCache(
         redis_url=redis_url, embedding=embedding_service
     )
-    logger.info("Enabled semantic cache on high-speed datastore")
-except Exception as e:
-    logger.error("Failed to retrieve from memory cache")
+    logger.info("The high speed semantic caching datastore was successfully initialized and enabled")
+except Exception:
+    logger.error("The system encountered an unexpected error while attempting to access the high speed cache storage")
 
 from huggingface_hub import AsyncInferenceClient
 from src.utils.hf import HFInferenceChat
@@ -60,11 +60,9 @@ try:
         client=_fallback_client, model=settings.FALLBACK_MODEL
     )
     llm = llm.with_fallbacks([_fallback_llm])
-    logger.info(
-        f"Established language model fallback chain: primary -> {settings.FALLBACK_MODEL}"
-    )
-except Exception as e:
-    logger.warning("Failed to configure LLM fallback")
+    logger.info("The language model fallback sequence was successfully established to ensure high availability")
+except Exception:
+    logger.warning("The system was unable to configure the language model fallback mechanism")
 
 llm_generate = llm.with_config({"tags": ["final_generator"]})
 
@@ -76,7 +74,7 @@ async def contextualize_question(state: AgentState):
         return {"question": question}
 
     history_str = "\n".join(
-        [f"{msg['role']}: {msg['content']}" for msg in history[-5:]]
+        [f"{msg['role']} {msg['content']}" for msg in history[-5:]]
     )
     from src.core.prompt_registry import PromptType, prompt_registry
 
@@ -98,8 +96,8 @@ async def contextualize_question(state: AgentState):
             else content.replace("<query>", "").replace("</query>", "").strip()
         )
         return {"question": final_q}
-    except Exception as e:
-        logger.error("Contextualization error")
+    except Exception:
+        logger.error("The system encountered an unexpected error during the context processing phase")
         return {"question": question}
 
 
@@ -122,8 +120,8 @@ async def route_question(state: AgentState):
             else ("direct" if "direct" in res else "rag")
         )
         return {"current_source": "db", "route": route_val}
-    except Exception as e:
-        logger.error("Routing error due to")
+    except Exception:
+        logger.error("The system encountered a routing failure while determining the appropriate execution path")
         return {"current_source": "db", "route": "rag"}
 
 
@@ -156,7 +154,7 @@ async def retrieve_db(state: AgentState):
     document_ids = state.get("document_ids", [])
 
     if document_ids and len(document_ids) >= 2:
-        logger.info(f"Using linked retrieval for {len(document_ids)} documents")
+        logger.info("The system is currently utilizing linked retrieval to process the requested documents")
         try:
             raw_documents = await retrieval_service.cross_document_retrieve(
                 question, document_ids, k=6
@@ -167,11 +165,11 @@ async def retrieve_db(state: AgentState):
                 title = meta.get("title", "Document")
                 file_url = meta.get("file_url", "")
                 extracted_documents.append(
-                    f"[Source: {title}] (PDF: {file_url}/)\n{_mask_pii(doc.get('text', ''))}"
+                    f"Source document {title}\n{_mask_pii(doc.get('text', ''))}"
                 )
             return {"documents": list(set(extracted_documents)), "current_source": "db"}
-        except Exception as e:
-            logger.error("Cross-document retrieval error")
+        except Exception:
+            logger.error("The system failed to retrieve information across multiple connected documents")
 
     from src.core.prompt_registry import PromptType, prompt_registry
 
@@ -201,8 +199,8 @@ async def retrieve_db(state: AgentState):
                 q_clean = q.strip("- 123. \r")
                 if q_clean:
                     queries.append(q_clean)
-    except Exception as e:
-        logger.error("Retrieval strategy error due to")
+    except Exception:
+        logger.error("The system encountered a failure while generating the optimal retrieval strategy")
 
     extracted_documents = []
 
@@ -224,8 +222,8 @@ async def retrieve_db(state: AgentState):
             for doc in results:
                 doc["_query"] = q
                 all_raw_documents.append(doc)
-        except Exception as e:
-            logger.error("Vector search error for query '{q}'")
+        except Exception:
+            logger.error("The search engine encountered an unexpected failure during the vector similarity search")
 
     if all_raw_documents:
         if reranker:
@@ -239,8 +237,8 @@ async def retrieve_db(state: AgentState):
                 top_documents = retrieval_service._lost_in_the_middle_reorder(
                     [doc for doc, score in scored_documents[:6]]
                 )[:3]
-            except Exception as e:
-                logger.error("Knowledge graph re-ranking error due to")
+            except Exception:
+                logger.error("The system encountered an issue while attempting to reorder the search results using the ranking model")
                 top_documents = all_raw_documents[:3]
         else:
             top_documents = all_raw_documents[:3]
@@ -248,9 +246,8 @@ async def retrieve_db(state: AgentState):
         for doc in top_documents:
             meta = doc.get("metadata", {})
             title = meta.get("title", "Document")
-            file_url = meta.get("file_url", "")
             extracted_documents.append(
-                f"[Source: {title}] (PDF: {file_url}/)\n{_mask_pii(doc.get('text', ''))}"
+                f"Source document {title}\n{_mask_pii(doc.get('text', ''))}"
             )
 
     return {"documents": list(set(extracted_documents)), "current_source": "db"}
@@ -266,8 +263,8 @@ async def retrieve_internet(state: AgentState):
             "documents": [f"[Internet Source]\n{results}"],
             "current_source": "internet",
         }
-    except Exception as e:
-        logger.error("Web search error due to")
+    except Exception:
+        logger.error("The web search module encountered an unexpected failure during information retrieval")
         return {"documents": [], "current_source": "internet"}
 
 
@@ -286,8 +283,8 @@ async def grade_documents(state: AgentState):
             response = await llm.ainvoke(prompt.format(context=d, question=question))
             if "yes" in response.content.strip().lower():
                 filtered_documents.append(d)
-        except Exception as e:
-            logger.error("Grading error")
+        except Exception:
+            logger.error("The document evaluation module encountered an error while assessing relevance")
             filtered_documents.append(d)
     return {"documents": filtered_documents}
 
@@ -315,8 +312,8 @@ async def transform_query(state: AgentState):
             "retry_count": state.get("retry_count", 0) + 1,
             "current_source": "db",
         }
-    except Exception as e:
-        logger.error("Query transformation error due to")
+    except Exception:
+        logger.error("The system encountered an issue while attempting to optimize the search query")
         return {"retry_count": state.get("retry_count", 0) + 1}
 
 
@@ -329,9 +326,9 @@ async def generate_direct(state: AgentState):
     try:
         response = await llm_generate.ainvoke(prompt)
         return {"generation": response.content}
-    except Exception as e:
-        logger.error("Failed to generate direct response")
-        return {"generation": "The system encountered an issue, please try again later"}
+    except Exception:
+        logger.error("The system failed to generate a direct response due to an internal processing error")
+        return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 
 async def generate(state: AgentState):
@@ -339,13 +336,13 @@ async def generate(state: AgentState):
     documents = state.get("documents", [])
     user_id = state.get("user_id")
     if not user_id:
-        return {"generation": "Please log in to use this feature"}
+        return {"generation": "Authentication is required to proceed with this specific operation please log in and try again"}
     user_context = await memory_manager.get_user_preferences(user_id)
     if state.get("file_data"):
         documents.append(f"[Attached Personal Documents]\n{state['file_data'][:6000]}")
 
     citation_instruction = (
-        "- Use inline source citations when referencing documents, e.g. [1], [2]"
+        "- Use inline source citations when referencing documents"
         if documents
         else "- Do NOT use any citations as no relevant documents were found"
     )
@@ -386,9 +383,9 @@ async def generate(state: AgentState):
             user_id,
         )
         return {"generation": generation}
-    except Exception as e:
-        logger.error("Generation error")
-        return {"generation": "The system encountered an issue, please try again later"}
+    except Exception:
+        logger.error("The system encountered an unexpected failure during the content generation process")
+        return {"generation": "The system encountered an unexpected error during generation and requires you to try again later"}
 
 
 async def grade_generation(state: AgentState):
@@ -421,8 +418,8 @@ async def grade_generation(state: AgentState):
                 is_hallucination = True
 
         return {"hallucination_pass": "no" if is_hallucination else "yes"}
-    except Exception as e:
-        logger.error("Grade generation error")
+    except Exception:
+        logger.error("The evaluation module encountered an error while grading the generated content")
         return {"hallucination_pass": "yes"}
 
 

@@ -25,7 +25,7 @@ async def chat_endpoint(req: ChatRequest, request: Request):
     scan = security_harness.scan_input(req.query, user_id=req.user_id or "")
     if not scan.passed:
         return {
-            "answer": "Your request contains prohibited content",
+            "answer": "The submitted request contains prohibited content and cannot be processed",
             "route": "blocked",
         }
 
@@ -45,13 +45,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
                     )
                     if doc_res.status_code not in [200, 201]:
                         return {
-                            "answer": "You do not have access or the document does not exist",
+                            "answer": "The requested document either does not exist or requires additional access permissions",
                             "route": "error",
                         }
-                except Exception as e:
-                    logger.error("Document access check error")
+                except Exception:
+                    logger.error("The system encountered an error while verifying document access permissions")
                     return {
-                        "answer": "Unable to verify document access permissions",
+                        "answer": "The system is currently unable to verify the document access permissions",
                         "route": "error",
                     }
 
@@ -94,13 +94,13 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 
         final_answer = security_harness.scan_output(final_answer)
         return {
-            "answer": final_answer or "System error, please try again later",
+            "answer": final_answer or "The system encountered an unexpected error and requires you to try again later",
             "route": "agentic_ai",
         }
-    except Exception as e:
-        logger.error("AI execution error")
+    except Exception:
+        logger.error("The artificial intelligence workflow execution encountered an unexpected issue")
         return {
-            "answer": "System error, please try again later",
+            "answer": "The system encountered an unexpected error and requires you to try again later",
             "route": "error",
         }
 
@@ -124,7 +124,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             agentops_harness.record_security_event(
                 session_id, "prompt_injection_blocked", scan.risk_score, scan.violations
             )
-            yield f"event: message\ndata: {json.dumps({'chunk': 'Your request contains prohibited content'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'The submitted request contains prohibited content and cannot be processed'})}\n\n"
             yield "event: done\ndata: [DONE]\n\n"
             return
 
@@ -150,12 +150,12 @@ async def stream_endpoint(req: ChatRequest, request: Request):
                             timeout=settings.DEFAULT_HTTP_TIMEOUT,
                         )
                         if doc_res.status_code not in [200, 201]:
-                            yield f"event: message\ndata: {json.dumps({'chunk': 'You do not have access or the document does not exist'})}\n\n"
+                            yield f"event: message\ndata: {json.dumps({'chunk': 'The requested document either does not exist or requires additional access permissions'})}\n\n"
                             agentops_harness.record_session_end(session_id, "failed")
                             return
-                    except Exception as e:
-                        logger.error("Document access check error")
-                        yield f"event: message\ndata: {json.dumps({'chunk': 'Unable to verify document access permissions'})}\n\n"
+                    except Exception:
+                        logger.error("The system encountered an error while verifying document access permissions")
+                        yield f"event: message\ndata: {json.dumps({'chunk': 'The system is currently unable to verify the document access permissions'})}\n\n"
                         agentops_harness.record_session_end(session_id, "failed")
                         return
 
@@ -172,7 +172,7 @@ async def stream_endpoint(req: ChatRequest, request: Request):
             final_answer = ""
 
             if route == "chat":
-                yield f"event: status\ndata: {json.dumps({'node': 'Responding directly'})}\n\n"
+                yield f"event: status\ndata: {json.dumps({'node': 'The system is responding directly to your query'})}\n\n"
 
                 fast_answer = route_data.get("answer", "")
                 if fast_answer:
@@ -271,10 +271,10 @@ async def stream_endpoint(req: ChatRequest, request: Request):
 
             agentops_harness.record_session_end(session_id, "done")
 
-        except Exception as e:
-            logger.exception("AI workflow execution error")
+        except Exception:
+            logger.error("The artificial intelligence streaming workflow execution encountered an unexpected issue")
             agentops_harness.record_session_end(session_id, "failed")
-            yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an issue, please try again later'})}\n\n"
+            yield f"event: message\ndata: {json.dumps({'chunk': 'The system encountered an unexpected issue and requires you to try again later'})}\n\n"
 
         yield "event: done\ndata: [DONE]\n\n"
 

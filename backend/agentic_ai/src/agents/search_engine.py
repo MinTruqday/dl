@@ -38,7 +38,7 @@ class SearchEngine:
             return ""
         formatted = ""
         for res in results:
-            formatted += f"- {res.get('title')}: {res.get('content')}\n  (Source: {res.get('url')})\n"
+            formatted += f"- {res.get('title')} {res.get('content')}\n  Source link {res.get('url')}\n"
         return formatted
 
     async def _duckduckgo_search(self, query: str) -> str:
@@ -52,37 +52,33 @@ class SearchEngine:
                 return ""
             formatted = ""
             for res in results:
-                formatted += f"- {res.get('title')}: {res.get('body')}\n  (Source: {res.get('href')})\n"
+                formatted += f"- {res.get('title')} {res.get('body')}\n  Source link {res.get('href')}\n"
             return formatted
-        except Exception as e:
-            logger.error("Alternative web search failed due to error")
+        except Exception:
+            logger.error("The alternative search engine encountered an unexpected failure during the retrieval process")
             return ""
 
     async def execute(self, query: str) -> str:
-        logger.info("Searching for information for '{query}'")
+        logger.info("The system is initiating a search operation to retrieve the requested information")
 
         if _is_ssrf_attempt(query):
-            logger.warning(f"Blocked SSRF attack attempt from query: {query}")
-            return "This query is not allowed"
+            logger.warning("The security system blocked a potential unauthorized network request attempt")
+            return "The submitted request violates network security protocols and has been blocked"
 
         if self.api_key_valid:
             try:
                 result = await self._tavily_search(query)
                 if result:
                     return result
-                logger.warning(
-                    "No results found from primary search engine, switching to alternative"
-                )
-            except Exception as e:
-                logger.warning(
-                    f"Primary web search failed: {e}. Automatically switching to alternative search engine"
-                )
+                logger.warning("The primary search engine yielded no results and the system is transitioning to the alternative engine")
+            except Exception:
+                logger.warning("The primary search engine encountered a failure and the system is automatically transitioning to the alternative engine")
 
         result = await self._duckduckgo_search(query)
         if result:
             return result
 
-        return "No relevant information found from available search sources"
+        return "The system could not locate any relevant information from the available search sources"
 
 
 search_engine = SearchEngine()

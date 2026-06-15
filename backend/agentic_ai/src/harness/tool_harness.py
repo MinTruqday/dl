@@ -49,7 +49,7 @@ class ToolHarness:
             max_retries=max_retries,
             is_async=is_async,
         )
-        logger.info("Registered AI tool")
+        logger.info("The requested artificial intelligence utility was successfully registered into the system operations registry")
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry
@@ -63,9 +63,9 @@ class ToolHarness:
     ) -> ToolResult:
         definition = self._registry.get(tool_name)
         if not definition:
-            logger.error("AI tool is not registered")
+            logger.error("The requested operation could not proceed because the specified utility is not registered within the system")
             return ToolResult(
-                success=False, data=None, error=f"Tool {tool_name!r} is not registered"
+                success=False, data=None, error="The requested utility is currently not registered or unavailable in the system"
             )
 
         start_ms = time.monotonic()
@@ -86,7 +86,7 @@ class ToolHarness:
                     )
 
                 duration_ms = int((time.monotonic() - start_ms) * 1000)
-                logger.info("AI tool executed successfully")
+                logger.info("The selected artificial intelligence utility completed its execution successfully and returned the expected results")
                 return ToolResult(
                     success=True,
                     data=result_data,
@@ -95,19 +95,19 @@ class ToolHarness:
                 )
 
             except asyncio.TimeoutError:
-                last_error = f"Timeout after {definition.timeout_seconds}s"
-                logger.warning("AI tool timed out")
+                last_error = "The execution of the utility exceeded the maximum allowed processing time and was forcefully terminated"
+                logger.warning("The artificial intelligence utility failed to respond within the expected timeframe and was aborted")
 
-            except Exception as e:
-                last_error = str(e)
-                logger.warning("AI tool execution error")
+            except Exception:
+                last_error = "The utility encountered an unexpected internal exception during its execution phase"
+                logger.warning("The artificial intelligence utility encountered a processing error and could not complete the assigned task")
 
             if attempt <= definition.max_retries:
                 delay = RETRY_BASE_DELAY_SECONDS * (2 ** (attempt - 1))
                 await asyncio.sleep(delay)
 
         duration_ms = int((time.monotonic() - start_ms) * 1000)
-        logger.error("AI tool execution failure")
+        logger.error("The artificial intelligence utility failed to execute successfully after exhausting all available retry attempts")
         return ToolResult(
             success=False,
             data=None,

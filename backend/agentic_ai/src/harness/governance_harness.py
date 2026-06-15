@@ -83,7 +83,7 @@ class GovernanceHarness:
             role=role,
         )
         logger.info(
-            f"Opened new session (session: {session_id} user={user_id} role={role}"
+            "The governance module successfully initialized and opened a new managed session"
         )
 
     def close_session(self, session_id: str):
@@ -94,19 +94,18 @@ class GovernanceHarness:
         if not state:
             return PolicyDecision(
                 allowed=False,
-                reason="Session not registered with governance harness",
+                reason="The requested session is currently not registered within the active governance tracking module",
             )
 
         policy = self._get_policy(state.role)
 
         if policy["blocked_tools"] and tool_name in policy["blocked_tools"]:
             logger.warning(
-                f"Blocked tool due to permission violation (session: {session_id} user={state.user_id} "
-                f"role={state.role} tool={tool_name} reason=blocked_for_role"
+                "The security governance system blocked an operation due to an insufficient permission level"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Tool {tool_name!r} is not allowed for role {state.role}",
+                reason="The requested operation is strictly restricted and not allowed for the current authorization level",
                 blocked_tool=tool_name,
             )
 
@@ -115,24 +114,22 @@ class GovernanceHarness:
             and tool_name not in policy["allowed_tools"]
         ):
             logger.warning(
-                f"Blocked tool due to permission violation (session: {session_id} user={state.user_id} "
-                f"role={state.role} tool={tool_name} reason=not_in_allowlist"
+                "The security governance system blocked an operation due to an insufficient permission level"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Tool {tool_name!r} is not in the allowed list",
+                reason="The requested operation is not present in the allowed operations list for the current session",
                 blocked_tool=tool_name,
             )
 
         max_calls = policy["max_tool_calls_per_session"]
         if max_calls != -1 and state.tool_calls_used >= max_calls:
             logger.warning(
-                f"Blocked due to exceeding tool usage limit (session: {session_id} user={state.user_id} "
-                f"role={state.role} used={state.tool_calls_used} max={max_calls}"
+                "The security governance system blocked an operation due to exceeding the maximum allowed usage limit"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Exceeded maximum of {max_calls} tool uses for this session",
+                reason="The current session has exceeded the maximum allowed number of utility invocations",
             )
 
         return PolicyDecision(allowed=True)
@@ -151,12 +148,11 @@ class GovernanceHarness:
         max_steps = policy["max_plan_steps"]
         if max_steps != -1 and num_steps > max_steps:
             logger.warning(
-                f"Blocked due to exceeding planning step limit (session: {session_id} role={state.role} "
-                f"requested={num_steps} max={max_steps}"
+                "The governance module blocked the request because it exceeded the maximum allowed planning steps"
             )
             return PolicyDecision(
                 allowed=False,
-                reason=f"Plan with {num_steps} steps exceeds limit of {max_steps} steps for role {state.role}",
+                reason="The generated execution plan exceeds the maximum allowed complexity for the current authorization level",
             )
         return PolicyDecision(allowed=True)
 
@@ -173,11 +169,11 @@ class GovernanceHarness:
             and (state.estimated_tokens_used + additional_tokens) > max_tokens
         ):
             logger.warning(
-                f"Blocked due to exceeding token limit (session: {session_id} role={state.role} "
-                f"used={state.estimated_tokens_used} additional={additional_tokens} max={max_tokens}"
+                "The governance module blocked the request due to exceeding the allocated token processing budget"
             )
             return PolicyDecision(
-                allowed=False, reason="Exceeded token limit for this session"
+                allowed=False,
+                reason="The current session has exceeded its allocated token processing budget and cannot proceed",
             )
         return PolicyDecision(allowed=True)
 
