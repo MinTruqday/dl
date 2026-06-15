@@ -4,11 +4,10 @@ import json
 import os
 import re
 import tempfile
-
+import html as _html
 from loguru import logger
 from uuid6 import uuid7
 from core.config import settings
-
 
 class EditorJSEngine:
 
@@ -37,9 +36,7 @@ class EditorJSEngine:
             if isinstance(item, dict):
                 text = san(s(item.get("content", item.get("text", ""))))
                 children = item.get("items", item.get("children", []))
-                sub = (
-                    EditorJSEngine._render_list_items(children, tag) if children else ""
-                )
+                sub = EditorJSEngine._render_list_items(children, tag) if children else ""
             else:
                 text = san(s(item))
                 sub = ""
@@ -48,15 +45,9 @@ class EditorJSEngine:
 
     @staticmethod
     def _render_block(block: dict) -> str:
-        import html as _html
-
         t = block.get("type", "")
         d = block.get("data", {})
-        s, san, rb = (
-            EditorJSEngine._s,
-            EditorJSEngine._san,
-            EditorJSEngine._render_block,
-        )
+        s, san, rb = EditorJSEngine._s, EditorJSEngine._san, EditorJSEngine._render_block
 
         if t == "paragraph":
             align = d.get("alignment", d.get("align", "left"))
@@ -74,12 +65,7 @@ class EditorJSEngine:
             )
 
         if t in ("warning", "alert", "notice", "callout"):
-            colors = {
-                "warning": "#f0ad4e",
-                "alert": "#e74c3c",
-                "notice": "#3498db",
-                "callout": "#9b59b6",
-            }
+            colors = {"warning": "#f0ad4e", "alert": "#e74c3c", "notice": "#3498db", "callout": "#9b59b6"}
             c = colors.get(t, "#999")
             title = san(s(d.get("title", d.get("type", ""))))
             msg = san(s(d.get("message", d.get("content", d.get("text", "")))))
@@ -123,11 +109,7 @@ class EditorJSEngine:
         if t in ("codeBox", "codeMirror"):
             lang = s(d.get("language", d.get("lang", "")))
             code = _html.escape(s(d.get("code", d.get("content", ""))))
-            lbl = (
-                f'<div style="font-size:9pt;color:#888;margin-bottom:4px">{lang}</div>'
-                if lang
-                else ""
-            )
+            lbl = f'<div style="font-size:9pt;color:#888;margin-bottom:4px">{lang}</div>' if lang else ""
             return f'<div>{lbl}<pre style="background:#1e1e1e;color:#d4d4d4;padding:1em;font-family:monospace;font-size:10pt"><code>{code}</code></pre></div>'
 
         if t == "gist":
@@ -146,21 +128,14 @@ class EditorJSEngine:
             img = f'<img src="{url}" alt="{cap}" style="max-width:100%;display:block;margin:0 auto"/>'
             if link:
                 img = f'<a href="{link}">{img}</a>'
-            cap_tag = (
-                f'<figcaption style="text-align:center;font-size:0.9em;color:#666">{cap}</figcaption>'
-                if cap
-                else ""
-            )
-            return (
-                f'<figure style="margin:1em 0;text-align:center">{img}{cap_tag}</figure>'
-            )
+            cap_tag = f'<figcaption style="text-align:center;font-size:0.9em;color:#666">{cap}</figcaption>' if cap else ""
+            return f'<figure style="margin:1em 0;text-align:center">{img}{cap_tag}</figure>'
 
         if t in ("gallery", "groupImage", "carousel"):
             files = d.get("files", d.get("images", []))
             imgs = [
                 f'<img src="{san(s(f.get("url", f.get("file", {}).get("url", ""))))}" style="width:30%;margin:4px;vertical-align:top"/>'
-                for f in files
-                if s(f.get("url", f.get("file", {}).get("url", "")))
+                for f in files if s(f.get("url", f.get("file", {}).get("url", "")))
             ]
             return f'<div style="margin:1em 0">{"".join(imgs)}</div>' if imgs else ""
 
@@ -175,9 +150,7 @@ class EditorJSEngine:
             return f'<div style="border:1px solid #ddd;padding:8px;text-align:center">[Video: {cap or url}]</div>'
 
         if t in ("embed", "gif", "telegramPost", "iframe"):
-            src = san(
-                s(d.get("source", d.get("embed", d.get("url", d.get("src", "")))))
-            )
+            src = san(s(d.get("source", d.get("embed", d.get("url", d.get("src", ""))))))
             cap = san(s(d.get("caption", "")))
             return f'<div style="border:1px solid #eee;padding:8px;text-align:center;color:#888">[Embed: {cap or src}]</div>'
 
@@ -225,9 +198,7 @@ class EditorJSEngine:
             for col in cols:
                 inner = "".join(rb(b) for b in col.get("blocks", []))
                 col_width = 100 // max(len(cols), 1)
-                col_html.append(
-                    f'<td style="vertical-align:top;padding:4px;width:{col_width}%">{inner}</td>'
-                )
+                col_html.append(f'<td style="vertical-align:top;padding:4px;width:{col_width}%">{inner}</td>')
             return f'<table style="width:100%;border-collapse:collapse"><tr>{"".join(col_html)}</tr></table>'
 
         if t == "button":
@@ -237,31 +208,20 @@ class EditorJSEngine:
 
         if t == "quiz":
             q = san(s(d.get("question", "")))
-            opts = "".join(
-                f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>'
-                for o in d.get("options", [])
-            )
+            opts = "".join(f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>' for o in d.get("options", []))
             return f'<div style="border:1px solid #ddd;padding:8px"><strong>Quiz:</strong> {q}<ol>{opts}</ol></div>'
 
         if t == "poll":
             q = san(s(d.get("question", d.get("title", ""))))
-            opts = "".join(
-                f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>'
-                for o in d.get("options", [])
-            )
+            opts = "".join(f'<li>{san(s(o.get("text",o) if isinstance(o,dict) else o))}</li>' for o in d.get("options", []))
             return f'<div style="border:1px solid #ddd;padding:8px"><strong>Poll:</strong> {q}<ul>{opts}</ul></div>'
 
         if t == "kanban":
             parts = []
             for col in d.get("columns", []):
                 col_title = san(s(col.get("title", "")))
-                cards = "".join(
-                    f'<li>{san(s(c.get("text",c) if isinstance(c,dict) else c))}</li>'
-                    for c in col.get("cards", [])
-                )
-                parts.append(
-                    f'<div style="display:inline-block;vertical-align:top;width:30%;margin:4px;border:1px solid #ddd;padding:8px"><strong>{col_title}</strong><ul>{cards}</ul></div>'
-                )
+                cards = "".join(f'<li>{san(s(c.get("text",c) if isinstance(c,dict) else c))}</li>' for c in col.get("cards", []))
+                parts.append(f'<div style="display:inline-block;vertical-align:top;width:30%;margin:4px;border:1px solid #ddd;padding:8px"><strong>{col_title}</strong><ul>{cards}</ul></div>')
             return f'<div>{"".join(parts)}</div>'
 
         if t == "timeline":
@@ -270,9 +230,7 @@ class EditorJSEngine:
                 date = san(s(ev.get("date", ev.get("time", ""))))
                 text = san(s(ev.get("title", ev.get("text", ""))))
                 desc = san(s(ev.get("description", ev.get("content", ""))))
-                parts.append(
-                    f'<div style="padding:6px 0;border-left:3px solid #333;padding-left:12px;margin:4px 0"><strong>{date}</strong> &#8211; {text}<br/><small>{desc}</small></div>'
-                )
+                parts.append(f'<div style="padding:6px 0;border-left:3px solid #333;padding-left:12px;margin:4px 0"><strong>{date}</strong> &#8211; {text}<br/><small>{desc}</small></div>')
             return f'<div>{"".join(parts)}</div>'
 
         if t == "steps":
@@ -294,11 +252,7 @@ class EditorJSEngine:
 
         if t == "personality":
             photo = san(s(d.get("photo", "")))
-            img = (
-                f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;margin-right:8px;vertical-align:middle"/>'
-                if photo
-                else ""
-            )
+            img = f'<img src="{photo}" style="width:48px;height:48px;border-radius:50%;margin-right:8px;vertical-align:middle"/>' if photo else ""
             return f'<div style="border:1px solid #eee;padding:8px">{img}<strong>{san(s(d.get("name","")))}</strong><br/><small>{san(s(d.get("description","")))}</small></div>'
 
         if t in ("countdown", "progressBar", "progress"):
@@ -309,16 +263,8 @@ class EditorJSEngine:
         if t == "flipbox":
             front_raw = d.get("front", "")
             back_raw = d.get("back", "")
-            front = san(
-                s(
-                    front_raw.get("text", "")
-                    if isinstance(front_raw, dict)
-                    else front_raw
-                )
-            )
-            back = san(
-                s(back_raw.get("text", "") if isinstance(back_raw, dict) else back_raw)
-            )
+            front = san(s(front_raw.get("text", "") if isinstance(front_raw, dict) else front_raw))
+            back = san(s(back_raw.get("text", "") if isinstance(back_raw, dict) else back_raw))
             return f'<div style="border:1px solid #ddd;padding:8px"><strong>Front:</strong> {front}<br/><strong>Back:</strong> {back}</div>'
 
         if t == "badge":
@@ -336,33 +282,13 @@ class EditorJSEngine:
             return f'<p style="color:#888;font-style:italic">&#128172; {san(s(d.get("author","")))} : {san(s(d.get("text",d.get("content",""))))}</p>'
 
         if t in (
-            "undo",
-            "dragDrop",
-            "multiBlockSelection",
-            "premium",
-            "alignment",
-            "indent",
-            "style",
-            "notice",
-            "anchor",
-            "styleTune",
-            "textVariant",
-            "textColor",
-            "colorPicker",
-            "marker",
-            "underline",
-            "strikethrough",
-            "changeCase",
-            "superscript",
-            "subscript",
-            "textStyle",
-            "hyperlink",
-            "linkSearch",
-            "template",
+            "undo", "dragDrop", "multiBlockSelection", "premium", "alignment", "indent", "style", "notice", "anchor",
+            "styleTune", "textVariant", "textColor", "colorPicker", "marker", "underline", "strikethrough", "changeCase",
+            "superscript", "subscript", "textStyle", "hyperlink", "linkSearch", "template"
         ):
             return ""
 
-        logger.warning("The system safely ignored an invalid or unsupported content block during the rendering process")
+        logger.warning("System safely ignored invalid or unsupported content block during document rendering process")
         return ""
 
     @staticmethod
@@ -386,9 +312,7 @@ class EditorJSEngine:
             "details { border: 1px solid #ddd; padding: 8px; margin: 8px 0; }"
             "kbd { background: #f4f4f4; border: 1px solid #ccc; border-radius: 3px; padding: 1px 5px; font-family: monospace; }"
         )
-        parts = [
-            f'<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><style>{CSS}</style></head><body>'
-        ]
+        parts = [f'<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"/><style>{CSS}</style></head><body>']
         for block in blocks:
             rendered = EditorJSEngine._render_block(block)
             if rendered:
@@ -400,18 +324,12 @@ class EditorJSEngine:
     async def compile_to_pdf(content: str) -> bytes:
         try:
             parsed_content = json.loads(content)
-            blocks = (
-                parsed_content.get("blocks", [])
-                if isinstance(parsed_content, dict)
-                else []
-            )
+            blocks = parsed_content.get("blocks", []) if isinstance(parsed_content, dict) else []
         except json.JSONDecodeError:
-            raise Exception(
-                "The provided document content format is structurally invalid and cannot be processed"
-            )
+            raise Exception("Provided document content format is structurally invalid and cannot be processed")
 
         if not blocks:
-            raise Exception("The submitted document does not contain any processable content blocks")
+            raise Exception("Submitted document does not contain any processable content blocks")
 
         html_content = EditorJSEngine._convert_blocks_to_html(blocks)
 
@@ -426,26 +344,17 @@ class EditorJSEngine:
         process = None
         try:
             process = await asyncio.create_subprocess_exec(
-                "timeout",
-                "-k",
-                "35",
-                "30",
-                "pandoc",
-                html_path,
-                "-o",
-                pdf_path,
-                "--pdf-engine=weasyprint",
+                "timeout", "-k", "35", "30",
+                "pandoc", html_path, "-o", pdf_path, "--pdf-engine=weasyprint",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024 * 2,
             )
-            await asyncio.wait_for(
-                process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT
-            )
+            await asyncio.wait_for(process.communicate(), timeout=settings.LONG_PROCESS_TIMEOUT)
 
             if not os.path.exists(pdf_path):
-                logger.error("The system encountered a critical failure while attempting to generate the final portable document format")
-                raise Exception("The system failed to generate the final document output due to an internal rendering error")
+                logger.error("System encountered critical failure while attempting to generate final portable document format")
+                raise Exception("System failed to generate final document output due to internal rendering error")
 
             with open(pdf_path, "rb") as f:
                 return f.read()
@@ -455,12 +364,11 @@ class EditorJSEngine:
                 try:
                     process.kill()
                 except Exception:
-                    logger.warning("The system was unable to cleanly terminate the background compilation process")
-            raise Exception("The document compilation process exceeded the maximum allowed execution time and was forcibly terminated")
-
+                    logger.warning("System was unable to cleanly terminate background compilation process")
+            raise Exception("Document compilation process exceeded maximum allowed execution time and was terminated")
         finally:
             for filepath in glob.glob(os.path.join(temp_dir, f"{job_id}.*")):
                 try:
                     os.remove(filepath)
                 except Exception:
-                    logger.warning("The system was unable to automatically clean up the temporary processing files")
+                    logger.warning("System was unable to automatically clean up temporary processing files")
