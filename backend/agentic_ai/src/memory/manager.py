@@ -2,20 +2,17 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-import redis
+import redis.asyncio as redis
 from core.config import settings
 from loguru import logger
-
 
 class MemoryManager:
     def __init__(self):
         redis_url = settings.REDIS_URI
         try:
             self._redis = redis.from_url(redis_url, decode_responses=True)
-            self._redis.ping()
-            logger.info("The memory management module successfully established a connection to the high speed caching infrastructure")
         except Exception:
-            logger.warning("The system was unable to establish a connection to the cache and will operate with limited memory capabilities")
+            logger.exception("The system was unable to establish a connection to the cache")
             self._redis = None
 
         self._short_term_ttl = 3600 * 2
@@ -27,11 +24,11 @@ class MemoryManager:
 
         key = f"memory:short:{conversation_id}"
         try:
-            data = self._redis.get(key)
+            data = await self._redis.get(key)
             if data:
                 return json.loads(data)
         except Exception:
-            logger.error("The system encountered an error while attempting to read data from the short term memory storage")
+            logger.exception("The system encountered an error while attempting to read data from the short term memory storage")
         return []
 
     async def save_short_term(self, conversation_id: str, entry: Dict):
@@ -47,11 +44,11 @@ class MemoryManager:
             if len(history) > max_turns:
                 history = history[-max_turns:]
 
-            self._redis.setex(
+            await self._redis.setex(
                 key, self._short_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception:
-            logger.debug("The system encountered an issue while attempting to persist data into the short term memory module")
+            logger.exception("The system encountered an issue while attempting to persist data into the short term memory module")
 
     async def save_long_term(self, user_id: str, entry: Dict):
         if not self._redis:
@@ -59,18 +56,18 @@ class MemoryManager:
 
         key = f"memory:long:{user_id}"
         try:
-            existing = self._redis.get(key)
+            existing = await self._redis.get(key)
             history = json.loads(existing) if existing else []
 
             history.append(entry)
             if len(history) > 200:
                 history = history[-200:]
 
-            self._redis.setex(
+            await self._redis.setex(
                 key, self._long_term_ttl, json.dumps(history, ensure_ascii=False)
             )
         except Exception:
-            logger.debug("The system encountered an issue while attempting to save information into the long term memory module")
+            logger.exception("The system encountered an issue while attempting to save information into the long term memory module")
 
     async def get_long_term(self, user_id: str) -> List[Dict]:
         if not self._redis:
@@ -78,11 +75,11 @@ class MemoryManager:
 
         key = f"memory:long:{user_id}"
         try:
-            data = self._redis.get(key)
+            data = await self._redis.get(key)
             if data:
                 return json.loads(data)
         except Exception:
-            logger.debug("The system encountered an issue while retrieving information from the long term memory module")
+            logger.exception("The system encountered an issue while retrieving information from the long term memory module")
         return []
 
     async def get_user_preferences(self, user_id: str) -> Dict:
@@ -104,6 +101,5 @@ class MemoryManager:
             "avg_quality": sum(e.get("answer_quality", 0) for e in history)
             / max(len(history), 1),
         }
-
 
 memory_manager = MemoryManager()
