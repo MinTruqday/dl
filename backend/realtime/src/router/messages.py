@@ -1,21 +1,17 @@
 import asyncio
 import json
 import time
-
 import jwt
 from core.config import settings
 from core.database import db_client
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
-from src.services.message_ws_service import message_manager
+from src.services.messages import message_manager
 
 router = APIRouter()
 
-
 @router.websocket("/{user_id}")
-async def websocket_endpoint(
-    websocket: WebSocket, user_id: str, token: str = Query(None)
-):
+async def handle_message_connection(websocket: WebSocket, user_id: str, token: str = Query(None)):
     if not token:
         await websocket.close(code=1008)
         return
@@ -23,11 +19,11 @@ async def websocket_endpoint(
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("sub") != user_id:
-            logger.warning("The connection request was rejected because the provided authentication credentials did not match the expected records")
+            logger.warning("Connection request rejected because provided authentication credentials did not match the expected records")
             await websocket.close(code=1008)
             return
     except Exception:
-        logger.error(f"The system failed to authenticate the connection token for the user with identifier {user_id} due to an invalid or expired payload")
+        logger.error(f"System failed to authenticate connection token for user identifier {user_id} due to invalid payload")
         await websocket.close(code=1008)
         return
 
@@ -58,7 +54,7 @@ async def websocket_endpoint(
                 if payload.get("action") == "ping":
                     await websocket.send_json({"type": "pong"})
                     continue
-                await message_manager._handle_ws_action(user_id, payload)
+                await message_manager.handle_action(user_id, payload)
             except json.JSONDecodeError:
                 pass
     except asyncio.TimeoutError:
@@ -70,5 +66,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         message_manager.disconnect(user_id, websocket)
     except Exception:
-        logger.error(f"The system encountered an unexpected error while processing direct messages for the user with identifier {user_id}")
+        logger.error(f"System encountered an unexpected error while processing direct messages for user identifier {user_id}")
         message_manager.disconnect(user_id, websocket)
