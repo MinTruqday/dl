@@ -1,6 +1,6 @@
 import operator
 from typing import Annotated, Any, Dict, List, TypedDict
-from langchain_core.messages import RemoveMessage, SystemMessage, BaseMessage
+from langchain_core.messages import BaseMessage, RemoveMessage, SystemMessage
 
 def reduce_chat_history(left: list, right: list) -> list:
     if left is None: left = []
@@ -18,11 +18,9 @@ def reduce_chat_history(left: list, right: list) -> list:
     if len(res) > 15:
         system_msgs = [m for m in res if isinstance(m, SystemMessage)]
         recent_msgs = res[-(15 - len(system_msgs)):] if len(system_msgs) < 15 else res[-15:]
-        
         if system_msgs and system_msgs[0] not in recent_msgs:
             return system_msgs + recent_msgs
         return recent_msgs
-        
     return res
 
 def reduce_consolidated_results(left: list, right: list) -> list:

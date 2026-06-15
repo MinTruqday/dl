@@ -1,72 +1,29 @@
 import json
-from typing import Any, Dict, List, Optional
-
-from core.config import settings
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_core.messages import HumanMessage
 from loguru import logger
-from pydantic import BaseModel, Field
+from src.core.prompt_registry import PromptType, prompt_registry
+from src.workflow.brain import llm
 
-from src.schemas.plan_schema import ExecutionPlan, PlanStep
-from src.utils.resilience import with_retry
-
-_hf_endpoint = HuggingFaceEndpoint(
-    task="conversational",
-    repo_id=settings.LLAMA_MODEL,
-    huggingfacehub_api_token=settings.HF_TOKEN,
-    temperature=0.1,
-)
-llm = ChatHuggingFace(llm=_hf_endpoint)
-
-class Planning:
-    def __init__(self):
-        self.llm = llm
-        self.parser = JsonOutputParser(pydantic_object=ExecutionPlan)
-
-    @with_retry(max_retries=3, base_wait=2, max_wait=10)
-    async def _invoke_llm(self, messages):
-        import httpx
-        return await self.llm.ainvoke(messages)
-
-    async def create_plan(self, req_data: Dict[str, Any]) -> List[Dict[str, str]]:
-        logger.info("Generating execution plan")
-
-        from src.core.prompt_registry import PromptType, prompt_registry
-        system_prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM)
-
-        history = req_data.get("conversation_history", [])
-        history_str = "\n".join(
-            [f"{msg.get('role', 'user')} said {msg.get('content', '')}" for msg in history[-5:]]
-        )
-        
-        query = req_data.get("query", "")
-        context = req_data.get("context", "None")
-
-        prompt = f"Recent conversation history\n{history_str}\n\nLatest request {query}\nCurrent context {context}"
-
+class PlanningAgent:
+    async def create_plan(self, req_data: dict) -> list:
         try:
-            format_instructions = self.parser.get_format_instructions()
-            messages = [
-                SystemMessage(content=system_prompt.format(format_instructions=format_instructions)),
-                HumanMessage(content=prompt),
-            ]
-
-            response = await self._invoke_llm(messages)
-            parsed_result = self.parser.invoke(response)
-
-            steps = [
-                {"agent": step["agent"], "task": step["task"]}
-                for step in parsed_result.get("steps", [])
-            ]
-
-            if not steps:
-                steps = [{"agent": "Knowledge", "task": "Inform user request exceeds capabilities"}]
-
-            return steps
-
+            query = req_data.get("query", "")
+            prompt = prompt_registry.get(PromptType.BRAIN_SYSTEM).format(format_instructions='{"reasoning": "...", "steps": [{"agent": "Action", "task": "..."}]}')
+            prompt += f"\nUSER REQUEST: {query}"
+            
+            result = await llm.ainvoke([HumanMessage(content=prompt)])
+            raw_content = result.content.strip()
+            
+            if "```json" in raw_content:
+                raw_content = raw_content.split("```json")[1].split("```")[0]
+            elif "```" in raw_content:
+                raw_content = raw_content.split("```")[1].split("```")[0]
+                
+            parsed = json.loads(raw_content)
+            logger.info("The centralized operational architectural planner flawlessly decomposed linguistic query extracting logical sequences")
+            return parsed.get("steps", [{"agent": "Knowledge", "task": query}])
         except Exception:
-            logger.exception("Plan generation failed")
-            return [{"agent": "Knowledge", "task": "Inform user of analysis failure"}]
+            logger.error("The artificial intelligence dynamic task orchestration planner completely failed formatting execution JSON")
+            return [{"agent": "Knowledge", "task": req_data.get("query", "")}]
 
-planning = Planning()
+planning = PlanningAgent()

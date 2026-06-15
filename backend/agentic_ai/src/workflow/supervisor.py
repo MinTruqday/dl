@@ -1,11 +1,9 @@
 import time
 from typing import Any, Dict, List, Literal
-from pydantic import BaseModel, Field
-
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from loguru import logger
-
+from pydantic import BaseModel, Field
 from src.agents.action import action
 from src.agents.code_interpreter import code_interpreter
 from src.agents.knowledge import knowledge
@@ -13,13 +11,15 @@ from src.agents.planning import planning
 from src.agents.reasoning import reasoning
 from src.agents.response_generator import response_generator
 from src.agents.search_engine import search_engine
+from src.core.prompt_registry import PromptType, prompt_registry
+from src.workflow.brain import llm
 from src.workflow.state import ActingState
 from uuid6 import uuid7
 
 class TaskEvaluation(BaseModel):
-    status: Literal["PASS", "FAIL"] = Field()
-    feedback: str = Field()
-    revised_task: str = Field(default="")
+    status: Literal["PASS", "FAIL"] = Field(description="Operational status determining outcome success or failure")
+    feedback: str = Field(description="Detailed structural feedback explaining functional operational outcome")
+    revised_task: str = Field(default="", description="Revised executable task parameters provided upon validation failure")
 
 async def supervisor_node(state: ActingState):
     start_time = state.get("start_time")
@@ -87,9 +87,7 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
     req_data = state.get("req_data", {})
 
     try:
-        from src.workflow.brain import llm
         evaluator_llm = llm.with_structured_output(TaskEvaluation)
-        
         replan_count = 0
         final_res = ""
         
@@ -103,28 +101,26 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             else:
                 res = await tool_callable.execute(current_task)
 
-            from src.core.prompt_registry import PromptType, prompt_registry
             prompt_template = prompt_registry.get(PromptType.SELF_REFLECTION)
             prompt = prompt_template.format(res=res)
             
             try:
                 eval_res = await evaluator_llm.ainvoke(prompt)
-                
                 if eval_res.status == "FAIL":
                     replan_count += 1
-                    logger.warning("Self evaluation failed initiating replanning")
+                    logger.warning("Self evaluation framework failed initiating automatic structural replanning module")
                     current_task = eval_res.revised_task or current_task
                     final_res = res
                 else:
                     final_res = res
                     break
             except Exception:
-                logger.debug("Evaluation parsing failed accepting result")
+                logger.debug("Evaluation structural parsing failed accepting current returned execution result securely")
                 final_res = res
                 break
 
         if replan_count >= 3:
-            final_res = "The agent was unable to complete the task"
+            final_res = "The agent was unable to successfully complete the designated operational task"
 
         return {
             "current_step_index": idx + 1,
@@ -132,10 +128,10 @@ async def execute_tool_node(state: ActingState, tool_callable, agent_name: str):
             "last_agent_result": final_res,
         }
     except Exception:
-        logger.exception("The execution node encountered an unexpected failure")
+        logger.exception("The internal execution node routing component encountered an unexpected catastrophic failure")
         return {
-            "consolidated_results": ["The execution step failed"],
-            "error": "Internal system exception",
+            "consolidated_results": ["The execution step failed completely"],
+            "error": "The system encountered an unexpected error and requires you to try again later",
         }
 
 async def code_interpreter_node(state: ActingState):
@@ -160,15 +156,14 @@ async def trimmer_node(state: ActingState):
 
     total_length = sum(len(str(r)) for r in results)
     if total_length > 12000:
-        logger.info("Summarizing results")
+        logger.info("Summarizing lengthy execution results optimizing overall structural memory context window")
         try:
-            from src.workflow.brain import llm
             combined = "\n\n".join(str(r) for r in results)
             summary_prompt = f"Summarize concisely preserving facts IDs data:\n\n{combined[:20000]}"
             summary_res = await llm.ainvoke(summary_prompt)
             trimmed = summary_res.content.strip()
         except Exception:
-            logger.exception("Summary failed truncating")
+            logger.exception("Contextual summary generation failed executing default hard string truncation algorithm")
             trimmed = "\n\n".join(str(r) for r in results)[:12000]
         return {"consolidated_results": [trimmed], "next_node": "trimmer"}
 
@@ -228,8 +223,8 @@ class Supervisor:
         self.app = supervisor_app
 
     async def execute_plan(self, req_data):
-        logger.info("Initialized execution flow")
-        yield {"type": "status", "node": "The system is analyzing your request"}
+        logger.info("Initialized operational execution flow establishing secure logical routing processing sequence")
+        yield {"type": "status", "node": "The system is analyzing your request processing internal algorithmic pathways"}
 
         initial_state = {
             "req_data": req_data,
@@ -260,15 +255,15 @@ class Supervisor:
                         yield {"type": "plan", "steps": steps}
                 elif node_name in ["code_interpreter", "search_engine", "action", "knowledge", "reasoning"]:
                     if state_update.get("error"):
-                        yield {"type": "error", "message": "The system encountered an issue"}
+                        yield {"type": "error", "message": "The system encountered an internal execution issue processing specific node"}
                     else:
                         yield {"type": "tool_result", "agent": node_name, "content": state_update.get("last_agent_result", "Completed")}
 
                 elif node_name == "aggregator":
-                    yield {"type": "status", "node": "Synthesizing information"}
+                    yield {"type": "status", "node": "Synthesizing retrieved information assembling comprehensive structural analytical network response"}
 
         if not final_results:
-            final_results = ["Unable to locate data"]
+            final_results = ["Unable to successfully locate required data fulfilling specific internal processing criteria"]
 
         query = req_data.get("query", "")
         async for chunk in response_generator.aggregate_stream(query, final_results):

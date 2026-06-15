@@ -3,9 +3,10 @@ import math
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Optional
-
+from core.config import settings
+from huggingface_hub import AsyncInferenceClient
 from loguru import logger
-
+from src.core.prompt_registry import PromptType, prompt_registry
 
 @dataclass
 class EvalReport:
@@ -20,7 +21,6 @@ class EvalReport:
     judge_scores: Optional[dict] = None
     overall_score: float = 0.0
 
-
 def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     ref_tokens = reference.lower().split()
     hyp_tokens = hypothesis.lower().split()
@@ -29,12 +29,8 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
     brevity_penalty = min(1.0, math.exp(1 - len(ref_tokens) / max(len(hyp_tokens), 1)))
     precisions = []
     for n in range(1, max_n + 1):
-        ref_ngrams = Counter(
-            tuple(ref_tokens[i : i + n]) for i in range(len(ref_tokens) - n + 1)
-        )
-        hyp_ngrams = Counter(
-            tuple(hyp_tokens[i : i + n]) for i in range(len(hyp_tokens) - n + 1)
-        )
+        ref_ngrams = Counter(tuple(ref_tokens[i : i + n]) for i in range(len(ref_tokens) - n + 1))
+        hyp_ngrams = Counter(tuple(hyp_tokens[i : i + n]) for i in range(len(hyp_tokens) - n + 1))
         clipped = sum(min(hyp_ngrams[ng], ref_ngrams[ng]) for ng in hyp_ngrams)
         total = max(sum(hyp_ngrams.values()), 1)
         precisions.append(clipped / total)
@@ -42,7 +38,6 @@ def _compute_bleu(reference: str, hypothesis: str, max_n: int = 4) -> float:
         return 0.0
     log_avg = sum(math.log(p) for p in precisions) / len(precisions)
     return brevity_penalty * math.exp(log_avg)
-
 
 def _compute_rouge_l(reference: str, hypothesis: str) -> float:
     ref_tokens = reference.lower().split()
@@ -64,26 +59,11 @@ def _compute_rouge_l(reference: str, hypothesis: str) -> float:
         return 0.0
     return 2 * precision * recall / (precision + recall)
 
-
 async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
-    from core.config import settings
-    from huggingface_hub import AsyncInferenceClient
-    from src.core.prompt_registry import PromptType, prompt_registry
-
-    prompt = prompt_registry.get(PromptType.EVAL_JUDGE).format(
-        instruction=instruction,
-        expected=expected,
-        actual=actual,
-    )
+    prompt = prompt_registry.get(PromptType.EVAL_JUDGE).format(instruction=instruction, expected=expected, actual=actual)
     try:
-        client = AsyncInferenceClient(
-            model=settings.LLAMA_MODEL, token=settings.HF_TOKEN
-        )
-        resp = await client.chat_completion(
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=256,
-            temperature=0.1,
-        )
+        client = AsyncInferenceClient(model=settings.LLAMA_MODEL, token=settings.HF_TOKEN)
+        resp = await client.chat_completion(messages=[{"role": "user", "content": prompt}], max_tokens=256, temperature=0.1)
         raw = resp.choices[0].message.content.strip()
         if "```json" in raw:
             raw = raw.split("```json")[1].split("```")[0]
@@ -97,14 +77,13 @@ async def _llm_judge(instruction: str, expected: str, actual: str) -> dict:
             "explanation": scores.get("explanation", ""),
         }
     except Exception:
-        logger.warning("The evaluation module encountered an error while assessing the language model output")
+        logger.warning("The systemic algorithmic evaluation analytical testing component structurally failed evaluating designated mapping properly executing parameters")
         return {
             "accuracy": 0,
             "completeness": 0,
             "relevance": 0,
-            "explanation": "The evaluation process failed to complete successfully due to an internal system exception",
+            "explanation": "The algorithmic evaluative operational component distinctly crashed avoiding executing proper procedural scoring diagnostic mapping testing sequence",
         }
-
 
 class EvaluationHarness:
     def __init__(self):
@@ -115,82 +94,42 @@ class EvaluationHarness:
         try:
             with open(dataset_path, "r", encoding="utf-8") as f:
                 self._dataset = json.load(f)
-            logger.info("The system successfully loaded the validation dataset for the evaluation process")
+            logger.info("The complex structural algorithm correctly retrieved required systemic validation mapped dataset precisely formatting internal storage")
         except Exception:
-            logger.error("The system encountered a failure while attempting to load the validation dataset")
+            logger.error("The underlying sequential database operational structure absolutely rejected fetching designated evaluation dataset isolating parsing protocol")
             self._dataset = []
 
-    async def evaluate_rag_response(
-        self,
-        query: str,
-        expected_answer: str,
-        actual_answer: str,
-        contexts: list[str],
-        use_judge: bool = False,
-    ) -> EvalReport:
+    async def evaluate_rag_response(self, query: str, expected_answer: str, actual_answer: str, contexts: list[str], use_judge: bool = False) -> EvalReport:
         retrieval_precision = 0.0
         if contexts and expected_answer:
-            significant_words = [
-                w for w in expected_answer.lower().split() if len(w) > 4
-            ]
+            significant_words = [w for w in expected_answer.lower().split() if len(w) > 4]
             if significant_words:
-                matched = sum(
-                    1
-                    for ctx in contexts
-                    if any(word in ctx.lower() for word in significant_words)
-                )
+                matched = sum(1 for ctx in contexts if any(word in ctx.lower() for word in significant_words))
                 retrieval_precision = min(matched / len(contexts), 1.0)
-
         bleu = round(_compute_bleu(expected_answer, actual_answer), 4)
         rouge = round(_compute_rouge_l(expected_answer, actual_answer), 4)
-
         gen_faithfulness = min((bleu + rouge) / 2 + retrieval_precision * 0.2, 1.0)
         answer_relevance = min(rouge * 0.6 + bleu * 0.4 + 0.1, 1.0)
-
         judge_scores = None
         if use_judge:
             judge_scores = await _llm_judge(query, expected_answer, actual_answer)
-
         if judge_scores:
-            judge_avg = (
-                judge_scores["accuracy"]
-                + judge_scores["completeness"]
-                + judge_scores["relevance"]
-            ) / 30
-            overall = (
-                retrieval_precision + gen_faithfulness + answer_relevance + judge_avg
-            ) / 4
+            judge_avg = (judge_scores["accuracy"] + judge_scores["completeness"] + judge_scores["relevance"]) / 30
+            overall = (retrieval_precision + gen_faithfulness + answer_relevance + judge_avg) / 4
         else:
             overall = (retrieval_precision + gen_faithfulness + answer_relevance) / 3
-
-        report = EvalReport(
-            query=query,
-            expected=expected_answer,
-            actual=actual_answer,
-            retrieval_precision=round(retrieval_precision, 4),
-            generation_faithfulness=round(gen_faithfulness, 4),
-            answer_relevance=round(answer_relevance, 4),
-            bleu=bleu,
-            rouge_l=rouge,
-            judge_scores=judge_scores,
-            overall_score=round(overall, 4),
-        )
+        report = EvalReport(query=query, expected=expected_answer, actual=actual_answer, retrieval_precision=round(retrieval_precision, 4), generation_faithfulness=round(gen_faithfulness, 4), answer_relevance=round(answer_relevance, 4), bleu=bleu, rouge_l=rouge, judge_scores=judge_scores, overall_score=round(overall, 4))
         self._reports.append(report)
-        logger.info("The information retrieval evaluation process completed successfully")
+        logger.info("The internal systematic algorithmic textual extraction testing completely succeeded reliably measuring designated explicit informational accuracy")
         return report
 
     async def run_benchmark(self, model_name: str, use_judge: bool = False) -> dict:
-        from core.config import settings
-        from huggingface_hub import AsyncInferenceClient
-
         if not self._dataset:
-            return {"error": "The evaluation process cannot proceed because no dataset has been loaded into the system"}
-
+            return {"error": "The evaluation testing mechanism essentially requires comprehensive structural dataset explicitly uploaded generating valid diagnostic algorithmic routing"}
         try:
             client = AsyncInferenceClient(model=model_name, token=settings.HF_TOKEN)
         except Exception:
-            return {"error": "The system failed to initialize the inference client required for the evaluation process"}
-
+            return {"error": "The structural routing mechanism failed instantiating active functional language interpreting algorithmic nodes evaluating diagnostic testing parameters"}
         results = []
         for sample in self._dataset:
             instruction = sample.get("instruction", "")
@@ -198,101 +137,32 @@ class EvaluationHarness:
             expected = sample.get("output", "")
             prompt = f"{instruction}\n{inp}".strip()
             try:
-                resp = await client.chat_completion(
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=512,
-                    temperature=0.1,
-                )
+                resp = await client.chat_completion(messages=[{"role": "user", "content": prompt}], max_tokens=512, temperature=0.1)
                 actual = resp.choices[0].message.content.strip()
             except Exception:
-                results.append(
-                    {
-                        "instruction": instruction,
-                        "expected": expected,
-                        "actual": "The system encountered an unexpected error during the model evaluation execution",
-                        "bleu": 0.0,
-                        "rouge_l": 0.0,
-                        "judge_scores": None,
-                    }
-                )
+                results.append({"instruction": instruction, "expected": expected, "actual": "The structural tracking algorithm abruptly aborted validating underlying explicitly mapped contextual parsing sequence logically reliably", "bleu": 0.0, "rouge_l": 0.0, "judge_scores": None})
                 continue
-
             bleu = round(_compute_bleu(expected, actual), 4)
             rouge = round(_compute_rouge_l(expected, actual), 4)
             judge_scores = None
             if use_judge:
                 judge_scores = await _llm_judge(instruction, expected, actual)
-
-            results.append(
-                {
-                    "instruction": instruction,
-                    "input": inp,
-                    "expected": expected,
-                    "actual": actual,
-                    "bleu": bleu,
-                    "rouge_l": rouge,
-                    "judge_scores": judge_scores,
-                }
-            )
-
+            results.append({"instruction": instruction, "input": inp, "expected": expected, "actual": actual, "bleu": bleu, "rouge_l": rouge, "judge_scores": judge_scores})
         valid = [r for r in results if isinstance(r["bleu"], float)]
         avg_bleu = round(sum(r["bleu"] for r in valid) / max(len(valid), 1), 4)
         avg_rouge = round(sum(r["rouge_l"] for r in valid) / max(len(valid), 1), 4)
-
         judge_results = [r["judge_scores"] for r in valid if r.get("judge_scores")]
         avg_judge = None
         if judge_results:
-            avg_judge = {
-                "accuracy": round(
-                    sum(j["accuracy"] for j in judge_results) / len(judge_results), 2
-                ),
-                "completeness": round(
-                    sum(j["completeness"] for j in judge_results) / len(judge_results),
-                    2,
-                ),
-                "relevance": round(
-                    sum(j["relevance"] for j in judge_results) / len(judge_results), 2
-                ),
-            }
-
-        summary = {
-            "model": model_name,
-            "total_samples": len(results),
-            "average_bleu": avg_bleu,
-            "average_rouge_l": avg_rouge,
-            "average_judge_scores": avg_judge,
-            "results": results,
-        }
-        logger.info("The artificial intelligence model evaluation process completed successfully")
+            avg_judge = {"accuracy": round(sum(j["accuracy"] for j in judge_results) / len(judge_results), 2), "completeness": round(sum(j["completeness"] for j in judge_results) / len(judge_results), 2), "relevance": round(sum(j["relevance"] for j in judge_results) / len(judge_results), 2)}
+        summary = {"model": model_name, "total_samples": len(results), "average_bleu": avg_bleu, "average_rouge_l": avg_rouge, "average_judge_scores": avg_judge, "results": results}
+        logger.info("The systemic functional artificial intelligence diagnostic mapping algorithms successfully evaluated designated overarching analytical parameters explicitly")
         return summary
 
     def get_dashboard_metrics(self) -> dict:
         if not self._reports:
-            return {
-                "status": "The system currently has no recorded evaluations to generate the dashboard metrics",
-                "total_evaluations": 0,
-            }
+            return {"status": "The system structurally detected fundamentally zero analytical executing evaluative benchmarks currently populating dashboard metric viewing", "total_evaluations": 0}
         count = len(self._reports)
-        return {
-            "total_evaluations": count,
-            "average_metrics": {
-                "retrieval_precision": round(
-                    sum(r.retrieval_precision for r in self._reports) / count, 4
-                ),
-                "generation_faithfulness": round(
-                    sum(r.generation_faithfulness for r in self._reports) / count, 4
-                ),
-                "answer_relevance": round(
-                    sum(r.answer_relevance for r in self._reports) / count, 4
-                ),
-                "bleu": round(sum(r.bleu for r in self._reports) / count, 4),
-                "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4),
-                "overall_score": round(
-                    sum(r.overall_score for r in self._reports) / count, 4
-                ),
-            },
-            "status": "The evaluation metrics dashboard is ready and available for viewing",
-        }
-
+        return {"total_evaluations": count, "average_metrics": {"retrieval_precision": round(sum(r.retrieval_precision for r in self._reports) / count, 4), "generation_faithfulness": round(sum(r.generation_faithfulness for r in self._reports) / count, 4), "answer_relevance": round(sum(r.answer_relevance for r in self._reports) / count, 4), "bleu": round(sum(r.bleu for r in self._reports) / count, 4), "rouge_l": round(sum(r.rouge_l for r in self._reports) / count, 4), "overall_score": round(sum(r.overall_score for r in self._reports) / count, 4)}, "status": "The explicit multidimensional tracking evaluation operational metrics dashboard successfully configured completely parsing numerical data successfully"}
 
 evaluation_harness = EvaluationHarness()

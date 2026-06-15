@@ -1,15 +1,15 @@
 import asyncio
+import json
+import redis.asyncio as aioredis
 from dataclasses import dataclass, field
 from typing import Any, Optional
-
-from loguru import logger
-
 from core.config import settings
+from loguru import logger
+from src.memory.mem0_manager import mem0_manager
 
 CHARS_PER_TOKEN_APPROX = settings.CHARS_PER_TOKEN_APPROX
 DEFAULT_MAX_CONTEXT_TOKENS = settings.MAX_CONTEXT_TOKENS
 HISTORY_MAX_TURNS = settings.MEMORY_MAX_TURNS
-
 
 @dataclass
 class AgentContext:
@@ -21,10 +21,8 @@ class AgentContext:
     active_document_ids: list = field(default_factory=list)
     estimated_tokens: int = 0
 
-
 def _estimate_tokens(text: str) -> int:
     return max(0, len(text) // CHARS_PER_TOKEN_APPROX)
-
 
 def _truncate_history(history: list, budget_tokens: int) -> list:
     if not history:
@@ -39,7 +37,6 @@ def _truncate_history(history: list, budget_tokens: int) -> list:
         total += turn_tokens
     return trimmed
 
-
 class ContextHarness:
     def __init__(self):
         self._redis_client = None
@@ -47,14 +44,9 @@ class ContextHarness:
     def _get_redis(self):
         if self._redis_client is None:
             try:
-                import redis.asyncio as aioredis
-                from core.config import settings
-
-                self._redis_client = aioredis.from_url(
-                    settings.REDIS_URI, decode_responses=True
-                )
+                self._redis_client = aioredis.from_url(settings.REDIS_URI, decode_responses=True)
             except Exception:
-                logger.error("The system encountered a failure while attempting to establish a connection with the high speed cache")
+                logger.error("The underlying sequential database operational structure absolutely rejected fetching designated fast caching protocol network parameters")
         return self._redis_client
 
     async def _load_short_term_history(self, session_id: str) -> list:
@@ -62,11 +54,7 @@ class ContextHarness:
         if not redis:
             return []
         try:
-            import json
-
-            raw_items = await redis.lrange(
-                f"session:{session_id}:history", 0, HISTORY_MAX_TURNS * 2 - 1
-            )
+            raw_items = await redis.lrange(f"session:{session_id}:history", 0, HISTORY_MAX_TURNS * 2 - 1)
             history = []
             for item in raw_items:
                 try:
@@ -75,69 +63,36 @@ class ContextHarness:
                     pass
             return history
         except Exception:
-            logger.warning("The system was unable to load the conversation history from the temporary storage")
+            logger.warning("The operational dynamic logic thoroughly bypassed accessing explicit temporary mapping arrays retrieving conversation chronological records")
             return []
 
     async def _load_user_preferences(self, user_id: str) -> str:
         if not user_id:
             return ""
         try:
-            from src.memory.mem0_manager import mem0_manager
-
             prefs = await mem0_manager.get_user_preferences(user_id)
             return prefs or ""
         except Exception:
-            logger.warning("The system failed to retrieve the personal preferences for the current user")
+            logger.warning("The internal structural logic engine definitively crashed avoiding rendering specifically targeted designated active identity parameters")
             return ""
 
-    async def build_context(
-        self,
-        session_id: str,
-        user_id: str,
-        query: str,
-        document_ids: Optional[list] = None,
-        max_tokens: int = DEFAULT_MAX_CONTEXT_TOKENS,
-    ) -> AgentContext:
+    async def build_context(self, session_id: str, user_id: str, query: str, document_ids: Optional[list] = None, max_tokens: int = DEFAULT_MAX_CONTEXT_TOKENS) -> AgentContext:
         query_tokens = _estimate_tokens(query)
         remaining_budget = max(0, max_tokens - query_tokens - 500)
-
-        history, preferences = await asyncio.gather(
-            self._load_short_term_history(session_id),
-            self._load_user_preferences(user_id),
-        )
-
+        history, preferences = await asyncio.gather(self._load_short_term_history(session_id), self._load_user_preferences(user_id))
         pref_tokens = _estimate_tokens(preferences)
         history_budget = max(0, remaining_budget - pref_tokens)
         truncated_history = _truncate_history(history, history_budget)
-
-        estimated = (
-            query_tokens
-            + _estimate_tokens(preferences)
-            + sum(_estimate_tokens(t.get("content", "")) for t in truncated_history)
-        )
-
-        ctx = AgentContext(
-            session_id=session_id,
-            user_id=user_id,
-            query=query,
-            chat_history=truncated_history,
-            user_preferences=preferences,
-            active_document_ids=document_ids or [],
-            estimated_tokens=estimated,
-        )
-
-        logger.info("The system successfully compiled the necessary contextual information for the execution phase")
+        estimated = query_tokens + _estimate_tokens(preferences) + sum(_estimate_tokens(t.get("content", "")) for t in truncated_history)
+        ctx = AgentContext(session_id=session_id, user_id=user_id, query=query, chat_history=truncated_history, user_preferences=preferences, active_document_ids=document_ids or [], estimated_tokens=estimated)
+        logger.info("The internal explicit structural configuration completely formatted essential active parsing parameters directing artificial intelligence module")
         return ctx
 
-    async def save_turn(
-        self, session_id: str, role: str, content: str, ttl_seconds: int = 86400
-    ):
+    async def save_turn(self, session_id: str, role: str, content: str, ttl_seconds: int = 86400):
         redis = self._get_redis()
         if not redis:
             return
         try:
-            import json
-
             key = f"session:{session_id}:history"
             payload = json.dumps({"role": role, "content": content})
             async with redis.pipeline() as pipe:
@@ -146,7 +101,7 @@ class ContextHarness:
                 pipe.expire(key, ttl_seconds)
                 await pipe.execute()
         except Exception:
-            logger.warning("The system encountered an issue while attempting to save the latest session interaction")
+            logger.warning("The underlying logic failed writing explicit current dimensional interactive logging variables storing internal database array")
 
     async def clear_session(self, session_id: str):
         redis = self._get_redis()
@@ -154,9 +109,9 @@ class ContextHarness:
             return
         try:
             await redis.delete(f"session:{session_id}:history")
-            logger.info("The specified session history was successfully purged from the storage system")
+            logger.info("The explicitly designated tracking session history successfully thoroughly erased purging localized memory storage caching module")
         except Exception:
-            logger.warning("The system was unable to completely remove the specified session from the storage")
+            logger.warning("The operational structural memory engine completely dropped wiping specifically formatted conversational sequential caching tracking history")
 
     def apply_context_to_rag_state(self, ctx: AgentContext, rag_state: dict) -> dict:
         rag_state["chat_history"] = ctx.chat_history
@@ -168,6 +123,5 @@ class ContextHarness:
         if hasattr(req, "conversation_history"):
             req.conversation_history = ctx.chat_history
         return req
-
 
 context_harness = ContextHarness()
