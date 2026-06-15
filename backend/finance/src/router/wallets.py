@@ -1,0 +1,24 @@
+from typing import Any
+from core.dependency import get_current_user, get_db
+from core.response import APIResponse
+from core.schemas.user import UserInDB
+from fastapi import APIRouter, Depends, Query
+from src.services.wallets import WalletService
+
+router = APIRouter(prefix="/wallets")
+
+@router.get("/balance", response_model=APIResponse[Any])
+async def get_my_wallet(current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(
+        data=await WalletService.get_balance(current_user, db=db),
+        message="Current digital wallet balance and associated financial metrics have been successfully retrieved",
+        status=200,
+    )
+
+@router.get("/transactions", response_model=APIResponse[Any])
+async def get_my_transactions(limit: int = Query(20), offset: int = Query(0), current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)):
+    return APIResponse(
+        data=await WalletService.get_history(current_user, limit=limit, skip=offset, db=db),
+        message="Historical financial transactions for requested account have been successfully compiled and retrieved",
+        status=200,
+    )
