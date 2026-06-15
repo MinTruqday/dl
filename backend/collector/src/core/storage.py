@@ -1,10 +1,7 @@
-import os
-
 import aioboto3
 from botocore.exceptions import ClientError
 from core.config import settings
 from loguru import logger
-
 
 class CollectorStorage:
     def __init__(self):
@@ -40,16 +37,11 @@ class CollectorStorage:
             client = await self.get_client()
             await client.head_bucket(Bucket=self.bucket)
         except ClientError:
-            logger.info("The automated provisioning sequence is preparing the primary object storage bucket for incoming multimedia assets")
+            logger.info("Automated structural provisioning sequence preparing primary object storage dynamic bucket incoming multimedia assets")
             client = await self.get_client()
             await client.create_bucket(Bucket=self.bucket)
 
-    async def upload_local_file(
-        self,
-        object_name: str,
-        local_file_path: str,
-        content_type: str = "application/pdf",
-    ) -> str:
+    async def upload_local_file(self, object_name: str, local_file_path: str, content_type: str = "application/pdf") -> str:
         try:
             await self._ensure_bucket()
             client = await self.get_client()
@@ -59,11 +51,9 @@ class CollectorStorage:
                 Key=object_name,
                 ExtraArgs={"ContentType": content_type},
             )
-            url = f"{self.public_url}/{self.bucket}/{object_name}"
-            return url
+            return f"{self.public_url}/{self.bucket}/{object_name}"
         except Exception as e:
-            logger.error("The system encountered a critical network failure while attempting to securely transfer the file into the permanent object storage backend")
+            logger.error("System encountered critical structural network failure securely transferring operational file permanent object storage backend")
             raise e
-
 
 storage = CollectorStorage()

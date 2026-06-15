@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timezone
-
 from core.config import settings
 from core.repositories.base_repository import RepositoryFactory
 from core.schemas.collector import CollectionRequest
@@ -12,7 +11,6 @@ from uuid6 import uuid7
 
 router = APIRouter()
 
-
 @router.post("/triggers")
 async def trigger_collection(req: CollectionRequest):
     source = req.source
@@ -23,6 +21,7 @@ async def trigger_collection(req: CollectionRequest):
         "triggered_at": datetime.now(timezone.utc).isoformat(),
     }
     queue_name = ""
+    
     if source == "AnnaArchive":
         queue_name = "anna_archive_queue"
         payload["pages"] = pages
@@ -37,46 +36,44 @@ async def trigger_collection(req: CollectionRequest):
         payload["pages"] = pages
     else:
         raise HTTPException(
-            status_code=400, detail="The specified data collection source is currently not recognized or supported by the system"
+            status_code=400, 
+            detail="Specified data collection source is not recognized or supported by current system configuration"
         )
 
     try:
         await mq_client.publish(queue_name, payload)
-        logger.info("A new background data collection process has been successfully queued and initiated for the requested source")
+        logger.info("Background data collection process successfully queued and initiated for requested data source")
         return {
             "status": "success",
             "job_id": payload["job_id"],
-            "message": "The automated data collection process has been successfully initiated and is now running in the background",
+            "message": "Automated data collection process successfully initiated and running in background infrastructure",
         }
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to initiate the background data collection process")
+        logger.error("System encountered unexpected error attempting to initiate background data collection process")
         raise HTTPException(
-            status_code=500, detail="The system was unable to safely queue the requested data collection process due to an internal service interruption"
+            status_code=500, 
+            detail="System unable to queue requested data collection process due to internal service interruption"
         )
-
 
 @router.post("/pause")
 async def stop_collection():
     try:
         if mq_client.channel:
             await mq_client.channel.close()
-        logger.info("The active data collection process has been successfully paused following the administrative command")
+        logger.info("Active data collection process successfully paused following administrative intervention command")
         return {
             "status": "success",
-            "message": "The administrative stop signal has been acknowledged and the active collection process is safely paused",
+            "message": "Administrative stop signal acknowledged and active collection process safely paused",
         }
     except Exception:
-        logger.error("The system encountered an unexpected error while attempting to transmit the pause signal to the active collection process")
+        logger.error("System encountered unexpected error attempting to transmit pause signal to collection process")
         raise HTTPException(
-            status_code=500, detail="The system was unable to transmit the pause signal to the background workers due to a communication interruption"
+            status_code=500, 
+            detail="System unable to transmit pause signal to background workers due to communication interruption"
         )
-
 
 @router.get("/active-jobs")
 async def get_active_jobs():
-    mongo_uri = settings.MONGODB_URI
-    client = AsyncIOMotorClient(mongo_uri)
-    db = client.get_default_database()
     active_collectors = (
         await RepositoryFactory.get("collection_jobs")
         .find({"status": {"$in": ["running", "pending"]}})
@@ -88,12 +85,8 @@ async def get_active_jobs():
     ]
     return jobs
 
-
 @router.get("/stats")
 async def get_collector_stats():
-    mongo_uri = settings.MONGODB_URI
-    client = AsyncIOMotorClient(mongo_uri)
-    db = client.get_default_database()
     total_docs = await RepositoryFactory.get("documents").count_documents({})
     total_assets = await RepositoryFactory.get("archives").count_documents({})
     recent_crawls = (
@@ -121,7 +114,6 @@ async def get_collector_stats():
         "active_sources": ["AnnaArchive", "NXBST", "NXBGD", "CTAN"],
         "status": "operational",
     }
-
 
 @router.get("/logs")
 async def get_collector_logs():

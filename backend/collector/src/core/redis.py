@@ -1,9 +1,6 @@
-import os
-
 import redis.asyncio as redis
 from core.config import settings
 from loguru import logger
-
 
 class RedisDeduplicator:
     def __init__(self):
@@ -11,14 +8,12 @@ class RedisDeduplicator:
         self.r = redis.from_url(url, decode_responses=True)
 
     async def is_collected(self, key_type: str, value: str) -> bool:
-
         redis_key = f"Collector:dedup:{key_type}"
         return await self.r.sismember(redis_key, value)
 
     async def mark_collected(self, key_type: str, value: str):
         redis_key = f"Collector:dedup:{key_type}"
         await self.r.sadd(redis_key, value)
-        logger.debug("The specified unique resource identifier has been successfully marked as collected in the remote caching system")
-
+        logger.debug("Specified unique structural resource identifier successfully marked collected active remote caching operational system")
 
 dedup = RedisDeduplicator()

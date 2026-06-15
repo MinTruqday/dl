@@ -1,17 +1,12 @@
 import asyncio
-import random
 from contextlib import asynccontextmanager
-
 import aiohttp
 from fake_useragent import UserAgent
 from loguru import logger
 from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
 
-ua = UserAgent(
-    os=["windows", "macos"], browsers=["chrome", "edge", "firefox", "safari"]
-)
-
+ua = UserAgent(os=["windows", "macos"], browsers=["chrome", "edge", "firefox", "safari"])
 
 @asynccontextmanager
 async def managed_browser(headless=True):
@@ -35,20 +30,19 @@ async def managed_browser(headless=True):
         )
         yield browser
     except Exception:
-        logger.error("The automated browser environment failed to initialize or execute due to an underlying process configuration issue")
+        logger.error("Automated structural browser environment failed initializing safely executing underlying process system configuration issue")
         raise
     finally:
         if browser:
             try:
                 await browser.close()
             except Exception:
-                logger.warning("The background cleanup routine encountered a delay while attempting to safely close the automated browser instance")
+                logger.warning("Background cleanup operational routine encountered unexpected delay safely closing functional automated browser instance")
         if playwright:
             try:
                 await playwright.stop()
             except Exception:
-                logger.warning("The background cleanup routine encountered a resource lock while attempting to terminate the rendering engine instance")
-
+                logger.warning("Background cleanup structural routine encountered resource lock actively attempting terminate primary rendering engine")
 
 async def get_stealth_context(browser):
     context = await browser.new_context(
@@ -58,10 +52,7 @@ async def get_stealth_context(browser):
     )
     return context
 
-
-async def download_file_with_retry(
-    url: str, dest_path: str, timeout: int = 300, max_retries: int = 3
-):
+async def download_file_with_retry(url: str, dest_path: str, timeout: int = 300, max_retries: int = 3):
     for attempt in range(max_retries):
         try:
             async with aiohttp.ClientSession() as session:
@@ -75,11 +66,11 @@ async def download_file_with_retry(
                                 f.write(chunk)
                         return True
                     else:
-                        logger.error("The network request to the specified remote resource failed due to an unexpected hyper text transfer protocol status code")
+                        logger.error("Network transfer request specified remote structural resource failed unexpected operational protocol numeric status code")
         except Exception:
-            logger.warning("A temporary network disruption occurred during the download process so the system is preparing an automated retry sequence")
+            logger.warning("Temporary dynamic network disruption occurred processing active download system preparing automated retry functional sequence")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2**attempt)
             else:
-                logger.error("The remote file download process failed permanently because all automated retry attempts have been exhausted")
+                logger.error("Remote file download operational process failed permanently exhausted all configured automated structural retry attempts")
     return False
