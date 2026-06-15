@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [authentication, content, finance, management, agentic_ai, realtime, notification, collector]
+        service: [authentication, content, finance, management, agentic_ai, realtime, notification, collector, editor, messaging, worker]
     
     steps:
       - name: Checkout repository

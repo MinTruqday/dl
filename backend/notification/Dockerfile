@@ -10,13 +10,15 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY signal/requirements.txt .
+COPY notification/requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY signal/src/ ./src/
+COPY notification/src/ ./src/
 COPY core/ ./core/
 
-EXPOSE 8150
+EXPOSE 8000
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8150"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
 

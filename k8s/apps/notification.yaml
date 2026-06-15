@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: authentication-deployment
+  name: notification-deployment
   namespace: doclib-production
   labels:
-    app: authentication-service
+    app: notification-service
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: authentication-service
+      app: notification-service
   template:
     metadata:
       labels:
-        app: authentication-service
+        app: notification-service
     spec:
       containers:
-        - name: authentication-service
-          image: doclib-registry/authentication:latest
+        - name: notification-service
+          image: doclib-registry/notification:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: authentication-service
+  name: notification-service
   namespace: doclib-production
 spec:
   selector:
-    app: authentication-service
+    app: notification-service
   ports:
     - protocol: TCP
       port: 80

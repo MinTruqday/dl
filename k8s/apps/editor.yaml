@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: authentication-deployment
+  name: editor-deployment
   namespace: doclib-production
   labels:
-    app: authentication-service
+    app: editor-service
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: authentication-service
+      app: editor-service
   template:
     metadata:
       labels:
-        app: authentication-service
+        app: editor-service
     spec:
       containers:
-        - name: authentication-service
-          image: doclib-registry/authentication:latest
+        - name: editor-service
+          image: doclib-registry/editor:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -28,11 +28,11 @@ spec:
                 name: doclib-secrets
           resources:
             requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
-              cpu: "1000m"
+              cpu: "500m"
               memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
           livenessProbe:
             httpGet:
               path: /health
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: authentication-service
+  name: editor-service
   namespace: doclib-production
 spec:
   selector:
-    app: authentication-service
+    app: editor-service
   ports:
     - protocol: TCP
       port: 80

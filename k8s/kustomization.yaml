@@ -1,4 +1,4 @@
-namespace: doclib
+namespace: doclib-production
 
 resources:
   - namespace.yaml
@@ -14,13 +14,14 @@ resources:
   - apps/agentic_ai.yaml
   - apps/authentication.yaml
   - apps/collector.yaml
-  - apps/compiler.yaml
-  - apps/contact.yaml
+  - apps/editor.yaml
+  - apps/messaging.yaml
   - apps/content.yaml
   - apps/finance.yaml
-  - apps/provision.yaml
-  - apps/signal.yaml
-  - apps/websocket.yaml
+  - apps/management.yaml
+  - apps/notification.yaml
+  - apps/realtime.yaml
+  - apps/worker.yaml
   - apps/frontend.yaml
   - ingress/ingress.yaml
 

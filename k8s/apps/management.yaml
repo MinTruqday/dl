@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: authentication-deployment
+  name: management-deployment
   namespace: doclib-production
   labels:
-    app: authentication-service
+    app: management-service
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: authentication-service
+      app: management-service
   template:
     metadata:
       labels:
-        app: authentication-service
+        app: management-service
     spec:
       containers:
-        - name: authentication-service
-          image: doclib-registry/authentication:latest
+        - name: management-service
+          image: doclib-registry/management:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
@@ -51,11 +51,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: authentication-service
+  name: management-service
   namespace: doclib-production
 spec:
   selector:
-    app: authentication-service
+    app: management-service
   ports:
     - protocol: TCP
       port: 80

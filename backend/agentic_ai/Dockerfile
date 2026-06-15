@@ -36,7 +36,7 @@ COPY --chown=appuser:appuser core/ ./core/
 
 USER appuser
 
-EXPOSE 8400
+EXPOSE 8000
 
-CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8400 --timeout 1200"]
+CMD ["bash", "-c", "gunicorn src.main:app -w 1 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 --timeout 1200"]
 
