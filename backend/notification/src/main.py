@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     logger.info("Notification service has been successfully initialized and is ready to process incoming requests")
     yield
 
-app = FastAPI(title="DocLib Notification Service", version=settings.VERSION, lifespan=lifespan)
+app = FastAPI(title="DocLib Notification", version=settings.VERSION, lifespan=lifespan)
 app.middleware("http")(add_trace_id_header)
 
 app.add_middleware(

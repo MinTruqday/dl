@@ -1,5 +1,4 @@
 from typing import Any
-
 from core.dependency import RateLimiter, get_current_user, get_db
 from core.response import APIResponse
 from core.schemas.user import (
@@ -12,24 +11,19 @@ from core.schemas.user import (
 )
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr
-from src.services.auth_service import AuthService
+from src.services.auth import AuthService
 
 router = APIRouter(prefix="/auth")
 
-
 @router.get("/me", response_model=APIResponse[UserResponse])
-async def read_users_me(
-    current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
-):
+async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
     user_data = current_user.model_dump()
-    user_data["has_passkey"] = (
-        len(current_user.passkeys) > 0 if current_user.passkeys else False
-    )
+    user_data["has_passkey"] = len(current_user.passkeys) > 0 if current_user.passkeys else False
     return APIResponse(
-        data=user_data, message="The requested personal profile information has been successfully retrieved from the system records", status=status.HTTP_200_OK
+        data=user_data,
+        message="Requested personal profile information successfully retrieved from the system records",
+        status=status.HTTP_200_OK
     )
-
 
 @router.post(
     "/register",
@@ -37,16 +31,13 @@ async def read_users_me(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(RateLimiter(calls=3, period=60))],
 )
-async def register_user(
-    user_in: UserCreate, request: Request, db=Depends(get_db)
-) -> Any:
+async def register_user(user_in: UserCreate, request: Request, db=Depends(get_db)) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.register_user(user_in, client_ip, db=db),
-        message="Your account has been registered successfully so please proceed to the login gateway to access your dashboard",
+        message="Account registered successfully please proceed to login gateway to access your dashboard",
         status=status.HTTP_201_CREATED,
     )
-
 
 @router.post(
     "/login",
@@ -60,65 +51,52 @@ async def login(
 ) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await AuthService.login_user(
-            form_data.username, form_data.password, client_ip, db=db
-        ),
-        message="The user authentication process was completed successfully and access has been granted",
+        data=await AuthService.login_user(form_data.username, form_data.password, client_ip, db=db),
+        message="User authentication process completed successfully and system access has been granted",
         status=status.HTTP_200_OK,
     )
 
-
 @router.post("/forgot-password", response_model=APIResponse[Any])
-async def forgot_password(
-    payload: ForgotPasswordRequest, request: Request, db=Depends(get_db)
-) -> Any:
+async def forgot_password(payload: ForgotPasswordRequest, request: Request, db=Depends(get_db)) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.forgot_password(payload.email, client_ip, db=db),
-        message="A password reset request has been initiated and the instructions are being sent to the registered address",
+        message="Password reset request initiated and instructions are being sent to registered address",
         status=status.HTTP_200_OK,
     )
-
 
 @router.post("/reset-password", response_model=APIResponse[Any])
-async def reset_password(
-    payload: ResetPasswordRequest, request: Request, db=Depends(get_db)
-) -> Any:
+async def reset_password(payload: ResetPasswordRequest, request: Request, db=Depends(get_db)) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
-        data=await AuthService.reset_password(
-            payload.token, payload.new_password, client_ip, db=db
-        ),
-        message="The account password has been successfully updated and secured",
+        data=await AuthService.reset_password(payload.token, payload.new_password, client_ip, db=db),
+        message="Account password has been successfully updated and secured within the system",
         status=status.HTTP_200_OK,
     )
 
-
 @router.post("/verify-code", response_model=APIResponse[Any])
-async def verify_code(
-    payload: VerifyCodeRequest, request: Request, db=Depends(get_db)
-) -> Any:
+async def verify_code(payload: VerifyCodeRequest, request: Request, db=Depends(get_db)) -> Any:
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.verify_reset_code(payload.token, client_ip, db=db),
-        message="The provided verification code has been successfully validated by the system",
+        message="Provided verification code has been successfully validated by the authentication system",
         status=status.HTTP_200_OK,
     )
 
-
 @router.get("/google/login", response_model=APIResponse[Any])
-async def google_login(db=Depends(get_db)):
-    auth_url = await AuthService.get_google_auth_url(db=db)
+async def google_login():
+    auth_url = await AuthService.get_google_auth_url()
     return APIResponse(
-        data={"url": auth_url}, message="The secure authentication gateway link for the external provider has been successfully generated", status=200
+        data={"url": auth_url},
+        message="Secure authentication gateway link for external provider has been successfully generated",
+        status=200
     )
-
 
 @router.get("/google/callback", response_model=APIResponse[Any])
 async def google_callback(code: str, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else "unknown"
     return APIResponse(
         data=await AuthService.handle_google_callback(code, client_ip, db=db),
-        message="The external authentication process has been completed successfully",
+        message="External authentication process completed successfully and system access has been granted",
         status=200,
     )
