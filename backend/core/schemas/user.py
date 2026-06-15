@@ -55,11 +55,9 @@ class UserBase(BaseModel):
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
     creator_status: CreatorStatusEnum = CreatorStatusEnum.NONE
     is_verified: bool = False
-    storage_limit: int = (
-        Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)
-        * 1024
-        * 1024
-        * 1024
+    storage_limit: int = Field(
+        default=settings.DEFAULT_PAGE_LIMIT * 1024 * 1024 * 1024,
+        le=settings.MAX_PAGE_LIMIT * 1024 * 1024 * 1024
     )
     ai_tier: AITierEnum = AITierEnum.BASIC
 

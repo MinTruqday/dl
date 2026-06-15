@@ -8,7 +8,6 @@ from src.services.profile_service import ProfileService
 from src.services.setting_service import SettingService
 from src.services.identity_service import IdentityService
 from src.services.privacy_service import PrivacyService
-from src.services.library_service import LibraryService
 from pydantic import BaseModel
 import json
 import io

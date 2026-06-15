@@ -4,8 +4,13 @@ from core.dependency import get_db, require_role
 from core.schemas.user import RoleEnum
 from core.response import APIResponse
 from src.services.banner_service import BannerService
-from core.schemas.banner import BannerRequest
 from pydantic import BaseModel
+
+class BannerRequest(BaseModel):
+    title: str
+    image_url: str
+    target_url: Optional[str] = None
+    is_active: bool = True
 
 router = APIRouter(prefix="/banners")
 

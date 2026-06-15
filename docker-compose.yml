@@ -245,11 +245,11 @@ services:
     networks:
       - doclib_network
 
-  collector:
+  crawler:
     build:
       context: ./backend
-      dockerfile: ./collector/Dockerfile
-    container_name: doclib_collector
+      dockerfile: ./crawler/Dockerfile
+    container_name: doclib_crawler
     restart: always
     env_file:
       - .env
@@ -257,17 +257,17 @@ services:
       - "8250:8250"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.collector.rule=PathPrefix(`/thu-thap`)"
-      - "traefik.http.services.collector.loadbalancer.server.port=8250"
+      - "traefik.http.routers.crawler.rule=PathPrefix(`/collector`)"
+      - "traefik.http.services.crawler.loadbalancer.server.port=8250"
     depends_on:
       - rabbitmq
       - mongodb
       - redis
       - minio
     volumes:
-      - ./backend/collector/src:/app/src
+      - ./backend/crawler/src:/app/src
       - ./backend/core:/app/core
-      - ./backend/logs/collector:/app/logs
+      - ./backend/logs/crawler:/app/logs
     command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8250 > /app/logs/collector_startup.log 2>&1"
     networks:
       - doclib_network
@@ -297,29 +297,6 @@ services:
     networks:
       - doclib_network
 
-  #   finance:
-  #     build:
-  #       context: ./backend/finance
-  #       dockerfile: Dockerfile
-  #     container_name: doclib_finance
-  #     restart: always
-  #     env_file:
-  #       - .env
-  #     ports:
-  #       - "8350:8350"
-  #     labels:
-  #       - "traefik.enable=true"
-  #       - "traefik.http.routers.finance.rule=PathPrefix(`/wallet`) || PathPrefix(`/deposit`) || PathPrefix(`/withdrawal`) || PathPrefix(`/coupon`) || PathPrefix(`/monetization`)"
-  #       - "traefik.http.services.finance.loadbalancer.server.port=8350"
-  #     depends_on:
-  #       - mongodb
-  #       - redis
-  #     volumes:
-  #       - ./backend/finance/src:/app/src
-  #       - ./backend/logs/finance:/app/logs
-  #     networks:
-  #       - doclib_network
-  #
   security:
     build:
       context: ./backend
@@ -370,55 +347,6 @@ services:
     networks:
       - doclib_network
 
-  #   contact:
-  #     build:
-  #       context: ./backend/contact
-  #       dockerfile: Dockerfile
-  #     container_name: doclib_contact
-  #     restart: always
-  #     env_file:
-  #       - .env
-  #     ports:
-  #       - "8100:8100"
-  #     labels:
-  #       - "traefik.enable=true"
-  #       - "traefik.http.routers.contact.rule=PathPrefix(`/contact`)"
-  #       - "traefik.http.services.contact.loadbalancer.server.port=8100"
-  #     depends_on:
-  #       - mongodb
-  #       - redis
-  #     volumes:
-  #       - ./backend/contact/src:/app/src
-  #       - ./backend/logs/contact:/app/logs
-  #     networks:
-  #       - doclib_network
-  #
-  #   signal:
-  #     build:
-  #       context: ./backend/signal
-  #       dockerfile: Dockerfile
-  #     container_name: doclib_signal
-  #     restart: always
-  #     env_file:
-  #       - .env
-  #     ports:
-  #       - "8150:8150"
-  #     labels:
-  #       - "traefik.enable=true"
-  #       - "traefik.http.routers.signal.rule=PathPrefix(`/notification`)"
-  #       - "traefik.http.services.signal.loadbalancer.server.port=8150"
-  #     depends_on:
-  #       - mongodb
-  #       - redis
-  #     volumes:
-  #       - ./backend/signal/src:/app/src
-  #       - ./backend/logs/signal:/app/logs
-  #     networks:
-  #       - doclib_network
-  #
-  #     networks:
-  #       - doclib_network
-  #
   websocket:
     build:
       context: ./backend
@@ -442,29 +370,6 @@ services:
     networks:
       - doclib_network
 
-  #   provision:
-  #     build:
-  #       context: ./backend/provision
-  #       dockerfile: Dockerfile
-  #     container_name: doclib_provision
-  #     restart: always
-  #     env_file:
-  #       - .env
-  #     ports:
-  #       - "8050:8050"
-  #     labels:
-  #       - "traefik.enable=true"
-  #       - "traefik.http.routers.provision.rule=PathPrefix(`/user`) || PathPrefix(`/audit`) || PathPrefix(`/telemetry`) || PathPrefix(`/operation`) || PathPrefix(`/quota`)"
-  #       - "traefik.http.services.provision.loadbalancer.server.port=8050"
-  #     depends_on:
-  #       - mongodb
-  #       - redis
-  #     volumes:
-  #       - ./backend/provision/src:/app/src
-  #       - ./backend/logs/provision:/app/logs
-  #     networks:
-  #       - doclib_network
-  #
   content:
     build:
       context: ./backend

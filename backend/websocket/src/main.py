@@ -4,7 +4,7 @@ from core.database import db_client
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-from src.router import editor_ws, message_ws
+from src.router import editor_ws_router, message_ws_router
 
 app = FastAPI(title="WebSocket Service", version=settings.VERSION)
 
@@ -20,8 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(editor_ws.router, prefix="/editor")
-app.include_router(message_ws.router, prefix="/messages")
+app.include_router(editor_ws_router.router, prefix="/editor")
+app.include_router(message_ws_router.router, prefix="/messages")
 
 
 @app.on_event("startup")
