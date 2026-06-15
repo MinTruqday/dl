@@ -206,7 +206,7 @@ class CTANCollector:
                 if found_pdf:
                     pdf_filename = os.path.basename(found_pdf)
                     minio_url_pdf = await storage.upload_local_file(
-                        f"tài liệu/ctan/{pdf_filename}", found_pdf
+                        f"documents/ctan/{pdf_filename}", found_pdf
                     )
                     logger.info("The extracted portable document format file has been successfully uploaded to the permanent storage system")
                     payload["pdf_url"] = minio_url_pdf
@@ -246,7 +246,7 @@ class CTANCollector:
                     md_f.write(md_content)
 
                 minio_url_md = await storage.upload_local_file(
-                    f"tài liệu/ctan/{md_filename}", md_path
+                    f"documents/ctan/{md_filename}", md_path
                 )
                 logger.info("The extracted source code has been successfully compiled into a markdown format and securely uploaded")
                 payload["markdown_url"] = minio_url_md

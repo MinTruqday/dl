@@ -395,13 +395,13 @@ AI RESPONSE {actual}
 JSON SCORE""",
         PromptType.STORAGE_FILE_ANALYSIS: """SYSTEM IDENTITY The Core Artificial Intelligence System Document Analysis Engine
 OBJECTIVE Analyze the provided document text and extract metadata including summary filename tags entities moderation status and folder routing
-OUTPUT_LANGUAGE Must be Vietnamese unless specified otherwise
+OUTPUT_LANGUAGE Must match the language of the document content
 OUTPUT_FORMAT You must output ONLY a valid JSON object matching the schema below No explanations
 
 JSON SCHEMA
 {{
-    "summary": "<2-3 câu tóm tắt nội dung>",
-    "suggested_name": "<Tên file ngắn gọn đúng trọng tâm bắt buộc phải có đuôi .{ext}>",
+    "summary": "<2-3 sentence summary of the document content>",
+    "suggested_name": "<Short concise filename that captures the main topic must include the .{ext} extension>",
     "tags": ["<tag1>", "<tag2>", "<tag3>"],
     "entities": {{
         "people": [],
@@ -410,7 +410,7 @@ JSON SCHEMA
         "amounts": []
     }},
     "is_safe": <boolean false if containing violent adult or illegal content>,
-    "target_folder_id": "<ID thư mục phù hợp nhất từ danh sách {folder_str} hoặc NONE nếu không phù hợp>"
+    "target_folder_id": "<ID of the most appropriate folder from the list {folder_str} or NONE if no match>"
 }}
 
 FILE EXTENSION {ext}

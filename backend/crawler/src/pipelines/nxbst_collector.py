@@ -200,7 +200,7 @@ class NXBSTStreamState:
 
             logger.info("The compiled document is being securely transferred to the permanent object storage backend")
             minio_url = await storage.upload_local_file(
-                f"tài liệu/nxbst/{final_pdf_name}", pdf_path
+                f"documents/nxbst/{final_pdf_name}", pdf_path
             )
 
             if minio_url:
@@ -342,7 +342,7 @@ class NXBSTCollector:
                 logger.info("The extraction sequence has successfully identified the primary document metadata and is proceeding to the download phase")
 
                 read_btn_css = (
-                    '#whatchNow, a:has-text("Đọc sách"), a:has-text("Xem ngay")'
+                    '#whatchNow, a:has-text("Read Book"), a:has-text("View Now")'
                 )
                 read_btn = await page.query_selector(read_btn_css)
 

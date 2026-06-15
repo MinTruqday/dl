@@ -319,7 +319,7 @@ class AnnaArchiveCollector:
             if success:
                 logger.info("The remote document has been successfully downloaded and securely saved to the temporary storage path")
                 minio_url = await storage.upload_local_file(
-                    f"tài liệu/anna_archive/{filename}", target_local
+                    f"documents/anna_archive/{filename}", target_local
                 )
 
             if os.path.exists(target_local):

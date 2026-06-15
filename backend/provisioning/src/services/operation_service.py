@@ -269,7 +269,7 @@ class OperationService:
                             elif key.startswith("images/"):
                                 categories["User Images"]["count"] += 1
                                 categories["User Images"]["size"] += size
-                            elif key.startswith("tài liệu/"):
+                            elif key.startswith("documents/"):
                                 categories["User Documents"]["count"] += 1
                                 categories["User Documents"]["size"] += size
                             else:

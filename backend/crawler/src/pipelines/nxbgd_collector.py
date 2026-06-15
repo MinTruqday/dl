@@ -113,7 +113,7 @@ class NXBGDCollector:
 
             logger.info("The compiled document is being securely transferred to the permanent object storage backend")
             minio_url = await storage.upload_local_file(
-                f"tài liệu/nxbgd/{final_pdf_name}", pdf_path
+                f"documents/nxbgd/{final_pdf_name}", pdf_path
             )
 
             if minio_url:
