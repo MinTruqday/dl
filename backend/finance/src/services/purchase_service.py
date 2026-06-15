@@ -139,7 +139,7 @@ class PurchaseService:
                 if should_close_session:
                     await session.abort_transaction()
                 return {"message": "The specified digital document has already been purchased and is accessible in your library", "status": "owned"}
-            author_id = doc.get("author_id")
+            creator_id = doc.get("creator_id")
 
             try:
                 deduct_result = await db["wallets"].update_one(
@@ -153,9 +153,9 @@ class PurchaseService:
                     raise HTTPException(
                         status_code=400, detail="The transaction cannot proceed due to insufficient funds available in the digital wallet"
                     )
-                if author_id:
+                if creator_id:
                     await db["wallets"].update_one(
-                        {"_id": author_id},
+                        {"_id": creator_id},
                         {"$inc": {"balance": price}},
                         upsert=True,
                         session=session,
@@ -178,7 +178,7 @@ class PurchaseService:
                     note="Payment processed for digital document acquisition",
                 )
                 tx_seller = Transaction(
-                    user_id=author_id,
+                    user_id=creator_id,
                     type=TransactionType.RECEIVE,
                     amount=price,
                     note="Revenue earned from the sale of a published digital document",
@@ -193,11 +193,11 @@ class PurchaseService:
                 if should_close_session:
                     await session.commit_transaction()
 
-                if author_id:
+                if creator_id:
                     notif_id = str(uuid7())
                     notification = {
                         "_id": notif_id,
-                        "target_user_id": author_id,
+                        "target_user_id": creator_id,
                         "title": "New transaction recorded",
                         "body": "A user has successfully purchased your published document",
                         "is_read": False,
@@ -215,7 +215,7 @@ class PurchaseService:
                                     await client.post(
                                         f"{settings.SIGNAL_URL}/notifications/dispatch",
                                         json={
-                                            "target_user_id": author_id,
+                                            "target_user_id": creator_id,
                                             "title": notification["title"],
                                             "body": notification["body"],
                                             "type": "purchase",
@@ -287,7 +287,7 @@ class PurchaseService:
         price = purchase.get("price", 0)
         doc_id = purchase.get("document_id")
         doc = await db["documents"].find_one({"_id": doc_id}) if doc_id else None
-        author_id = doc.get("author_id") if doc else None
+        creator_id = doc.get("creator_id") if doc else None
 
         try:
             await db["wallets"].update_one(
@@ -296,9 +296,9 @@ class PurchaseService:
                 upsert=True,
                 session=session,
             )
-            if author_id:
+            if creator_id:
                 deduct_result = await db["wallets"].update_one(
-                    {"_id": author_id, "balance": {"$gte": price}},
+                    {"_id": creator_id, "balance": {"$gte": price}},
                     {"$inc": {"balance": -price}},
                     session=session,
                 )
@@ -327,7 +327,7 @@ class PurchaseService:
                 note="Refund issued for previously cancelled purchase transaction",
             )
             tx_refund_seller = Transaction(
-                user_id=author_id,
+                user_id=creator_id,
                 type=TransactionType.REFUND,
                 amount=-price,
                 note="Funds deducted for previously cancelled purchase transaction refund",

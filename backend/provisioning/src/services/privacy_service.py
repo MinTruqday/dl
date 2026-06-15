@@ -12,7 +12,7 @@ class PrivacyService:
         user_id = str(current_user.id)
         comments = await db["comments"].find({"user_id": user_id}).to_list(length=1000)
         documents = (
-            await db["documents"].find({"author_id": user_id}).to_list(length=1000)
+            await db["documents"].find({"creator_id": user_id}).to_list(length=1000)
         )
         reactions = (
             await db["reactions"].find({"user_id": user_id}).to_list(length=1000)
@@ -46,7 +46,7 @@ class PrivacyService:
                 }
             },
         )
-        await db["documents"].delete_many({"author_id": user_id})
+        await db["documents"].delete_many({"creator_id": user_id})
         await db["reactions"].delete_many({"user_id": user_id})
         if db_client.redis:
             await db_client.redis.delete(f"active_session:{user_id}")
@@ -74,7 +74,7 @@ class PrivacyService:
                 {"_id": str(current_user.id)}, {"password_hash": 0}
             ),
             "documents": await db["documents"]
-            .find({"author_id": user_id})
+            .find({"creator_id": user_id})
             .to_list(100),
             "comments": await db["comments"].find({"user_id": user_id}).to_list(500),
         }

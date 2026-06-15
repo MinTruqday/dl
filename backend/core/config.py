@@ -11,7 +11,7 @@ class Settings(BaseModel):
     CORS_ALLOWED_ORIGINS: str = os.getenv("CORS_ALLOWED_ORIGINS")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
-    PLATFORM_ADMIN_ID: str = os.getenv("PLATFORM_ADMIN_ID")
+    PLATFORM_SYSTEM_ID: str = os.getenv("PLATFORM_SYSTEM_ID")
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME")
     REDIS_URI: str = os.getenv("REDIS_URI")

@@ -43,7 +43,7 @@ class ReadingService:
             {
                 "$lookup": {
                     "from": "users",
-                    "localField": "doc.author_id",
+                    "localField": "doc.creator_id",
                     "foreignField": "_id",
                     "as": "author",
                 }

@@ -276,7 +276,7 @@ class CTANCollector:
                 "content_format": "zip",
                 "price": 0.0,
                 "visibility": "private",
-                "author_id": "ctan",
+                "creator_id": "ctan",
                 "status": "published",
                 "rag_status": "pending",
                 "views": 0,

@@ -21,7 +21,7 @@ router = APIRouter(prefix="/users")
 @router.get(
     "",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_all_users(
     limit: int = Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT),
@@ -49,7 +49,7 @@ async def update_user_role(user_id: str, req: UpdateRoleRequest, db=Depends(get_
 @router.put(
     "/{user_id}/status",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.ADMIN, RoleEnum.MODERATOR]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def update_user_status(
     user_id: str, req: UpdateStatusRequest, db=Depends(get_db)
@@ -63,7 +63,7 @@ async def update_user_status(
 @router.post(
     "/{user_id}/warn",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def warn_user(
     user_id: str,
@@ -80,7 +80,7 @@ async def warn_user(
 @router.post(
     "/{user_id}/lock",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def lock_user(
     user_id: str,
@@ -99,7 +99,7 @@ async def lock_user(
 @router.post(
     "/{user_id}/shadowban",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def shadowban_user(
     user_id: str,
@@ -116,11 +116,11 @@ async def shadowban_user(
 @router.get(
     "/{user_id}/notes",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
-async def get_moderator_notes(user_id: str, db=Depends(get_db)):
+async def get_notes(user_id: str, db=Depends(get_db)):
     return APIResponse(
-        data=await UserService.get_moderator_notes(user_id, db=db),
+        data=await UserService.get_notes(user_id, db=db),
         message="The internal administrative moderation notes have been successfully retrieved",
     )
 
@@ -128,16 +128,16 @@ async def get_moderator_notes(user_id: str, db=Depends(get_db)):
 @router.post(
     "/{user_id}/notes",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
-async def add_moderator_note(
+async def add_note(
     user_id: str,
     req: NoteRequest,
     current_user: UserInDB = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
-        data=await UserService.add_moderator_note(
+        data=await UserService.add_note(
             user_id, req.note, current_user, db=db
         ),
         message="The internal administrative moderation note has been successfully saved to the user profile",

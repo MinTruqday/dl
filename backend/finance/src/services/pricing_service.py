@@ -14,7 +14,7 @@ class PricingService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await db["documents"].find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located in the primary storage repository")

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/drafts")
 @router.get(
     "/queue",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def get_approval_queue(
     cursor: str = None,
@@ -30,7 +30,7 @@ async def get_approval_queue(
 @router.post(
     "/{document_id}/moderate",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def moderate_document(
     document_id: str,

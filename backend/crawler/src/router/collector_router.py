@@ -109,7 +109,7 @@ async def get_collector_stats():
         else None
     )
     total_collected = await RepositoryFactory.get("documents").count_documents(
-        {"author_id": {"$regex": ".*collector.*"}}
+        {"creator_id": {"$regex": ".*collector.*"}}
     )
     return {
         "total_documents": total_docs,

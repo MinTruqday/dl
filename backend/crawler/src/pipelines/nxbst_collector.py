@@ -214,7 +214,7 @@ class NXBSTStreamState:
                     "content_format": "pdf",
                     "price": 0.0,
                     "visibility": "private",
-                    "author_id": "nxbst",
+                    "creator_id": "nxbst",
                     "status": "published",
                     "views": 0,
                     "average_rating": 0.0,

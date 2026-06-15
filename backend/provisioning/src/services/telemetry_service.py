@@ -87,12 +87,12 @@ class TelemetryService:
         }
 
     @staticmethod
-    async def get_moderator_activity_log(moderator_id: str, db=None) -> list:
+    async def get_activity_log(user_id: str, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         return (
             await RepositoryFactory.get("moderator_activity")
-            .find({"moderator_id": moderator_id})
+            .find({"actor_id": actor_id})
             .sort("timestamp", -1)
             .to_list(length=100)
         )

@@ -87,7 +87,7 @@ class DocumentCreate(DocumentBase):
 
 class DocumentInDB(DocumentBase):
     id: str = Field(default_factory=lambda: str(uuid7()), alias="_id")
-    author_id: str
+    creator_id: str
     status: DocumentStatus = DocumentStatus.DRAFT
     drm_fingerprint: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -99,7 +99,7 @@ class DocumentInDB(DocumentBase):
 
 class DocumentResponse(DocumentBase):
     id: str = Field(alias="_id")
-    author_id: str
+    creator_id: str
     status: DocumentStatus
     created_at: datetime
     views: int = 0

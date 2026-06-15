@@ -11,7 +11,7 @@ router = APIRouter(prefix="/telemetry")
 
 
 @router.get(
-    "/thong-ke",
+    "/stats",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -23,7 +23,7 @@ async def get_stats(db=Depends(get_db)):
 
 
 @router.get(
-    "/suc-khoe-he-thong",
+    "/health",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -35,7 +35,7 @@ async def get_sys_health(db=Depends(get_db)):
 
 
 @router.get(
-    "/kiem-tra",
+    "/audit",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
@@ -51,15 +51,15 @@ async def get_audit_logs(
 
 
 @router.get(
-    "/hoat-dong",
+    "/activity",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
-async def get_moderator_activity(
+async def get_activity(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):
     return APIResponse(
-        data=await TelemetryService.get_moderator_activity_log(
+        data=await TelemetryService.get_activity_log(
             str(current_user.id), db=db
         ),
         message="The administrative moderation activity logs have been successfully retrieved",

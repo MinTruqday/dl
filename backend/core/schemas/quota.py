@@ -28,7 +28,6 @@ class GlobalQuotaConfig(BaseModel):
     role_limits: Dict[str, QuotaLimit] = {
         "reader": QuotaLimit(daily_requests=0, daily_tokens=0),
         "author": QuotaLimit(daily_requests=0, daily_tokens=0),
-        "moderator": QuotaLimit(daily_requests=0, daily_tokens=0),
         "admin": QuotaLimit(daily_requests=math.inf, daily_tokens=math.inf),
     }
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

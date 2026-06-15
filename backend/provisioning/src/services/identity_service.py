@@ -3,7 +3,7 @@ import uuid
 from uuid6 import uuid7
 from fastapi import HTTPException
 from core.database import db_client
-from core.schemas.user import AuthorStatusEnum, KYCStatusEnum, RoleEnum
+from core.schemas.user import CreatorStatusEnum, KYCStatusEnum, RoleEnum
 from core.storage import upload_file
 from loguru import logger
 
@@ -43,12 +43,12 @@ class IdentityService:
             raise HTTPException(
                 status_code=403, detail="This action is restricted because only accounts with standard reader privileges are permitted to submit an author application"
             )
-        if current_user.author_status == AuthorStatusEnum.PENDING:
+        if current_user.creator_status == CreatorStatusEnum.PENDING:
             raise HTTPException(
                 status_code=400,
                 detail="Your previous application for author status is currently under active administrative review",
             )
-        if current_user.author_status == AuthorStatusEnum.SUSPENDED:
+        if current_user.creator_status == CreatorStatusEnum.SUSPENDED:
             raise HTTPException(
                 status_code=403,
                 detail="Your account is currently restricted by the administration and cannot apply for elevated author privileges",
@@ -66,7 +66,7 @@ class IdentityService:
                 if isinstance(application, dict)
                 else application if isinstance(application, str) else ""
             ),
-            "status": AuthorStatusEnum.PENDING,
+            "status": CreatorStatusEnum.PENDING,
             "created_at": datetime.now(timezone.utc),
         }
         await db["author_applications"].insert_one(application_data)
@@ -74,7 +74,7 @@ class IdentityService:
             {"_id": user_id},
             {
                 "$set": {
-                    "author_status": AuthorStatusEnum.PENDING,
+                    "creator_status": CreatorStatusEnum.PENDING,
                     "tos_accepted_at": datetime.now(timezone.utc),
                 }
             },
@@ -127,16 +127,16 @@ class IdentityService:
             raise HTTPException(
                 status_code=404, detail="The requested public member profile could not be located within the system records"
             )
-        author_id = str(author["_id"])
+        creator_id = str(author["_id"])
         docs = (
             await db["documents"]
-            .find({"author_id": author_id, "status": "PUBLISHED"})
+            .find({"creator_id": creator_id, "status": "PUBLISHED"})
             .sort("created_at", -1)
             .limit(10)
             .to_list(length=10)
         )
         return {
-            "_id": author_id,
+            "_id": creator_id,
             "full_name": author.get("full_name", "Anonymous Member"),
             "slug": author.get("slug", ""),
             "role": author.get("role", "READER"),

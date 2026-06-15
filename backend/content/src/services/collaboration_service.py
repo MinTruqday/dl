@@ -35,7 +35,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -159,7 +159,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -213,7 +213,7 @@ class CollaborationService:
                 status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
             )
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": invite["document_id"], "author_id": str(current_user.id)}
+            {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -246,7 +246,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -285,7 +285,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -319,7 +319,7 @@ class CollaborationService:
             {"_id": document_id},
             {
                 "$set": {
-                    "author_id": target_user_id,
+                    "creator_id": target_user_id,
                     "updated_at": datetime.now(timezone.utc),
                 },
                 "$pull": {"coauthors": target_user_id},
@@ -395,7 +395,7 @@ class CollaborationService:
                 status_code=404, detail="The detailed configuration for the specified collaboration environment could not be retrieved"
             )
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": invite["document_id"], "author_id": str(current_user.id)}
+            {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -423,7 +423,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -452,7 +452,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -491,7 +491,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -521,7 +521,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -548,7 +548,7 @@ class CollaborationService:
                 status_code=404, detail="The specified collaboration invitation could not be located or has already been processed by the recipient"
             )
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": invite["document_id"], "author_id": str(current_user.id)}
+            {"_id": invite["document_id"], "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -573,7 +573,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -605,7 +605,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -640,7 +640,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -678,7 +678,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -773,7 +773,7 @@ class CollaborationService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(
@@ -814,7 +814,7 @@ class CollaborationService:
         doc = await RepositoryFactory.get("documents").find_one({"_id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
-        if doc.get("author_id") == str(current_user.id):
+        if doc.get("creator_id") == str(current_user.id):
             raise HTTPException(status_code=400, detail="The authentication process has determined that you are already the primary administrative owner of this document")
         if str(current_user.id) in doc.get("coauthors", []):
             raise HTTPException(
@@ -832,7 +832,7 @@ class CollaborationService:
                 "_id": str(uuid7()),
                 "document_id": document_id,
                 "document_title": doc.get("title", "Untitled Document"),
-                "inviter_id": doc["author_id"],
+                "inviter_id": doc["creator_id"],
                 "inviter_name": "Owner",
                 "invitee_id": str(current_user.id),
                 "role": "editor",
@@ -862,7 +862,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -898,7 +898,7 @@ class CollaborationService:
             {
                 "_id": document_id,
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -943,7 +943,7 @@ class CollaborationService:
             {
                 "_id": task["document_id"],
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -978,7 +978,7 @@ class CollaborationService:
             {
                 "_id": task["document_id"],
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }
@@ -1010,7 +1010,7 @@ class CollaborationService:
             {
                 "_id": task["document_id"],
                 "$or": [
-                    {"author_id": str(current_user.id)},
+                    {"creator_id": str(current_user.id)},
                     {"coauthors": str(current_user.id)},
                 ],
             }

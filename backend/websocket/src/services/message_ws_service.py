@@ -193,7 +193,7 @@ class MessageConnectionManager:
             {"$set": {"is_read": True}},
         )
         await self.send_personal_message(
-            {"type": "messages_read", "data": {"reader_id": user_id}}, other_user_id
+            {"type": "messages_read", "data": {"viewer_id": user_id}}, other_user_id
         )
 
     async def _action_typing(self, user_id: str, data: dict):

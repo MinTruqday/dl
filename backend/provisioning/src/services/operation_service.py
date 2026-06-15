@@ -424,7 +424,7 @@ class OperationService:
         return []
 
     @staticmethod
-    async def handle_bug_report(data: dict, current_moderator, db=None) -> dict:
+    async def handle_bug_report(data: dict, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         report_id = str(uuid7())
@@ -434,7 +434,7 @@ class OperationService:
                 "title": data["title"],
                 "description": data["description"],
                 "status": "open",
-                "assigned_to": str(current_moderator.id),
+                "assigned_to": str(current_user.id),
                 "created_at": datetime.now(timezone.utc),
             }
         )
@@ -442,31 +442,31 @@ class OperationService:
         return {"message": "The system issue report has been successfully recorded and submitted for further investigation"}
 
     @staticmethod
-    async def assign_task(data: dict, current_moderator, db=None) -> dict:
+    async def assign_task(data: dict, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         task = {
             "_id": str(uuid7()),
-            "assigned_to": data["moderator_id"],
+            "assigned_to": data["user_id"],
             "title": data["title"],
             "status": "pending",
             "created_at": datetime.now(timezone.utc),
         }
-        await RepositoryFactory.get("moderator_tasks").insert_one(task)
+        await RepositoryFactory.get("tasks").insert_one(task)
         logger.info(
             "A new administrative task has been successfully generated and assigned to the specified moderation staff member"
         )
         return {"message": "The administrative task has been successfully assigned and logged into the system workflow"}
 
     @staticmethod
-    async def submit_policy_proposal(data: dict, current_moderator, db=None) -> dict:
+    async def submit_policy_proposal(data: dict, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         proposal_id = str(uuid7())
         await RepositoryFactory.get("policy_proposals").insert_one(
             {
                 "_id": proposal_id,
-                "author_id": str(current_moderator.id),
+                "creator_id": str(current_user.id),
                 "title": data["title"],
                 "content": data["content"],
                 "status": "pending",
@@ -502,7 +502,7 @@ class OperationService:
         return []
 
     @staticmethod
-    async def approve_withdrawal(withdrawal_id: str, admin_id: str, db=None) -> dict:
+    async def approve_withdrawal(withdrawal_id: str, system_id: str, db=None) -> dict:
         import httpx
         from core.config import settings
         from loguru import logger
@@ -527,7 +527,7 @@ class OperationService:
 
     @staticmethod
     async def reject_withdrawal(
-        withdrawal_id: str, reason: str, admin_id: str, db=None
+        withdrawal_id: str, reason: str, system_id: str, db=None
     ) -> dict:
         import httpx
         from core.config import settings

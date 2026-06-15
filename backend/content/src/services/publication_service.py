@@ -16,7 +16,7 @@ class PublicationService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": str(document_id), "author_id": user_id}
+            {"_id": str(document_id), "creator_id": user_id}
         )
         if not doc:
             raise HTTPException(
@@ -85,7 +85,7 @@ class PublicationService:
             db = db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
         await RepositoryFactory.get("documents").update_one(
-            {"_id": document_id, "author_id": user_id},
+            {"_id": document_id, "creator_id": user_id},
             {"$set": {"scheduled_publish_at": datetime.fromisoformat(publish_at)}},
         )
         logger.info(
@@ -100,7 +100,7 @@ class PublicationService:
         docs_collection = RepositoryFactory.get("documents")
         user_id = str(current_user.id)
         document = await docs_collection.find_one(
-            {"_id": document_id, "author_id": user_id}
+            {"_id": document_id, "creator_id": user_id}
         )
         if not document:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")

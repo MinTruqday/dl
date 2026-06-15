@@ -183,7 +183,7 @@ async def get_active_collector_jobs(db=Depends(get_db)):
 @router.post(
     "/users/{user_id}/shadowban",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def shadowban_user(
     payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
@@ -199,7 +199,7 @@ async def shadowban_user(
 @router.post(
     "/users/{user_id}/kyc/{status}",
     response_model=APIResponse[Any],
-    dependencies=[Depends(require_role([RoleEnum.MODERATOR, RoleEnum.ADMIN]))],
+    dependencies=[Depends(require_role([RoleEnum.ADMIN]))],
 )
 async def verify_kyc(
     payload: Any, current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)

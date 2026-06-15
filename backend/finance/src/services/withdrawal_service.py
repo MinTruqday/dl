@@ -268,7 +268,7 @@ class WithdrawalService:
 
     @staticmethod
     async def verify_withdrawal(
-        withdrawal_id: str, action: str, current_moderator, db=None, session=None
+        withdrawal_id: str, action: str, current_user, db=None, session=None
     ) -> dict:
         should_close_session = False
         if db is None:
@@ -297,7 +297,7 @@ class WithdrawalService:
                 status_code=404, detail="The system was unable to locate a withdrawal request matching the provided transaction identifier"
             )
 
-        if str(current_moderator.id) == withdrawal.get("user_id"):
+        if str(current_user.id) == withdrawal.get("user_id"):
             if should_close_session:
                 await session.abort_transaction()
                 await session.end_session()
@@ -322,7 +322,7 @@ class WithdrawalService:
                 {
                     "$set": {
                         "status": status,
-                        "processed_by": str(current_moderator.id),
+                        "processed_by": str(current_user.id),
                         "processed_at": datetime.now(timezone.utc),
                     }
                 },
@@ -360,7 +360,7 @@ class WithdrawalService:
             await db["audit_logs"].insert_one(
                 {
                     "action": f"WITHDRAWAL_{status}",
-                    "actor_id": str(current_moderator.id),
+                    "actor_id": str(current_user.id),
                     "withdrawal_id": withdrawal_id,
                     "bank_info_masked": masked_bank,
                     "timestamp": datetime.now(timezone.utc),

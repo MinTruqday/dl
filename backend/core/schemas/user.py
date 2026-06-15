@@ -15,7 +15,7 @@ class KYCStatusEnum(str, Enum):
     REJECTED = "REJECTED"
 
 
-class AuthorStatusEnum(str, Enum):
+class CreatorStatusEnum(str, Enum):
     NONE = "NONE"
     PENDING = "PENDING"
     APPROVED = "APPROVED"
@@ -26,9 +26,7 @@ class AuthorStatusEnum(str, Enum):
 class RoleEnum(str, Enum):
     GUEST = "guest"
     READER = "reader"
-    POTENTIAL_AUTHOR = "potential_author"
     AUTHOR = "author"
-    MODERATOR = "moderator"
     ADMIN = "admin"
 
 
@@ -55,7 +53,7 @@ class UserBase(BaseModel):
     permissions: List[str] = []
     donation_link: Optional[str] = None
     kyc_status: KYCStatusEnum = KYCStatusEnum.NONE
-    author_status: AuthorStatusEnum = AuthorStatusEnum.NONE
+    creator_status: CreatorStatusEnum = CreatorStatusEnum.NONE
     is_verified: bool = False
     storage_limit: int = (
         Query(default=settings.DEFAULT_PAGE_LIMIT, le=settings.MAX_PAGE_LIMIT)
@@ -65,7 +63,7 @@ class UserBase(BaseModel):
     )
     ai_tier: AITierEnum = AITierEnum.BASIC
 
-    @field_validator("kyc_status", "author_status", mode="before")
+    @field_validator("kyc_status", "creator_status", mode="before")
     @classmethod
     def validate_enum_case(cls, v: Any):
         if isinstance(v, str):

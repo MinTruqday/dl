@@ -9,7 +9,7 @@ from src.services.wallet_service import WalletService
 router = APIRouter(prefix="/wallets")
 
 
-@router.get("/me", response_model=APIResponse[Any])
+@router.get("/balance", response_model=APIResponse[Any])
 async def get_my_wallet(
     current_user: UserInDB = Depends(get_current_user), db=Depends(get_db)
 ):

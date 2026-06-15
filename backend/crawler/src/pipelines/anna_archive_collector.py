@@ -342,7 +342,7 @@ class AnnaArchiveCollector:
                 "content_format": ext,
                 "price": 0.0,
                 "visibility": "public",
-                "author_id": "annas-archive",
+                "creator_id": "annas-archive",
                 "status": "published",
                 "views": 0,
                 "average_rating": 0.0,

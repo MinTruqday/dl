@@ -121,7 +121,7 @@ class EditorService:
         )
         if (
             doc
-            and str(doc.get("author_id")) != user_id
+            and str(doc.get("creator_id")) != user_id
             and sug.get("reviewer_id") != user_id
         ):
             raise HTTPException(
@@ -206,7 +206,7 @@ class EditorService:
         await RepositoryFactory.get("documents").update_one(
             {
                 "_id": document_id,
-                "$or": [{"author_id": user_id}, {"co_authors": user_id}],
+                "$or": [{"creator_id": user_id}, {"co_authors": user_id}],
             },
             {
                 "$set": {
@@ -226,7 +226,7 @@ class EditorService:
     async def submit_for_review(document_id: str, current_user, db=None):
         user_id = str(current_user.id)
         await RepositoryFactory.get("documents").update_one(
-            {"_id": document_id, "author_id": user_id},
+            {"_id": document_id, "creator_id": user_id},
             {"$set": {"editor_review_status": "pending_review"}},
         )
         logger.info("A document has been successfully placed into the editorial review queue by the author")
@@ -245,7 +245,7 @@ class EditorService:
 
         user_id = str(current_user.id)
         document = await RepositoryFactory.get("documents").find_one(
-            {"_id": str(document_id), "author_id": user_id}
+            {"_id": str(document_id), "creator_id": user_id}
         )
         if not document:
             raise HTTPException(
@@ -290,7 +290,7 @@ class EditorService:
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": str(document_id),
-                "author_id": user_id,
+                "creator_id": user_id,
                 "action": "GLOBAL_REPLACE",
                 "details": f"Replaced '{search_term}' with '{replace_term}'",
                 "created_at": datetime.now(timezone.utc),
@@ -467,7 +467,7 @@ class EditorService:
         )
         if (
             doc
-            and str(doc.get("author_id")) != str(current_user.id)
+            and str(doc.get("creator_id")) != str(current_user.id)
             and comment.get("user_id") != str(current_user.id)
         ):
             raise HTTPException(
@@ -512,7 +512,7 @@ class EditorService:
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")
@@ -560,7 +560,7 @@ class EditorService:
         document_id: str, current_user, agentic_ai_url: str, db=None
     ) -> dict:
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="The requested document could not be located within the system records")

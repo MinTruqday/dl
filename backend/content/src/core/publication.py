@@ -5,7 +5,7 @@ from core.database import db_client
 from loguru import logger
 
 
-async def publish_compile_task(document_id: str, author_id: str, content_raw: str):
+async def publish_compile_task(document_id: str, creator_id: str, content_raw: str):
     if not db_client.rabbitmq:
         logger.error("Failed to connect to background task queue. Compilation task rejected.")
         return False
@@ -16,7 +16,7 @@ async def publish_compile_task(document_id: str, author_id: str, content_raw: st
 
             payload = {
                 "document_id": document_id,
-                "author_id": author_id,
+                "creator_id": creator_id,
                 "content_raw": content_raw,
             }
 
@@ -32,7 +32,7 @@ async def publish_compile_task(document_id: str, author_id: str, content_raw: st
         return False
 
 
-async def trigger_document_publish_job(document_id: str, author_id: str):
+async def trigger_document_publish_job(document_id: str, creator_id: str):
     if not db_client.rabbitmq:
         logger.error("Failed to connect to background task queue. Publication task rejected.")
         return False
@@ -41,7 +41,7 @@ async def trigger_document_publish_job(document_id: str, author_id: str):
         async with db_client.rabbitmq.channel() as channel:
             queue = await channel.declare_queue("document_publish_queue", durable=True)
 
-            payload = {"document_id": document_id, "author_id": author_id}
+            payload = {"document_id": document_id, "creator_id": creator_id}
 
             message = Message(
                 body=json.dumps(payload).encode("utf-8"),

@@ -170,7 +170,7 @@ async def add_reaction(
 async def mark_as_read(other_user_id: str, current_user=Depends(get_current_user)):
     result = await MessageService.mark_as_read(other_user_id, current_user)
     await publish_personal_message(
-        {"type": "messages_read", "data": {"reader_id": current_user.id}}, other_user_id
+        {"type": "messages_read", "data": {"viewer_id": current_user.id}}, other_user_id
     )
     return APIResponse(data=result, message="The conversation thread has been successfully marked as read for the current user")
 

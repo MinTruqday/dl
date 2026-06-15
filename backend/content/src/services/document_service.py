@@ -108,7 +108,7 @@ class DocumentService:
         if not doc_dict.get("publisher_name"):
             doc_dict["publisher_name"] = current_user.full_name
 
-        doc_doc = DocumentInDB(**doc_dict, author_id=str(current_user.id))
+        doc_doc = DocumentInDB(**doc_dict, creator_id=str(current_user.id))
         await docs_collection.insert_one(doc_doc.model_dump(by_alias=True))
         logger.info("A new digital document has been successfully provisioned and registered in the system repository")
         return doc_doc
@@ -123,7 +123,7 @@ class DocumentService:
         ),
     ) -> list:
         db = db_client.mongodb.get_default_database()
-        query = {"author_id": str(current_user.id), "is_deleted": {"$ne": True}}
+        query = {"creator_id": str(current_user.id), "is_deleted": {"$ne": True}}
         if q:
             query["$or"] = [
                 {"title": {"$regex": q, "$options": "i"}},
@@ -165,7 +165,7 @@ class DocumentService:
         db = db_client.mongodb.get_default_database()
         docs_collection = RepositoryFactory.get("documents")
         document = await docs_collection.find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
@@ -186,7 +186,7 @@ class DocumentService:
             await RepositoryFactory.get("document_revisions").insert_one(
                 {
                     "document_id": document_id,
-                    "author_id": str(current_user.id),
+                    "creator_id": str(current_user.id),
                     "content": document.get("content"),
                     "content_format": document.get("content_format"),
                     "created_at": datetime.now(timezone.utc),
@@ -241,7 +241,7 @@ class DocumentService:
         if not doc:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         if (
-            doc.get("author_id") != str(current_user.id)
+            doc.get("creator_id") != str(current_user.id)
             and current_user.role != "ADMIN"
         ):
             raise HTTPException(
@@ -275,7 +275,7 @@ class DocumentService:
                 await RepositoryFactory.get("document_revisions").insert_one(
                     {
                         "document_id": document_id,
-                        "author_id": str(current_user.id),
+                        "creator_id": str(current_user.id),
                         "content": doc.get("content"),
                         "content_format": doc.get("content_format"),
                         "created_at": datetime.now(timezone.utc),
@@ -341,7 +341,7 @@ class DocumentService:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
 
         if (
-            document.get("author_id") != user_id
+            document.get("creator_id") != user_id
             and document.get("status") != DocumentStatus.PUBLISHED
         ):
             if not current_user or current_user.role != "ADMIN":
@@ -349,7 +349,7 @@ class DocumentService:
 
         if (
             document.get("is_password_protected")
-            and document.get("author_id") != user_id
+            and document.get("creator_id") != user_id
         ):
             if not password:
                 return {
@@ -388,7 +388,7 @@ class DocumentService:
         res = await RepositoryFactory.get("documents").update_one(
             {
                 "_id": document_id,
-                "author_id": str(current_user.id),
+                "creator_id": str(current_user.id),
                 "is_deleted": {"$ne": True},
             },
             {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc)}},
@@ -405,7 +405,7 @@ class DocumentService:
     async def restore_document(document_id: str, current_user) -> dict:
         db = db_client.mongodb.get_default_database()
         res = await RepositoryFactory.get("documents").update_one(
-            {"_id": document_id, "author_id": str(current_user.id), "is_deleted": True},
+            {"_id": document_id, "creator_id": str(current_user.id), "is_deleted": True},
             {"$set": {"is_deleted": False, "deleted_at": None}},
         )
         if res.modified_count == 0:
@@ -421,7 +421,7 @@ class DocumentService:
         db = db_client.mongodb.get_default_database()
         docs = (
             await RepositoryFactory.get("documents")
-            .find({"author_id": str(current_user.id), "is_deleted": True})
+            .find({"creator_id": str(current_user.id), "is_deleted": True})
             .sort("deleted_at", -1)
             .to_list(length=100)
         )
@@ -444,7 +444,7 @@ class DocumentService:
     ) -> dict:
         db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
@@ -467,7 +467,7 @@ class DocumentService:
     async def invite_coauthor(document_id: str, email: str, current_user):
         db = db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not document:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
@@ -517,7 +517,7 @@ class DocumentService:
         user_id = str(current_user.id) if current_user else None
         has_purchased = False
         if user_id:
-            if document.get("author_id") == user_id:
+            if document.get("creator_id") == user_id:
                 has_purchased = True
             else:
                 purchases_col = RepositoryFactory.get("purchases")
@@ -527,7 +527,7 @@ class DocumentService:
                 if purchase:
                     has_purchased = True
 
-        is_privileged = current_user and current_user.role in ["ADMIN", "MODERATOR"]
+        is_privileged = current_user and current_user.role == "ADMIN"
         if document.get("is_premium") and not has_purchased and not is_privileged:
             raw_content = document.get("content") or ""
             limit = document.get("preview_pages", 5)
@@ -544,7 +544,7 @@ class DocumentService:
                 document["content"] = raw_content[: limit * 1000]
 
         should_increment = True
-        if user_id == document.get("author_id"):
+        if user_id == document.get("creator_id"):
             should_increment = False
         elif hasattr(db_client, "redis") and db_client.redis:
             cache_key = f"viewed:{user_id or 'guest'}:{document['_id']}"
@@ -566,7 +566,7 @@ class DocumentService:
         try:
             async with httpx.AsyncClient() as client:
                 resp = await client.get(
-                    f"{settings.PROVISION_URL}/users/{document['author_id']}",
+                    f"{settings.PROVISION_URL}/users/{document['creator_id']}",
                     timeout=settings.DEFAULT_HTTP_TIMEOUT,
                 )
                 if resp.status_code == 200:
@@ -616,7 +616,7 @@ class DocumentService:
             "title": doc.get("title"),
             "description": doc.get("description"),
             "cover_url": doc.get("cover_url"),
-            "author_id": doc.get("author_id"),
+            "creator_id": doc.get("creator_id"),
             "preview_content": preview_content,
         }
         return preview_data
@@ -625,7 +625,7 @@ class DocumentService:
     async def get_document_audit_logs(document_id: str, current_user) -> list:
         db = db_client.mongodb.get_default_database()
         document = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}, {"_id": 1}
+            {"_id": document_id, "creator_id": str(current_user.id)}, {"_id": 1}
         )
         if not document:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
@@ -675,7 +675,7 @@ class DocumentService:
             {
                 "$lookup": {
                     "from": "users",
-                    "localField": "author_id",
+                    "localField": "creator_id",
                     "foreignField": "_id",
                     "as": "author",
                 }
@@ -702,7 +702,7 @@ class DocumentService:
                 "_id": str(b["_id"]),
                 "title": b.get("title", ""),
                 "description": b.get("description", ""),
-                "author_id": b.get("author_id"),
+                "creator_id": b.get("creator_id"),
                 "author_name": b.get("author", {}).get("full_name", "Anonymous"),
                 "created_at": format_date(b.get("created_at") or b.get("updated_at")),
                 "updated_at": format_date(b.get("updated_at")),
@@ -713,7 +713,7 @@ class DocumentService:
 
     @staticmethod
     async def moderate_document(
-        document_id: str, action: str, reason: str, current_moderator
+        document_id: str, action: str, reason: str, current_user
     ) -> dict:
         db = db_client.mongodb.get_default_database()
         status_val = "PUBLISHED" if action == "approve" else "REJECTED"
@@ -724,7 +724,7 @@ class DocumentService:
                 "$set": {
                     "status": status_val,
                     "moderation_reason": reason,
-                    "moderated_by": str(current_moderator.id),
+                    "moderated_by": str(current_user.id),
                     "moderated_at": datetime.now(timezone.utc),
                 }
             },
@@ -735,13 +735,13 @@ class DocumentService:
                 {"_id": document_id}
             )
             if doc:
-                await trigger_document_publish_job(document_id, doc.get("author_id"))
+                await trigger_document_publish_job(document_id, doc.get("creator_id"))
                 logger.info("The automated publication sequence has been initiated for the specified digital document")
 
         await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": f"DOCUMENT_{status_val}",
-                "actor_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "document_id": document_id,
                 "reason": reason,
                 "timestamp": datetime.now(timezone.utc),
@@ -754,7 +754,7 @@ class DocumentService:
 
     @staticmethod
     async def resolve_copyright_dispute(
-        dispute_id: str, resolution: str, current_moderator
+        dispute_id: str, resolution: str, current_user
     ) -> dict:
         db = db_client.mongodb.get_default_database()
         await RepositoryFactory.get("copyright_disputes").update_one(
@@ -763,7 +763,7 @@ class DocumentService:
                 "$set": {
                     "status": "resolved",
                     "resolution": resolution,
-                    "resolved_by": str(current_moderator.id),
+                    "resolved_by": str(current_user.id),
                     "resolved_at": datetime.now(timezone.utc),
                 }
             },

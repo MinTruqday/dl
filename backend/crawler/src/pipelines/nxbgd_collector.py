@@ -127,7 +127,7 @@ class NXBGDCollector:
                     "content_format": "pdf",
                     "price": 0.0,
                     "visibility": "private",
-                    "author_id": "nxbgd",
+                    "creator_id": "nxbgd",
                     "status": "published",
                     "views": 0,
                     "average_rating": 0.0,

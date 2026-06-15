@@ -23,7 +23,7 @@ class CouponService:
         )
         coupon = {
             "_id": str(uuid7()),
-            "author_id": str(current_user.id),
+            "creator_id": str(current_user.id),
             "code": data["code"].upper(),
             "discount_percent": min(100, max(1, data.get("discount_percent", 10))),
             "max_uses": data.get("max_uses", 100),
@@ -57,7 +57,7 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         query = {}
         if current_user.role != RoleEnum.ADMIN:
-            query["author_id"] = str(current_user.id)
+            query["creator_id"] = str(current_user.id)
         coupons = (
             await db["coupons"].find(query).sort("created_at", -1).to_list(length=100)
         )
@@ -150,7 +150,7 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         query = {"_id": coupon_id}
         if current_user.role != RoleEnum.ADMIN:
-            query["author_id"] = str(current_user.id)
+            query["creator_id"] = str(current_user.id)
         coupon = await db["coupons"].find_one(query)
         if not coupon:
             raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")
@@ -170,7 +170,7 @@ class CouponService:
             db = db_client.mongodb.get_default_database()
         query = {"_id": coupon_id}
         if current_user.role != RoleEnum.ADMIN:
-            query["author_id"] = str(current_user.id)
+            query["creator_id"] = str(current_user.id)
         res = await db["coupons"].delete_one(query)
         if res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="The specified promotional coupon could not be located in the active database records")

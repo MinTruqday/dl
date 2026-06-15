@@ -45,10 +45,10 @@ class ExportService:
         user_id = str(current_user.id)
         if (
             document.get("is_premium")
-            and document.get("author_id") != user_id
+            and document.get("creator_id") != user_id
             and (
                 not hasattr(current_user, "role")
-                or current_user.role not in ["ADMIN", "MODERATOR"]
+                or current_user.role != "ADMIN"
             )
         ):
             purchases_col = RepositoryFactory.get("purchases")

@@ -92,7 +92,7 @@ class UserService:
         return {"message": "The operational activity status for the specified account has been successfully updated"}
 
     @staticmethod
-    async def warn_user(user_id: str, reason: str, current_moderator, db=None) -> dict:
+    async def warn_user(user_id: str, reason: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         user = await RepositoryFactory.get("users").find_one({"_id": user_id})
@@ -103,7 +103,7 @@ class UserService:
         warning = {
             "_id": str(uuid7()),
             "user_id": user_id,
-            "moderator_id": str(current_moderator.id),
+            "actor_id": str(current_user.id),
             "reason": reason,
             "created_at": datetime.now(timezone.utc),
         }
@@ -111,7 +111,7 @@ class UserService:
         await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": "WARN_USER",
-                "actor_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "target_user_id": user_id,
                 "reason": reason,
                 "timestamp": datetime.now(timezone.utc),
@@ -140,7 +140,7 @@ class UserService:
 
     @staticmethod
     async def lock_user(
-        user_id: str, reason: str, duration_hours: int, current_moderator, db=None
+        user_id: str, reason: str, duration_hours: int, current_user, db=None
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -159,7 +159,7 @@ class UserService:
         await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": "LOCK_USER",
-                "actor_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "target_user_id": user_id,
                 "reason": reason,
                 "duration": duration_hours,
@@ -173,7 +173,7 @@ class UserService:
 
     @staticmethod
     async def shadowban_user(
-        user_id: str, is_banned: bool, current_moderator, db=None
+        user_id: str, is_banned: bool, current_user, db=None
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -190,7 +190,7 @@ class UserService:
         await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": action,
-                "actor_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "target_user_id": user_id,
                 "timestamp": datetime.now(timezone.utc),
             }
@@ -201,7 +201,7 @@ class UserService:
         return {"message": "The system visibility restriction status for the specified account has been updated successfully"}
 
     @staticmethod
-    async def verify_kyc(user_id: str, status: str, current_moderator, db=None) -> dict:
+    async def verify_kyc(user_id: str, status: str, current_user, db=None) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
         await RepositoryFactory.get("users").update_one(
@@ -217,7 +217,7 @@ class UserService:
         await RepositoryFactory.get("audit_logs").insert_one(
             {
                 "action": f"KYC_{status}",
-                "actor_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "target_user_id": user_id,
                 "timestamp": datetime.now(timezone.utc),
             }
@@ -228,7 +228,7 @@ class UserService:
         return {"message": "The submitted identity verification documents have been successfully processed and the account status has been updated"}
 
     @staticmethod
-    async def get_moderator_notes(user_id: str, db=None) -> list:
+    async def get_notes(user_id: str, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         notes = (
@@ -241,7 +241,7 @@ class UserService:
             {
                 "_id": str(n["_id"]),
                 "note": n.get("note", ""),
-                "moderator_id": n.get("moderator_id"),
+                "actor_id": n.get("actor_id"),
                 "created_at": (
                     n["created_at"].isoformat()
                     if isinstance(n.get("created_at"), datetime)
@@ -252,8 +252,8 @@ class UserService:
         ]
 
     @staticmethod
-    async def add_moderator_note(
-        user_id: str, note: str, current_moderator, db=None
+    async def add_note(
+        user_id: str, note: str, current_user, db=None
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -261,7 +261,7 @@ class UserService:
             {
                 "_id": str(uuid7()),
                 "user_id": user_id,
-                "moderator_id": str(current_moderator.id),
+                "actor_id": str(current_user.id),
                 "note": note,
                 "created_at": datetime.now(timezone.utc),
             }
@@ -340,7 +340,7 @@ class UserService:
 
     @staticmethod
     async def resolve_report(
-        report_id: str, action: str, current_moderator, db=None
+        report_id: str, action: str, current_user, db=None
     ) -> dict:
         if db is None:
             db = db_client.mongodb.get_default_database()
@@ -350,7 +350,7 @@ class UserService:
                 "$set": {
                     "status": "resolved",
                     "action_taken": action,
-                    "resolved_by": str(current_moderator.id),
+                    "resolved_by": str(current_user.id),
                     "resolved_at": datetime.now(timezone.utc),
                 }
             },
@@ -361,12 +361,12 @@ class UserService:
         return {"message": "The system violation report has been successfully processed and marked as resolved"}
 
     @staticmethod
-    async def get_moderator_activity_log(moderator_id: str, db=None) -> list:
+    async def get_moderator_activity_log(actor_id: str, db=None) -> list:
         if db is None:
             db = db_client.mongodb.get_default_database()
         logs = (
             await RepositoryFactory.get("audit_logs")
-            .find({"actor_id": moderator_id})
+            .find({"actor_id": actor_id})
             .sort("timestamp", -1)
             .limit(50)
             .to_list(length=50)

@@ -17,14 +17,14 @@ class VersionsService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         doc = await RepositoryFactory.get("documents").find_one(
-            {"_id": document_id, "author_id": str(current_user.id)}
+            {"_id": document_id, "creator_id": str(current_user.id)}
         )
         if not doc:
             raise HTTPException(status_code=404, detail="The requested digital document could not be located within the primary storage repository")
         await RepositoryFactory.get("document_versions").insert_one(
             {
                 "document_id": document_id,
-                "author_id": str(current_user.id),
+                "creator_id": str(current_user.id),
                 "note": version_note,
                 "snapshot": {
                     "title": doc.get("title"),
@@ -46,7 +46,7 @@ class VersionsService:
             db = db_client.mongodb.get_default_database()
         cursor = (
             RepositoryFactory.get("document_versions")
-            .find({"document_id": document_id, "author_id": str(current_user.id)})
+            .find({"document_id": document_id, "creator_id": str(current_user.id)})
             .sort("created_at", -1)
         )
         versions = await cursor.to_list(length=100)
@@ -60,7 +60,7 @@ class VersionsService:
         if db is None:
             db = db_client.mongodb.get_default_database()
         version = await RepositoryFactory.get("document_versions").find_one(
-            {"_id": ObjectId(version_id), "author_id": str(current_user.id)}
+            {"_id": ObjectId(version_id), "creator_id": str(current_user.id)}
         )
         if not version:
             raise HTTPException(status_code=404, detail="The requested historical version snapshot could not be located within the archival system")

@@ -47,12 +47,12 @@ async def verify_withdrawal(
     withdrawal_id: str,
     action: str,
     reason: str = "",
-    current_admin: UserInDB = Depends(get_current_user),
+    current_user: UserInDB = Depends(get_current_user),
     db=Depends(get_db),
 ):
     return APIResponse(
         data=await WithdrawalService.verify_withdrawal(
-            withdrawal_id, action, reason, current_admin, db=db
+            withdrawal_id, action, reason, current_user, db=db
         ),
         message="The administrative verification process for the specified withdrawal request has been completed successfully",
         status=200,

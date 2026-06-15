@@ -108,7 +108,7 @@ async def get_folders(
     parent_id: Optional[str] = None, current_user: UserInDB = Depends(get_current_user)
 ):
     db = db_client.mongodb.get_default_database()
-    query = {"author_id": str(current_user.id)}
+    query = {"creator_id": str(current_user.id)}
     if parent_id:
         query["parent_id"] = parent_id
     cursor = db["workspace_folders"].find(query).sort("created_at", 1)
@@ -130,7 +130,7 @@ async def create_folder(
     folder_doc = {
         "name": req.name,
         "parent_id": req.parent_id,
-        "author_id": str(current_user.id),
+        "creator_id": str(current_user.id),
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
@@ -149,7 +149,7 @@ async def delete_folder(
 ):
     db = db_client.mongodb.get_default_database()
     folder = await db["workspace_folders"].find_one(
-        {"_id": ObjectId(folder_id), "author_id": str(current_user.id)}
+        {"_id": ObjectId(folder_id), "creator_id": str(current_user.id)}
     )
     if not folder:
         raise HTTPException(status_code=404, detail="The system was unable to locate the specified organizational folder within the current workspace")
@@ -161,7 +161,7 @@ async def delete_folder(
 
 
 @router.get(
-    "/ca-nhan",
+    "/personal",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -179,7 +179,7 @@ async def get_my_documents(
 
 
 @router.get(
-    "/thung-rac",
+    "/trash",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -239,7 +239,7 @@ async def soft_delete_document(
 
 
 @router.post(
-    "/{document_id}/khoi-phuc",
+    "/{document_id}/restore",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -294,7 +294,7 @@ async def toggle_star_document(
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one(
-        {"_id": document_id, "author_id": str(current_user.id)}
+        {"_id": document_id, "creator_id": str(current_user.id)}
     )
     if not doc:
         raise HTTPException(status_code=404, detail="The system was unable to locate the requested digital document within the primary repository")
@@ -308,7 +308,7 @@ async def toggle_star_document(
 
 
 @router.post(
-    "/{document_id}/chuyen-nhuong",
+    "/{document_id}/transfer",
     response_model=APIResponse[Any],
     dependencies=[Depends(require_role([RoleEnum.AUTHOR, RoleEnum.ADMIN]))],
 )
@@ -319,7 +319,7 @@ async def transfer_document(
 ):
     db = db_client.mongodb.get_default_database()
     doc = await db["documents"].find_one(
-        {"_id": document_id, "author_id": str(current_user.id)}
+        {"_id": document_id, "creator_id": str(current_user.id)}
     )
     if not doc:
         raise HTTPException(
@@ -345,7 +345,7 @@ async def transfer_document(
         )
     await db["documents"].update_one(
         {"_id": document_id},
-        {"$set": {"author_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}},
+        {"$set": {"creator_id": new_owner_id, "updated_at": datetime.now(timezone.utc)}},
     )
     return APIResponse(
         data={"status": "transferred", "new_owner_id": new_owner_id},

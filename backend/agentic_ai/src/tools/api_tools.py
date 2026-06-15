@@ -45,13 +45,13 @@ async def _make_api_request(method: str, url: str, **kwargs) -> httpx.Response:
 import jwt
 
 
-def _check_admin(token: str) -> bool:
+def _check_system_access(token: str) -> bool:
     try:
         from core.config import settings
 
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = payload.get("role", "guest")
-        return role in ["admin", "moderator"]
+        return role == "admin"
     except:
         return False
 
@@ -76,7 +76,7 @@ async def get_user_balance(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/vi-tien/so-du",
+            f"{INTERNAL_API_URL}/wallets/balance",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -102,7 +102,7 @@ async def get_transaction_history(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/vi-tien/lich-su",
+            f"{INTERNAL_API_URL}/wallets/transactions",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -135,7 +135,7 @@ async def redeem_voucher(code: str, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/vi-tien/coupon-code/redeem",
+            f"{INTERNAL_API_URL}/coupons/redeem",
             json={"code": code.strip()},
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
@@ -160,7 +160,7 @@ async def get_revenue_report(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/vi-tien/doanh-thu",
+            f"{INTERNAL_API_URL}/withdrawals/revenue",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -185,7 +185,7 @@ async def get_my_documents(config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/ca-nhan",
+            f"{INTERNAL_API_URL}/documents/personal",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -209,14 +209,14 @@ async def get_trash_documents(config: RunnableConfig) -> str:
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Authentication is required to perform this action"
-    if not _check_admin(token):
+    if not _check_system_access(token):
         return "Your account does not possess the necessary authorization to access this specific area"
 
     headers = {"Authorization": token}
     try:
         response = await _make_api_request(
             "GET",
-            f"{INTERNAL_API_URL}/documents/thung-rac",
+            f"{INTERNAL_API_URL}/documents/trash",
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,
         )
@@ -293,7 +293,7 @@ async def get_document_analytics(document_id: str, config: RunnableConfig) -> st
     token = config.get("configurable", {}).get("token")
     if not token:
         return "Authentication is required to perform this action"
-    if not _check_admin(token):
+    if not _check_system_access(token):
         return "Your account does not possess the necessary authorization to perform this operation"
 
     headers = {"Authorization": token}
@@ -412,7 +412,7 @@ async def create_deposit_link(amount: int, config: RunnableConfig) -> str:
     try:
         response = await _make_api_request(
             "POST",
-            f"{INTERNAL_API_URL}/nap-tien/tao-link",
+            f"{INTERNAL_API_URL}/deposits",
             json={"amount": amount},
             headers=headers,
             timeout=settings.LONG_PROCESS_TIMEOUT,

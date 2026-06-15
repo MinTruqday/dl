@@ -79,7 +79,7 @@ async def setup_indexes():
             [("title", "text"), ("description", "text"), ("author", "text")],
             background=True,
         )
-        await db["documents"].create_index([("author_id", 1)], background=True)
+        await db["documents"].create_index([("creator_id", 1)], background=True)
         await db["documents"].create_index(
             [("status", 1), ("is_deleted", 1), ("created_at", -1)], background=True
         )

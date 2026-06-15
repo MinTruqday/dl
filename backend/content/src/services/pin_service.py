@@ -45,7 +45,7 @@ class PinService:
                         "title": d.get("title", ""),
                         "slug": d.get("slug", ""),
                         "cover_url": d.get("cover_url"),
-                        "author_id": d.get("author_id"),
+                        "creator_id": d.get("creator_id"),
                         "pinned_at": pinned_at_map.get(d_id),
                     }
                 )
