@@ -1,7 +1,5 @@
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List
 from core.database import db_client
-
 
 class BaseMongoRepository:
     def __init__(self, collection_name: str):
@@ -24,14 +22,10 @@ class BaseMongoRepository:
     async def insert_many(self, documents: List[Dict[str, Any]], **kwargs):
         return await self.collection.insert_many(documents, **kwargs)
 
-    async def update_one(
-        self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
-    ):
+    async def update_one(self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs):
         return await self.collection.update_one(filter, update, **kwargs)
 
-    async def update_many(
-        self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs
-    ):
+    async def update_many(self, filter: Dict[str, Any], update: Dict[str, Any], **kwargs):
         return await self.collection.update_many(filter, update, **kwargs)
 
     async def delete_one(self, filter: Dict[str, Any], **kwargs):
@@ -45,7 +39,6 @@ class BaseMongoRepository:
 
     def aggregate(self, pipeline: List[Dict[str, Any]], **kwargs):
         return self.collection.aggregate(pipeline, **kwargs)
-
 
 class RepositoryFactory:
     _repos = {}

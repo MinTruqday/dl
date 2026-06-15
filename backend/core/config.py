@@ -1,8 +1,6 @@
 import os
 from typing import Optional
-
 from pydantic import BaseModel
-
 
 class Settings(BaseModel):
     PROJECT_NAME: str = os.getenv("PROJECT_NAME")
@@ -66,30 +64,27 @@ class Settings(BaseModel):
     TOOL_TIMEOUT_SECONDS: float = float(os.getenv("TOOL_TIMEOUT_SECONDS"))
     TOOL_MAX_RETRIES: int = int(os.getenv("TOOL_MAX_RETRIES"))
     CIRCUIT_BREAKER_THRESHOLD: int = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD"))
-    CIRCUIT_BREAKER_RESET_SECONDS: float = float(
-        os.getenv("CIRCUIT_BREAKER_RESET_SECONDS")
-    )
+    CIRCUIT_BREAKER_RESET_SECONDS: float = float(os.getenv("CIRCUIT_BREAKER_RESET_SECONDS"))
     MAX_CONTEXT_TOKENS: int = int(os.getenv("MAX_CONTEXT_TOKENS"))
     CHARS_PER_TOKEN_APPROX: int = int(os.getenv("CHARS_PER_TOKEN_APPROX"))
     DEFAULT_CHUNK_SIZE: int = int(os.getenv("DEFAULT_CHUNK_SIZE"))
     DEFAULT_CHUNK_OVERLAP: int = int(os.getenv("DEFAULT_CHUNK_OVERLAP"))
+    API_URL: str = os.getenv("API_URL")
+    CORE_URL: Optional[str] = os.getenv("CORE_URL")
     AGENTIC_AI_URL: str = os.getenv("AGENTIC_AI_URL")
-    INTERNAL_API_URL: str = os.getenv("INTERNAL_API_URL")
-    CORE_BACKEND_URL: Optional[str] = os.getenv("CORE_BACKEND_URL")
-    COMPILER_URL: str = os.getenv("COMPILER_URL")
+    EDITOR_URL: str = os.getenv("EDITOR_URL")
     COLLECTOR_URL: str = os.getenv("COLLECTOR_URL")
-    CONTACT_URL: str = os.getenv("CONTACT_URL")
+    MESSAGING_URL: str = os.getenv("MESSAGING_URL")
     FINANCE_URL: str = os.getenv("FINANCE_URL")
-    SIGNAL_URL: str = os.getenv("SIGNAL_URL")
-    PROVISION_URL: str = os.getenv("PROVISION_URL")
+    NOTIFICATION_URL: str = os.getenv("NOTIFICATION_URL")
+    MANAGEMENT_URL: str = os.getenv("MANAGEMENT_URL")
     AUTHENTICATION_URL: str = os.getenv("AUTHENTICATION_URL")
     CONTENT_URL: str = os.getenv("CONTENT_URL")
-    WEBSOCKET_URL: str = os.getenv("WEBSOCKET_URL")
+    REALTIME_URL: str = os.getenv("REALTIME_URL")
     FLARESOLVERR_URL: str = os.getenv("FLARESOLVERR_URL")
     DEFAULT_PAGE_LIMIT: int = int(os.getenv("DEFAULT_PAGE_LIMIT"))
     MAX_PAGE_LIMIT: int = int(os.getenv("MAX_PAGE_LIMIT"))
     DEFAULT_HTTP_TIMEOUT: float = float(os.getenv("DEFAULT_HTTP_TIMEOUT"))
     LONG_PROCESS_TIMEOUT: float = float(os.getenv("LONG_PROCESS_TIMEOUT"))
-
 
 settings = Settings()

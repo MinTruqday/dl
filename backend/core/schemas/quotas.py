@@ -1,12 +1,7 @@
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Union
 import math
-
+from datetime import datetime, timezone
+from typing import Dict, Union
 from pydantic import BaseModel, Field
-
-
-from core.schemas.user import AITierEnum
-
 
 class QuotaLimit(BaseModel):
     daily_requests: Union[int, float] = 0
@@ -16,13 +11,11 @@ class QuotaLimit(BaseModel):
     model: str = ""
     thinking: bool = False
 
-
 class UserQuota(BaseModel):
     user_id: str
     role: str
     limits: QuotaLimit
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
 
 class GlobalQuotaConfig(BaseModel):
     role_limits: Dict[str, QuotaLimit] = {
