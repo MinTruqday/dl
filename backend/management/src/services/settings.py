@@ -2,16 +2,12 @@ from datetime import datetime, timezone
 from core.database import db_client
 from loguru import logger
 
-
 class SettingService:
 
     @staticmethod
     async def get_settings(current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
-        user = await db["users"].find_one(
-            {"_id": str(current_user.id)}, {"settings": 1}
-        )
+        target_db = db or db_client.mongodb.get_default_database()
+        user = await target_db["users"].find_one({"_id": str(current_user.id)}, {"settings": 1})
         defaults = {
             "appearance": "light",
             "fontSize": "medium",
@@ -30,20 +26,14 @@ class SettingService:
 
     @staticmethod
     async def update_settings(settings_data: dict, current_user, db=None) -> dict:
-        if db is None:
-            db = db_client.mongodb.get_default_database()
+        target_db = db or db_client.mongodb.get_default_database()
         user_id = str(current_user.id)
-        user = await db["users"].find_one({"_id": user_id}, {"settings": 1})
+        user = await target_db["users"].find_one({"_id": user_id}, {"settings": 1})
         current_settings = user.get("settings", {}) if user else {}
         merged_settings = {**current_settings, **settings_data}
-        await db["users"].update_one(
+        await target_db["users"].update_one(
             {"_id": user_id},
-            {
-                "$set": {
-                    "settings": merged_settings,
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
+            {"$set": {"settings": merged_settings, "updated_at": datetime.now(timezone.utc)}},
         )
-        logger.info("The system configuration settings have been successfully updated by the authenticated user")
-        return {"message": "Your personal system configuration settings have been successfully updated and saved"}
+        logger.info("System configuration settings have been successfully updated by authenticated user")
+        return {"message": "Personal system configuration settings have been successfully updated and saved"}
